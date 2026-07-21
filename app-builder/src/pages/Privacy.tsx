@@ -1,11 +1,8 @@
-import { Page } from '../components/Page';
+import { LegalPage } from '../components/LegalPage';
 import { en } from '../i18n/en';
 
-/** Privacy page. */
+/** Privacy Policy page. */
 export function Privacy(): JSX.Element {
-  return (
-    <Page title={en.pages.privacy.title}>
-      <p>{en.pages.privacy.body}</p>
-    </Page>
-  );
+  const p = en.pages.privacy;
+  return <LegalPage title={p.title} updated={p.updated} intro={p.intro} sections={p.sections} />;
 }

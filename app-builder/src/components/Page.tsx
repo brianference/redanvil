@@ -49,8 +49,10 @@ function Logo(): JSX.Element {
   return (
     <a href={APP_URL} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
       <img
-        src="/banner.png"
+        src="/logo-sm.png"
         alt="RedAnvil — forge apps from a prompt"
+        width={107}
+        height={56}
         style={{ height: 56, width: 'auto', display: 'block', borderRadius: theme.radius.sm }}
       />
     </a>

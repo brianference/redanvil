@@ -21,10 +21,14 @@ export interface EstimateResult {
   confidence: EstimateConfidence;
 }
 
-const BASE_TOKENS = 30_000;
-const TOKENS_PER_FEATURE = 25_000;
-const TOKENS_PER_ENTITY = 12_000;
-const AUTH_TOKENS = 20_000;
+// Calibrated 2026-07-21 against a real RedAnvil Grok build run: one feature-building
+// iteration (submit endpoint + wiring + tests, multi-file) measured 264,672 tokens.
+// The old constants were ~3x low. Confidence below reflects SCOPE variance, not
+// calibration certainty — only ~1 real run so far; it tightens as the loop logs actuals.
+const BASE_TOKENS = 120_000;
+const TOKENS_PER_FEATURE = 55_000;
+const TOKENS_PER_ENTITY = 22_000;
+const AUTH_TOKENS = 40_000;
 
 /**
  * Deterministic first-pass token-cost estimate for a build job.

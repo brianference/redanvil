@@ -1,11 +1,8 @@
-import { Page } from '../components/Page';
+import { LegalPage } from '../components/LegalPage';
 import { en } from '../i18n/en';
 
 /** About page. */
 export function About(): JSX.Element {
-  return (
-    <Page title={en.pages.about.title}>
-      <p>{en.pages.about.body}</p>
-    </Page>
-  );
+  const p = en.pages.about;
+  return <LegalPage title={p.title} updated={p.updated} intro={p.intro} sections={p.sections} />;
 }

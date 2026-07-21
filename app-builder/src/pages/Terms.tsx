@@ -1,11 +1,8 @@
-import { Page } from '../components/Page';
+import { LegalPage } from '../components/LegalPage';
 import { en } from '../i18n/en';
 
-/** Terms page. */
+/** Terms and Conditions page. */
 export function Terms(): JSX.Element {
-  return (
-    <Page title={en.pages.terms.title}>
-      <p>{en.pages.terms.body}</p>
-    </Page>
-  );
+  const p = en.pages.terms;
+  return <LegalPage title={p.title} updated={p.updated} intro={p.intro} sections={p.sections} />;
 }

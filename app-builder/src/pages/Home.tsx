@@ -30,8 +30,9 @@ export function Home(): JSX.Element {
     <Page title="Forge an app from a prompt">
       {prd === null && (
         <img
-          src="/banner.png"
+          src="/banner.webp"
           alt="RedAnvil — forge apps from a prompt"
+          loading="eager"
           style={{
             width: '100%',
             maxWidth: '46rem',

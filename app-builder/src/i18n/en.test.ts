@@ -4,17 +4,23 @@ import { en, type Locale } from './en';
 describe('en locale bundle', () => {
   it('exposes typed app shell copy', () => {
     const locale: Locale = en;
-    expect(locale.app.name).toBe('app-builder');
+    expect(locale.app.name).toBe('RedAnvil');
     expect(locale.app.primaryNav).toBe('Primary');
-    expect(locale.app.footerCopyright).toContain('app-builder');
+    expect(locale.app.footerCopyright).toContain('RedAnvil');
   });
 
-  it('exposes page titles and bodies', () => {
+  it('exposes real legal/info page content (title, intro, sections)', () => {
     expect(en.pages.home.title).toBe('Build an app');
-    expect(en.pages.about.title).toBe('About');
-    expect(en.pages.contact.body).toBe('Contact content.');
-    expect(en.pages.privacy.title).toBe('Privacy');
-    expect(en.pages.terms.body).toBe('Terms content.');
+    for (const key of ['about', 'contact', 'privacy', 'terms'] as const) {
+      const p = en.pages[key];
+      expect(p.title.length).toBeGreaterThan(2);
+      expect(p.intro.length).toBeGreaterThan(20);
+      expect(p.sections.length).toBeGreaterThan(0);
+      for (const s of p.sections) {
+        expect(s.heading.length).toBeGreaterThan(2);
+        expect(s.body.length).toBeGreaterThan(20);
+      }
+    }
   });
 
   it('formats wizard interpolations without any', () => {
