@@ -24,6 +24,14 @@ Each role has a skillset and an enforced rule subset. A build cannot reach the s
 - lg-role-security (blocker): security review — SAST clean on changed code, every input validated at the boundary (Zod / pydantic), Web Crypto (PBKDF2 + HMAC-SHA256) for auth, no secrets or PII in logs, parameterized SQL, explicit timeouts, no stubbed auth paths. Skill: /security-review.
 - lg-role-uat (major): user acceptance testing — simulate real users against every acceptance line in the PRD; a feature with no exercised acceptance criterion fails UAT.
 
+## Design and completeness gate (blockers)
+
+These close the holes that shipped a barebones, dead-end app. They are verified on the RENDERED page, never from source.
+
+- lg-visual-review-required (blocker): no site passes or is called done without a recorded visual review — load the deployed URL in Playwright/Chrome, screenshot at 375/768/1280, and verify the design checklist (wordmark/logo, sticky header, professional multi-column footer, theme tokens only, WCAG AA contrast, no text overlap at 375px, zero console errors). Design rules (`fe-theme-tokens-only`, `fe-a11y-contrast`, header/footer) are scored from the screenshot, never rubber-stamped from code. A global deploy hook injects this requirement on every `wrangler pages deploy`.
+- lg-product-completeness (blocker): the app must deliver its stated core feature end-to-end, verified by UAT on the live site. A flow that collects input but produces no usable output (e.g. a wizard that never generates its PRD) fails — "does nothing" is never a pass.
+- lg-cross-link (major): apps that belong to the same system link to each other in a shared header/footer (app-builder <-> dashboard), so the product is navigable, not a set of orphan pages.
+
 ## Score gate
 
 - lg-score-threshold (blocker): the run passes only when the inline score is >= the job threshold (default 90). Below threshold, capture failing output verbatim and feed it into the next Grok prompt.

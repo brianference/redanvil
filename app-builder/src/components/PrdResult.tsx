@@ -1,0 +1,101 @@
+import { useState, type CSSProperties } from 'react';
+import type { Prd } from '../lib/prd';
+import { theme } from '../theme';
+
+export interface PrdResultProps {
+  /** The generated PRD to display and offer for download. */
+  prd: Prd;
+  /** Called when the user wants to start a new PRD. */
+  onReset: () => void;
+}
+
+const card: CSSProperties = {
+  background: theme.color.surface,
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.lg,
+  padding: theme.space.lg
+};
+
+const button = (primary = false): CSSProperties => ({
+  fontFamily: theme.type.family,
+  fontSize: theme.type.scale[1],
+  fontWeight: 600,
+  color: theme.color.text,
+  background: primary ? theme.color.accent : 'transparent',
+  border: primary ? 'none' : `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.sm,
+  padding: `${theme.space.sm}px ${theme.space.md}px`,
+  cursor: 'pointer'
+});
+
+/** Shows the generated PRD with download-as-markdown and copy actions. */
+export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
+  const [copied, setCopied] = useState(false);
+
+  /** Download the PRD as a .md file the user can load into Claude. */
+  function download(): void {
+    const blob = new Blob([prd.markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${prd.slug}.prd.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /** Copy the PRD markdown to the clipboard. */
+  async function copy(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(prd.markdown);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <section style={card} aria-label="Generated PRD">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: theme.space.sm }}>
+        <div>
+          <p style={{ margin: 0, color: theme.color.accent, fontSize: theme.type.scale[0], fontWeight: 600, letterSpacing: '0.08em' }}>
+            PRD READY
+          </p>
+          <h2 style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[4] }}>{prd.title}</h2>
+        </div>
+        <div style={{ display: 'flex', gap: theme.space.sm, flexWrap: 'wrap' }}>
+          <button type="button" style={button(true)} onClick={download}>
+            ↓ Download .md
+          </button>
+          <button type="button" style={button()} onClick={() => void copy()}>
+            {copied ? 'Copied ✓' : 'Copy'}
+          </button>
+          <button type="button" style={button()} onClick={onReset}>
+            New PRD
+          </button>
+        </div>
+      </div>
+      <p style={{ color: theme.color.muted, fontSize: theme.type.scale[1], marginTop: theme.space.sm }}>
+        Paste this into Claude to build the app, or download it as markdown.
+      </p>
+      <pre
+        style={{
+          marginTop: theme.space.md,
+          maxHeight: '28rem',
+          overflow: 'auto',
+          background: theme.color.bg,
+          border: `1px solid ${theme.color.border}`,
+          borderRadius: theme.radius.md,
+          padding: theme.space.md,
+          fontSize: theme.type.scale[1],
+          lineHeight: 1.6,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          color: theme.color.text
+        }}
+      >
+        {prd.markdown}
+      </pre>
+    </section>
+  );
+}
