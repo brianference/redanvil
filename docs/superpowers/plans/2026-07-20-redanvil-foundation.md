@@ -588,7 +588,7 @@ git commit -m "feat: redanvil validate command and CLI entrypoint"
 ### Task 4: Author the rules, prompts, and design corpus
 
 **Files:**
-- Create: `rules/base-15.md`, `rules/per-app-pack.md`
+- Create: `rules/base-15.md`, `rules/per-app-pack.md`, `rules/loop-gate.md` (loop role gate + no-stall protocol; already authored)
 - Create: `rules/rubric/typing.md`, `security.md`, `frontend.md`, `testing.md`, `process.md`, `ci.md`, `hygiene.md`, `concision.md` (one file per lane in spec §7)
 - Create: `prompts/orchestrator.md`, `prompts/grok-coder.md`, `prompts/judge.md`, `prompts/environment/session-start.md`
 - Create: `design-system/tokens.json`, `design-system/checklist.md`
