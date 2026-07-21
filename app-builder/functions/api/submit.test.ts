@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { onRequestPost } from './submit';
+import type { D1PreparedStatement, Env } from '../lib/env';
+
+/** Minimal in-memory D1 mock that always succeeds. */
+function mockEnv(): Env {
+  const stmt: D1PreparedStatement = {
+    bind: () => stmt,
+    run: () => Promise.resolve({}),
+    all: () => Promise.resolve({ results: [] })
+  };
+  return { DB: { prepare: () => stmt } };
+}
 
 /**
  * Build a Request targeting /api/submit with an optional JSON body.
@@ -33,14 +44,14 @@ describe('POST /api/submit headers', () => {
       hasAuth: true,
       entities: 2
     });
-    const response = await onRequestPost({ request });
+    const response = await onRequestPost({ request, env: mockEnv() });
     expect(response.status).toBe(200);
     expectSecureHeaders(response, request.url);
   });
 
   it('includes nosniff and same-origin CORS on validation error', async () => {
     const request = submitRequest({ prompt: 'short' });
-    const response = await onRequestPost({ request });
+    const response = await onRequestPost({ request, env: mockEnv() });
     expect(response.status).toBe(400);
     expectSecureHeaders(response, request.url);
   });
@@ -51,7 +62,7 @@ describe('POST /api/submit headers', () => {
       headers: { 'content-type': 'application/json' },
       body: 'not-json'
     });
-    const response = await onRequestPost({ request });
+    const response = await onRequestPost({ request, env: mockEnv() });
     expect(response.status).toBe(400);
     expectSecureHeaders(response, request.url);
   });

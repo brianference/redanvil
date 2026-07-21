@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { buildJob } from '../../src/lib/job';
+import type { Env } from '../lib/env';
 
 /**
  * Secure JSON response headers: nosniff + explicit same-origin CORS (no wildcard).
@@ -41,11 +42,15 @@ const submitBodySchema = z.object({
 });
 
 /**
- * POST /api/submit — validate wizard answers and return a build job.
- * Does not commit to GitHub. Fail closed: invalid input → 400 { error }.
+ * POST /api/submit — validate wizard answers, queue the build job in D1, and
+ * return it. Fail closed: invalid input → 400; a storage failure → 500. The
+ * queued job is what the RedAnvil loop (or the dashboard) picks up.
  */
-export async function onRequestPost(context: { request: Request }): Promise<Response> {
-  const { request } = context;
+export async function onRequestPost(context: {
+  request: Request;
+  env: Env;
+}): Promise<Response> {
+  const { request, env } = context;
 
   let raw: unknown;
   try {
@@ -67,5 +72,17 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
     entities: String(parsed.data.entities)
   });
 
-  return jsonResponse(request, job, 200);
+  const id = crypto.randomUUID();
+  const createdAt = new Date().toISOString();
+  try {
+    await env.DB.prepare(
+      'INSERT INTO jobs (id, slug, prompt, target_type, threshold, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    )
+      .bind(id, job.slug, job.prompt, job.targetType, job.threshold, 'queued', createdAt)
+      .run();
+  } catch {
+    return jsonResponse(request, { error: 'Could not queue the build job' }, 500);
+  }
+
+  return jsonResponse(request, { ...job, id, status: 'queued', queued: true }, 200);
 }
