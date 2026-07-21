@@ -12,8 +12,13 @@ export interface GrokReply {
   usage?: Record<string, number>;
 }
 
-const DEFAULT_MODEL = 'grok-4.5-build';
+const DEFAULT_MODEL = 'grok-4.5';
 const DEFAULT_GROK_TIMEOUT_MS = 600_000;
+
+/** Grok requires --session-id to be a valid UUID (confirmed live 2026-07-21). */
+export function newSessionId(): string {
+  return crypto.randomUUID();
+}
 
 /** Builds the headless grok argv for a bounded, isolated build invocation. */
 export function grokArgs(cwd: string, prompt: string, opts: GrokOptions): string[] {
