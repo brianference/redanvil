@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { theme } from '../theme';
+import { AnvilMark } from './AnvilMark';
 
 export interface PageProps {
   /** Page title, rendered as the single h1. */
@@ -57,11 +58,10 @@ function Logo(): JSX.Element {
           height: 32,
           borderRadius: theme.radius.sm,
           background: theme.color.accent,
-          color: theme.color.text,
-          fontSize: theme.type.scale[3]
+          color: theme.color.text
         }}
       >
-        ⚒
+        <AnvilMark />
       </span>
       <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
         <strong style={{ color: theme.color.text, fontSize: theme.type.scale[2] }}>RedAnvil</strong>
