@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { theme } from '../theme';
-import { AnvilMark } from './AnvilMark';
 
 export interface PageProps {
   /** Page title, rendered as the single h1. */
@@ -48,14 +47,12 @@ const navLink = (active = false): CSSProperties => ({
 /** Site logo: an accent anvil mark plus the RedAnvil wordmark. */
 function Logo(): JSX.Element {
   return (
-    <a href={APP_URL} style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, textDecoration: 'none' }}>
-      <span aria-hidden="true" style={{ color: theme.color.accent, display: 'grid', placeItems: 'center' }}>
-        <AnvilMark size={30} />
-      </span>
-      <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-        <strong style={{ color: theme.color.text, fontSize: theme.type.scale[2] }}>RedAnvil</strong>
-        <span className="ra-logo-tag" style={{ color: theme.color.muted, fontSize: theme.type.scale[0] }}>App Builder</span>
-      </span>
+    <a href={APP_URL} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+      <img
+        src="/banner.png"
+        alt="RedAnvil — forge apps from a prompt"
+        style={{ height: 56, width: 'auto', display: 'block', borderRadius: theme.radius.sm }}
+      />
     </a>
   );
 }
@@ -74,7 +71,7 @@ export function Page({ title, subtitle, children }: PageProps): JSX.Element {
         }
       `}</style>
       <header style={bar}>
-        <div style={{ ...container, padding: `0 ${theme.space.md}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: theme.space.sm, height: 60 }}>
+        <div style={{ ...container, padding: `0 ${theme.space.md}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: theme.space.sm, height: 72 }}>
           <Logo />
           <nav className="ra-nav" aria-label="Primary" style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
             <a href={APP_URL} style={navLink(true)}>
