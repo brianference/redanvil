@@ -5,4 +5,4 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "app-builder-db"
-database_id = "REPLACE_WITH_D1_ID"
+database_id = "0142e968-7f0e-4458-ba91-b6195a0027c3"
