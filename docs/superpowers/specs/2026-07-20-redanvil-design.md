@@ -1,8 +1,9 @@
-# App-Forge design spec
+# RedAnvil design spec
 
 Date: 2026-07-20
 Status: approved (brainstorm), pending spec review
 Owner: Brian
+Repo: RedAnvil (name locked; npm `redanvil` free, no product collision found as of 2026-07-20)
 
 ## 1. Purpose
 
@@ -140,6 +141,6 @@ Phase 2: full rubric calibration (reference repos, stability sampling, per-rule 
 
 ## 16. Open items to confirm at spec review
 
-- Repo name (`app-forge` placeholder).
+- Repo name: **RedAnvil**, locked. npm package `redanvil` is free; no product or brand collision found on GitHub, npm, or the web (checked 2026-07-20). The `github.com/redanvil` handle belongs to an unrelated existing account, which does not affect a repo hosted under the owner's account.
 - Cloudflare deploy type (A git-connected vs B direct upload) confirmed against reality before first deploy.
 - Whether the dashboard is read-only in v1 or can also trigger/cancel runs.
