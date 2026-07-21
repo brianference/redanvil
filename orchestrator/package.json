@@ -1,0 +1,11 @@
+{
+  "name": "@redanvil/orchestrator",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "zod": "^3.23.0"
+  }
+}
