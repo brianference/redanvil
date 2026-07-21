@@ -1,0 +1,8 @@
+name = "app-builder"
+compatibility_date = "2026-07-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "app-builder-db"
+database_id = "REPLACE_WITH_D1_ID"
