@@ -32,8 +32,13 @@ export function runCommand(
   const { cwd, timeoutMs = DEFAULT_TIMEOUT_MS, env } = opts;
   const start = Date.now();
 
+  // On Windows, bare command names like `npx`/`npm`/`grok` resolve to `.cmd`
+  // shims that cannot be spawned without a shell; absolute paths (node.exe) can.
+  const useShell =
+    process.platform === 'win32' && !command.includes('\\') && !command.includes('/');
+
   return new Promise<RunResult>((resolve) => {
-    const child = spawn(command, args, { cwd, env, shell: false });
+    const child = spawn(command, args, { cwd, env, shell: useShell });
     let stdout = '';
     let stderr = '';
     let timedOut = false;

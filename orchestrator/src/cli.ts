@@ -1,13 +1,26 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
+import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateFile } from './commands/validate';
 import { rubricSummary } from './commands/rubric';
 import { scaffoldFromJobFile } from './commands/scaffold';
+import { gateApp } from './commands/gate';
+import type { Outcome } from './gate/score';
 
 async function main(): Promise<number> {
-  const { positionals } = parseArgs({ allowPositionals: true, strict: false });
+  const { positionals, values } = parseArgs({
+    allowPositionals: true,
+    strict: false,
+    options: {
+      threshold: { type: 'string' },
+      judge: { type: 'string' },
+      slug: { type: 'string' },
+      out: { type: 'string' },
+      deploy: { type: 'string' }
+    }
+  });
   const [command, arg] = positionals;
 
   if (command === 'validate') {
@@ -48,7 +61,44 @@ async function main(): Promise<number> {
     return 1;
   }
 
-  console.error('usage: redanvil <validate|rubric|scaffold> [args]');
+  if (command === 'gate') {
+    const dir = positionals[1];
+    if (!dir) {
+      console.error('usage: redanvil gate <appDir> [--threshold N] [--judge f.json] [--slug s --out r.json --deploy url]');
+      return 2;
+    }
+    const threshold = typeof values.threshold === 'string' ? Number(values.threshold) : 90;
+    const judge: Outcome[] =
+      typeof values.judge === 'string'
+        ? (JSON.parse(await readFile(values.judge, 'utf8')) as Outcome[])
+        : [];
+    const report = await gateApp(dir, undefined, judge);
+    const verdict = report.score >= threshold ? 'PASS' : 'FAIL';
+    console.log(
+      `gate: ${verdict} — score ${report.score}/100 (threshold ${threshold}), evaluated ${report.evaluated}/${report.total} rules`
+    );
+    for (const o of report.outcomes) console.log(`  ${o.passed ? 'PASS' : 'FAIL'}  ${o.ruleId}`);
+    if (report.blockersFailed.length > 0) {
+      console.log(`  blockers failed: ${report.blockersFailed.join(', ')}`);
+    }
+    if (typeof values.out === 'string' && typeof values.slug === 'string') {
+      const result = {
+        kind: 'results',
+        slug: values.slug,
+        finalScore: report.score,
+        threshold,
+        passed: report.score >= threshold,
+        iterations: [{ index: 1, score: report.score, blockers: report.blockersFailed }],
+        deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
+        finishedAt: new Date().toISOString()
+      };
+      await writeFile(values.out, JSON.stringify(result, null, 2) + '\n');
+      console.log(`wrote result to ${values.out}`);
+    }
+    return report.score >= threshold ? 0 : 1;
+  }
+
+  console.error('usage: redanvil <validate|rubric|scaffold|gate> [args]');
   return 2;
 }
 

@@ -26,10 +26,10 @@ describe('runCommand', () => {
     expect(r.durationMs).toBeLessThan(5000);
   });
 
-  it('resolves (not rejects) when the command does not exist', async () => {
+  it('resolves with a failure (never hangs or rejects) when the command does not exist', async () => {
     const r = await runCommand('definitely-not-a-real-binary-xyz', []);
-    expect(r.code).toBeNull();
-    expect(r.stderr).toContain('spawn error');
+    expect(r.timedOut).toBe(false);
+    expect(r.code).not.toBe(0); // failed, but resolved cleanly rather than hanging or throwing
   });
 });
 
