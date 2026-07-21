@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
 import { validateFile } from './commands/validate';
+import { rubricSummary } from './commands/rubric';
 
 async function main(): Promise<number> {
   const { positionals } = parseArgs({ allowPositionals: true, strict: false });
@@ -19,6 +20,11 @@ async function main(): Promise<number> {
     console.error('invalid payload:');
     for (const issue of r.issues) console.error(`  - ${issue}`);
     return 1;
+  }
+
+  if (command === 'rubric') {
+    console.log(rubricSummary());
+    return 0;
   }
 
   console.error('usage: redanvil <validate|rubric> [args]');
