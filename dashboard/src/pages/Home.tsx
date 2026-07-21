@@ -1,30 +1,40 @@
 import { Page } from '../components/Page';
 import { RunList } from '../components/RunList';
-import resultsJson from '../data/results.json';
-import { summarize, type Run } from '../lib/summary';
+import { summarize } from '../lib/summary';
+import { useRuns } from '../lib/useRuns';
 import { theme } from '../theme';
 
-/**
- * Normalize imported results JSON into the Run type used by the dashboard.
- * Extra fields from the file (e.g. kind) are ignored via structural typing.
- */
-function toRuns(raw: typeof resultsJson): readonly Run[] {
-  return raw.map((row) => ({
-    slug: row.slug,
-    finalScore: row.finalScore,
-    threshold: row.threshold,
-    passed: row.passed,
-    iterations: row.iterations,
-    deployUrl: row.deployUrl,
-    finishedAt: row.finishedAt
-  }));
-}
-
-/** Home page: summary header plus the read-only run list. */
+/** Home page: live summary header plus the read-only run list, with explicit states. */
 export function Home(): JSX.Element {
-  const runs = toRuns(resultsJson);
-  const stats = summarize(runs);
+  const state = useRuns();
 
+  if (state.status === 'loading') {
+    return (
+      <Page title="Runs">
+        <p style={{ color: theme.color.muted }}>Loading live runs…</p>
+      </Page>
+    );
+  }
+
+  if (state.status === 'error') {
+    return (
+      <Page title="Runs">
+        <p role="alert" style={{ color: theme.color.accent }}>
+          Could not load runs: {state.message}
+        </p>
+      </Page>
+    );
+  }
+
+  if (state.runs.length === 0) {
+    return (
+      <Page title="Runs">
+        <p style={{ color: theme.color.muted }}>No runs recorded yet.</p>
+      </Page>
+    );
+  }
+
+  const stats = summarize(state.runs);
   return (
     <Page title="Runs">
       <section
@@ -44,7 +54,7 @@ export function Home(): JSX.Element {
           <strong>{stats.avgScore.toFixed(1)}</strong>
         </p>
       </section>
-      <RunList runs={runs} />
+      <RunList runs={state.runs} />
     </Page>
   );
 }
