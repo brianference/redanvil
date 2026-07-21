@@ -1,0 +1,12 @@
+[
+  {
+    "kind": "results",
+    "slug": "app-builder",
+    "finalScore": 90,
+    "threshold": 90,
+    "passed": true,
+    "iterations": [{ "index": 1, "score": 90, "blockers": [] }],
+    "deployUrl": "https://redanvil.pages.dev",
+    "finishedAt": "2026-07-21T16:40:00.000Z"
+  }
+]
