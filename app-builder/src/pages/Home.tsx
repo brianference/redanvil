@@ -5,6 +5,7 @@ import { PrdResult } from '../components/PrdResult';
 import { generatePrd, type Prd } from '../lib/prd';
 import { estimate } from '../lib/estimate';
 import { countEntities, type WizardAnswers } from '../lib/job';
+import { theme } from '../theme';
 
 /** Home page: clarifying wizard that generates a downloadable PRD from the answers. */
 export function Home(): JSX.Element {
@@ -26,10 +27,25 @@ export function Home(): JSX.Element {
   }
 
   return (
-    <Page
-      title="Forge an app from a prompt"
-      subtitle="Describe what you want to build. RedAnvil asks a few questions, then generates a complete PRD you can download and hand to Claude."
-    >
+    <Page title="Forge an app from a prompt">
+      {prd === null && (
+        <img
+          src="/banner.png"
+          alt="RedAnvil — forge apps from a prompt"
+          style={{
+            width: '100%',
+            maxWidth: '46rem',
+            height: 'auto',
+            borderRadius: theme.radius.lg,
+            border: `1px solid ${theme.color.border}`,
+            display: 'block',
+            marginBottom: theme.space.xl
+          }}
+        />
+      )}
+      <p style={{ color: theme.color.muted, fontSize: theme.type.scale[3], maxWidth: '40rem', marginBottom: theme.space.xl }}>
+        Describe what you want to build. RedAnvil asks a few questions, then generates a complete PRD you can download and hand to Claude.
+      </p>
       {prd === null ? (
         <Wizard value={answers} onChange={setAnswers} onSubmit={handleSubmit} />
       ) : (

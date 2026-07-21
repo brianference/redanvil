@@ -49,19 +49,8 @@ const navLink = (active = false): CSSProperties => ({
 function Logo(): JSX.Element {
   return (
     <a href={APP_URL} style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, textDecoration: 'none' }}>
-      <span
-        aria-hidden="true"
-        style={{
-          display: 'grid',
-          placeItems: 'center',
-          width: 32,
-          height: 32,
-          borderRadius: theme.radius.sm,
-          background: theme.color.accent,
-          color: theme.color.text
-        }}
-      >
-        <AnvilMark />
+      <span aria-hidden="true" style={{ color: theme.color.accent, display: 'grid', placeItems: 'center' }}>
+        <AnvilMark size={30} />
       </span>
       <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
         <strong style={{ color: theme.color.text, fontSize: theme.type.scale[2] }}>RedAnvil</strong>
