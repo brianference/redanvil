@@ -55,8 +55,9 @@ export function countEntities(entities: string): number {
 }
 
 /**
- * Build a job object from wizard answers.
- * Slug is kebab-case derived from the prompt; targetType and threshold are fixed.
+ * Build a job object from wizard answers (pure).
+ * Slug is kebab-case from the prompt; targetType and threshold are fixed.
+ * Used by the client and by POST /api/submit.
  */
 export function buildJob(answers: WizardAnswers): BuildJob {
   const prompt = answers.prompt.trim();

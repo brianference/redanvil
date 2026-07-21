@@ -34,4 +34,17 @@ describe('buildJob', () => {
       threshold: 90
     });
   });
+
+  it('always uses threshold 90 and kebab-case slug from the prompt', () => {
+    const job = buildJob({
+      prompt: 'My Cool SaaS Dashboard!!!',
+      appType: 'dashboard',
+      hasAuth: false,
+      entities: 'Account'
+    });
+    expect(job.threshold).toBe(90);
+    expect(job.slug).toBe('my-cool-saas-dashboard');
+    expect(job.kind).toBe('job');
+    expect(job.targetType).toBe('fullstack-web');
+  });
 });

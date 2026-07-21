@@ -1,7 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent, type CSSProperties } from 'react';
 import { estimate } from '../lib/estimate';
 import {
-  buildJob,
   countEntities,
   type BuildJob,
   type WizardAnswers
@@ -11,13 +10,40 @@ import { theme } from '../theme';
 /** Minimum prompt length before submit is allowed (matches job schema). */
 const MIN_PROMPT_LENGTH = 8;
 
+/** Client-side state for the review-step submit request. */
+type SubmitUiState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'success'; job: BuildJob };
+
 export interface WizardProps {
   /** Controlled wizard answers. */
   value: WizardAnswers;
   /** Called when any answer field changes. */
   onChange: (next: WizardAnswers) => void;
-  /** Called with the built job when the user submits on step 3. */
+  /** Called with the server job only after a successful submit. */
   onSubmit: (job: BuildJob) => void;
+}
+
+/**
+ * Narrow unknown JSON to a BuildJob (fail closed on any mismatch).
+ */
+function parseBuildJob(payload: unknown): BuildJob | null {
+  if (typeof payload !== 'object' || payload === null) return null;
+  const record = payload as Record<string, unknown>;
+  if (record['kind'] !== 'job') return null;
+  if (typeof record['slug'] !== 'string') return null;
+  if (typeof record['prompt'] !== 'string') return null;
+  if (record['targetType'] !== 'fullstack-web') return null;
+  if (record['threshold'] !== 90) return null;
+  return {
+    kind: 'job',
+    slug: record['slug'],
+    prompt: record['prompt'],
+    targetType: 'fullstack-web',
+    threshold: 90
+  };
 }
 
 /**
@@ -27,6 +53,7 @@ export interface WizardProps {
  */
 export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element {
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [submitState, setSubmitState] = useState<SubmitUiState>({ status: 'idle' });
 
   const entityCount = countEntities(value.entities);
   /** One base feature for the app shell, plus one per named entity. */
@@ -38,7 +65,8 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
   });
 
   const promptReady = value.prompt.trim().length >= MIN_PROMPT_LENGTH;
-  const canSubmit = promptReady;
+  const isLoading = submitState.status === 'loading';
+  const canSubmit = promptReady && !isLoading;
 
   /**
    * Patch a single answer field into the controlled value.
@@ -63,12 +91,58 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
   }
 
   /**
-   * Build the job and hand it to the parent (fail closed if prompt is short).
+   * POST answers to /api/submit; show loading, error, or returned job.
+   * Fail closed: errors never render as success; onSubmit only on 200 job.
    */
-  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     if (!canSubmit) return;
-    onSubmit(buildJob(value));
+
+    setSubmitState({ status: 'loading' });
+
+    try {
+      const response = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          prompt: value.prompt.trim(),
+          appType: value.appType,
+          hasAuth: value.hasAuth,
+          entities: entityCount
+        })
+      });
+
+      let payload: unknown;
+      try {
+        payload = await response.json();
+      } catch {
+        setSubmitState({ status: 'error', message: 'Invalid response from server' });
+        return;
+      }
+
+      if (!response.ok) {
+        const message =
+          typeof payload === 'object' &&
+          payload !== null &&
+          'error' in payload &&
+          typeof (payload as { error: unknown }).error === 'string'
+            ? (payload as { error: string }).error
+            : `Submit failed (${response.status})`;
+        setSubmitState({ status: 'error', message });
+        return;
+      }
+
+      const job = parseBuildJob(payload);
+      if (job === null) {
+        setSubmitState({ status: 'error', message: 'Invalid job payload from server' });
+        return;
+      }
+
+      setSubmitState({ status: 'success', job });
+      onSubmit(job);
+    } catch {
+      setSubmitState({ status: 'error', message: 'Network error submitting job' });
+    }
   }
 
   const fieldStyle: CSSProperties = {
@@ -261,17 +335,50 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
               Confidence: {cost.confidence}
             </p>
           </div>
-          {!canSubmit && (
+          {!promptReady && (
             <p role="alert" style={{ color: theme.color.accent, fontSize: theme.type.scale[1] }}>
               Enter a prompt of at least {MIN_PROMPT_LENGTH} characters before submitting.
             </p>
+          )}
+          {submitState.status === 'loading' && (
+            <p role="status" aria-live="polite" style={{ marginTop: theme.space.md, fontSize: theme.type.scale[2] }}>
+              Submitting build job…
+            </p>
+          )}
+          {submitState.status === 'error' && (
+            <p role="alert" style={{ marginTop: theme.space.md, color: theme.color.accent, fontSize: theme.type.scale[2] }}>
+              {submitState.message}
+            </p>
+          )}
+          {submitState.status === 'success' && (
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                marginTop: theme.space.md,
+                padding: theme.space.md,
+                background: theme.color.bg,
+                borderRadius: theme.radius.sm,
+                border: `1px solid ${theme.color.border}`
+              }}
+            >
+              <p style={{ margin: 0, fontSize: theme.type.scale[2] }}>
+                Job ready: <strong>{submitState.job.slug}</strong>
+              </p>
+              <p style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[1], color: theme.color.muted }}>
+                {submitState.job.targetType} · threshold {submitState.job.threshold}
+              </p>
+              <p style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[1], color: theme.color.muted }}>
+                {submitState.job.prompt}
+              </p>
+            </div>
           )}
         </div>
       )}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
         {step > 1 && (
-          <button type="button" onClick={goBack} style={secondaryButtonStyle}>
+          <button type="button" onClick={goBack} style={secondaryButtonStyle} disabled={isLoading}>
             Back
           </button>
         )}
@@ -287,7 +394,7 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
         )}
         {step === 3 && (
           <button type="submit" disabled={!canSubmit} style={canSubmit ? buttonStyle : disabledButtonStyle}>
-            Submit
+            {isLoading ? 'Submitting…' : 'Submit'}
           </button>
         )}
       </div>
