@@ -1,8 +1,33 @@
 import { z } from 'zod';
 import { buildJob } from '../../src/lib/job';
 
-/** JSON content-type for all responses from this handler. */
-const JSON_HEADERS = { 'content-type': 'application/json' } as const;
+/**
+ * Secure JSON response headers: nosniff + explicit same-origin CORS (no wildcard).
+ */
+function responseHeaders(request: Request): Record<string, string> {
+  const origin = new URL(request.url).origin;
+  return {
+    'content-type': 'application/json',
+    'x-content-type-options': 'nosniff',
+    'access-control-allow-origin': origin,
+    'access-control-allow-methods': 'POST',
+    'access-control-allow-headers': 'content-type'
+  };
+}
+
+/**
+ * JSON error/success response with secure headers applied.
+ */
+function jsonResponse(
+  request: Request,
+  body: unknown,
+  status: number
+): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: responseHeaders(request)
+  });
+}
 
 /**
  * Submit body from the wizard: prompt and scope fields.
@@ -20,23 +45,19 @@ const submitBodySchema = z.object({
  * Does not commit to GitHub. Fail closed: invalid input → 400 { error }.
  */
 export async function onRequestPost(context: { request: Request }): Promise<Response> {
+  const { request } = context;
+
   let raw: unknown;
   try {
-    raw = await context.request.json();
+    raw = await request.json();
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-      status: 400,
-      headers: JSON_HEADERS
-    });
+    return jsonResponse(request, { error: 'Invalid JSON body' }, 400);
   }
 
   const parsed = submitBodySchema.safeParse(raw);
   if (!parsed.success) {
     const message = parsed.error.issues[0]?.message ?? 'Invalid input';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 400,
-      headers: JSON_HEADERS
-    });
+    return jsonResponse(request, { error: message }, 400);
   }
 
   const job = buildJob({
@@ -46,8 +67,5 @@ export async function onRequestPost(context: { request: Request }): Promise<Resp
     entities: String(parsed.data.entities)
   });
 
-  return new Response(JSON.stringify(job), {
-    status: 200,
-    headers: JSON_HEADERS
-  });
+  return jsonResponse(request, job, 200);
 }

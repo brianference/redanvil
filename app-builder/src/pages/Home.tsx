@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Page } from '../components/Page';
 import { Wizard, EMPTY_WIZARD_ANSWERS } from '../components/Wizard';
 import type { BuildJob, WizardAnswers } from '../lib/job';
+import { en } from '../i18n/en';
 import { theme } from '../theme';
 
 /** Home page: clarifying wizard that builds a job from user answers. */
@@ -17,11 +18,11 @@ export function Home(): JSX.Element {
   }
 
   return (
-    <Page title="Build an app">
+    <Page title={en.pages.home.title}>
       <Wizard value={answers} onChange={setAnswers} onSubmit={handleSubmit} />
       {submitted !== null && (
         <p role="status" style={{ marginTop: theme.space.md, color: theme.color.text }}>
-          Job ready: {submitted.slug} (threshold {submitted.threshold})
+          {en.pages.home.jobReady(submitted.slug, submitted.threshold)}
         </p>
       )}
     </Page>

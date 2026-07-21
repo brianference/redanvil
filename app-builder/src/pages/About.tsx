@@ -1,10 +1,11 @@
 import { Page } from '../components/Page';
+import { en } from '../i18n/en';
 
-/** About page. Copy belongs in the locale bundle; kept inline here only as a compliant seed. */
+/** About page. */
 export function About(): JSX.Element {
   return (
-    <Page title="About">
-      <p>About content.</p>
+    <Page title={en.pages.about.title}>
+      <p>{en.pages.about.body}</p>
     </Page>
   );
 }

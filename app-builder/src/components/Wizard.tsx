@@ -5,10 +5,14 @@ import {
   type BuildJob,
   type WizardAnswers
 } from '../lib/job';
+import { en } from '../i18n/en';
 import { theme } from '../theme';
 
 /** Minimum prompt length before submit is allowed (matches job schema). */
 const MIN_PROMPT_LENGTH = 8;
+
+/** Client fetch timeout for POST /api/submit (fail closed). */
+const SUBMIT_TIMEOUT_MS = 10_000;
 
 /** Client-side state for the review-step submit request. */
 type SubmitUiState =
@@ -67,6 +71,7 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
   const promptReady = value.prompt.trim().length >= MIN_PROMPT_LENGTH;
   const isLoading = submitState.status === 'loading';
   const canSubmit = promptReady && !isLoading;
+  const copy = en.wizard;
 
   /**
    * Patch a single answer field into the controlled value.
@@ -93,12 +98,18 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
   /**
    * POST answers to /api/submit; show loading, error, or returned job.
    * Fail closed: errors never render as success; onSubmit only on 200 job.
+   * Explicit AbortController timeout (~10s).
    */
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     if (!canSubmit) return;
 
     setSubmitState({ status: 'loading' });
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, SUBMIT_TIMEOUT_MS);
 
     try {
       const response = await fetch('/api/submit', {
@@ -109,14 +120,15 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
           appType: value.appType,
           hasAuth: value.hasAuth,
           entities: entityCount
-        })
+        }),
+        signal: controller.signal
       });
 
       let payload: unknown;
       try {
         payload = await response.json();
       } catch {
-        setSubmitState({ status: 'error', message: 'Invalid response from server' });
+        setSubmitState({ status: 'error', message: copy.errors.invalidResponse });
         return;
       }
 
@@ -127,21 +139,29 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
           'error' in payload &&
           typeof (payload as { error: unknown }).error === 'string'
             ? (payload as { error: string }).error
-            : `Submit failed (${response.status})`;
+            : copy.errors.submitFailed(response.status);
         setSubmitState({ status: 'error', message });
         return;
       }
 
       const job = parseBuildJob(payload);
       if (job === null) {
-        setSubmitState({ status: 'error', message: 'Invalid job payload from server' });
+        setSubmitState({ status: 'error', message: copy.errors.invalidJobPayload });
         return;
       }
 
       setSubmitState({ status: 'success', job });
       onSubmit(job);
-    } catch {
-      setSubmitState({ status: 'error', message: 'Network error submitting job' });
+    } catch (error: unknown) {
+      const timedOut =
+        (error instanceof DOMException && error.name === 'AbortError') ||
+        (error instanceof Error && error.name === 'AbortError');
+      setSubmitState({
+        status: 'error',
+        message: timedOut ? copy.errors.timeout : copy.errors.network
+      });
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
@@ -195,7 +215,7 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
   return (
     <form
       onSubmit={handleSubmit}
-      aria-label="App build wizard"
+      aria-label={copy.formLabel}
       style={{
         fontFamily: theme.type.family,
         color: theme.color.text,
@@ -207,13 +227,13 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
       }}
     >
       <p style={{ color: theme.color.muted, fontSize: theme.type.scale[1], margin: 0 }}>
-        Step {step} of 3
+        {copy.stepOf(step)}
       </p>
 
       {step === 1 && (
         <div>
           <label htmlFor="wizard-prompt" style={labelStyle}>
-            What app do you want?
+            {copy.promptLabel}
           </label>
           <textarea
             id="wizard-prompt"
@@ -229,7 +249,7 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
             aria-describedby="wizard-prompt-hint"
           />
           <p id="wizard-prompt-hint" style={{ ...labelStyle, marginTop: theme.space.xs }}>
-            Describe the product in a short sentence (at least {MIN_PROMPT_LENGTH} characters).
+            {copy.promptHint(MIN_PROMPT_LENGTH)}
           </p>
         </div>
       )}
@@ -237,7 +257,7 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
       {step === 2 && (
         <div>
           <label htmlFor="wizard-app-type" style={labelStyle}>
-            App type
+            {copy.appTypeLabel}
           </label>
           <input
             id="wizard-app-type"
@@ -247,7 +267,7 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
             onChange={(event: ChangeEvent<HTMLInputElement>) =>
               patch({ appType: event.target.value })
             }
-            placeholder="e.g. marketplace, dashboard, content site"
+            placeholder={copy.appTypePlaceholder}
             style={fieldStyle}
           />
 
@@ -270,11 +290,11 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
                 patch({ hasAuth: event.target.checked })
               }
             />
-            Authentication needed
+            {copy.authLabel}
           </label>
 
           <label htmlFor="wizard-entities" style={labelStyle}>
-            Main entities
+            {copy.entitiesLabel}
           </label>
           <input
             id="wizard-entities"
@@ -284,12 +304,12 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
             onChange={(event: ChangeEvent<HTMLInputElement>) =>
               patch({ entities: event.target.value })
             }
-            placeholder="e.g. User, Recipe, Favorite"
+            placeholder={copy.entitiesPlaceholder}
             style={fieldStyle}
             aria-describedby="wizard-entities-hint"
           />
           <p id="wizard-entities-hint" style={{ ...labelStyle, marginTop: theme.space.xs }}>
-            Comma-separated domain nouns the app will store or manage.
+            {copy.entitiesHint}
           </p>
         </div>
       )}
@@ -297,16 +317,17 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
       {step === 3 && (
         <div>
           <p style={{ marginTop: theme.space.md, fontSize: theme.type.scale[2] }}>
-            <strong>Prompt:</strong> {value.prompt.trim() || '(empty)'}
+            <strong>{copy.reviewPrompt}</strong> {value.prompt.trim() || copy.reviewEmpty}
           </p>
           <p style={{ fontSize: theme.type.scale[2] }}>
-            <strong>App type:</strong> {value.appType.trim() || '(not set)'}
+            <strong>{copy.reviewAppType}</strong> {value.appType.trim() || copy.reviewNotSet}
           </p>
           <p style={{ fontSize: theme.type.scale[2] }}>
-            <strong>Auth:</strong> {value.hasAuth ? 'Yes' : 'No'}
+            <strong>{copy.reviewAuth}</strong>{' '}
+            {value.hasAuth ? copy.reviewYes : copy.reviewNo}
           </p>
           <p style={{ fontSize: theme.type.scale[2] }}>
-            <strong>Entities:</strong> {value.entities.trim() || '(none)'}
+            <strong>{copy.reviewEntities}</strong> {value.entities.trim() || copy.reviewNone}
           </p>
           <div
             role="status"
@@ -320,10 +341,10 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
             }}
           >
             <p style={{ margin: 0, fontSize: theme.type.scale[2] }}>
-              Estimated iterations: {cost.iterations}
+              {copy.estimatedIterations(cost.iterations)}
             </p>
             <p style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[2] }}>
-              Estimated tokens: {cost.tokens.toLocaleString()}
+              {copy.estimatedTokens(cost.tokens.toLocaleString())}
             </p>
             <p
               style={{
@@ -332,17 +353,17 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
                 color: theme.color.muted
               }}
             >
-              Confidence: {cost.confidence}
+              {copy.confidence(cost.confidence)}
             </p>
           </div>
           {!promptReady && (
             <p role="alert" style={{ color: theme.color.accent, fontSize: theme.type.scale[1] }}>
-              Enter a prompt of at least {MIN_PROMPT_LENGTH} characters before submitting.
+              {copy.promptTooShort(MIN_PROMPT_LENGTH)}
             </p>
           )}
           {submitState.status === 'loading' && (
             <p role="status" aria-live="polite" style={{ marginTop: theme.space.md, fontSize: theme.type.scale[2] }}>
-              Submitting build job…
+              {copy.submittingStatus}
             </p>
           )}
           {submitState.status === 'error' && (
@@ -363,10 +384,10 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
               }}
             >
               <p style={{ margin: 0, fontSize: theme.type.scale[2] }}>
-                Job ready: <strong>{submitState.job.slug}</strong>
+                <strong>{copy.jobReadyHeading(submitState.job.slug)}</strong>
               </p>
               <p style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[1], color: theme.color.muted }}>
-                {submitState.job.targetType} · threshold {submitState.job.threshold}
+                {copy.jobMeta(submitState.job.targetType, submitState.job.threshold)}
               </p>
               <p style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[1], color: theme.color.muted }}>
                 {submitState.job.prompt}
@@ -379,7 +400,7 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
         {step > 1 && (
           <button type="button" onClick={goBack} style={secondaryButtonStyle} disabled={isLoading}>
-            Back
+            {copy.back}
           </button>
         )}
         {step < 3 && (
@@ -389,12 +410,12 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
             disabled={step === 1 && !promptReady}
             style={step === 1 && !promptReady ? disabledButtonStyle : buttonStyle}
           >
-            Next
+            {copy.next}
           </button>
         )}
         {step === 3 && (
           <button type="submit" disabled={!canSubmit} style={canSubmit ? buttonStyle : disabledButtonStyle}>
-            {isLoading ? 'Submitting…' : 'Submit'}
+            {isLoading ? copy.submitting : copy.submit}
           </button>
         )}
       </div>
