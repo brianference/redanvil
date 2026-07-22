@@ -24,3 +24,12 @@ nothing in the scored rubric decided them.
 - fe-visual-review-recorded (blocker, visual): a visual review was actually performed and recorded — screenshots at all three breakpoints in both themes, zero console errors. The meta-rule that cannot auto-pass.
 - fe-seo-og (major, visual): per-route title/description, Open Graph tags, a real OG image, sitemap, robots.txt, JSON-LD, semantic headings.
 - fe-cross-link (major, visual): sibling apps in one system cross-link in a shared header/footer so the product is navigable, not orphan pages.
+
+## Measurable mobile-ux rules (method `visual`, from mobile-design-rules R1–R12)
+
+Promoted from prose/checklist to scored rules so the mobile design system is measured, not just documented.
+
+- fe-touch-targets (blocker, visual): primary tap targets >= 44x44 pt / 48x48 dp; >= 8pt between adjacent controls (R1.1/R1.2).
+- fe-type-floor (blocker, visual): body text >= 16px on mobile for primary content (R3.1).
+- fe-noncolor-state (major, visual): state is never signalled by color alone; pair with icon/text/weight (R4.2).
+- fe-safe-areas (major, visual): respect top/bottom/landscape safe areas; content never trapped under fixed header/tab bar (R2.1/R2.2).

@@ -1,5 +1,6 @@
 import { runGate } from '../gate/runGate';
 import { loadRubric } from '../rubric/index';
+import { FAIL_CLOSED_METHODS } from '../rubric/types';
 import type { Check } from '../gate/checks';
 import type { Outcome } from '../gate/score';
 
@@ -43,8 +44,17 @@ export async function gateApp(
   const na = new Set(notApplicable);
   const rules = loadRubric().filter((r) => !na.has(r.id) && !na.has(r.lane));
 
+  // A blocker fails if it was evaluated-and-failed, OR if it is a fail-closed
+  // method (visual) with no recorded passing outcome. An unrecorded visual rule
+  // must never earn a silent pass — an ungated design requirement is a failure,
+  // not an omission (base rule 15). This is what forces a real visual review.
   const blockersFailed = rules
-    .filter((r) => r.severity === 'blocker' && byId.get(r.id) === false)
+    .filter((r) => {
+      if (r.severity !== 'blocker') return false;
+      const recorded = byId.get(r.id);
+      if (recorded === false) return true;
+      return FAIL_CLOSED_METHODS.has(r.method) && recorded !== true;
+    })
     .map((r) => r.id);
 
   const totalWeight = rules.reduce((s, r) => s + r.weight, 0) || 1;

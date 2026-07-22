@@ -55,6 +55,14 @@ export const RULES: Rule[] = [
   rule('fe-seo-og', 'frontend', 'major', 'visual'),
   rule('fe-cross-link', 'frontend', 'major', 'visual'),
 
+  // Measurable mobile-ux rules (from design-system/mobile-design-rules R1–R12),
+  // promoted from prose/checklist to scored visual rules so they are actually
+  // measured on the rendered page, not just described.
+  rule('fe-touch-targets', 'frontend', 'blocker', 'visual'), // R1.1 >=44px targets
+  rule('fe-type-floor', 'frontend', 'blocker', 'visual'), // R3.1 >=16px body
+  rule('fe-noncolor-state', 'frontend', 'major', 'visual'), // R4.2 state not by color alone
+  rule('fe-safe-areas', 'frontend', 'major', 'visual'), // R2.1/R2.2 safe areas, no chrome collision
+
   rule('ci-actionlint', 'ci', 'major', 'det'),
   rule('ci-sha-pinned', 'ci', 'blocker', 'det'),
   rule('ci-least-privilege', 'ci', 'blocker', 'det'),
