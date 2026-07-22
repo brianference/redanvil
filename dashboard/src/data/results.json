@@ -207,9 +207,21 @@
         "index": 4,
         "score": 100,
         "blockers": []
+      },
+      {
+        "index": 5,
+        "score": 0,
+        "blockers": [
+          "fe-theme-tokens-only"
+        ]
+      },
+      {
+        "index": 6,
+        "score": 100,
+        "blockers": []
       }
     ],
     "deployUrl": "https://redanvil.pages.dev",
-    "finishedAt": "2026-07-22T06:12:56.750Z"
+    "finishedAt": "2026-07-22T07:10:04.765Z"
   }
 ]

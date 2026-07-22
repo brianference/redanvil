@@ -193,7 +193,7 @@ const rootStyle: CSSProperties = {
 const threadStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: theme.space.md
+  gap: 14
 };
 
 const rowStyle: CSSProperties = {
@@ -234,12 +234,13 @@ const senderStyle: CSSProperties = {
 const bubbleStyle: CSSProperties = {
   padding: '12px 14px',
   borderRadius: 18,
-  borderBottomLeftRadius: theme.radius.sm,
+  borderBottomLeftRadius: 6,
   fontSize: theme.type.scale[2],
   lineHeight: 1.45,
   color: theme.color.text,
   background: theme.color.surfaceElevated,
   border: `1px solid ${theme.color.border}`,
+  boxShadow: theme.shadow.card,
   wordBreak: 'break-word',
   overflowWrap: 'anywhere' as const
 };
@@ -267,10 +268,12 @@ function trustPillStyle(online: boolean): CSSProperties {
     alignItems: 'center',
     gap: 6,
     minHeight: 32,
-    padding: `4px 10px`,
+    padding: '4px 12px',
     borderRadius: theme.radius.pill,
     border: `1px solid ${online ? theme.color.success : theme.color.border}`,
-    background: theme.color.surface,
+    background: online
+      ? `color-mix(in srgb, ${theme.color.successSoft} 70%, ${theme.color.surface})`
+      : theme.color.surface,
     fontSize: theme.type.scale[0],
     fontWeight: 600,
     color: online ? theme.color.text : theme.color.muted
@@ -281,7 +284,7 @@ const chipsWrapStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   flexWrap: 'nowrap',
-  gap: theme.space.sm,
+  gap: 10,
   width: '100%',
   maxWidth: '100%'
 };
@@ -295,18 +298,22 @@ const exampleChipStyle: CSSProperties = {
   flexDirection: 'column',
   alignItems: 'flex-start',
   justifyContent: 'flex-start',
-  gap: theme.space.xs,
+  gap: 4,
   width: '100%',
   maxWidth: '100%',
-  borderRadius: theme.radius.md,
-  whiteSpace: 'normal' as const
+  borderRadius: 14,
+  padding: '12px 14px',
+  minHeight: theme.touch,
+  whiteSpace: 'normal' as const,
+  boxShadow: theme.shadow.card
 };
 
 const exampleTitleStyle: CSSProperties = {
   display: 'block',
-  fontWeight: 600,
+  fontWeight: 650,
   color: theme.color.text,
-  lineHeight: 1.3
+  lineHeight: 1.3,
+  fontSize: 15
 };
 
 const exampleDescStyle: CSSProperties = {
@@ -314,6 +321,7 @@ const exampleDescStyle: CSSProperties = {
   fontWeight: 400,
   color: theme.color.muted,
   lineHeight: 1.4,
+  fontSize: 13,
   wordBreak: 'break-word',
   overflowWrap: 'anywhere' as const
 };
@@ -325,22 +333,22 @@ const exampleDescStyle: CSSProperties = {
 const composerShellStyle: CSSProperties = {
   position: 'relative',
   zIndex: 1,
-  marginTop: theme.space.lg,
+  marginTop: theme.space.md,
   paddingTop: theme.space.md,
   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
   borderTop: `1px solid ${theme.color.border}`,
-  background: theme.color.bg
+  background: `color-mix(in srgb, ${theme.color.bg} 92%, transparent)`
 };
 
 const composerFormStyle: CSSProperties = {
   background: theme.color.surface,
   border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.lg,
-  padding: theme.space.md,
+  borderRadius: 16,
+  padding: 14,
   boxShadow: theme.shadow.composer,
   display: 'flex',
   flexDirection: 'column',
-  gap: theme.space.sm
+  gap: 10
 };
 
 const composerFooterStyle: CSSProperties = {

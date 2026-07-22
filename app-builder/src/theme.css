@@ -13,6 +13,8 @@
   --accent: #e5484d;
   --accent-soft: color-mix(in srgb, #e5484d 16%, transparent);
   --border: #2a2a36;
+  --scrim: rgba(0, 0, 0, 0.55);
+  --shadow: rgba(0, 0, 0, 0.25);
   --border-strong: #3a3a48;
   --chip-bg: #1c1c26;
   --success: #30a46c;
@@ -41,6 +43,8 @@
   --accent: #d33b40;
   --accent-soft: color-mix(in srgb, #d33b40 12%, transparent);
   --border: #e2e2e8;
+  --scrim: rgba(0, 0, 0, 0.45);
+  --shadow: rgba(0, 0, 0, 0.18);
   --border-strong: #c8c8d0;
   --chip-bg: #ffffff;
   --success: #218358;

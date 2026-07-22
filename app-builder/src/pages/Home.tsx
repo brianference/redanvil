@@ -101,7 +101,10 @@ export function Home(): JSX.Element {
     <Page title={pageTitle} subtitle={pageSubtitle}>
       {view === 'chat' && (
         <>
+          {/* Theme-aware hero: dark banner on dark, transparent light lockup on light
+              (no black box on light pages). Classes own visibility — no inline display. */}
           <img
+            className="ra-logo-dark"
             src="/banner.webp"
             alt={copy.bannerAlt}
             loading="eager"
@@ -111,7 +114,18 @@ export function Home(): JSX.Element {
               height: 'auto',
               borderRadius: theme.radius.lg,
               border: `1px solid ${theme.color.border}`,
-              display: 'block',
+              marginBottom: theme.space.xl
+            }}
+          />
+          <img
+            className="ra-logo-light"
+            src="/logo-light.png"
+            alt={copy.bannerAlt}
+            loading="eager"
+            style={{
+              width: '100%',
+              maxWidth: '26rem',
+              height: 'auto',
               marginBottom: theme.space.xl
             }}
           />

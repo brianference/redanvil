@@ -27,7 +27,7 @@ function sampleRun(overrides: Partial<Run> = {}): Run {
 }
 
 /**
- * Render RunList inside a MemoryRouter (required for Link).
+ * Render RunList inside a MemoryRouter (required for Link / useNavigate).
  */
 function renderList(runs: readonly Run[]): string {
   return renderToStaticMarkup(
@@ -41,11 +41,15 @@ describe('RunList', () => {
     expect(html).toContain(en.runList.empty);
   });
 
-  it('renders coverage, iteration count, detail link, and deploy link', () => {
+  it('renders card rows with coverage, iterations, detail link, and deploy link', () => {
     const html = renderList([sampleRun()]);
-    expect(html).toContain(en.runList.coverage);
+    // Cards, not a table
+    expect(html).not.toContain('<table');
+    expect(html).toContain('<article');
+    expect(html).toContain(en.pages.home.recentHeading);
     expect(html).toContain(en.runList.coverageValue(41, 41));
-    expect(html).toContain('>2<');
+    expect(html).toContain(en.runList.iterationsValue(2));
+    expect(html).toContain('100');
     expect(html).toContain('href="/run/app-builder"');
     expect(html).toContain(en.runList.openDeploy);
     expect(html).toContain('href="https://redanvil.pages.dev"');
@@ -54,12 +58,12 @@ describe('RunList', () => {
     expect(html).toContain('✓');
   });
 
-  it('shows fail badge and none when deploy is missing', () => {
+  it('shows fail badge with ! and none when deploy is missing', () => {
     const html = renderList([
       sampleRun({ passed: false, finalScore: 70, deployUrl: null, evaluated: 10, total: 41 })
     ]);
     expect(html).toContain(en.status.fail);
-    expect(html).toContain('✗');
+    expect(html).toContain('!');
     expect(html).toContain(en.runList.none);
     expect(html).toContain(en.runList.coverageValue(10, 41));
   });

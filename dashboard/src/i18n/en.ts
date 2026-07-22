@@ -12,8 +12,10 @@ export const en = {
     logoAlt: 'RedAnvil — forge apps from a prompt',
     navBuilder: 'Builder',
     navDashboard: 'Dashboard',
-    navGitHub: 'GitHub',
+    navRuns: 'Runs',
     navAbout: 'About',
+    navContact: 'Contact',
+    navGitHub: 'GitHub',
     themeToLight: 'Switch to light theme',
     themeToDark: 'Switch to dark theme',
     menuOpen: 'Open menu',
@@ -37,9 +39,13 @@ export const en = {
       loading: 'Loading live runs…',
       error: (message: string): string => `Could not load runs: ${message}`,
       empty: 'No runs recorded yet.',
-      summaryLabel: 'Run summary',
-      summaryLine: (total: number, passed: number, avg: string): string =>
-        `${total} total · ${passed} passed · avg score ${avg}`
+      summaryLabel: 'Build stats',
+      kpiTotal: 'Total runs',
+      kpiPassed: 'Passed',
+      kpiAvgScore: 'Avg score',
+      recentHeading: 'Recent builds',
+      recentMeta: (count: number): string =>
+        count === 1 ? '1 shown' : `${count} shown`
     },
     about: {
       title: 'About',
@@ -129,15 +135,28 @@ export const en = {
   runList: {
     empty: 'No runs yet.',
     caption: 'Build runs',
+    listAria: 'Recent builds',
     slug: 'Slug',
     score: 'Score',
+    scoreValue: (score: number): string => String(score),
     coverage: 'Coverage',
     coverageValue: (evaluated: number, total: number): string =>
       `${evaluated}/${total} rules`,
     iterations: 'Iterations',
+    iterationsValue: (count: number): string =>
+      count === 1 ? '1 iteration' : `${count} iterations`,
     deploy: 'Deploy',
     openDeploy: 'Open deploy',
-    none: 'None'
+    none: 'None',
+    metaSep: ' · '
+  },
+  relativeTime: {
+    justNow: 'just now',
+    minutes: (n: number): string => `${n}m ago`,
+    hours: (n: number): string => `${n}h ago`,
+    days: (n: number): string => `${n}d ago`,
+    months: (n: number): string => `${n}mo ago`,
+    years: (n: number): string => `${n}y ago`
   },
   runDetail: {
     loading: 'Loading run detail…',

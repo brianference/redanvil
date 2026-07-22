@@ -16,12 +16,15 @@ export const en = {
     navDashboard: 'Dashboard',
     navGitHub: 'GitHub',
     navSaved: 'Saved',
+    navAbout: 'About',
+    navContact: 'Contact',
     themeToLight: 'Switch to light theme',
     themeToDark: 'Switch to dark theme',
     menuOpen: 'Open menu',
     menuClose: 'Close menu',
     breadcrumbHome: 'Home',
-    breadcrumbNav: 'Breadcrumb'
+    breadcrumbNav: 'Breadcrumb',
+    sidebarLabel: 'Navigate'
   },
   pages: {
     home: {
@@ -43,11 +46,17 @@ export const en = {
       emptyCta: 'Start a new build',
       listLabel: 'Recent builds',
       sectionRecent: 'Recent builds',
-      itemMeta: (slug: string, createdAt: string): string => `${slug} · ${createdAt}`,
+      itemMeta: (slug: string): string => `PRD · ${slug}`,
       statusReady: 'Ready',
       statusLabel: 'PRD ready',
       newBuild: 'New build',
-      countMeta: (n: number): string => (n === 1 ? '1 build' : `${n} builds`)
+      countMeta: (n: number): string => (n === 1 ? '1 shown' : `${n} shown`),
+      kpiLabel: 'Build stats',
+      kpiTotal: 'All time',
+      kpiSaved: 'Saved',
+      kpiThisWeek: 'This week',
+      openAction: 'Open',
+      openAria: (title: string): string => `Open ${title}`
     },
     savedPrd: {
       title: 'Saved PRD',
@@ -200,13 +209,16 @@ export const en = {
     title: 'Start from a template',
     subtitle: 'Pick an app archetype, or describe your own below.',
     gridLabel: 'App type templates',
-    orDescribe: 'Or describe your own',
+    sectionLabel: 'App types',
+    sectionCount: (n: number): string => (n === 1 ? '1 template' : `${n} templates`),
+    orDescribe: 'or describe your own',
     composerLabel: 'Your app idea',
     composerPlaceholder: 'e.g. A booking system for independent bike shops with inventory and SMS reminders',
     continue: 'Continue to questions',
     backToChat: 'Back to chat',
     selected: 'Selected',
     emptyHint: 'Pick a template or write your own description to continue.',
+    emptyTitle: 'No template selected',
     examplesLabel: 'Example prompts',
     items: [
       {
@@ -250,6 +262,8 @@ export const en = {
     formLabel: 'App build wizard',
     stepOf: (step: number): string => `Step ${step} of 3`,
     stepTitles: ['App idea', 'Scope', 'Review'] as const,
+    comingUp: 'Coming up',
+    stepDone: 'Done',
     questionKicker: (n: number): string => `Question ${n}`,
     promptLabel: 'What app do you want?',
     promptHint: (minLength: number): string =>

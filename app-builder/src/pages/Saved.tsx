@@ -1,18 +1,16 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 import { buttonStyle, errorBannerStyle, statusBannerStyle } from '../components/ui';
 import { messageFromPayload } from '../lib/apiError';
-
-/** One row from GET /api/prds (metadata only). */
-interface SavedPrdListItem {
-  id: string;
-  slug: string;
-  title: string;
-  created_at: string;
-}
+import {
+  countThisWeek,
+  formatRelativeTime,
+  parseSavedList,
+  type SavedPrdListItem
+} from '../lib/savedList';
 
 type ListState =
   | { status: 'loading' }
@@ -23,44 +21,9 @@ type ListState =
 const FETCH_TIMEOUT_MS = 10_000;
 
 /**
- * Narrow unknown JSON to a SavedPrdListItem array, or null if any row is invalid.
- */
-function parseList(payload: unknown): SavedPrdListItem[] | null {
-  if (!Array.isArray(payload)) return null;
-  const items: SavedPrdListItem[] = [];
-  for (const row of payload) {
-    if (
-      typeof row !== 'object' ||
-      row === null ||
-      typeof (row as { id?: unknown }).id !== 'string' ||
-      typeof (row as { slug?: unknown }).slug !== 'string' ||
-      typeof (row as { title?: unknown }).title !== 'string' ||
-      typeof (row as { created_at?: unknown }).created_at !== 'string'
-    ) {
-      return null;
-    }
-    items.push({
-      id: (row as { id: string }).id,
-      slug: (row as { slug: string }).slug,
-      title: (row as { title: string }).title,
-      created_at: (row as { created_at: string }).created_at
-    });
-  }
-  return items;
-}
-
-/**
- * Format an ISO date for display; fall back to the raw string if unparseable.
- */
-function formatCreatedAt(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString();
-}
-
-/**
- * Saved builds dashboard (Grok v5) with glanceable recent-build rows
- * (Claude variation 5). Loading, empty, and error states with recovery.
+ * Saved builds dashboard (Grok v5): glanceable KPI strip + recent-build cards
+ * with status icon, badge, title, meta, timestamp, and open action.
+ * Real /api/prds data; loading / empty / error with recovery.
  */
 export function Saved(): JSX.Element {
   const copy = en.pages.saved;
@@ -93,7 +56,7 @@ export function Saved(): JSX.Element {
           return;
         }
 
-        const items = parseList(payload);
+        const items = parseSavedList(payload);
         if (items === null) {
           setState({ status: 'error', message: copy.error });
           return;
@@ -117,10 +80,21 @@ export function Saved(): JSX.Element {
     };
   }, [copy.error, reloadKey]);
 
+  const kpis = useMemo(() => {
+    if (state.status !== 'success') return null;
+    const total = state.items.length;
+    return {
+      thisWeek: countThisWeek(state.items),
+      total,
+      saved: total
+    };
+  }, [state]);
+
   return (
     <Page title={copy.title} subtitle={copy.subtitle} breadcrumb={copy.title}>
       <div style={toolbarStyle}>
         <Link to="/" style={buttonStyle(true)}>
+          <span aria-hidden="true">+</span>
           {copy.newBuild}
         </Link>
       </div>
@@ -162,32 +136,49 @@ export function Saved(): JSX.Element {
         </div>
       )}
 
-      {state.status === 'success' && (
+      {state.status === 'success' && kpis !== null && (
         <>
+          <div style={kpiStripStyle} role="group" aria-label={copy.kpiLabel}>
+            <KpiCard value={kpis.thisWeek} label={copy.kpiThisWeek} />
+            <KpiCard value={kpis.total} label={copy.kpiTotal} />
+            <KpiCard value={kpis.saved} label={copy.kpiSaved} />
+          </div>
+
           <div style={sectionHeadStyle}>
             <h2 style={sectionTitleStyle}>{copy.sectionRecent}</h2>
             <span style={sectionMetaStyle}>{copy.countMeta(state.items.length)}</span>
           </div>
+
           <ul style={listStyle} aria-label={copy.listLabel}>
             {state.items.map((item) => (
               <li key={item.id}>
-                <Link to={`/prd/${item.id}`} style={buildRowStyle}>
+                <div style={buildCardStyle}>
                   <span style={buildIconStyle} aria-hidden="true">
                     ✓
                   </span>
-                  <span style={buildBodyStyle}>
-                    <span style={buildTitleStyle}>{item.title}</span>
-                    <span style={buildMetaStyle}>
+                  <div style={buildBodyStyle}>
+                    <Link to={`/prd/${item.id}`} style={buildTitleLinkStyle}>
+                      {item.title}
+                    </Link>
+                    <div style={buildMetaStyle}>
                       <span style={badgeStyle}>
                         <span aria-hidden="true">● </span>
                         {copy.statusReady}
                       </span>
-                      <span>
-                        {copy.itemMeta(item.slug, formatCreatedAt(item.created_at))}
-                      </span>
-                    </span>
-                  </span>
-                </Link>
+                      <span style={metaEllipsisStyle}>{copy.itemMeta(item.slug)}</span>
+                    </div>
+                  </div>
+                  <div style={buildActionsStyle}>
+                    <span style={buildTimeStyle}>{formatRelativeTime(item.created_at)}</span>
+                    <Link
+                      to={`/prd/${item.id}`}
+                      style={rowActionStyle}
+                      aria-label={copy.openAria(item.title)}
+                    >
+                      {copy.openAction}
+                    </Link>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
@@ -197,11 +188,23 @@ export function Saved(): JSX.Element {
   );
 }
 
+/**
+ * One glanceable KPI tile (value + uppercase label).
+ */
+function KpiCard({ value, label }: { value: number; label: string }): JSX.Element {
+  return (
+    <div style={kpiStyle}>
+      <div style={kpiValStyle}>{value}</div>
+      <div style={kpiLblStyle}>{label}</div>
+    </div>
+  );
+}
+
 const toolbarStyle: CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
   gap: theme.space.sm,
-  marginBottom: theme.space.lg
+  marginBottom: theme.space.md
 };
 
 const emptyCardStyle: CSSProperties = {
@@ -213,12 +216,52 @@ const emptyCardStyle: CSSProperties = {
   maxWidth: '28rem'
 };
 
+const kpiStripStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+  gap: theme.space.sm,
+  marginBottom: theme.space.md,
+  maxWidth: '40rem'
+};
+
+const kpiStyle: CSSProperties = {
+  background: theme.color.surface,
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: 10,
+  padding: '10px 10px 9px',
+  boxShadow: theme.shadow.card,
+  minWidth: 0
+};
+
+const kpiValStyle: CSSProperties = {
+  fontSize: theme.type.scale[3],
+  fontWeight: 750,
+  letterSpacing: '-0.03em',
+  lineHeight: 1.1,
+  color: theme.color.text,
+  fontVariantNumeric: 'tabular-nums'
+};
+
+const kpiLblStyle: CSSProperties = {
+  fontSize: 11,
+  fontWeight: 600,
+  color: theme.color.muted,
+  marginTop: 3,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis'
+};
+
 const sectionHeadStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: theme.space.sm,
-  marginBottom: theme.space.sm
+  marginBottom: theme.space.sm,
+  minHeight: 32,
+  maxWidth: '40rem'
 };
 
 const sectionTitleStyle: CSSProperties = {
@@ -233,7 +276,8 @@ const sectionTitleStyle: CSSProperties = {
 const sectionMetaStyle: CSSProperties = {
   fontSize: theme.type.scale[0],
   color: theme.color.muted,
-  fontWeight: 500
+  fontWeight: 500,
+  fontVariantNumeric: 'tabular-nums'
 };
 
 const listStyle: CSSProperties = {
@@ -245,34 +289,32 @@ const listStyle: CSSProperties = {
   maxWidth: '40rem'
 };
 
-const buildRowStyle: CSSProperties = {
+const buildCardStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: theme.space.sm,
+  gap: 10,
   minHeight: 56,
-  padding: `${theme.space.sm}px ${theme.space.md}px`,
+  padding: '10px 12px',
   background: theme.color.surface,
   border: `1px solid ${theme.color.border}`,
   borderRadius: theme.radius.md,
   boxShadow: theme.shadow.card,
-  textDecoration: 'none',
-  color: theme.color.text,
   boxSizing: 'border-box'
 };
 
 const buildIconStyle: CSSProperties = {
   width: 36,
   height: 36,
-  borderRadius: theme.radius.sm,
+  borderRadius: 9,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   flexShrink: 0,
-  fontSize: theme.type.scale[2],
+  fontSize: 15,
   fontWeight: 700,
   background: theme.color.successSoft,
   color: theme.color.success,
-  border: `1px solid ${theme.color.border}`
+  border: `1px solid color-mix(in srgb, ${theme.color.success} 30%, ${theme.color.border})`
 };
 
 const buildBodyStyle: CSSProperties = {
@@ -283,36 +325,77 @@ const buildBodyStyle: CSSProperties = {
   gap: 2
 };
 
-const buildTitleStyle: CSSProperties = {
-  fontSize: theme.type.scale[2],
+const buildTitleLinkStyle: CSSProperties = {
+  fontSize: 15,
   fontWeight: 650,
   lineHeight: 1.25,
   whiteSpace: 'nowrap',
   overflow: 'hidden',
-  textOverflow: 'ellipsis'
+  textOverflow: 'ellipsis',
+  color: theme.color.text,
+  textDecoration: 'none'
 };
 
 const buildMetaStyle: CSSProperties = {
-  fontSize: theme.type.scale[0],
+  fontSize: 12,
   color: theme.color.muted,
   display: 'flex',
   flexWrap: 'wrap',
   alignItems: 'center',
-  gap: theme.space.sm,
+  gap: 6,
+  minWidth: 0
+};
+
+const metaEllipsisStyle: CSSProperties = {
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
   minWidth: 0
 };
 
 const badgeStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  fontSize: theme.type.scale[0],
+  fontSize: 11,
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.03em',
-  padding: `2px 7px`,
+  padding: '2px 7px',
   borderRadius: theme.radius.pill,
   background: theme.color.successSoft,
   color: theme.color.success,
+  flexShrink: 0,
+  lineHeight: 1.3
+};
+
+const buildActionsStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-end',
+  gap: 4,
   flexShrink: 0
 };
 
+const buildTimeStyle: CSSProperties = {
+  fontSize: 11,
+  color: theme.color.muted,
+  fontVariantNumeric: 'tabular-nums'
+};
+
+const rowActionStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: 32,
+  minWidth: theme.touch,
+  padding: '0 8px',
+  fontSize: 12,
+  fontWeight: 650,
+  fontFamily: theme.type.family,
+  borderRadius: 7,
+  border: `1px solid ${theme.color.border}`,
+  background: theme.color.bg,
+  color: theme.color.text,
+  textDecoration: 'none',
+  boxSizing: 'border-box'
+};

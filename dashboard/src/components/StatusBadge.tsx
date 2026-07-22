@@ -12,10 +12,11 @@ export interface StatusBadgeProps {
 
 /**
  * Pass/fail marker using icon + text (not color alone) for non-color state.
+ * Pass uses ✓; Fail uses ! (matches approved run-list mockup).
  */
 export function StatusBadge({ passed, score, threshold }: StatusBadgeProps): JSX.Element {
   const label = passed ? en.status.pass : en.status.fail;
-  const icon = passed ? '✓' : '✗';
+  const icon = passed ? '✓' : '!';
   const aria =
     score !== undefined && threshold !== undefined
       ? en.status.badgeAria(label, score, threshold)
@@ -26,15 +27,18 @@ export function StatusBadge({ passed, score, threshold }: StatusBadgeProps): JSX
     alignItems: 'center',
     gap: theme.space.xs,
     padding: `${theme.space.xs}px ${theme.space.sm}px`,
-    borderRadius: theme.radius.sm,
+    borderRadius: 999,
     fontSize: theme.type.scale[0],
-    fontWeight: 600,
-    color: theme.color.text,
-    background: theme.color.surface,
-    border: `1px solid ${theme.color.border}`,
+    fontWeight: 700,
+    letterSpacing: '0.03em',
+    textTransform: 'uppercase',
+    color: passed ? theme.color.success : theme.color.error,
+    background: passed ? theme.color.successSoft : theme.color.errorSoft,
+    border: 'none',
     fontFamily: theme.type.family,
-    lineHeight: 1.2,
-    whiteSpace: 'nowrap'
+    lineHeight: 1.3,
+    whiteSpace: 'nowrap',
+    flexShrink: 0
   };
 
   return (

@@ -79,6 +79,8 @@ describe('en locale bundle', () => {
     expect(locale.app.breadcrumbNav).toBe('Breadcrumb');
     expect(locale.app.navBuilder).toBe('Builder');
     expect(locale.app.navDashboard).toBe('Dashboard');
+    expect(locale.app.navRuns).toBe('Runs');
+    expect(locale.app.navContact).toBe('Contact');
     expect(locale.app.navGitHub).toBe('GitHub');
   });
 
@@ -93,12 +95,17 @@ describe('en locale bundle', () => {
   it('exposes run list and run detail copy', () => {
     expect(en.runList.coverage).toBe('Coverage');
     expect(en.runList.coverageValue(41, 41)).toBe('41/41 rules');
+    expect(en.runList.iterationsValue(2)).toBe('2 iterations');
     expect(en.status.pass).toBe('Pass');
     expect(en.status.fail).toBe('Fail');
+    expect(en.pages.home.kpiTotal.length).toBeGreaterThan(2);
+    expect(en.pages.home.kpiPassed.length).toBeGreaterThan(2);
+    expect(en.pages.home.kpiAvgScore.length).toBeGreaterThan(2);
     expect(en.runDetail.iterationsHeading.length).toBeGreaterThan(2);
     expect(en.runDetail.rulesHeading.length).toBeGreaterThan(2);
     expect(en.runDetail.laneHeading('u')).toContain('u');
   });
+
 
   it('gives each content page a non-empty intro and at least one section', () => {
     const contentPages = [en.pages.about, en.pages.contact, en.pages.terms, en.pages.privacy] as const;

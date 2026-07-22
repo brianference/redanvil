@@ -188,7 +188,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
     >
       <Stepper step={step} />
 
-      <section style={cardStyle(theme.space.lg)} aria-labelledby={`wizard-q-${step}`}>
+      <section style={{ ...cardStyle(theme.space.lg), borderRadius: 16, padding: '20px 18px' }} aria-labelledby={`wizard-q-${step}`}>
         <p style={kickerStyle}>{copy.questionKicker(step)}</p>
 
         {step === 1 && (
@@ -412,6 +412,8 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
         )}
       </section>
 
+      <ComingUp step={step} />
+
       <div style={stickyBarStyle()}>
         {step > 1 && (
           <button type="button" onClick={goBack} style={buttonStyle(false, isLoading)} disabled={isLoading}>
@@ -457,7 +459,7 @@ function Stepper({ step }: { step: 1 | 2 | 3 }): JSX.Element {
             key={seg}
             style={{
               flex: 1,
-              height: theme.space.xs + 2,
+              height: 6,
               borderRadius: theme.radius.pill,
               background:
                 seg <= step ? theme.color.progressFill : theme.color.progressTrack,
@@ -467,6 +469,62 @@ function Stepper({ step }: { step: 1 | 2 | 3 }): JSX.Element {
           />
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Grok v2 pillbox step list — numbered tiles for each wizard step.
+ * Current step uses accent border + filled number (not color alone).
+ */
+function ComingUp({ step }: { step: 1 | 2 | 3 }): JSX.Element {
+  const copy = en.wizard;
+  return (
+    <div style={upcomingStyle} aria-label={copy.comingUp}>
+      <h2 style={upcomingHeadingStyle}>{copy.comingUp}</h2>
+      <ol style={upcomingListStyle}>
+        {copy.stepTitles.map((title, index) => {
+          const n = (index + 1) as 1 | 2 | 3;
+          const isCurrent = n === step;
+          const isDone = n < step;
+          return (
+            <li
+              key={title}
+              style={{
+                ...upcomingItemStyle,
+                borderColor: isCurrent ? theme.color.accent : theme.color.border,
+                color: isCurrent || isDone ? theme.color.text : theme.color.muted
+              }}
+              aria-current={isCurrent ? 'step' : undefined}
+            >
+              <span
+                style={{
+                  ...upcomingNumStyle,
+                  background: isCurrent
+                    ? theme.color.accent
+                    : isDone
+                      ? theme.color.successSoft
+                      : theme.color.chipBg,
+                  color: isCurrent
+                    ? theme.color.textOnAccent
+                    : isDone
+                      ? theme.color.success
+                      : theme.color.muted
+                }}
+                aria-hidden="true"
+              >
+                {isDone ? '✓' : n}
+              </span>
+              <span style={{ fontWeight: isCurrent ? 650 : 500 }}>
+                {title}
+                {isDone ? (
+                  <span style={{ color: theme.color.muted, fontWeight: 500 }}> · {copy.stepDone}</span>
+                ) : null}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }
@@ -526,13 +584,13 @@ const stepperMetaStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  gap: theme.space.sm,
-  marginBottom: theme.space.sm,
+  gap: 12,
+  marginBottom: 10,
   flexWrap: 'wrap'
 };
 
 const stepLabelStyle: CSSProperties = {
-  fontSize: theme.type.scale[1],
+  fontSize: 13,
   fontWeight: 650,
   letterSpacing: '0.02em',
   color: theme.color.muted,
@@ -540,7 +598,7 @@ const stepLabelStyle: CSSProperties = {
 };
 
 const stepTitleStyle: CSSProperties = {
-  fontSize: theme.type.scale[1],
+  fontSize: 13,
   fontWeight: 600,
   color: theme.color.accent
 };
@@ -552,7 +610,7 @@ const progressTrackStyle: CSSProperties = {
 };
 
 const kickerStyle: CSSProperties = {
-  fontSize: theme.type.scale[0],
+  fontSize: 12,
   fontWeight: 650,
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
@@ -566,14 +624,14 @@ const fieldLabelStyle: CSSProperties = {
   fontWeight: 650,
   color: theme.color.text,
   lineHeight: 1.35,
-  margin: 0
+  margin: `0 0 10px`
 };
 
 const chipsRowStyle: CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
   gap: theme.space.sm,
-  marginTop: theme.space.md
+  marginTop: 14
 };
 
 const reviewListStyle: CSSProperties = {
@@ -587,4 +645,53 @@ const estimateBoxStyle: CSSProperties = {
   background: theme.color.bg,
   borderRadius: theme.radius.sm,
   border: `1px solid ${theme.color.border}`
+};
+
+const upcomingStyle: CSSProperties = {
+  marginTop: theme.space.md,
+  marginBottom: theme.space.sm
+};
+
+const upcomingHeadingStyle: CSSProperties = {
+  fontSize: 13,
+  fontWeight: 650,
+  letterSpacing: '0.03em',
+  textTransform: 'uppercase',
+  color: theme.color.muted,
+  margin: `0 0 10px`
+};
+
+const upcomingListStyle: CSSProperties = {
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.space.sm
+};
+
+const upcomingItemStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+  minHeight: theme.touch,
+  padding: '10px 12px',
+  borderRadius: theme.radius.md,
+  border: `1px solid ${theme.color.border}`,
+  background: theme.color.surface,
+  fontSize: 15,
+  lineHeight: 1.35,
+  boxSizing: 'border-box'
+};
+
+const upcomingNumStyle: CSSProperties = {
+  width: 28,
+  height: 28,
+  borderRadius: 8,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 13,
+  fontWeight: 700,
+  flexShrink: 0
 };

@@ -1,3 +1,4 @@
+import { KpiStrip } from '../components/KpiStrip';
 import { Page } from '../components/Page';
 import { RunList } from '../components/RunList';
 import { en } from '../i18n/en';
@@ -5,7 +6,7 @@ import { summarize } from '../lib/summary';
 import { useRuns } from '../lib/useRuns';
 import { theme } from '../theme';
 
-/** Home page: live summary header plus the read-only run list, with explicit states. */
+/** Home page: KPI strip plus glanceable run cards, with explicit load/error/empty states. */
 export function Home(): JSX.Element {
   const state = useRuns();
   const title = en.pages.home.title;
@@ -31,6 +32,7 @@ export function Home(): JSX.Element {
   if (state.runs.length === 0) {
     return (
       <Page title={title}>
+        <KpiStrip summary={summarize([])} />
         <p style={{ color: theme.color.muted }}>{en.pages.home.empty}</p>
       </Page>
     );
@@ -39,22 +41,7 @@ export function Home(): JSX.Element {
   const stats = summarize(state.runs);
   return (
     <Page title={title}>
-      <section
-        aria-label={en.pages.home.summaryLabel}
-        style={{
-          fontFamily: theme.type.family,
-          color: theme.color.text,
-          background: theme.color.surface,
-          border: `1px solid ${theme.color.border}`,
-          borderRadius: theme.radius.md,
-          padding: theme.space.md,
-          marginBottom: theme.space.lg
-        }}
-      >
-        <p style={{ margin: 0, fontSize: theme.type.scale[2] }}>
-          {en.pages.home.summaryLine(stats.total, stats.passed, stats.avgScore.toFixed(1))}
-        </p>
-      </section>
+      <KpiStrip summary={stats} />
       <RunList runs={state.runs} />
     </Page>
   );
