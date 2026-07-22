@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { en } from '../i18n/en';
 import type { Run } from '../lib/summary';
 import { theme } from '../theme';
 
@@ -46,7 +47,7 @@ export function RunList({ runs }: RunListProps): JSX.Element {
   if (runs.length === 0) {
     return (
       <p role="status" style={{ color: theme.color.muted, fontFamily: theme.type.family }}>
-        No runs yet.
+        {en.runList.empty}
       </p>
     );
   }
@@ -64,28 +65,28 @@ export function RunList({ runs }: RunListProps): JSX.Element {
             fontFamily: theme.type.family
           }}
         >
-          Build runs
+          {en.runList.caption}
         </caption>
         <thead>
           <tr>
             <th scope="col" style={thStyle}>
-              Slug
+              {en.runList.slug}
             </th>
             <th scope="col" style={thStyle}>
-              Score
+              {en.runList.score}
             </th>
             <th scope="col" style={thStyle}>
-              Iterations
+              {en.runList.iterations}
             </th>
             <th scope="col" style={thStyle}>
-              Deploy
+              {en.runList.deploy}
             </th>
           </tr>
         </thead>
         <tbody>
           {runs.map((run) => {
             const meetsThreshold = run.finalScore >= run.threshold;
-            const badgeLabel = meetsThreshold ? 'Pass' : 'Fail';
+            const badgeLabel = meetsThreshold ? en.runList.pass : en.runList.fail;
             const badgeStyle: CSSProperties = {
               display: 'inline-block',
               marginLeft: theme.space.xs,
@@ -108,7 +109,7 @@ export function RunList({ runs }: RunListProps): JSX.Element {
                     {run.finalScore}
                     <span
                       style={badgeStyle}
-                      aria-label={`${badgeLabel}: score ${run.finalScore} versus threshold ${run.threshold}`}
+                      aria-label={en.runList.badgeAria(badgeLabel, run.finalScore, run.threshold)}
                     >
                       {badgeLabel}
                     </span>
@@ -117,16 +118,11 @@ export function RunList({ runs }: RunListProps): JSX.Element {
                 <td style={tdStyle}>{run.iterations.length}</td>
                 <td style={tdStyle}>
                   {run.deployUrl !== null && run.deployUrl !== '' ? (
-                    <a
-                      href={run.deployUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={linkStyle}
-                    >
-                      Open deploy
+                    <a href={run.deployUrl} target="_blank" rel="noreferrer" style={linkStyle}>
+                      {en.runList.openDeploy}
                     </a>
                   ) : (
-                    <span style={{ color: theme.color.muted }}>None</span>
+                    <span style={{ color: theme.color.muted }}>{en.runList.none}</span>
                   )}
                 </td>
               </tr>

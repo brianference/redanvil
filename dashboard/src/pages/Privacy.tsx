@@ -1,10 +1,11 @@
 import { Page } from '../components/Page';
+import { en } from '../i18n/en';
 
-/** Privacy page. Copy belongs in the locale bundle; kept inline here only as a compliant seed. */
+/** Privacy page. */
 export function Privacy(): JSX.Element {
   return (
-    <Page title="Privacy">
-      <p>Privacy content.</p>
+    <Page title={en.pages.privacy.title} breadcrumb={en.pages.privacy.title}>
+      <p>{en.pages.privacy.body}</p>
     </Page>
   );
 }

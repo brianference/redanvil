@@ -1,5 +1,6 @@
 import { Page } from '../components/Page';
 import { RunList } from '../components/RunList';
+import { en } from '../i18n/en';
 import { summarize } from '../lib/summary';
 import { useRuns } from '../lib/useRuns';
 import { theme } from '../theme';
@@ -7,20 +8,21 @@ import { theme } from '../theme';
 /** Home page: live summary header plus the read-only run list, with explicit states. */
 export function Home(): JSX.Element {
   const state = useRuns();
+  const title = en.pages.home.title;
 
   if (state.status === 'loading') {
     return (
-      <Page title="Runs">
-        <p style={{ color: theme.color.muted }}>Loading live runs…</p>
+      <Page title={title}>
+        <p style={{ color: theme.color.muted }}>{en.pages.home.loading}</p>
       </Page>
     );
   }
 
   if (state.status === 'error') {
     return (
-      <Page title="Runs">
+      <Page title={title}>
         <p role="alert" style={{ color: theme.color.accent }}>
-          Could not load runs: {state.message}
+          {en.pages.home.error(state.message)}
         </p>
       </Page>
     );
@@ -28,17 +30,17 @@ export function Home(): JSX.Element {
 
   if (state.runs.length === 0) {
     return (
-      <Page title="Runs">
-        <p style={{ color: theme.color.muted }}>No runs recorded yet.</p>
+      <Page title={title}>
+        <p style={{ color: theme.color.muted }}>{en.pages.home.empty}</p>
       </Page>
     );
   }
 
   const stats = summarize(state.runs);
   return (
-    <Page title="Runs">
+    <Page title={title}>
       <section
-        aria-label="Run summary"
+        aria-label={en.pages.home.summaryLabel}
         style={{
           fontFamily: theme.type.family,
           color: theme.color.text,
@@ -50,8 +52,7 @@ export function Home(): JSX.Element {
         }}
       >
         <p style={{ margin: 0, fontSize: theme.type.scale[2] }}>
-          <strong>{stats.total}</strong> total · <strong>{stats.passed}</strong> passed · avg score{' '}
-          <strong>{stats.avgScore.toFixed(1)}</strong>
+          {en.pages.home.summaryLine(stats.total, stats.passed, stats.avgScore.toFixed(1))}
         </p>
       </section>
       <RunList runs={state.runs} />

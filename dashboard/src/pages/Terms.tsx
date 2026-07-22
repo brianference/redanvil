@@ -1,10 +1,11 @@
 import { Page } from '../components/Page';
+import { en } from '../i18n/en';
 
-/** Terms page. Copy belongs in the locale bundle; kept inline here only as a compliant seed. */
+/** Terms page. */
 export function Terms(): JSX.Element {
   return (
-    <Page title="Terms">
-      <p>Terms content.</p>
+    <Page title={en.pages.terms.title} breadcrumb={en.pages.terms.title}>
+      <p>{en.pages.terms.body}</p>
     </Page>
   );
 }

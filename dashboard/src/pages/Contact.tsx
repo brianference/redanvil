@@ -1,10 +1,11 @@
 import { Page } from '../components/Page';
+import { en } from '../i18n/en';
 
-/** Contact page. Copy belongs in the locale bundle; kept inline here only as a compliant seed. */
+/** Contact page. */
 export function Contact(): JSX.Element {
   return (
-    <Page title="Contact">
-      <p>Contact content.</p>
+    <Page title={en.pages.contact.title} breadcrumb={en.pages.contact.title}>
+      <p>{en.pages.contact.body}</p>
     </Page>
   );
 }
