@@ -1,6 +1,6 @@
 # Mobile design rules (living)
 
-Version: 1.2 · Last improved: 2026-07-21  
+Version: 1.3 · Last improved: 2026-07-22  
 Source of truth for Grok Build mobile UX. Update via continuous improvement protocol after each design run.
 
 ---
@@ -33,6 +33,7 @@ Source of truth for Grok Build mobile UX. Update via continuous improvement prot
 | R2.4 | Horizontal scroll regions must show affordance (peek of next card, page dots) | should |
 | R2.5 | Avoid nested vertical scroll without clear ownership (one main scroller) | should |
 | R2.6 | Max content width for readable text ~ **65–75 ch** on large phones/tablets | prefer |
+| R2.7 | Zero horizontal overflow at 375px (body has no h-scroll; content fits) | must |
 
 ## R3 — Typography and hierarchy
 
@@ -53,6 +54,7 @@ Source of truth for Grok Build mobile UX. Update via continuous improvement prot
 | R4.3 | Disabled controls look disabled and are not focus-trapping | must |
 | R4.4 | Error, success, warning share consistent semantic tokens | should |
 | R4.5 | Dark mode: don’t invert blindly; use elevation surfaces | should |
+| R4.6 | Light AND dark mode with a visible theme toggle; colors from per-theme semantic tokens; persist choice | must |
 
 ## R5 — Navigation and structure
 
@@ -63,6 +65,8 @@ Source of truth for Grok Build mobile UX. Update via continuous improvement prot
 | R5.3 | Deep screens show context (title, breadcrumb, or parent name) | should |
 | R5.4 | Tab bar labels short (1–2 words); icons recognizable at 24–28 pt | should |
 | R5.5 | Modal vs full-screen push: modals for short tasks; push for hierarchical content | prefer |
+| R5.6 | Premium sticky nav: brand + primary links with hover/active states (not bare text links); overflow in a menu | must |
+| R5.7 | Breadcrumbs on inner/detail pages | should |
 
 ## R6 — Forms and input
 
@@ -111,6 +115,8 @@ Source of truth for Grok Build mobile UX. Update via continuous improvement prot
 | R10.3 | Variants share props/API; differ in layout density and emphasis | should |
 | R10.4 | Sticky bottom CTA bar includes safe-area padding | must |
 | R10.5 | Lists: row min height for touch; swipe actions secondary, not only path | should |
+| R10.6 | Brand mark in header/nav is a small optimized asset (WebP/SVG, ~<=60KB), never the hero/banner image | must |
+| R10.7 | Favicon and app icon derive from the same mark as the header logo | should |
 
 ## R11 — Inspiration hygiene
 

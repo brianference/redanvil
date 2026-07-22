@@ -23,6 +23,14 @@ Injected into every app RedAnvil generates, on top of the base-15 and the rubric
 ## UI baseline
 
 - Follow the mobile-ux design rules in `/design-system/mobile-design-rules.md` (leveled must/should/prefer: touch targets, safe areas, 16px body floor, non-color state, loading/empty/error, sticky-CTA safe-area padding, anti-patterns) and the layout recipes in `/design-system/screen-patterns.md`. When delegating UI to Grok Build, inject those rules and build 2-3 variants before polishing. Also available as the `mobile-ux` skill.
+
+## Premium site/app requirements (enforced)
+
+- Light AND dark mode with a visible theme toggle. Every color comes from semantic tokens that resolve per theme; default follows the system, and the choice persists. Both themes pass WCAG AA and get a visual review.
+- Premium navigation: a polished sticky top nav with the brand mark and primary links that have clear hover and active states, not bare text links. Overflow goes in a menu. On inner/detail pages show breadcrumbs.
+- Professional, organized footer (multi-column) and a clean, prominent header logo (a real brand mark, not an emoji).
+- The full app checklist: register/login where the app needs accounts (Web Crypto), search + detail pages where relevant, loading/error/empty states, confirmation before destructive actions, responsive with no overlapping text at 375px, the required pages (Home, About, Terms, Privacy, Contact) with full SEO (sitemap, OG image, JSON-LD), and no "made with" attribution text.
+- All user-facing copy follows the Human Writing Guidelines: no banned words, `--` not unicode em-dashes (max 2 per page), sentence-case headings, plain direct wording. This applies to the app UI, the README, and release notes.
 - Real brand logo and OG/social image, generated via Grok Imagine (the grok CLI `image_gen` tool) or a hand-authored SVG mark — never an emoji or placeholder icon. Visually review every generated image before shipping it.
 - Clean, modern, responsive, mobile-first. Sticky header. Organized professional footer.
 - No overlapping text at 375px. Verified at 375 / 768 / 1280.

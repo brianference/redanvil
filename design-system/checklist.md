@@ -11,3 +11,4 @@ Every generated app is verified against this at 375 / 768 / 1280.
 - Dialogs wired via aria-labelledby / aria-describedby / aria-controls / aria-expanded.
 - Confirmation before any destructive action.
 - Images sized and lazy-loaded; a real OG image per route.
+- Real brand logo (hand-authored SVG mark for the tiny UI logo; Grok Imagine PNG for premium/OG) — never an emoji. Every generated image is visually reviewed before shipping.
