@@ -3,6 +3,27 @@
 Changelog for the RedAnvil design system and the gate that scores it. Newest first.
 Append an entry after every design run per the mobile-ux continuous-improvement protocol.
 
+## 2026-07-21 — Measure everything + 10-option design exploration (enforced)
+
+Observation: the gate wired only 5 deterministic checks, so the real app-builder gate
+measured 5 of 48 rules and the dashboard showed a fabricated 98. Manual review is not
+the system doing its job.
+
+Changes:
+- Deterministic coverage 5 -> 16 via a real static checker (orchestrator/scripts/checks/
+  check.mjs): security (interpolated-SQL, stubbed-auth, fetch-timeouts, headers/CORS,
+  input-validation), hygiene (secret-scan, no-binaries), frontend (theme-tokens-only,
+  no-unsanitized-html, i18n-central-copy), scoped ts-ignores. Judge + visual verdicts
+  cover the rest of the 48-rule rubric.
+- gateApp fails-closed on unrecorded visual blockers.
+- Promoted measurable mobile-ux rules (touch targets, 16px type floor, non-color state,
+  safe areas) to scored visual rules.
+- Design process is now: 10 options per new app UI (5 Claude + 5 Grok team), a random
+  Mobbin-inspired element injected, Grok designs default, keep approved logos, merge the
+  user's picks, then ralph-loop to a real >= 90 with recorded visual evidence.
+- Learned: a false-failing check is its own dishonesty — u-sec-param-sql first flagged PRD
+  prose ("create, edit, and delete ${x}"); tightened to require real SQL syntax (FROM/INTO/SET).
+
 ## 2026-07-21 — Premium requirements become fail-closed rubric rules
 
 Observation: the RedAnvil site shipped without light mode, with bare-text nav and no
