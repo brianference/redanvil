@@ -1,11 +1,13 @@
+import { ContentSections } from '../components/ContentSections';
 import { Page } from '../components/Page';
 import { en } from '../i18n/en';
 
-/** Terms page. */
+/** Terms of use for the free, read-only dashboard. */
 export function Terms(): JSX.Element {
+  const page = en.pages.terms;
   return (
-    <Page title={en.pages.terms.title} breadcrumb={en.pages.terms.title}>
-      <p>{en.pages.terms.body}</p>
+    <Page title={page.title} breadcrumb={page.title}>
+      <ContentSections intro={page.intro} updated={page.updated} sections={page.sections} />
     </Page>
   );
 }

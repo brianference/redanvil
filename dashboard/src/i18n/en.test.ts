@@ -6,6 +6,65 @@ import { Breadcrumbs } from '../components/Breadcrumbs';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { en, type Locale } from './en';
 
+/** Words banned by the Human Writing Guidelines (case-insensitive whole words). */
+const BANNED_WORDS = [
+  'delve',
+  'pivotal',
+  'crucial',
+  'leverage',
+  'utilize',
+  'seamless',
+  'robust',
+  'transformative',
+  'innovative',
+  'groundbreaking',
+  'cutting-edge',
+  'revolutionary',
+  'synergy',
+  'paradigm',
+  'holistic',
+  'empower',
+  'streamline',
+  'ecosystem',
+  'best-in-class',
+  'world-class',
+  'next-generation',
+  'game-changer',
+  'unlock',
+  'unleash',
+  'elevate',
+  'harness',
+  'facilitate',
+  'optimize',
+  'scalable',
+  'mission-critical'
+] as const;
+
+/**
+ * Flatten a content page's user-facing strings for banned-word scanning.
+ */
+function pageCopyText(page: {
+  title: string;
+  intro: string;
+  updated?: string;
+  sections: readonly { heading: string; body: string }[];
+}): string {
+  const sectionText = page.sections.map((s) => `${s.heading} ${s.body}`).join(' ');
+  const updated = page.updated ?? '';
+  return `${page.title} ${page.intro} ${updated} ${sectionText}`;
+}
+
+/**
+ * Return banned words found in text (whole-word, case-insensitive).
+ */
+function findBannedWords(text: string): string[] {
+  const lower = text.toLowerCase();
+  return BANNED_WORDS.filter((word) => {
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`\\b${escaped}\\b`, 'i').test(lower);
+  });
+}
+
 describe('en locale bundle', () => {
   it('exposes typed app shell copy', () => {
     const locale: Locale = en;
@@ -29,6 +88,26 @@ describe('en locale bundle', () => {
     expect(en.pages.terms.title.length).toBeGreaterThan(2);
     expect(en.pages.privacy.title.length).toBeGreaterThan(2);
     expect(en.pages.home.title.length).toBeGreaterThan(2);
+  });
+
+  it('gives each content page a non-empty intro and at least one section', () => {
+    const contentPages = [en.pages.about, en.pages.contact, en.pages.terms, en.pages.privacy] as const;
+    for (const page of contentPages) {
+      expect(page.intro.trim().length).toBeGreaterThan(0);
+      expect(page.sections.length).toBeGreaterThanOrEqual(1);
+      for (const section of page.sections) {
+        expect(section.heading.trim().length).toBeGreaterThan(0);
+        expect(section.body.trim().length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('keeps page copy free of banned writing-guideline words', () => {
+    const contentPages = [en.pages.about, en.pages.contact, en.pages.terms, en.pages.privacy] as const;
+    for (const page of contentPages) {
+      const found = findBannedWords(pageCopyText(page));
+      expect(found, `${page.title} has banned words: ${found.join(', ')}`).toEqual([]);
+    }
   });
 });
 
