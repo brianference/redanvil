@@ -1,5 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import type { Prd } from '../lib/prd';
+import { savePrd, SavePrdError } from '../lib/savePrd';
+import { en } from '../i18n/en';
 import { theme } from '../theme';
 
 export interface PrdResultProps {
@@ -8,6 +10,12 @@ export interface PrdResultProps {
   /** Called when the user wants to start a new PRD. */
   onReset: () => void;
 }
+
+type SaveState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; url: string }
+  | { status: 'error'; message: string };
 
 const card: CSSProperties = {
   background: theme.color.surface,
@@ -28,9 +36,11 @@ const button = (primary = false): CSSProperties => ({
   cursor: 'pointer'
 });
 
-/** Shows the generated PRD with download-as-markdown and copy actions. */
+/** Shows the generated PRD with download, copy, and save-to-site actions. */
 export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
+  const copy = en.prdResult;
   const [copied, setCopied] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>({ status: 'idle' });
 
   /** Download the PRD as a .md file the user can load into Claude. */
   function download(): void {
@@ -44,7 +54,7 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
   }
 
   /** Copy the PRD markdown to the clipboard. */
-  async function copy(): Promise<void> {
+  async function copyMarkdown(): Promise<void> {
     try {
       await navigator.clipboard.writeText(prd.markdown);
       setCopied(true);
@@ -54,30 +64,76 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
     }
   }
 
+  /**
+   * Persist the PRD to the site via POST /api/prds.
+   * Loading → success link or inline error (fail closed).
+   */
+  async function handleSave(): Promise<void> {
+    if (saveState.status === 'loading') return;
+    setSaveState({ status: 'loading' });
+    try {
+      const result = await savePrd(prd);
+      setSaveState({ status: 'success', url: result.url });
+    } catch (error: unknown) {
+      const message =
+        error instanceof SavePrdError
+          ? error.message
+          : copy.errors.generic;
+      setSaveState({ status: 'error', message });
+    }
+  }
+
   return (
-    <section style={card} aria-label="Generated PRD">
+    <section style={card} aria-label={copy.sectionLabel}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: theme.space.sm }}>
         <div>
           <p style={{ margin: 0, color: theme.color.accent, fontSize: theme.type.scale[0], fontWeight: 600, letterSpacing: '0.08em' }}>
-            PRD READY
+            {copy.ready}
           </p>
           <h2 style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[4] }}>{prd.title}</h2>
         </div>
         <div style={{ display: 'flex', gap: theme.space.sm, flexWrap: 'wrap' }}>
           <button type="button" style={button(true)} onClick={download}>
-            ↓ Download .md
+            {copy.download}
           </button>
-          <button type="button" style={button()} onClick={() => void copy()}>
-            {copied ? 'Copied ✓' : 'Copy'}
+          <button type="button" style={button()} onClick={() => void copyMarkdown()}>
+            {copied ? copy.copied : copy.copy}
+          </button>
+          <button
+            type="button"
+            style={button()}
+            onClick={() => void handleSave()}
+            disabled={saveState.status === 'loading'}
+            aria-busy={saveState.status === 'loading'}
+          >
+            {saveState.status === 'loading' ? copy.saving : copy.saveToSite}
           </button>
           <button type="button" style={button()} onClick={onReset}>
-            New PRD
+            {copy.newPrd}
           </button>
         </div>
       </div>
       <p style={{ color: theme.color.muted, fontSize: theme.type.scale[1], marginTop: theme.space.sm }}>
-        Paste this into Claude to build the app, or download it as markdown.
+        {copy.hint}
       </p>
+      {saveState.status === 'success' && (
+        <p
+          role="status"
+          style={{ color: theme.color.accent, fontSize: theme.type.scale[1], marginTop: theme.space.sm }}
+        >
+          <a href={saveState.url} style={{ color: theme.color.accent, fontWeight: 600 }}>
+            {copy.savedViewAt(saveState.url)}
+          </a>
+        </p>
+      )}
+      {saveState.status === 'error' && (
+        <p
+          role="alert"
+          style={{ color: theme.color.accent, fontSize: theme.type.scale[1], marginTop: theme.space.sm }}
+        >
+          {saveState.message}
+        </p>
+      )}
       <pre
         style={{
           marginTop: theme.space.md,

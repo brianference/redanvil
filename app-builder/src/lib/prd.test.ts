@@ -9,9 +9,10 @@ const prd = generatePrd(
 );
 
 describe('generatePrd', () => {
-  it('derives a schema-valid slug and a non-empty title', () => {
+  it('derives a schema-valid slug, non-empty title, and original prompt', () => {
     expect(prd.slug).toMatch(/^[a-z0-9][a-z0-9-]+$/);
     expect(prd.title.length).toBeGreaterThan(0);
+    expect(prd.prompt).toBe('Build an app for tracking tesla driving stats');
   });
 
   it('includes the required PRD sections', () => {

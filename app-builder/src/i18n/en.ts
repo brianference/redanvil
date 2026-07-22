@@ -6,13 +6,34 @@ export const en = {
   app: {
     name: 'RedAnvil',
     primaryNav: 'Primary',
-    footerCopyright: '© RedAnvil'
+    footerCopyright: '© RedAnvil',
+    navBuilder: 'Builder',
+    navDashboard: 'Dashboard',
+    navGitHub: 'GitHub',
+    navSaved: 'Saved'
   },
   pages: {
     home: {
       title: 'Build an app',
       jobReady: (slug: string, threshold: number): string =>
         `Job ready: ${slug} (threshold ${threshold})`
+    },
+    saved: {
+      title: 'Saved PRDs',
+      subtitle: 'PRDs you saved to this site. Open one to view or share the link.',
+      loading: 'Loading saved PRDs…',
+      error: 'Could not load saved PRDs.',
+      empty: 'No saved PRDs yet. Generate a PRD and choose Save to site.',
+      listLabel: 'Saved PRDs',
+      itemMeta: (slug: string, createdAt: string): string => `${slug} · ${createdAt}`
+    },
+    savedPrd: {
+      title: 'Saved PRD',
+      loading: 'Loading PRD…',
+      error: 'Could not load this PRD.',
+      notFound: 'This PRD was not found.',
+      backToSaved: 'Back to saved PRDs',
+      createdAt: (createdAt: string): string => `Saved ${createdAt}`
     },
     about: {
       title: 'About RedAnvil',
@@ -160,6 +181,23 @@ export const en = {
       invalidJobPayload: 'Invalid job payload from server',
       network: 'Network error submitting job',
       timeout: 'Request timed out'
+    }
+  },
+  prdResult: {
+    ready: 'PRD READY',
+    download: '↓ Download .md',
+    copy: 'Copy',
+    copied: 'Copied ✓',
+    newPrd: 'New PRD',
+    saveToSite: 'Save to site',
+    saving: 'Saving…',
+    hint: 'Paste this into Claude to build the app, or download it as markdown.',
+    savedViewAt: (url: string): string => `Saved — view at ${url}`,
+    sectionLabel: 'Generated PRD',
+    errors: {
+      generic: 'Could not save the PRD.',
+      timeout: 'Save request timed out',
+      network: 'Network error saving PRD'
     }
   }
 } as const;

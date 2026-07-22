@@ -1,4 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { en } from '../i18n/en';
 import { theme } from '../theme';
 
 export interface PageProps {
@@ -75,15 +77,18 @@ export function Page({ title, subtitle, children }: PageProps): JSX.Element {
       <header style={bar}>
         <div style={{ ...container, padding: `0 ${theme.space.md}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: theme.space.sm, height: 72 }}>
           <Logo />
-          <nav className="ra-nav" aria-label="Primary" style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+          <nav className="ra-nav" aria-label={en.app.primaryNav} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
             <a href={APP_URL} style={navLink(true)}>
-              Builder
+              {en.app.navBuilder}
             </a>
             <a href={DASHBOARD_URL} style={navLink()}>
-              Dashboard
+              {en.app.navDashboard}
             </a>
+            <Link to="/saved" style={navLink()}>
+              {en.app.navSaved}
+            </Link>
             <a href={GITHUB_URL} target="_blank" rel="noreferrer" style={navLink()}>
-              GitHub
+              {en.app.navGitHub}
             </a>
           </nav>
         </div>

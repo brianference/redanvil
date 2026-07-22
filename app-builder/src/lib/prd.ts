@@ -11,6 +11,8 @@ export interface TokenEstimate {
 export interface Prd {
   slug: string;
   title: string;
+  /** Original user prompt used to generate this PRD. */
+  prompt: string;
   /** Complete PRD as GitHub-flavored markdown, ready to paste into Claude. */
   markdown: string;
 }
@@ -157,5 +159,5 @@ wrangler.toml   D1 binding
 > Build the app in this PRD. Cloudflare Pages Functions + D1 + Web Crypto. Strict TypeScript, no \`any\`. Smallest correct diff. Follow every rule in sections 6–8. Ship the required pages with full SEO. Add unit + Playwright + axe tests. Do not stop until \`wrangler pages dev\` boots, the core flow works end-to-end, and the design passes a visual review at 375/768/1280. Target score: 90.
 `;
 
-  return { slug, title, markdown };
+  return { slug, title, prompt, markdown };
 }
