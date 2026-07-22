@@ -22,6 +22,8 @@ Injected into every app RedAnvil generates, on top of the base-15 and the rubric
 
 ## UI baseline
 
+- Follow the mobile-ux design rules in `/design-system/mobile-design-rules.md` (leveled must/should/prefer: touch targets, safe areas, 16px body floor, non-color state, loading/empty/error, sticky-CTA safe-area padding, anti-patterns) and the layout recipes in `/design-system/screen-patterns.md`. When delegating UI to Grok Build, inject those rules and build 2-3 variants before polishing. Also available as the `mobile-ux` skill.
+- Real brand logo and OG/social image, generated via Grok Imagine (the grok CLI `image_gen` tool) or a hand-authored SVG mark — never an emoji or placeholder icon. Visually review every generated image before shipping it.
 - Clean, modern, responsive, mobile-first. Sticky header. Organized professional footer.
 - No overlapping text at 375px. Verified at 375 / 768 / 1280.
 - Theme tokens only (see `/design-system`); WCAG AA contrast; confirmation before destructive actions.
