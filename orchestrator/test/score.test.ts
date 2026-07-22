@@ -34,4 +34,21 @@ describe('computeScore', () => {
     );
     expect(computeScore(fail(judgeIds)).score).toBe(70);
   });
+
+  it('fails a visual blocker that has no recorded outcome (fail-closed)', () => {
+    const visualBlocker = rules.find((r) => r.method === 'visual' && r.severity === 'blocker');
+    expect(visualBlocker).toBeDefined();
+    // Record every rule EXCEPT the visual blocker; it must still gate to zero.
+    const partial: Outcome[] = allPass.filter((o) => o.ruleId !== visualBlocker!.id);
+    const r = computeScore(partial);
+    expect(r.score).toBe(0);
+    expect(r.blockers).toContain(visualBlocker!.id);
+  });
+
+  it('passes a non-visual rule that has no recorded outcome (pass-by-default unchanged)', () => {
+    const detMajor = rules.find((r) => r.severity !== 'blocker' && r.method === 'det');
+    expect(detMajor).toBeDefined();
+    const partial: Outcome[] = allPass.filter((o) => o.ruleId !== detMajor!.id);
+    expect(computeScore(partial).score).toBe(100);
+  });
 });

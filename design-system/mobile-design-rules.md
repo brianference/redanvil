@@ -1,6 +1,6 @@
 # Mobile design rules (living)
 
-Version: 1.3 · Last improved: 2026-07-22  
+Version: 1.4 · Last improved: 2026-07-21  
 Source of truth for Grok Build mobile UX. Update via continuous improvement protocol after each design run.
 
 ---
@@ -138,6 +138,30 @@ Before shipping variants, each must answer:
 - [ ] Empty + loading + error considered (even if stubbed)
 - [ ] Thumb reach for primary action
 - [ ] Visually distinct from other variants (not only recolor)
+
+## R13 — Premium web-app shell (must; scored fail-closed)
+
+For any web app RedAnvil ships. Each maps to a `visual`-method rubric rule that is
+**fail-closed** — with no recorded visual-review verdict it FAILS, so these can
+never silently auto-pass from a code-clean diff (the exact hole that shipped a
+barebones site). Verified on the rendered page at 375 / 768 / 1280 in both themes.
+
+| ID | Rule | Level | Rubric rule |
+|----|------|-------|-------------|
+| R13.1 | Light AND dark mode with a visible toggle; every color from a semantic token per theme; default follows system; choice persists; both pass AA | must | fe-light-dark |
+| R13.2 | Polished sticky top nav with brand mark and primary links that have clear hover AND active states (not bare text); overflow in a menu; breadcrumbs on inner/detail pages | must | fe-premium-nav |
+| R13.3 | Home, About, Terms, Privacy, Contact all present and reachable from the shared nav/footer | must | fe-required-pages |
+| R13.4 | No "made with" / "built with" attribution text anywhere in the UI | must | fe-no-attribution |
+| R13.5 | No overlapping or clipped text at 375px; verified at 375 / 768 / 1280 | must | fe-responsive-375 |
+| R13.6 | The stated core feature works end-to-end and produces usable output; input-only dead-ends fail | must | fe-product-completeness |
+| R13.7 | A visual review was actually performed and recorded — screenshots at all three breakpoints in both themes, zero console errors | must | fe-visual-review-recorded |
+| R13.8 | Per-route title/description, OG tags, real OG image, sitemap, robots.txt, JSON-LD, semantic headings | should | fe-seo-og |
+| R13.9 | Sibling apps in one system cross-link in a shared header/footer | should | fe-cross-link |
+
+CSS-specificity trap (recurring): a React inline `style={{ display: ... }}` beats a
+class rule, so a `.menu-btn { display: none }` hide-on-desktop toggle leaks unless
+the class (not inline style) owns `display` with a matching `!important` media query.
+Only a real visual review catches it — it renders fine in code review and passes tests.
 
 ---
 

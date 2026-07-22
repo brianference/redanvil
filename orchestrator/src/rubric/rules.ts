@@ -40,6 +40,21 @@ export const RULES: Rule[] = [
   rule('fe-pages-compose', 'frontend', 'major', 'judge'),
   rule('fe-fail-closed-states', 'frontend', 'major', 'det+judge'),
 
+  // Premium/design requirements. Method 'visual' = scored from the recorded
+  // visual-review verdict and FAIL-CLOSED: with no recorded verdict they fail,
+  // so a run cannot score above zero without an actual visual review. These
+  // close the exact holes that shipped a barebones site (no light mode, bare
+  // nav, missing pages, dead-end flow) despite a code-clean diff.
+  rule('fe-light-dark', 'frontend', 'blocker', 'visual'),
+  rule('fe-premium-nav', 'frontend', 'blocker', 'visual'),
+  rule('fe-required-pages', 'frontend', 'blocker', 'visual'),
+  rule('fe-no-attribution', 'frontend', 'blocker', 'visual'),
+  rule('fe-responsive-375', 'frontend', 'blocker', 'visual'),
+  rule('fe-product-completeness', 'frontend', 'blocker', 'visual'),
+  rule('fe-visual-review-recorded', 'frontend', 'blocker', 'visual'),
+  rule('fe-seo-og', 'frontend', 'major', 'visual'),
+  rule('fe-cross-link', 'frontend', 'major', 'visual'),
+
   rule('ci-actionlint', 'ci', 'major', 'det'),
   rule('ci-sha-pinned', 'ci', 'blocker', 'det'),
   rule('ci-least-privilege', 'ci', 'blocker', 'det'),

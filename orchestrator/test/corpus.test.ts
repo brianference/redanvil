@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 import { CORPUS_VERSION } from '../src/corpus/version';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const RULE_LINE = /^- [a-z0-9-]+ \((blocker|major|minor|advisory), (det|judge|det\+judge|hook|process)\): .+/;
+const RULE_LINE = /^- [a-z0-9-]+ \((blocker|major|minor|advisory), (det|judge|det\+judge|hook|process|visual)\): .+/;
 
 describe('corpus', () => {
   it('has a semver corpus version', () => {

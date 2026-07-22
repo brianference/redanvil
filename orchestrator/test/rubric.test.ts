@@ -12,7 +12,7 @@ describe('rubric', () => {
 
   it('every rule has a valid severity and method', () => {
     const sev = new Set(['blocker', 'major', 'minor', 'advisory']);
-    const meth = new Set(['det', 'judge', 'det+judge', 'hook', 'process']);
+    const meth = new Set(['det', 'judge', 'det+judge', 'hook', 'process', 'visual']);
     for (const r of rules) {
       expect(sev.has(r.severity), `${r.id} severity`).toBe(true);
       expect(meth.has(r.method), `${r.id} method`).toBe(true);
