@@ -18,7 +18,8 @@ async function main(): Promise<number> {
       judge: { type: 'string' },
       slug: { type: 'string' },
       out: { type: 'string' },
-      deploy: { type: 'string' }
+      deploy: { type: 'string' },
+      na: { type: 'string' }
     }
   });
   const [command, arg] = positionals;
@@ -72,7 +73,11 @@ async function main(): Promise<number> {
       typeof values.judge === 'string'
         ? (JSON.parse(await readFile(values.judge, 'utf8')) as Outcome[])
         : [];
-    const report = await gateApp(dir, undefined, judge);
+    const notApplicable =
+      typeof values.na === 'string'
+        ? values.na.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+    const report = await gateApp(dir, undefined, judge, notApplicable);
     const verdict = report.score >= threshold ? 'PASS' : 'FAIL';
     console.log(
       `gate: ${verdict} — score ${report.score}/100 (threshold ${threshold}), evaluated ${report.evaluated}/${report.total} rules`

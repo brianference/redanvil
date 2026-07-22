@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { gateApp } from '../src/commands/gate';
 import type { Check } from '../src/gate/checks';
+import type { Outcome } from '../src/gate/score';
+import { loadRubric } from '../src/rubric/index';
 
 const node = process.execPath;
 const pass = (ruleId: string): Check => ({ ruleId, command: node, args: ['-e', 'process.exit(0)'] });
@@ -29,5 +31,15 @@ describe('gateApp', () => {
     ]);
     expect(withJudge.evaluated).toBeGreaterThan(withoutJudge.evaluated);
     expect(withJudge.score).toBeGreaterThan(withoutJudge.score);
+  });
+
+  it('excludes a not-applicable lane from scoring, lifting a clean app', async () => {
+    // Everything passes except the ci lane; ci rules are blockers.
+    const outcomes: Outcome[] = loadRubric().map((r) => ({ ruleId: r.id, passed: r.lane !== 'ci' }));
+    const withCi = await gateApp(process.cwd(), [], outcomes);
+    const naCi = await gateApp(process.cwd(), [], outcomes, ['ci']);
+    expect(withCi.score).toBe(0); // failing ci blockers gate it to 0
+    expect(naCi.blockersFailed).toEqual([]); // ci excluded -> no blocker failures
+    expect(naCi.score).toBeGreaterThan(withCi.score);
   });
 });
