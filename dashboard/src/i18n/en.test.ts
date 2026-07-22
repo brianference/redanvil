@@ -90,6 +90,16 @@ describe('en locale bundle', () => {
     expect(en.pages.home.title.length).toBeGreaterThan(2);
   });
 
+  it('exposes run list and run detail copy', () => {
+    expect(en.runList.coverage).toBe('Coverage');
+    expect(en.runList.coverageValue(41, 41)).toBe('41/41 rules');
+    expect(en.status.pass).toBe('Pass');
+    expect(en.status.fail).toBe('Fail');
+    expect(en.runDetail.iterationsHeading.length).toBeGreaterThan(2);
+    expect(en.runDetail.rulesHeading.length).toBeGreaterThan(2);
+    expect(en.runDetail.laneHeading('u')).toContain('u');
+  });
+
   it('gives each content page a non-empty intro and at least one section', () => {
     const contentPages = [en.pages.about, en.pages.contact, en.pages.terms, en.pages.privacy] as const;
     for (const page of contentPages) {

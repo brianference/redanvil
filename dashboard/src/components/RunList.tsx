@@ -1,7 +1,9 @@
 import type { CSSProperties } from 'react';
+import { Link } from 'react-router-dom';
 import { en } from '../i18n/en';
 import type { Run } from '../lib/summary';
 import { theme } from '../theme';
+import { StatusBadge } from './StatusBadge';
 
 export interface RunListProps {
   /** Finished runs to display (read-only). */
@@ -9,8 +11,8 @@ export interface RunListProps {
 }
 
 /**
- * Read-only accessible table of build runs: slug, score with pass/fail badge,
- * iteration count, and deploy link (new tab, rel noreferrer).
+ * Read-only accessible table of build runs: slug (links to detail), score with
+ * pass/fail badge, coverage, iteration count, and deploy link (new tab).
  */
 export function RunList({ runs }: RunListProps): JSX.Element {
   const tableStyle: CSSProperties = {
@@ -41,7 +43,8 @@ export function RunList({ runs }: RunListProps): JSX.Element {
 
   const linkStyle: CSSProperties = {
     color: theme.color.accent,
-    textDecoration: 'underline'
+    textDecoration: 'underline',
+    textUnderlineOffset: 3
   };
 
   if (runs.length === 0) {
@@ -53,7 +56,7 @@ export function RunList({ runs }: RunListProps): JSX.Element {
   }
 
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <table style={tableStyle}>
         <caption
           style={{
@@ -76,6 +79,9 @@ export function RunList({ runs }: RunListProps): JSX.Element {
               {en.runList.score}
             </th>
             <th scope="col" style={thStyle}>
+              {en.runList.coverage}
+            </th>
+            <th scope="col" style={thStyle}>
               {en.runList.iterations}
             </th>
             <th scope="col" style={thStyle}>
@@ -85,36 +91,28 @@ export function RunList({ runs }: RunListProps): JSX.Element {
         </thead>
         <tbody>
           {runs.map((run) => {
-            const meetsThreshold = run.finalScore >= run.threshold;
-            const badgeLabel = meetsThreshold ? en.runList.pass : en.runList.fail;
-            const badgeStyle: CSSProperties = {
-              display: 'inline-block',
-              marginLeft: theme.space.xs,
-              padding: `${theme.space.xs}px ${theme.space.sm}px`,
-              borderRadius: theme.radius.sm,
-              fontSize: theme.type.scale[0],
-              fontWeight: 600,
-              color: theme.color.text,
-              background: meetsThreshold ? theme.color.surface : theme.color.accent,
-              border: `1px solid ${theme.color.border}`
-            };
-
+            const detailPath = `/run/${encodeURIComponent(run.slug)}`;
             return (
               <tr key={`${run.slug}-${run.finishedAt}`}>
                 <th scope="row" style={{ ...tdStyle, fontWeight: 600, textAlign: 'left' }}>
-                  {run.slug}
+                  <Link to={detailPath} style={linkStyle}>
+                    {run.slug}
+                  </Link>
                 </th>
                 <td style={tdStyle}>
-                  <span>
-                    {run.finalScore}
-                    <span
-                      style={badgeStyle}
-                      aria-label={en.runList.badgeAria(badgeLabel, run.finalScore, run.threshold)}
-                    >
-                      {badgeLabel}
-                    </span>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      gap: theme.space.xs
+                    }}
+                  >
+                    <span>{run.finalScore}</span>
+                    <StatusBadge passed={run.passed} score={run.finalScore} threshold={run.threshold} />
                   </span>
                 </td>
+                <td style={tdStyle}>{en.runList.coverageValue(run.evaluated, run.total)}</td>
                 <td style={tdStyle}>{run.iterations.length}</td>
                 <td style={tdStyle}>
                   {run.deployUrl !== null && run.deployUrl !== '' ? (

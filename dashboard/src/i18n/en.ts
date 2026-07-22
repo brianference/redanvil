@@ -56,7 +56,7 @@ export const en = {
         },
         {
           heading: 'What this dashboard shows',
-          body: 'Each run lists a slug, score, iteration count, and a link to the deployed result. The view is read-only. Nothing here starts, edits, or restarts a build.'
+          body: 'Each run lists a slug, score, rule coverage, iteration count, and a link to the deployed result. Open a run for iteration history and the full per-rule breakdown. The view is read-only. Nothing here starts, edits, or restarts a build.'
         },
         {
           heading: 'Source',
@@ -120,19 +120,50 @@ export const en = {
       ]
     }
   },
+  status: {
+    pass: 'Pass',
+    fail: 'Fail',
+    badgeAria: (label: string, score: number, threshold: number): string =>
+      `${label}: score ${score} versus threshold ${threshold}`
+  },
   runList: {
     empty: 'No runs yet.',
     caption: 'Build runs',
     slug: 'Slug',
     score: 'Score',
+    coverage: 'Coverage',
+    coverageValue: (evaluated: number, total: number): string =>
+      `${evaluated}/${total} rules`,
     iterations: 'Iterations',
     deploy: 'Deploy',
-    pass: 'Pass',
-    fail: 'Fail',
-    badgeAria: (label: string, score: number, threshold: number): string =>
-      `${label}: score ${score} versus threshold ${threshold}`,
     openDeploy: 'Open deploy',
     none: 'None'
+  },
+  runDetail: {
+    loading: 'Loading run detail…',
+    error: (message: string): string => `Could not load run: ${message}`,
+    notFound: 'No run found for this slug.',
+    missingSlug: 'Run',
+    headerLabel: 'Run summary',
+    scoreLabel: 'Score',
+    scoreValue: (score: number, threshold: number): string => `${score} / ${threshold}`,
+    coverageLabel: 'Coverage',
+    coverageValue: (evaluated: number, total: number): string =>
+      `${evaluated}/${total} rules`,
+    finishedLabel: 'Finished',
+    deployLabel: 'Deploy',
+    openDeploy: 'Open deploy',
+    none: 'None',
+    iterationsHeading: 'Iteration history',
+    iterationsSummary: (count: number): string =>
+      count === 1 ? '1 iteration' : `${count} iterations`,
+    iterationsEmpty: 'No iterations recorded for this run.',
+    iterationIndex: (index: number): string => `Iteration ${index}`,
+    iterationScore: (score: number): string => `score ${score}`,
+    noBlockers: 'No blockers',
+    rulesHeading: 'Per-rule breakdown',
+    rulesEmpty: 'No rule results recorded for this run.',
+    laneHeading: (lane: string): string => `${lane} lane`
   }
 } as const;
 

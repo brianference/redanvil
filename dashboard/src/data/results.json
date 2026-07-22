@@ -2,11 +2,214 @@
   {
     "kind": "results",
     "slug": "app-builder",
-    "finalScore": 90,
+    "finalScore": 100,
     "threshold": 90,
     "passed": true,
-    "iterations": [{ "index": 1, "score": 90, "blockers": [] }],
+    "evaluated": 41,
+    "total": 41,
+    "rules": [
+      {
+        "ruleId": "u-typing-strict",
+        "passed": true
+      },
+      {
+        "ruleId": "u-typing-no-any",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-dead-code",
+        "passed": true
+      },
+      {
+        "ruleId": "u-test-presence",
+        "passed": true
+      },
+      {
+        "ruleId": "hyg-env-ignored",
+        "passed": true
+      },
+      {
+        "ruleId": "u-typing-scoped-ignores",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-param-sql",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-no-stub-paths",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-timeouts",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-headers-cors",
+        "passed": true
+      },
+      {
+        "ruleId": "u-val-input-validation",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-theme-tokens-only",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-no-unsanitized-html",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-i18n-central-copy",
+        "passed": true
+      },
+      {
+        "ruleId": "hyg-no-binaries",
+        "passed": true
+      },
+      {
+        "ruleId": "hyg-secret-scan",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-sast",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-no-padding",
+        "passed": true
+      },
+      {
+        "ruleId": "hyg-no-duplication",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-light-dark",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-premium-nav",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-required-pages",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-no-attribution",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-responsive-375",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-product-completeness",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-visual-review-recorded",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-touch-targets",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-type-floor",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-noncolor-state",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-safe-areas",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-seo-og",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-cross-link",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-idiomatic",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-no-speculative-abstraction",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-use-what-exists",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-smallest-diff",
+        "passed": true
+      },
+      {
+        "ruleId": "u-val-input-validation",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-no-stub-paths",
+        "passed": true
+      },
+      {
+        "ruleId": "u-test-adequacy",
+        "passed": true
+      },
+      {
+        "ruleId": "u-test-behavioral",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-pages-compose",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-fail-closed-states",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-a11y-contrast",
+        "passed": true
+      }
+    ],
+    "iterations": [
+      {
+        "index": 1,
+        "score": 0,
+        "blockers": [
+          "fe-responsive-375"
+        ]
+      },
+      {
+        "index": 2,
+        "score": 0,
+        "blockers": [
+          "hyg-no-duplication"
+        ]
+      },
+      {
+        "index": 3,
+        "score": 0,
+        "blockers": [
+          "hyg-no-duplication"
+        ]
+      },
+      {
+        "index": 4,
+        "score": 100,
+        "blockers": []
+      }
+    ],
     "deployUrl": "https://redanvil.pages.dev",
-    "finishedAt": "2026-07-21T16:40:00.000Z"
+    "finishedAt": "2026-07-22T06:12:56.750Z"
   }
 ]
