@@ -1,13 +1,17 @@
-import type { CSSProperties, ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, type CSSProperties, type ReactNode } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
+import { Breadcrumbs } from './Breadcrumbs';
+import { ThemeToggle } from './ThemeToggle';
 
 export interface PageProps {
   /** Page title, rendered as the single h1. */
   title: string;
   /** Optional hero subtitle under the h1. */
   subtitle?: string;
+  /** Optional breadcrumb current-page label (inner pages only). */
+  breadcrumb?: string;
   /** Page body. */
   children: ReactNode;
 }
@@ -15,6 +19,8 @@ export interface PageProps {
 const APP_URL = 'https://redanvil.pages.dev';
 const DASHBOARD_URL = 'https://redanvil-dashboard.pages.dev';
 const GITHUB_URL = 'https://github.com/brianference/redanvil';
+
+const LOGO_HEIGHT = 96;
 
 const shell: CSSProperties = {
   minHeight: '100vh',
@@ -30,64 +36,216 @@ const bar: CSSProperties = {
   top: 0,
   zIndex: 10,
   backdropFilter: 'blur(10px)',
-  background: `${theme.color.surface}cc`,
+  WebkitBackdropFilter: 'blur(10px)',
+  background: `color-mix(in srgb, ${theme.color.surface} 80%, transparent)`,
   borderBottom: `1px solid ${theme.color.border}`
 };
 
-const container: CSSProperties = { width: '100%', maxWidth: '68rem', margin: '0 auto', padding: `0 ${theme.space.lg}px` };
+const container: CSSProperties = {
+  width: '100%',
+  maxWidth: '68rem',
+  margin: '0 auto',
+  padding: `0 ${theme.space.lg}px`
+};
 
-const navLink = (active = false): CSSProperties => ({
-  color: active ? theme.color.text : theme.color.muted,
-  textDecoration: 'none',
-  fontSize: theme.type.scale[1],
-  fontWeight: active ? 600 : 400,
-  padding: `${theme.space.xs}px ${theme.space.xs}px`,
+// Note: no `display` here on purpose — the `.ra-menu-btn` class owns
+// visibility (hidden on desktop, inline-flex at ≤560px). An inline
+// `display` would beat the class and leak the hamburger onto desktop.
+const iconButton: CSSProperties = {
+  alignItems: 'center',
+  justifyContent: 'center',
+  minWidth: 44,
+  minHeight: 44,
+  padding: theme.space.sm,
+  margin: 0,
+  border: `1px solid ${theme.color.border}`,
   borderRadius: theme.radius.sm,
-  whiteSpace: 'nowrap'
-});
+  background: theme.color.surface,
+  color: theme.color.text,
+  cursor: 'pointer',
+  fontSize: theme.type.scale[2],
+  lineHeight: 1,
+  fontFamily: theme.type.family
+};
 
-/** Site logo: an accent anvil mark plus the RedAnvil wordmark. */
-function Logo(): JSX.Element {
+/** Site logo: optimized lockup. Header uses ~2× prior size; footer stays compact. */
+function Logo({ height = LOGO_HEIGHT }: { height?: number }): JSX.Element {
+  const width = Math.round((107 / 56) * height);
   return (
-    <a href={APP_URL} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+    <a href={APP_URL} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
       <img
         src="/logo-sm.png"
         alt="RedAnvil — forge apps from a prompt"
-        width={107}
-        height={56}
-        style={{ height: 56, width: 'auto', display: 'block', borderRadius: theme.radius.sm }}
+        width={width}
+        height={height}
+        style={{ height, width: 'auto', display: 'block', borderRadius: theme.radius.sm }}
       />
     </a>
   );
 }
 
-/** Shared page shell: sticky header with logo + cross-site nav, hero title, professional footer. */
-export function Page({ title, subtitle, children }: PageProps): JSX.Element {
+/**
+ * Whether a primary nav item is the current page (for active styles).
+ */
+function isNavActive(pathname: string, key: 'builder' | 'saved'): boolean {
+  if (key === 'builder') return pathname === '/';
+  return pathname === '/saved' || pathname.startsWith('/prd/');
+}
+
+/** Shared page shell: sticky blurred header, optional breadcrumbs, hero title, footer. */
+export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.Element {
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const builderActive = isNavActive(location.pathname, 'builder');
+  const savedActive = isNavActive(location.pathname, 'saved');
+
   return (
     <div style={shell}>
       <style>{`
         * { box-sizing: border-box; }
-        body { margin: 0; overflow-x: hidden; }
-        @media (max-width: 480px) {
+        body { margin: 0; overflow-x: hidden; font-size: 16px; }
+        .ra-nav-link {
+          color: ${theme.color.muted};
+          text-decoration: none;
+          font-size: ${theme.type.scale[1]}px;
+          font-weight: 400;
+          padding: ${theme.space.sm}px ${theme.space.sm}px;
+          border-radius: ${theme.radius.sm}px;
+          white-space: nowrap;
+          border-bottom: 2px solid transparent;
+          transition: color 0.15s ease, opacity 0.15s ease, border-color 0.15s ease;
+        }
+        .ra-nav-link:hover {
+          opacity: 0.85;
+          text-decoration: underline;
+          text-underline-offset: 4px;
+        }
+        .ra-nav-link.is-active {
+          color: ${theme.color.accent};
+          font-weight: 600;
+          border-bottom-color: ${theme.color.accent};
+          text-decoration: none;
+          opacity: 1;
+        }
+        .ra-nav-link.is-active:hover {
+          text-decoration: none;
+          opacity: 1;
+        }
+        .ra-desktop-nav { display: flex; align-items: center; gap: 0; }
+        .ra-menu-btn { display: none; }
+        .ra-mobile-panel { display: none; }
+        @media (max-width: 560px) {
           .ra-h1 { font-size: 1.9rem !important; }
-          .ra-logo-tag { display: none; }
-          .ra-nav a { padding: 4px 5px !important; font-size: 0.82rem !important; }
+          .ra-desktop-nav { display: none !important; }
+          .ra-menu-btn { display: inline-flex !important; }
+          .ra-mobile-panel[data-open="true"] {
+            display: block !important;
+            padding: ${theme.space.sm}px ${theme.space.md}px ${theme.space.md}px;
+            border-top: 1px solid ${theme.color.border};
+          }
+          .ra-mobile-panel nav {
+            display: flex;
+            flex-direction: column;
+            gap: ${theme.space.xs}px;
+          }
+          .ra-mobile-panel .ra-nav-link {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            width: 100%;
+          }
         }
       `}</style>
       <header style={bar}>
-        <div style={{ ...container, padding: `0 ${theme.space.md}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: theme.space.sm, height: 72 }}>
+        <div
+          style={{
+            ...container,
+            padding: `0 ${theme.space.md}px`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: theme.space.sm,
+            minHeight: LOGO_HEIGHT + theme.space.md
+          }}
+        >
           <Logo />
-          <nav className="ra-nav" aria-label={en.app.primaryNav} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-            <a href={APP_URL} style={navLink(true)}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, flexShrink: 0 }}>
+            <nav className="ra-desktop-nav" aria-label={en.app.primaryNav}>
+              <a href={APP_URL} className={`ra-nav-link${builderActive ? ' is-active' : ''}`} aria-current={builderActive ? 'page' : undefined}>
+                {en.app.navBuilder}
+              </a>
+              <a href={DASHBOARD_URL} className="ra-nav-link">
+                {en.app.navDashboard}
+              </a>
+              <Link to="/saved" className={`ra-nav-link${savedActive ? ' is-active' : ''}`} aria-current={savedActive ? 'page' : undefined}>
+                {en.app.navSaved}
+              </Link>
+              <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="ra-nav-link">
+                {en.app.navGitHub}
+              </a>
+            </nav>
+            <ThemeToggle />
+            <button
+              type="button"
+              className="ra-menu-btn"
+              style={iconButton}
+              aria-expanded={menuOpen}
+              aria-controls="ra-mobile-nav"
+              aria-label={menuOpen ? en.app.menuClose : en.app.menuOpen}
+              onClick={() => {
+                setMenuOpen((open) => !open);
+              }}
+            >
+              <span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span>
+            </button>
+          </div>
+        </div>
+        <div
+          id="ra-mobile-nav"
+          className="ra-mobile-panel"
+          data-open={menuOpen ? 'true' : 'false'}
+          hidden={!menuOpen}
+        >
+          <nav aria-label={en.app.primaryNav}>
+            <a
+              href={APP_URL}
+              className={`ra-nav-link${builderActive ? ' is-active' : ''}`}
+              aria-current={builderActive ? 'page' : undefined}
+              onClick={() => {
+                setMenuOpen(false);
+              }}
+            >
               {en.app.navBuilder}
             </a>
-            <a href={DASHBOARD_URL} style={navLink()}>
+            <a
+              href={DASHBOARD_URL}
+              className="ra-nav-link"
+              onClick={() => {
+                setMenuOpen(false);
+              }}
+            >
               {en.app.navDashboard}
             </a>
-            <Link to="/saved" style={navLink()}>
+            <Link
+              to="/saved"
+              className={`ra-nav-link${savedActive ? ' is-active' : ''}`}
+              aria-current={savedActive ? 'page' : undefined}
+              onClick={() => {
+                setMenuOpen(false);
+              }}
+            >
               {en.app.navSaved}
             </Link>
-            <a href={GITHUB_URL} target="_blank" rel="noreferrer" style={navLink()}>
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="ra-nav-link"
+              onClick={() => {
+                setMenuOpen(false);
+              }}
+            >
               {en.app.navGitHub}
             </a>
           </nav>
@@ -95,7 +253,10 @@ export function Page({ title, subtitle, children }: PageProps): JSX.Element {
       </header>
 
       <main style={{ ...container, flex: 1, padding: `${theme.space.xl}px ${theme.space.lg}px` }}>
-        <h1 className="ra-h1" style={{ fontSize: theme.type.scale[5], margin: 0, letterSpacing: '-0.02em' }}>{title}</h1>
+        {breadcrumb !== undefined && <Breadcrumbs current={breadcrumb} />}
+        <h1 className="ra-h1" style={{ fontSize: theme.type.scale[5], margin: 0, letterSpacing: '-0.02em' }}>
+          {title}
+        </h1>
         {subtitle !== undefined && (
           <p style={{ color: theme.color.muted, fontSize: theme.type.scale[3], maxWidth: '40rem', marginTop: theme.space.sm }}>
             {subtitle}
@@ -104,7 +265,7 @@ export function Page({ title, subtitle, children }: PageProps): JSX.Element {
         <div style={{ marginTop: theme.space.xl }}>{children}</div>
       </main>
 
-      <footer style={{ borderTop: `1px solid ${theme.color.border}`, background: `${theme.color.surface}80`, marginTop: theme.space.xl }}>
+      <footer style={{ borderTop: `1px solid ${theme.color.border}`, background: `color-mix(in srgb, ${theme.color.surface} 50%, transparent)`, marginTop: theme.space.xl }}>
         <div
           style={{
             ...container,
@@ -115,7 +276,7 @@ export function Page({ title, subtitle, children }: PageProps): JSX.Element {
           }}
         >
           <div>
-            <Logo />
+            <Logo height={56} />
             <p style={{ color: theme.color.muted, fontSize: theme.type.scale[0], marginTop: theme.space.sm, maxWidth: '18rem' }}>
               Forge a full-stack app from one prompt. Every app ships behind a real quality gate.
             </p>

@@ -10,7 +10,13 @@ export const en = {
     navBuilder: 'Builder',
     navDashboard: 'Dashboard',
     navGitHub: 'GitHub',
-    navSaved: 'Saved'
+    navSaved: 'Saved',
+    themeToLight: 'Switch to light theme',
+    themeToDark: 'Switch to dark theme',
+    menuOpen: 'Open menu',
+    menuClose: 'Close menu',
+    breadcrumbHome: 'Home',
+    breadcrumbNav: 'Breadcrumb'
   },
   pages: {
     home: {

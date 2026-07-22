@@ -7,6 +7,10 @@ describe('en locale bundle', () => {
     expect(locale.app.name).toBe('RedAnvil');
     expect(locale.app.primaryNav).toBe('Primary');
     expect(locale.app.footerCopyright).toContain('RedAnvil');
+    expect(locale.app.themeToLight.length).toBeGreaterThan(2);
+    expect(locale.app.themeToDark.length).toBeGreaterThan(2);
+    expect(locale.app.menuOpen.length).toBeGreaterThan(2);
+    expect(locale.app.breadcrumbHome).toBe('Home');
   });
 
   it('exposes real legal/info page content (title, intro, sections)', () => {

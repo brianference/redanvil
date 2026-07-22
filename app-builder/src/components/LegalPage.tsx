@@ -22,7 +22,7 @@ export interface LegalPageProps {
 /** Renders an informational/legal page: intro, updated date, and headed sections. */
 export function LegalPage({ title, updated, intro, sections }: LegalPageProps): JSX.Element {
   return (
-    <Page title={title}>
+    <Page title={title} breadcrumb={title}>
       <p style={{ color: theme.color.muted, fontSize: theme.type.scale[0], margin: 0 }}>{updated}</p>
       <p style={{ color: theme.color.text, fontSize: theme.type.scale[3], maxWidth: '44rem', marginTop: theme.space.sm }}>
         {intro}

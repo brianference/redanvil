@@ -142,7 +142,7 @@ export function SavedPrd(): JSX.Element {
     state.status === 'success' ? state.prd.title : copy.title;
 
   return (
-    <Page title={pageTitle}>
+    <Page title={pageTitle} breadcrumb={copy.title}>
       <p style={{ marginBottom: theme.space.md }}>
         <Link
           to="/saved"

@@ -136,7 +136,7 @@ export function Saved(): JSX.Element {
   }, [copy.error]);
 
   return (
-    <Page title={copy.title} subtitle={copy.subtitle}>
+    <Page title={copy.title} subtitle={copy.subtitle} breadcrumb={copy.title}>
       {state.status === 'loading' && (
         <p role="status" style={{ color: theme.color.muted, fontSize: theme.type.scale[2] }}>
           {copy.loading}
