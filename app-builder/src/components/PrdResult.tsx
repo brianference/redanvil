@@ -3,6 +3,13 @@ import type { Prd } from '../lib/prd';
 import { savePrd, SavePrdError } from '../lib/savePrd';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
+import {
+  buttonStyle,
+  cardStyle,
+  contentColumnStyle,
+  errorBannerStyle,
+  statusBannerStyle
+} from './ui';
 
 export interface PrdResultProps {
   /** The generated PRD to display and offer for download. */
@@ -17,26 +24,10 @@ type SaveState =
   | { status: 'success'; url: string }
   | { status: 'error'; message: string };
 
-const card: CSSProperties = {
-  background: theme.color.surface,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.lg,
-  padding: theme.space.lg
-};
-
-const button = (primary = false): CSSProperties => ({
-  fontFamily: theme.type.family,
-  fontSize: theme.type.scale[1],
-  fontWeight: 600,
-  color: theme.color.text,
-  background: primary ? theme.color.accent : 'transparent',
-  border: primary ? 'none' : `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.sm,
-  padding: `${theme.space.sm}px ${theme.space.md}px`,
-  cursor: 'pointer'
-});
-
-/** Shows the generated PRD with download, copy, and save-to-site actions. */
+/**
+ * Shows the generated PRD with hero-style ready state, download, copy, and
+ * save-to-site actions (Grok v4 premium result language).
+ */
 export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
   const copy = en.prdResult;
   const [copied, setCopied] = useState(false);
@@ -83,75 +74,130 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
     }
   }
 
+  const saving = saveState.status === 'loading';
+
   return (
-    <section style={card} aria-label={copy.sectionLabel}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: theme.space.sm }}>
-        <div>
-          <p style={{ margin: 0, color: theme.color.accent, fontSize: theme.type.scale[0], fontWeight: 600, letterSpacing: '0.08em' }}>
-            {copy.ready}
-          </p>
-          <h2 style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[4] }}>{prd.title}</h2>
-        </div>
-        <div style={{ display: 'flex', gap: theme.space.sm, flexWrap: 'wrap' }}>
-          <button type="button" style={button(true)} onClick={download}>
-            {copy.download}
-          </button>
-          <button type="button" style={button()} onClick={() => void copyMarkdown()}>
-            {copied ? copy.copied : copy.copy}
-          </button>
-          <button
-            type="button"
-            style={button()}
-            onClick={() => void handleSave()}
-            disabled={saveState.status === 'loading'}
-            aria-busy={saveState.status === 'loading'}
-          >
-            {saveState.status === 'loading' ? copy.saving : copy.saveToSite}
-          </button>
-          <button type="button" style={button()} onClick={onReset}>
-            {copy.newPrd}
-          </button>
-        </div>
+    <section style={contentColumnStyle} aria-label={copy.sectionLabel}>
+      <div style={heroStyle}>
+        <p style={readyBadgeStyle}>
+          <span aria-hidden="true">✓ </span>
+          {copy.ready}
+        </p>
+        <h2 style={titleStyle}>{prd.title}</h2>
+        <p style={ledeStyle}>{copy.lede}</p>
+        <p style={{ ...ledeStyle, marginTop: theme.space.xs }}>{copy.hint}</p>
       </div>
-      <p style={{ color: theme.color.muted, fontSize: theme.type.scale[1], marginTop: theme.space.sm }}>
-        {copy.hint}
-      </p>
-      {saveState.status === 'success' && (
-        <p
-          role="status"
-          style={{ color: theme.color.accent, fontSize: theme.type.scale[1], marginTop: theme.space.sm }}
+
+      <div style={actionsStyle}>
+        <button type="button" style={buttonStyle(true)} onClick={download}>
+          {copy.download}
+        </button>
+        <button type="button" style={buttonStyle(false)} onClick={() => void copyMarkdown()}>
+          {copied ? (
+            <>
+              <span aria-hidden="true">✓ </span>
+              {copy.copied}
+            </>
+          ) : (
+            copy.copy
+          )}
+        </button>
+        <button
+          type="button"
+          style={buttonStyle(false, saving)}
+          onClick={() => void handleSave()}
+          disabled={saving}
+          aria-busy={saving}
         >
+          {saving ? copy.saving : copy.saveToSite}
+        </button>
+        <button type="button" style={buttonStyle(false)} onClick={onReset}>
+          {copy.newPrd}
+        </button>
+      </div>
+
+      {saveState.status === 'loading' && (
+        <div role="status" aria-live="polite" aria-busy="true" style={statusBannerStyle()}>
+          <span aria-hidden="true">…</span>
+          <span>{copy.saving}</span>
+        </div>
+      )}
+      {saveState.status === 'success' && (
+        <div role="status" style={statusBannerStyle()}>
+          <span aria-hidden="true">✓</span>
           <a href={saveState.url} style={{ color: theme.color.accent, fontWeight: 600 }}>
             {copy.savedViewAt(saveState.url)}
           </a>
-        </p>
+        </div>
       )}
       {saveState.status === 'error' && (
-        <p
-          role="alert"
-          style={{ color: theme.color.accent, fontSize: theme.type.scale[1], marginTop: theme.space.sm }}
-        >
-          {saveState.message}
-        </p>
+        <div role="alert" style={errorBannerStyle()}>
+          <span aria-hidden="true">!</span>
+          <span>{saveState.message}</span>
+        </div>
       )}
-      <pre
-        style={{
-          marginTop: theme.space.md,
-          maxHeight: '28rem',
-          overflow: 'auto',
-          background: theme.color.bg,
-          border: `1px solid ${theme.color.border}`,
-          borderRadius: theme.radius.md,
-          padding: theme.space.md,
-          fontSize: theme.type.scale[1],
-          lineHeight: 1.6,
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-word',
-          color: theme.color.text
-        }}
-      >
-        {prd.markdown}
-      </pre>
+
+      <div style={cardStyle(theme.space.md)}>
+        <pre style={preStyle}>{prd.markdown}</pre>
+      </div>
     </section>
   );
 }
+
+const heroStyle: CSSProperties = {
+  textAlign: 'left',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.space.xs
+};
+
+const readyBadgeStyle: CSSProperties = {
+  margin: 0,
+  color: theme.color.accent,
+  fontSize: theme.type.scale[0],
+  fontWeight: 700,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: theme.space.xs
+};
+
+const titleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: theme.type.scale[4],
+  fontWeight: 750,
+  letterSpacing: '-0.03em',
+  lineHeight: 1.2,
+  color: theme.color.text,
+  wordBreak: 'break-word'
+};
+
+const ledeStyle: CSSProperties = {
+  margin: 0,
+  color: theme.color.muted,
+  fontSize: theme.type.scale[2],
+  lineHeight: 1.45,
+  maxWidth: '40rem'
+};
+
+const actionsStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: theme.space.sm
+};
+
+const preStyle: CSSProperties = {
+  margin: 0,
+  maxHeight: '28rem',
+  overflow: 'auto',
+  background: theme.color.bg,
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.md,
+  padding: theme.space.md,
+  fontSize: theme.type.scale[1],
+  lineHeight: 1.6,
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+  color: theme.color.text
+};

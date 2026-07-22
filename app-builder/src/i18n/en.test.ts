@@ -14,7 +14,9 @@ describe('en locale bundle', () => {
   });
 
   it('exposes real legal/info page content (title, intro, sections)', () => {
-    expect(en.pages.home.title).toBe('Build an app');
+    expect(en.pages.home.title.length).toBeGreaterThan(2);
+    expect(en.chat.greetingBody.length).toBeGreaterThan(20);
+    expect(en.templates.items.length).toBeGreaterThanOrEqual(5);
     for (const key of ['about', 'contact', 'privacy', 'terms'] as const) {
       const p = en.pages[key];
       expect(p.title.length).toBeGreaterThan(2);

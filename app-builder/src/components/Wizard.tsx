@@ -7,6 +7,17 @@ import {
 } from '../lib/job';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
+import {
+  buttonStyle,
+  cardStyle,
+  chipStyle,
+  errorBannerStyle,
+  fieldStyle,
+  hintStyle,
+  labelStyle,
+  statusBannerStyle,
+  stickyBarStyle
+} from './ui';
 
 /** Minimum prompt length before submit is allowed (matches job schema). */
 const MIN_PROMPT_LENGTH = 8;
@@ -28,6 +39,8 @@ export interface WizardProps {
   onChange: (next: WizardAnswers) => void;
   /** Called with the server job only after a successful submit. */
   onSubmit: (job: BuildJob) => void;
+  /** Optional: start on a specific step (e.g. 2 when prompt already set). */
+  initialStep?: 1 | 2 | 3;
 }
 
 /**
@@ -53,10 +66,10 @@ function parseBuildJob(payload: unknown): BuildJob | null {
 /**
  * Three-step clarifying-questions wizard: free-text intent, structured
  * scope (type / auth / entities), then review with a token estimate and submit.
- * Controlled via value/onChange; step index is internal.
+ * Grok v2 base + Claude variation 3 pill chips and clear step indicators.
  */
-export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardProps): JSX.Element {
+  const [step, setStep] = useState<1 | 2 | 3>(initialStep);
   const [submitState, setSubmitState] = useState<SubmitUiState>({ status: 'idle' });
 
   const entityCount = countEntities(value.entities);
@@ -165,241 +178,243 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
     }
   }
 
-  const fieldStyle: CSSProperties = {
-    display: 'block',
-    width: '100%',
-    maxWidth: '32rem',
-    fontFamily: theme.type.family,
-    fontSize: theme.type.scale[2],
-    color: theme.color.text,
-    background: theme.color.bg,
-    border: `1px solid ${theme.color.border}`,
-    borderRadius: theme.radius.sm,
-    padding: theme.space.sm,
-    marginTop: theme.space.xs,
-    boxSizing: 'border-box'
-  };
-
-  const labelStyle: CSSProperties = {
-    display: 'block',
-    marginTop: theme.space.md,
-    fontSize: theme.type.scale[1],
-    color: theme.color.muted
-  };
-
-  const buttonStyle: CSSProperties = {
-    fontFamily: theme.type.family,
-    fontSize: theme.type.scale[2],
-    color: theme.color.text,
-    background: theme.color.accent,
-    border: 'none',
-    borderRadius: theme.radius.sm,
-    padding: `${theme.space.sm}px ${theme.space.md}px`,
-    cursor: 'pointer',
-    marginRight: theme.space.sm,
-    marginTop: theme.space.md
-  };
-
-  const secondaryButtonStyle: CSSProperties = {
-    ...buttonStyle,
-    background: theme.color.surface,
-    border: `1px solid ${theme.color.border}`
-  };
-
-  const disabledButtonStyle: CSSProperties = {
-    ...buttonStyle,
-    opacity: 0.5,
-    cursor: 'not-allowed'
-  };
-
   return (
     <form
-      onSubmit={handleSubmit}
-      aria-label={copy.formLabel}
-      style={{
-        fontFamily: theme.type.family,
-        color: theme.color.text,
-        background: theme.color.surface,
-        border: `1px solid ${theme.color.border}`,
-        borderRadius: theme.radius.md,
-        padding: theme.space.lg,
-        maxWidth: '40rem'
+      onSubmit={(event) => {
+        void handleSubmit(event);
       }}
+      aria-label={copy.formLabel}
+      style={formStyle}
     >
-      <p style={{ color: theme.color.muted, fontSize: theme.type.scale[1], margin: 0 }}>
-        {copy.stepOf(step)}
-      </p>
+      <Stepper step={step} />
 
-      {step === 1 && (
-        <div>
-          <label htmlFor="wizard-prompt" style={labelStyle}>
-            {copy.promptLabel}
-          </label>
-          <textarea
-            id="wizard-prompt"
-            name="prompt"
-            required
-            minLength={MIN_PROMPT_LENGTH}
-            rows={4}
-            value={value.prompt}
-            onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-              patch({ prompt: event.target.value })
-            }
-            style={fieldStyle}
-            aria-describedby="wizard-prompt-hint"
-          />
-          <p id="wizard-prompt-hint" style={{ ...labelStyle, marginTop: theme.space.xs }}>
-            {copy.promptHint(MIN_PROMPT_LENGTH)}
-          </p>
-        </div>
-      )}
+      <section style={cardStyle(theme.space.lg)} aria-labelledby={`wizard-q-${step}`}>
+        <p style={kickerStyle}>{copy.questionKicker(step)}</p>
 
-      {step === 2 && (
-        <div>
-          <label htmlFor="wizard-app-type" style={labelStyle}>
-            {copy.appTypeLabel}
-          </label>
-          <input
-            id="wizard-app-type"
-            name="appType"
-            type="text"
-            value={value.appType}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              patch({ appType: event.target.value })
-            }
-            placeholder={copy.appTypePlaceholder}
-            style={fieldStyle}
-          />
-
-          <label
-            htmlFor="wizard-auth"
-            style={{
-              ...labelStyle,
-              display: 'flex',
-              alignItems: 'center',
-              gap: theme.space.sm,
-              color: theme.color.text
-            }}
-          >
-            <input
-              id="wizard-auth"
-              name="hasAuth"
-              type="checkbox"
-              checked={value.hasAuth}
-              onChange={(event: ChangeEvent<HTMLInputElement>) =>
-                patch({ hasAuth: event.target.checked })
+        {step === 1 && (
+          <div>
+            <label htmlFor="wizard-prompt" id="wizard-q-1" style={fieldLabelStyle}>
+              {copy.promptLabel}
+            </label>
+            <p style={hintStyle()}>{copy.promptHint(MIN_PROMPT_LENGTH)}</p>
+            <textarea
+              id="wizard-prompt"
+              name="prompt"
+              required
+              minLength={MIN_PROMPT_LENGTH}
+              rows={5}
+              value={value.prompt}
+              onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                patch({ prompt: event.target.value })
               }
+              placeholder={copy.promptPlaceholder}
+              style={{ ...fieldStyle(), minHeight: 120, marginTop: theme.space.sm }}
+              aria-describedby="wizard-prompt-hint"
             />
-            {copy.authLabel}
-          </label>
-
-          <label htmlFor="wizard-entities" style={labelStyle}>
-            {copy.entitiesLabel}
-          </label>
-          <input
-            id="wizard-entities"
-            name="entities"
-            type="text"
-            value={value.entities}
-            onChange={(event: ChangeEvent<HTMLInputElement>) =>
-              patch({ entities: event.target.value })
-            }
-            placeholder={copy.entitiesPlaceholder}
-            style={fieldStyle}
-            aria-describedby="wizard-entities-hint"
-          />
-          <p id="wizard-entities-hint" style={{ ...labelStyle, marginTop: theme.space.xs }}>
-            {copy.entitiesHint}
-          </p>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div>
-          <p style={{ marginTop: theme.space.md, fontSize: theme.type.scale[2] }}>
-            <strong>{copy.reviewPrompt}</strong> {value.prompt.trim() || copy.reviewEmpty}
-          </p>
-          <p style={{ fontSize: theme.type.scale[2] }}>
-            <strong>{copy.reviewAppType}</strong> {value.appType.trim() || copy.reviewNotSet}
-          </p>
-          <p style={{ fontSize: theme.type.scale[2] }}>
-            <strong>{copy.reviewAuth}</strong>{' '}
-            {value.hasAuth ? copy.reviewYes : copy.reviewNo}
-          </p>
-          <p style={{ fontSize: theme.type.scale[2] }}>
-            <strong>{copy.reviewEntities}</strong> {value.entities.trim() || copy.reviewNone}
-          </p>
-          <div
-            role="status"
-            aria-live="polite"
-            style={{
-              marginTop: theme.space.md,
-              padding: theme.space.md,
-              background: theme.color.bg,
-              borderRadius: theme.radius.sm,
-              border: `1px solid ${theme.color.border}`
-            }}
-          >
-            <p style={{ margin: 0, fontSize: theme.type.scale[2] }}>
-              {copy.estimatedIterations(cost.iterations)}
+            <p id="wizard-prompt-hint" style={hintStyle()}>
+              {value.prompt.trim().length}/{MIN_PROMPT_LENGTH}+
             </p>
-            <p style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[2] }}>
-              {copy.estimatedTokens(cost.tokens.toLocaleString())}
-            </p>
-            <p
-              style={{
-                margin: `${theme.space.xs}px 0 0`,
-                fontSize: theme.type.scale[1],
-                color: theme.color.muted
-              }}
+            <div
+              style={chipsRowStyle}
+              role="group"
+              aria-label={copy.exampleIdeasLabel}
             >
-              {copy.confidence(cost.confidence)}
+              {copy.exampleIdeas.map((idea) => (
+                <button
+                  key={idea}
+                  type="button"
+                  style={chipStyle(value.prompt.includes(idea))}
+                  onClick={() => {
+                    patch({ prompt: `A ${idea.toLowerCase()} app` });
+                  }}
+                >
+                  {idea}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div>
+            <p id="wizard-q-2" style={fieldLabelStyle}>
+              {copy.appTypeLabel}
+            </p>
+            <div
+              style={chipsRowStyle}
+              role="group"
+              aria-label={copy.appTypeChipsLabel}
+            >
+              {copy.appTypeChips.map((chip) => {
+                const selected = value.appType === chip;
+                return (
+                  <button
+                    key={chip}
+                    type="button"
+                    style={chipStyle(selected)}
+                    aria-pressed={selected}
+                    onClick={() => {
+                      patch({ appType: chip });
+                    }}
+                  >
+                    {chip}
+                  </button>
+                );
+              })}
+            </div>
+            <label htmlFor="wizard-app-type" style={{ ...labelStyle(), marginTop: theme.space.md }}>
+              {copy.appTypeLabel}
+            </label>
+            <input
+              id="wizard-app-type"
+              name="appType"
+              type="text"
+              value={value.appType}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                patch({ appType: event.target.value })
+              }
+              placeholder={copy.appTypePlaceholder}
+              style={fieldStyle()}
+            />
+
+            <p style={{ ...fieldLabelStyle, marginTop: theme.space.lg }} id="wizard-auth-label">
+              {copy.authGroupLabel}
+            </p>
+            <div
+              style={chipsRowStyle}
+              role="group"
+              aria-labelledby="wizard-auth-label"
+            >
+              <button
+                type="button"
+                style={chipStyle(value.hasAuth)}
+                aria-pressed={value.hasAuth}
+                onClick={() => {
+                  patch({ hasAuth: true });
+                }}
+              >
+                {copy.authYes}
+              </button>
+              <button
+                type="button"
+                style={chipStyle(!value.hasAuth)}
+                aria-pressed={!value.hasAuth}
+                onClick={() => {
+                  patch({ hasAuth: false });
+                }}
+              >
+                {copy.authNo}
+              </button>
+            </div>
+
+            <label
+              htmlFor="wizard-entities"
+              style={{ ...labelStyle(), marginTop: theme.space.lg }}
+            >
+              {copy.entitiesLabel}
+            </label>
+            <input
+              id="wizard-entities"
+              name="entities"
+              type="text"
+              value={value.entities}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                patch({ entities: event.target.value })
+              }
+              placeholder={copy.entitiesPlaceholder}
+              style={fieldStyle()}
+              aria-describedby="wizard-entities-hint"
+            />
+            <p id="wizard-entities-hint" style={hintStyle()}>
+              {copy.entitiesHint}
             </p>
           </div>
-          {!promptReady && (
-            <p role="alert" style={{ color: theme.color.accent, fontSize: theme.type.scale[1] }}>
-              {copy.promptTooShort(MIN_PROMPT_LENGTH)}
+        )}
+
+        {step === 3 && (
+          <div>
+            <p id="wizard-q-3" style={fieldLabelStyle}>
+              {copy.reviewHeading}
             </p>
-          )}
-          {submitState.status === 'loading' && (
-            <p role="status" aria-live="polite" style={{ marginTop: theme.space.md, fontSize: theme.type.scale[2] }}>
-              {copy.submittingStatus}
-            </p>
-          )}
-          {submitState.status === 'error' && (
-            <p role="alert" style={{ marginTop: theme.space.md, color: theme.color.accent, fontSize: theme.type.scale[2] }}>
-              {submitState.message}
-            </p>
-          )}
-          {submitState.status === 'success' && (
-            <div
-              role="status"
-              aria-live="polite"
-              style={{
-                marginTop: theme.space.md,
-                padding: theme.space.md,
-                background: theme.color.bg,
-                borderRadius: theme.radius.sm,
-                border: `1px solid ${theme.color.border}`
-              }}
-            >
+            <dl style={reviewListStyle}>
+              <ReviewRow term={copy.reviewPrompt} detail={value.prompt.trim() || copy.reviewEmpty} />
+              <ReviewRow
+                term={copy.reviewAppType}
+                detail={value.appType.trim() || copy.reviewNotSet}
+              />
+              <ReviewRow
+                term={copy.reviewAuth}
+                detail={value.hasAuth ? copy.reviewYes : copy.reviewNo}
+              />
+              <ReviewRow
+                term={copy.reviewEntities}
+                detail={value.entities.trim() || copy.reviewNone}
+              />
+            </dl>
+            <div role="status" aria-live="polite" style={estimateBoxStyle}>
               <p style={{ margin: 0, fontSize: theme.type.scale[2] }}>
-                <strong>{copy.jobReadyHeading(submitState.job.slug)}</strong>
+                {copy.estimatedIterations(cost.iterations)}
               </p>
-              <p style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[1], color: theme.color.muted }}>
-                {copy.jobMeta(submitState.job.targetType, submitState.job.threshold)}
+              <p style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[2] }}>
+                {copy.estimatedTokens(cost.tokens.toLocaleString())}
               </p>
-              <p style={{ margin: `${theme.space.xs}px 0 0`, fontSize: theme.type.scale[1], color: theme.color.muted }}>
-                {submitState.job.prompt}
+              <p
+                style={{
+                  margin: `${theme.space.xs}px 0 0`,
+                  fontSize: theme.type.scale[1],
+                  color: theme.color.muted
+                }}
+              >
+                {copy.confidence(cost.confidence)}
               </p>
             </div>
-          )}
-        </div>
-      )}
+            {!promptReady && (
+              <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
+                <span aria-hidden="true">!</span>
+                <span>{copy.promptTooShort(MIN_PROMPT_LENGTH)}</span>
+              </div>
+            )}
+            {submitState.status === 'loading' && (
+              <div
+                role="status"
+                aria-live="polite"
+                aria-busy="true"
+                style={{ ...statusBannerStyle(), marginTop: theme.space.md }}
+              >
+                <span aria-hidden="true">…</span>
+                <span>{copy.submittingStatus}</span>
+              </div>
+            )}
+            {submitState.status === 'error' && (
+              <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
+                <span aria-hidden="true">!</span>
+                <span>{submitState.message}</span>
+              </div>
+            )}
+            {submitState.status === 'success' && (
+              <div
+                role="status"
+                aria-live="polite"
+                style={{ ...statusBannerStyle(), marginTop: theme.space.md }}
+              >
+                <span aria-hidden="true">✓</span>
+                <div>
+                  <p style={{ margin: 0, fontWeight: 600 }}>
+                    {copy.jobReadyHeading(submitState.job.slug)}
+                  </p>
+                  <p style={{ margin: `${theme.space.xs}px 0 0`, color: theme.color.muted, fontSize: theme.type.scale[1] }}>
+                    {copy.jobMeta(submitState.job.targetType, submitState.job.threshold)}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={stickyBarStyle()}>
         {step > 1 && (
-          <button type="button" onClick={goBack} style={secondaryButtonStyle} disabled={isLoading}>
+          <button type="button" onClick={goBack} style={buttonStyle(false, isLoading)} disabled={isLoading}>
             {copy.back}
           </button>
         )}
@@ -408,18 +423,83 @@ export function Wizard({ value, onChange, onSubmit }: WizardProps): JSX.Element 
             type="button"
             onClick={goNext}
             disabled={step === 1 && !promptReady}
-            style={step === 1 && !promptReady ? disabledButtonStyle : buttonStyle}
+            style={buttonStyle(true, step === 1 && !promptReady)}
           >
             {copy.next}
           </button>
         )}
         {step === 3 && (
-          <button type="submit" disabled={!canSubmit} style={canSubmit ? buttonStyle : disabledButtonStyle}>
+          <button type="submit" disabled={!canSubmit} style={buttonStyle(true, !canSubmit)}>
             {isLoading ? copy.submitting : copy.submit}
           </button>
         )}
       </div>
     </form>
+  );
+}
+
+/**
+ * Segmented step indicator with label + progress track (not color alone).
+ */
+function Stepper({ step }: { step: 1 | 2 | 3 }): JSX.Element {
+  const copy = en.wizard;
+  return (
+    <div style={stepperStyle} aria-label={copy.stepOf(step)}>
+      <div style={stepperMetaStyle}>
+        <span style={stepLabelStyle}>
+          {copy.stepOf(step)}
+        </span>
+        <span style={stepTitleStyle}>{copy.stepTitles[step - 1]}</span>
+      </div>
+      <div style={progressTrackStyle} role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
+        {([1, 2, 3] as const).map((seg) => (
+          <div
+            key={seg}
+            style={{
+              flex: 1,
+              height: theme.space.xs + 2,
+              borderRadius: theme.radius.pill,
+              background:
+                seg <= step ? theme.color.progressFill : theme.color.progressTrack,
+              opacity: seg < step ? 0.55 : 1
+            }}
+            aria-hidden="true"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One review definition row.
+ */
+function ReviewRow({ term, detail }: { term: string; detail: string }): JSX.Element {
+  return (
+    <div style={{ marginBottom: theme.space.sm }}>
+      <dt
+        style={{
+          fontSize: theme.type.scale[0],
+          fontWeight: 600,
+          color: theme.color.muted,
+          textTransform: 'uppercase',
+          letterSpacing: '0.04em',
+          margin: 0
+        }}
+      >
+        {term}
+      </dt>
+      <dd
+        style={{
+          margin: `${theme.space.xs}px 0 0`,
+          fontSize: theme.type.scale[2],
+          color: theme.color.text,
+          wordBreak: 'break-word'
+        }}
+      >
+        {detail}
+      </dd>
+    </div>
   );
 }
 
@@ -429,4 +509,82 @@ export const EMPTY_WIZARD_ANSWERS: WizardAnswers = {
   appType: '',
   hasAuth: false,
   entities: ''
+};
+
+const formStyle: CSSProperties = {
+  fontFamily: theme.type.family,
+  color: theme.color.text,
+  maxWidth: '40rem',
+  width: '100%'
+};
+
+const stepperStyle: CSSProperties = {
+  marginBottom: theme.space.md
+};
+
+const stepperMetaStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: theme.space.sm,
+  marginBottom: theme.space.sm,
+  flexWrap: 'wrap'
+};
+
+const stepLabelStyle: CSSProperties = {
+  fontSize: theme.type.scale[1],
+  fontWeight: 650,
+  letterSpacing: '0.02em',
+  color: theme.color.muted,
+  textTransform: 'uppercase'
+};
+
+const stepTitleStyle: CSSProperties = {
+  fontSize: theme.type.scale[1],
+  fontWeight: 600,
+  color: theme.color.accent
+};
+
+const progressTrackStyle: CSSProperties = {
+  display: 'flex',
+  gap: 6,
+  height: 6
+};
+
+const kickerStyle: CSSProperties = {
+  fontSize: theme.type.scale[0],
+  fontWeight: 650,
+  letterSpacing: '0.04em',
+  textTransform: 'uppercase',
+  color: theme.color.accent,
+  margin: `0 0 ${theme.space.sm}px`
+};
+
+const fieldLabelStyle: CSSProperties = {
+  display: 'block',
+  fontSize: theme.type.scale[2],
+  fontWeight: 650,
+  color: theme.color.text,
+  lineHeight: 1.35,
+  margin: 0
+};
+
+const chipsRowStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: theme.space.sm,
+  marginTop: theme.space.md
+};
+
+const reviewListStyle: CSSProperties = {
+  margin: `${theme.space.md}px 0 0`,
+  padding: 0
+};
+
+const estimateBoxStyle: CSSProperties = {
+  marginTop: theme.space.md,
+  padding: theme.space.md,
+  background: theme.color.bg,
+  borderRadius: theme.radius.sm,
+  border: `1px solid ${theme.color.border}`
 };

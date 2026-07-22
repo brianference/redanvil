@@ -1,34 +1,9 @@
 import { z } from 'zod';
 import type { Env } from '../lib/env';
+import { jsonResponse } from '../lib/http';
 
-/**
- * Secure JSON response headers: nosniff + explicit same-origin CORS (no wildcard).
- */
-function responseHeaders(request: Request, methods: string): Record<string, string> {
-  const origin = new URL(request.url).origin;
-  return {
-    'content-type': 'application/json',
-    'x-content-type-options': 'nosniff',
-    'access-control-allow-origin': origin,
-    'access-control-allow-methods': methods,
-    'access-control-allow-headers': 'content-type'
-  };
-}
-
-/**
- * JSON error/success response with secure headers applied.
- */
-function jsonResponse(
-  request: Request,
-  body: unknown,
-  status: number,
-  methods: string
-): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: responseHeaders(request, methods)
-  });
-}
+/** CORS allow-methods for this endpoint (POST + GET). Order matches prior local copy. */
+const ALLOWED_METHODS = 'POST, GET';
 
 /**
  * Body for saving a generated PRD to D1.
@@ -51,19 +26,18 @@ export async function onRequestPost(context: {
   env: Env;
 }): Promise<Response> {
   const { request, env } = context;
-  const methods = 'POST, GET';
 
   let raw: unknown;
   try {
     raw = await request.json();
   } catch {
-    return jsonResponse(request, { error: 'Invalid JSON body' }, 400, methods);
+    return jsonResponse(request, { error: 'Invalid JSON body' }, 400, ALLOWED_METHODS);
   }
 
   const parsed = savePrdBodySchema.safeParse(raw);
   if (!parsed.success) {
     const message = parsed.error.issues[0]?.message ?? 'Invalid input';
-    return jsonResponse(request, { error: message }, 400, methods);
+    return jsonResponse(request, { error: message }, 400, ALLOWED_METHODS);
   }
 
   const id = crypto.randomUUID();
@@ -77,10 +51,10 @@ export async function onRequestPost(context: {
       .bind(id, slug, title, prompt, markdown, createdAt)
       .run();
   } catch {
-    return jsonResponse(request, { error: 'Could not save the PRD' }, 500, methods);
+    return jsonResponse(request, { error: 'Could not save the PRD' }, 500, ALLOWED_METHODS);
   }
 
-  return jsonResponse(request, { id, url: `/prd/${id}` }, 200, methods);
+  return jsonResponse(request, { id, url: `/prd/${id}` }, 200, ALLOWED_METHODS);
 }
 
 /**
@@ -91,14 +65,13 @@ export async function onRequestGet(context: {
   env: Env;
 }): Promise<Response> {
   const { request, env } = context;
-  const methods = 'POST, GET';
 
   try {
     const { results } = await env.DB.prepare(
       'SELECT id, slug, title, created_at FROM prds ORDER BY created_at DESC LIMIT 50'
     ).all();
-    return jsonResponse(request, results, 200, methods);
+    return jsonResponse(request, results, 200, ALLOWED_METHODS);
   } catch {
-    return jsonResponse(request, { error: 'Could not list PRDs' }, 500, methods);
+    return jsonResponse(request, { error: 'Could not list PRDs' }, 500, ALLOWED_METHODS);
   }
 }

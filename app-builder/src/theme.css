@@ -1,32 +1,96 @@
 /**
  * Light/dark color variables. Default (no data-theme) is dark; system light
  * applies when the user has not chosen explicitly.
+ * Semantic tokens only — components reference these via theme.ts.
  */
 :root {
   --bg: #0b0b0f;
   --surface: #15151d;
+  --surface-elevated: #1c1c26;
   --text: #f5f5f7;
-  --muted: #8b8b93;
+  --text-on-accent: #ffffff;
+  --muted: #9b9ba6;
   --accent: #e5484d;
-  --border: #26263049;
+  --accent-soft: color-mix(in srgb, #e5484d 16%, transparent);
+  --border: #2a2a36;
+  --border-strong: #3a3a48;
+  --chip-bg: #1c1c26;
+  --success: #30a46c;
+  --success-soft: color-mix(in srgb, #30a46c 16%, transparent);
+  --error: #e5484d;
+  --error-soft: color-mix(in srgb, #e5484d 12%, transparent);
+  --warning: #f5a524;
+  --skeleton: #22222e;
+  --skeleton-shine: #2c2c3a;
+  --focus-ring: 0 0 0 3px color-mix(in srgb, #e5484d 40%, transparent);
+  --shadow-card: 0 1px 2px color-mix(in srgb, #000 35%, transparent);
+  --shadow-composer: 0 -8px 24px color-mix(in srgb, #000 35%, transparent);
+  --radius-pill: 999px;
+  --touch: 44px;
+  --progress-track: #2a2a36;
+  --progress-fill: #e5484d;
 }
 
 :root[data-theme='light'] {
-  --bg: #f6f7fb;
+  --bg: #f4f4f6;
   --surface: #ffffff;
-  --text: #16161d;
-  --muted: #5b6270;
+  --surface-elevated: #ffffff;
+  --text: #111114;
+  --text-on-accent: #ffffff;
+  --muted: #5c5c68;
   --accent: #d33b40;
-  --border: #e4e6ee;
+  --accent-soft: color-mix(in srgb, #d33b40 12%, transparent);
+  --border: #e2e2e8;
+  --border-strong: #c8c8d0;
+  --chip-bg: #ffffff;
+  --success: #218358;
+  --success-soft: color-mix(in srgb, #218358 12%, transparent);
+  --error: #d33b40;
+  --error-soft: color-mix(in srgb, #d33b40 10%, transparent);
+  --warning: #ad5700;
+  --skeleton: #e8e8ee;
+  --skeleton-shine: #f4f4f8;
+  --focus-ring: 0 0 0 3px color-mix(in srgb, #d33b40 35%, transparent);
+  --shadow-card: 0 1px 2px color-mix(in srgb, #111 6%, transparent);
+  --shadow-composer: 0 -8px 24px color-mix(in srgb, #111 6%, transparent);
+  --progress-track: #e2e2e8;
+  --progress-fill: #d33b40;
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
-    --bg: #f6f7fb;
+    --bg: #f4f4f6;
     --surface: #ffffff;
-    --text: #16161d;
-    --muted: #5b6270;
+    --surface-elevated: #ffffff;
+    --text: #111114;
+    --text-on-accent: #ffffff;
+    --muted: #5c5c68;
     --accent: #d33b40;
-    --border: #e4e6ee;
+    --accent-soft: color-mix(in srgb, #d33b40 12%, transparent);
+    --border: #e2e2e8;
+    --border-strong: #c8c8d0;
+    --chip-bg: #ffffff;
+    --success: #218358;
+    --success-soft: color-mix(in srgb, #218358 12%, transparent);
+    --error: #d33b40;
+    --error-soft: color-mix(in srgb, #d33b40 10%, transparent);
+    --warning: #ad5700;
+    --skeleton: #e8e8ee;
+    --skeleton-shine: #f4f4f8;
+    --focus-ring: 0 0 0 3px color-mix(in srgb, #d33b40 35%, transparent);
+    --shadow-card: 0 1px 2px color-mix(in srgb, #111 6%, transparent);
+    --shadow-composer: 0 -8px 24px color-mix(in srgb, #111 6%, transparent);
+    --progress-track: #e2e2e8;
+    --progress-fill: #d33b40;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -34,7 +34,10 @@ export const APP_CHECKS: Check[] = [
   det('fe-no-unsanitized-html'),
   det('fe-i18n-central-copy'),
   det('hyg-no-binaries'),
-  det('hyg-secret-scan')
+  det('hyg-secret-scan'),
+  det('u-sec-sast'),
+  det('u-conc-no-padding'),
+  det('hyg-no-duplication')
 ];
 
 export interface GateReport {

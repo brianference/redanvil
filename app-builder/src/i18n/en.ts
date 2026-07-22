@@ -7,6 +7,11 @@ export const en = {
     name: 'RedAnvil',
     primaryNav: 'Primary',
     footerCopyright: '© RedAnvil',
+    footerTagline: 'Forge a full-stack app from one prompt. Every app ships behind a real quality gate.',
+    footerProduct: 'Product',
+    footerCompany: 'Company',
+    footerLegal: 'Legal',
+    footerQuality: 'Quality gate · score ≥ 90',
     navBuilder: 'Builder',
     navDashboard: 'Dashboard',
     navGitHub: 'GitHub',
@@ -20,18 +25,29 @@ export const en = {
   },
   pages: {
     home: {
-      title: 'Build an app',
+      title: 'What app should we forge?',
+      subtitle:
+        'Describe the product in plain language. RedAnvil asks a few questions, then generates a downloadable PRD.',
       jobReady: (slug: string, threshold: number): string =>
-        `Job ready: ${slug} (threshold ${threshold})`
+        `Job ready: ${slug} (threshold ${threshold})`,
+      bannerAlt: 'RedAnvil — forge apps from a prompt'
     },
     saved: {
-      title: 'Saved PRDs',
-      subtitle: 'PRDs you saved to this site. Open one to view or share the link.',
-      loading: 'Loading saved PRDs…',
+      title: 'Your builds',
+      subtitle: 'PRDs saved on this site. Open one to view or share the link.',
+      loading: 'Loading recent builds…',
       error: 'Could not load saved PRDs.',
-      empty: 'No saved PRDs yet. Generate a PRD and choose Save to site.',
-      listLabel: 'Saved PRDs',
-      itemMeta: (slug: string, createdAt: string): string => `${slug} · ${createdAt}`
+      errorRetry: 'Retry',
+      empty: 'No saved PRDs yet.',
+      emptyHint: 'Generate a PRD and choose Save to site to see it here.',
+      emptyCta: 'Start a new build',
+      listLabel: 'Recent builds',
+      sectionRecent: 'Recent builds',
+      itemMeta: (slug: string, createdAt: string): string => `${slug} · ${createdAt}`,
+      statusReady: 'Ready',
+      statusLabel: 'PRD ready',
+      newBuild: 'New build',
+      countMeta: (n: number): string => (n === 1 ? '1 build' : `${n} builds`)
     },
     savedPrd: {
       title: 'Saved PRD',
@@ -39,7 +55,8 @@ export const en = {
       error: 'Could not load this PRD.',
       notFound: 'This PRD was not found.',
       backToSaved: 'Back to saved PRDs',
-      createdAt: (createdAt: string): string => `Saved ${createdAt}`
+      createdAt: (createdAt: string): string => `Saved ${createdAt}`,
+      readyBadge: 'PRD READY'
     },
     about: {
       title: 'About RedAnvil',
@@ -147,18 +164,112 @@ export const en = {
       ]
     }
   },
+  chat: {
+    agentName: 'RedAnvil',
+    greetingBody:
+      'Describe the product in plain language. I’ll ask a few sharp questions, then generate a downloadable PRD you can ship to engineering.',
+    greetingMeta: 'Full-stack scope · Mobile-first · No account required to start',
+    starterLine: 'Try a starter, or type your own idea below.',
+    trustOnline: 'Online',
+    trustPrivate: 'PRD private to you',
+    trustStatusLabel: 'Service status',
+    examplesLabel: 'Example prompts',
+    emptyHint: 'No draft yet. Send a description to start forging your PRD.',
+    composerLabel: 'Describe your app',
+    composerPlaceholder: 'e.g. A marketplace for local makers with tips and pickup slots…',
+    composerHint: 'Send · I’ll reply with clarifying questions, then forge a PRD.',
+    sendAria: 'Send description',
+    tooShort: (min: number): string => `Enter at least ${min} characters to continue.`,
+    browseTemplates: 'Or start from a template',
+    examples: [
+      {
+        title: 'Field service app',
+        prompt: 'A field service app where techs log jobs offline and sync when back online'
+      },
+      {
+        title: 'Parent coach',
+        prompt: 'A parent coach app with daily prompts and shared family goals'
+      },
+      {
+        title: 'B2B invoice tracker',
+        prompt: 'A B2B invoice tracker with Stripe status, dunning reminders, and CSV export'
+      }
+    ]
+  },
+  templates: {
+    title: 'Start from a template',
+    subtitle: 'Pick an app archetype, or describe your own below.',
+    gridLabel: 'App type templates',
+    orDescribe: 'Or describe your own',
+    composerLabel: 'Your app idea',
+    composerPlaceholder: 'e.g. A booking system for independent bike shops with inventory and SMS reminders',
+    continue: 'Continue to questions',
+    backToChat: 'Back to chat',
+    selected: 'Selected',
+    emptyHint: 'Pick a template or write your own description to continue.',
+    examplesLabel: 'Example prompts',
+    items: [
+      {
+        id: 'saas',
+        title: 'SaaS',
+        description: 'Subscriptions, teams, billing, dashboards',
+        appType: 'SaaS dashboard',
+        prompt: 'A multi-tenant SaaS dashboard with team invites, billing, and usage analytics'
+      },
+      {
+        id: 'marketplace',
+        title: 'Marketplace',
+        description: 'Listings, search, checkout, sellers',
+        appType: 'Marketplace',
+        prompt: 'A marketplace for local makers with listings, search, tips, and pickup slots'
+      },
+      {
+        id: 'internal',
+        title: 'Internal tool',
+        description: 'Ops tables, roles, audit trails',
+        appType: 'Internal tool',
+        prompt: 'An internal ops tool with role-based access, audit trails, and bulk export'
+      },
+      {
+        id: 'mobile',
+        title: 'Mobile app',
+        description: 'iOS/Android flows, push, offline',
+        appType: 'Mobile app',
+        prompt: 'A mobile-first app with offline support, push notifications, and simple onboarding'
+      },
+      {
+        id: 'api',
+        title: 'API / backend',
+        description: 'Auth, webhooks, rate limits, OpenAPI docs',
+        appType: 'API backend',
+        prompt: 'A backend API with auth, webhooks, rate limits, and OpenAPI documentation'
+      }
+    ]
+  },
   wizard: {
     formLabel: 'App build wizard',
     stepOf: (step: number): string => `Step ${step} of 3`,
+    stepTitles: ['App idea', 'Scope', 'Review'] as const,
+    questionKicker: (n: number): string => `Question ${n}`,
     promptLabel: 'What app do you want?',
     promptHint: (minLength: number): string =>
       `Describe the product in a short sentence (at least ${minLength} characters).`,
+    promptPlaceholder:
+      'e.g. A booking app for a small yoga studio with class schedules and payments',
+    exampleIdeasLabel: 'Example app ideas',
+    exampleIdeas: ['Team habit tracker', 'Local marketplace', 'Clinic waitlist'] as const,
     appTypeLabel: 'App type',
     appTypePlaceholder: 'e.g. marketplace, dashboard, content site',
+    appTypeChipsLabel: 'Common types',
+    appTypeChips: ['SaaS', 'Marketplace', 'Internal tool', 'Mobile app', 'API'] as const,
     authLabel: 'Authentication needed',
+    authYes: 'Yes',
+    authNo: 'No',
+    authGroupLabel: 'Does this app need sign-in?',
     entitiesLabel: 'Main entities',
     entitiesPlaceholder: 'e.g. User, Recipe, Favorite',
     entitiesHint: 'Comma-separated domain nouns the app will store or manage.',
+    reviewHeading: 'Review your answers',
     reviewPrompt: 'Prompt:',
     reviewEmpty: '(empty)',
     reviewAppType: 'App type:',
@@ -179,8 +290,8 @@ export const en = {
       `${targetType} · threshold ${threshold}`,
     back: 'Back',
     next: 'Next',
-    submit: 'Submit',
-    submitting: 'Submitting…',
+    submit: 'Forge PRD',
+    submitting: 'Forging…',
     errors: {
       invalidResponse: 'Invalid response from server',
       submitFailed: (status: number): string => `Submit failed (${status})`,
@@ -191,15 +302,16 @@ export const en = {
   },
   prdResult: {
     ready: 'PRD READY',
-    download: '↓ Download .md',
+    download: 'Download .md',
     copy: 'Copy',
-    copied: 'Copied ✓',
+    copied: 'Copied',
     newPrd: 'New PRD',
     saveToSite: 'Save to site',
     saving: 'Saving…',
     hint: 'Paste this into Claude to build the app, or download it as markdown.',
     savedViewAt: (url: string): string => `Saved — view at ${url}`,
     sectionLabel: 'Generated PRD',
+    lede: 'Your product requirements document is ready. Download it, copy it, or save a shareable link.',
     errors: {
       generic: 'Could not save the PRD.',
       timeout: 'Save request timed out',

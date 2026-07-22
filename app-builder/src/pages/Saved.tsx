@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
+import { buttonStyle, errorBannerStyle, statusBannerStyle } from '../components/ui';
+import { messageFromPayload } from '../lib/apiError';
 
 /** One row from GET /api/prds (metadata only). */
 interface SavedPrdListItem {
@@ -19,24 +21,6 @@ type ListState =
   | { status: 'success'; items: SavedPrdListItem[] };
 
 const FETCH_TIMEOUT_MS = 10_000;
-
-const listStyle: CSSProperties = {
-  listStyle: 'none',
-  padding: 0,
-  margin: 0,
-  display: 'grid',
-  gap: theme.space.sm
-};
-
-const itemStyle: CSSProperties = {
-  background: theme.color.surface,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.md,
-  padding: theme.space.md,
-  textDecoration: 'none',
-  color: theme.color.text,
-  display: 'block'
-};
 
 /**
  * Narrow unknown JSON to a SavedPrdListItem array, or null if any row is invalid.
@@ -74,10 +58,14 @@ function formatCreatedAt(iso: string): string {
   return date.toLocaleString();
 }
 
-/** Lists PRDs saved to the site (GET /api/prds) with loading/error/empty states. */
+/**
+ * Saved builds dashboard (Grok v5) with glanceable recent-build rows
+ * (Claude variation 5). Loading, empty, and error states with recovery.
+ */
 export function Saved(): JSX.Element {
   const copy = en.pages.saved;
   const [state, setState] = useState<ListState>({ status: 'loading' });
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -89,6 +77,7 @@ export function Saved(): JSX.Element {
      * Load the saved PRD list; fail closed on network, timeout, or bad payload.
      */
     async function load(): Promise<void> {
+      setState({ status: 'loading' });
       try {
         const response = await fetch('/api/prds', { signal: controller.signal });
         let payload: unknown;
@@ -100,14 +89,7 @@ export function Saved(): JSX.Element {
         }
 
         if (!response.ok) {
-          const message =
-            typeof payload === 'object' &&
-            payload !== null &&
-            'error' in payload &&
-            typeof (payload as { error: unknown }).error === 'string'
-              ? (payload as { error: string }).error
-              : copy.error;
-          setState({ status: 'error', message });
+          setState({ status: 'error', message: messageFromPayload(payload, copy.error) });
           return;
         }
 
@@ -133,44 +115,204 @@ export function Saved(): JSX.Element {
       clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [copy.error]);
+  }, [copy.error, reloadKey]);
 
   return (
     <Page title={copy.title} subtitle={copy.subtitle} breadcrumb={copy.title}>
+      <div style={toolbarStyle}>
+        <Link to="/" style={buttonStyle(true)}>
+          {copy.newBuild}
+        </Link>
+      </div>
+
       {state.status === 'loading' && (
-        <p role="status" style={{ color: theme.color.muted, fontSize: theme.type.scale[2] }}>
-          {copy.loading}
-        </p>
+        <div role="status" aria-live="polite" aria-busy="true" style={statusBannerStyle()}>
+          <span aria-hidden="true">…</span>
+          <span>{copy.loading}</span>
+        </div>
       )}
+
       {state.status === 'error' && (
-        <p role="alert" style={{ color: theme.color.accent, fontSize: theme.type.scale[2] }}>
-          {state.message}
-        </p>
+        <div role="alert" style={errorBannerStyle()}>
+          <span aria-hidden="true">!</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0 }}>{state.message}</p>
+            <button
+              type="button"
+              style={{ ...buttonStyle(false), marginTop: theme.space.sm }}
+              onClick={() => {
+                setReloadKey((k) => k + 1);
+              }}
+            >
+              {copy.errorRetry}
+            </button>
+          </div>
+        </div>
       )}
+
       {state.status === 'empty' && (
-        <p style={{ color: theme.color.muted, fontSize: theme.type.scale[2] }}>{copy.empty}</p>
+        <div role="status" style={emptyCardStyle}>
+          <p style={{ margin: 0, fontWeight: 650, fontSize: theme.type.scale[2] }}>{copy.empty}</p>
+          <p style={{ margin: `${theme.space.sm}px 0 0`, color: theme.color.muted, fontSize: theme.type.scale[2] }}>
+            {copy.emptyHint}
+          </p>
+          <Link to="/" style={{ ...buttonStyle(true), marginTop: theme.space.md, display: 'inline-flex' }}>
+            {copy.emptyCta}
+          </Link>
+        </div>
       )}
+
       {state.status === 'success' && (
-        <ul style={listStyle} aria-label={copy.listLabel}>
-          {state.items.map((item) => (
-            <li key={item.id}>
-              <Link to={`/prd/${item.id}`} style={itemStyle}>
-                <span style={{ fontWeight: 600, fontSize: theme.type.scale[2] }}>{item.title}</span>
-                <span
-                  style={{
-                    display: 'block',
-                    marginTop: theme.space.xs,
-                    color: theme.color.muted,
-                    fontSize: theme.type.scale[1]
-                  }}
-                >
-                  {copy.itemMeta(item.slug, formatCreatedAt(item.created_at))}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <>
+          <div style={sectionHeadStyle}>
+            <h2 style={sectionTitleStyle}>{copy.sectionRecent}</h2>
+            <span style={sectionMetaStyle}>{copy.countMeta(state.items.length)}</span>
+          </div>
+          <ul style={listStyle} aria-label={copy.listLabel}>
+            {state.items.map((item) => (
+              <li key={item.id}>
+                <Link to={`/prd/${item.id}`} style={buildRowStyle}>
+                  <span style={buildIconStyle} aria-hidden="true">
+                    ✓
+                  </span>
+                  <span style={buildBodyStyle}>
+                    <span style={buildTitleStyle}>{item.title}</span>
+                    <span style={buildMetaStyle}>
+                      <span style={badgeStyle}>
+                        <span aria-hidden="true">● </span>
+                        {copy.statusReady}
+                      </span>
+                      <span>
+                        {copy.itemMeta(item.slug, formatCreatedAt(item.created_at))}
+                      </span>
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </Page>
   );
 }
+
+const toolbarStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: theme.space.sm,
+  marginBottom: theme.space.lg
+};
+
+const emptyCardStyle: CSSProperties = {
+  background: theme.color.surface,
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.md,
+  padding: theme.space.lg,
+  boxShadow: theme.shadow.card,
+  maxWidth: '28rem'
+};
+
+const sectionHeadStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: theme.space.sm,
+  marginBottom: theme.space.sm
+};
+
+const sectionTitleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: theme.type.scale[1],
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  color: theme.color.muted
+};
+
+const sectionMetaStyle: CSSProperties = {
+  fontSize: theme.type.scale[0],
+  color: theme.color.muted,
+  fontWeight: 500
+};
+
+const listStyle: CSSProperties = {
+  listStyle: 'none',
+  padding: 0,
+  margin: 0,
+  display: 'grid',
+  gap: theme.space.sm,
+  maxWidth: '40rem'
+};
+
+const buildRowStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.space.sm,
+  minHeight: 56,
+  padding: `${theme.space.sm}px ${theme.space.md}px`,
+  background: theme.color.surface,
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.md,
+  boxShadow: theme.shadow.card,
+  textDecoration: 'none',
+  color: theme.color.text,
+  boxSizing: 'border-box'
+};
+
+const buildIconStyle: CSSProperties = {
+  width: 36,
+  height: 36,
+  borderRadius: theme.radius.sm,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  fontSize: theme.type.scale[2],
+  fontWeight: 700,
+  background: theme.color.successSoft,
+  color: theme.color.success,
+  border: `1px solid ${theme.color.border}`
+};
+
+const buildBodyStyle: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 2
+};
+
+const buildTitleStyle: CSSProperties = {
+  fontSize: theme.type.scale[2],
+  fontWeight: 650,
+  lineHeight: 1.25,
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis'
+};
+
+const buildMetaStyle: CSSProperties = {
+  fontSize: theme.type.scale[0],
+  color: theme.color.muted,
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: theme.space.sm,
+  minWidth: 0
+};
+
+const badgeStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  fontSize: theme.type.scale[0],
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.03em',
+  padding: `2px 7px`,
+  borderRadius: theme.radius.pill,
+  background: theme.color.successSoft,
+  color: theme.color.success,
+  flexShrink: 0
+};
+

@@ -38,7 +38,8 @@ const bar: CSSProperties = {
   backdropFilter: 'blur(10px)',
   WebkitBackdropFilter: 'blur(10px)',
   background: `color-mix(in srgb, ${theme.color.surface} 80%, transparent)`,
-  borderBottom: `1px solid ${theme.color.border}`
+  borderBottom: `1px solid ${theme.color.border}`,
+  paddingTop: 'env(safe-area-inset-top, 0px)'
 };
 
 const container: CSSProperties = {
@@ -54,8 +55,8 @@ const container: CSSProperties = {
 const iconButton: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
-  minWidth: 44,
-  minHeight: 44,
+  minWidth: theme.touch,
+  minHeight: theme.touch,
   padding: theme.space.sm,
   margin: 0,
   border: `1px solid ${theme.color.border}`,
@@ -150,7 +151,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             gap: ${theme.space.xs}px;
           }
           .ra-mobile-panel .ra-nav-link {
-            min-height: 44px;
+            min-height: ${theme.touch}px;
             display: inline-flex;
             align-items: center;
             width: 100%;
@@ -278,36 +279,36 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
           <div>
             <Logo height={56} />
             <p style={{ color: theme.color.muted, fontSize: theme.type.scale[0], marginTop: theme.space.sm, maxWidth: '18rem' }}>
-              Forge a full-stack app from one prompt. Every app ships behind a real quality gate.
+              {en.app.footerTagline}
             </p>
           </div>
           <FooterCol
-            heading="Product"
+            heading={en.app.footerProduct}
             links={[
-              { label: 'App Builder', href: APP_URL },
-              { label: 'Dashboard', href: DASHBOARD_URL },
-              { label: 'GitHub', href: GITHUB_URL }
+              { label: en.app.navBuilder, href: APP_URL },
+              { label: en.app.navDashboard, href: DASHBOARD_URL },
+              { label: en.app.navGitHub, href: GITHUB_URL }
             ]}
           />
           <FooterCol
-            heading="Company"
+            heading={en.app.footerCompany}
             links={[
-              { label: 'About', href: '/about' },
-              { label: 'Contact', href: '/contact' }
+              { label: en.pages.about.title, href: '/about' },
+              { label: en.pages.contact.title, href: '/contact' }
             ]}
           />
           <FooterCol
-            heading="Legal"
+            heading={en.app.footerLegal}
             links={[
-              { label: 'Terms', href: '/terms' },
-              { label: 'Privacy', href: '/privacy' }
+              { label: en.pages.terms.title, href: '/terms' },
+              { label: en.pages.privacy.title, href: '/privacy' }
             ]}
           />
         </div>
-        <div style={{ borderTop: `1px solid ${theme.color.border}` }}>
+        <div style={{ borderTop: `1px solid ${theme.color.border}`, paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
           <div style={{ ...container, padding: `${theme.space.md}px ${theme.space.lg}px`, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: theme.space.sm }}>
-            <small style={{ color: theme.color.muted }}>© {new Date().getFullYear()} RedAnvil</small>
-            <small style={{ color: theme.color.muted }}>Built by the RedAnvil loop</small>
+            <small style={{ color: theme.color.muted }}>© {new Date().getFullYear()} {en.app.name}</small>
+            <small style={{ color: theme.color.muted }}>{en.app.footerQuality}</small>
           </div>
         </div>
       </footer>

@@ -8,3 +8,4 @@ dist/
 .grok/
 *.log
 /tmp/
+orchestrator/.verdicts-*.json

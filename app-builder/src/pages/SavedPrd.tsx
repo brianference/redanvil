@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
+import { buttonStyle, cardStyle, errorBannerStyle, statusBannerStyle } from '../components/ui';
+import { messageFromPayload } from '../lib/apiError';
 
 /** Full PRD row from GET /api/prd/:id. */
 interface SavedPrdRow {
@@ -21,13 +23,6 @@ type DetailState =
   | { status: 'success'; prd: SavedPrdRow };
 
 const FETCH_TIMEOUT_MS = 10_000;
-
-const card: CSSProperties = {
-  background: theme.color.surface,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.lg,
-  padding: theme.space.lg
-};
 
 /**
  * Narrow unknown JSON to a SavedPrdRow, or null if the shape is wrong.
@@ -104,14 +99,7 @@ export function SavedPrd(): JSX.Element {
         }
 
         if (!response.ok) {
-          const message =
-            typeof payload === 'object' &&
-            payload !== null &&
-            'error' in payload &&
-            typeof (payload as { error: unknown }).error === 'string'
-              ? (payload as { error: string }).error
-              : copy.error;
-          setState({ status: 'error', message });
+          setState({ status: 'error', message: messageFromPayload(payload, copy.error) });
           return;
         }
 
@@ -144,54 +132,74 @@ export function SavedPrd(): JSX.Element {
   return (
     <Page title={pageTitle} breadcrumb={copy.title}>
       <p style={{ marginBottom: theme.space.md }}>
-        <Link
-          to="/saved"
-          style={{ color: theme.color.muted, fontSize: theme.type.scale[1], textDecoration: 'none' }}
-        >
+        <Link to="/saved" style={buttonStyle(false)}>
           ← {copy.backToSaved}
         </Link>
       </p>
 
       {state.status === 'loading' && (
-        <p role="status" style={{ color: theme.color.muted, fontSize: theme.type.scale[2] }}>
-          {copy.loading}
-        </p>
+        <div role="status" aria-live="polite" aria-busy="true" style={statusBannerStyle()}>
+          <span aria-hidden="true">…</span>
+          <span>{copy.loading}</span>
+        </div>
       )}
       {state.status === 'error' && (
-        <p role="alert" style={{ color: theme.color.accent, fontSize: theme.type.scale[2] }}>
-          {state.message}
-        </p>
+        <div role="alert" style={errorBannerStyle()}>
+          <span aria-hidden="true">!</span>
+          <span>{state.message}</span>
+        </div>
       )}
       {state.status === 'not-found' && (
-        <p role="alert" style={{ color: theme.color.accent, fontSize: theme.type.scale[2] }}>
-          {copy.notFound}
-        </p>
+        <div role="alert" style={errorBannerStyle()}>
+          <span aria-hidden="true">!</span>
+          <span>{copy.notFound}</span>
+        </div>
       )}
       {state.status === 'success' && (
-        <section style={card} aria-label={state.prd.title}>
+        <section style={rootStyle} aria-label={state.prd.title}>
+          <p style={readyStyle}>
+            <span aria-hidden="true">✓ </span>
+            {copy.readyBadge}
+          </p>
           <p style={{ margin: 0, color: theme.color.muted, fontSize: theme.type.scale[1] }}>
             {copy.createdAt(formatCreatedAt(state.prd.created_at))}
           </p>
-          <pre
-            style={{
-              marginTop: theme.space.md,
-              maxHeight: '28rem',
-              overflow: 'auto',
-              background: theme.color.bg,
-              border: `1px solid ${theme.color.border}`,
-              borderRadius: theme.radius.md,
-              padding: theme.space.md,
-              fontSize: theme.type.scale[1],
-              lineHeight: 1.6,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              color: theme.color.text
-            }}
-          >
-            {state.prd.markdown}
-          </pre>
+          <div style={cardStyle(theme.space.md)}>
+            <pre style={preStyle}>{state.prd.markdown}</pre>
+          </div>
         </section>
       )}
     </Page>
   );
 }
+
+const rootStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.space.md,
+  maxWidth: '46rem'
+};
+
+const readyStyle: CSSProperties = {
+  margin: 0,
+  color: theme.color.accent,
+  fontSize: theme.type.scale[0],
+  fontWeight: 700,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase'
+};
+
+const preStyle: CSSProperties = {
+  margin: 0,
+  maxHeight: '28rem',
+  overflow: 'auto',
+  background: theme.color.bg,
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.md,
+  padding: theme.space.md,
+  fontSize: theme.type.scale[1],
+  lineHeight: 1.6,
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+  color: theme.color.text
+};

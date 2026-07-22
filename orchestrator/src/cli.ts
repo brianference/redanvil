@@ -19,7 +19,8 @@ async function main(): Promise<number> {
       slug: { type: 'string' },
       out: { type: 'string' },
       deploy: { type: 'string' },
-      na: { type: 'string' }
+      na: { type: 'string' },
+      iterations: { type: 'string' }
     }
   });
   const [command, arg] = positionals;
@@ -87,13 +88,22 @@ async function main(): Promise<number> {
       console.log(`  blockers failed: ${report.blockersFailed.join(', ')}`);
     }
     if (typeof values.out === 'string' && typeof values.slug === 'string') {
+      // Optional real iteration history: --iterations '[{"index":1,"score":0,"blockers":["fe-responsive-375"]}]'
+      let iterations = [{ index: 1, score: report.score, blockers: report.blockersFailed }];
+      if (typeof values.iterations === 'string') {
+        iterations = JSON.parse(values.iterations) as typeof iterations;
+      }
       const result = {
         kind: 'results',
         slug: values.slug,
         finalScore: report.score,
         threshold,
         passed: report.score >= threshold,
-        iterations: [{ index: 1, score: report.score, blockers: report.blockersFailed }],
+        evaluated: report.evaluated,
+        total: report.total,
+        // Per-rule proof: exactly what the gate scored, generated (never hand-authored).
+        rules: report.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed })),
+        iterations,
         deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
         finishedAt: new Date().toISOString()
       };

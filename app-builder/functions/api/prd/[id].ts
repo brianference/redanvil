@@ -1,28 +1,8 @@
 import type { Env } from '../../lib/env';
+import { jsonResponse } from '../../lib/http';
 
-/**
- * Secure JSON response headers: nosniff + explicit same-origin CORS (no wildcard).
- */
-function responseHeaders(request: Request): Record<string, string> {
-  const origin = new URL(request.url).origin;
-  return {
-    'content-type': 'application/json',
-    'x-content-type-options': 'nosniff',
-    'access-control-allow-origin': origin,
-    'access-control-allow-methods': 'GET',
-    'access-control-allow-headers': 'content-type'
-  };
-}
-
-/**
- * JSON error/success response with secure headers applied.
- */
-function jsonResponse(request: Request, body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: responseHeaders(request)
-  });
-}
+/** CORS allow-methods for this endpoint (GET only). */
+const ALLOWED_METHODS = 'GET';
 
 /**
  * GET /api/prd/:id — fetch one saved PRD by id. Missing → 404; DB error → 500.
@@ -36,7 +16,7 @@ export async function onRequestGet(context: {
   const id = params.id?.trim() ?? '';
 
   if (id.length === 0) {
-    return jsonResponse(request, { error: 'Missing PRD id' }, 400);
+    return jsonResponse(request, { error: 'Missing PRD id' }, 400, ALLOWED_METHODS);
   }
 
   try {
@@ -48,11 +28,11 @@ export async function onRequestGet(context: {
 
     const row = results[0];
     if (row === undefined) {
-      return jsonResponse(request, { error: 'PRD not found' }, 404);
+      return jsonResponse(request, { error: 'PRD not found' }, 404, ALLOWED_METHODS);
     }
 
-    return jsonResponse(request, row, 200);
+    return jsonResponse(request, row, 200, ALLOWED_METHODS);
   } catch {
-    return jsonResponse(request, { error: 'Could not load the PRD' }, 500);
+    return jsonResponse(request, { error: 'Could not load the PRD' }, 500, ALLOWED_METHODS);
   }
 }

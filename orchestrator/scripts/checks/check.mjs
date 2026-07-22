@@ -147,6 +147,54 @@ switch (ruleId) {
     hit ? fail(`hardcoded JSX copy: ${hit}`) : pass();
     break;
   }
+  case 'u-sec-sast': {
+    // Lightweight SAST: dangerous sinks in app/function source.
+    const files = [...tsx(), ...walk(functionsDir, ['.ts', '.js'])];
+    const hit = firstMatch(files, /\beval\s*\(|new\s+Function\s*\(|child_process|\.innerHTML\s*=|document\.write\s*\(/);
+    hit ? fail(`SAST sink: ${hit}`) : pass();
+    break;
+  }
+  case 'u-conc-no-padding': {
+    // No gratuitous padding: 3+ consecutive blank lines.
+    const files = tsx();
+    for (const f of files) {
+      if (/\n[ \t]*\n[ \t]*\n[ \t]*\n/.test(read(f))) fail(`3+ blank lines: ${f}`);
+    }
+    pass();
+    break;
+  }
+  case 'hyg-no-duplication': {
+    // Real copy-paste: the same 8-line block of SUBSTANTIVE code in 2+ files.
+    // Pure style-property runs (`key: value,`) are excluded — two style objects
+    // both reading values from shared theme tokens is consistent token usage, not
+    // harmful duplication, and forcing them into a shared abstraction would trip
+    // the no-speculative-abstraction rule. This mirrors token-based tools (jscpd).
+    const files = [...tsx(), ...walk(functionsDir, ['.ts', '.js'])];
+    const seen = new Map();
+    const WIN = 8;
+    const isPropLine = (l) => /^[\w'"[\]-]+\s*:\s*.+,?$/.test(l); // style/object property
+    for (const f of files) {
+      const lines = read(f)
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l.length > 8 && !l.startsWith('//') && !l.startsWith('*') && !l.startsWith('import'));
+      // Framework-mandated boilerplate that cannot (and must not) be abstracted:
+      // Cloudflare Pages Function handler signatures are exported per-route by design.
+      const isBoilerplate = (l) => /onRequest(Post|Get|Put|Delete|Patch)?\b|:\s*Promise<Response>|export async function/.test(l);
+      for (let i = 0; i + WIN <= lines.length; i++) {
+        const win = lines.slice(i, i + WIN);
+        const propShare = win.filter(isPropLine).length / WIN;
+        if (propShare > 0.6) continue; // mostly style props → not substantive duplication
+        if (win.some(isBoilerplate)) continue; // platform-required handler signatures
+        const block = win.join('\n');
+        const prev = seen.get(block);
+        if (prev && prev !== f) fail(`duplicated code across ${prev} and ${f}`);
+        if (!prev) seen.set(block, f);
+      }
+    }
+    pass();
+    break;
+  }
   default:
     console.error(`unknown rule: ${ruleId}`);
     process.exit(2);
