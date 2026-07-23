@@ -33,9 +33,7 @@ describe('generatePrd', () => {
     // Must not end mid-word on the old 6-word cut ("…for Small")
     expect(long.title).not.toMatch(/for Small$/);
     expect(long.title.toLowerCase()).toContain('shift');
-    expect(long.markdown.startsWith(`# Product Requirements Document — ${long.title}`)).toBe(
-      true
-    );
+    expect(long.markdown.startsWith(`# Product Requirements Document — ${long.title}`)).toBe(true);
     // No ellipsis stuffed into the markdown heading
     expect(long.markdown.split('\n')[0]).not.toContain('…');
     expect(long.markdown.split('\n')[0]).not.toContain('...');

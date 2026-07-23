@@ -17,3 +17,4 @@ The core of the standard. A diff that honors these rarely trips the detailed lan
 13. PR discipline: ticket-prefixed title, conventional commits, full local suite before push.
 14. When the surrounding file uses an older idiom, a minimal diff matches it; consistency beats a style island.
 15. Validate every input at the boundary and fail closed everywhere: unknown or partial state is an explicit error, in code and on screen; silent success is forbidden.
+16. Never report a number from an unvalidated measurement. An unverified measurer produces fabricated data. Sanity-check every measured figure against an invariant that would prove the tool broken before quoting it; if two runs disagree, report neither. Use the standard implementation for anything with a spec (axe-core for contrast, not a bespoke parser). When a measurement cannot be trusted, record UNVERIFIED and let it fail closed.

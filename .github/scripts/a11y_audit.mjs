@@ -40,9 +40,42 @@ const axeSource = readFileSync(require.resolve('axe-core'), 'utf8');
 
 const browser = await chromium.launch();
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  // Emulate the OS colour scheme too. Setting data-theme alone can leave the app
+  // in a half-switched state if its own theme state still reads the system
+  // preference -- which yields light tokens on dark surfaces and looks like an
+  // app bug when it is an audit-setup bug.
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 900 },
+    colorScheme: theme === 'dark' ? 'dark' : 'light'
+  });
   await page.goto(url, { waitUntil: 'networkidle' });
-  await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
+  await page.evaluate((t) => {
+    localStorage.setItem('theme', t);
+    document.documentElement.setAttribute('data-theme', t);
+  }, theme);
+  await page.reload({ waitUntil: 'networkidle' });
+
+  // Report what the page ACTUALLY resolved, so a mis-set theme is visible in the
+  // output rather than being blamed on the app.
+  const resolved = await page.evaluate(() => {
+    const cs = getComputedStyle(document.documentElement);
+    const probe = document.createElement('div');
+    document.body.appendChild(probe);
+    const asRgb = (v) => {
+      probe.style.color = v;
+      return getComputedStyle(probe).color;
+    };
+    const out = {
+      dataTheme: document.documentElement.getAttribute('data-theme'),
+      muted: asRgb(cs.getPropertyValue('--muted').trim()),
+      bg: asRgb(cs.getPropertyValue('--bg').trim())
+    };
+    probe.remove();
+    return out;
+  });
+  console.log(
+    `resolved: data-theme=${resolved.dataTheme} --muted=${resolved.muted} --bg=${resolved.bg}`
+  );
   await page.addScriptTag({ content: axeSource });
   const results = await page.evaluate(
     async () => await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa'] })
