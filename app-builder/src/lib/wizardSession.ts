@@ -8,6 +8,5 @@
  * @param startStep - Step the Wizard should open on for this session.
  * @returns Key string suitable for React's `key` prop.
  */
-export function wizardInstanceKey(sessionId: number, startStep: 1 | 2 | 3): string {
-  return `wizard-${sessionId}-${startStep}`;
-}
+export function wizardInstanceKey(sessionId: number, startStep: 1 | 2 | 3, prompt: string): string {
+  return `wizard-${sessionId}-

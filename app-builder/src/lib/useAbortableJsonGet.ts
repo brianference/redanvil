@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  createActiveFlag,
-  errorMessageFromFetchCatch,
-  FETCH_TIMEOUT_MS
-} from './abortableEffect';
+import { createActiveFlag, errorMessageFromFetchCatch, FETCH_TIMEOUT_MS } from './abortableEffect';
 import { messageFromPayload } from './apiError';
 
 /**
@@ -42,9 +38,7 @@ export interface UseAbortableJsonGetOptions<T> {
  * @param options - URL, parser, and error copy.
  * @returns Current fetch state and a retry trigger that re-runs the effect.
  */
-export function useAbortableJsonGet<T>(
-  options: UseAbortableJsonGetOptions<T>
-): {
+export function useAbortableJsonGet<T>(options: UseAbortableJsonGetOptions<T>): {
   state: AbortableJsonState<T>;
   retry: () => void;
 } {

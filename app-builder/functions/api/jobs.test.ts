@@ -12,9 +12,7 @@ function mockEnv(mode: 'ok' | 'fail'): Env {
     bind: () => stmt,
     run: () => Promise.resolve({}),
     all: () =>
-      mode === 'ok'
-        ? Promise.resolve({ results: [] })
-        : Promise.reject(new Error('D1 unavailable'))
+      mode === 'ok' ? Promise.resolve({ results: [] }) : Promise.reject(new Error('D1 unavailable'))
   };
   return { DB: { prepare: () => stmt } };
 }

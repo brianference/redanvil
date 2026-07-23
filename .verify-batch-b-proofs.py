@@ -10,17 +10,21 @@ ROOT = Path(__file__).resolve().parent
 
 
 def run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    # shell=True so Windows can resolve npx.cmd / node from PATH
+    if len(cmd) == 1:
+        cmdline = cmd[0]
+    else:
+        cmdline = subprocess.list2cmdline(cmd)
     return subprocess.run(
-        cmd,
+        cmdline,
         cwd=str(cwd or ROOT),
         capture_output=True,
         text=True,
-        shell=False,
+        shell=True,
     )
 
 
 def npx_vitest(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
-    # Windows: npx.cmd
     return run(["npx", "vitest", "run", *args], cwd=cwd)
 
 
