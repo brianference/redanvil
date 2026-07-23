@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 import { buttonStyle, errorBannerStyle, statusBannerStyle } from '../components/ui';
-import { messageFromPayload } from '../lib/apiError';
 import {
   countThisWeek,
   formatRelativeTime,
   parseSavedList,
   type SavedPrdListItem
 } from '../lib/savedList';
+import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 
 type ListState =
   | { status: 'loading' }
@@ -18,7 +18,23 @@ type ListState =
   | { status: 'empty' }
   | { status: 'success'; items: SavedPrdListItem[] };
 
-const FETCH_TIMEOUT_MS = 10_000;
+/**
+ * Map generic abortable fetch state onto the Saved list view union.
+ * Empty success data becomes the dedicated empty view (not an error).
+ *
+ * @param fetchState - Hook state from GET /api/prds.
+ * @returns Page-local list state.
+ */
+function toListState(
+  fetchState: ReturnType<typeof useAbortableJsonGet<SavedPrdListItem[]>>['state']
+): ListState {
+  if (fetchState.status === 'loading') return { status: 'loading' };
+  if (fetchState.status === 'error') {
+    return { status: 'error', message: fetchState.message };
+  }
+  if (fetchState.data.length === 0) return { status: 'empty' };
+  return { status: 'success', items: fetchState.data };
+}
 
 /**
  * Saved builds dashboard (Grok v5): glanceable KPI strip + recent-build cards
@@ -27,58 +43,12 @@ const FETCH_TIMEOUT_MS = 10_000;
  */
 export function Saved(): JSX.Element {
   const copy = en.pages.saved;
-  const [state, setState] = useState<ListState>({ status: 'loading' });
-  const [reloadKey, setReloadKey] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, FETCH_TIMEOUT_MS);
-
-    /**
-     * Load the saved PRD list; fail closed on network, timeout, or bad payload.
-     */
-    async function load(): Promise<void> {
-      setState({ status: 'loading' });
-      try {
-        const response = await fetch('/api/prds', { signal: controller.signal });
-        let payload: unknown;
-        try {
-          payload = await response.json();
-        } catch {
-          setState({ status: 'error', message: copy.error });
-          return;
-        }
-
-        if (!response.ok) {
-          setState({ status: 'error', message: messageFromPayload(payload, copy.error) });
-          return;
-        }
-
-        const items = parseSavedList(payload);
-        if (items === null) {
-          setState({ status: 'error', message: copy.error });
-          return;
-        }
-
-        if (items.length === 0) {
-          setState({ status: 'empty' });
-          return;
-        }
-
-        setState({ status: 'success', items });
-      } catch {
-        setState({ status: 'error', message: copy.error });
-      }
-    }
-
-    void load();
-    return () => {
-      clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [copy.error, reloadKey]);
+  const { state: fetchState, retry } = useAbortableJsonGet({
+    url: '/api/prds',
+    parse: parseSavedList,
+    errorMessage: copy.error
+  });
+  const state = toListState(fetchState);
 
   const kpis = useMemo(() => {
     if (state.status !== 'success') return null;
@@ -114,9 +84,7 @@ export function Saved(): JSX.Element {
             <button
               type="button"
               style={{ ...buttonStyle(false), marginTop: theme.space.sm }}
-              onClick={() => {
-                setReloadKey((k) => k + 1);
-              }}
+              onClick={retry}
             >
               {copy.errorRetry}
             </button>

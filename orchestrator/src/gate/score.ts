@@ -16,7 +16,13 @@ const isJudge = (r: Rule): boolean => r.method === 'judge' || r.method === 'det+
 export function indexOutcomes(outcomes: Outcome[]): Map<string, boolean> {
   const byId = new Map<string, boolean>();
   for (const o of outcomes) {
-    byId.set(o.ruleId, (byId.get(o.ruleId) ?? true) && o.passed);
+    // `o.passed === true`, not `o.passed`. Outcomes can arrive from a JSON file,
+    // and a truthy non-boolean (`"passed": "yes"`) once flowed straight into this
+    // map: `!"yes"` is false, so no blocker gated the score and the gate reported
+    // 100/100 while listing 28 failed blockers. Validation at the boundary is the
+    // real fix; this makes the hole unreachable if a future caller skips it.
+    const passed = o.passed === true;
+    byId.set(o.ruleId, (byId.get(o.ruleId) ?? true) && passed);
   }
   return byId;
 }

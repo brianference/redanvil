@@ -19,19 +19,29 @@ describe('countEntities', () => {
 });
 
 describe('buildJob', () => {
-  it('constructs a fullstack-web job with threshold 90', () => {
-    const job = buildJob({
-      prompt: 'Build a recipe box for home cooks',
-      appType: 'content',
-      hasAuth: true,
-      entities: 'Recipe, User'
-    });
+  it('constructs a fullstack-web job with threshold 90, answers, and createdAt', () => {
+    const now = new Date('2026-07-22T12:00:00.000Z');
+    const job = buildJob(
+      {
+        prompt: 'Build a recipe box for home cooks',
+        appType: 'content',
+        hasAuth: true,
+        entities: 'Recipe, User'
+      },
+      now
+    );
     expect(job).toEqual({
       kind: 'job',
       slug: 'build-a-recipe-box-for-home-cooks',
       prompt: 'Build a recipe box for home cooks',
       targetType: 'fullstack-web',
-      threshold: 90
+      threshold: 90,
+      answers: {
+        appType: 'content',
+        hasAuth: 'true',
+        entities: 'Recipe, User'
+      },
+      createdAt: '2026-07-22T12:00:00.000Z'
     });
   });
 
@@ -46,5 +56,8 @@ describe('buildJob', () => {
     expect(job.slug).toBe('my-cool-saas-dashboard');
     expect(job.kind).toBe('job');
     expect(job.targetType).toBe('fullstack-web');
+    expect(job.answers.hasAuth).toBe('false');
+    expect(typeof job.createdAt).toBe('string');
+    expect(Number.isNaN(Date.parse(job.createdAt))).toBe(false);
   });
 });

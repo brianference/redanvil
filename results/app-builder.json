@@ -1,9 +1,9 @@
 {
   "kind": "results",
   "slug": "app-builder",
-  "finalScore": 100,
+  "finalScore": 0,
   "threshold": 90,
-  "passed": true,
+  "passed": false,
   "evaluated": 41,
   "total": 41,
   "rules": [
@@ -81,7 +81,7 @@
     },
     {
       "ruleId": "hyg-no-duplication",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "fe-light-dark",
@@ -152,14 +152,6 @@
       "passed": true
     },
     {
-      "ruleId": "u-val-input-validation",
-      "passed": true
-    },
-    {
-      "ruleId": "u-sec-no-stub-paths",
-      "passed": true
-    },
-    {
       "ruleId": "u-test-adequacy",
       "passed": true
     },
@@ -183,18 +175,20 @@
   "iterations": [
     {
       "index": 1,
-      "score": 100,
-      "blockers": []
+      "score": 0,
+      "blockers": [
+        "hyg-no-duplication"
+      ]
     }
   ],
   "deployUrl": "https://redanvil.pages.dev",
-  "finishedAt": "2026-07-23T04:33:56.137Z",
+  "finishedAt": "2026-07-23T05:19:23.088Z",
   "provenance": {
-    "commit": "f716da491d7f8e934e4b626cfac35a605c68048a",
-    "dirty": false,
+    "commit": "f82c09ddc5d173a6eb8322d53a7c25bb7325d65f",
+    "dirty": true,
     "rubricHash": "898f7fa0e8035ee2f232f96e3992177ff95ea095735c2f9664592728b2bff345",
     "rubricRuleCount": 48,
     "node": "v22.19.0",
-    "generatedAt": "2026-07-23T04:33:56.180Z"
+    "generatedAt": "2026-07-23T05:19:23.132Z"
   }
 }

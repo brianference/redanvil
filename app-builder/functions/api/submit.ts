@@ -6,15 +6,20 @@ import { jsonResponse } from '../lib/http';
 /** CORS allow-methods for this endpoint (POST only). */
 const ALLOWED_METHODS = 'POST';
 
+/** Max lengths for user-supplied strings (generous for real use, D1-safe). */
+const MAX_PROMPT_LEN = 10_000;
+const MAX_APP_TYPE_LEN = 64;
+
 /**
  * Submit body from the wizard: prompt and scope fields.
  * entities is a non-negative integer count (not free-text names).
+ * String fields are bounded so multi-megabyte bodies are rejected at 400.
  */
 const submitBodySchema = z.object({
-  prompt: z.string().trim().min(8),
-  appType: z.string(),
+  prompt: z.string().trim().min(8).max(MAX_PROMPT_LEN),
+  appType: z.string().min(1).max(MAX_APP_TYPE_LEN),
   hasAuth: z.boolean(),
-  entities: z.number().int().min(0)
+  entities: z.number().int().min(0).max(10_000)
 });
 
 /**
@@ -46,17 +51,17 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
   });
 
   const id = crypto.randomUUID();
-  const createdAt = new Date().toISOString();
   try {
     await env.DB.prepare(
       'INSERT INTO jobs (id, slug, prompt, target_type, threshold, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
     )
-      .bind(id, job.slug, job.prompt, job.targetType, job.threshold, 'queued', createdAt)
+      .bind(id, job.slug, job.prompt, job.targetType, job.threshold, 'queued', job.createdAt)
       .run();
   } catch {
     return jsonResponse(request, { error: 'Could not queue the build job' }, 500, ALLOWED_METHODS);
   }
 
+  // Full orchestrator-valid job (answers + createdAt) plus queue metadata.
   return jsonResponse(
     request,
     { ...job, id, status: 'queued', queued: true },

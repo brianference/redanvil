@@ -41,6 +41,11 @@ export interface WizardProps {
 
 /**
  * Narrow unknown JSON to a BuildJob (fail closed on any mismatch).
+ * Requires orchestrator Job fields (answers + createdAt) so the client shape
+ * cannot silently drift from JobSchema.
+ *
+ * @param payload - Unknown JSON from POST /api/submit.
+ * @returns Typed BuildJob or null.
  */
 function parseBuildJob(payload: unknown): BuildJob | null {
   if (typeof payload !== 'object' || payload === null) return null;
@@ -50,12 +55,22 @@ function parseBuildJob(payload: unknown): BuildJob | null {
   if (typeof record['prompt'] !== 'string') return null;
   if (record['targetType'] !== 'fullstack-web') return null;
   if (record['threshold'] !== 90) return null;
+  if (typeof record['createdAt'] !== 'string') return null;
+  if (typeof record['answers'] !== 'object' || record['answers'] === null) return null;
+  const answersRaw = record['answers'] as Record<string, unknown>;
+  const answers: Record<string, string> = {};
+  for (const [key, value] of Object.entries(answersRaw)) {
+    if (typeof value !== 'string') return null;
+    answers[key] = value;
+  }
   return {
     kind: 'job',
     slug: record['slug'],
     prompt: record['prompt'],
     targetType: 'fullstack-web',
-    threshold: 90
+    threshold: 90,
+    answers,
+    createdAt: record['createdAt']
   };
 }
 

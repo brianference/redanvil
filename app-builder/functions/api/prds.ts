@@ -5,15 +5,21 @@ import { jsonResponse } from '../lib/http';
 /** CORS allow-methods for this endpoint (POST + GET). Order matches prior local copy. */
 const ALLOWED_METHODS = 'POST, GET';
 
+/** Max lengths for user-supplied strings (generous for real use, D1-safe). */
+const MAX_TITLE_LEN = 200;
+const MAX_PROMPT_LEN = 10_000;
+const MAX_MARKDOWN_LEN = 200_000;
+
 /**
  * Body for saving a generated PRD to D1.
- * slug: kebab-case 2–49 chars starting with alphanumeric.
+ * slug: kebab-case 2–49 chars starting with alphanumeric (regex already bounds length).
+ * title/prompt/markdown are max-bounded so multi-megabyte bodies are rejected at 400.
  */
 const savePrdBodySchema = z.object({
   slug: z.string().regex(/^[a-z0-9][a-z0-9-]{1,48}$/, 'Invalid slug'),
-  title: z.string().trim().min(2),
-  prompt: z.string().trim().min(8),
-  markdown: z.string().min(20)
+  title: z.string().trim().min(2).max(MAX_TITLE_LEN),
+  prompt: z.string().trim().min(8).max(MAX_PROMPT_LEN),
+  markdown: z.string().min(20).max(MAX_MARKDOWN_LEN)
 });
 
 /**

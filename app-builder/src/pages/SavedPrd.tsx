@@ -1,10 +1,10 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { type CSSProperties } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 import { buttonStyle, cardStyle, errorBannerStyle, statusBannerStyle } from '../components/ui';
-import { messageFromPayload } from '../lib/apiError';
+import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 
 /** Full PRD row from GET /api/prd/:id. */
 interface SavedPrdRow {
@@ -22,10 +22,11 @@ type DetailState =
   | { status: 'not-found' }
   | { status: 'success'; prd: SavedPrdRow };
 
-const FETCH_TIMEOUT_MS = 10_000;
-
 /**
  * Narrow unknown JSON to a SavedPrdRow, or null if the shape is wrong.
+ *
+ * @param payload - Raw JSON from GET /api/prd/:id.
+ * @returns Typed row or null.
  */
 function parsePrd(payload: unknown): SavedPrdRow | null {
   if (typeof payload !== 'object' || payload === null) return null;
@@ -52,6 +53,9 @@ function parsePrd(payload: unknown): SavedPrdRow | null {
 
 /**
  * Format an ISO date for display; fall back to the raw string if unparseable.
+ *
+ * @param iso - ISO-8601 timestamp string.
+ * @returns Locale display string or the original value.
  */
 function formatCreatedAt(iso: string): string {
   const date = new Date(iso);
@@ -59,68 +63,38 @@ function formatCreatedAt(iso: string): string {
   return date.toLocaleString();
 }
 
+/**
+ * Map generic abortable fetch state onto the SavedPrd detail view union.
+ * Missing id and HTTP 404 become not-found (not a generic error).
+ *
+ * @param hasId - Whether the route param is a non-empty id.
+ * @param fetchState - Hook state from GET /api/prd/:id (ignored when !hasId).
+ * @returns Page-local detail state.
+ */
+function toDetailState(
+  hasId: boolean,
+  fetchState: ReturnType<typeof useAbortableJsonGet<SavedPrdRow>>['state']
+): DetailState {
+  if (!hasId) return { status: 'not-found' };
+  if (fetchState.status === 'loading') return { status: 'loading' };
+  if (fetchState.status === 'error') {
+    if (fetchState.httpStatus === 404) return { status: 'not-found' };
+    return { status: 'error', message: fetchState.message };
+  }
+  return { status: 'success', prd: fetchState.data };
+}
+
 /** Renders one saved PRD by route id (GET /api/prd/:id) with load/error/not-found. */
 export function SavedPrd(): JSX.Element {
   const copy = en.pages.savedPrd;
   const { id } = useParams<{ id: string }>();
-  const [state, setState] = useState<DetailState>({ status: 'loading' });
-
-  useEffect(() => {
-    if (id === undefined || id.trim().length === 0) {
-      setState({ status: 'not-found' });
-      return;
-    }
-
-    const prdId = id;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, FETCH_TIMEOUT_MS);
-
-    /**
-     * Fetch the PRD by id; fail closed on network, timeout, 404, or bad payload.
-     */
-    async function load(): Promise<void> {
-      try {
-        const response = await fetch(`/api/prd/${encodeURIComponent(prdId)}`, {
-          signal: controller.signal
-        });
-        let payload: unknown;
-        try {
-          payload = await response.json();
-        } catch {
-          setState({ status: 'error', message: copy.error });
-          return;
-        }
-
-        if (response.status === 404) {
-          setState({ status: 'not-found' });
-          return;
-        }
-
-        if (!response.ok) {
-          setState({ status: 'error', message: messageFromPayload(payload, copy.error) });
-          return;
-        }
-
-        const prd = parsePrd(payload);
-        if (prd === null) {
-          setState({ status: 'error', message: copy.error });
-          return;
-        }
-
-        setState({ status: 'success', prd });
-      } catch {
-        setState({ status: 'error', message: copy.error });
-      }
-    }
-
-    void load();
-    return () => {
-      clearTimeout(timeoutId);
-      controller.abort();
-    };
-  }, [id, copy.error]);
+  const hasId = id !== undefined && id.trim().length > 0;
+  const { state: fetchState } = useAbortableJsonGet({
+    url: hasId ? `/api/prd/${encodeURIComponent(id)}` : null,
+    parse: parsePrd,
+    errorMessage: copy.error
+  });
+  const state = toDetailState(hasId, fetchState);
 
   const pageTitle = state.status === 'success' ? state.prd.title : copy.title;
 

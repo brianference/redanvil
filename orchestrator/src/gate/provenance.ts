@@ -20,6 +20,19 @@ export type Provenance = {
   rubricRuleCount: number;
   /** Node version that produced the run. */
   node: string;
+  /**
+   * SHA-256 of the verdicts file that supplied the non-deterministic rules, or
+   * null when the run used none. Without this the CI reproduction re-runs the
+   * gate against whatever verdicts file it is handed, so it confirms only that
+   * the static checks reproduce — it can never contradict an edited verdict.
+   */
+  verdictsHash: string | null;
+  /**
+   * Lanes and rule ids excluded from scoring. `--na` is load-bearing: it is the
+   * only way an unmeasured rule can avoid failing closed, so a result that does
+   * not disclose what was waived is not fully describing its own score.
+   */
+  notApplicable: string[];
   generatedAt: string;
 };
 
@@ -52,10 +65,18 @@ export function rubricHash(): string {
   return createHash('sha256').update(surface).digest('hex');
 }
 
+/** SHA-256 with line endings normalized, so CRLF vs LF is not a difference. */
+function sha256(text: string): string {
+  return createHash('sha256').update(text.replace(/\r\n/g, '\n')).digest('hex');
+}
+
 /**
  * Collect provenance for a gate run rooted at `cwd`.
  */
-export function collectProvenance(cwd: string = process.cwd()): Provenance {
+export function collectProvenance(
+  cwd: string = process.cwd(),
+  opts: { verdictsRaw?: string | null; notApplicable?: string[] } = {}
+): Provenance {
   const commit = git(['rev-parse', 'HEAD'], cwd);
   const status = git(['status', '--porcelain'], cwd);
   return {
@@ -64,6 +85,8 @@ export function collectProvenance(cwd: string = process.cwd()): Provenance {
     rubricHash: rubricHash(),
     rubricRuleCount: loadRubric().length,
     node: process.version,
+    verdictsHash: typeof opts.verdictsRaw === 'string' ? sha256(opts.verdictsRaw) : null,
+    notApplicable: [...(opts.notApplicable ?? [])].sort(),
     generatedAt: new Date().toISOString()
   };
 }

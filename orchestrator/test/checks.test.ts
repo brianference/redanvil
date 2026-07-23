@@ -431,3 +431,307 @@ describe('check.mjs — bug 8 walk() I/O resilience', () => {
     expect(r.stderr).toMatch(/usage/i);
   });
 });
+
+describe('check.mjs — fe-theme-tokens-only', () => {
+  it('fails when a page component uses a raw hex color', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/pages/Home.tsx',
+      `
+import type { CSSProperties } from 'react';
+
+/**
+ * Demo page that hard-codes a brand color instead of a theme token.
+ */
+export function Home(): JSX.Element {
+  const style: CSSProperties = {
+    color: '#ff0000',
+    padding: 8
+  };
+  return <div style={style}>Hello World Page Title Here</div>;
+}
+`
+    );
+    const r = runCheck('fe-theme-tokens-only', app);
+    expect(r.status, r.stderr).not.toBe(0);
+    expect(r.stderr).toMatch(/raw hex/i);
+  });
+
+  it('passes when components use theme tokens and hex lives only in theme.ts', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/theme.ts',
+      `
+/** Design tokens — raw hex is allowed only in this file. */
+export const theme = {
+  color: {
+    accent: '#c41e3a',
+    text: '#111111'
+  }
+} as const;
+`
+    );
+    write(
+      app,
+      'src/pages/Home.tsx',
+      `
+import type { CSSProperties } from 'react';
+import { theme } from '../theme';
+
+/**
+ * Demo page that reads colors from the theme module.
+ */
+export function Home(): JSX.Element {
+  const style: CSSProperties = {
+    color: theme.color.accent,
+    padding: 8
+  };
+  return <div style={style}>{/* copy from i18n in real apps */}</div>;
+}
+`
+    );
+    const r = runCheck('fe-theme-tokens-only', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+});
+
+describe('check.mjs — hyg-no-binaries', () => {
+  it('fails when a binary image is committed under src/', () => {
+    const app = makeAppDir();
+    // Minimal non-empty PNG-like bytes so the file is not an empty stub.
+    write(app, 'src/lib/ok.ts', `export const version: string = '1';\n`);
+    const full = join(app, 'src', 'assets', 'icon.png');
+    mkdirSync(join(app, 'src', 'assets'), { recursive: true });
+    writeFileSync(full, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const r = runCheck('hyg-no-binaries', app);
+    expect(r.status, r.stderr).not.toBe(0);
+    expect(r.stderr).toMatch(/binary under src/i);
+  });
+
+  it('passes when src has only source files', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/lib/util.ts',
+      `
+/**
+ * Tiny helper used by the clean fixture.
+ * @param n - Input number.
+ * @returns Doubled value.
+ */
+export function double(n: number): number {
+  return n * 2;
+}
+`
+    );
+    const r = runCheck('hyg-no-binaries', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+});
+
+describe('check.mjs — hyg-secret-scan', () => {
+  it('fails when an AWS access key id appears in source', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/lib/config.ts',
+      `
+/** Broken config that embeds a live-looking AWS key. */
+export const awsKey: string = 'AKIAIOSFODNN7EXAMPLE';
+`
+    );
+    const r = runCheck('hyg-secret-scan', app);
+    expect(r.status, r.stderr).not.toBe(0);
+    expect(r.stderr).toMatch(/possible secret/i);
+  });
+
+  it('passes when no secret-shaped tokens appear', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/lib/config.ts',
+      `
+/**
+ * Config that reads secrets from the environment only.
+ */
+export function getApiBase(): string {
+  return process.env['API_BASE'] ?? 'https://example.com';
+}
+`
+    );
+    const r = runCheck('hyg-secret-scan', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+});
+
+describe('check.mjs — u-sec-sast', () => {
+  it('fails when eval is used in app source', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/lib/run.ts',
+      `
+/**
+ * Dangerous dynamic evaluation — SAST must reject this.
+ * @param code - Untrusted code string.
+ * @returns Evaluated result.
+ */
+export function runUserCode(code: string): unknown {
+  return eval(code);
+}
+`
+    );
+    const r = runCheck('u-sec-sast', app);
+    expect(r.status, r.stderr).not.toBe(0);
+    expect(r.stderr).toMatch(/SAST sink/i);
+  });
+
+  it('passes when source has no dangerous sinks', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/lib/run.ts',
+      `
+/**
+ * Safe string length helper.
+ * @param code - Input text.
+ * @returns Character count.
+ */
+export function measure(code: string): number {
+  return code.length;
+}
+`
+    );
+    const r = runCheck('u-sec-sast', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+});
+
+describe('check.mjs — u-conc-no-padding', () => {
+  it('fails when a source file has three or more consecutive blank lines', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/lib/padded.ts',
+      `
+/**
+ * Intentionally padded export for the concision check.
+ */
+export function value(): number {
+  return 1;
+}
+
+
+
+export function other(): number {
+  return 2;
+}
+`
+    );
+    const r = runCheck('u-conc-no-padding', app);
+    expect(r.status, r.stderr).not.toBe(0);
+    expect(r.stderr).toMatch(/3\+ blank lines/i);
+  });
+
+  it('passes when blank-line runs stay under three', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/lib/compact.ts',
+      `
+/**
+ * Compact module with at most one blank line between blocks.
+ */
+export function value(): number {
+  return 1;
+}
+
+export function other(): number {
+  return 2;
+}
+`
+    );
+    const r = runCheck('u-conc-no-padding', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+});
+
+describe('check.mjs — hyg-no-duplication', () => {
+  it('fails when the same substantive 8-line block appears in two files', () => {
+    const app = makeAppDir();
+    // Eight non-comment, non-import lines >8 chars that are not style props and
+    // not Pages Function boilerplate — the exact window the detector uses.
+    const block = `
+export function loadItems(flag: { ifActive: (fn: () => void) => boolean }, setState: (s: unknown) => void, errorMessage: string): void {
+  flag.ifActive(() => {
+    setState({ status: 'loading' as const });
+  });
+  const timeoutId = setTimeout(() => {
+    flag.ifActive(() => {
+      setState({ status: 'error' as const, message: errorMessage });
+    });
+  }, 10_000);
+  void timeoutId;
+}
+`;
+    write(app, 'src/pages/Alpha.tsx', `import type { ReactNode } from 'react';\n${block}\n`);
+    write(app, 'src/pages/Beta.tsx', `import type { ReactNode } from 'react';\n${block}\n`);
+    const r = runCheck('hyg-no-duplication', app);
+    expect(r.status, r.stderr).not.toBe(0);
+    expect(r.stderr).toMatch(/duplicated code/i);
+  });
+
+  it('passes when two pages share only style-token property runs', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/pages/Alpha.tsx',
+      `
+import type { CSSProperties } from 'react';
+
+const cardStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+  minHeight: 56,
+  padding: '10px 12px',
+  background: 'var(--surface)',
+  borderRadius: 8,
+  boxSizing: 'border-box'
+};
+
+/** Alpha page shell. */
+export function Alpha(): JSX.Element {
+  return <div style={cardStyle}>Alpha unique body content here now</div>;
+}
+`
+    );
+    write(
+      app,
+      'src/pages/Beta.tsx',
+      `
+import type { CSSProperties } from 'react';
+
+const cardStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+  minHeight: 56,
+  padding: '10px 12px',
+  background: 'var(--surface)',
+  borderRadius: 8,
+  boxSizing: 'border-box'
+};
+
+/** Beta page shell. */
+export function Beta(): JSX.Element {
+  return <section style={cardStyle}>Beta different body content here now</section>;
+}
+`
+    );
+    const r = runCheck('hyg-no-duplication', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+});

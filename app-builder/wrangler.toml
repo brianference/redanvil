@@ -6,3 +6,6 @@ pages_build_output_dir = "dist"
 binding = "DB"
 database_name = "app-builder-db"
 database_id = "0142e968-7f0e-4458-ba91-b6195a0027c3"
+# Standard D1 binding key (Workers + Pages). Apply with:
+#   npx wrangler d1 migrations apply app-builder-db --local|--remote
+migrations_dir = "migrations"

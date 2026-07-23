@@ -100,6 +100,13 @@ export async function gateApp(
   // forgiving than the one under test — a run could lose every major, minor and
   // judge rule and still score 74. One implementation, one set of tests.
   const { score } = computeScore(outcomes, rules);
+
+  // A passing score alongside failed blockers is a contradiction: the two are
+  // derived from the same outcomes, so disagreement means the inputs were
+  // malformed or the two code paths have drifted apart again. Report it as a
+  // hard zero rather than emitting "PASS" next to a list of failed blockers.
+  const consistentScore = blockersFailed.length > 0 ? 0 : score;
+
   const evaluated = new Set(outcomes.map((o) => o.ruleId)).size;
-  return { outcomes, blockersFailed, evaluated, total: rules.length, score };
+  return { outcomes, blockersFailed, evaluated, total: rules.length, score: consistentScore };
 }

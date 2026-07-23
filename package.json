@@ -14,6 +14,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "gate": "tsx orchestrator/src/cli.ts gate",
+    "loop": "tsx orchestrator/src/cli.ts loop",
     "rubric": "tsx orchestrator/src/cli.ts rubric"
   },
   "devDependencies": {

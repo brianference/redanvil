@@ -56,6 +56,11 @@ const read = (f) => {
     return '';
   }
 };
+/** Test files. They construct request bodies and fixtures on purpose, so
+ *  handler-shaped rules (input validation, auth stubs, headers) must not be
+ *  applied to them — a test asserting a 400 is not an unvalidated endpoint. */
+const isTestFile = (f) => /\.(test|spec)\.(ts|tsx|js|mjs)$/.test(f);
+
 /** Files whose raw literals are legitimately allowed (token/theme definitions). */
 const isThemeFile = (f) => /theme\.(ts|css)$|tokens?\.(ts|json)$/.test(f);
 const pass = () => process.exit(0);
@@ -234,7 +239,7 @@ switch (ruleId) {
   case 'u-val-input-validation': {
     // Function handlers that read a request body should validate with a real schema.
     // JSON.parse alone must never satisfy this rule.
-    const files = walk(functionsDir, ['.ts', '.js']);
+    const files = walk(functionsDir, ['.ts', '.js']).filter((f) => !isTestFile(f));
     const readsBody = files.filter((f) => /await\s+\w+\.json\(\)|request\.json\(\)/.test(read(f)));
     if (readsBody.length === 0) pass();
     for (const f of readsBody) {

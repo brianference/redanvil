@@ -40,13 +40,17 @@ describe('parseByKind', () => {
 
 describe('RunResultSchema provenance', () => {
   /** A real, fully-formed result as the gate CLI writes it. */
+  // Coherent by construction: evaluated matches rules.length, passed matches
+  // the threshold comparison, and the last iteration matches finalScore. The
+  // previous fixture claimed evaluated:41 with a one-element rules array, so it
+  // could not have come from any real run and proved nothing about integrity.
   const validResult = {
     kind: 'results',
     slug: 'app-builder',
     finalScore: 100,
     threshold: 90,
     passed: true,
-    evaluated: 41,
+    evaluated: 1,
     total: 41,
     rules: [{ ruleId: 'u-typing-strict', passed: true }],
     iterations: [{ index: 1, score: 100, blockers: [] }],
@@ -78,5 +82,61 @@ describe('RunResultSchema provenance', () => {
   it('rejects a result missing coverage fields', () => {
     const { evaluated: _drop, ...noCoverage } = validResult;
     expect(() => parseByKind('results', noCoverage)).toThrow(ValidationError);
+  });
+});
+
+describe('RunResultSchema coherence', () => {
+  /** A coherent result, as the gate writes it. */
+  const base = {
+    kind: 'results',
+    slug: 'app-builder',
+    finalScore: 100,
+    threshold: 90,
+    passed: true,
+    evaluated: 2,
+    total: 41,
+    rules: [
+      { ruleId: 'u-typing-strict', passed: true },
+      { ruleId: 'u-test-presence', passed: true }
+    ],
+    iterations: [{ index: 1, score: 100, blockers: [] }],
+    deployUrl: null,
+    finishedAt: '2026-07-23T00:00:00.000Z',
+    provenance: {
+      commit: 'b122c580069c42155525a800a483fe732e5978cb',
+      dirty: false,
+      rubricHash: 'a'.repeat(64),
+      rubricRuleCount: 48,
+      node: 'v22.19.0',
+      generatedAt: '2026-07-23T00:00:00.000Z'
+    }
+  };
+
+  it('accepts a coherent result', () => {
+    expect(() => parseByKind('results', base)).not.toThrow();
+  });
+
+  it('rejects a perfect score sitting next to a failed rule', () => {
+    const bad = { ...base, rules: [base.rules[0]!, { ruleId: 'u-test-presence', passed: false }] };
+    expect(() => parseByKind('results', bad)).toThrow(ValidationError);
+  });
+
+  it('rejects evaluated that disagrees with the recorded outcomes', () => {
+    expect(() => parseByKind('results', { ...base, evaluated: 41 })).toThrow(ValidationError);
+  });
+
+  it('rejects passed that disagrees with the threshold', () => {
+    expect(() => parseByKind('results', { ...base, finalScore: 10, passed: true })).toThrow(
+      ValidationError
+    );
+  });
+
+  it('rejects a finalScore that disagrees with the last iteration', () => {
+    const bad = { ...base, iterations: [{ index: 1, score: 40, blockers: [] }] };
+    expect(() => parseByKind('results', bad)).toThrow(ValidationError);
+  });
+
+  it('rejects more applicable rules than exist in the rubric', () => {
+    expect(() => parseByKind('results', { ...base, total: 999 })).toThrow(ValidationError);
   });
 });

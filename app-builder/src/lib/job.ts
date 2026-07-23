@@ -10,17 +10,25 @@ export interface WizardAnswers {
   entities: string;
 }
 
-/** Build job payload consumed by the orchestrator (kind = job). */
+/**
+ * Build job payload consumed by the orchestrator (kind = job).
+ * Shape must stay a valid subset of orchestrator `JobSchema` so a client-built
+ * job.json can feed scaffold/validate without a silent hand-edit layer.
+ */
 export interface BuildJob {
   kind: 'job';
   /** Kebab-case slug derived from the prompt. */
   slug: string;
   /** Original user prompt. */
   prompt: string;
-  /** Always fullstack-web for this wizard. */
+  /** Always fullstack-web for this wizard (orchestrator also allows other targets). */
   targetType: 'fullstack-web';
   /** Gate pass threshold (default 90). */
   threshold: 90;
+  /** Wizard scope fields as string map (orchestrator Job.answers). */
+  answers: Record<string, string>;
+  /** ISO-8601 creation time (orchestrator Job.createdAt). */
+  createdAt: string;
 }
 
 const SLUG_MAX = 49;
@@ -29,6 +37,9 @@ const SLUG_FALLBACK = 'app';
 /**
  * Derive a kebab-case slug from free text.
  * Shape: starts with [a-z0-9], then [a-z0-9-], length 2–49.
+ *
+ * @param prompt - Free-text app description.
+ * @returns Kebab-case slug safe for JobSchema.
  */
 export function slugFromPrompt(prompt: string): string {
   const raw = prompt
@@ -46,6 +57,9 @@ export function slugFromPrompt(prompt: string): string {
 
 /**
  * Count main entities from a comma / semicolon / newline separated list.
+ *
+ * @param entities - Free-text entity list.
+ * @returns Count of non-empty parts.
  */
 export function countEntities(entities: string): number {
   return entities
@@ -56,16 +70,26 @@ export function countEntities(entities: string): number {
 
 /**
  * Build a job object from wizard answers (pure).
- * Slug is kebab-case from the prompt; targetType and threshold are fixed.
- * Used by the client and by POST /api/submit.
+ * Emits a full orchestrator-valid job: answers map + createdAt, plus fixed
+ * targetType and threshold. Used by the client and by POST /api/submit.
+ *
+ * @param answers - Wizard form values.
+ * @param now - Clock for createdAt (injectable for tests).
+ * @returns BuildJob that must pass orchestrator JobSchema.
  */
-export function buildJob(answers: WizardAnswers): BuildJob {
+export function buildJob(answers: WizardAnswers, now: Date = new Date()): BuildJob {
   const prompt = answers.prompt.trim();
   return {
     kind: 'job',
     slug: slugFromPrompt(prompt),
     prompt,
     targetType: 'fullstack-web',
-    threshold: 90
+    threshold: 90,
+    answers: {
+      appType: answers.appType,
+      hasAuth: answers.hasAuth ? 'true' : 'false',
+      entities: answers.entities
+    },
+    createdAt: now.toISOString()
   };
 }

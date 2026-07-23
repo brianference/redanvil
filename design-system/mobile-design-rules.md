@@ -1,6 +1,6 @@
 # Mobile design rules (living)
 
-Version: 1.4 · Last improved: 2026-07-21  
+Version: 1.6 · Last improved: 2026-07-22  
 Source of truth for Grok Build mobile UX. Update via continuous improvement protocol after each design run.
 
 ---
@@ -108,26 +108,49 @@ Source of truth for Grok Build mobile UX. Update via continuous improvement prot
 
 ## R10 — Component structure defaults
 
-| ID    | Rule                                                                                                 | Level  |
-| ----- | ---------------------------------------------------------------------------------------------------- | ------ |
-| R10.1 | Screen = shell (safe area + chrome) + regions + feature components                                   | must   |
-| R10.2 | Shared tokens: spacing scale (4/8), radius, type steps, semantic colors                              | must   |
-| R10.3 | Variants share props/API; differ in layout density and emphasis                                      | should |
-| R10.4 | Sticky bottom CTA bar includes safe-area padding                                                     | must   |
-| R10.5 | Lists: row min height for touch; swipe actions secondary, not only path                              | should |
-| R10.6 | Brand mark in header/nav is a small optimized asset (WebP/SVG, ~<=60KB), never the hero/banner image | must   |
-| R10.7 | Favicon and app icon derive from the same mark as the header logo                                    | should |
+| ID    | Rule                                                                                                                                                                                                                               | Level  |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| R10.1 | Screen = shell (safe area + chrome) + regions + feature components                                                                                                                                                                 | must   |
+| R10.2 | Shared tokens: spacing scale (4/8), radius, type steps, semantic colors                                                                                                                                                            | must   |
+| R10.3 | Variants share props/API; differ in layout density and emphasis                                                                                                                                                                    | should |
+| R10.4 | Sticky bottom CTA bar includes safe-area padding                                                                                                                                                                                   | must   |
+| R10.5 | Lists: row min height for touch; swipe actions secondary, not only path                                                                                                                                                            | should |
+| R10.6 | Brand mark in header/nav is a small optimized asset (WebP/SVG, ~<=60KB), never the hero/banner image                                                                                                                               | must   |
+| R10.7 | Favicon and app icon derive from the same mark as the header logo                                                                                                                                                                  | should |
+| R10.8 | Decide the target **before** structure: responsive web-mobile (React + TS + Tailwind) or true native (**Expo / React Native**). These rules apply to both, but the implementation differs and the choice is not reversible cheaply | must   |
+
+### R10.8a — Expo / React Native translations
+
+The rules are written in web terms by default. On Expo/RN they still hold, but the
+mechanism changes. Do not skip a rule because its web mechanism is absent.
+
+| Rule                  | Web mechanism                         | Expo / React Native mechanism                                                   |
+| --------------------- | ------------------------------------- | ------------------------------------------------------------------------------- |
+| R2.1 safe areas       | `env(safe-area-inset-*)`              | `react-native-safe-area-context` (`useSafeAreaInsets`) — not a fixed 44px guess |
+| R2.2 chrome collision | scroll padding                        | `contentInset` / `contentContainerStyle` padding                                |
+| R3.1 16px body        | CSS `px`                              | RN unitless density-independent points; still >= 16                             |
+| R3.5 dynamic type     | `rem` + browser zoom                  | `allowFontScaling` (default true) — never disable it to protect a layout        |
+| R4.1 contrast AA      | CSS color tokens                      | same tokens via a theme object; verify against the rendered screen              |
+| R4.6 light/dark       | `prefers-color-scheme` + `data-theme` | `useColorScheme()` + Appearance API; persist the override                       |
+| R8.1 virtualization   | windowing lib                         | `FlatList`/`FlashList` — never `.map()` a long feed into a `ScrollView`         |
+| R8.3 reduced motion   | `prefers-reduced-motion`              | `AccessibilityInfo.isReduceMotionEnabled()`                                     |
+| R1.5 icon labels      | `aria-label`                          | `accessibilityLabel` + `accessibilityRole`                                      |
+| R7.x states           | DOM conditional render                | same, but loading needs an explicit `ActivityIndicator`, not a blank frame      |
+
+Web-only rules that do **not** apply natively: R10.7 favicon, R2.7 horizontal
+overflow at 375 (RN has no document scroll), and the SEO rules in R13.8. Mark them
+`notApplicable` explicitly rather than quietly passing them.
 
 ## R11 — Inspiration hygiene
 
-| ID    | Rule                                                                                                                                                             | Level  |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| R11.1 | Use refs for structure/density/tone; never clone brand or 1:1 layout                                                                                             | must   |
-| R11.2 | Prefer real product UI for structure; concept art only for mood                                                                                                  | should |
-| R11.3 | Cite sources in `design-refs/.../SOURCES.md` when inspo was used                                                                                                 | must   |
-| R11.4 | Do not scrape paywalled design libraries                                                                                                                         | must   |
-| R11.5 | Treat Mobbin `/discover/*` as **login-gated** unless session exists; use **@mobbin X posts** for public app-name drops and collages, not bulk site harvest       | must   |
-| R11.6 | When the user has multiple products, pick the **primary mobile product** first (or ask once); map other products in as content/context cards, not separate homes | should |
+| ID    | Rule                                                                                                                                                                                                                                                                                                   | Level  |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| R11.1 | Use refs for structure/density/tone; never clone brand or 1:1 layout                                                                                                                                                                                                                                   | must   |
+| R11.2 | Prefer real product UI for structure; concept art only for mood                                                                                                                                                                                                                                        | should |
+| R11.3 | Cite sources in `design-refs/.../SOURCES.md` when inspo was used                                                                                                                                                                                                                                       | must   |
+| R11.4 | Do not scrape paywalled design libraries                                                                                                                                                                                                                                                               | must   |
+| R11.5 | Treat Mobbin `/discover/*` as **login-gated** unless session exists; use **@mobbin X posts** for public app-name drops and collages, not bulk site harvest                                                                                                                                             | must   |
+| R11.6 | In a multi-repo/multi-app portfolio, pick the **primary mobile product and its one primary screen** before gathering refs (or ask once); map other products in as content/context cards, not separate homes. A vague "all products" home yields refs that match nothing and a screen no repo can adopt | must   |
 
 ## R12 — Variant checklist (A/B/C)
 

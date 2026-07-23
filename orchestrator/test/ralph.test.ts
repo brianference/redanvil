@@ -46,3 +46,47 @@ describe('runLoop', () => {
     expect(result.promise).toBeNull();
   });
 });
+
+describe('runLoop records', () => {
+  it('records every pass with the blockers the gate actually reported', async () => {
+    // records[] is what makes a multi-iteration history real instead of typed
+    // in by hand, so it has to match the gate verdicts pass for pass.
+    const scores = [0, 40, 95];
+    const blockers = [['u-typing-strict'], ['hyg-no-duplication'], []];
+    let i = 0;
+    const result = await runLoop(
+      {
+        coder: async () => {},
+        gate: async (): Promise<GateOutcome> => {
+          const g = { score: scores[i]!, blockers: blockers[i]!, feedback: `f${i}` };
+          i++;
+          return g;
+        }
+      },
+      { threshold: 90, maxIters: 5 }
+    );
+
+    expect(result.passed).toBe(true);
+    expect(result.records).toEqual([
+      { index: 1, score: 0, blockers: ['u-typing-strict'] },
+      { index: 2, score: 40, blockers: ['hyg-no-duplication'] },
+      { index: 3, score: 95, blockers: [] }
+    ]);
+    // The history and the records must not disagree about what happened.
+    expect(result.records.map((r) => r.score)).toEqual(result.history);
+    expect(result.records).toHaveLength(result.iterations);
+  });
+
+  it('records failing passes too when the loop never clears the threshold', async () => {
+    const result = await runLoop(
+      {
+        coder: async () => {},
+        gate: async (): Promise<GateOutcome> => ({ score: 10, blockers: ['x'], feedback: 'f' })
+      },
+      { threshold: 90, maxIters: 3 }
+    );
+    expect(result.passed).toBe(false);
+    expect(result.records).toHaveLength(3);
+    expect(result.records.every((r) => r.blockers.includes('x'))).toBe(true);
+  });
+});

@@ -67,3 +67,33 @@ describe('POST /api/submit headers', () => {
     expectSecureHeaders(response, request.url);
   });
 });
+
+describe('POST /api/submit body bounds', () => {
+  it('rejects an over-limit prompt with the existing 400 validation shape', async () => {
+    const request = submitRequest({
+      prompt: 'x'.repeat(10_001),
+      appType: 'content',
+      hasAuth: false,
+      entities: 1
+    });
+    const response = await onRequestPost({ request, env: mockEnv() });
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string };
+    expect(typeof body.error).toBe('string');
+    expect(body.error.length).toBeGreaterThan(0);
+    expectSecureHeaders(response, request.url);
+  });
+
+  it('rejects an over-limit appType with 400', async () => {
+    const request = submitRequest({
+      prompt: 'Build a recipe app with search',
+      appType: 'a'.repeat(65),
+      hasAuth: false,
+      entities: 0
+    });
+    const response = await onRequestPost({ request, env: mockEnv() });
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string };
+    expect(typeof body.error).toBe('string');
+  });
+});

@@ -3,15 +3,25 @@ import { estimateTokens } from '../src/preflight/tokens';
 import { analyzeCollisions } from '../src/preflight/collision';
 
 describe('estimateTokens', () => {
-  it('is monotonic: more features never estimates fewer iterations or tokens', () => {
-    const small = estimateTokens({ tasks: 3, features: 2 });
-    const big = estimateTokens({ tasks: 3, features: 10 });
-    expect(big.iterations).toBeGreaterThanOrEqual(small.iterations);
-    expect(big.grokTokens).toBeGreaterThanOrEqual(small.grokTokens);
+  it('pins a calibrated point from the formula (not a free floor)', () => {
+    // iterations = max(2, ceil(2/2)+1) = 2
+    // grokTokens = 3 * 50_000 * 2 = 300_000; claude = 40% = 120_000
+    const r = estimateTokens({ tasks: 3, features: 2 });
+    expect(r.iterations).toBe(2);
+    expect(r.grokTokens).toBe(300_000);
+    expect(r.claudeTokens).toBe(120_000);
+    expect(r.confidence).toBe('high');
   });
 
-  it('never estimates fewer than 2 iterations', () => {
-    expect(estimateTokens({ tasks: 1, features: 1 }).iterations).toBeGreaterThanOrEqual(2);
+  it('strictly increases iterations and tokens when features go from 2 → 10', () => {
+    const small = estimateTokens({ tasks: 3, features: 2 });
+    const big = estimateTokens({ tasks: 3, features: 10 });
+    expect(big.iterations).toBeGreaterThan(small.iterations);
+    expect(big.grokTokens).toBeGreaterThan(small.grokTokens);
+  });
+
+  it('never estimates fewer than 2 iterations at the minimum boundary', () => {
+    expect(estimateTokens({ tasks: 1, features: 1 }).iterations).toBe(2);
   });
 
   it('lowers confidence as feature count grows', () => {
