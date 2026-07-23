@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { linkifyText } from '../lib/linkify';
 import { theme } from '../theme';
 
 /** One labeled body block under a content-page intro. */
@@ -26,7 +27,7 @@ const introStyle: CSSProperties = {
 
 const updatedStyle: CSSProperties = {
   color: theme.color.muted,
-  fontSize: theme.type.scale[0],
+  fontSize: theme.type.scale[1],
   margin: `${theme.space.sm}px 0 0`
 };
 
@@ -45,14 +46,14 @@ const headingStyle: CSSProperties = {
 
 const bodyStyle: CSSProperties = {
   color: theme.color.muted,
-  fontSize: theme.type.scale[1],
+  fontSize: theme.type.scale[2],
   lineHeight: 1.6,
   margin: 0
 };
 
 /**
  * Renders a content page body: intro, optional updated line, then h2/p sections.
- * The page shell still owns the single h1.
+ * Bare URLs in body copy become real anchors. The page shell still owns the single h1.
  */
 export function ContentSections({ intro, updated, sections }: ContentSectionsProps): JSX.Element {
   return (
@@ -62,7 +63,7 @@ export function ContentSections({ intro, updated, sections }: ContentSectionsPro
       {sections.map((section) => (
         <section key={section.heading} style={sectionStyle}>
           <h2 style={headingStyle}>{section.heading}</h2>
-          <p style={bodyStyle}>{section.body}</p>
+          <p style={bodyStyle}>{linkifyText(section.body)}</p>
         </section>
       ))}
     </>

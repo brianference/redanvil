@@ -15,6 +15,8 @@ describe('en locale bundle', () => {
     expect(locale.app.navAbout).toBe('About');
     expect(locale.app.navContact).toBe('Contact');
     expect(locale.app.sidebarLabel.length).toBeGreaterThan(2);
+    expect(locale.app.navBuilder).toBe('App Builder');
+    expect(locale.app.footerTerms).toBe('Terms');
   });
 
   it('exposes saved dashboard KPI and card copy', () => {

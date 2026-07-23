@@ -3,18 +3,27 @@ import { Page } from '../components/Page';
 import { RunList } from '../components/RunList';
 import { en } from '../i18n/en';
 import { summarize } from '../lib/summary';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 import { useRuns } from '../lib/useRuns';
 import { theme } from '../theme';
 
 /** Home page: KPI strip plus glanceable run cards, with explicit load/error/empty states. */
 export function Home(): JSX.Element {
+  useDocumentMeta({
+    title: 'RedAnvil Dashboard — build runs',
+    description:
+      'RedAnvil dashboard: a read-only view of build runs — slug, final score, pass/fail, iterations, and deploy URL.',
+    path: '/'
+  });
   const state = useRuns();
   const title = en.pages.home.title;
 
   if (state.status === 'loading') {
     return (
       <Page title={title}>
-        <p style={{ color: theme.color.muted }}>{en.pages.home.loading}</p>
+        <p role="status" aria-live="polite" aria-busy="true" style={{ color: theme.color.muted }}>
+          {en.pages.home.loading}
+        </p>
       </Page>
     );
   }

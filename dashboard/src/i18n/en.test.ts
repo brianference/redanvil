@@ -77,7 +77,7 @@ describe('en locale bundle', () => {
     expect(locale.app.menuClose.length).toBeGreaterThan(2);
     expect(locale.app.breadcrumbHome).toBe('Home');
     expect(locale.app.breadcrumbNav).toBe('Breadcrumb');
-    expect(locale.app.navBuilder).toBe('Builder');
+    expect(locale.app.navBuilder).toBe('App Builder');
     expect(locale.app.navDashboard).toBe('Dashboard');
     expect(locale.app.navRuns).toBe('Runs');
     expect(locale.app.navContact).toBe('Contact');

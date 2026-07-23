@@ -8,13 +8,16 @@
   --surface-2: #1c1c26;
   --text: #f5f5f7;
   --muted: #8b8b93;
-  --accent: #e5484d;
+  /* Fill accent: white-on-accent AA (4.5:1). Text-on-surface uses --accent-fg. */
+  --accent: #d33b40;
+  --accent-fg: #ff8b8e;
   --border: #26263049;
   --success: #3dd68c;
   --success-soft: #143325;
   --error: #ff6b6b;
   --error-soft: #3a1618;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --scrim: rgba(0, 0, 0, 0.55);
 }
 
 :root[data-theme='light'] {
@@ -23,13 +26,17 @@
   --surface-2: #eef0f6;
   --text: #16161d;
   --muted: #5b6270;
-  --accent: #d33b40;
+  /* Darker accent for active nav text on soft red bg (>=4.5:1). #d33b40 was ~4.44:1. */
+  --accent: #c62828;
+  --accent-fg: #c62828;
   --border: #e4e6ee;
-  --success: #1a7f4b;
+  /* Darker success for PASS pill on soft green (>=4.5:1). #1a7f4b was 4.49:1. */
+  --success: #156b3c;
   --success-soft: #e6f6ed;
   --error: #c62828;
   --error-soft: #fde8e8;
   --shadow: 0 1px 2px rgba(22, 22, 29, 0.06);
+  --scrim: rgba(0, 0, 0, 0.55);
 }
 
 @media (prefers-color-scheme: light) {
@@ -39,12 +46,14 @@
     --surface-2: #eef0f6;
     --text: #16161d;
     --muted: #5b6270;
-    --accent: #d33b40;
+    --accent: #c62828;
+    --accent-fg: #c62828;
     --border: #e4e6ee;
-    --success: #1a7f4b;
+    --success: #156b3c;
     --success-soft: #e6f6ed;
     --error: #c62828;
     --error-soft: #fde8e8;
     --shadow: 0 1px 2px rgba(22, 22, 29, 0.06);
+    --scrim: rgba(0, 0, 0, 0.55);
   }
 }

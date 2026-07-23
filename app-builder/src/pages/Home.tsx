@@ -9,7 +9,7 @@ import { estimate } from '../lib/estimate';
 import { countEntities, type BuildJob, type WizardAnswers } from '../lib/job';
 import { wizardInstanceKey } from '../lib/wizardSession';
 import { en } from '../i18n/en';
-import { theme } from '../theme';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 /** Which builder surface is active on the home route. */
 type BuilderView = 'chat' | 'templates' | 'wizard' | 'result';
@@ -34,6 +34,13 @@ export function Home(): JSX.Element {
   answersRef.current = answers;
 
   const copy = en.pages.home;
+
+  useDocumentMeta({
+    title: 'RedAnvil — Forge apps from a prompt',
+    description:
+      'RedAnvil turns a prompt into a complete, downloadable PRD you can hand to Claude — with a token estimate and an enforced quality gate.',
+    path: '/'
+  });
 
   /**
    * Update controlled answers and keep the ref in sync.
@@ -117,46 +124,16 @@ export function Home(): JSX.Element {
   return (
     <Page title={pageTitle} subtitle={pageSubtitle}>
       {view === 'chat' && (
-        <>
-          {/* Theme-aware hero: dark banner on dark, transparent light lockup on light
-              (no black box on light pages). Classes own visibility — no inline display. */}
-          <img
-            className="ra-logo-dark"
-            src="/banner.webp"
-            alt={copy.bannerAlt}
-            loading="eager"
-            style={{
-              width: '100%',
-              maxWidth: '40rem',
-              height: 'auto',
-              borderRadius: theme.radius.lg,
-              border: `1px solid ${theme.color.border}`,
-              marginBottom: theme.space.xl
-            }}
-          />
-          <img
-            className="ra-logo-light"
-            src="/logo-light.png"
-            alt={copy.bannerAlt}
-            loading="eager"
-            style={{
-              width: '100%',
-              maxWidth: '26rem',
-              height: 'auto',
-              marginBottom: theme.space.xl
-            }}
-          />
-          <ComposerChat
-            prompt={answers.prompt}
-            onPromptChange={(prompt) => {
-              updateAnswers({ ...answersRef.current, prompt });
-            }}
-            onSend={handleChatSend}
-            onBrowseTemplates={() => {
-              setView('templates');
-            }}
-          />
-        </>
+        <ComposerChat
+          prompt={answers.prompt}
+          onPromptChange={(prompt) => {
+            updateAnswers({ ...answersRef.current, prompt });
+          }}
+          onSend={handleChatSend}
+          onBrowseTemplates={() => {
+            setView('templates');
+          }}
+        />
       )}
 
       {view === 'templates' && (

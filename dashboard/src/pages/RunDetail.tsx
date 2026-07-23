@@ -1,9 +1,10 @@
 import type { CSSProperties } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { StatusBadge } from '../components/StatusBadge';
 import { en } from '../i18n/en';
 import { groupRulesByLane, type Run, type RunIteration, type RunRule } from '../lib/summary';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 import { useRuns } from '../lib/useRuns';
 import { theme } from '../theme';
 
@@ -57,13 +58,27 @@ const metaItemStyle: CSSProperties = {
 const metaLabelStyle: CSSProperties = {
   display: 'block',
   color: theme.color.muted,
-  fontSize: theme.type.scale[0],
+  fontSize: theme.type.scale[1],
   fontWeight: 600,
   marginBottom: theme.space.xs
 };
 
 const linkStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: theme.touch,
   color: theme.color.accent,
+  textDecoration: 'underline',
+  textUnderlineOffset: 3
+};
+
+const recoveryLinkStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: theme.touch,
+  marginTop: theme.space.md,
+  color: theme.color.accent,
+  fontWeight: 600,
   textDecoration: 'underline',
   textUnderlineOffset: 3
 };
@@ -215,13 +230,13 @@ function RuleRow({ rule }: { rule: RunRule }): JSX.Element {
         padding: `${theme.space.xs}px 0`,
         borderBottom: `1px solid ${theme.color.border}`,
         listStyle: 'none',
-        fontSize: theme.type.scale[1]
+        fontSize: theme.type.scale[2]
       }}
     >
       <code
         style={{
           fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-          fontSize: theme.type.scale[1],
+          fontSize: theme.type.scale[2],
           wordBreak: 'break-word'
         }}
       >
@@ -287,6 +302,17 @@ export function RunDetailBody({ run }: { run: Run }): JSX.Element {
 }
 
 /**
+ * Recovery link back to the run list (used on not-found / error).
+ */
+function BackToRunsLink(): JSX.Element {
+  return (
+    <Link to="/" style={recoveryLinkStyle}>
+      {en.runDetail.backToRuns}
+    </Link>
+  );
+}
+
+/**
  * Detail view for one run: header, iteration history, and full per-rule breakdown.
  * Loads the same feed as the list and selects by slug; fail-closed loading/error/empty.
  */
@@ -296,10 +322,21 @@ export function RunDetail(): JSX.Element {
   const state = useRuns();
   const title = slug.length > 0 ? slug : en.runDetail.missingSlug;
 
+  useDocumentMeta({
+    title: `${title} · RedAnvil Dashboard`,
+    description:
+      slug.length > 0
+        ? `Build run detail for ${slug}: score, coverage, iterations, and per-rule breakdown.`
+        : 'RedAnvil build run detail.',
+    path: slug.length > 0 ? `/run/${encodeURIComponent(slug)}` : '/run'
+  });
+
   if (state.status === 'loading') {
     return (
       <Page title={title} breadcrumb={title}>
-        <p style={{ color: theme.color.muted }}>{en.runDetail.loading}</p>
+        <p role="status" aria-live="polite" aria-busy="true" style={{ color: theme.color.muted }}>
+          {en.runDetail.loading}
+        </p>
       </Page>
     );
   }
@@ -310,6 +347,7 @@ export function RunDetail(): JSX.Element {
         <p role="alert" style={{ color: theme.color.accent }}>
           {en.runDetail.error(state.message)}
         </p>
+        <BackToRunsLink />
       </Page>
     );
   }
@@ -320,6 +358,7 @@ export function RunDetail(): JSX.Element {
         <p role="status" style={{ color: theme.color.muted }}>
           {en.runDetail.notFound}
         </p>
+        <BackToRunsLink />
       </Page>
     );
   }
@@ -331,6 +370,7 @@ export function RunDetail(): JSX.Element {
         <p role="status" style={{ color: theme.color.muted }}>
           {en.runDetail.notFound}
         </p>
+        <BackToRunsLink />
       </Page>
     );
   }

@@ -28,7 +28,7 @@ export function StatusBadge({ passed, score, threshold }: StatusBadgeProps): JSX
     gap: theme.space.xs,
     padding: `${theme.space.xs}px ${theme.space.sm}px`,
     borderRadius: 999,
-    fontSize: theme.type.scale[0],
+    fontSize: theme.type.scale[1],
     fontWeight: 700,
     letterSpacing: '0.03em',
     textTransform: 'uppercase',

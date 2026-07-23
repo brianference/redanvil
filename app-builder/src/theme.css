@@ -10,8 +10,13 @@
   --text: #f5f5f7;
   --text-on-accent: #ffffff;
   --muted: #9b9ba6;
-  --accent: #e5484d;
-  --accent-soft: color-mix(in srgb, #e5484d 16%, transparent);
+  /*
+   * Fill accent: dark enough for white CTA text (≥4.5:1). #e5484d was 3.91:1.
+   * Active-nav TEXT uses --accent-fg (lighter) so red-on-dark also meets AA.
+   */
+  --accent: #d33b40;
+  --accent-fg: #ff8b8e;
+  --accent-soft: color-mix(in srgb, #d33b40 16%, transparent);
   --border: #2a2a36;
   --scrim: rgba(0, 0, 0, 0.55);
   --shadow: rgba(0, 0, 0, 0.25);
@@ -19,18 +24,18 @@
   --chip-bg: #1c1c26;
   --success: #30a46c;
   --success-soft: color-mix(in srgb, #30a46c 16%, transparent);
-  --error: #e5484d;
-  --error-soft: color-mix(in srgb, #e5484d 12%, transparent);
+  --error: #d33b40;
+  --error-soft: color-mix(in srgb, #d33b40 12%, transparent);
   --warning: #f5a524;
   --skeleton: #22222e;
   --skeleton-shine: #2c2c3a;
-  --focus-ring: 0 0 0 3px color-mix(in srgb, #e5484d 40%, transparent);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, #d33b40 40%, transparent);
   --shadow-card: 0 1px 2px color-mix(in srgb, #000 35%, transparent);
   --shadow-composer: 0 -8px 24px color-mix(in srgb, #000 35%, transparent);
   --radius-pill: 999px;
   --touch: 44px;
   --progress-track: #2a2a36;
-  --progress-fill: #e5484d;
+  --progress-fill: #d33b40;
 }
 
 :root[data-theme='light'] {
@@ -40,8 +45,10 @@
   --text: #111114;
   --text-on-accent: #ffffff;
   --muted: #5c5c68;
-  --accent: #d33b40;
-  --accent-soft: color-mix(in srgb, #d33b40 12%, transparent);
+  /* Match dashboard light: white-on-accent and accent-on-soft both ≥4.5:1. */
+  --accent: #c62828;
+  --accent-fg: #c62828;
+  --accent-soft: color-mix(in srgb, #c62828 12%, transparent);
   --border: #e2e2e8;
   --scrim: rgba(0, 0, 0, 0.45);
   --shadow: rgba(0, 0, 0, 0.18);
@@ -49,16 +56,16 @@
   --chip-bg: #ffffff;
   --success: #218358;
   --success-soft: color-mix(in srgb, #218358 12%, transparent);
-  --error: #d33b40;
-  --error-soft: color-mix(in srgb, #d33b40 10%, transparent);
+  --error: #c62828;
+  --error-soft: color-mix(in srgb, #c62828 10%, transparent);
   --warning: #ad5700;
   --skeleton: #e8e8ee;
   --skeleton-shine: #f4f4f8;
-  --focus-ring: 0 0 0 3px color-mix(in srgb, #d33b40 35%, transparent);
+  --focus-ring: 0 0 0 3px color-mix(in srgb, #c62828 35%, transparent);
   --shadow-card: 0 1px 2px color-mix(in srgb, #111 6%, transparent);
   --shadow-composer: 0 -8px 24px color-mix(in srgb, #111 6%, transparent);
   --progress-track: #e2e2e8;
-  --progress-fill: #d33b40;
+  --progress-fill: #c62828;
 }
 
 @media (prefers-color-scheme: light) {
@@ -69,23 +76,24 @@
     --text: #111114;
     --text-on-accent: #ffffff;
     --muted: #5c5c68;
-    --accent: #d33b40;
-    --accent-soft: color-mix(in srgb, #d33b40 12%, transparent);
+    --accent: #c62828;
+    --accent-fg: #c62828;
+    --accent-soft: color-mix(in srgb, #c62828 12%, transparent);
     --border: #e2e2e8;
     --border-strong: #c8c8d0;
     --chip-bg: #ffffff;
     --success: #218358;
     --success-soft: color-mix(in srgb, #218358 12%, transparent);
-    --error: #d33b40;
-    --error-soft: color-mix(in srgb, #d33b40 10%, transparent);
+    --error: #c62828;
+    --error-soft: color-mix(in srgb, #c62828 10%, transparent);
     --warning: #ad5700;
     --skeleton: #e8e8ee;
     --skeleton-shine: #f4f4f8;
-    --focus-ring: 0 0 0 3px color-mix(in srgb, #d33b40 35%, transparent);
+    --focus-ring: 0 0 0 3px color-mix(in srgb, #c62828 35%, transparent);
     --shadow-card: 0 1px 2px color-mix(in srgb, #111 6%, transparent);
     --shadow-composer: 0 -8px 24px color-mix(in srgb, #111 6%, transparent);
     --progress-track: #e2e2e8;
-    --progress-fill: #d33b40;
+    --progress-fill: #c62828;
   }
 }
 

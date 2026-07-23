@@ -35,7 +35,7 @@ const valueStyle: CSSProperties = {
 };
 
 const labelStyle: CSSProperties = {
-  fontSize: 11,
+  fontSize: theme.type.scale[1],
   fontWeight: 600,
   color: theme.color.muted,
   marginTop: 3,

@@ -30,14 +30,31 @@ const STOPWORDS = new Set([
   'and'
 ]);
 
-/** Derive a human product title from the prompt (Title Case, stopwords kept lowercase mid-title). */
+/** Soft max character length for a title; cuts only on a word boundary (no ellipsis). */
+const TITLE_MAX_CHARS = 72;
+
+/**
+ * Derive a human product title from the prompt.
+ * Title Case with stopwords kept lowercase mid-title. Never cuts mid-word;
+ * if length-bounded, trims to the last full word under TITLE_MAX_CHARS.
+ */
 function titleFromPrompt(prompt: string): string {
-  const words = prompt
+  const cleaned = prompt
     .trim()
     .replace(/[^a-zA-Z0-9 ]+/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 6);
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (cleaned.length === 0) return 'New App';
+
+  let clause = cleaned;
+  if (clause.length > TITLE_MAX_CHARS) {
+    const head = clause.slice(0, TITLE_MAX_CHARS);
+    const lastSpace = head.lastIndexOf(' ');
+    // Prefer a word boundary; only hard-cut if there is no space past a minimal prefix.
+    clause = lastSpace > 12 ? head.slice(0, lastSpace) : head;
+  }
+
+  const words = clause.split(/\s+/).filter(Boolean);
   if (words.length === 0) return 'New App';
   return words
     .map((w, i) =>

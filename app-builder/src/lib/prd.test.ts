@@ -20,6 +20,27 @@ describe('generatePrd', () => {
     expect(prd.prompt).toBe('Build an app for tracking tesla driving stats');
   });
 
+  it('does not truncate titles mid-phrase and embeds the full title in the markdown H1', () => {
+    const long = generatePrd(
+      {
+        prompt: 'A Shift Scheduling app for Small Businesses with employee roles and swaps',
+        appType: 'internal tool',
+        hasAuth: true,
+        entities: 'shifts, employees'
+      },
+      cost
+    );
+    // Must not end mid-word on the old 6-word cut ("…for Small")
+    expect(long.title).not.toMatch(/for Small$/);
+    expect(long.title.toLowerCase()).toContain('shift');
+    expect(long.markdown.startsWith(`# Product Requirements Document — ${long.title}`)).toBe(
+      true
+    );
+    // No ellipsis stuffed into the markdown heading
+    expect(long.markdown.split('\n')[0]).not.toContain('…');
+    expect(long.markdown.split('\n')[0]).not.toContain('...');
+  });
+
   it('includes the required PRD sections', () => {
     const md = prd.markdown.toLowerCase();
     for (const section of [

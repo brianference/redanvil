@@ -57,7 +57,7 @@ const bodyStyle: CSSProperties = {
 };
 
 const titleStyle: CSSProperties = {
-  fontSize: 15,
+  fontSize: theme.type.scale[2],
   fontWeight: 650,
   lineHeight: 1.25,
   whiteSpace: 'nowrap',
@@ -65,16 +65,19 @@ const titleStyle: CSSProperties = {
   textOverflow: 'ellipsis',
   color: theme.color.text,
   textDecoration: 'none',
-  display: 'block'
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: theme.touch,
+  maxWidth: '100%'
 };
 
 const metaStyle: CSSProperties = {
-  fontSize: theme.type.scale[0],
+  fontSize: theme.type.scale[1],
   color: theme.color.muted,
   marginTop: 2,
   display: 'flex',
   alignItems: 'center',
-  gap: 6,
+  gap: theme.space.sm,
   minWidth: 0,
   flexWrap: 'wrap'
 };
@@ -90,24 +93,24 @@ const actionsStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'flex-end',
-  gap: 4,
+  gap: theme.space.sm,
   flexShrink: 0
 };
 
 const timeStyle: CSSProperties = {
-  fontSize: 11,
+  fontSize: theme.type.scale[1],
   color: theme.color.muted,
   fontVariantNumeric: 'tabular-nums'
 };
 
 const deployLinkStyle: CSSProperties = {
-  minHeight: 32,
-  minWidth: 44,
-  padding: '0 8px',
-  fontSize: theme.type.scale[0],
+  minHeight: theme.touch,
+  minWidth: theme.touch,
+  padding: `0 ${theme.space.sm}px`,
+  fontSize: theme.type.scale[1],
   fontWeight: 650,
   fontFamily: theme.type.family,
-  borderRadius: 7,
+  borderRadius: theme.radius.sm,
   border: `1px solid ${theme.color.border}`,
   background: theme.color.bg,
   color: theme.color.text,
@@ -119,7 +122,7 @@ const deployLinkStyle: CSSProperties = {
 };
 
 const noneStyle: CSSProperties = {
-  fontSize: theme.type.scale[0],
+  fontSize: theme.type.scale[1],
   color: theme.color.muted
 };
 
@@ -250,7 +253,7 @@ export function RunList({ runs }: RunListProps): JSX.Element {
         <h2
           style={{
             margin: 0,
-            fontSize: 13,
+            fontSize: theme.type.scale[1],
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
@@ -262,7 +265,7 @@ export function RunList({ runs }: RunListProps): JSX.Element {
         </h2>
         <span
           style={{
-            fontSize: theme.type.scale[0],
+            fontSize: theme.type.scale[1],
             color: theme.color.muted,
             fontWeight: 500,
             fontVariantNumeric: 'tabular-nums',

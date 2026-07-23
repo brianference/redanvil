@@ -288,7 +288,7 @@ const sectionLabelStyle: CSSProperties = {
 
 const sectionTitleStyle: CSSProperties = {
   margin: 0,
-  fontSize: 13,
+  fontSize: theme.type.scale[1],
   fontWeight: 700,
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
@@ -296,7 +296,7 @@ const sectionTitleStyle: CSSProperties = {
 };
 
 const sectionMetaStyle: CSSProperties = {
-  fontSize: 13,
+  fontSize: theme.type.scale[1],
   color: theme.color.muted
 };
 
@@ -362,14 +362,14 @@ const templateBodyStyle: CSSProperties = {
 };
 
 const templateTitleStyle: CSSProperties = {
-  fontSize: 15,
+  fontSize: theme.type.scale[2],
   fontWeight: 700,
   lineHeight: 1.25,
   color: theme.color.text
 };
 
 const templateDescStyle: CSSProperties = {
-  fontSize: 13,
+  fontSize: theme.type.scale[2],
   color: theme.color.muted,
   lineHeight: 1.35
 };
@@ -386,7 +386,7 @@ const checkBadgeStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: 12,
+  fontSize: theme.type.scale[1],
   fontWeight: 700
 };
 
@@ -395,7 +395,7 @@ const orDividerStyle: CSSProperties = {
   alignItems: 'center',
   gap: 12,
   color: theme.color.muted,
-  fontSize: 13,
+  fontSize: theme.type.scale[1],
   fontWeight: 600
 };
 

@@ -609,7 +609,7 @@ const stepperMetaStyle: CSSProperties = {
 };
 
 const stepLabelStyle: CSSProperties = {
-  fontSize: 13,
+  fontSize: theme.type.scale[1],
   fontWeight: 650,
   letterSpacing: '0.02em',
   color: theme.color.muted,
@@ -617,9 +617,9 @@ const stepLabelStyle: CSSProperties = {
 };
 
 const stepTitleStyle: CSSProperties = {
-  fontSize: 13,
+  fontSize: theme.type.scale[1],
   fontWeight: 600,
-  color: theme.color.accent
+  color: theme.color.accentFg
 };
 
 const progressTrackStyle: CSSProperties = {
@@ -629,11 +629,11 @@ const progressTrackStyle: CSSProperties = {
 };
 
 const kickerStyle: CSSProperties = {
-  fontSize: 12,
+  fontSize: theme.type.scale[1],
   fontWeight: 650,
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
-  color: theme.color.accent,
+  color: theme.color.accentFg,
   margin: `0 0 ${theme.space.sm}px`
 };
 
@@ -672,7 +672,7 @@ const upcomingStyle: CSSProperties = {
 };
 
 const upcomingHeadingStyle: CSSProperties = {
-  fontSize: 13,
+  fontSize: theme.type.scale[1],
   fontWeight: 650,
   letterSpacing: '0.03em',
   textTransform: 'uppercase',
@@ -698,7 +698,7 @@ const upcomingItemStyle: CSSProperties = {
   borderRadius: theme.radius.md,
   border: `1px solid ${theme.color.border}`,
   background: theme.color.surface,
-  fontSize: 15,
+  fontSize: theme.type.scale[2],
   lineHeight: 1.35,
   boxSizing: 'border-box'
 };
@@ -710,7 +710,7 @@ const upcomingNumStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: 13,
+  fontSize: theme.type.scale[1],
   fontWeight: 700,
   flexShrink: 0
 };

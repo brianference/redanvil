@@ -51,7 +51,19 @@ export function estimate(input: EstimateInput): EstimateResult {
   const tokens = perIteration * iterations;
 
   const weight = features + entities + authExtra;
-  const confidence: EstimateConfidence = weight <= 3 ? 'high' : weight <= 8 ? 'medium' : 'low';
+  // Confidence reflects how much was actually specified, then scope variance.
+  // Underspecified (shell-only / no entities) → low; small well-scoped → high;
+  // large scope → medium/low (more unknowns).
+  let confidence: EstimateConfidence;
+  if (entities === 0 && features <= 1) {
+    confidence = 'low';
+  } else if (weight <= 3) {
+    confidence = 'high';
+  } else if (weight <= 8) {
+    confidence = 'medium';
+  } else {
+    confidence = 'low';
+  }
 
   return { iterations, tokens, confidence };
 }

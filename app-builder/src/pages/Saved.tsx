@@ -11,6 +11,7 @@ import {
   type SavedPrdListItem
 } from '../lib/savedList';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 type ListState =
   | { status: 'loading' }
@@ -43,6 +44,11 @@ function toListState(
  */
 export function Saved(): JSX.Element {
   const copy = en.pages.saved;
+  useDocumentMeta({
+    title: `${copy.title} · RedAnvil`,
+    description: copy.subtitle,
+    path: '/saved'
+  });
   const { state: fetchState, retry } = useAbortableJsonGet({
     url: '/api/prds',
     parse: parseSavedList,
@@ -142,6 +148,7 @@ export function Saved(): JSX.Element {
                         <span aria-hidden="true">● </span>
                         {copy.statusReady}
                       </span>
+                      <span style={sourceBadgeStyle}>{copy.sourcePublic}</span>
                       <span style={metaEllipsisStyle}>{copy.itemMeta(item.slug)}</span>
                     </div>
                   </div>
@@ -220,7 +227,7 @@ const kpiValStyle: CSSProperties = {
 };
 
 const kpiLblStyle: CSSProperties = {
-  fontSize: 11,
+  fontSize: theme.type.scale[1],
   fontWeight: 600,
   color: theme.color.muted,
   marginTop: 3,
@@ -251,7 +258,7 @@ const sectionTitleStyle: CSSProperties = {
 };
 
 const sectionMetaStyle: CSSProperties = {
-  fontSize: theme.type.scale[0],
+  fontSize: theme.type.scale[1],
   color: theme.color.muted,
   fontWeight: 500,
   fontVariantNumeric: 'tabular-nums'
@@ -303,23 +310,27 @@ const buildBodyStyle: CSSProperties = {
 };
 
 const buildTitleLinkStyle: CSSProperties = {
-  fontSize: 15,
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: theme.touch,
+  fontSize: theme.type.scale[2],
   fontWeight: 650,
   lineHeight: 1.25,
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   color: theme.color.text,
-  textDecoration: 'none'
+  textDecoration: 'none',
+  maxWidth: '100%'
 };
 
 const buildMetaStyle: CSSProperties = {
-  fontSize: 12,
+  fontSize: theme.type.scale[1],
   color: theme.color.muted,
   display: 'flex',
   flexWrap: 'wrap',
   alignItems: 'center',
-  gap: 6,
+  gap: theme.space.sm,
   minWidth: 0
 };
 
@@ -333,7 +344,7 @@ const metaEllipsisStyle: CSSProperties = {
 const badgeStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  fontSize: 11,
+  fontSize: theme.type.scale[1],
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.03em',
@@ -345,16 +356,30 @@ const badgeStyle: CSSProperties = {
   lineHeight: 1.3
 };
 
+const sourceBadgeStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  fontSize: theme.type.scale[1],
+  fontWeight: 600,
+  padding: '2px 7px',
+  borderRadius: theme.radius.pill,
+  background: theme.color.chipBg,
+  color: theme.color.muted,
+  border: `1px solid ${theme.color.border}`,
+  flexShrink: 0,
+  lineHeight: 1.3
+};
+
 const buildActionsStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'flex-end',
-  gap: 4,
+  gap: theme.space.sm,
   flexShrink: 0
 };
 
 const buildTimeStyle: CSSProperties = {
-  fontSize: 11,
+  fontSize: theme.type.scale[1],
   color: theme.color.muted,
   fontVariantNumeric: 'tabular-nums'
 };
@@ -363,13 +388,13 @@ const rowActionStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  minHeight: 32,
+  minHeight: theme.touch,
   minWidth: theme.touch,
-  padding: '0 8px',
-  fontSize: 12,
+  padding: `0 ${theme.space.sm}px`,
+  fontSize: theme.type.scale[1],
   fontWeight: 650,
   fontFamily: theme.type.family,
-  borderRadius: 7,
+  borderRadius: theme.radius.sm,
   border: `1px solid ${theme.color.border}`,
   background: theme.color.bg,
   color: theme.color.text,

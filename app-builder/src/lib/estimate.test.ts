@@ -40,8 +40,11 @@ describe('estimate', () => {
     expect(withAuth.tokens).toBeGreaterThan(plain.tokens);
   });
 
-  it('maps confidence bands by weight (features + entities + auth)', () => {
-    // weight <= 3 → high; <= 8 → medium; else low
+  it('maps confidence bands by specification completeness then scope weight', () => {
+    // Underspecified (no entities, shell-only features) → low
+    expect(estimate({ features: 1, hasAuth: false, entities: 0 }).confidence).toBe('low');
+    expect(estimate({ features: 0, hasAuth: false, entities: 0 }).confidence).toBe('low');
+    // Small well-scoped → high; mid weight → medium; large → low
     expect(estimate({ features: 2, hasAuth: false, entities: 1 }).confidence).toBe('high');
     expect(estimate({ features: 4, hasAuth: true, entities: 3 }).confidence).toBe('medium');
     expect(estimate({ features: 10, hasAuth: true, entities: 5 }).confidence).toBe('low');

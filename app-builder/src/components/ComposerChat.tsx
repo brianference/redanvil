@@ -170,38 +170,23 @@ export function ComposerChat({
 }
 
 /**
- * Agent message row with the approved logo as avatar (no new mark).
- * Theme-aware swap matches the header: classes own visibility — no inline `display`.
+ * Agent message row with the square anvil mark as avatar (legible in both themes).
  */
 function AgentRow({ children }: { children: ReactNode }): JSX.Element {
-  const avatarImgStyle: CSSProperties = {
-    width: 28,
-    height: 28,
-    borderRadius: theme.radius.sm,
-    objectFit: 'cover',
-    // Anchor the crop to the anvil. A centered crop of the wide lockup lands
-    // between the mark and the wordmark, so the avatar showed a sliver of each
-    // and read as neither. Same approved asset, cropped to its mark.
-    objectPosition: 'left center'
-  };
   return (
     <div style={rowStyle}>
       <div style={avatarStyle} aria-hidden="true">
         <img
-          className="ra-logo-dark"
-          src="/logo-sm.png"
+          src="/logo-mark.png"
           alt=""
           width={28}
           height={28}
-          style={avatarImgStyle}
-        />
-        <img
-          className="ra-logo-light"
-          src="/logo-light.png"
-          alt=""
-          width={28}
-          height={28}
-          style={avatarImgStyle}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: theme.radius.sm,
+            objectFit: 'contain'
+          }}
         />
       </div>
       <div style={bubbleStackStyle}>
@@ -343,7 +328,7 @@ const exampleTitleStyle: CSSProperties = {
   fontWeight: 650,
   color: theme.color.text,
   lineHeight: 1.3,
-  fontSize: 15
+  fontSize: theme.type.scale[2]
 };
 
 const exampleDescStyle: CSSProperties = {
@@ -351,7 +336,7 @@ const exampleDescStyle: CSSProperties = {
   fontWeight: 400,
   color: theme.color.muted,
   lineHeight: 1.4,
-  fontSize: 13,
+  fontSize: theme.type.scale[2],
   wordBreak: 'break-word',
   overflowWrap: 'anywhere' as const
 };

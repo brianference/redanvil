@@ -1,4 +1,5 @@
 import { Page } from './Page';
+import { linkifyText } from '../lib/linkify';
 import { theme } from '../theme';
 
 export interface LegalSection {
@@ -23,7 +24,7 @@ export interface LegalPageProps {
 export function LegalPage({ title, updated, intro, sections }: LegalPageProps): JSX.Element {
   return (
     <Page title={title} breadcrumb={title}>
-      <p style={{ color: theme.color.muted, fontSize: theme.type.scale[0], margin: 0 }}>
+      <p style={{ color: theme.color.muted, fontSize: theme.type.scale[1], margin: 0 }}>
         {updated}
       </p>
       <p
@@ -47,7 +48,7 @@ export function LegalPage({ title, updated, intro, sections }: LegalPageProps): 
               marginTop: theme.space.sm
             }}
           >
-            {s.body}
+            {linkifyText(s.body)}
           </p>
         </section>
       ))}

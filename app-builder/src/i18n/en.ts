@@ -6,6 +6,7 @@ export const en = {
   app: {
     name: 'RedAnvil',
     primaryNav: 'Primary',
+    logoAlt: 'RedAnvil — forge apps from a prompt',
     footerCopyright: (year: number): string => `© ${year} RedAnvil`,
     footerTagline:
       'Forge a full-stack app from one prompt. Every app ships behind a real quality gate.',
@@ -13,7 +14,14 @@ export const en = {
     footerCompany: 'Company',
     footerLegal: 'Legal',
     footerQuality: 'Quality gate · score ≥ 90',
-    navBuilder: 'Builder',
+    footerAppBuilder: 'App Builder',
+    footerDashboard: 'Dashboard',
+    footerGitHub: 'GitHub',
+    footerAbout: 'About',
+    footerContact: 'Contact',
+    footerTerms: 'Terms',
+    footerPrivacy: 'Privacy',
+    navBuilder: 'App Builder',
     navDashboard: 'Dashboard',
     navGitHub: 'GitHub',
     navSaved: 'Saved',
@@ -35,23 +43,25 @@ export const en = {
       bannerAlt: 'RedAnvil — forge apps from a prompt'
     },
     saved: {
-      title: 'Your builds',
-      subtitle: 'PRDs saved on this site. Open one to view or share the link.',
+      title: 'Saved builds',
+      subtitle:
+        'Public PRDs saved on this site (shared library, not private to your browser). Open one to view or share the link.',
       loading: 'Loading recent builds…',
       error: 'Could not load saved PRDs.',
       errorRetry: 'Retry',
       empty: 'No saved PRDs yet.',
       emptyHint: 'Generate a PRD and choose Save to site to see it here.',
       emptyCta: 'Start a new build',
-      listLabel: 'Recent builds',
-      sectionRecent: 'Recent builds',
-      itemMeta: (slug: string): string => `PRD · ${slug}`,
+      listLabel: 'Public saved PRDs',
+      sectionRecent: 'Public library',
+      itemMeta: (slug: string): string => `Public PRD · ${slug}`,
       statusReady: 'Ready',
+      sourcePublic: 'Public example',
       newBuild: 'New build',
       countMeta: (n: number): string => (n === 1 ? '1 shown' : `${n} shown`),
-      kpiLabel: 'Build stats',
+      kpiLabel: 'Library stats',
       kpiTotal: 'All time',
-      kpiSaved: 'Saved',
+      kpiSaved: 'In library',
       kpiThisWeek: 'This week',
       openAction: 'Open',
       openAria: (title: string): string => `Open ${title}`
@@ -92,7 +102,7 @@ export const en = {
       sections: [
         {
           heading: 'GitHub',
-          body: 'The fastest way to reach us is to open an issue or discussion on the RedAnvil GitHub repository. We read every one.'
+          body: 'The fastest way to reach us is to open an issue on the RedAnvil GitHub repository: https://github.com/brianference/redanvil/issues. We read every one.'
         },
         {
           heading: 'Feedback and requests',

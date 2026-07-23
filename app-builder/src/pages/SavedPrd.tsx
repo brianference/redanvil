@@ -5,6 +5,7 @@ import { en } from '../i18n/en';
 import { theme } from '../theme';
 import { buttonStyle, cardStyle, errorBannerStyle, statusBannerStyle } from '../components/ui';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 /** Full PRD row from GET /api/prd/:id. */
 interface SavedPrdRow {
@@ -97,6 +98,15 @@ export function SavedPrd(): JSX.Element {
   const state = toDetailState(hasId, fetchState);
 
   const pageTitle = state.status === 'success' ? state.prd.title : copy.title;
+
+  useDocumentMeta({
+    title: `${pageTitle} · RedAnvil`,
+    description:
+      state.status === 'success'
+        ? `Saved PRD: ${state.prd.title}`
+        : 'View a PRD saved on RedAnvil.',
+    path: hasId ? `/prd/${encodeURIComponent(id)}` : '/prd'
+  });
 
   return (
     <Page title={pageTitle} breadcrumb={copy.title}>

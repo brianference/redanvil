@@ -80,7 +80,7 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
           <span aria-hidden="true">✓ </span>
           {copy.ready}
         </p>
-        <h2 style={titleStyle}>{prd.title}</h2>
+        {/* Title is the single page H1 from Page — do not repeat it here. */}
         <p style={ledeStyle}>{copy.lede}</p>
         <p style={{ ...ledeStyle, marginTop: theme.space.xs }}>{copy.hint}</p>
       </div>
@@ -158,16 +158,6 @@ const readyBadgeStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: theme.space.xs
-};
-
-const titleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: theme.type.scale[4],
-  fontWeight: 750,
-  letterSpacing: '-0.03em',
-  lineHeight: 1.2,
-  color: theme.color.text,
-  wordBreak: 'break-word'
 };
 
 const ledeStyle: CSSProperties = {

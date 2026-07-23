@@ -45,9 +45,13 @@ export function Breadcrumbs({ current }: BreadcrumbsProps): JSX.Element {
           <Link
             to="/"
             style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: theme.touch,
               color: theme.color.muted,
               textDecoration: 'underline',
-              textUnderlineOffset: 3
+              textUnderlineOffset: 3,
+              fontSize: theme.type.scale[2]
             }}
           >
             {en.app.breadcrumbHome}

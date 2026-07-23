@@ -110,7 +110,7 @@ export function hintStyle(): CSSProperties {
 export function chipStyle(selected = false): CSSProperties {
   return {
     fontFamily: theme.type.family,
-    fontSize: 14,
+    fontSize: theme.type.scale[1],
     fontWeight: selected ? 600 : 550,
     lineHeight: 1.3,
     color: selected ? theme.color.accent : theme.color.text,

@@ -28,10 +28,8 @@ const APP_URL = 'https://redanvil.pages.dev';
 const DASHBOARD_URL = 'https://redanvil-dashboard.pages.dev';
 const GITHUB_URL = 'https://github.com/brianference/redanvil';
 
-/** Desktop sidebar rail width (px). Main content is offset by this at ≥1024px. */
-const SIDEBAR_WIDTH = 220;
-
-const LOGO_HEIGHT = 96;
+const SIDEBAR_WIDTH = theme.layout.sidebarWidth;
+const LOGO_HEIGHT = 56;
 
 /** Primary nav item used in the sidebar / mobile drawer. */
 interface NavItem {
@@ -65,16 +63,17 @@ const bar: CSSProperties = {
   paddingTop: 'env(safe-area-inset-top, 0px)'
 };
 
-const container: CSSProperties = {
+/** Shared max-width column for main and footer so left/right edges align. */
+const shellContainer: CSSProperties = {
   width: '100%',
-  maxWidth: '68rem',
+  maxWidth: theme.layout.contentMaxWidth,
   margin: '0 auto',
-  padding: `0 ${theme.space.lg}px`
+  padding: `0 ${theme.space.lg}px`,
+  boxSizing: 'border-box'
 };
 
 // Note: no `display` here on purpose — the `.ra-menu-btn` class owns
-// visibility (hidden on desktop, inline-flex below 1024px). An inline
-// `display` would beat the class and leak the hamburger onto desktop.
+// visibility (hidden on desktop, inline-flex below 1024px).
 const iconButton: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
@@ -92,36 +91,25 @@ const iconButton: CSSProperties = {
   fontFamily: theme.type.family
 };
 
-/** Site logo: optimized lockup. Header uses ~2× prior size; footer stays compact. */
+/**
+ * Site logo: single transparent lockup for both themes (no theme-swap, no grey box).
+ */
 function Logo({ height = LOGO_HEIGHT }: { height?: number }): JSX.Element {
-  // Theme-aware: dark-background raster for dark mode, transparent light lockup for
-  // light mode (no black box on light pages). The .ra-logo-dark/.ra-logo-light
-  // classes own visibility — no `display` inline, or it would beat the class.
-  const imgStyle: CSSProperties = {
-    height,
-    width: 'auto',
-    maxWidth: 'min(58vw, 260px)',
-    objectFit: 'contain',
-    borderRadius: theme.radius.sm
-  };
   return (
     <a
       href={APP_URL}
       style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}
     >
       <img
-        className="ra-logo-dark"
-        src="/logo-sm.png"
-        alt="RedAnvil — forge apps from a prompt"
+        src="/logo-lockup.png"
+        alt={en.app.logoAlt}
         height={height}
-        style={imgStyle}
-      />
-      <img
-        className="ra-logo-light"
-        src="/logo-light.png"
-        alt="RedAnvil — forge apps from a prompt"
-        height={height}
-        style={imgStyle}
+        style={{
+          height,
+          width: 'auto',
+          maxWidth: 'min(58vw, 260px)',
+          objectFit: 'contain'
+        }}
       />
     </a>
   );
@@ -152,7 +140,7 @@ function primaryNavItems(): NavItem[] {
   ];
 }
 
-/** Shared page shell: sticky blurred header, collapsible sidebar, optional breadcrumbs, footer. */
+/** Shared page shell: sticky header, full-height rail, aligned main/footer, drawer. */
 export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.Element {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -170,12 +158,10 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
     setMenuOpen(false);
   }, []);
 
-  // Close the mobile drawer on route change.
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Lock body scroll while the mobile drawer is open.
   useEffect(() => {
     if (!menuOpen) return;
     const prev = document.body.style.overflow;
@@ -228,19 +214,11 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
   }
 
   return (
-    <div style={shell}>
+    <div className="ra-shell" style={shell}>
       <style>{`
         * { box-sizing: border-box; }
         body { margin: 0; overflow-x: hidden; font-size: 16px; }
-        /* Theme-aware logo swap: dark lockup on dark, transparent light lockup on light. */
-        .ra-logo-dark { display: block; }
-        .ra-logo-light { display: none; }
-        :root[data-theme='light'] .ra-logo-dark { display: none; }
-        :root[data-theme='light'] .ra-logo-light { display: block; }
-        @media (prefers-color-scheme: light) {
-          :root:not([data-theme]) .ra-logo-dark { display: none; }
-          :root:not([data-theme]) .ra-logo-light { display: block; }
-        }
+
         .ra-side-link {
           display: flex;
           align-items: center;
@@ -261,29 +239,26 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
           background: color-mix(in srgb, ${theme.color.surfaceElevated} 80%, transparent);
         }
         .ra-side-link.is-active {
-          color: ${theme.color.accent};
+          color: ${theme.color.accentFg};
           font-weight: 650;
           background: ${theme.color.accentSoft};
           border-color: color-mix(in srgb, ${theme.color.accent} 35%, ${theme.color.border});
         }
         .ra-side-link.is-active:hover {
-          color: ${theme.color.accent};
+          color: ${theme.color.accentFg};
         }
+
         .ra-menu-btn { display: none; }
-        .ra-sidebar {
-          display: none;
-        }
-        .ra-drawer-backdrop {
-          display: none;
-        }
-        .ra-drawer {
-          display: none;
-        }
+        .ra-sidebar { display: none; }
+        .ra-drawer-backdrop { display: none; }
+        .ra-drawer { display: none; }
+
         .ra-body {
           display: flex;
           flex: 1;
           min-width: 0;
           width: 100%;
+          align-items: stretch;
         }
         .ra-main-col {
           flex: 1;
@@ -291,22 +266,25 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
           display: flex;
           flex-direction: column;
         }
+
+        /* Full-height rail: single background from top of body to bottom. */
         @media (min-width: 1024px) {
           .ra-sidebar {
             display: flex;
             flex-direction: column;
             width: ${SIDEBAR_WIDTH}px;
             flex-shrink: 0;
+            align-self: stretch;
+            min-height: 100%;
             position: sticky;
-            /* Sit under the sticky header — no overlap with the logo bar. */
-            top: calc(${LOGO_HEIGHT + theme.space.md}px + env(safe-area-inset-top, 0px));
-            align-self: flex-start;
-            max-height: calc(100vh - ${LOGO_HEIGHT + theme.space.md}px - env(safe-area-inset-top, 0px));
+            top: 0;
+            height: 100vh;
             overflow-y: auto;
             padding: ${theme.space.md}px ${theme.space.sm}px;
             border-right: 1px solid ${theme.color.border};
-            background: color-mix(in srgb, ${theme.color.surface} 55%, ${theme.color.bg});
+            background: color-mix(in srgb, ${theme.color.surface} 70%, ${theme.color.bg});
             gap: ${theme.space.xs}px;
+            box-sizing: border-box;
           }
           .ra-sidebar nav {
             display: flex;
@@ -314,7 +292,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             gap: ${theme.space.xs}px;
           }
           .ra-sidebar-label {
-            font-size: ${theme.type.scale[0]}px;
+            font-size: ${theme.type.scale[1]}px;
             font-weight: 700;
             letter-spacing: 0.06em;
             text-transform: uppercase;
@@ -322,7 +300,9 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             padding: ${theme.space.sm}px ${theme.space.md}px ${theme.space.xs}px;
             margin: 0;
           }
+          .ra-menu-btn { display: none !important; }
         }
+
         @media (max-width: 1023px) {
           .ra-menu-btn { display: inline-flex !important; }
           .ra-drawer-backdrop[data-open="true"] {
@@ -330,7 +310,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             position: fixed;
             inset: 0;
             z-index: 40;
-            background: var(--scrim);
+            background: rgba(0, 0, 0, 0.55);
           }
           .ra-drawer[data-open="true"] {
             display: flex !important;
@@ -344,7 +324,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             padding: calc(env(safe-area-inset-top, 0px) + ${theme.space.md}px) ${theme.space.md}px env(safe-area-inset-bottom, 0px);
             background: ${theme.color.surface};
             border-right: 1px solid ${theme.color.border};
-            box-shadow: 8px 0 32px var(--shadow);
+            box-shadow: 8px 0 32px var(--shadow, rgba(0,0,0,0.25));
             gap: ${theme.space.sm}px;
             overflow-y: auto;
           }
@@ -361,15 +341,30 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             margin-bottom: ${theme.space.sm}px;
             min-height: ${theme.touch}px;
           }
-          .ra-drawer-title {
-            font-size: ${theme.type.scale[1]}px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            color: ${theme.color.muted};
-            margin: 0;
+          /* Hide header chrome while drawer is open — only the drawer close remains. */
+          .ra-header-controls[data-drawer-open="true"] {
+            visibility: hidden;
+            pointer-events: none;
           }
         }
+
+        /* Footer: 2×2 at tablet so Legal is not orphaned under a gap. */
+        .ra-footer-grid {
+          display: grid;
+          gap: ${theme.space.lg}px;
+          grid-template-columns: 1fr;
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .ra-footer-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+        @media (min-width: 1024px) {
+          .ra-footer-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+          }
+        }
+
         @media (max-width: 560px) {
           .ra-h1 { font-size: 1.9rem !important; }
         }
@@ -389,7 +384,13 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             minHeight: LOGO_HEIGHT + theme.space.md
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, minWidth: 0 }}>
+          <Logo />
+          <div
+            className="ra-header-controls"
+            data-drawer-open={menuOpen ? 'true' : 'false'}
+            style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, flexShrink: 0 }}
+          >
+            <ThemeToggle />
             <button
               ref={menuBtnRef}
               type="button"
@@ -404,17 +405,10 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             >
               <span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span>
             </button>
-            <Logo />
-          </div>
-          <div
-            style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, flexShrink: 0 }}
-          >
-            <ThemeToggle />
           </div>
         </div>
       </header>
 
-      {/* Mobile drawer (off-canvas); desktop uses the sticky rail below. */}
       <div
         className="ra-drawer-backdrop"
         data-open={menuOpen ? 'true' : 'false'}
@@ -431,7 +425,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
         tabIndex={-1}
       >
         <div className="ra-drawer-head">
-          <p className="ra-drawer-title">{en.app.sidebarLabel}</p>
+          <Logo height={48} />
           <button
             ref={closeBtnRef}
             type="button"
@@ -455,7 +449,11 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
 
         <div className="ra-main-col">
           <main
-            style={{ ...container, flex: 1, padding: `${theme.space.xl}px ${theme.space.lg}px` }}
+            style={{
+              ...shellContainer,
+              flex: 1,
+              padding: `${theme.space.xl}px ${theme.space.lg}px`
+            }}
           >
             {breadcrumb !== undefined && <Breadcrumbs current={breadcrumb} />}
             <h1
@@ -487,22 +485,21 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             }}
           >
             <div
+              className="ra-footer-grid"
               style={{
-                ...container,
-                padding: `${theme.space.xl}px ${theme.space.lg}px`,
-                display: 'grid',
-                gap: theme.space.lg,
-                gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))'
+                ...shellContainer,
+                padding: `${theme.space.xl}px ${theme.space.lg}px`
               }}
             >
               <div>
-                <Logo height={56} />
+                <Logo height={48} />
                 <p
                   style={{
                     color: theme.color.muted,
-                    fontSize: theme.type.scale[0],
+                    fontSize: theme.type.scale[2],
                     marginTop: theme.space.sm,
-                    maxWidth: '18rem'
+                    maxWidth: '18rem',
+                    lineHeight: 1.5
                   }}
                 >
                   {en.app.footerTagline}
@@ -511,24 +508,24 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
               <FooterCol
                 heading={en.app.footerProduct}
                 links={[
-                  { label: en.app.navBuilder, href: '/' },
-                  { label: en.app.navDashboard, href: DASHBOARD_URL },
+                  { label: en.app.footerAppBuilder, href: '/' },
+                  { label: en.app.footerDashboard, href: DASHBOARD_URL },
                   { label: en.app.navSaved, href: '/saved' },
-                  { label: en.app.navGitHub, href: GITHUB_URL }
+                  { label: en.app.footerGitHub, href: GITHUB_URL }
                 ]}
               />
               <FooterCol
                 heading={en.app.footerCompany}
                 links={[
-                  { label: en.pages.about.title, href: '/about' },
-                  { label: en.pages.contact.title, href: '/contact' }
+                  { label: en.app.footerAbout, href: '/about' },
+                  { label: en.app.footerContact, href: '/contact' }
                 ]}
               />
               <FooterCol
                 heading={en.app.footerLegal}
                 links={[
-                  { label: en.pages.terms.title, href: '/terms' },
-                  { label: en.pages.privacy.title, href: '/privacy' }
+                  { label: en.app.footerTerms, href: '/terms' },
+                  { label: en.app.footerPrivacy, href: '/privacy' }
                 ]}
               />
             </div>
@@ -540,7 +537,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             >
               <div
                 style={{
-                  ...container,
+                  ...shellContainer,
                   padding: `${theme.space.md}px ${theme.space.lg}px`,
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -548,10 +545,12 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
                   gap: theme.space.sm
                 }}
               >
-                <small style={{ color: theme.color.muted }}>
+                <small style={{ color: theme.color.muted, fontSize: theme.type.scale[1] }}>
                   {en.app.footerCopyright(new Date().getFullYear())}
                 </small>
-                <small style={{ color: theme.color.muted }}>{en.app.footerQuality}</small>
+                <small style={{ color: theme.color.muted, fontSize: theme.type.scale[1] }}>
+                  {en.app.footerQuality}
+                </small>
               </div>
             </div>
           </footer>
@@ -566,14 +565,14 @@ interface FooterColProps {
   links: { label: string; href: string }[];
 }
 
-/** One labeled column of footer links. */
+/** One labeled column of footer links (≥44px targets, ≥8px gap). */
 function FooterCol({ heading, links }: FooterColProps): JSX.Element {
   return (
     <div>
       <p
         style={{
           color: theme.color.text,
-          fontSize: theme.type.scale[1],
+          fontSize: theme.type.scale[2],
           fontWeight: 600,
           margin: `0 0 ${theme.space.sm}px`
         }}
@@ -581,16 +580,25 @@ function FooterCol({ heading, links }: FooterColProps): JSX.Element {
         {heading}
       </p>
       <ul
-        style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: theme.space.xs }}
+        style={{
+          listStyle: 'none',
+          padding: 0,
+          margin: 0,
+          display: 'grid',
+          gap: theme.space.sm
+        }}
       >
         {links.map((l) => (
           <li key={l.label}>
             <a
               href={l.href}
               style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                minHeight: theme.touch,
                 color: theme.color.muted,
                 textDecoration: 'none',
-                fontSize: theme.type.scale[1]
+                fontSize: theme.type.scale[2]
               }}
             >
               {l.label}
