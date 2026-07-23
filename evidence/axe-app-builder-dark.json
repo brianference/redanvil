@@ -1,0 +1,40 @@
+{
+  "url": "https://redanvil.pages.dev/",
+  "theme": "dark",
+  "checkedAt": "2026-07-23T07:07:34.375Z",
+  "axeVersion": "4.12.1",
+  "contrastViolationNodes": 6,
+  "contrastDetails": [
+    {
+      "target": ".ra-sidebar > nav > .is-active[aria-current=\"page\"][href=\"/\"]",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.07 (foreground color: #c62828, background color: #28151b, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".ra-sidebar > nav > .ra-side-link:nth-child(2)",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.82 (foreground color: #5c5c68, background color: #121219, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".ra-sidebar > nav > .ra-side-link[href$=\"saved\"]",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.82 (foreground color: #5c5c68, background color: #121219, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".ra-sidebar > nav > .ra-side-link[href$=\"about\"]",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.82 (foreground color: #5c5c68, background color: #121219, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".ra-sidebar > nav > .ra-side-link[href$=\"contact\"]",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.82 (foreground color: #5c5c68, background color: #121219, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".ra-sidebar > nav > .ra-side-link[target=\"_blank\"][rel=\"noreferrer\"]",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.82 (foreground color: #5c5c68, background color: #121219, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+    }
+  ],
+  "otherViolations": [
+    {
+      "id": "link-name",
+      "impact": "serious",
+      "nodes": 2
+    }
+  ]
+}

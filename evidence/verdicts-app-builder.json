@@ -109,11 +109,11 @@
     "passed": false,
     "method": "visual",
     "evidence": [
-      "evidence/screenshots/ab-1280-light.png",
-      "evidence/screenshots/ab-375-dark.png"
+      "evidence/axe-app-builder-dark.json",
+      "evidence/screenshots/ab-1280-light.png"
     ],
-    "note": "Measured every rendered text node on production against its effective background: 25 AA violations in light, 6 in dark. Worst are the sidebar nav links at 3.17:1 against a 4.5:1 requirement at 16px. Recorded as FAILED \u2014 this rule was previously declared det with no check anywhere, so it auto-passed unmeasured.",
-    "reviewedAt": "2026-07-23T06:16:46Z",
-    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
+    "note": "FAILED, measured by axe-core 4.12.1 driven by Playwright against production in dark theme: 6 colour-contrast violation nodes, all in the sidebar. Active nav link #c62828 on #28151b = 3.07:1; five sidebar links #5c5c68 on #121219 = 2.82:1; both need 4.5:1 at 16px. axe also reports 2 link-name violations (serious). Earlier hand-rolled contrast numbers from this session were wrong four different ways and are superseded by this report -- axe composites backgrounds and applies WCAG as specified.",
+    "reviewedAt": "2026-07-23T07:08:27Z",
+    "reviewedCommit": "cc2167603ab3559827384e196472a9ecbf18de4b"
   }
 ]
