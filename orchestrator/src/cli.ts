@@ -11,6 +11,7 @@ import { gateApp } from './commands/gate';
 import type { Outcome } from './gate/score';
 import { collectProvenance } from './gate/provenance';
 import { parseOutcomes } from './schemas/outcomes';
+import { indexOutcomes } from './gate/score';
 import { runLoopCommand } from './commands/loop';
 
 /** Shared CLI flags used by both `gate` and `loop`. */
@@ -18,6 +19,8 @@ interface SharedRunFlags {
   threshold: number;
   judge: Outcome[];
   notApplicable: string[];
+  /** Raw verdicts file text, hashed into provenance. Null when none was supplied. */
+  verdictsRaw: string | null;
 }
 
 /** One measured iteration record written into a results payload. */
@@ -38,9 +41,14 @@ async function parseSharedRunFlags(
   values: Record<string, string | boolean | undefined>
 ): Promise<SharedRunFlags> {
   const threshold = typeof values.threshold === 'string' ? Number(values.threshold) : 90;
+  // Keep the raw text: provenance hashes it, so a swapped or edited verdicts
+  // file is detectable. Without that, the CI reproduction re-runs the gate
+  // against whatever verdicts it is handed and can only confirm determinism.
+  const verdictsRaw =
+    typeof values.judge === 'string' ? await readFile(values.judge, 'utf8') : null;
   const judge: Outcome[] =
-    typeof values.judge === 'string'
-      ? parseOutcomes(await readFile(values.judge, 'utf8'), values.judge)
+    typeof values.judge === 'string' && verdictsRaw !== null
+      ? parseOutcomes(verdictsRaw, values.judge)
       : [];
   const notApplicable =
     typeof values.na === 'string'
@@ -49,7 +57,7 @@ async function parseSharedRunFlags(
           .map((s) => s.trim())
           .filter(Boolean)
       : [];
-  return { threshold, judge, notApplicable };
+  return { threshold, judge, notApplicable, verdictsRaw };
 }
 
 /**
@@ -71,6 +79,8 @@ async function writeResultFile(
     rules: Array<{ ruleId: string; passed: boolean }>;
     iterations: IterationRecord[];
     deployUrl: string | null;
+    verdictsRaw: string | null;
+    notApplicable: string[];
   }
 ): Promise<void> {
   const result = {
@@ -88,7 +98,10 @@ async function writeResultFile(
     finishedAt: new Date().toISOString(),
     // Machine-generated: which commit and which rubric actually produced this
     // score. Re-checkable by CI, so a hand-authored result file is detectable.
-    provenance: collectProvenance()
+    provenance: collectProvenance(process.cwd(), {
+      verdictsRaw: args.verdictsRaw,
+      notApplicable: args.notApplicable
+    })
   };
   await writeFile(outPath, JSON.stringify(result, null, 2) + '\n');
   console.log(`wrote result to ${outPath}`);
@@ -169,7 +182,7 @@ async function main(): Promise<number> {
       );
       return 2;
     }
-    const { threshold, judge, notApplicable } = await parseSharedRunFlags(values);
+    const { threshold, judge, notApplicable, verdictsRaw } = await parseSharedRunFlags(values);
     const report = await gateApp(dir, undefined, judge, notApplicable);
     const verdict = report.score >= threshold ? 'PASS' : 'FAIL';
     console.log(
@@ -192,9 +205,11 @@ async function main(): Promise<number> {
         passed: report.score >= threshold,
         evaluated: report.evaluated,
         total: report.total,
-        rules: report.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed })),
+        rules: [...indexOutcomes(report.outcomes)].map(([ruleId, passed]) => ({ ruleId, passed })),
         iterations: [{ index: 1, score: report.score, blockers: report.blockersFailed }],
-        deployUrl: typeof values.deploy === 'string' ? values.deploy : null
+        deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
+        verdictsRaw,
+        notApplicable
       });
     }
     return report.score >= threshold ? 0 : 1;
@@ -216,7 +231,7 @@ async function main(): Promise<number> {
       console.error(`loop: no such spec file: ${values.spec}`);
       return 2;
     }
-    const { threshold, judge, notApplicable } = await parseSharedRunFlags(values);
+    const { threshold, judge, notApplicable, verdictsRaw } = await parseSharedRunFlags(values);
     const maxIters = typeof values['max-iters'] === 'string' ? Number(values['max-iters']) : 5;
 
     const { loop: result, final } = await runLoopCommand({
@@ -250,9 +265,11 @@ async function main(): Promise<number> {
         passed: result.passed,
         evaluated: final.evaluated,
         total: final.total,
-        rules: final.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed })),
+        rules: [...indexOutcomes(final.outcomes)].map(([ruleId, passed]) => ({ ruleId, passed })),
         iterations: result.records,
-        deployUrl: typeof values.deploy === 'string' ? values.deploy : null
+        deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
+        verdictsRaw,
+        notApplicable
       });
     }
     return result.passed ? 0 : 1;

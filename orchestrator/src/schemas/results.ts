@@ -30,6 +30,12 @@ export const RunResultSchema = z
       rubricHash: z.string().length(64),
       rubricRuleCount: z.number().int().positive(),
       node: z.string().min(2),
+      // Required, not optional: an undeclared field is silently stripped by Zod,
+      // which is how `rules`/`evaluated`/`total` went unvalidated in the first
+      // place. A result that does not disclose which verdicts fed it, or what
+      // was waived, is not describing its own score.
+      verdictsHash: z.string().length(64).nullable(),
+      notApplicable: z.array(z.string()),
       generatedAt: z.string().datetime()
     })
   })

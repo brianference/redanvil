@@ -62,6 +62,8 @@ describe('RunResultSchema provenance', () => {
       rubricHash: 'a'.repeat(64),
       rubricRuleCount: 48,
       node: 'v22.19.0',
+      verdictsHash: 'b'.repeat(64),
+      notApplicable: ['ci', 'process'],
       generatedAt: '2026-07-23T00:00:00.000Z'
     }
   };
@@ -108,6 +110,8 @@ describe('RunResultSchema coherence', () => {
       rubricHash: 'a'.repeat(64),
       rubricRuleCount: 48,
       node: 'v22.19.0',
+      verdictsHash: 'b'.repeat(64),
+      notApplicable: ['ci', 'process'],
       generatedAt: '2026-07-23T00:00:00.000Z'
     }
   };

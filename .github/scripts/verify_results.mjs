@@ -57,6 +57,28 @@ try {
 
 const fresh = JSON.parse(await readFile(tmp, 'utf8'));
 
+// The verdicts file supplies the rules no static check can decide — the majority
+// of the score. Re-running the gate against a DIFFERENT verdicts file than the
+// one that produced the committed result would reproduce happily and prove
+// nothing, so the hashes must match too.
+if (fresh.provenance.verdictsHash !== committed.provenance.verdictsHash) {
+  fail(
+    `verdicts mismatch: the committed result was produced with verdicts ` +
+      `${String(committed.provenance.verdictsHash).slice(0, 12)}, but ${verdictFile} hashes to ` +
+      `${String(fresh.provenance.verdictsHash).slice(0, 12)}. Re-run the gate and commit the new result.`
+  );
+}
+
+// `--na` decides the denominator, so a result produced with a wider waiver than
+// CI reproduces with is not the same run.
+const committedNa = (committed.provenance.notApplicable ?? []).join(',');
+const freshNa = (fresh.provenance.notApplicable ?? []).join(',');
+if (committedNa !== freshNa) {
+  fail(
+    `notApplicable mismatch: committed waived [${committedNa}], reproduction waived [${freshNa}].`
+  );
+}
+
 if (fresh.provenance.rubricHash !== committed.provenance.rubricHash) {
   fail(
     `rubric changed since the result was written (committed ${committed.provenance.rubricHash.slice(0, 12)}, ` +
