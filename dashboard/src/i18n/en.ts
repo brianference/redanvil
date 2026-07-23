@@ -44,8 +44,7 @@ export const en = {
       kpiPassed: 'Passed',
       kpiAvgScore: 'Avg score',
       recentHeading: 'Recent builds',
-      recentMeta: (count: number): string =>
-        count === 1 ? '1 shown' : `${count} shown`
+      recentMeta: (count: number): string => (count === 1 ? '1 shown' : `${count} shown`)
     },
     about: {
       title: 'About',
@@ -140,8 +139,7 @@ export const en = {
     score: 'Score',
     scoreValue: (score: number): string => String(score),
     coverage: 'Coverage',
-    coverageValue: (evaluated: number, total: number): string =>
-      `${evaluated}/${total} rules`,
+    coverageValue: (evaluated: number, total: number): string => `${evaluated}/${total} rules`,
     iterations: 'Iterations',
     iterationsValue: (count: number): string =>
       count === 1 ? '1 iteration' : `${count} iterations`,
@@ -167,8 +165,7 @@ export const en = {
     scoreLabel: 'Score',
     scoreValue: (score: number, threshold: number): string => `${score} / ${threshold}`,
     coverageLabel: 'Coverage',
-    coverageValue: (evaluated: number, total: number): string =>
-      `${evaluated}/${total} rules`,
+    coverageValue: (evaluated: number, total: number): string => `${evaluated}/${total} rules`,
     finishedLabel: 'Finished',
     deployLabel: 'Deploy',
     openDeploy: 'Open deploy',

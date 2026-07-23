@@ -81,6 +81,7 @@ Notes: first useful row above fold; pull-to-refresh if remote.
 ```
 
 Notes:
+
 - **Chosen:** B+C for OpenClaw (see `design-refs/openclaw-mobile-home/OPENCLAW-HOME-BC.md`)
 - Pure B = marketing/first-run only
 - Pure C = acceptable if space is tight
@@ -88,7 +89,7 @@ Notes:
 
 ## Pattern log
 
-| Date | Pattern | Why added |
-|------|---------|-----------|
-| 2026-07-21 | Bootstrap skeletons | Initial skill |
+| Date       | Pattern              | Why added          |
+| ---------- | -------------------- | ------------------ |
+| 2026-07-21 | Bootstrap skeletons  | Initial skill      |
 | 2026-07-21 | Agent companion home | OpenClaw real pass |

@@ -27,7 +27,10 @@ export function useRuns(url: string = RESULTS_URL): RunsState {
       })
       .catch((err: unknown) => {
         if (active) {
-          setState({ status: 'error', message: err instanceof Error ? err.message : 'load failed' });
+          setState({
+            status: 'error',
+            message: err instanceof Error ? err.message : 'load failed'
+          });
         }
       });
     return () => {

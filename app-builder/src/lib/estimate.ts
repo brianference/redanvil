@@ -40,10 +40,7 @@ export function estimate(input: EstimateInput): EstimateResult {
   const entities = Math.max(0, input.entities);
   const authExtra = input.hasAuth ? 1 : 0;
 
-  const iterations = Math.max(
-    2,
-    Math.ceil(features / 2) + Math.ceil(entities / 3) + authExtra
-  );
+  const iterations = Math.max(2, Math.ceil(features / 2) + Math.ceil(entities / 3) + authExtra);
 
   const perIteration =
     BASE_TOKENS +
@@ -54,8 +51,7 @@ export function estimate(input: EstimateInput): EstimateResult {
   const tokens = perIteration * iterations;
 
   const weight = features + entities + authExtra;
-  const confidence: EstimateConfidence =
-    weight <= 3 ? 'high' : weight <= 8 ? 'medium' : 'low';
+  const confidence: EstimateConfidence = weight <= 3 ? 'high' : weight <= 8 ? 'medium' : 'low';
 
   return { iterations, tokens, confidence };
 }

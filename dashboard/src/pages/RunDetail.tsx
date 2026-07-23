@@ -77,7 +77,14 @@ function RunHeader({ run }: { run: Run }): JSX.Element {
       <ul style={metaRowStyle}>
         <li style={metaItemStyle}>
           <span style={metaLabelStyle}>{en.runDetail.scoreLabel}</span>
-          <span style={{ display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: theme.space.xs }}>
+          <span
+            style={{
+              display: 'inline-flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: theme.space.xs
+            }}
+          >
             <span style={{ fontSize: theme.type.scale[4], fontWeight: 600 }}>
               {en.runDetail.scoreValue(run.finalScore, run.threshold)}
             </span>
@@ -130,7 +137,9 @@ function IterationItem({ iteration }: { iteration: RunIteration }): JSX.Element 
         }}
       >
         <span style={{ fontWeight: 600 }}>{en.runDetail.iterationIndex(iteration.index)}</span>
-        <span style={{ color: theme.color.muted }}>{en.runDetail.iterationScore(iteration.score)}</span>
+        <span style={{ color: theme.color.muted }}>
+          {en.runDetail.iterationScore(iteration.score)}
+        </span>
       </div>
       {hasBlockers ? (
         <ul
@@ -171,7 +180,13 @@ function IterationHistory({ iterations }: { iterations: readonly RunIteration[] 
         </p>
       ) : (
         <>
-          <p style={{ margin: `0 0 ${theme.space.sm}px`, color: theme.color.muted, fontSize: theme.type.scale[1] }}>
+          <p
+            style={{
+              margin: `0 0 ${theme.space.sm}px`,
+              color: theme.color.muted,
+              fontSize: theme.type.scale[1]
+            }}
+          >
             {en.runDetail.iterationsSummary(iterations.length)}
           </p>
           <ol style={{ margin: 0, padding: 0, listStyle: 'none' }}>

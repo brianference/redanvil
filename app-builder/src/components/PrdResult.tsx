@@ -66,10 +66,7 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
       const result = await savePrd(prd);
       setSaveState({ status: 'success', url: result.url });
     } catch (error: unknown) {
-      const message =
-        error instanceof SavePrdError
-          ? error.message
-          : copy.errors.generic;
+      const message = error instanceof SavePrdError ? error.message : copy.errors.generic;
       setSaveState({ status: 'error', message });
     }
   }

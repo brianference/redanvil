@@ -91,7 +91,11 @@ function parseIteration(value: unknown): RunIteration {
     throw new Error('malformed iteration');
   }
   const row = value as Record<string, unknown>;
-  if (typeof row.index !== 'number' || typeof row.score !== 'number' || !Array.isArray(row.blockers)) {
+  if (
+    typeof row.index !== 'number' ||
+    typeof row.score !== 'number' ||
+    !Array.isArray(row.blockers)
+  ) {
     throw new Error('malformed iteration');
   }
   if (!row.blockers.every((b): b is string => typeof b === 'string')) {

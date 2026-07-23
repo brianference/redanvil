@@ -4,7 +4,12 @@ import { estimate } from './estimate';
 
 const cost = estimate({ features: 3, hasAuth: true, entities: 2 });
 const prd = generatePrd(
-  { prompt: 'Build an app for tracking tesla driving stats', appType: 'dashboard', hasAuth: true, entities: 'trips, drivers' },
+  {
+    prompt: 'Build an app for tracking tesla driving stats',
+    appType: 'dashboard',
+    hasAuth: true,
+    entities: 'trips, drivers'
+  },
   cost
 );
 
@@ -17,7 +22,14 @@ describe('generatePrd', () => {
 
   it('includes the required PRD sections', () => {
     const md = prd.markdown.toLowerCase();
-    for (const section of ['summary', 'core features', 'data model', 'tech stack', 'test design', 'initial build prompt']) {
+    for (const section of [
+      'summary',
+      'core features',
+      'data model',
+      'tech stack',
+      'test design',
+      'initial build prompt'
+    ]) {
       expect(md, section).toContain(section);
     }
   });

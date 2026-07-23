@@ -8,4 +8,16 @@ dist/
 .grok/
 *.log
 /tmp/
+# Scratch verdict files. Recorded evidence that backs a committed result lives
+# in evidence/ and IS tracked -- a score whose inputs are gitignored cannot be
+# reproduced or audited, which is how an unverifiable result gets trusted.
 orchestrator/.verdicts-*.json
+
+# Visual-review screenshot runs. Reproducible on demand by re-running the visual
+# review; ~1.2 MB of PNGs per run is not worth carrying in history.
+review-*/
+
+# D1 exports. Kept out of git by default so a future export containing real user
+# data cannot be committed by reflex. Add one explicitly with `git add -f` when
+# an export is genuinely meant to be tracked.
+backups/*.sql

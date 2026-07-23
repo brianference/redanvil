@@ -30,9 +30,7 @@ function sampleRun(overrides: Partial<Run> = {}): Run {
  * Render RunList inside a MemoryRouter (required for Link / useNavigate).
  */
 function renderList(runs: readonly Run[]): string {
-  return renderToStaticMarkup(
-    createElement(MemoryRouter, null, createElement(RunList, { runs }))
-  );
+  return renderToStaticMarkup(createElement(MemoryRouter, null, createElement(RunList, { runs })));
 }
 
 describe('RunList', () => {

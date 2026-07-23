@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RedAnvil mobile — Claude variations (5)</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #0e0e12;
+        color: #f5f5f7;
+        font:
+          15px/1.5 system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        padding: 24px;
+      }
+      h1 {
+        font-size: 1.4rem;
+        margin: 0 0 4px;
+      }
+      p.lead {
+        color: #9aa0ab;
+        margin: 0 0 24px;
+        max-width: 60ch;
+      }
+      .row {
+        display: flex;
+        gap: 28px;
+        flex-wrap: wrap;
+        margin-bottom: 40px;
+      }
+      .col-title {
+        width: 100%;
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 8px 0 4px;
+        color: #fff;
+      }
+      .col-note {
+        width: 100%;
+        color: #9aa0ab;
+        margin: 0 0 12px;
+        font-size: 13px;
+      }
+
+      /* Phone frame */
+      .phone {
+        width: 300px;
+        border-radius: 30px;
+        padding: 10px;
+        background: #000;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        flex: 0 0 auto;
+      }
+      .screen {
+        border-radius: 22px;
+        overflow: hidden;
+        height: 620px;
+        position: relative;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+      }
+      .theme-tag {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        z-index: 5;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      /* Theme tokens */
+      .screen[data-theme='dark'] {
+        --bg: #0b0b0f;
+        --surface: #15151d;
+        --surface2: #1d1d27;
+        --text: #f5f5f7;
+        --muted: #8b8b93;
+        --accent: #e5484d;
+        --border: #2a2a35;
+        --chip: #1d1d27;
+      }
+      .screen[data-theme='light'] {
+        --bg: #f6f7fb;
+        --surface: #ffffff;
+        --surface2: #eef0f6;
+        --text: #16161d;
+        --muted: #5b6270;
+        --accent: #d33b40;
+        --border: #e4e6ee;
+        --chip: #eef0f6;
+      }
+
+      /* Shared header with theme-aware anvil mark (NO opaque box behind it) */
+      .hd {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 14px 12px;
+        border-bottom: 1px solid var(--border);
+        background: color-mix(in srgb, var(--surface) 70%, transparent);
+        backdrop-filter: blur(8px);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .brand svg {
+        display: block;
+      }
+      .brand .wm {
+        font-weight: 800;
+        font-size: 16px;
+        letter-spacing: -0.01em;
+      }
+      .brand .wm b {
+        color: var(--accent);
+      }
+      .hd .ctrls {
+        display: flex;
+        gap: 8px;
+      }
+      .iconbtn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+      }
+      .body {
+        padding: 16px 14px;
+        overflow: auto;
+        flex: 1;
+      }
+      .h1 {
+        font-size: 24px;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        margin: 6px 0 6px;
+        font-weight: 800;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0 0 16px;
+        font-size: 14px;
+      }
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 12px 0;
+      }
+      .chip {
+        background: var(--chip);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+      .composer {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+      }
+      .composer .ta {
+        color: var(--muted);
+        font-size: 14px;
+        min-height: 64px;
+      }
+      .cta {
+        width: 100%;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 14px;
+        font-weight: 700;
+        font-size: 15px;
+        margin-top: 12px;
+      }
+      .cta.secondary {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        margin: 10px 0;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .row2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .tile {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 12px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .tile .ic {
+        font-size: 22px;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .progress {
+        height: 6px;
+        background: var(--surface2);
+        border-radius: 999px;
+        overflow: hidden;
+        margin: 4px 0 14px;
+      }
+      .progress > i {
+        display: block;
+        height: 100%;
+        width: 33%;
+        background: var(--accent);
+      }
+      .msg {
+        max-width: 80%;
+        padding: 10px 12px;
+        border-radius: 14px;
+        margin: 8px 0;
+        font-size: 14px;
+      }
+      .msg.bot {
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+      .msg.me {
+        background: var(--accent);
+        color: #fff;
+        margin-left: auto;
+      }
+      .stickybar {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+        background: color-mix(in srgb, var(--surface) 92%, transparent);
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .stickybar input {
+        flex: 1;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 999px;
+        padding: 11px 14px;
+        font-size: 14px;
+      }
+      .send {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        font-size: 16px;
+      }
+      .listrow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .badge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+      }
+      .badge.pass {
+        color: #16a34a;
+      }
+      .badge.run {
+        color: var(--accent);
+      }
+      .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 999px;
+        animation: spin 1s linear infinite;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .fab {
+        position: absolute;
+        right: 16px;
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        font-size: 26px;
+        box-shadow: 0 8px 24px rgba(229, 72, 77, 0.4);
+      }
+      .err {
+        background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+        border: 1px solid var(--accent);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RedAnvil mobile home — Claude's 5 variations</h1>
+    <p class="lead">
+      Each variation is a structurally distinct layout, shown in light and dark. The brand mark is a
+      theme-aware inline SVG anvil — no dark box in light mode (the current defect). Pick a
+      direction (or mix, e.g. "layout of 4, header of 1").
+    </p>
+
+    <!-- reusable anvil symbol -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="anvil" viewBox="0 0 32 24">
+        <path
+          fill="currentColor"
+          d="M2 6h14c0 3-2 4-5 4v2h9l3-3 2 1-2 4c0 0-1 2-4 2H10c-4 0-6-3-6-6V10H2z"
+        />
+        <rect x="9" y="18" width="14" height="2" rx="1" fill="currentColor" />
+        <rect x="11" y="20" width="10" height="3" rx="1" fill="var(--accent)" />
+      </symbol>
+    </svg>
+
+    <script>
+      const anvil = (sz = 22) =>
+        `<svg width="${sz}" height="${sz * 0.75}"><use href="#anvil"/></svg>`;
+      const header = `<div class="hd"><div class="brand" style="color:var(--text)">${anvil(24)}<span class="wm"><b>Red</b>Anvil</span></div><div class="ctrls"><button class="iconbtn">☾</button><button class="iconbtn">☰</button></div></div>`;
+    </script>
+
+    <!-- V1 Hero + composer -->
+    <div class="row" id="v1"></div>
+    <!-- V2 Conversational -->
+    <div class="row" id="v2"></div>
+    <!-- V3 Wizard -->
+    <div class="row" id="v3"></div>
+    <!-- V4 Template gallery -->
+    <div class="row" id="v4"></div>
+    <!-- V5 Utility / recent builds -->
+    <div class="row" id="v5"></div>
+
+    <script>
+      function phone(theme, inner) {
+        return `<div class="phone"><div class="screen" data-theme="${theme}"><span class="theme-tag">${theme}</span>${header}<div class="body">${inner}</div></div></div>`;
+      }
+      function phoneRaw(theme, inner) {
+        return `<div class="phone"><div class="screen" data-theme="${theme}"><span class="theme-tag">${theme}</span>${header}${inner}</div></div>`;
+      }
+
+      // V1 Hero + composer
+      const v1 = `<div class="h1">Forge an app<br>from a prompt</div>
+  <p class="sub">Describe what you want. RedAnvil asks a few questions, then generates a complete PRD you can download.</p>
+  <div class="composer"><div class="ta">e.g. A booking app for a small yoga studio with class schedules and Stripe payments…</div></div>
+  <div class="chips"><span class="chip">SaaS dashboard</span><span class="chip">Marketplace</span><span class="chip">Internal tool</span></div>
+  <button class="cta">Forge PRD →</button>`;
+      document.getElementById('v1').innerHTML =
+        `<div class="col-title">1 · Hero + composer (consumer)</div><div class="col-note">Big value headline, prompt front-and-center, example chips, one dominant CTA.</div>` +
+        phone('light', v1) +
+        phone('dark', v1);
+
+      // V2 Conversational
+      const v2body = `<div style="padding:16px 14px;overflow:auto;flex:1">
+  <div class="msg bot">Hi — I'm RedAnvil. What do you want to build?</div>
+  <div class="msg me">A booking app for a yoga studio</div>
+  <div class="msg bot">Nice. Who are the main users — studio staff, students, or both? <span class="spinner"></span></div></div>
+  <div class="stickybar"><input placeholder="Message RedAnvil…"><button class="send">➤</button></div>`;
+      document.getElementById('v2').innerHTML =
+        `<div class="col-title">2 · Conversational (chat-first)</div><div class="col-note">Feels like a focused chat; sticky bottom composer with safe-area padding; loading state shown.</div>` +
+        phoneRaw('light', v2body) +
+        phoneRaw('dark', v2body);
+
+      // V3 Wizard
+      const v3 = `<div class="muted" style="margin-bottom:4px">Step 1 of 3</div><div class="progress"><i></i></div>
+  <div class="h1" style="font-size:21px">What are you building?</div>
+  <p class="sub">One sentence is enough to start.</p>
+  <div class="composer"><div class="ta">A booking app for a small yoga studio…</div></div>
+  <div class="chips"><span class="chip">Web app</span><span class="chip">Mobile app</span><span class="chip">API</span></div>
+  <button class="cta">Next →</button><button class="cta secondary">Skip</button>`;
+      document.getElementById('v3').innerHTML =
+        `<div class="col-title">3 · Wizard stepper (guided)</div><div class="col-note">Progress + one question per card; matches the "asks a few questions" flow; large Next CTA.</div>` +
+        phone('light', v3) +
+        phone('dark', v3);
+
+      // V4 Template gallery
+      const v4 = `<div class="h1" style="font-size:21px">Start from a template</div>
+  <p class="sub">Or describe your own below.</p>
+  <div class="row2">
+    <div class="tile"><span class="ic">📊</span>SaaS dashboard</div>
+    <div class="tile"><span class="ic">🛒</span>Marketplace</div>
+    <div class="tile"><span class="ic">🔧</span>Internal tool</div>
+    <div class="tile"><span class="ic">📱</span>Mobile app</div>
+  </div>
+  <div class="composer" style="margin-top:12px"><div class="ta">Describe your own app…</div></div>
+  <button class="cta">Forge PRD →</button>`;
+      document.getElementById('v4').innerHTML =
+        `<div class="col-title">4 · Template gallery (pick a starting point)</div><div class="col-note">Card grid of app archetypes + free-form composer; good for users who don't know where to start.</div>` +
+        phone('light', v4) +
+        phone('dark', v4);
+
+      // V5 Utility / recent builds
+      const v5 = `<div class="h1" style="font-size:21px">Your builds</div>
+  <div class="err" style="margin-bottom:10px">Couldn't reach the results feed. <b>Retry</b></div>
+  <div class="card" style="padding:8px 14px">
+    <div class="listrow"><div><b>yoga-studio</b><div class="muted">PRD ready · 2 min ago</div></div><span class="badge pass">Ready</span></div>
+    <div class="listrow"><div><b>invoice-tool</b><div class="muted">Generating…</div></div><span class="badge run">●</span></div>
+    <div class="listrow" style="border:none"><div><b>trip-planner</b><div class="muted">PRD ready · 1 hr ago</div></div><span class="badge pass">Ready</span></div>
+  </div>
+  <button class="cta secondary">View all builds</button>`;
+      document.getElementById('v5').innerHTML =
+        `<div class="col-title">5 · Utility dashboard (returning user)</div><div class="col-note">Denser; recent builds list + a New-build FAB; shows a real error state on the feed.</div>` +
+        phoneRaw('light', `<div class="body">${v5}</div><button class="fab">+</button>`) +
+        phoneRaw('dark', `<div class="body">${v5}</div><button class="fab">+</button>`);
+    </script>
+  </body>
+</html>

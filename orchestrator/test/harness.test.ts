@@ -10,7 +10,9 @@ describe('grokArgs', () => {
   const argv = grokArgs('/work/dir', 'do the thing', { sessionId: 'run-1' });
 
   it('includes the required headless flags and the scoped cwd', () => {
-    expect(argv).toEqual(expect.arrayContaining(['--always-approve', '--no-alt-screen', '--output-format', 'json']));
+    expect(argv).toEqual(
+      expect.arrayContaining(['--always-approve', '--no-alt-screen', '--output-format', 'json'])
+    );
     expect(argv[argv.indexOf('--cwd') + 1]).toBe('/work/dir');
     expect(argv[argv.indexOf('--session-id') + 1]).toBe('run-1');
   });
@@ -24,7 +26,9 @@ describe('grokArgs', () => {
 
 describe('newSessionId', () => {
   it('produces a valid UUID (grok rejects non-UUID session ids)', () => {
-    expect(newSessionId()).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    expect(newSessionId()).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+    );
   });
 });
 

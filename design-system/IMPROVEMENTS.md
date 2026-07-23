@@ -10,6 +10,7 @@ measured 5 of 48 rules and the dashboard showed a fabricated 98. Manual review i
 the system doing its job.
 
 Changes:
+
 - Deterministic coverage 5 -> 16 via a real static checker (orchestrator/scripts/checks/
   check.mjs): security (interpolated-SQL, stubbed-auth, fetch-timeouts, headers/CORS,
   input-validation), hygiene (secret-scan, no-binaries), frontend (theme-tokens-only,
@@ -34,6 +35,7 @@ any rule with no recorded outcome as passing. A code-clean diff therefore cleare
 gate with none of the premium requirements actually checked.
 
 Changes:
+
 - Added a `visual` rule method that is **fail-closed** — an unrecorded verdict FAILS
   (`FAIL_CLOSED_METHODS` in `rubric/types.ts`; `computeScore` in `gate/score.ts`).
 - Encoded 9 premium/design requirements as scored `visual` rules: fe-light-dark,
@@ -50,6 +52,7 @@ Classify: new **must** rules (promoted from prose to scored, fail-closed). Anti-
 recorded: requirements that live only in prose and are never encoded in the scored array.
 
 Rule updates:
+
 - Added R13.1–R13.9 (premium web-app shell), version 1.3 → 1.4.
 - No rule softened or deleted.
 

@@ -51,9 +51,11 @@ const labelStyle: CSSProperties = {
  */
 export function KpiStrip({ summary }: KpiStripProps): JSX.Element {
   const avgDisplay =
-    summary.total === 0 ? '—' : Number.isInteger(summary.avgScore)
-      ? String(summary.avgScore)
-      : summary.avgScore.toFixed(1);
+    summary.total === 0
+      ? '—'
+      : Number.isInteger(summary.avgScore)
+        ? String(summary.avgScore)
+        : summary.avgScore.toFixed(1);
 
   return (
     <div style={stripStyle} role="group" aria-label={en.pages.home.summaryLabel}>

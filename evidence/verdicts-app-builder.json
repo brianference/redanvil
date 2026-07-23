@@ -1,0 +1,98 @@
+[
+  {
+    "ruleId": "fe-light-dark",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-premium-nav",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-required-pages",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-no-attribution",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-responsive-375",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-product-completeness",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-visual-review-recorded",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-touch-targets",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-type-floor",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-noncolor-state",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-safe-areas",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-seo-og",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-cross-link",
+    "passed": true
+  },
+  {
+    "ruleId": "u-conc-idiomatic",
+    "passed": true
+  },
+  {
+    "ruleId": "u-conc-no-speculative-abstraction",
+    "passed": true
+  },
+  {
+    "ruleId": "u-conc-use-what-exists",
+    "passed": true
+  },
+  {
+    "ruleId": "u-conc-smallest-diff",
+    "passed": true
+  },
+  {
+    "ruleId": "u-val-input-validation",
+    "passed": true
+  },
+  {
+    "ruleId": "u-sec-no-stub-paths",
+    "passed": true
+  },
+  {
+    "ruleId": "u-test-adequacy",
+    "passed": true
+  },
+  {
+    "ruleId": "u-test-behavioral",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-pages-compose",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-fail-closed-states",
+    "passed": true
+  },
+  {
+    "ruleId": "fe-a11y-contrast",
+    "passed": true
+  }
+]

@@ -4,12 +4,20 @@ import { runGate } from '../gate/runGate';
 import { loadRubric } from '../rubric/index';
 import { FAIL_CLOSED_METHODS } from '../rubric/types';
 import type { Check } from '../gate/checks';
+import { indexOutcomes, computeScore } from '../gate/score';
 import type { Outcome } from '../gate/score';
 
 /** Absolute path to the deterministic rule checker (runs with cwd = the app dir). */
-const CHECK_SCRIPT = join(dirname(fileURLToPath(import.meta.url)), '../../scripts/checks/check.mjs');
+const CHECK_SCRIPT = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../scripts/checks/check.mjs'
+);
 /** One static check via check.mjs, scanning the app dir (`.` since cwd = app dir at run time). */
-const det = (ruleId: string): Check => ({ ruleId, command: 'node', args: [CHECK_SCRIPT, ruleId, '.'] });
+const det = (ruleId: string): Check => ({
+  ruleId,
+  command: 'node',
+  args: [CHECK_SCRIPT, ruleId, '.']
+});
 
 /**
  * Deterministic checks runnable against a generated Cloudflare app. Covers every
@@ -67,7 +75,9 @@ export async function gateApp(
 ): Promise<GateReport> {
   const det = await runGate(dir, checks);
   const outcomes = [...det, ...judge];
-  const byId = new Map(outcomes.map((o) => [o.ruleId, o.passed]));
+  // Fail-closed on duplicates: judge outcomes are appended after deterministic
+  // ones, so last-write-wins would let a judge pass erase a real check failure.
+  const byId = indexOutcomes(outcomes);
   const na = new Set(notApplicable);
   const rules = loadRubric().filter((r) => !na.has(r.id) && !na.has(r.lane));
 
@@ -84,12 +94,12 @@ export async function gateApp(
     })
     .map((r) => r.id);
 
-  const totalWeight = rules.reduce((s, r) => s + r.weight, 0) || 1;
-  const earnedWeight = rules
-    .filter((r) => byId.get(r.id) === true)
-    .reduce((s, r) => s + r.weight, 0);
-
-  const score = blockersFailed.length > 0 ? 0 : Math.round((100 * earnedWeight) / totalWeight);
+  // Score through the SAME function the tests validate. This used to be a second,
+  // independent formula that included blocker weight in the ratio and applied no
+  // judge cap, so the path that actually gated deploys was materially more
+  // forgiving than the one under test — a run could lose every major, minor and
+  // judge rule and still score 74. One implementation, one set of tests.
+  const { score } = computeScore(outcomes, rules);
   const evaluated = new Set(outcomes.map((o) => o.ruleId)).size;
   return { outcomes, blockersFailed, evaluated, total: rules.length, score };
 }

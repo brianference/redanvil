@@ -2,13 +2,19 @@
   "name": "redanvil",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20.10" },
-  "workspaces": ["orchestrator"],
+  "engines": {
+    "node": ">=20.10"
+  },
+  "workspaces": [
+    "orchestrator"
+  ],
   "scripts": {
     "typecheck": "tsc -p orchestrator/tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "format:check": "prettier --check .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "gate": "tsx orchestrator/src/cli.ts gate",
+    "rubric": "tsx orchestrator/src/cli.ts rubric"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

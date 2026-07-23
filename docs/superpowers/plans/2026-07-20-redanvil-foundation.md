@@ -71,17 +71,20 @@ design-system/
 ### Task 1: Monorepo and tooling scaffold
 
 **Files:**
+
 - Create: `package.json`, `tsconfig.base.json`, `eslint.config.js`, `.prettierrc.json`, `vitest.config.ts`
 - Create: `orchestrator/package.json`, `orchestrator/tsconfig.json`
 - Create: `orchestrator/src/index.ts`, `orchestrator/test/smoke.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing (first task).
 - Produces: working `npm test`, `npm run typecheck`, `npm run lint`, `npm run format:check` at the repo root, resolving across the `orchestrator` workspace.
 
 - [ ] **Step 1: Write the failing smoke test**
 
 `orchestrator/test/smoke.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest';
 import { redanvilVersion } from '../src/index.js';
@@ -96,6 +99,7 @@ describe('foundation smoke', () => {
 - [ ] **Step 2: Create root config files**
 
 `package.json`:
+
 ```json
 {
   "name": "redanvil",
@@ -123,6 +127,7 @@ describe('foundation smoke', () => {
 ```
 
 `tsconfig.base.json`:
+
 ```json
 {
   "compilerOptions": {
@@ -141,6 +146,7 @@ describe('foundation smoke', () => {
 ```
 
 `eslint.config.js`:
+
 ```js
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
@@ -160,11 +166,13 @@ export default [
 ```
 
 `.prettierrc.json`:
+
 ```json
 { "singleQuote": true, "semi": true, "printWidth": 100, "trailingComma": "none" }
 ```
 
 `vitest.config.ts`:
+
 ```ts
 import { defineConfig } from 'vitest/config';
 
@@ -176,6 +184,7 @@ export default defineConfig({
 - [ ] **Step 3: Create the orchestrator workspace**
 
 `orchestrator/package.json`:
+
 ```json
 {
   "name": "@redanvil/orchestrator",
@@ -188,6 +197,7 @@ export default defineConfig({
 ```
 
 `orchestrator/tsconfig.json`:
+
 ```json
 {
   "extends": "../tsconfig.base.json",
@@ -197,6 +207,7 @@ export default defineConfig({
 ```
 
 `orchestrator/src/index.ts`:
+
 ```ts
 /** Returns the orchestrator package version, read from package.json at build. */
 export function redanvilVersion(): string {
@@ -222,11 +233,13 @@ git commit -m "chore: monorepo scaffold with strict TS, eslint, vitest"
 ### Task 2: Bus payload schemas (Zod)
 
 **Files:**
+
 - Create: `orchestrator/src/errors.ts`
 - Create: `orchestrator/src/schemas/job.ts`, `prd.ts`, `results.ts`, `conformance.ts`, `index.ts`
 - Test: `orchestrator/test/schemas.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing from prior tasks beyond the toolchain.
 - Produces:
   - `Job`, `Prd`, `RunResult`, `Conformance` TypeScript types.
@@ -237,6 +250,7 @@ git commit -m "chore: monorepo scaffold with strict TS, eslint, vitest"
 - [ ] **Step 1: Write the failing schema tests**
 
 `orchestrator/test/schemas.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest';
 import { parseByKind, SCHEMA_KINDS } from '../src/schemas/index.js';
@@ -287,6 +301,7 @@ Expected: FAIL — cannot resolve `../src/schemas/index.js`.
 - [ ] **Step 3: Implement errors and schemas**
 
 `orchestrator/src/errors.ts`:
+
 ```ts
 /** Raised when a payload fails schema validation at a boundary. */
 export class ValidationError extends Error {
@@ -300,6 +315,7 @@ export class ValidationError extends Error {
 ```
 
 `orchestrator/src/schemas/job.ts`:
+
 ```ts
 import { z } from 'zod';
 
@@ -317,6 +333,7 @@ export type Job = z.infer<typeof JobSchema>;
 ```
 
 `orchestrator/src/schemas/prd.ts`:
+
 ```ts
 import { z } from 'zod';
 
@@ -341,6 +358,7 @@ export type Prd = z.infer<typeof PrdSchema>;
 ```
 
 `orchestrator/src/schemas/results.ts`:
+
 ```ts
 import { z } from 'zod';
 
@@ -365,6 +383,7 @@ export type RunResult = z.infer<typeof RunResultSchema>;
 ```
 
 `orchestrator/src/schemas/conformance.ts`:
+
 ```ts
 import { z } from 'zod';
 
@@ -380,6 +399,7 @@ export type Conformance = z.infer<typeof ConformanceSchema>;
 ```
 
 `orchestrator/src/schemas/index.ts`:
+
 ```ts
 import { z } from 'zod';
 import { JobSchema, type Job } from './job.js';
@@ -406,7 +426,9 @@ export type ParsedPayload =
 /** Validates `data` against the schema named by `kind`; throws ValidationError on any failure. */
 export function parseByKind(kind: string, data: unknown): ParsedPayload {
   if (!(kind in REGISTRY)) {
-    throw new ValidationError(`unknown payload kind: ${kind}`, [`kind must be one of ${SCHEMA_KINDS.join(', ')}`]);
+    throw new ValidationError(`unknown payload kind: ${kind}`, [
+      `kind must be one of ${SCHEMA_KINDS.join(', ')}`
+    ]);
   }
   const schema = REGISTRY[kind as keyof typeof REGISTRY] as z.ZodTypeAny;
   const result = schema.safeParse(data);
@@ -435,17 +457,20 @@ git commit -m "feat: bus payload schemas (job, prd, results, conformance) with t
 ### Task 3: `redanvil validate` CLI command
 
 **Files:**
+
 - Create: `orchestrator/src/commands/validate.ts`
 - Create: `orchestrator/src/cli.ts`
 - Test: `orchestrator/test/validate.test.ts`
 
 **Interfaces:**
+
 - Consumes: `parseByKind`, `ValidationError` from Task 2.
 - Produces: `validateFile(path: string): { ok: true; kind: string } | { ok: false; issues: string[] }` (pure, testable, no process.exit). `cli.ts` wraps it and sets exit codes.
 
 - [ ] **Step 1: Write the failing test**
 
 `orchestrator/test/validate.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { writeFile, rm, mkdtemp } from 'node:fs/promises';
@@ -497,6 +522,7 @@ Expected: FAIL — cannot resolve `validate.js`.
 - [ ] **Step 3: Implement the command and CLI**
 
 `orchestrator/src/commands/validate.ts`:
+
 ```ts
 import { readFile } from 'node:fs/promises';
 import { parseByKind } from '../schemas/index.js';
@@ -527,6 +553,7 @@ export async function validateFile(
 ```
 
 `orchestrator/src/cli.ts`:
+
 ```ts
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
@@ -588,6 +615,7 @@ git commit -m "feat: redanvil validate command and CLI entrypoint"
 ### Task 4: Author the rules, prompts, and design corpus
 
 **Files:**
+
 - Create: `rules/base-15.md`, `rules/per-app-pack.md`, `rules/loop-gate.md` (loop role gate + no-stall protocol; already authored)
 - Create: `rules/rubric/typing.md`, `security.md`, `frontend.md`, `testing.md`, `process.md`, `ci.md`, `hygiene.md`, `concision.md` (one file per lane in spec §7)
 - Create: `prompts/orchestrator.md`, `prompts/grok-coder.md`, `prompts/judge.md`, `prompts/environment/session-start.md`
@@ -596,6 +624,7 @@ git commit -m "feat: redanvil validate command and CLI entrypoint"
 - Test: `orchestrator/test/corpus.test.ts` (added here; see Step 1)
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: `CORPUS_VERSION: string` (semver) exported from `corpus/version.ts`; the rule lane markdown files whose entries Task 5 encodes. Each rubric rule line follows the exact format `- <id> (<severity>, <method>): <text>` where severity ∈ {blocker, major, minor, advisory} and method ∈ {det, judge, det+judge, hook, process}.
 
@@ -604,6 +633,7 @@ Content source: transcribe verbatim the standard already recorded in the design 
 - [ ] **Step 1: Write the failing corpus-format test**
 
 `orchestrator/test/corpus.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest';
 import { readFile, readdir } from 'node:fs/promises';
@@ -612,7 +642,8 @@ import { dirname, join } from 'node:path';
 import { CORPUS_VERSION } from '../src/corpus/version.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const RULE_LINE = /^- [a-z0-9-]+ \((blocker|major|minor|advisory), (det|judge|det\+judge|hook|process)\): .+/;
+const RULE_LINE =
+  /^- [a-z0-9-]+ \((blocker|major|minor|advisory), (det|judge|det\+judge|hook|process)\): .+/;
 
 describe('corpus', () => {
   it('has a semver corpus version', () => {
@@ -641,6 +672,7 @@ Expected: FAIL — cannot resolve `corpus/version.js` and `rules/rubric` is miss
 - [ ] **Step 3: Create the corpus version module**
 
 `orchestrator/src/corpus/version.ts`:
+
 ```ts
 /** The canonical corpus version. Bump on any change to rules/prompts/design-system. */
 export const CORPUS_VERSION = '1.0.0';
@@ -649,18 +681,20 @@ export const CORPUS_VERSION = '1.0.0';
 - [ ] **Step 4: Author `rules/base-15.md`**
 
 Transcribe the 15-line core standard from spec §7 / the base-rules block. Example of the required shape (first three lines shown; enter all 15):
+
 ```markdown
 # Base rules (v1.0.0)
 
 1. Strict typing everywhere: mypy strict, tsc strict, zero `any`, no untyped defs.
 2. Concise, reviewable code: the smallest diff that does the job; no padding, no speculative abstraction.
 3. Use what exists before writing or adding anything: stdlib, then framework, then shared library.
-...
+   ...
 ```
 
 - [ ] **Step 5: Author the lane files with the exact rule-line format**
 
 For each lane in spec §7, create `rules/rubric/<lane>.md`. Every rule is one line: `- <id> (<severity>, <method>): <text>`. Example (`rules/rubric/security.md`, real entries from the corpus):
+
 ```markdown
 # Security lane (v1.0.0)
 
@@ -670,6 +704,7 @@ For each lane in spec §7, create `rules/rubric/<lane>.md`. Every rule is one li
 - u-sec-timeouts (major, det): explicit timeout budgets on shared HTTP clients and pools.
 - u-sec-headers-cors (major, det): CORS origins explicit and no wider than needed; secure response headers present.
 ```
+
 Repeat for `typing.md`, `concision.md`, `testing.md`, `frontend.md`, `ci.md`, `hygiene.md`, `process.md`, transcribing each lane's rules from spec §7 in this format.
 
 - [ ] **Step 6: Author `rules/per-app-pack.md`, the prompts, and the design system**
@@ -679,15 +714,23 @@ Repeat for `typing.md`, `concision.md`, `testing.md`, `frontend.md`, `ci.md`, `h
 `prompts/orchestrator.md`, `prompts/grok-coder.md`, `prompts/judge.md`: the three role system prompts from the design (manager, builder, judge). `prompts/environment/session-start.md`: the base-15 summary injected each run.
 
 `design-system/tokens.json`:
+
 ```json
 {
   "version": "1.0.0",
-  "color": { "bg": "#0b0b0f", "surface": "#15151d", "text": "#f5f5f7", "accent": "#e5484d", "muted": "#8b8b93" },
+  "color": {
+    "bg": "#0b0b0f",
+    "surface": "#15151d",
+    "text": "#f5f5f7",
+    "accent": "#e5484d",
+    "muted": "#8b8b93"
+  },
   "space": { "xs": 4, "sm": 8, "md": 16, "lg": 24, "xl": 40 },
   "radius": { "sm": 6, "md": 12, "lg": 20 },
   "type": { "scale": [12, 14, 16, 20, 28, 40], "family": "Inter, system-ui, sans-serif" }
 }
 ```
+
 `design-system/checklist.md`: the mobile + WCAG-AA checklist (contrast ratios, one h1 per page, focus indicators, thumb zones, no overlapping text at 375px).
 
 - [ ] **Step 7: Run to verify the corpus test passes**
@@ -707,11 +750,13 @@ git commit -m "feat: author rules/prompts/design corpus with enforced rule-line 
 ### Task 5: Encode the rubric as typed data with invariants
 
 **Files:**
+
 - Create: `orchestrator/src/rubric/types.ts`, `rubric/rules.ts`, `rubric/index.ts`
 - Create: `orchestrator/src/commands/rubric.ts`
 - Test: `orchestrator/test/rubric.test.ts`
 
 **Interfaces:**
+
 - Consumes: the lane files from Task 4 (as the source of truth for which rules exist and their id/severity/method).
 - Produces:
   - `type Severity = 'blocker' | 'major' | 'minor' | 'advisory'`
@@ -724,6 +769,7 @@ git commit -m "feat: author rules/prompts/design corpus with enforced rule-line 
 - [ ] **Step 1: Write the failing rubric tests**
 
 `orchestrator/test/rubric.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest';
 import { loadRubric, judgeWeightShare } from '../src/rubric/index.js';
@@ -760,6 +806,7 @@ Expected: FAIL — cannot resolve `rubric/index.js`.
 - [ ] **Step 3: Implement rubric types, data, and index**
 
 `orchestrator/src/rubric/types.ts`:
+
 ```ts
 export type Severity = 'blocker' | 'major' | 'minor' | 'advisory';
 export type Method = 'det' | 'judge' | 'det+judge' | 'hook' | 'process';
@@ -775,6 +822,7 @@ export interface Rule {
 ```
 
 `orchestrator/src/rubric/rules.ts`:
+
 ```ts
 import type { Rule } from './types.js';
 
@@ -817,9 +865,11 @@ export const RULES: Rule[] = [
   rule('proc-pr-title-ticket', 'process', 'blocker', 'det')
 ];
 ```
+
 Note: the entries above are the starter set that satisfies the invariants and the smoke count. As Task 4's lane files are completed, add one `rule(...)` line per authored rule so the encoded list matches the corpus. The judge-weight-cap test guards the ratio as you add judge rules.
 
 `orchestrator/src/rubric/index.ts`:
+
 ```ts
 import { RULES } from './rules.js';
 import type { Rule } from './types.js';
@@ -844,6 +894,7 @@ export function judgeWeightShare(rules: Rule[]): number {
 - [ ] **Step 4: Implement the rubric summary command**
 
 `orchestrator/src/commands/rubric.ts`:
+
 ```ts
 import { loadRubric, judgeWeightShare } from '../rubric/index.js';
 
@@ -885,6 +936,7 @@ git commit -m "feat: encode rubric as typed data with judge-weight-cap invariant
 ## Self-Review
 
 **Spec coverage (against `2026-07-20-redanvil-design.md`):**
+
 - §5 monorepo layout → Task 1 (workspaces) + Tasks 4/5 (corpus dirs). The `/app-builder`, `/dashboard`, `/orchestrator` engine internals are later plans by design; this plan lays the root + orchestrator package + content dirs.
 - §7 rubric (tier-1/tier-2, judge cap 30%) → Task 5 invariant test; lane content → Task 4.
 - §8 rule/design inheritance → corpus authored here (Task 4); the scaffold/scoring/injection mechanisms are Plans 2–3, which consume this corpus.

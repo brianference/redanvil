@@ -106,9 +106,13 @@ describe('en locale bundle', () => {
     expect(en.runDetail.laneHeading('u')).toContain('u');
   });
 
-
   it('gives each content page a non-empty intro and at least one section', () => {
-    const contentPages = [en.pages.about, en.pages.contact, en.pages.terms, en.pages.privacy] as const;
+    const contentPages = [
+      en.pages.about,
+      en.pages.contact,
+      en.pages.terms,
+      en.pages.privacy
+    ] as const;
     for (const page of contentPages) {
       expect(page.intro.trim().length).toBeGreaterThan(0);
       expect(page.sections.length).toBeGreaterThanOrEqual(1);
@@ -120,7 +124,12 @@ describe('en locale bundle', () => {
   });
 
   it('keeps page copy free of banned writing-guideline words', () => {
-    const contentPages = [en.pages.about, en.pages.contact, en.pages.terms, en.pages.privacy] as const;
+    const contentPages = [
+      en.pages.about,
+      en.pages.contact,
+      en.pages.terms,
+      en.pages.privacy
+    ] as const;
     for (const page of contentPages) {
       const found = findBannedWords(pageCopyText(page));
       expect(found, `${page.title} has banned words: ${found.join(', ')}`).toEqual([]);
@@ -131,7 +140,11 @@ describe('en locale bundle', () => {
 describe('Breadcrumbs', () => {
   it('renders Home link and current page label', () => {
     const html = renderToStaticMarkup(
-      createElement(MemoryRouter, null, createElement(Breadcrumbs, { current: en.pages.about.title }))
+      createElement(
+        MemoryRouter,
+        null,
+        createElement(Breadcrumbs, { current: en.pages.about.title })
+      )
     );
     expect(html).toContain(en.app.breadcrumbHome);
     expect(html).toContain(en.pages.about.title);

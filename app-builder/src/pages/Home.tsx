@@ -7,6 +7,7 @@ import { PrdResult } from '../components/PrdResult';
 import { generatePrd, type Prd } from '../lib/prd';
 import { estimate } from '../lib/estimate';
 import { countEntities, type BuildJob, type WizardAnswers } from '../lib/job';
+import { wizardInstanceKey } from '../lib/wizardSession';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 
@@ -22,6 +23,12 @@ export function Home(): JSX.Element {
   const [answers, setAnswers] = useState<WizardAnswers>(EMPTY_WIZARD_ANSWERS);
   const [prd, setPrd] = useState<Prd | null>(null);
   const [wizardStartStep, setWizardStartStep] = useState<1 | 2 | 3>(1);
+  /**
+   * Bumped only on intentional new-wizard-session events (chat send, template
+   * continue, reset). Used as the Wizard React key so typing the prompt never
+   * remounts the subtree and drops focus.
+   */
+  const [wizardSessionId, setWizardSessionId] = useState(0);
   /** Latest answers for async submit completion (avoids stale closures). */
   const answersRef = useRef<WizardAnswers>(answers);
   answersRef.current = answers;
@@ -37,11 +44,19 @@ export function Home(): JSX.Element {
   }
 
   /**
+   * Start a new wizard session (remounts Wizard so internal step state resets).
+   */
+  function bumpWizardSession(): void {
+    setWizardSessionId((id) => id + 1);
+  }
+
+  /**
    * Enter the wizard with a prompt from the chat composer.
    */
   function handleChatSend(prompt: string): void {
     updateAnswers({ ...answersRef.current, prompt });
     setWizardStartStep(2);
+    bumpWizardSession();
     setView('wizard');
   }
 
@@ -56,6 +71,7 @@ export function Home(): JSX.Element {
       appType: selection.appType || prev.appType
     });
     setWizardStartStep(selection.appType ? 2 : 1);
+    bumpWizardSession();
     setView('wizard');
   }
 
@@ -83,6 +99,7 @@ export function Home(): JSX.Element {
     setPrd(null);
     updateAnswers(EMPTY_WIZARD_ANSWERS);
     setWizardStartStep(1);
+    bumpWizardSession();
     setView('chat');
   }
 
@@ -154,7 +171,7 @@ export function Home(): JSX.Element {
 
       {view === 'wizard' && (
         <Wizard
-          key={`${wizardStartStep}-${answers.prompt.slice(0, 24)}`}
+          key={wizardInstanceKey(wizardSessionId, wizardStartStep)}
           value={answers}
           onChange={updateAnswers}
           onSubmit={handleJobReady}

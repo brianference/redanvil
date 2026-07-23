@@ -69,13 +69,7 @@ export function ThemeToggle(): JSX.Element {
   const label = isDark ? en.app.themeToLight : en.app.themeToDark;
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={label}
-      title={label}
-      style={buttonStyle}
-    >
+    <button type="button" onClick={toggle} aria-label={label} title={label} style={buttonStyle}>
       <span aria-hidden="true">{isDark ? '☀' : '☾'}</span>
     </button>
   );

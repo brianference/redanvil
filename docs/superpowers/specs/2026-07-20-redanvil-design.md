@@ -23,16 +23,16 @@ Every app the system creates inherits the same coding rules, design system, and 
 
 ## 3. Decisions (from brainstorm)
 
-| Decision | Choice |
-|---|---|
-| Orchestrator layer | Reusable toolkit repo **plus** a Cloudflare dashboard |
-| First target app | Full-featured app-builder (PRD + token estimate + test design + planning wizard) |
-| Grok auth | `grok login` (Brian's account, no API cost) |
-| Scoring gate | Deterministic tier-1 + capped Claude judge tier-2, architected to grow into the full calibrated rubric |
-| App-builder intelligence | Thin client: the web app commits a job; the local Claude+Grok loop is the brain |
-| Repo | One monorepo |
-| First proof run | Full-featured (not a toy) |
-| Threshold | 90 |
+| Decision                 | Choice                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Orchestrator layer       | Reusable toolkit repo **plus** a Cloudflare dashboard                                                  |
+| First target app         | Full-featured app-builder (PRD + token estimate + test design + planning wizard)                       |
+| Grok auth                | `grok login` (Brian's account, no API cost)                                                            |
+| Scoring gate             | Deterministic tier-1 + capped Claude judge tier-2, architected to grow into the full calibrated rubric |
+| App-builder intelligence | Thin client: the web app commits a job; the local Claude+Grok loop is the brain                        |
+| Repo                     | One monorepo                                                                                           |
+| First proof run          | Full-featured (not a toy)                                                                              |
+| Threshold                | 90                                                                                                     |
 
 ## 4. Architecture
 
@@ -72,10 +72,12 @@ The web app never calls an LLM. It captures intent and commits a job. The local 
 ## 6. Orchestrator loop
 
 Two run modes:
+
 - **Interactive** — Claude drives iteration by iteration, applies judgment, crafts feedback. This is the real management role.
 - **Unattended** — `grok-loop.ps1` (and a bash twin) for hands-off runs.
 
 Each iteration:
+
 1. Invoke Grok headless against the target repo with spec plus prior failures: `--no-auto-update --always-approve --no-alt-screen --cwd <target> --session-id <run> -m grok-4.5 --output-format json -p <prompt>`. The fixed session id gives Grok memory of its earlier attempts.
 2. Run the deterministic gate against the tree. Never trust Grok's self-report; the score is the only signal.
 3. If tier-1 is clean, run the judge pass on the judgment rules.
@@ -101,6 +103,7 @@ The rubric content is the pasted standard: base-15 plus the typing, modularity, 
 3. **Injected per session** — the environment prompt (the 15-line SessionStart block) and the per-app rule pack are fed to both Grok and Claude every iteration.
 
 Supporting pieces:
+
 - **Conformance manifest** — each generated app carries `conformance.json` recording the corpus version it was built against, so drift is visible.
 - **Re-sync** — bumping the corpus can re-inject configs into existing generated apps and re-run their gate, so a rule change propagates to everything the system has made.
 

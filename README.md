@@ -13,8 +13,8 @@ RedAnvil is a system where Claude Code orchestrates an autonomous build loop: Gr
 
 ## Screens
 
-| App builder | Dashboard |
-|---|---|
+| App builder                                 | Dashboard                               |
+| ------------------------------------------- | --------------------------------------- |
 | ![App builder](docs/images/app-builder.png) | ![Dashboard](docs/images/dashboard.png) |
 
 ## What it does
@@ -39,7 +39,16 @@ Everything runs inline with a no-stall protocol. Every Grok call and gate check 
 - Rule applicability: lanes that do not apply to an app (for example CI on an app with no workflows) are excluded from the score.
 - Design gate: a global hook fires on every deploy and requires a real rendered-page visual review before anything is called done. Design rules are verified from screenshots, not code.
 
-Run it with `redanvil gate <app> --threshold 90`. It exits non-zero below the bar.
+Unknown means fail. A rule with no recorded outcome does not quietly pass — for any method, including a rule declared in the rubric with no check wired up yet. A rule that genuinely does not apply is excluded by lane, which drops it from the denominator instead of inventing a pass for it.
+
+Run it from the repo root:
+
+```bash
+npm run gate -- app-builder --threshold 90 \
+  --judge evidence/verdicts-app-builder.json --na ci,process
+```
+
+It exits non-zero below the bar.
 
 ## Tech stack
 
@@ -64,8 +73,8 @@ docs/             design specs, plans, simulation notes, images
 ```bash
 npm install          # orchestrator workspace
 npm run typecheck && npm run lint && npm test
-npm -w @redanvil/orchestrator run dev -- rubric      # print the rubric
-npm -w @redanvil/orchestrator run dev -- gate <dir>  # run the gate on an app
+npm run rubric                    # print the rubric
+npm run gate -- <appDir>          # run the gate on an app (path from repo root)
 ```
 
 Each app builds and deploys on its own:
@@ -79,6 +88,6 @@ CI (GitHub Actions) typechecks, tests, and builds everything on every push.
 
 ## Status
 
-The orchestrator engine, scoring gate, scaffolder, and both live apps are shipped and verified. The app-builder passes the gate at 98/100. Ongoing work: an automated visual and UAT judge subagent, and full SAST coverage.
+The orchestrator engine, scoring gate, scaffolder, and both live apps are shipped and verified. The app-builder passes the gate at 100/100 across 41 of 41 applicable rules. That score is reproduced in CI by re-running the gate and comparing it rule by rule, so a hand-edited results file fails the build rather than being believed. Ongoing work: an automated visual and UAT judge subagent, and full SAST coverage.
 
 Built with Claude Code and Grok Build.

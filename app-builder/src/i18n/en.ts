@@ -6,8 +6,9 @@ export const en = {
   app: {
     name: 'RedAnvil',
     primaryNav: 'Primary',
-    footerCopyright: '© RedAnvil',
-    footerTagline: 'Forge a full-stack app from one prompt. Every app ships behind a real quality gate.',
+    footerCopyright: (year: number): string => `© ${year} RedAnvil`,
+    footerTagline:
+      'Forge a full-stack app from one prompt. Every app ships behind a real quality gate.',
     footerProduct: 'Product',
     footerCompany: 'Company',
     footerLegal: 'Legal',
@@ -31,8 +32,6 @@ export const en = {
       title: 'What app should we forge?',
       subtitle:
         'Describe the product in plain language. RedAnvil asks a few questions, then generates a downloadable PRD.',
-      jobReady: (slug: string, threshold: number): string =>
-        `Job ready: ${slug} (threshold ${threshold})`,
       bannerAlt: 'RedAnvil — forge apps from a prompt'
     },
     saved: {
@@ -48,7 +47,6 @@ export const en = {
       sectionRecent: 'Recent builds',
       itemMeta: (slug: string): string => `PRD · ${slug}`,
       statusReady: 'Ready',
-      statusLabel: 'PRD ready',
       newBuild: 'New build',
       countMeta: (n: number): string => (n === 1 ? '1 shown' : `${n} shown`),
       kpiLabel: 'Build stats',
@@ -105,7 +103,8 @@ export const en = {
     privacy: {
       title: 'Privacy Policy',
       updated: 'Updated July 2026',
-      intro: 'RedAnvil is built to collect as little as possible. This policy explains what happens to your data.',
+      intro:
+        'RedAnvil is built to collect as little as possible. This policy explains what happens to your data.',
       sections: [
         {
           heading: 'What we collect',
@@ -136,7 +135,8 @@ export const en = {
     terms: {
       title: 'Terms and Conditions',
       updated: 'Updated July 2026',
-      intro: 'By using RedAnvil you agree to these terms. If you do not agree, do not use the service.',
+      intro:
+        'By using RedAnvil you agree to these terms. If you do not agree, do not use the service.',
       sections: [
         {
           heading: 'Who can use it',
@@ -213,7 +213,8 @@ export const en = {
     sectionCount: (n: number): string => (n === 1 ? '1 template' : `${n} templates`),
     orDescribe: 'or describe your own',
     composerLabel: 'Your app idea',
-    composerPlaceholder: 'e.g. A booking system for independent bike shops with inventory and SMS reminders',
+    composerPlaceholder:
+      'e.g. A booking system for independent bike shops with inventory and SMS reminders',
     continue: 'Continue to questions',
     backToChat: 'Back to chat',
     selected: 'Selected',
@@ -276,7 +277,6 @@ export const en = {
     appTypePlaceholder: 'e.g. marketplace, dashboard, content site',
     appTypeChipsLabel: 'Common types',
     appTypeChips: ['SaaS', 'Marketplace', 'Internal tool', 'Mobile app', 'API'] as const,
-    authLabel: 'Authentication needed',
     authYes: 'Yes',
     authNo: 'No',
     authGroupLabel: 'Does this app need sign-in?',

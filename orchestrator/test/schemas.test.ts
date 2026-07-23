@@ -37,3 +37,46 @@ describe('parseByKind', () => {
     }
   });
 });
+
+describe('RunResultSchema provenance', () => {
+  /** A real, fully-formed result as the gate CLI writes it. */
+  const validResult = {
+    kind: 'results',
+    slug: 'app-builder',
+    finalScore: 100,
+    threshold: 90,
+    passed: true,
+    evaluated: 41,
+    total: 41,
+    rules: [{ ruleId: 'u-typing-strict', passed: true }],
+    iterations: [{ index: 1, score: 100, blockers: [] }],
+    deployUrl: 'https://redanvil.pages.dev',
+    finishedAt: '2026-07-23T00:00:00.000Z',
+    provenance: {
+      commit: 'b122c580069c42155525a800a483fe732e5978cb',
+      dirty: false,
+      rubricHash: 'a'.repeat(64),
+      rubricRuleCount: 48,
+      node: 'v22.19.0',
+      generatedAt: '2026-07-23T00:00:00.000Z'
+    }
+  };
+
+  it('accepts a result the gate actually produced', () => {
+    expect(() => parseByKind('results', validResult)).not.toThrow();
+  });
+
+  it('rejects a result with no provenance (untraceable score)', () => {
+    const { provenance: _drop, ...noProvenance } = validResult;
+    expect(() => parseByKind('results', noProvenance)).toThrow(ValidationError);
+  });
+
+  it('rejects a result with no per-rule proof', () => {
+    expect(() => parseByKind('results', { ...validResult, rules: [] })).toThrow(ValidationError);
+  });
+
+  it('rejects a result missing coverage fields', () => {
+    const { evaluated: _drop, ...noCoverage } = validResult;
+    expect(() => parseByKind('results', noCoverage)).toThrow(ValidationError);
+  });
+});

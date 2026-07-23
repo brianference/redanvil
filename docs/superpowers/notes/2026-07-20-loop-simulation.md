@@ -20,6 +20,7 @@ Fix: `lg-runtime-parity` (blocker) — boot `wrangler pages dev`, curl a live en
 
 Finding B: unbounded Grok call and unbounded loop.
 Fixes:
+
 - `lg-grok-timeout` (blocker) — Grok runs in the background with a wall-clock timeout and is killable; on timeout the iteration fails, partial diff becomes feedback, loop proceeds.
 - `lg-ralph-bounded` (blocker) — both completion-promise and `--max-iterations` always set; promise emitted only from a real inline score.
 - `lg-score-flipflop-escalates` (already present) — crossing then falling back escalates to the owner.
@@ -31,6 +32,7 @@ Fixes:
 
 Finding C: Grok has too much privilege and no disk isolation.
 Fixes:
+
 - `lg-worktree-isolation` (blocker) — each run in a dedicated, disk-isolated git worktree.
 - `lg-grok-no-secrets` (blocker) — no secrets in Grok's env or worktree.
 - `lg-grok-no-deploy` (blocker) — push and deploy are orchestrator-only, inline, post-gate; Grok is forbidden.

@@ -1,6 +1,14 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode
+} from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { en } from '../i18n/en';
+import { useDrawerA11y } from '../lib/useDrawerA11y';
 import { theme } from '../theme';
 import { Breadcrumbs } from './Breadcrumbs';
 import { ThemeToggle } from './ThemeToggle';
@@ -97,9 +105,24 @@ function Logo({ height = LOGO_HEIGHT }: { height?: number }): JSX.Element {
     borderRadius: theme.radius.sm
   };
   return (
-    <a href={APP_URL} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
-      <img className="ra-logo-dark" src="/logo-sm.png" alt="RedAnvil — forge apps from a prompt" height={height} style={imgStyle} />
-      <img className="ra-logo-light" src="/logo-light.png" alt="RedAnvil — forge apps from a prompt" height={height} style={imgStyle} />
+    <a
+      href={APP_URL}
+      style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}
+    >
+      <img
+        className="ra-logo-dark"
+        src="/logo-sm.png"
+        alt="RedAnvil — forge apps from a prompt"
+        height={height}
+        style={imgStyle}
+      />
+      <img
+        className="ra-logo-light"
+        src="/logo-light.png"
+        alt="RedAnvil — forge apps from a prompt"
+        height={height}
+        style={imgStyle}
+      />
     </a>
   );
 }
@@ -134,6 +157,18 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const navItems = primaryNavItems();
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Close the mobile nav drawer.
+   */
+  const closeMenu = useCallback((): void => {
+    setMenuOpen(false);
+  }, []);
 
   // Close the mobile drawer on route change.
   useEffect(() => {
@@ -149,6 +184,15 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
       document.body.style.overflow = prev;
     };
   }, [menuOpen]);
+
+  useDrawerA11y({
+    open: menuOpen,
+    drawerRef,
+    triggerRef: menuBtnRef,
+    initialFocusRef: closeBtnRef,
+    backgroundRefs: [headerRef, bodyRef],
+    onClose: closeMenu
+  });
 
   /**
    * Render one nav link (internal Link or external anchor).
@@ -331,7 +375,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
         }
       `}</style>
 
-      <header style={bar}>
+      <header ref={headerRef} style={bar}>
         <div
           style={{
             width: '100%',
@@ -347,6 +391,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, minWidth: 0 }}>
             <button
+              ref={menuBtnRef}
               type="button"
               className="ra-menu-btn"
               style={iconButton}
@@ -361,7 +406,9 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             </button>
             <Logo />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, flexShrink: 0 }}>
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, flexShrink: 0 }}
+          >
             <ThemeToggle />
           </div>
         </div>
@@ -372,60 +419,73 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
         className="ra-drawer-backdrop"
         data-open={menuOpen ? 'true' : 'false'}
         aria-hidden={!menuOpen}
-        onClick={() => {
-          setMenuOpen(false);
-        }}
+        onClick={closeMenu}
       />
       <aside
+        ref={drawerRef}
         id="ra-side-drawer"
         className="ra-drawer"
         data-open={menuOpen ? 'true' : 'false'}
         aria-label={en.app.primaryNav}
         aria-hidden={!menuOpen}
+        tabIndex={-1}
       >
         <div className="ra-drawer-head">
           <p className="ra-drawer-title">{en.app.sidebarLabel}</p>
           <button
+            ref={closeBtnRef}
             type="button"
             style={iconButton}
             aria-label={en.app.menuClose}
-            onClick={() => {
-              setMenuOpen(false);
-            }}
+            onClick={closeMenu}
           >
             <span aria-hidden="true">✕</span>
           </button>
         </div>
         <nav aria-label={en.app.primaryNav}>
-          {navItems.map((item) =>
-            renderNavLink(item, () => {
-              setMenuOpen(false);
-            })
-          )}
+          {navItems.map((item) => renderNavLink(item, closeMenu))}
         </nav>
       </aside>
 
-      <div className="ra-body">
+      <div ref={bodyRef} className="ra-body">
         <aside className="ra-sidebar" aria-label={en.app.primaryNav}>
           <p className="ra-sidebar-label">{en.app.sidebarLabel}</p>
           <nav aria-label={en.app.primaryNav}>{navItems.map((item) => renderNavLink(item))}</nav>
         </aside>
 
         <div className="ra-main-col">
-          <main style={{ ...container, flex: 1, padding: `${theme.space.xl}px ${theme.space.lg}px` }}>
+          <main
+            style={{ ...container, flex: 1, padding: `${theme.space.xl}px ${theme.space.lg}px` }}
+          >
             {breadcrumb !== undefined && <Breadcrumbs current={breadcrumb} />}
-            <h1 className="ra-h1" style={{ fontSize: theme.type.scale[5], margin: 0, letterSpacing: '-0.02em' }}>
+            <h1
+              className="ra-h1"
+              style={{ fontSize: theme.type.scale[5], margin: 0, letterSpacing: '-0.02em' }}
+            >
               {title}
             </h1>
             {subtitle !== undefined && (
-              <p style={{ color: theme.color.muted, fontSize: theme.type.scale[3], maxWidth: '40rem', marginTop: theme.space.sm }}>
+              <p
+                style={{
+                  color: theme.color.muted,
+                  fontSize: theme.type.scale[3],
+                  maxWidth: '40rem',
+                  marginTop: theme.space.sm
+                }}
+              >
                 {subtitle}
               </p>
             )}
             <div style={{ marginTop: theme.space.xl }}>{children}</div>
           </main>
 
-          <footer style={{ borderTop: `1px solid ${theme.color.border}`, background: `color-mix(in srgb, ${theme.color.surface} 50%, transparent)`, marginTop: theme.space.xl }}>
+          <footer
+            style={{
+              borderTop: `1px solid ${theme.color.border}`,
+              background: `color-mix(in srgb, ${theme.color.surface} 50%, transparent)`,
+              marginTop: theme.space.xl
+            }}
+          >
             <div
               style={{
                 ...container,
@@ -437,7 +497,14 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             >
               <div>
                 <Logo height={56} />
-                <p style={{ color: theme.color.muted, fontSize: theme.type.scale[0], marginTop: theme.space.sm, maxWidth: '18rem' }}>
+                <p
+                  style={{
+                    color: theme.color.muted,
+                    fontSize: theme.type.scale[0],
+                    marginTop: theme.space.sm,
+                    maxWidth: '18rem'
+                  }}
+                >
                   {en.app.footerTagline}
                 </p>
               </div>
@@ -465,9 +532,25 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
                 ]}
               />
             </div>
-            <div style={{ borderTop: `1px solid ${theme.color.border}`, paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-              <div style={{ ...container, padding: `${theme.space.md}px ${theme.space.lg}px`, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: theme.space.sm }}>
-                <small style={{ color: theme.color.muted }}>© {new Date().getFullYear()} {en.app.name}</small>
+            <div
+              style={{
+                borderTop: `1px solid ${theme.color.border}`,
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+              }}
+            >
+              <div
+                style={{
+                  ...container,
+                  padding: `${theme.space.md}px ${theme.space.lg}px`,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: theme.space.sm
+                }}
+              >
+                <small style={{ color: theme.color.muted }}>
+                  {en.app.footerCopyright(new Date().getFullYear())}
+                </small>
                 <small style={{ color: theme.color.muted }}>{en.app.footerQuality}</small>
               </div>
             </div>
@@ -487,11 +570,29 @@ interface FooterColProps {
 function FooterCol({ heading, links }: FooterColProps): JSX.Element {
   return (
     <div>
-      <p style={{ color: theme.color.text, fontSize: theme.type.scale[1], fontWeight: 600, margin: `0 0 ${theme.space.sm}px` }}>{heading}</p>
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: theme.space.xs }}>
+      <p
+        style={{
+          color: theme.color.text,
+          fontSize: theme.type.scale[1],
+          fontWeight: 600,
+          margin: `0 0 ${theme.space.sm}px`
+        }}
+      >
+        {heading}
+      </p>
+      <ul
+        style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: theme.space.xs }}
+      >
         {links.map((l) => (
           <li key={l.label}>
-            <a href={l.href} style={{ color: theme.color.muted, textDecoration: 'none', fontSize: theme.type.scale[1] }}>
+            <a
+              href={l.href}
+              style={{
+                color: theme.color.muted,
+                textDecoration: 'none',
+                fontSize: theme.type.scale[1]
+              }}
+            >
               {l.label}
             </a>
           </li>

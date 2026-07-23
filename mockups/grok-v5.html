@@ -1,0 +1,1506 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>G5-Utility-dashboard — RedAnvil mobile mockup</title>
+    <style>
+      /* ── Page chrome (reviewer canvas) ─────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background: #1a1a22;
+        color: #e8e8ec;
+        min-height: 100vh;
+        padding: 28px 20px 48px;
+        line-height: 1.45;
+      }
+
+      .page-label {
+        text-align: center;
+        margin-bottom: 22px;
+      }
+      .page-label h1 {
+        font-size: 1.125rem;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        color: #f5f5f7;
+      }
+      .page-label p {
+        margin-top: 6px;
+        font-size: 0.875rem;
+        color: #9a9aa6;
+        max-width: 42rem;
+        margin-inline: auto;
+      }
+
+      .phones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 28px;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .phone-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .phone-caption {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #9a9aa6;
+      }
+
+      /* ── Phone frame ───────────────────────────────────────────── */
+      .phone {
+        width: 390px;
+        height: 844px;
+        border-radius: 40px;
+        overflow: hidden;
+        position: relative;
+        border: 3px solid #2e2e38;
+        box-shadow:
+          0 0 0 1px #0a0a0e,
+          0 24px 48px rgba(0, 0, 0, 0.45),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Theme tokens — light */
+      .phone[data-theme='light'] {
+        --bg: #f6f7fb;
+        --surface: #ffffff;
+        --surface-2: #eef0f6;
+        --text: #16161d;
+        --muted: #5b6270;
+        --accent: #d33b40;
+        --accent-soft: #fdecec;
+        --border: #e4e6ee;
+        --success: #1a7f4b;
+        --success-soft: #e6f6ed;
+        --warning: #9a6700;
+        --warning-soft: #fff6dd;
+        --error: #c62828;
+        --error-soft: #fde8e8;
+        --nav-active: #d33b40;
+        --shadow: 0 1px 2px rgba(22, 22, 29, 0.06);
+        --status-bg: #f6f7fb;
+        --fab-shadow: 0 6px 18px rgba(211, 59, 64, 0.38);
+        color-scheme: light;
+      }
+
+      /* Theme tokens — dark */
+      .phone[data-theme='dark'] {
+        --bg: #0b0b0f;
+        --surface: #15151d;
+        --surface-2: #1c1c26;
+        --text: #f5f5f7;
+        --muted: #8b8b93;
+        --accent: #e5484d;
+        --accent-soft: #3a1a1c;
+        --border: #2a2a36;
+        --success: #3dd68c;
+        --success-soft: #143325;
+        --warning: #f5c542;
+        --warning-soft: #2f2610;
+        --error: #ff6b6b;
+        --error-soft: #3a1618;
+        --nav-active: #e5484d;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+        --status-bg: #0b0b0f;
+        --fab-shadow: 0 6px 18px rgba(229, 72, 77, 0.4);
+        color-scheme: dark;
+      }
+
+      .phone-inner {
+        background: var(--bg);
+        color: var(--text);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* ── Status bar ────────────────────────────────────────────── */
+      .status-bar {
+        flex-shrink: 0;
+        height: 44px;
+        padding: 12px 22px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 14px;
+        font-weight: 600;
+        background: var(--status-bg);
+        color: var(--text);
+      }
+      .status-bar .icons {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        font-size: 12px;
+        letter-spacing: 0.02em;
+      }
+
+      /* ── Sticky header / nav ───────────────────────────────────── */
+      .app-header {
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: color-mix(in srgb, var(--bg) 92%, transparent);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        padding: 0 12px;
+      }
+
+      .header-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 48px;
+        padding: 4px 0;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: var(--text);
+        min-height: 44px;
+        min-width: 44px;
+        padding: 4px 6px 4px 2px;
+        border-radius: 8px;
+        flex-shrink: 0;
+      }
+      .brand:hover,
+      .brand:focus-visible {
+        background: var(--surface-2);
+        outline: none;
+      }
+      .brand:active {
+        opacity: 0.85;
+      }
+
+      /* Theme-aware anvil — currentColor only, NO opaque box */
+      .anvil-mark {
+        width: 28px;
+        height: 28px;
+        display: block;
+        color: var(--accent);
+        flex-shrink: 0;
+        /* Explicit: no background, no box */
+        background: transparent;
+        border: none;
+        box-shadow: none;
+      }
+
+      .wordmark {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+
+      .header-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .icon-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: var(--shadow);
+        font-size: 16px;
+        line-height: 1;
+      }
+      .icon-btn:hover,
+      .icon-btn:focus-visible {
+        border-color: var(--accent);
+        color: var(--accent);
+        outline: none;
+      }
+      .icon-btn:active {
+        transform: scale(0.97);
+      }
+
+      .nav-tabs {
+        display: flex;
+        gap: 4px;
+        padding: 0 0 8px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .nav-tabs::-webkit-scrollbar {
+        display: none;
+      }
+
+      .nav-link {
+        flex-shrink: 0;
+        min-height: 36px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        text-decoration: none;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition:
+          color 0.15s,
+          background 0.15s,
+          border-color 0.15s;
+      }
+      .nav-link:hover,
+      .nav-link:focus-visible {
+        color: var(--text);
+        background: var(--surface-2);
+        outline: none;
+      }
+      .nav-link[aria-current='page'] {
+        color: var(--nav-active);
+        background: var(--accent-soft);
+        border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+      }
+      .nav-link:active {
+        opacity: 0.9;
+      }
+
+      /* ── Scrollable main ───────────────────────────────────────── */
+      .main-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 12px 14px 100px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .title-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .title-row h1 {
+        font-size: 22px;
+        font-weight: 750;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+        color: var(--text);
+      }
+      .title-row .sub {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 3px;
+        font-weight: 500;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 44px;
+        padding: 0 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 650;
+        font-family: inherit;
+        cursor: pointer;
+        border: 1px solid transparent;
+        white-space: nowrap;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          color 0.15s,
+          transform 0.1s;
+      }
+      .btn:active {
+        transform: scale(0.98);
+      }
+      .btn:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      }
+      .btn-primary:hover {
+        filter: brightness(1.06);
+      }
+      .btn-primary:disabled,
+      .btn-primary[aria-disabled='true'] {
+        opacity: 0.5;
+        cursor: not-allowed;
+        filter: none;
+      }
+      .btn-ghost {
+        background: var(--surface);
+        color: var(--text);
+        border-color: var(--border);
+      }
+      .btn-ghost:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .btn-sm {
+        min-height: 36px;
+        padding: 0 10px;
+        font-size: 13px;
+        border-radius: 8px;
+      }
+
+      /* ── KPI strip (glanceable) ────────────────────────────────── */
+      .kpi-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .kpi {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 10px 9px;
+        box-shadow: var(--shadow);
+        min-width: 0;
+      }
+      .kpi .val {
+        font-size: 20px;
+        font-weight: 750;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+      .kpi .lbl {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        margin-top: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* ── Alerts / states ───────────────────────────────────────── */
+      .alert {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid;
+        margin-bottom: 12px;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .alert .alert-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .alert .alert-title {
+        font-weight: 700;
+        margin-bottom: 2px;
+        font-size: 14px;
+      }
+      .alert .alert-msg {
+        color: inherit;
+        opacity: 0.92;
+        font-size: 13px;
+      }
+      .alert .alert-icon {
+        flex-shrink: 0;
+        width: 22px;
+        height: 22px;
+        margin-top: 1px;
+      }
+      .alert-error {
+        background: var(--error-soft);
+        border-color: color-mix(in srgb, var(--error) 35%, var(--border));
+        color: var(--error);
+      }
+      .alert-error .alert-msg {
+        color: var(--text);
+      }
+      .phone[data-theme='dark'] .alert-error .alert-msg {
+        color: #f0d0d0;
+      }
+
+      /* ── Section headers ───────────────────────────────────────── */
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 4px 0 8px;
+        min-height: 32px;
+      }
+      .section-head h2 {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+      }
+      .section-head .meta {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ── Recent builds list ────────────────────────────────────── */
+      .build-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .build-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 56px;
+        padding: 10px 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        text-decoration: none;
+        color: var(--text);
+        cursor: pointer;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
+      .build-row:hover,
+      .build-row:focus-visible {
+        border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+        outline: none;
+      }
+      .build-row:active {
+        background: var(--surface-2);
+      }
+
+      .build-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 15px;
+        font-weight: 700;
+        background: var(--surface-2);
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      .build-icon.ready {
+        background: var(--success-soft);
+        color: var(--success);
+        border-color: color-mix(in srgb, var(--success) 30%, var(--border));
+      }
+      .build-icon.loading {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+      }
+      .build-icon.failed {
+        background: var(--error-soft);
+        color: var(--error);
+        border-color: color-mix(in srgb, var(--error) 30%, var(--border));
+      }
+
+      .build-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .build-title {
+        font-size: 15px;
+        font-weight: 650;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .build-meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 2px 7px;
+        border-radius: 999px;
+        line-height: 1.3;
+        flex-shrink: 0;
+      }
+      .badge-ready {
+        background: var(--success-soft);
+        color: var(--success);
+      }
+      .badge-loading {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+      .badge-failed {
+        background: var(--error-soft);
+        color: var(--error);
+      }
+
+      .build-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      .build-time {
+        font-size: 11px;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .row-action {
+        min-height: 32px;
+        min-width: 44px;
+        padding: 0 8px;
+        font-size: 12px;
+        font-weight: 650;
+        font-family: inherit;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        cursor: pointer;
+      }
+      .row-action:hover,
+      .row-action:focus-visible {
+        border-color: var(--accent);
+        color: var(--accent);
+        outline: none;
+      }
+
+      /* Spinner for loading state */
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .spinner {
+          animation: none;
+          border-top-color: transparent;
+          opacity: 0.7;
+        }
+        .btn,
+        .nav-link,
+        .build-row,
+        .icon-btn {
+          transition: none;
+        }
+      }
+
+      /* ── Empty state card ──────────────────────────────────────── */
+      .empty-card {
+        border: 1px dashed var(--border);
+        border-radius: 12px;
+        padding: 16px 14px;
+        text-align: center;
+        background: var(--surface);
+        margin-bottom: 14px;
+      }
+      .empty-card .empty-icon {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 8px;
+        border-radius: 10px;
+        background: var(--surface-2);
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+      }
+      .empty-card h3 {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .empty-card p {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.4;
+        margin-bottom: 12px;
+        max-width: 28ch;
+        margin-inline: auto;
+      }
+
+      /* ── Composer ──────────────────────────────────────────────── */
+      .composer {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        box-shadow: var(--shadow);
+        margin-bottom: 8px;
+      }
+      .composer label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .composer textarea {
+        width: 100%;
+        min-height: 88px;
+        resize: vertical;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 16px; /* R3.1 — 16px+ body / inputs */
+        font-family: inherit;
+        line-height: 1.4;
+        color: var(--text);
+        background: var(--bg);
+        margin-bottom: 8px;
+      }
+      .composer textarea::placeholder {
+        color: var(--muted);
+        opacity: 0.85;
+      }
+      .composer textarea:focus {
+        outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+        outline-offset: 0;
+        border-color: var(--accent);
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .chip {
+        min-height: 36px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        line-height: 1.2;
+      }
+      .chip:hover,
+      .chip:focus-visible {
+        border-color: var(--accent);
+        color: var(--accent);
+        outline: none;
+      }
+      .chip:active {
+        background: var(--accent-soft);
+      }
+
+      .composer-footer {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .composer-footer .hint {
+        font-size: 12px;
+        color: var(--muted);
+        flex: 1;
+        min-width: 0;
+      }
+      .composer-footer .btn-primary {
+        min-width: 120px;
+      }
+
+      /* Loading overlay on forge button area */
+      .forge-loading {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 650;
+        color: var(--accent);
+      }
+
+      /* ── FAB ───────────────────────────────────────────────────── */
+      .fab {
+        position: absolute;
+        right: 16px;
+        bottom: 20px;
+        z-index: 30;
+        min-width: 52px;
+        min-height: 52px;
+        height: 52px;
+        padding: 0 18px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        box-shadow: var(--fab-shadow);
+        font-size: 15px;
+        font-weight: 700;
+        font-family: inherit;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+      }
+      .fab:hover,
+      .fab:focus-visible {
+        filter: brightness(1.08);
+        outline: 2px solid var(--text);
+        outline-offset: 2px;
+      }
+      .fab:active {
+        transform: scale(0.97);
+      }
+      .fab svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+
+      /* Home indicator */
+      .home-indicator {
+        position: absolute;
+        bottom: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 4px;
+        border-radius: 4px;
+        background: var(--text);
+        opacity: 0.18;
+        z-index: 40;
+        pointer-events: none;
+      }
+
+      /* Visually hidden utility */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page-label">
+      <h1>G5-Utility-dashboard</h1>
+      <p>
+        Power-user home: dense recent-builds list, glanceable KPIs, and a prominent New build
+        action. Theme-aware inline SVG anvil (no dark box in light mode).
+      </p>
+    </header>
+
+    <div class="phones">
+      <!-- ═══════════════ LIGHT PHONE ═══════════════ -->
+      <div class="phone-wrap">
+        <span class="phone-caption">Light</span>
+        <div class="phone" data-theme="light" id="phone-light">
+          <div class="phone-inner">
+            <div class="status-bar" aria-hidden="true">
+              <span>9:41</span>
+              <span class="icons">5G · 84%</span>
+            </div>
+
+            <header class="app-header">
+              <div class="header-row">
+                <a class="brand" href="#home-light" aria-label="RedAnvil home">
+                  <!-- Theme-aware anvil: currentColor, transparent, no box -->
+                  <svg
+                    class="anvil-mark"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    role="img"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M1.2 10.2 L7.8 6.4 H18.2 V8.6 H21.2 V11 H16.2 L15.2 13.2 H13.6 V16.2 H19.6 L21.6 21.4 H2.4 L4.4 16.2 H10.4 V13.2 H8.8 L7.8 11 H3.6 Z"
+                    />
+                  </svg>
+                  <span class="wordmark">RedAnvil</span>
+                </a>
+                <div class="header-actions">
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    aria-label="Switch to dark theme"
+                    title="Switch to dark theme"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M21 14.5A8.5 8.5 0 0 1 9.5 3 7 7 0 1 0 21 14.5z"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    aria-label="Open menu"
+                    aria-expanded="false"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <nav class="nav-tabs" aria-label="Primary">
+                <a class="nav-link" href="#home-light" aria-current="page">Builder</a>
+                <a class="nav-link" href="#saved-light">Saved</a>
+                <a class="nav-link" href="#about-light">About</a>
+                <a class="nav-link" href="#contact-light">Contact</a>
+              </nav>
+            </header>
+
+            <main class="main-scroll" id="home-light">
+              <div class="title-row">
+                <div>
+                  <h1>Builds</h1>
+                  <p class="sub">Forge a PRD · hand it to Claude</p>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  style="min-height: 44px; padding: 0 14px; font-size: 14px"
+                  aria-label="Start a new build"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+                  </svg>
+                  New build
+                </button>
+              </div>
+
+              <!-- Glanceable KPIs -->
+              <div class="kpi-strip" role="group" aria-label="Build stats">
+                <div class="kpi">
+                  <div class="val">3</div>
+                  <div class="lbl">This week</div>
+                </div>
+                <div class="kpi">
+                  <div class="val">11</div>
+                  <div class="lbl">All time</div>
+                </div>
+                <div class="kpi">
+                  <div class="val">4</div>
+                  <div class="lbl">Saved</div>
+                </div>
+              </div>
+
+              <!-- ERROR state (failed forge) -->
+              <div class="alert alert-error" role="alert">
+                <svg
+                  class="alert-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 8v5M12 16h.01" stroke-linecap="round" />
+                </svg>
+                <div class="alert-body">
+                  <div class="alert-title">Forge failed</div>
+                  <p class="alert-msg">
+                    Could not generate PRD for “Team roster app”. Network timed out after 30s.
+                  </p>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    style="
+                      margin-top: 8px;
+                      min-height: 36px;
+                      color: inherit;
+                      border-color: currentColor;
+                    "
+                  >
+                    Retry forge
+                  </button>
+                </div>
+              </div>
+
+              <div class="section-head">
+                <h2>Recent builds</h2>
+                <span class="meta">4 shown</span>
+              </div>
+
+              <ul class="build-list" aria-label="Recent builds">
+                <!-- Ready -->
+                <li>
+                  <a class="build-row" href="#prd-meal">
+                    <div class="build-icon ready" aria-hidden="true">✓</div>
+                    <div class="build-body">
+                      <div class="build-title">Meal planner for two</div>
+                      <div class="build-meta">
+                        <span class="badge badge-ready">Ready</span>
+                        <span>PRD · 8 features · auth</span>
+                      </div>
+                    </div>
+                    <div class="build-actions">
+                      <span class="build-time">2h ago</span>
+                      <button
+                        type="button"
+                        class="row-action"
+                        aria-label="Download meal planner PRD"
+                      >
+                        ↓ MD
+                      </button>
+                    </div>
+                  </a>
+                </li>
+                <!-- LOADING state -->
+                <li>
+                  <div class="build-row" role="status" aria-live="polite" aria-busy="true">
+                    <div class="build-icon loading" aria-hidden="true">
+                      <span class="spinner"></span>
+                    </div>
+                    <div class="build-body">
+                      <div class="build-title">Field service check-ins</div>
+                      <div class="build-meta">
+                        <span class="badge badge-loading">
+                          <span
+                            class="spinner"
+                            style="width: 10px; height: 10px; border-width: 1.5px"
+                          ></span>
+                          Forging
+                        </span>
+                        <span>Writing data model…</span>
+                      </div>
+                    </div>
+                    <div class="build-actions">
+                      <span class="build-time">now</span>
+                    </div>
+                  </div>
+                </li>
+                <!-- Failed row -->
+                <li>
+                  <div class="build-row">
+                    <div class="build-icon failed" aria-hidden="true">!</div>
+                    <div class="build-body">
+                      <div class="build-title">Team roster app</div>
+                      <div class="build-meta">
+                        <span class="badge badge-failed">Failed</span>
+                        <span>Timeout · retry available</span>
+                      </div>
+                    </div>
+                    <div class="build-actions">
+                      <span class="build-time">1d ago</span>
+                      <button type="button" class="row-action" aria-label="Retry team roster forge">
+                        Retry
+                      </button>
+                    </div>
+                  </div>
+                </li>
+                <!-- Ready older -->
+                <li>
+                  <a class="build-row" href="#prd-inventory">
+                    <div class="build-icon ready" aria-hidden="true">✓</div>
+                    <div class="build-body">
+                      <div class="build-title">Shop inventory tracker</div>
+                      <div class="build-meta">
+                        <span class="badge badge-ready">Ready</span>
+                        <span>PRD · 6 features</span>
+                      </div>
+                    </div>
+                    <div class="build-actions">
+                      <span class="build-time">3d ago</span>
+                      <button type="button" class="row-action" aria-label="Download inventory PRD">
+                        ↓ MD
+                      </button>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+
+              <!-- EMPTY state (archives) -->
+              <div class="empty-card" role="status">
+                <div class="empty-icon" aria-hidden="true">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M4 7h16M4 12h10M4 17h14" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <h3>No archived builds</h3>
+                <p>Older forges you clear land here. Keep going — nothing to restore yet.</p>
+                <button type="button" class="btn btn-ghost btn-sm" style="min-height: 44px">
+                  Browse saved PRDs
+                </button>
+              </div>
+
+              <!-- Composer -->
+              <div class="section-head" id="composer-light">
+                <h2>Quick forge</h2>
+              </div>
+              <form class="composer" action="#" onsubmit="return false;">
+                <label for="prompt-light">Describe the app</label>
+                <textarea
+                  id="prompt-light"
+                  name="prompt"
+                  rows="3"
+                  placeholder="e.g. A booking app for a solo barber with deposit payments and SMS reminders"
+                ></textarea>
+                <div class="chips" role="group" aria-label="Example prompts">
+                  <button type="button" class="chip">Inventory tracker</button>
+                  <button type="button" class="chip">Booking calendar</button>
+                  <button type="button" class="chip">Team roster</button>
+                </div>
+                <div class="composer-footer">
+                  <span class="hint">~30s · downloadable PRD</span>
+                  <button type="submit" class="btn btn-primary" style="min-height: 44px">
+                    Forge PRD
+                  </button>
+                </div>
+              </form>
+            </main>
+
+            <button type="button" class="fab" aria-label="New build — jump to composer">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+              </svg>
+              New
+            </button>
+            <div class="home-indicator" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ DARK PHONE ═══════════════ -->
+      <div class="phone-wrap">
+        <span class="phone-caption">Dark</span>
+        <div class="phone" data-theme="dark" id="phone-dark">
+          <div class="phone-inner">
+            <div class="status-bar" aria-hidden="true">
+              <span>9:41</span>
+              <span class="icons">5G · 84%</span>
+            </div>
+
+            <header class="app-header">
+              <div class="header-row">
+                <a class="brand" href="#home-dark" aria-label="RedAnvil home">
+                  <svg
+                    class="anvil-mark"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    role="img"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M1.2 10.2 L7.8 6.4 H18.2 V8.6 H21.2 V11 H16.2 L15.2 13.2 H13.6 V16.2 H19.6 L21.6 21.4 H2.4 L4.4 16.2 H10.4 V13.2 H8.8 L7.8 11 H3.6 Z"
+                    />
+                  </svg>
+                  <span class="wordmark">RedAnvil</span>
+                </a>
+                <div class="header-actions">
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    aria-label="Switch to light theme"
+                    title="Switch to light theme"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="4" />
+                      <path
+                        d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    aria-label="Open menu"
+                    aria-expanded="false"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <nav class="nav-tabs" aria-label="Primary">
+                <a class="nav-link" href="#home-dark" aria-current="page">Builder</a>
+                <a class="nav-link" href="#saved-dark">Saved</a>
+                <a class="nav-link" href="#about-dark">About</a>
+                <a class="nav-link" href="#contact-dark">Contact</a>
+              </nav>
+            </header>
+
+            <main class="main-scroll" id="home-dark">
+              <div class="title-row">
+                <div>
+                  <h1>Builds</h1>
+                  <p class="sub">Forge a PRD · hand it to Claude</p>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  style="min-height: 44px; padding: 0 14px; font-size: 14px"
+                  aria-label="Start a new build"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+                  </svg>
+                  New build
+                </button>
+              </div>
+
+              <div class="kpi-strip" role="group" aria-label="Build stats">
+                <div class="kpi">
+                  <div class="val">3</div>
+                  <div class="lbl">This week</div>
+                </div>
+                <div class="kpi">
+                  <div class="val">11</div>
+                  <div class="lbl">All time</div>
+                </div>
+                <div class="kpi">
+                  <div class="val">4</div>
+                  <div class="lbl">Saved</div>
+                </div>
+              </div>
+
+              <!-- ERROR state -->
+              <div class="alert alert-error" role="alert">
+                <svg
+                  class="alert-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 8v5M12 16h.01" stroke-linecap="round" />
+                </svg>
+                <div class="alert-body">
+                  <div class="alert-title">Forge failed</div>
+                  <p class="alert-msg">
+                    Could not generate PRD for “Team roster app”. Network timed out after 30s.
+                  </p>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    style="
+                      margin-top: 8px;
+                      min-height: 36px;
+                      color: inherit;
+                      border-color: currentColor;
+                    "
+                  >
+                    Retry forge
+                  </button>
+                </div>
+              </div>
+
+              <div class="section-head">
+                <h2>Recent builds</h2>
+                <span class="meta">4 shown</span>
+              </div>
+
+              <ul class="build-list" aria-label="Recent builds">
+                <li>
+                  <a class="build-row" href="#prd-meal-d">
+                    <div class="build-icon ready" aria-hidden="true">✓</div>
+                    <div class="build-body">
+                      <div class="build-title">Meal planner for two</div>
+                      <div class="build-meta">
+                        <span class="badge badge-ready">Ready</span>
+                        <span>PRD · 8 features · auth</span>
+                      </div>
+                    </div>
+                    <div class="build-actions">
+                      <span class="build-time">2h ago</span>
+                      <button
+                        type="button"
+                        class="row-action"
+                        aria-label="Download meal planner PRD"
+                      >
+                        ↓ MD
+                      </button>
+                    </div>
+                  </a>
+                </li>
+                <!-- LOADING -->
+                <li>
+                  <div class="build-row" role="status" aria-live="polite" aria-busy="true">
+                    <div class="build-icon loading" aria-hidden="true">
+                      <span class="spinner"></span>
+                    </div>
+                    <div class="build-body">
+                      <div class="build-title">Field service check-ins</div>
+                      <div class="build-meta">
+                        <span class="badge badge-loading">
+                          <span
+                            class="spinner"
+                            style="width: 10px; height: 10px; border-width: 1.5px"
+                          ></span>
+                          Forging
+                        </span>
+                        <span>Writing data model…</span>
+                      </div>
+                    </div>
+                    <div class="build-actions">
+                      <span class="build-time">now</span>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="build-row">
+                    <div class="build-icon failed" aria-hidden="true">!</div>
+                    <div class="build-body">
+                      <div class="build-title">Team roster app</div>
+                      <div class="build-meta">
+                        <span class="badge badge-failed">Failed</span>
+                        <span>Timeout · retry available</span>
+                      </div>
+                    </div>
+                    <div class="build-actions">
+                      <span class="build-time">1d ago</span>
+                      <button type="button" class="row-action" aria-label="Retry team roster forge">
+                        Retry
+                      </button>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <a class="build-row" href="#prd-inventory-d">
+                    <div class="build-icon ready" aria-hidden="true">✓</div>
+                    <div class="build-body">
+                      <div class="build-title">Shop inventory tracker</div>
+                      <div class="build-meta">
+                        <span class="badge badge-ready">Ready</span>
+                        <span>PRD · 6 features</span>
+                      </div>
+                    </div>
+                    <div class="build-actions">
+                      <span class="build-time">3d ago</span>
+                      <button type="button" class="row-action" aria-label="Download inventory PRD">
+                        ↓ MD
+                      </button>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+
+              <!-- EMPTY state -->
+              <div class="empty-card" role="status">
+                <div class="empty-icon" aria-hidden="true">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M4 7h16M4 12h10M4 17h14" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <h3>No archived builds</h3>
+                <p>Older forges you clear land here. Keep going — nothing to restore yet.</p>
+                <button type="button" class="btn btn-ghost btn-sm" style="min-height: 44px">
+                  Browse saved PRDs
+                </button>
+              </div>
+
+              <div class="section-head" id="composer-dark">
+                <h2>Quick forge</h2>
+              </div>
+              <!-- LOADING state on primary generate action (dark phone shows mid-forge) -->
+              <form class="composer" action="#" onsubmit="return false;">
+                <label for="prompt-dark">Describe the app</label>
+                <textarea id="prompt-dark" name="prompt" rows="3" disabled aria-busy="true">
+A mobile check-in tool for field techs with offline photo capture and supervisor sign-off.</textarea>
+                <div class="chips" role="group" aria-label="Example prompts">
+                  <button type="button" class="chip" disabled>Inventory tracker</button>
+                  <button type="button" class="chip" disabled>Booking calendar</button>
+                  <button type="button" class="chip" disabled>Team roster</button>
+                </div>
+                <div class="composer-footer">
+                  <span class="forge-loading">
+                    <span class="spinner" aria-hidden="true"></span>
+                    Forging PRD… 18s
+                  </span>
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    style="min-height: 44px"
+                    disabled
+                    aria-disabled="true"
+                  >
+                    Forge PRD
+                  </button>
+                </div>
+              </form>
+            </main>
+
+            <button type="button" class="fab" aria-label="New build — jump to composer">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <path d="M12 5v14M5 12h14" stroke-linecap="round" />
+              </svg>
+              New
+            </button>
+            <div class="home-indicator" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

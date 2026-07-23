@@ -111,10 +111,6 @@ export function SavedPrd(): JSX.Element {
 
         setState({ status: 'success', prd });
       } catch {
-        if (controller.signal.aborted) {
-          setState({ status: 'error', message: copy.error });
-          return;
-        }
         setState({ status: 'error', message: copy.error });
       }
     }
@@ -126,8 +122,7 @@ export function SavedPrd(): JSX.Element {
     };
   }, [id, copy.error]);
 
-  const pageTitle =
-    state.status === 'success' ? state.prd.title : copy.title;
+  const pageTitle = state.status === 'success' ? state.prd.title : copy.title;
 
   return (
     <Page title={pageTitle} breadcrumb={copy.title}>

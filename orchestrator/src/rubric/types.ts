@@ -9,8 +9,25 @@ export type Severity = 'blocker' | 'major' | 'minor' | 'advisory';
  */
 export type Method = 'det' | 'judge' | 'det+judge' | 'hook' | 'process' | 'visual';
 
-/** Rule methods whose unknown/unrecorded outcome is treated as a failure. */
-export const FAIL_CLOSED_METHODS: ReadonlySet<Method> = new Set<Method>(['visual']);
+/**
+ * Rule methods whose unknown/unrecorded outcome is treated as a failure.
+ *
+ * This is EVERY method. Restricting it to `visual` left the same hole one door
+ * over: a rule declared in the rubric with no check wired up anywhere was never
+ * recorded, so it silently auto-passed on every run, forever — including
+ * blocker-severity `det` rules. An unmeasured requirement is an unknown, and an
+ * unknown is a failure (base rule 15). A rule that genuinely does not apply is
+ * excluded via `notApplicable`, which removes it from the denominator rather
+ * than fabricating a pass for it.
+ */
+export const FAIL_CLOSED_METHODS: ReadonlySet<Method> = new Set<Method>([
+  'det',
+  'judge',
+  'det+judge',
+  'hook',
+  'process',
+  'visual'
+]);
 
 export interface Rule {
   id: string;

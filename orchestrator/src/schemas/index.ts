@@ -30,9 +30,7 @@ export function parseByKind(kind: string, data: unknown): ParsedPayload {
   const schema = REGISTRY[kind as keyof typeof REGISTRY] as z.ZodTypeAny;
   const result = schema.safeParse(data);
   if (!result.success) {
-    const issues = result.error.issues.map(
-      (i) => `${i.path.join('.') || '(root)'}: ${i.message}`
-    );
+    const issues = result.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`);
     throw new ValidationError(`invalid ${kind} payload`, issues);
   }
   return { kind, value: result.data } as ParsedPayload;

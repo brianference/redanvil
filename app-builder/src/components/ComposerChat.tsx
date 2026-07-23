@@ -1,4 +1,10 @@
-import { useState, type ChangeEvent, type FormEvent, type CSSProperties, type ReactNode } from 'react';
+import {
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type CSSProperties,
+  type ReactNode
+} from 'react';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 import { buttonStyle, chipStyle, fieldStyle, hintStyle } from './ui';
@@ -58,14 +64,18 @@ export function ComposerChat({
       <div style={threadStyle} role="log" aria-live="polite" aria-relevant="additions">
         <AgentRow>
           <div style={bubbleStyle}>
-            <p style={{ margin: 0, fontSize: theme.type.scale[2], lineHeight: 1.45 }}>{copy.greetingBody}</p>
+            <p style={{ margin: 0, fontSize: theme.type.scale[2], lineHeight: 1.45 }}>
+              {copy.greetingBody}
+            </p>
             <p style={{ ...metaStyle, marginTop: theme.space.sm }}>{copy.greetingMeta}</p>
           </div>
         </AgentRow>
 
         <AgentRow>
           <div style={bubbleStyle}>
-            <p style={{ margin: 0, fontSize: theme.type.scale[2], lineHeight: 1.45 }}>{copy.starterLine}</p>
+            <p style={{ margin: 0, fontSize: theme.type.scale[2], lineHeight: 1.45 }}>
+              {copy.starterLine}
+            </p>
           </div>
         </AgentRow>
 
@@ -161,17 +171,33 @@ export function ComposerChat({
 
 /**
  * Agent message row with the approved logo as avatar (no new mark).
+ * Theme-aware swap matches the header: classes own visibility — no inline `display`.
  */
 function AgentRow({ children }: { children: ReactNode }): JSX.Element {
+  const avatarImgStyle: CSSProperties = {
+    width: 28,
+    height: 28,
+    borderRadius: theme.radius.sm,
+    objectFit: 'cover'
+  };
   return (
     <div style={rowStyle}>
       <div style={avatarStyle} aria-hidden="true">
         <img
+          className="ra-logo-dark"
           src="/logo-sm.png"
           alt=""
           width={28}
           height={28}
-          style={{ width: 28, height: 28, borderRadius: theme.radius.sm, display: 'block', objectFit: 'cover' }}
+          style={avatarImgStyle}
+        />
+        <img
+          className="ra-logo-light"
+          src="/logo-light.png"
+          alt=""
+          width={28}
+          height={28}
+          style={avatarImgStyle}
         />
       </div>
       <div style={bubbleStackStyle}>

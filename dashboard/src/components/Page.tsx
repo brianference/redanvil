@@ -1,6 +1,14 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode
+} from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { en } from '../i18n/en';
+import { useDrawerA11y } from '../lib/useDrawerA11y';
 import { theme } from '../theme';
 import { Breadcrumbs } from './Breadcrumbs';
 import { ThemeToggle } from './ThemeToggle';
@@ -84,9 +92,24 @@ function Logo({ height = LOGO_HEIGHT }: { height?: number }): JSX.Element {
     borderRadius: theme.radius.sm
   };
   return (
-    <a href={APP_URL} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
-      <img className="ra-logo-dark" src="/logo-sm.png" alt={en.app.logoAlt} height={height} style={imgStyle} />
-      <img className="ra-logo-light" src="/logo-light.png" alt={en.app.logoAlt} height={height} style={imgStyle} />
+    <a
+      href={APP_URL}
+      style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}
+    >
+      <img
+        className="ra-logo-dark"
+        src="/logo-sm.png"
+        alt={en.app.logoAlt}
+        height={height}
+        style={imgStyle}
+      />
+      <img
+        className="ra-logo-light"
+        src="/logo-light.png"
+        alt={en.app.logoAlt}
+        height={height}
+        style={imgStyle}
+      />
     </a>
   );
 }
@@ -187,6 +210,18 @@ function SideNav({ pathname, onNavigate, ariaLabel, className, id }: SideNavProp
 export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.Element {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const mainColRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Close the mobile nav drawer.
+   */
+  const closeMenu = useCallback((): void => {
+    setMenuOpen(false);
+  }, []);
 
   // Close the drawer on route change.
   useEffect(() => {
@@ -202,6 +237,15 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
       document.body.style.overflow = prev;
     };
   }, [menuOpen]);
+
+  useDrawerA11y({
+    open: menuOpen,
+    drawerRef,
+    triggerRef: menuBtnRef,
+    initialFocusRef: closeBtnRef,
+    backgroundRefs: [sidebarRef, mainColRef],
+    onClose: closeMenu
+  });
 
   return (
     <div className="ra-shell" style={shell}>
@@ -362,14 +406,14 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
       `}</style>
 
       {/* Desktop persistent rail */}
-      <aside className="ra-sidebar" aria-label={en.app.primaryNav}>
+      <aside ref={sidebarRef} className="ra-sidebar" aria-label={en.app.primaryNav}>
         <div className="ra-sidebar-brand">
           <Logo height={56} />
         </div>
         <SideNav pathname={location.pathname} ariaLabel={en.app.primaryNav} />
       </aside>
 
-      <div className="ra-main-column">
+      <div ref={mainColRef} className="ra-main-column">
         <header style={bar}>
           <div
             className="ra-header-inner"
@@ -386,9 +430,18 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             <div className="ra-header-logo">
               <Logo />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, flexShrink: 0, marginLeft: 'auto' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: theme.space.sm,
+                flexShrink: 0,
+                marginLeft: 'auto'
+              }}
+            >
               <ThemeToggle />
               <button
+                ref={menuBtnRef}
                 type="button"
                 className="ra-menu-btn"
                 style={iconButton}
@@ -407,11 +460,21 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
 
         <main style={{ ...container, flex: 1, padding: `${theme.space.xl}px ${theme.space.lg}px` }}>
           {breadcrumb !== undefined && <Breadcrumbs current={breadcrumb} />}
-          <h1 className="ra-h1" style={{ fontSize: theme.type.scale[5], margin: 0, letterSpacing: '-0.02em' }}>
+          <h1
+            className="ra-h1"
+            style={{ fontSize: theme.type.scale[5], margin: 0, letterSpacing: '-0.02em' }}
+          >
             {title}
           </h1>
           {subtitle !== undefined && (
-            <p style={{ color: theme.color.muted, fontSize: theme.type.scale[3], maxWidth: '40rem', marginTop: theme.space.sm }}>
+            <p
+              style={{
+                color: theme.color.muted,
+                fontSize: theme.type.scale[3],
+                maxWidth: '40rem',
+                marginTop: theme.space.sm
+              }}
+            >
               {subtitle}
             </p>
           )}
@@ -494,26 +557,25 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
         className="ra-drawer-backdrop"
         data-open={menuOpen ? 'true' : 'false'}
         aria-hidden="true"
-        onClick={() => {
-          setMenuOpen(false);
-        }}
+        onClick={closeMenu}
       />
       <aside
+        ref={drawerRef}
         id="ra-mobile-drawer"
         className="ra-drawer"
         data-open={menuOpen ? 'true' : 'false'}
         aria-hidden={!menuOpen}
         hidden={!menuOpen}
+        tabIndex={-1}
       >
         <div className="ra-drawer-brand">
           <Logo height={48} />
           <button
+            ref={closeBtnRef}
             type="button"
             style={iconButton}
             aria-label={en.app.menuClose}
-            onClick={() => {
-              setMenuOpen(false);
-            }}
+            onClick={closeMenu}
           >
             <span aria-hidden="true">✕</span>
           </button>
@@ -521,9 +583,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
         <SideNav
           pathname={location.pathname}
           ariaLabel={en.app.primaryNav}
-          onNavigate={() => {
-            setMenuOpen(false);
-          }}
+          onNavigate={closeMenu}
         />
       </aside>
     </div>
@@ -549,10 +609,19 @@ function FooterCol({ heading, links }: FooterColProps): JSX.Element {
       >
         {heading}
       </p>
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: theme.space.xs }}>
+      <ul
+        style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: theme.space.xs }}
+      >
         {links.map((l) => (
           <li key={l.label}>
-            <a href={l.href} style={{ color: theme.color.muted, textDecoration: 'none', fontSize: theme.type.scale[1] }}>
+            <a
+              href={l.href}
+              style={{
+                color: theme.color.muted,
+                textDecoration: 'none',
+                fontSize: theme.type.scale[1]
+              }}
+            >
               {l.label}
             </a>
           </li>

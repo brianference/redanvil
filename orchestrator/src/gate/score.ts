@@ -7,6 +7,21 @@ export type Outcome = { ruleId: string; passed: boolean };
 const isJudge = (r: Rule): boolean => r.method === 'judge' || r.method === 'det+judge';
 
 /**
+ * Index outcomes by rule id, resolving duplicates FAIL-CLOSED. A rule can be
+ * recorded by more than one lane (a deterministic check and a judge verdict for
+ * the same `det+judge` rule). A naive `new Map(...)` is last-write-wins, so a
+ * later pass would silently erase an earlier real failure. Any recorded failure
+ * for a rule id wins.
+ */
+export function indexOutcomes(outcomes: Outcome[]): Map<string, boolean> {
+  const byId = new Map<string, boolean>();
+  for (const o of outcomes) {
+    byId.set(o.ruleId, (byId.get(o.ruleId) ?? true) && o.passed);
+  }
+  return byId;
+}
+
+/**
  * Decide whether a rule passed. A recorded outcome is authoritative. With no
  * recorded outcome the default depends on method: fail-closed methods (visual
  * design/premium rules) FAIL, everything else passes. This is the systemic fix
@@ -32,19 +47,18 @@ export function computeScore(
   outcomes: Outcome[],
   rules: Rule[] = loadRubric()
 ): { score: number; blockers: string[] } {
-  const byId = new Map(outcomes.map((o) => [o.ruleId, o.passed]));
+  const byId = indexOutcomes(outcomes);
   const passed = (r: Rule): boolean => passedRule(r, byId);
 
-  const blockers = rules
-    .filter((r) => r.severity === 'blocker' && !passed(r))
-    .map((r) => r.id);
+  const blockers = rules.filter((r) => r.severity === 'blocker' && !passed(r)).map((r) => r.id);
   if (blockers.length > 0) return { score: 0, blockers };
 
   const tier2 = rules.filter((r) => r.severity !== 'blocker');
   const det = tier2.filter((r) => !isJudge(r));
   const jud = tier2.filter((r) => isJudge(r));
   const sum = (rs: Rule[]): number => rs.reduce((s, r) => s + r.weight, 0);
-  const passFraction = (rs: Rule[]): number => (rs.length === 0 ? 0 : sum(rs.filter(passed)) / sum(rs));
+  const passFraction = (rs: Rule[]): number =>
+    rs.length === 0 ? 0 : sum(rs.filter(passed)) / sum(rs);
 
   const judgeBudget = jud.length > 0 ? JUDGE_WEIGHT_CAP * 100 : 0;
   const detBudget = det.length > 0 ? 100 - judgeBudget : 0;

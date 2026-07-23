@@ -16,11 +16,9 @@ describe('runCommand', () => {
   });
 
   it('kills and flags a process that exceeds the timeout, without hanging', async () => {
-    const r = await runCommand(
-      process.execPath,
-      ['-e', 'setTimeout(() => {}, 10000)'],
-      { timeoutMs: 200 }
-    );
+    const r = await runCommand(process.execPath, ['-e', 'setTimeout(() => {}, 10000)'], {
+      timeoutMs: 200
+    });
     expect(r.timedOut).toBe(true);
     expect(r.code).toBeNull();
     expect(r.durationMs).toBeLessThan(5000);

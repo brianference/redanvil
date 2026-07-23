@@ -1,60 +1,109 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8"/>
-<title>RedAnvil marks</title>
-<style>
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: system-ui, sans-serif; background: #0d0d0f; color: #e8e8ea; padding: 2rem; }
-  h1 { font-weight: 600; font-size: 1.25rem; margin: 0 0 1.5rem; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
-  figure { margin: 0; border-radius: 12px; overflow: hidden; border: 1px solid #2a2a30; }
-  .checker {
-    background-image:
-      linear-gradient(45deg, #2a2a30 25%, transparent 25%),
-      linear-gradient(-45deg, #2a2a30 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #2a2a30 75%),
-      linear-gradient(-45deg, transparent 75%, #2a2a30 75%);
-    background-size: 24px 24px;
-    background-position: 0 0, 0 12px, 12px -12px, -12px 0;
-    background-color: #1a1a1e;
-    display: flex; align-items: center; justify-content: center;
-    min-height: 320px; padding: 1.5rem;
-  }
-  .checker.dark { background-color: #0a0a0c; }
-  .checker.light {
-    background-color: #e8e8ea;
-    background-image:
-      linear-gradient(45deg, #d0d0d4 25%, transparent 25%),
-      linear-gradient(-45deg, #d0d0d4 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #d0d0d4 75%),
-      linear-gradient(-45deg, transparent 75%, #d0d0d4 75%);
-  }
-  img { width: min(100%, 280px); height: auto; image-rendering: auto; }
-  figcaption { padding: 0.75rem 1rem; font-size: 0.9rem; background: #16161a; }
-  code { color: #e5484d; }
-  .row { display: grid; gap: 0.5rem; }
-</style>
-</head>
-<body>
-  <h1>RedAnvil logo marks (transparent PNG)</h1>
-  <div class="grid">
-    <figure>
-      <div class="checker"><img src="mark-red.png" alt="mark-red"/></div>
-      <figcaption><strong>1. mark-red.png</strong> — solid #e5484d · 1024×1024 · alpha</figcaption>
-    </figure>
-    <figure>
-      <div class="checker dark"><img src="mark-white.png" alt="mark-white"/></div>
-      <figcaption><strong>2. mark-white.png</strong> — solid white · 1024×1024 · alpha</figcaption>
-    </figure>
-    <figure>
-      <div class="checker"><img src="mark-steel.png" alt="mark-steel"/></div>
-      <figcaption><strong>3. mark-steel.png</strong> — brushed steel + red glow · 1024×1024 · alpha</figcaption>
-    </figure>
-    <figure>
-      <div class="checker light"><img src="mark-red.png" alt="mark-red on light"/></div>
-      <figcaption>Red mark on light checker (transparency check)</figcaption>
-    </figure>
-  </div>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>RedAnvil marks</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #0d0d0f;
+        color: #e8e8ea;
+        padding: 2rem;
+      }
+      h1 {
+        font-weight: 600;
+        font-size: 1.25rem;
+        margin: 0 0 1.5rem;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+      }
+      figure {
+        margin: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #2a2a30;
+      }
+      .checker {
+        background-image:
+          linear-gradient(45deg, #2a2a30 25%, transparent 25%),
+          linear-gradient(-45deg, #2a2a30 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, #2a2a30 75%),
+          linear-gradient(-45deg, transparent 75%, #2a2a30 75%);
+        background-size: 24px 24px;
+        background-position:
+          0 0,
+          0 12px,
+          12px -12px,
+          -12px 0;
+        background-color: #1a1a1e;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 320px;
+        padding: 1.5rem;
+      }
+      .checker.dark {
+        background-color: #0a0a0c;
+      }
+      .checker.light {
+        background-color: #e8e8ea;
+        background-image:
+          linear-gradient(45deg, #d0d0d4 25%, transparent 25%),
+          linear-gradient(-45deg, #d0d0d4 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, #d0d0d4 75%),
+          linear-gradient(-45deg, transparent 75%, #d0d0d4 75%);
+      }
+      img {
+        width: min(100%, 280px);
+        height: auto;
+        image-rendering: auto;
+      }
+      figcaption {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        background: #16161a;
+      }
+      code {
+        color: #e5484d;
+      }
+      .row {
+        display: grid;
+        gap: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RedAnvil logo marks (transparent PNG)</h1>
+    <div class="grid">
+      <figure>
+        <div class="checker"><img src="mark-red.png" alt="mark-red" /></div>
+        <figcaption>
+          <strong>1. mark-red.png</strong> — solid #e5484d · 1024×1024 · alpha
+        </figcaption>
+      </figure>
+      <figure>
+        <div class="checker dark"><img src="mark-white.png" alt="mark-white" /></div>
+        <figcaption>
+          <strong>2. mark-white.png</strong> — solid white · 1024×1024 · alpha
+        </figcaption>
+      </figure>
+      <figure>
+        <div class="checker"><img src="mark-steel.png" alt="mark-steel" /></div>
+        <figcaption>
+          <strong>3. mark-steel.png</strong> — brushed steel + red glow · 1024×1024 · alpha
+        </figcaption>
+      </figure>
+      <figure>
+        <div class="checker light"><img src="mark-red.png" alt="mark-red on light" /></div>
+        <figcaption>Red mark on light checker (transparency check)</figcaption>
+      </figure>
+    </div>
+  </body>
 </html>

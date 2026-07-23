@@ -233,7 +233,10 @@ export function TemplateGallery({
       </div>
 
       {error !== null && (
-        <p role="alert" style={{ color: theme.color.accent, fontSize: theme.type.scale[2], margin: 0 }}>
+        <p
+          role="alert"
+          style={{ color: theme.color.accent, fontSize: theme.type.scale[2], margin: 0 }}
+        >
           <span aria-hidden="true">! </span>
           {error}
         </p>
@@ -241,7 +244,9 @@ export function TemplateGallery({
 
       {!canContinue && error === null && (
         <div role="status" style={emptyStateStyle}>
-          <p style={{ margin: 0, fontWeight: 650, fontSize: theme.type.scale[2] }}>{copy.emptyTitle}</p>
+          <p style={{ margin: 0, fontWeight: 650, fontSize: theme.type.scale[2] }}>
+            {copy.emptyTitle}
+          </p>
           <p id="template-empty-hint" style={{ ...hintStyle(), margin: `${theme.space.xs}px 0 0` }}>
             {copy.emptyHint}
           </p>

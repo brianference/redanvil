@@ -20,7 +20,6 @@ The core of the standard. A diff that honors these rarely trips the detailed lan
 14. When the surrounding file uses an older idiom, a minimal diff matches it; consistency beats a style island.
 15. Validate every input at the boundary and fail closed everywhere: unknown or partial state is an explicit error, in code and on screen; silent success is forbidden.
 
-
 # Per-app rule pack (v1.0.0)
 
 Injected into every app RedAnvil generates, on top of the base-15 and the rubric lanes. Scaffolded into the app's own `CLAUDE.md`, scored by the gate, and injected into every build session.
@@ -49,4 +48,3 @@ Injected into every app RedAnvil generates, on top of the base-15 and the rubric
 - No overlapping text at 375px. Verified at 375 / 768 / 1280.
 - Theme tokens only (see `/design-system`); WCAG AA contrast; confirmation before destructive actions.
 - Loading, error, and empty states on every screen; no failure rendered as a clean empty success.
-

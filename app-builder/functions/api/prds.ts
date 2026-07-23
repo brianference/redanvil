@@ -10,9 +10,7 @@ const ALLOWED_METHODS = 'POST, GET';
  * slug: kebab-case 2–49 chars starting with alphanumeric.
  */
 const savePrdBodySchema = z.object({
-  slug: z
-    .string()
-    .regex(/^[a-z0-9][a-z0-9-]{1,48}$/, 'Invalid slug'),
+  slug: z.string().regex(/^[a-z0-9][a-z0-9-]{1,48}$/, 'Invalid slug'),
   title: z.string().trim().min(2),
   prompt: z.string().trim().min(8),
   markdown: z.string().min(20)
@@ -21,10 +19,7 @@ const savePrdBodySchema = z.object({
 /**
  * POST /api/prds — validate and persist a PRD. Fail closed: invalid → 400, DB → 500.
  */
-export async function onRequestPost(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
+export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
 
   let raw: unknown;
@@ -60,10 +55,7 @@ export async function onRequestPost(context: {
 /**
  * GET /api/prds — list recent saved PRDs (metadata only; no markdown).
  */
-export async function onRequestGet(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
+export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
 
   try {

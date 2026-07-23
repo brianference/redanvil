@@ -11,6 +11,7 @@
 ## Global Constraints
 
 Inherit Plan 1's Global Constraints. Additional:
+
 - Every subprocess goes through `runCommand` with a timeout. No raw `spawn`/`exec` on the critical path.
 - The score is computed inline from real output; Grok self-report is never read.
 - Grok's env is built with `scrubbedEnv` — no secrets. Grok never pushes or deploys.
@@ -56,6 +57,7 @@ Implemented in `orchestrator/src/process/run.ts` with `runCommand` (hard timeout
 **Files:** Create `orchestrator/src/gate/score.ts`; Test `orchestrator/test/score.test.ts`.
 
 **Interfaces:**
+
 - Consumes: `Rule`, `loadRubric`, `cappedJudgeShare` (Plan 1).
 - Produces: `type Outcome = { ruleId: string; passed: boolean }`; `computeScore(outcomes: Outcome[], rules?: Rule[]): { score: number; blockers: string[] }`.
 
@@ -65,10 +67,14 @@ Implemented in `orchestrator/src/process/run.ts` with `runCommand` (hard timeout
 - [ ] Step 2: run to fail. Step 3: implement `computeScore`. Step 4: run to pass. Step 5: commit `feat: rubric score computation with blocker gate and capped judge`.
 
 Reference implementation sketch:
+
 ```ts
 export type Outcome = { ruleId: string; passed: boolean };
 
-export function computeScore(outcomes: Outcome[], rules = loadRubric()): { score: number; blockers: string[] } {
+export function computeScore(
+  outcomes: Outcome[],
+  rules = loadRubric()
+): { score: number; blockers: string[] } {
   const byId = new Map(outcomes.map((o) => [o.ruleId, o.passed]));
   const blockers = rules
     .filter((r) => r.severity === 'blocker' && byId.get(r.id) === false)
@@ -78,8 +84,12 @@ export function computeScore(outcomes: Outcome[], rules = loadRubric()): { score
   const tier2 = rules.filter((r) => r.severity !== 'blocker');
   const total = tier2.reduce((s, r) => s + r.weight, 0) || 1;
   const isJudge = (r: (typeof tier2)[number]) => r.method === 'judge' || r.method === 'det+judge';
-  const detPass = tier2.filter((r) => !isJudge(r) && byId.get(r.id) !== false).reduce((s, r) => s + r.weight, 0);
-  const judgePass = tier2.filter((r) => isJudge(r) && byId.get(r.id) !== false).reduce((s, r) => s + r.weight, 0);
+  const detPass = tier2
+    .filter((r) => !isJudge(r) && byId.get(r.id) !== false)
+    .reduce((s, r) => s + r.weight, 0);
+  const judgePass = tier2
+    .filter((r) => isJudge(r) && byId.get(r.id) !== false)
+    .reduce((s, r) => s + r.weight, 0);
   const detFrac = detPass / total;
   const judgeFracRaw = judgePass / total;
   const judgeFrac = Math.min(judgeFracRaw, cappedJudgeShare(rules));
@@ -95,6 +105,7 @@ export function computeScore(outcomes: Outcome[], rules = loadRubric()): { score
 **Files:** Create `gate/checks.ts`, `gate/runGate.ts`; Test `runGate.test.ts` with `test/fixtures/`.
 
 **Interfaces:**
+
 - `type Check = { ruleId: string; command: string; args: string[] }`.
 - `DEFAULT_CHECKS: Check[]` — e.g. `u-typing-strict` → `npx tsc --noEmit`; `u-conc-dead-code`/`u-typing-no-any` → `npx eslint . --max-warnings 0`; `u-test-presence` → `npm test`; `hyg-secret-scan` → a bundled secret grep; runtime parity → build + `npx wrangler pages dev` boot + curl.
 - `runGate(repoDir: string, checks?: Check[]): Promise<Outcome[]>` — runs each check via `runCommand` (timeout), maps exit 0 → passed.
@@ -108,6 +119,7 @@ export function computeScore(outcomes: Outcome[], rules = loadRubric()): { score
 **Files:** Create `worktree/isolate.ts`, `grok/harness.ts`; Test `harness.test.ts`.
 
 **Interfaces:**
+
 - `withWorktree(repoDir, branch, fn): Promise<T>` — create a git worktree, run `fn(worktreeDir)`, always remove it.
 - `runGrok(worktreeDir, prompt, opts): Promise<RunResult>` — invokes `grok --no-auto-update --always-approve --no-alt-screen --cwd <wt> --session-id <run> -m grok-4.5 --output-format json -p <prompt>` via `runCommand` with a timeout and `scrubbedEnv([])` (no secrets). Forbids push/deploy by env and prompt.
 
@@ -122,6 +134,7 @@ Note: the live end-to-end Grok run requires `grok login` (browser auth to the ow
 **Files:** Create `preflight/tokens.ts`, `preflight/collision.ts`; Test `tokens.test.ts`, `collision.test.ts`.
 
 **Interfaces:**
+
 - `estimateTokens(plan: { tasks: number; features: number }): { iterations; grokTokens; claudeTokens; confidence }` — deterministic heuristic; monotonic in inputs.
 - `analyzeCollisions(tasks: { id: string; files: string[] }[]): { parallelizable: string[][]; serialized: string[] }` — group tasks with disjoint file sets; any overlap → serialize (conservative).
 
@@ -134,6 +147,7 @@ Note: the live end-to-end Grok run requires `grok login` (browser auth to the ow
 **Files:** Create `loop/ralph.ts`; Test folded into an integration test with a stub gate.
 
 **Interfaces:**
+
 - `runLoop({ repoDir, spec, threshold, maxIters, gate, coder }): Promise<RunResult>` where `gate` and `coder` are injectable (real: `runGate`+`computeScore`, `runGrok`); emits `<promise>SCORE>=THRESHOLD</promise>` only when the inline score clears the threshold; always bounded by `maxIters`.
 
 - [ ] Steps: test with a fake coder that improves the score each iteration and a fake gate — assert the loop stops exactly when score ≥ threshold, and stops at `maxIters` otherwise, and never calls the coder after passing. Implement, verify, commit.
@@ -145,6 +159,7 @@ Note: the live end-to-end Grok run requires `grok login` (browser auth to the ow
 **Files:** Create `deploy/verify.ts`; Test `deploy.test.ts`.
 
 **Interfaces:**
+
 - `verifyDeploy(prodUrl, localDistDir): Promise<{ ok: boolean; reason?: string }>` — extract the built asset hash from local `dist`, fetch the prod page, confirm the same hash is served, and curl a real backend endpoint for a 200. Matches the owner's Cloudflare rule that a deploy "success" is not proof.
 
 - [ ] Steps: test hash extraction and mismatch detection against fixture HTML. The live deploy is Plan 4, gated on Cloudflare credentials.
@@ -154,6 +169,7 @@ Note: the live end-to-end Grok run requires `grok login` (browser auth to the ow
 ## Human gate (before Plans 4–5, the live build + deploy)
 
 Autonomous build covers the engine (Plans 2–3) with fixtures and a fake-grok shim. Going live needs, once:
+
 - `grok login` — browser auth to the owner's Grok account (Grok CLI 0.2.103 is already installed). No API key.
 - Cloudflare + GitHub credentials confirmed: the Cloudflare token in `x-search-mcp-server/.env` (`NewCloudFlareAccountToken`, account `dd01b432f0329f87bb1cc1a3fad590ee`) and a classic GitHub PAT with `repo` + `workflow` scopes to create the repo and push.
 

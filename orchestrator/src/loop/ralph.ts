@@ -17,6 +17,13 @@ export interface LoopConfig {
   maxIters: number;
 }
 
+/** One recorded pass of the loop: what the gate actually measured that iteration. */
+export interface IterationRecord {
+  index: number;
+  score: number;
+  blockers: string[];
+}
+
 export interface LoopResult {
   passed: boolean;
   iterations: number;
@@ -24,6 +31,14 @@ export interface LoopResult {
   /** The ralph completion promise, emitted only from a real passing score, else null. */
   promise: string | null;
   history: number[];
+  /**
+   * Full per-iteration record (score AND blockers), in the exact shape a result
+   * file's `iterations` field takes. Previously the loop kept only scores in
+   * memory, so a multi-iteration history could not be backed by anything the
+   * loop produced — it had to be supplied by hand, which is indistinguishable
+   * from fabricating it. This is the artifact that makes it real.
+   */
+  records: IterationRecord[];
 }
 
 /**
@@ -36,23 +51,26 @@ export async function runLoop(deps: LoopDeps, cfg: LoopConfig): Promise<LoopResu
   let feedback = '';
   let finalScore = 0;
   const history: number[] = [];
+  const records: IterationRecord[] = [];
 
   for (let i = 1; i <= cfg.maxIters; i++) {
     await deps.coder(i, feedback);
     const g = await deps.gate();
     finalScore = g.score;
     history.push(g.score);
+    records.push({ index: i, score: g.score, blockers: g.blockers });
     if (g.score >= cfg.threshold) {
       return {
         passed: true,
         iterations: i,
         finalScore,
         promise: `<promise>SCORE>=${cfg.threshold}</promise>`,
-        history
+        history,
+        records
       };
     }
     feedback = g.feedback;
   }
 
-  return { passed: false, iterations: cfg.maxIters, finalScore, promise: null, history };
+  return { passed: false, iterations: cfg.maxIters, finalScore, promise: null, history, records };
 }

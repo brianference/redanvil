@@ -3,10 +3,7 @@
  * @param request Incoming request (origin is mirrored for CORS).
  * @param methods Comma-separated Access-Control-Allow-Methods value for this endpoint.
  */
-export function responseHeaders(
-  request: Request,
-  methods: string
-): Record<string, string> {
+export function responseHeaders(request: Request, methods: string): Record<string, string> {
   const origin = new URL(request.url).origin;
   return {
     'content-type': 'application/json',

@@ -26,7 +26,12 @@ describe('scaffoldApp', () => {
   beforeAll(async () => {
     out = await mkdtemp(join(tmpdir(), 'redanvil-scaffold-'));
     if (job.kind !== 'job') throw new Error('job fixture invalid');
-    await scaffoldApp({ job: job.value, outDir: out, corpusDir, builtAt: '2026-07-21T00:00:00.000Z' });
+    await scaffoldApp({
+      job: job.value,
+      outDir: out,
+      corpusDir,
+      builtAt: '2026-07-21T00:00:00.000Z'
+    });
   });
   afterAll(async () => {
     await rm(out, { recursive: true, force: true });

@@ -1,10 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent, type CSSProperties } from 'react';
 import { estimate } from '../lib/estimate';
-import {
-  countEntities,
-  type BuildJob,
-  type WizardAnswers
-} from '../lib/job';
+import { countEntities, type BuildJob, type WizardAnswers } from '../lib/job';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 import {
@@ -188,7 +184,10 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
     >
       <Stepper step={step} />
 
-      <section style={{ ...cardStyle(theme.space.lg), borderRadius: 16, padding: '20px 18px' }} aria-labelledby={`wizard-q-${step}`}>
+      <section
+        style={{ ...cardStyle(theme.space.lg), borderRadius: 16, padding: '20px 18px' }}
+        aria-labelledby={`wizard-q-${step}`}
+      >
         <p style={kickerStyle}>{copy.questionKicker(step)}</p>
 
         {step === 1 && (
@@ -214,11 +213,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
             <p id="wizard-prompt-hint" style={hintStyle()}>
               {value.prompt.trim().length}/{MIN_PROMPT_LENGTH}+
             </p>
-            <div
-              style={chipsRowStyle}
-              role="group"
-              aria-label={copy.exampleIdeasLabel}
-            >
+            <div style={chipsRowStyle} role="group" aria-label={copy.exampleIdeasLabel}>
               {copy.exampleIdeas.map((idea) => (
                 <button
                   key={idea}
@@ -240,11 +235,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
             <p id="wizard-q-2" style={fieldLabelStyle}>
               {copy.appTypeLabel}
             </p>
-            <div
-              style={chipsRowStyle}
-              role="group"
-              aria-label={copy.appTypeChipsLabel}
-            >
+            <div style={chipsRowStyle} role="group" aria-label={copy.appTypeChipsLabel}>
               {copy.appTypeChips.map((chip) => {
                 const selected = value.appType === chip;
                 return (
@@ -280,11 +271,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
             <p style={{ ...fieldLabelStyle, marginTop: theme.space.lg }} id="wizard-auth-label">
               {copy.authGroupLabel}
             </p>
-            <div
-              style={chipsRowStyle}
-              role="group"
-              aria-labelledby="wizard-auth-label"
-            >
+            <div style={chipsRowStyle} role="group" aria-labelledby="wizard-auth-label">
               <button
                 type="button"
                 style={chipStyle(value.hasAuth)}
@@ -307,10 +294,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
               </button>
             </div>
 
-            <label
-              htmlFor="wizard-entities"
-              style={{ ...labelStyle(), marginTop: theme.space.lg }}
-            >
+            <label htmlFor="wizard-entities" style={{ ...labelStyle(), marginTop: theme.space.lg }}>
               {copy.entitiesLabel}
             </label>
             <input
@@ -337,7 +321,10 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
               {copy.reviewHeading}
             </p>
             <dl style={reviewListStyle}>
-              <ReviewRow term={copy.reviewPrompt} detail={value.prompt.trim() || copy.reviewEmpty} />
+              <ReviewRow
+                term={copy.reviewPrompt}
+                detail={value.prompt.trim() || copy.reviewEmpty}
+              />
               <ReviewRow
                 term={copy.reviewAppType}
                 detail={value.appType.trim() || copy.reviewNotSet}
@@ -402,7 +389,13 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
                   <p style={{ margin: 0, fontWeight: 600 }}>
                     {copy.jobReadyHeading(submitState.job.slug)}
                   </p>
-                  <p style={{ margin: `${theme.space.xs}px 0 0`, color: theme.color.muted, fontSize: theme.type.scale[1] }}>
+                  <p
+                    style={{
+                      margin: `${theme.space.xs}px 0 0`,
+                      color: theme.color.muted,
+                      fontSize: theme.type.scale[1]
+                    }}
+                  >
                     {copy.jobMeta(submitState.job.targetType, submitState.job.threshold)}
                   </p>
                 </div>
@@ -416,7 +409,12 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
 
       <div style={stickyBarStyle()}>
         {step > 1 && (
-          <button type="button" onClick={goBack} style={buttonStyle(false, isLoading)} disabled={isLoading}>
+          <button
+            type="button"
+            onClick={goBack}
+            style={buttonStyle(false, isLoading)}
+            disabled={isLoading}
+          >
             {copy.back}
           </button>
         )}
@@ -448,12 +446,16 @@ function Stepper({ step }: { step: 1 | 2 | 3 }): JSX.Element {
   return (
     <div style={stepperStyle} aria-label={copy.stepOf(step)}>
       <div style={stepperMetaStyle}>
-        <span style={stepLabelStyle}>
-          {copy.stepOf(step)}
-        </span>
+        <span style={stepLabelStyle}>{copy.stepOf(step)}</span>
         <span style={stepTitleStyle}>{copy.stepTitles[step - 1]}</span>
       </div>
-      <div style={progressTrackStyle} role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
+      <div
+        style={progressTrackStyle}
+        role="progressbar"
+        aria-valuenow={step}
+        aria-valuemin={1}
+        aria-valuemax={3}
+      >
         {([1, 2, 3] as const).map((seg) => (
           <div
             key={seg}
@@ -461,8 +463,7 @@ function Stepper({ step }: { step: 1 | 2 | 3 }): JSX.Element {
               flex: 1,
               height: 6,
               borderRadius: theme.radius.pill,
-              background:
-                seg <= step ? theme.color.progressFill : theme.color.progressTrack,
+              background: seg <= step ? theme.color.progressFill : theme.color.progressTrack,
               opacity: seg < step ? 0.55 : 1
             }}
             aria-hidden="true"
@@ -518,7 +519,10 @@ function ComingUp({ step }: { step: 1 | 2 | 3 }): JSX.Element {
               <span style={{ fontWeight: isCurrent ? 650 : 500 }}>
                 {title}
                 {isDone ? (
-                  <span style={{ color: theme.color.muted, fontWeight: 500 }}> · {copy.stepDone}</span>
+                  <span style={{ color: theme.color.muted, fontWeight: 500 }}>
+                    {' '}
+                    · {copy.stepDone}
+                  </span>
                 ) : null}
               </span>
             </li>

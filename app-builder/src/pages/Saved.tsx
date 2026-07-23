@@ -127,10 +127,19 @@ export function Saved(): JSX.Element {
       {state.status === 'empty' && (
         <div role="status" style={emptyCardStyle}>
           <p style={{ margin: 0, fontWeight: 650, fontSize: theme.type.scale[2] }}>{copy.empty}</p>
-          <p style={{ margin: `${theme.space.sm}px 0 0`, color: theme.color.muted, fontSize: theme.type.scale[2] }}>
+          <p
+            style={{
+              margin: `${theme.space.sm}px 0 0`,
+              color: theme.color.muted,
+              fontSize: theme.type.scale[2]
+            }}
+          >
             {copy.emptyHint}
           </p>
-          <Link to="/" style={{ ...buttonStyle(true), marginTop: theme.space.md, display: 'inline-flex' }}>
+          <Link
+            to="/"
+            style={{ ...buttonStyle(true), marginTop: theme.space.md, display: 'inline-flex' }}
+          >
             {copy.emptyCta}
           </Link>
         </div>

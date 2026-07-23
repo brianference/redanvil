@@ -24,6 +24,25 @@ jobs:
       - run: npm run lint
       - run: npm test
 
+  # Reproduces the committed gate result instead of trusting it. A results file
+  # is just correctly-shaped JSON; the only way to tell a real score from a
+  # hand-authored one is to run the gate again and compare rule-by-rule.
+  results-provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Install app deps (gate runs real checks against the app)
+        working-directory: app-builder
+        run: npm ci
+      - name: Verify results were produced by the gate
+        run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process
+
   apps:
     runs-on: ubuntu-latest
     strategy:
@@ -42,6 +61,9 @@ jobs:
       - name: Typecheck
         working-directory: ${{ matrix.app }}
         run: npx tsc --noEmit
+      - name: Lint
+        working-directory: ${{ matrix.app }}
+        run: npm run lint
       - name: Test
         working-directory: ${{ matrix.app }}
         run: npx vitest run

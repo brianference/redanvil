@@ -14,7 +14,16 @@ export async function withWorktree<T>(
   fn: (dir: string) => Promise<T>
 ): Promise<T> {
   const dir = join(tmpdir(), `redanvil-wt-${branch}`);
-  const add = await runCommand('git', ['-C', repoDir, 'worktree', 'add', '-b', branch, dir, 'HEAD']);
+  const add = await runCommand('git', [
+    '-C',
+    repoDir,
+    'worktree',
+    'add',
+    '-b',
+    branch,
+    dir,
+    'HEAD'
+  ]);
   if (add.code !== 0) throw new Error(`worktree add failed: ${add.stderr || add.stdout}`);
   try {
     return await fn(dir);

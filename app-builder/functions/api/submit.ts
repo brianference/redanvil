@@ -22,10 +22,7 @@ const submitBodySchema = z.object({
  * return it. Fail closed: invalid input → 400; a storage failure → 500. The
  * queued job is what the RedAnvil loop (or the dashboard) picks up.
  */
-export async function onRequestPost(context: {
-  request: Request;
-  env: Env;
-}): Promise<Response> {
+export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
 
   let raw: unknown;
@@ -60,5 +57,10 @@ export async function onRequestPost(context: {
     return jsonResponse(request, { error: 'Could not queue the build job' }, 500, ALLOWED_METHODS);
   }
 
-  return jsonResponse(request, { ...job, id, status: 'queued', queued: true }, 200, ALLOWED_METHODS);
+  return jsonResponse(
+    request,
+    { ...job, id, status: 'queued', queued: true },
+    200,
+    ALLOWED_METHODS
+  );
 }

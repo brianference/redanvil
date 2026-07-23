@@ -3,12 +3,12 @@ import { estimate } from './estimate';
 
 describe('estimate', () => {
   it('never estimates fewer than 2 iterations', () => {
-    expect(estimate({ features: 0, hasAuth: false, entities: 0 }).iterations).toBeGreaterThanOrEqual(
-      2
-    );
-    expect(estimate({ features: 1, hasAuth: false, entities: 0 }).iterations).toBeGreaterThanOrEqual(
-      2
-    );
+    expect(
+      estimate({ features: 0, hasAuth: false, entities: 0 }).iterations
+    ).toBeGreaterThanOrEqual(2);
+    expect(
+      estimate({ features: 1, hasAuth: false, entities: 0 }).iterations
+    ).toBeGreaterThanOrEqual(2);
   });
 
   it('is monotonic: more features never lowers iterations or tokens', () => {

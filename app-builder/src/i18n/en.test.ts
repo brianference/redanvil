@@ -6,7 +6,8 @@ describe('en locale bundle', () => {
     const locale: Locale = en;
     expect(locale.app.name).toBe('RedAnvil');
     expect(locale.app.primaryNav).toBe('Primary');
-    expect(locale.app.footerCopyright).toContain('RedAnvil');
+    expect(locale.app.footerCopyright(2026)).toContain('RedAnvil');
+    expect(locale.app.footerCopyright(2026)).toContain('2026');
     expect(locale.app.themeToLight.length).toBeGreaterThan(2);
     expect(locale.app.themeToDark.length).toBeGreaterThan(2);
     expect(locale.app.menuOpen.length).toBeGreaterThan(2);
@@ -54,6 +55,6 @@ describe('en locale bundle', () => {
     expect(en.wizard.promptHint(8)).toContain('8');
     expect(en.wizard.errors.submitFailed(500)).toBe('Submit failed (500)');
     expect(en.wizard.errors.timeout).toBe('Request timed out');
-    expect(en.pages.home.jobReady('my-app', 90)).toBe('Job ready: my-app (threshold 90)');
+    expect(en.wizard.jobReadyHeading('my-app')).toBe('Job ready: my-app');
   });
 });

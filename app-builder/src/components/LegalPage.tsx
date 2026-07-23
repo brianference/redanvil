@@ -23,14 +23,30 @@ export interface LegalPageProps {
 export function LegalPage({ title, updated, intro, sections }: LegalPageProps): JSX.Element {
   return (
     <Page title={title} breadcrumb={title}>
-      <p style={{ color: theme.color.muted, fontSize: theme.type.scale[0], margin: 0 }}>{updated}</p>
-      <p style={{ color: theme.color.text, fontSize: theme.type.scale[3], maxWidth: '44rem', marginTop: theme.space.sm }}>
+      <p style={{ color: theme.color.muted, fontSize: theme.type.scale[0], margin: 0 }}>
+        {updated}
+      </p>
+      <p
+        style={{
+          color: theme.color.text,
+          fontSize: theme.type.scale[3],
+          maxWidth: '44rem',
+          marginTop: theme.space.sm
+        }}
+      >
         {intro}
       </p>
       {sections.map((s) => (
         <section key={s.heading} style={{ maxWidth: '44rem', marginTop: theme.space.xl }}>
           <h2 style={{ fontSize: theme.type.scale[3], margin: 0 }}>{s.heading}</h2>
-          <p style={{ color: theme.color.muted, fontSize: theme.type.scale[2], lineHeight: 1.7, marginTop: theme.space.sm }}>
+          <p
+            style={{
+              color: theme.color.muted,
+              fontSize: theme.type.scale[2],
+              lineHeight: 1.7,
+              marginTop: theme.space.sm
+            }}
+          >
             {s.body}
           </p>
         </section>

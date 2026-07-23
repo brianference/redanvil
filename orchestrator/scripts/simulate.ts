@@ -27,7 +27,10 @@ const scenarios: { name: string; outcomes: Outcome[] }[] = [
       'fe-fail-closed-states'
     ])
   },
-  { name: '4 low coverage — only 5 rules evaluated', outcomes: ids.slice(0, 5).map((id) => ({ ruleId: id, passed: true })) },
+  {
+    name: '4 low coverage — only 5 rules evaluated',
+    outcomes: ids.slice(0, 5).map((id) => ({ ruleId: id, passed: true }))
+  },
   {
     name: '5 real app-builder — i18n blocker + timeouts + headers fail',
     outcomes: flip(allPass(), ['fe-i18n-central-copy', 'u-sec-timeouts', 'u-sec-headers-cors'])

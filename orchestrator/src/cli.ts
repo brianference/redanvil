@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
 import { readFile, writeFile } from 'node:fs/promises';
+import { existsSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateFile } from './commands/validate';
@@ -8,6 +9,7 @@ import { rubricSummary } from './commands/rubric';
 import { scaffoldFromJobFile } from './commands/scaffold';
 import { gateApp } from './commands/gate';
 import type { Outcome } from './gate/score';
+import { collectProvenance } from './gate/provenance';
 
 async function main(): Promise<number> {
   const { positionals, values } = parseArgs({
@@ -66,7 +68,20 @@ async function main(): Promise<number> {
   if (command === 'gate') {
     const dir = positionals[1];
     if (!dir) {
-      console.error('usage: redanvil gate <appDir> [--threshold N] [--judge f.json] [--slug s --out r.json --deploy url]');
+      console.error(
+        'usage: npm run gate -- <appDir> [--threshold N] [--judge f.json] [--na lanes] [--slug s --out r.json --deploy url]'
+      );
+      return 2;
+    }
+    // A missing target directory used to score 0/100 with every check "failing",
+    // which reads as "your app is broken" when the real problem is a wrong path.
+    // An unusable input is a usage error, not a rule violation.
+    if (!existsSync(dir) || !statSync(dir).isDirectory()) {
+      console.error(
+        `gate: no such app directory: ${dir}\n` +
+          `  (resolved from ${process.cwd()})\n` +
+          `  Run from the repo root with: npm run gate -- <appDir>`
+      );
       return 2;
     }
     const threshold = typeof values.threshold === 'string' ? Number(values.threshold) : 90;
@@ -76,7 +91,10 @@ async function main(): Promise<number> {
         : [];
     const notApplicable =
       typeof values.na === 'string'
-        ? values.na.split(',').map((s) => s.trim()).filter(Boolean)
+        ? values.na
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
         : [];
     const report = await gateApp(dir, undefined, judge, notApplicable);
     const verdict = report.score >= threshold ? 'PASS' : 'FAIL';
@@ -105,7 +123,10 @@ async function main(): Promise<number> {
         rules: report.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed })),
         iterations,
         deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
-        finishedAt: new Date().toISOString()
+        finishedAt: new Date().toISOString(),
+        // Machine-generated: which commit and which rubric actually produced this
+        // score. Re-checkable by CI, so a hand-authored result file is detectable.
+        provenance: collectProvenance()
       };
       await writeFile(values.out, JSON.stringify(result, null, 2) + '\n');
       console.log(`wrote result to ${values.out}`);

@@ -185,23 +185,17 @@
       {
         "index": 1,
         "score": 0,
-        "blockers": [
-          "fe-responsive-375"
-        ]
+        "blockers": ["fe-responsive-375"]
       },
       {
         "index": 2,
         "score": 0,
-        "blockers": [
-          "hyg-no-duplication"
-        ]
+        "blockers": ["hyg-no-duplication"]
       },
       {
         "index": 3,
         "score": 0,
-        "blockers": [
-          "hyg-no-duplication"
-        ]
+        "blockers": ["hyg-no-duplication"]
       },
       {
         "index": 4,
@@ -211,9 +205,7 @@
       {
         "index": 5,
         "score": 0,
-        "blockers": [
-          "fe-theme-tokens-only"
-        ]
+        "blockers": ["fe-theme-tokens-only"]
       },
       {
         "index": 6,

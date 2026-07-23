@@ -32,7 +32,10 @@ export async function verifyDeploy(
 
   const prodHash = extractAssetHash(prodHtml);
   if (prodHash !== localHash) {
-    return { ok: false, reason: `asset hash mismatch: local ${localHash} vs prod ${prodHash ?? 'none'}` };
+    return {
+      ok: false,
+      reason: `asset hash mismatch: local ${localHash} vs prod ${prodHash ?? 'none'}`
+    };
   }
   return { ok: true };
 }

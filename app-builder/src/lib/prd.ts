@@ -17,7 +17,18 @@ export interface Prd {
   markdown: string;
 }
 
-const STOPWORDS = new Set(['a', 'an', 'the', 'for', 'with', 'app', 'application', 'to', 'of', 'and']);
+const STOPWORDS = new Set([
+  'a',
+  'an',
+  'the',
+  'for',
+  'with',
+  'app',
+  'application',
+  'to',
+  'of',
+  'and'
+]);
 
 /** Derive a human product title from the prompt (Title Case, stopwords kept lowercase mid-title). */
 function titleFromPrompt(prompt: string): string {
@@ -60,7 +71,9 @@ export function generatePrd(answers: WizardAnswers, cost: TokenEstimate): Prd {
 
   const entityRows =
     entities.length > 0
-      ? entities.map((e) => `| ${e} | id, created_at, plus fields specific to ${e.toLowerCase()} |`).join('\n')
+      ? entities
+          .map((e) => `| ${e} | id, created_at, plus fields specific to ${e.toLowerCase()} |`)
+          .join('\n')
       : '| Item | id, created_at, title, description |';
 
   const featureLines = [
@@ -69,7 +82,12 @@ export function generatePrd(answers: WizardAnswers, cost: TokenEstimate): Prd {
     auth
       ? `- **Accounts** — register and sign in with Web Crypto (PBKDF2 + HMAC-SHA256). *Acceptance:* a user can register, sign out, sign back in, and only see their own data.`
       : `- **Public access** — no login required. *Acceptance:* every page is reachable without authentication.`,
-    ...entities.slice(0, 3).map((e) => `- **Manage ${e}** — create, edit, and delete ${e.toLowerCase()} with confirmation before delete. *Acceptance:* CRUD works end-to-end and delete shows a confirm dialog.`)
+    ...entities
+      .slice(0, 3)
+      .map(
+        (e) =>
+          `- **Manage ${e}** — create, edit, and delete ${e.toLowerCase()} with confirmation before delete. *Acceptance:* CRUD works end-to-end and delete shows a confirm dialog.`
+      )
   ].join('\n');
 
   const markdown = `# Product Requirements Document — ${title}
