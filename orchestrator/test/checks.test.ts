@@ -498,16 +498,44 @@ export function Home(): JSX.Element {
 });
 
 describe('check.mjs — hyg-no-binaries', () => {
-  it('fails when a binary image is committed under src/', () => {
+  /**
+   * Initialise a git repo in the fixture and commit everything.
+   * The rule is about COMMITTED binaries, so the check reads `git ls-files`;
+   * an untracked fixture is correctly invisible to it.
+   */
+  function commitAll(app: string): void {
+    const run = (args: string[]) => spawnSync('git', args, { cwd: app, encoding: 'utf8' });
+    run(['init', '-q']);
+    run(['add', '-A']);
+    run(['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'fixture']);
+  }
+
+  it('fails when a binary image is committed outside an asset directory', () => {
     const app = makeAppDir();
-    // Minimal non-empty PNG-like bytes so the file is not an empty stub.
     write(app, 'src/lib/ok.ts', `export const version: string = '1';\n`);
     const full = join(app, 'src', 'assets', 'icon.png');
     mkdirSync(join(app, 'src', 'assets'), { recursive: true });
     writeFileSync(full, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    commitAll(app);
     const r = runCheck('hyg-no-binaries', app);
     expect(r.status, r.stderr).not.toBe(0);
-    expect(r.stderr).toMatch(/binary under src/i);
+    expect(r.stderr).toMatch(/outside an asset directory/i);
+  });
+
+  it('ignores an untracked binary — the rule is about what is committed', () => {
+    // A filesystem walk also sees local scratch (generated logo variants,
+    // review screenshots) that git ignores. Flagging those is a false failure,
+    // which trains people to ignore the gate.
+    const app = makeAppDir();
+    write(app, 'src/lib/ok.ts', `export const version: string = '1';\n`);
+    commitAll(app);
+    mkdirSync(join(app, 'scratch'), { recursive: true });
+    writeFileSync(
+      join(app, 'scratch', 'draft.png'),
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+    );
+    const r = runCheck('hyg-no-binaries', app);
+    expect(r.status, r.stderr).toBe(0);
   });
 
   it('passes when src has only source files', () => {

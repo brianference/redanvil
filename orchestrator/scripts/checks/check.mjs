@@ -8,7 +8,11 @@
  * judge-method and visual-method rules are scored elsewhere (judge pass / visual review).
  */
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, extname } from 'node:path';
+
+/** NUL separator for `git ls-files -z`, built from a code point so no text transform can mangle it. */
+const NUL = String.fromCharCode(0);
 
 const [, , ruleId, appDir] = process.argv;
 if (!ruleId || !appDir) {
@@ -61,8 +65,44 @@ const read = (f) => {
  *  applied to them — a test asserting a 400 is not an unvalidated endpoint. */
 const isTestFile = (f) => /\.(test|spec)\.(ts|tsx|js|mjs)$/.test(f);
 
+/**
+ * Files tracked by git under `dir`, as absolute-ish repo paths.
+ * Returns an empty list outside a git repo, in which case the caller's rule is
+ * simply not decidable and must not invent a verdict.
+ */
+function trackedFiles(dir) {
+  try {
+    // Run git INSIDE the target directory. Running it in the caller's cwd asks
+    // the wrong repository, so a target outside that repo returns nothing and
+    // the rule silently measures an empty file list.
+    const out = execFileSync('git', ['ls-files', '-z'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    });
+    // -z is NUL-separated so paths containing spaces survive intact.
+    return out.split(NUL).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 /** Files whose raw literals are legitimately allowed (token/theme definitions). */
 const isThemeFile = (f) => /theme\.(ts|css)$|tokens?\.(ts|json)$/.test(f);
+/**
+ * The rule's subject does not exist in this app, so there is nothing to measure.
+ *
+ * Exit 3, NOT 0. Reporting `pass` for a rule that was never exercised inflates
+ * the numerator with unearned credit — the README explicitly promises that an
+ * inapplicable rule is "excluded from the denominator instead of inventing a
+ * pass for it", and three checks were doing the opposite. The runner records
+ * this as not-applicable, so the rule leaves the score entirely.
+ */
+const notApplicable = (why) => {
+  if (why) console.error(`n/a: ${why}`);
+  process.exit(3);
+};
+
 const pass = () => process.exit(0);
 const fail = (msg) => {
   if (msg) console.error(msg);
@@ -206,7 +246,7 @@ switch (ruleId) {
     // Each function file that calls fetch must itself carry an AbortSignal/timeout.
     const files = walk(functionsDir, ['.ts', '.js']);
     const fetchFiles = files.filter((f) => /\bfetch\s*\(/.test(read(f)));
-    if (fetchFiles.length === 0) pass(); // no outbound calls → N/A, passes
+    if (fetchFiles.length === 0) notApplicable('no outbound fetch in this app');
     for (const f of fetchFiles) {
       const c = read(f);
       if (!/AbortController|signal:|AbortSignal\.timeout/.test(c)) {
@@ -220,18 +260,26 @@ switch (ruleId) {
     // Each function file that constructs a Response must set security headers in that file.
     // Shared helpers that build Response with headers pass; raw new Response without headers fail.
     // Files that only call a helper (no direct Response construction) are not checked here.
-    const files = walk(functionsDir, ['.ts', '.js']);
-    if (files.length === 0) pass();
+    const files = walk(functionsDir, ['.ts', '.js']).filter((f) => !isTestFile(f));
+    if (files.length === 0) notApplicable('no function files in this app');
     const constructsResponse = (c) =>
       /\bnew\s+Response\b|\bResponse\.json\s*\(|\bResponse\.redirect\s*\(/.test(c);
-    const hasHeaders = (c) =>
-      /X-Content-Type-Options|Content-Security-Policy|Access-Control-Allow-Origin|Referrer-Policy/i.test(
-        c
-      );
+    // nosniff is required on every constructed Response. Matching ANY ONE of
+    // four headers meant a file that set only an ACAO satisfied a rule about
+    // content-type sniffing.
+    const hasNosniff = (c) => /X-Content-Type-Options/i.test(c);
+    // The prose forbids CORS "wider than needed", but the old check accepted the
+    // literal header name anywhere in the file — so a handler setting
+    // `'Access-Control-Allow-Origin': '*'` PASSED the rule that exists to
+    // forbid exactly that.
+    const wildcardCors = /Access-Control-Allow-Origin['"]?\s*[:,]\s*['"]\*['"]/i;
     for (const f of files) {
       const c = read(f);
       if (!constructsResponse(c)) continue;
-      if (!hasHeaders(c)) fail(`no security/CORS headers: ${f}`);
+      if (wildcardCors.test(c)) {
+        fail(`wildcard CORS origin (Access-Control-Allow-Origin: *): ${f}`);
+      }
+      if (!hasNosniff(c)) fail(`no X-Content-Type-Options header on a Response: ${f}`);
     }
     pass();
     break;
@@ -241,7 +289,7 @@ switch (ruleId) {
     // JSON.parse alone must never satisfy this rule.
     const files = walk(functionsDir, ['.ts', '.js']).filter((f) => !isTestFile(f));
     const readsBody = files.filter((f) => /await\s+\w+\.json\(\)|request\.json\(\)/.test(read(f)));
-    if (readsBody.length === 0) pass();
+    if (readsBody.length === 0) notApplicable('no handler reads a request body');
     for (const f of readsBody) {
       if (!hasSchemaValidation(read(f))) {
         fail(`request body parsed without schema validation: ${f}`);
@@ -266,20 +314,50 @@ switch (ruleId) {
     break;
   }
   case 'hyg-no-binaries': {
-    // No committed binaries under src.
-    const bins = walk(src, [
-      '.png',
-      '.jpg',
-      '.jpeg',
-      '.gif',
-      '.webp',
-      '.ico',
-      '.mp4',
-      '.zip',
-      '.exe',
-      '.wasm'
-    ]);
-    bins.length ? fail(`binary under src: ${bins[0]}`) : pass();
+    // Scans the WHOLE app, not just src/. Scoping this to src/ meant the rule
+    // could not see the ~1.9 MB of tracked PNGs sitting one directory over in
+    // public/, and reported PASS on every run. An app legitimately ships brand
+    // and OG art, so the rule is an allowlisted-directory + size budget rather
+    // than a blanket ban — which is also what the prose ("past size and
+    // extension thresholds") always said, though no threshold was implemented.
+    const IMAGE_EXT = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.avif', '.svg'];
+    const FORBIDDEN_EXT = ['.mp4', '.mov', '.zip', '.tar', '.gz', '.exe', '.dll', '.wasm', '.pdf'];
+    /** Asset directories where shipping an image is expected. */
+    // `git ls-files` yields repo-relative paths with no leading separator, so
+    // the segment must be anchored to start-or-separator, not separator only.
+    // Anything under src/ is source, not an asset directory — `src/assets/` is
+    // still a binary committed into source, which is what this rule forbids.
+    const underSrc = (f) => /(^|[\\/])src[\\/]/.test(f);
+    const isAssetDir = (f) => !underSrc(f) && /(^|[\\/])(public|assets|static)[\\/]/.test(f);
+    /** Largest single asset an app should ship. */
+    const MAX_ASSET_BYTES = 750 * 1024;
+
+    // Only TRACKED files count. The rule is about what is committed, and a
+    // filesystem walk also sees local scratch (generated logo variants, review
+    // screenshots) that git ignores — flagging those is a false failure, which
+    // trains people to ignore the gate.
+    const tracked = trackedFiles(appDir);
+    const withExt = (exts) => tracked.filter((f) => exts.includes(extname(f).toLowerCase()));
+
+    const forbidden = withExt(FORBIDDEN_EXT).filter((f) => !isTestFile(f));
+    if (forbidden.length > 0) fail(`forbidden binary committed: ${forbidden[0]}`);
+
+    const images = withExt(IMAGE_EXT);
+    for (const f of images) {
+      if (!isAssetDir(f)) fail(`image outside an asset directory: ${f}`);
+      let bytes = 0;
+      try {
+        bytes = statSync(join(appDir, f)).size;
+      } catch {
+        continue;
+      }
+      if (bytes > MAX_ASSET_BYTES) {
+        fail(
+          `asset over ${Math.round(MAX_ASSET_BYTES / 1024)}KB: ${f} (${Math.round(bytes / 1024)}KB)`
+        );
+      }
+    }
+    pass();
     break;
   }
   case 'hyg-secret-scan': {

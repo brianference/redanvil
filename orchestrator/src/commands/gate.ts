@@ -73,12 +73,16 @@ export async function gateApp(
   judge: Outcome[] = [],
   notApplicable: string[] = []
 ): Promise<GateReport> {
-  const det = await runGate(dir, checks);
+  const { outcomes: det, notApplicable: detNa } = await runGate(dir, checks);
   const outcomes = [...det, ...judge];
   // Fail-closed on duplicates: judge outcomes are appended after deterministic
   // ones, so last-write-wins would let a judge pass erase a real check failure.
   const byId = indexOutcomes(outcomes);
-  const na = new Set(notApplicable);
+  // A check that reported "this rule's subject does not exist here" removes the
+  // rule from the denominator, exactly as an explicit --na lane does. Previously
+  // those checks exited 0, which credited the numerator for a rule nothing had
+  // measured.
+  const na = new Set([...notApplicable, ...detNa]);
   const rules = loadRubric().filter((r) => !na.has(r.id) && !na.has(r.lane));
 
   // A blocker fails if it was evaluated-and-failed, OR if it is a fail-closed
