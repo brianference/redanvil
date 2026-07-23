@@ -184,36 +184,19 @@
     "iterations": [
       {
         "index": 1,
-        "score": 0,
-        "blockers": ["fe-responsive-375"]
-      },
-      {
-        "index": 2,
-        "score": 0,
-        "blockers": ["hyg-no-duplication"]
-      },
-      {
-        "index": 3,
-        "score": 0,
-        "blockers": ["hyg-no-duplication"]
-      },
-      {
-        "index": 4,
-        "score": 100,
-        "blockers": []
-      },
-      {
-        "index": 5,
-        "score": 0,
-        "blockers": ["fe-theme-tokens-only"]
-      },
-      {
-        "index": 6,
         "score": 100,
         "blockers": []
       }
     ],
     "deployUrl": "https://redanvil.pages.dev",
-    "finishedAt": "2026-07-22T07:10:04.765Z"
+    "finishedAt": "2026-07-23T04:33:56.137Z",
+    "provenance": {
+      "commit": "f716da491d7f8e934e4b626cfac35a605c68048a",
+      "dirty": false,
+      "rubricHash": "898f7fa0e8035ee2f232f96e3992177ff95ea095735c2f9664592728b2bff345",
+      "rubricRuleCount": 48,
+      "node": "v22.19.0",
+      "generatedAt": "2026-07-23T04:33:56.180Z"
+    }
   }
 ]
