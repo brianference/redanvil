@@ -42,6 +42,13 @@ jobs:
         run: npm ci
       - name: Verify results were produced by the gate
         run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process
+      # The dashboard fetches results/all.json directly, so the artifact the
+      # public site displays must be derived from the verified per-run files
+      # rather than hand-maintained alongside them.
+      - name: Verify the dashboard feed is derived, not hand-edited
+        run: node .github/scripts/build_feed.mjs --check
+      - name: Verify design rules match the skill source
+        run: node .github/scripts/verify_design_rules.mjs
 
   # Note: linting is NOT repeated here. The root `npm run lint` in the
   # orchestrator job runs `eslint .` over the whole repo, which already covers

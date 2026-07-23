@@ -153,14 +153,6 @@
         "passed": true
       },
       {
-        "ruleId": "u-val-input-validation",
-        "passed": true
-      },
-      {
-        "ruleId": "u-sec-no-stub-paths",
-        "passed": true
-      },
-      {
         "ruleId": "u-test-adequacy",
         "passed": true
       },
@@ -189,14 +181,19 @@
       }
     ],
     "deployUrl": "https://redanvil.pages.dev",
-    "finishedAt": "2026-07-23T04:33:56.137Z",
+    "finishedAt": "2026-07-23T05:29:20.669Z",
     "provenance": {
-      "commit": "f716da491d7f8e934e4b626cfac35a605c68048a",
-      "dirty": false,
+      "commit": "f4aaef282675df4a59a8814015294cc0b51b5e2c",
+      "dirty": true,
       "rubricHash": "898f7fa0e8035ee2f232f96e3992177ff95ea095735c2f9664592728b2bff345",
       "rubricRuleCount": 48,
       "node": "v22.19.0",
-      "generatedAt": "2026-07-23T04:33:56.180Z"
+      "verdictsHash": "bd00200ceba0a3dae7572698d2f6b9abbc41ba76091037181e0415b62b2c04ae",
+      "notApplicable": [
+        "ci",
+        "process"
+      ],
+      "generatedAt": "2026-07-23T05:29:20.712Z"
     }
   }
 ]
