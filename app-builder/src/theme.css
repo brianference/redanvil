@@ -106,3 +106,28 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Theme-aware brand lockup. Both files are transparent PNGs of the SAME approved
+   lockup; only the wordmark tone differs, because a dark wordmark on the dark
+   header measured about 2:1 contrast. Classes own `display` here — an inline
+   style would win and silently disable the swap. */
+.ra-logo-light {
+  display: block;
+}
+.ra-logo-dark {
+  display: none;
+}
+:root[data-theme='dark'] .ra-logo-light {
+  display: none;
+}
+:root[data-theme='dark'] .ra-logo-dark {
+  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .ra-logo-light {
+    display: none;
+  }
+  :root:not([data-theme]) .ra-logo-dark {
+    display: block;
+  }
+}

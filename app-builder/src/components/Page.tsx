@@ -100,16 +100,24 @@ function Logo({ height = LOGO_HEIGHT }: { height?: number }): JSX.Element {
       href={APP_URL}
       style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}
     >
+      {/* Two transparent lockups, one per theme. The single-image version was
+          illegible in dark: the wordmark measured ~2:1 against the header. CSS
+          classes own visibility — never an inline `display`, which beats the
+          class rule and silently breaks the swap. */}
       <img
+        className="ra-logo-light"
         src="/logo-lockup.png"
         alt={en.app.logoAlt}
         height={height}
-        style={{
-          height,
-          width: 'auto',
-          maxWidth: 'min(58vw, 260px)',
-          objectFit: 'contain'
-        }}
+        style={{ height, width: 'auto', maxWidth: 'min(58vw, 260px)', objectFit: 'contain' }}
+      />
+      <img
+        className="ra-logo-dark"
+        src="/logo-lockup-dark.png"
+        alt=""
+        aria-hidden="true"
+        height={height}
+        style={{ height, width: 'auto', maxWidth: 'min(58vw, 260px)', objectFit: 'contain' }}
       />
     </a>
   );
