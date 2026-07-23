@@ -10,7 +10,7 @@ import { scaffoldFromJobFile } from './commands/scaffold';
 import { gateApp } from './commands/gate';
 import type { Outcome } from './gate/score';
 import { collectProvenance } from './gate/provenance';
-import { parseOutcomes } from './schemas/outcomes';
+import { parseVerdicts } from './schemas/verdicts';
 import { indexOutcomes } from './gate/score';
 import { runLoopCommand } from './commands/loop';
 
@@ -48,7 +48,7 @@ async function parseSharedRunFlags(
     typeof values.judge === 'string' ? await readFile(values.judge, 'utf8') : null;
   const judge: Outcome[] =
     typeof values.judge === 'string' && verdictsRaw !== null
-      ? parseOutcomes(verdictsRaw, values.judge)
+      ? parseVerdicts(verdictsRaw, values.judge)
       : [];
   const notApplicable =
     typeof values.na === 'string'

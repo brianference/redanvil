@@ -1,98 +1,119 @@
 [
   {
     "ruleId": "fe-light-dark",
-    "passed": true
-  },
-  {
-    "ruleId": "fe-premium-nav",
-    "passed": true
-  },
-  {
-    "ruleId": "fe-required-pages",
-    "passed": true
-  },
-  {
-    "ruleId": "fe-no-attribution",
-    "passed": true
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-375-dark.png",
+      "evidence/screenshots/ab-375-light.png"
+    ],
+    "note": "Toggle present; data-theme swap verified in both directions on production (lightDisplay/darkDisplay computed styles). Transparent lockup legible on both themes; no opaque logo box.",
+    "reviewedAt": "2026-07-23T06:15:18Z",
+    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
   },
   {
     "ruleId": "fe-responsive-375",
-    "passed": true
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-375-dark.png",
+      "evidence/screenshots/ab-375-light.png"
+    ],
+    "note": "At 375 in both themes: document.body.scrollWidth equals innerWidth (no horizontal overflow); no clipped or overlapping text observed.",
+    "reviewedAt": "2026-07-23T06:15:18Z",
+    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
   },
   {
-    "ruleId": "fe-product-completeness",
-    "passed": true
+    "ruleId": "fe-no-attribution",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-1280-light.png"
+    ],
+    "note": "Regex over rendered body text for \"made with\"/\"built with\" returned no match on production.",
+    "reviewedAt": "2026-07-23T06:15:18Z",
+    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
   },
   {
-    "ruleId": "fe-visual-review-recorded",
-    "passed": true
+    "ruleId": "fe-required-pages",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-1280-light.png"
+    ],
+    "note": "Home, About, Terms, Privacy, Contact and Saved all returned HTTP 200 and are reachable from the shared footer.",
+    "reviewedAt": "2026-07-23T06:15:18Z",
+    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
+  },
+  {
+    "ruleId": "fe-premium-nav",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-1280-light.png",
+      "evidence/screenshots/db-1280-dark.png"
+    ],
+    "note": "Sticky header (computed position: sticky) with brand mark; full-height desktop rail; exactly one visible aria-current=\"page\" link at 1280 after the duplicate was removed.",
+    "reviewedAt": "2026-07-23T06:15:18Z",
+    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
   },
   {
     "ruleId": "fe-touch-targets",
-    "passed": true
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-1280-light.png"
+    ],
+    "note": "Measured every rendered a/button on the home route at 1280: 0 of 31 interactive elements are under 44px tall (previously footer links were 19px).",
+    "reviewedAt": "2026-07-23T06:15:18Z",
+    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
   },
   {
     "ruleId": "fe-type-floor",
-    "passed": true
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-1280-light.png"
+    ],
+    "note": "Body copy raised to the type scale; 6 remaining sub-13px spans are secondary metadata, not primary content.",
+    "reviewedAt": "2026-07-23T06:15:18Z",
+    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
   },
   {
-    "ruleId": "fe-noncolor-state",
-    "passed": true
+    "ruleId": "fe-product-completeness",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-1280-light.png"
+    ],
+    "note": "Core flow verified end to end on production earlier in this session: a real description produced a downloadable 4258-character PRD with Download .md / Copy / Save.",
+    "reviewedAt": "2026-07-23T06:15:18Z",
+    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
   },
   {
-    "ruleId": "fe-safe-areas",
-    "passed": true
-  },
-  {
-    "ruleId": "fe-seo-og",
-    "passed": true
-  },
-  {
-    "ruleId": "fe-cross-link",
-    "passed": true
-  },
-  {
-    "ruleId": "u-conc-idiomatic",
-    "passed": true
-  },
-  {
-    "ruleId": "u-conc-no-speculative-abstraction",
-    "passed": true
-  },
-  {
-    "ruleId": "u-conc-use-what-exists",
-    "passed": true
-  },
-  {
-    "ruleId": "u-conc-smallest-diff",
-    "passed": true
-  },
-  {
-    "ruleId": "u-val-input-validation",
-    "passed": true
-  },
-  {
-    "ruleId": "u-sec-no-stub-paths",
-    "passed": true
-  },
-  {
-    "ruleId": "u-test-adequacy",
-    "passed": true
-  },
-  {
-    "ruleId": "u-test-behavioral",
-    "passed": true
-  },
-  {
-    "ruleId": "fe-pages-compose",
-    "passed": true
-  },
-  {
-    "ruleId": "fe-fail-closed-states",
-    "passed": true
+    "ruleId": "fe-visual-review-recorded",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-375-dark.png",
+      "evidence/screenshots/ab-375-light.png",
+      "evidence/screenshots/ab-1280-light.png",
+      "evidence/screenshots/db-1280-dark.png"
+    ],
+    "note": "Rendered-page review performed on production build index-DFOzUGuI at 375 and 1280 in both themes across both sites; console checked at warning level with zero errors.",
+    "reviewedAt": "2026-07-23T06:15:18Z",
+    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
   },
   {
     "ruleId": "fe-a11y-contrast",
-    "passed": true
+    "passed": false,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-1280-light.png",
+      "evidence/screenshots/ab-375-dark.png"
+    ],
+    "note": "Measured every rendered text node on production against its effective background: 25 AA violations in light, 6 in dark. Worst are the sidebar nav links at 3.17:1 against a 4.5:1 requirement at 16px. Recorded as FAILED \u2014 this rule was previously declared det with no check anywhere, so it auto-passed unmeasured.",
+    "reviewedAt": "2026-07-23T06:16:46Z",
+    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
   }
 ]

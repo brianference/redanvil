@@ -40,7 +40,11 @@ export const RULES: Rule[] = [
   rule('u-test-behavioral', 'testing', 'major', 'judge'),
 
   rule('fe-theme-tokens-only', 'frontend', 'blocker', 'det'),
-  rule('fe-a11y-contrast', 'frontend', 'blocker', 'det'),
+  // Declared `det` for a long time with no check anywhere, so it silently
+  // auto-passed and later became an unbacked assertion. Contrast cannot be
+  // decided without rendering, so the honest method is `visual`: it must be
+  // measured on the real page and recorded with evidence.
+  rule('fe-a11y-contrast', 'frontend', 'blocker', 'visual'),
   rule('fe-i18n-central-copy', 'frontend', 'blocker', 'det'),
   rule('fe-no-unsanitized-html', 'frontend', 'blocker', 'det'),
   rule('fe-pages-compose', 'frontend', 'major', 'judge'),
