@@ -45,8 +45,7 @@ try {
   await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
   await page.addScriptTag({ content: axeSource });
   const results = await page.evaluate(
-    async () =>
-        await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa'] })
+    async () => await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa'] })
   );
 
   const contrast = results.violations.filter((v) => v.id === 'color-contrast');
