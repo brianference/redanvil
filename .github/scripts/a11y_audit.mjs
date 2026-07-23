@@ -46,8 +46,7 @@ try {
   await page.addScriptTag({ content: axeSource });
   const results = await page.evaluate(
     async () =>
-      // eslint-disable-next-line no-undef
-      await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa'] })
+        await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa'] })
   );
 
   const contrast = results.violations.filter((v) => v.id === 'color-contrast');
