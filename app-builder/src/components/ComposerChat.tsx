@@ -178,7 +178,11 @@ function AgentRow({ children }: { children: ReactNode }): JSX.Element {
     width: 28,
     height: 28,
     borderRadius: theme.radius.sm,
-    objectFit: 'cover'
+    objectFit: 'cover',
+    // Anchor the crop to the anvil. A centered crop of the wide lockup lands
+    // between the mark and the wordmark, so the avatar showed a sliver of each
+    // and read as neither. Same approved asset, cropped to its mark.
+    objectPosition: 'left center'
   };
   return (
     <div style={rowStyle}>
