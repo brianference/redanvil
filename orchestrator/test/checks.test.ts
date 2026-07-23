@@ -763,3 +763,46 @@ export function Beta(): JSX.Element {
     expect(r.status, r.stderr).toBe(0);
   });
 });
+
+describe('check.mjs — u-plat-worker-runtime', () => {
+  /**
+   * Every case here passes a Node unit test suite, because Node HAS these
+   * globals and modules. Only a static scan catches them before they throw in
+   * a Worker or the browser.
+   */
+  const cases: Array<[string, string]> = [
+    ['process global', 'const key = process.env.SECRET;'],
+    ['Buffer global', "const b = Buffer.from('x');"],
+    ['node:fs import', "import { readFileSync } from 'node:fs';"],
+    ['native dependency', "import bcrypt from 'bcrypt';"]
+  ];
+
+  for (const [name, snippet] of cases) {
+    it(`fails on a ${name} in worker code`, () => {
+      const app = makeAppDir();
+      write(
+        app,
+        'functions/api/h.ts',
+        `${snippet}\nexport function onRequestGet(): Response {\n  return new Response('ok');\n}\n`
+      );
+      const r = runCheck('u-plat-worker-runtime', app);
+      expect(r.status, r.stderr).not.toBe(0);
+    });
+  }
+
+  it('passes worker code that uses only platform APIs', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'functions/api/h.ts',
+      `
+export async function onRequestGet(context: { env: { DB: { prepare: (s: string) => { first: () => Promise<unknown> } } } }): Promise<Response> {
+  const row = await context.env.DB.prepare('SELECT 1').first();
+  return new Response(JSON.stringify(row), { headers: { 'content-type': 'application/json' } });
+}
+`
+    );
+    const r = runCheck('u-plat-worker-runtime', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+});

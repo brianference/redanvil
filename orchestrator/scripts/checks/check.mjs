@@ -380,6 +380,28 @@ switch (ruleId) {
     pass();
     break;
   }
+  case 'u-plat-worker-runtime': {
+    // Node-only globals and modules in Worker or browser code. Unit tests run in
+    // Node, where all of these exist, so a passing suite proves nothing here --
+    // the failure only appears at runtime in Workers or the browser.
+    const files = [...tsx(), ...walk(functionsDir, ['.ts', '.js'])].filter((f) => !isTestFile(f));
+    if (files.length === 0) notApplicable('no worker or browser source');
+    const NODE_GLOBALS = /(^|[^.\w$])(process|Buffer|__dirname|__filename)\s*[.[(]/;
+    const NODE_MODULES =
+      /from\s+['"](node:)?(fs|path|os|child_process|crypto|net|tls|http|https|stream|zlib)['"]|require\s*\(\s*['"](node:)?(fs|path|os|child_process|crypto)['"]/;
+    const NATIVE_DEPS = /from\s+['"](bcrypt|jsonwebtoken|better-sqlite3|sqlite3|node-fetch)['"]/;
+    for (const f of files) {
+      const c = read(f);
+      // `import.meta.env` and Vite's `process.env` shim are compile-time; only
+      // flag a real runtime reference.
+      const code = c.replace(/import\.meta\.env[\w.]*/g, '');
+      if (NODE_GLOBALS.test(code)) fail(`Node-only global in worker/browser code: ${f}`);
+      if (NODE_MODULES.test(code)) fail(`Node-only module import in worker/browser code: ${f}`);
+      if (NATIVE_DEPS.test(code)) fail(`native/Node-only dependency in worker/browser code: ${f}`);
+    }
+    pass();
+    break;
+  }
   case 'u-sec-sast': {
     // Lightweight SAST: dangerous sinks in app/function source.
     const files = [...tsx(), ...walk(functionsDir, ['.ts', '.js'])];

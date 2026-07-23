@@ -28,6 +28,12 @@ export const RULES: Rule[] = [
   rule('u-sec-timeouts', 'security', 'major', 'det'),
   rule('u-sec-headers-cors', 'security', 'major', 'det'),
   rule('u-sec-sast', 'security', 'major', 'det'),
+  // loop-gate.md declares runtime parity a blocker, but no rubric rule encoded
+  // it, so the corpus's most emphatic requirement scored nothing. Node-only
+  // globals pass every unit test (which runs in Node) and then throw at runtime
+  // in Workers and browsers, which have neither -- the single most repeated
+  // production failure in this environment.
+  rule('u-plat-worker-runtime', 'security', 'blocker', 'det'),
 
   rule('u-test-presence', 'testing', 'blocker', 'det'),
   rule('u-test-adequacy', 'testing', 'major', 'det+judge'),

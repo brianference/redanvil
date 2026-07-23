@@ -4,8 +4,8 @@
   "finalScore": 100,
   "threshold": 90,
   "passed": true,
-  "evaluated": 40,
-  "total": 40,
+  "evaluated": 41,
+  "total": 41,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -69,6 +69,10 @@
     },
     {
       "ruleId": "u-sec-sast",
+      "passed": true
+    },
+    {
+      "ruleId": "u-plat-worker-runtime",
       "passed": true
     },
     {
@@ -176,18 +180,18 @@
     }
   ],
   "deployUrl": "https://redanvil.pages.dev",
-  "finishedAt": "2026-07-23T06:10:08.708Z",
+  "finishedAt": "2026-07-23T06:13:05.415Z",
   "provenance": {
-    "commit": "dad0222d8a6cb1c26cf6f004071b00b7b4a76f1d",
+    "commit": "8d61bfb36042291535c8fbca639bdef49a0a0a54",
     "dirty": true,
-    "rubricHash": "898f7fa0e8035ee2f232f96e3992177ff95ea095735c2f9664592728b2bff345",
-    "rubricRuleCount": 48,
+    "rubricHash": "1eb4745ada553f812dd4338b5b2116cf7fb33ca3b3d25baa6ecf5232febd08f5",
+    "rubricRuleCount": 49,
     "node": "v22.19.0",
     "verdictsHash": "bd00200ceba0a3dae7572698d2f6b9abbc41ba76091037181e0415b62b2c04ae",
     "notApplicable": [
       "ci",
       "process"
     ],
-    "generatedAt": "2026-07-23T06:10:08.752Z"
+    "generatedAt": "2026-07-23T06:13:05.459Z"
   }
 }

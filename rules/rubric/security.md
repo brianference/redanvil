@@ -6,3 +6,4 @@
 - u-sec-timeouts (major, det): explicit timeout budgets on shared HTTP clients and pools.
 - u-sec-headers-cors (major, det): CORS origins explicit and no wider than needed; secure response headers present on browser-facing services.
 - u-sec-sast (major, det): bandit / semgrep (Python) and eslint-plugin-security (TS) clean on changed code.
+- u-plat-worker-runtime (blocker, det): no Node-only global (`process`, `Buffer`, `__dirname`, `__filename`) and no native or Node-only module (`fs`, `path`, `crypto` as a Node import, `bcrypt`, `jsonwebtoken`, `better-sqlite3`) referenced in Worker (`functions/**`) or browser (`src/**`) code. Decided by an import and identifier scan, not by a passing Node test: unit tests run in Node, where these exist, so they cannot catch it.

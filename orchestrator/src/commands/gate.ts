@@ -44,6 +44,7 @@ export const APP_CHECKS: Check[] = [
   det('hyg-no-binaries'),
   det('hyg-secret-scan'),
   det('u-sec-sast'),
+  det('u-plat-worker-runtime'),
   det('u-conc-no-padding'),
   det('hyg-no-duplication')
 ];
