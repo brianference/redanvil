@@ -21,3 +21,5 @@ review-*/
 # data cannot be committed by reflex. Add one explicitly with `git add -f` when
 # an export is genuinely meant to be tracked.
 backups/*.sql
+# Full-repo bundles. A backup of the repo does not belong inside the repo.
+backups/*.bundle
