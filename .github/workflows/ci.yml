@@ -43,6 +43,11 @@ jobs:
       - name: Verify results were produced by the gate
         run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process
 
+  # Note: linting is NOT repeated here. The root `npm run lint` in the
+  # orchestrator job runs `eslint .` over the whole repo, which already covers
+  # every file in both apps (50 of the 99 files it lints). Running it per-app
+  # would also fail: eslint is a root devDependency, absent from each app's own
+  # node_modules after a standalone `npm ci` (exit 127).
   apps:
     runs-on: ubuntu-latest
     strategy:
@@ -61,9 +66,6 @@ jobs:
       - name: Typecheck
         working-directory: ${{ matrix.app }}
         run: npx tsc --noEmit
-      - name: Lint
-        working-directory: ${{ matrix.app }}
-        run: npm run lint
       - name: Test
         working-directory: ${{ matrix.app }}
         run: npx vitest run
