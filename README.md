@@ -88,6 +88,6 @@ CI (GitHub Actions) typechecks, tests, and builds everything on every push.
 
 ## Status
 
-The orchestrator engine, scoring gate, scaffolder, and both live apps are shipped and verified. The app-builder passes the gate at 100/100 across 41 of 41 applicable rules. That score is reproduced in CI by re-running the gate and comparing it rule by rule, so a hand-edited results file fails the build rather than being believed. Ongoing work: an automated visual and UAT judge subagent, and full SAST coverage.
+The orchestrator engine, scoring gate, scaffolder, and both live apps are shipped and verified. The app-builder passes the gate at 100/100 across 41 of 41 applicable rules -- and that number is now backed end to end: 19 deterministic checks, a judge tier where each verdict cites file:line evidence, and a visual tier measured on the rendered page (contrast via axe-core, recorded as evidence). Every verdict's evidence path is checked to exist on disk, the verdicts file is hashed into provenance, and CI reproduces the whole thing rule by rule. The repo's own CI-lane blockers (SHA-pinned actions, least-privilege permissions, no injection) are scored separately in CI, since generated apps have no workflows. Ongoing work: fan out the judge tier across parallel subagents with adversarial verification, and a scheduled drift re-gate (see docs/claude-primitives-integration.md).
 
 Built with Claude Code and Grok Build.
