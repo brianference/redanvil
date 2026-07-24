@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Page } from '../components/Page';
 import { ComposerChat } from '../components/ComposerChat';
 import { TemplateGallery, type TemplateSelection } from '../components/TemplateGallery';
@@ -32,6 +32,16 @@ export function Home(): JSX.Element {
   /** Latest answers for async submit completion (avoids stale closures). */
   const answersRef = useRef<WizardAnswers>(answers);
   answersRef.current = answers;
+
+  // Each builder surface (chat → templates → wizard → result) swaps in via state,
+  // not a route change, so the browser keeps the previous scroll position — you
+  // click "Start from a template" partway down the page and land partway down the
+  // new one. Reset to the top whenever the surface changes. `smooth` respects
+  // prefers-reduced-motion via the browser.
+  useEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+  }, [view]);
 
   const copy = en.pages.home;
 
