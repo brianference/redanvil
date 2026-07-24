@@ -15,7 +15,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const check = join(here, '..', '..', 'orchestrator', 'scripts', 'checks', 'check.mjs');
 const repo = join(here, '..', '..');
 
-const RULES = ['ci-sha-pinned', 'ci-least-privilege', 'ci-no-injection'];
+const RULES = ['ci-actionlint', 'ci-sha-pinned', 'ci-least-privilege', 'ci-no-injection'];
 let failed = 0;
 for (const rule of RULES) {
   const r = spawnSync('node', [check, rule, '.'], { cwd: repo, encoding: 'utf8' });

@@ -10,6 +10,9 @@
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, extname } from 'node:path';
+import { runCiActionlint } from './ci-actionlint.mjs';
+import { runProcConventionalCommits } from './proc-conventional-commits.mjs';
+import { runProcPrTitleTicket } from './proc-pr-title-ticket.mjs';
 
 /** NUL separator for `git ls-files -z`, built from a code point so no text transform can mangle it. */
 const NUL = String.fromCharCode(0);
@@ -640,6 +643,20 @@ switch (ruleId) {
       }
     }
     pass();
+    break;
+  }
+  case 'ci-actionlint': {
+    // Structural workflow lint in JS — never silent-pass when actionlint is missing.
+    runCiActionlint(appDir, { pass, fail, notApplicable, EOL });
+    break;
+  }
+  case 'proc-conventional-commits': {
+    runProcConventionalCommits(appDir, { pass, fail, notApplicable, EOL });
+    break;
+  }
+  case 'proc-pr-title-ticket': {
+    // Option (a): measure via `gh pr view` when a PR exists; N/A otherwise.
+    runProcPrTitleTicket(appDir, { pass, fail, notApplicable });
     break;
   }
   default:
