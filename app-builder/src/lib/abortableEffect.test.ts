@@ -1,10 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import {
-  createActiveFlag,
-  createTimedAbort,
-  errorMessageFromFetchCatch,
-  isAbortError
-} from './abortableEffect';
+import { createActiveFlag, errorMessageFromFetchCatch, isAbortError } from './abortableEffect';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -88,24 +83,5 @@ describe('errorMessageFromFetchCatch', () => {
     expect(
       errorMessageFromFetchCatch(new TypeError('Failed to fetch'), true, 'Could not load')
     ).toBe('Could not load');
-  });
-});
-
-describe('createTimedAbort', () => {
-  it('aborts the controller after the timeout', () => {
-    vi.useFakeTimers();
-    const { controller, clear } = createTimedAbort(1_000);
-    expect(controller.signal.aborted).toBe(false);
-    vi.advanceTimersByTime(1_000);
-    expect(controller.signal.aborted).toBe(true);
-    clear();
-  });
-
-  it('does not abort after clear()', () => {
-    vi.useFakeTimers();
-    const { controller, clear } = createTimedAbort(1_000);
-    clear();
-    vi.advanceTimersByTime(5_000);
-    expect(controller.signal.aborted).toBe(false);
   });
 });

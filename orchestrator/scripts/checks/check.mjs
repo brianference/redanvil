@@ -13,6 +13,8 @@ import { join, extname } from 'node:path';
 
 /** NUL separator for `git ls-files -z`, built from a code point so no text transform can mangle it. */
 const NUL = String.fromCharCode(0);
+/** Line-feed, built from a code point so no heredoc or text transform can mangle it. */
+const EOL = String.fromCharCode(10);
 
 const [, , ruleId, appDir] = process.argv;
 if (!ruleId || !appDir) {
@@ -378,6 +380,59 @@ switch (ruleId) {
       if (snippet) fail(`hardcoded JSX copy: ${f}: ${snippet}`);
     }
     pass();
+    break;
+  }
+  case 'ci-sha-pinned':
+  case 'ci-least-privilege':
+  case 'ci-no-injection': {
+    // CI-lane checks over .github/workflows. If the target ships no workflows the
+    // lane does not apply and must be waived by the caller, not passed here.
+    const wf = trackedFiles(appDir).filter((f) => /\.github[\/]workflows[\/].+\.ya?ml$/.test(f));
+    if (wf.length === 0) notApplicable('no workflow files');
+    const read2 = (f) => read(join(appDir, f));
+    if (ruleId === 'ci-sha-pinned') {
+      // Every third-party `uses:` must pin a 40-hex SHA (with a version comment).
+      for (const f of wf) {
+        for (const line of read2(f).split(EOL)) {
+          const m = /uses:\s*([^@\s]+)@(\S+)/.exec(line);
+          if (!m) continue;
+          if (m[1].startsWith('./') || m[1].startsWith('actions/')) {
+            // still require a pin even for actions/*; a tag is not a pin
+          }
+          if (!/^[0-9a-f]{40}$/.test(m[2]))
+            fail(`unpinned action (not a 40-hex SHA): ${f}: ${m[1]}@${m[2]}`);
+        }
+      }
+      pass();
+    }
+    if (ruleId === 'ci-least-privilege') {
+      for (const f of wf) {
+        const c = read2(f);
+        if (!/^permissions:/m.test(c)) fail(`no top-level permissions block: ${f}`);
+        if (/permissions:\s*write-all/.test(c))
+          fail(`permissions: write-all is not least-privilege: ${f}`);
+        if (/uses:\s*actions\/checkout/.test(c) && !/persist-credentials:\s*false/.test(c)) {
+          fail(`checkout without persist-credentials: false: ${f}`);
+        }
+      }
+      pass();
+    }
+    if (ruleId === 'ci-no-injection') {
+      for (const f of wf) {
+        const c = read2(f);
+        if (/pull_request_target/.test(c) && /actions\/checkout/.test(c)) {
+          fail(`pull_request_target with a checkout is an injection surface: ${f}`);
+        }
+        // Untrusted interpolation directly into a run: script (single line).
+        const inject = new RegExp(
+          'run:[^' +
+            EOL +
+            ']*\\$\\{\\{\\s*(github\\.event\\.(issue|pull_request|comment)|github\\.head_ref)'
+        );
+        if (inject.test(c)) fail(`untrusted \${{ }} interpolated into a run script: ${f}`);
+      }
+      pass();
+    }
     break;
   }
   case 'u-plat-worker-runtime': {

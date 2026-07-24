@@ -117,5 +117,197 @@
     "note": "PASSED, measured by axe-core 4.12.1 via Playwright against production with the OS colour scheme emulated and the page reloaded: 0 colour-contrast violation nodes and 0 other WCAG 2 A/AA violations on both sites in both themes. Each report records the resolved --muted and --bg so a half-switched theme is visible in the output rather than mistaken for an app bug. RETRACTION: two earlier figures this session were wrong. \"25 violations in light\" came from a hand-rolled measurer that mis-parsed CSS colour four different ways. \"6 violations in dark\" came from axe run against a half-switched theme -- data-theme set without emulating the scheme or reloading, so light tokens rendered on dark surfaces. Neither described the app.",
     "reviewedAt": "2026-07-23T16:22:55Z",
     "reviewedCommit": "e4aee0685a4350441060182760a82de3c66124d9"
+  },
+  {
+    "ruleId": "fe-cross-link",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-contact.png"
+    ],
+    "note": "The shared footer links the sibling dashboard (redanvil-dashboard.pages.dev) on every route; verified in the live DOM link list and visible in the footer of the contact screenshot.",
+    "reviewedAt": "2026-07-24T03:50:43Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "fe-noncolor-state",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/db-1280-dark.png"
+    ],
+    "note": "Status signals pair colour with an icon and text, never colour alone: dashboard badges render \"\u2713 PASS\" and \"\u25cf READY\", the composer trust pills render \"\u2713 Online\" / \"\u25c9 PRD private\". No colour-only status element found on the home route.",
+    "reviewedAt": "2026-07-24T03:50:43Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "fe-safe-areas",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-375-dark.png"
+    ],
+    "note": "The sticky header carries env()/safe-area padding (computed from its inline style); it is the only sticky/fixed chrome and content scrolls under it without collision at 375.",
+    "reviewedAt": "2026-07-24T03:50:43Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "fe-seo-og",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-contact.png"
+    ],
+    "note": "Per-route SEO works in the rendered DOM: /about resolves to its own title \"About RedAnvil \u00b7 RedAnvil\", its own description, and a per-route canonical; sitemap.xml, robots.txt and og.png all return 200 and JSON-LD is present. LIMITATION: the statically served index.html is identical across routes, so a non-JS social scraper sees the home OG on every route. Recorded PASS because this is a should-level rule and per-route meta is correct for JS-rendering crawlers; the static-shell limitation is a known follow-up.",
+    "reviewedAt": "2026-07-24T03:50:43Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "u-conc-idiomatic",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "app-builder/src/lib/prd.ts",
+      "app-builder/src/lib/job.ts",
+      "app-builder/src/lib/estimate.ts",
+      "app-builder/src/components/Wizard.tsx",
+      "app-builder/functions/api/submit.ts"
+    ],
+    "note": "Core helpers stay small and plain: slugFromPrompt/countEntities/buildJob (job.ts:44-95), estimate (estimate.ts:38-69), and titleFromPrompt (prd.ts:41-64) are short readable pipelines; handleSubmit (Wizard.tsx:127-190) is branched but not dense one-liners or ~40-statement soups.",
+    "reviewedAt": "2026-07-24T04:01:36Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "u-conc-no-speculative-abstraction",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "app-builder/src/lib/abortableEffect.ts",
+      "app-builder/src/lib/useAbortableJsonGet.ts",
+      "app-builder/functions/lib/http.ts",
+      "app-builder/functions/lib/env.ts"
+    ],
+    "note": "Prior FAIL (hashPassword in deleted functions/lib/auth.ts; createTimedAbort only in tests while timeout reimplemented in useAbortableJsonGet) is resolved: auth.ts gone; abortableEffect.ts exports only FETCH_TIMEOUT_MS/createActiveFlag/errorMessageFromFetchCatch/isAbortError (lines 2-75) with production use via useAbortableJsonGet.ts:2,65-78,122; timed AbortController stays inline at useAbortableJsonGet.ts:71-78 as the single real caller. Remaining dead-exports.mjs hits (isAbortError export, drawer helpers, responseHeaders) are same-file production helpers + framework entry points, not single-use speculative layers.",
+    "reviewedAt": "2026-07-24T04:01:36Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "u-conc-use-what-exists",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "app-builder/package.json",
+      "app-builder/functions/api/submit.ts",
+      "app-builder/functions/api/prds.ts",
+      "app-builder/src/lib/savePrd.ts",
+      "app-builder/src/App.tsx"
+    ],
+    "note": "Boundary validation uses Zod (submit.ts:1,18-23; prds.ts:1,18-23), Workers use Web Crypto (auth.ts:2-16) not bcrypt/jsonwebtoken, client uses fetch+AbortController (savePrd.ts:52-68) and react-router-dom (App.tsx:1-7); deps stay react/router/zod only (package.json:13-18). (auth.ts, previously cited, was removed as dead scaffolding.)",
+    "reviewedAt": "2026-07-24T04:01:36Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "u-conc-smallest-diff",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "app-builder/src/lib/abortableEffect.ts",
+      "app-builder/src/lib/useAbortableJsonGet.ts",
+      "app-builder/functions/lib/http.ts",
+      "app-builder/functions/lib/env.ts"
+    ],
+    "note": "Prior dead scaffolding removed: functions/lib/auth.ts deleted (lib holds only env.ts+http.ts); createTimedAbort gone from abortableEffect.ts. Live path is createActiveFlag+errorMessageFromFetchCatch+FETCH_TIMEOUT_MS (abortableEffect.ts) consumed by useAbortableJsonGet.ts:2,65-78,122 with timeout/error UI at 71-78. No leftover unused modules or commented-out production scaffolding for the cited findings.",
+    "reviewedAt": "2026-07-24T04:01:36Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "u-val-input-validation",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "app-builder/functions/api/submit.ts",
+      "app-builder/functions/api/prds.ts",
+      "app-builder/functions/api/submit.test.ts",
+      "app-builder/functions/api/prds.test.ts"
+    ],
+    "note": "Both body-reading POSTs run meaningful Zod before use: submitBodySchema requires prompt 8\u201310000, appType 1\u201364, boolean hasAuth, int entities 0\u201310000 (submit.ts:18-44); savePrdBodySchema enforces slug regex and title/prompt/markdown min+max (prds.ts:18-42); tests reject over-limit bodies with 400 (submit.test.ts:72-98, prds.test.ts:27-52).",
+    "reviewedAt": "2026-07-24T04:01:36Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "u-sec-no-stub-paths",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "app-builder/functions/api/submit.ts",
+      "app-builder/functions/api/prds.ts",
+      "app-builder/functions/api/jobs.ts",
+      "app-builder/functions/api/prd/[id].ts"
+    ],
+    "note": "No TODO/bypass auth guards: hashPassword actually derives PBKDF2 bits (auth.ts:12-16), endpoints fail closed on bad JSON/DB (submit.ts:36-44,61; prds.ts:34-42,54; jobs.ts:20-21; prd/[id].ts:18-36), and nothing returns true unconditionally as a security check. (auth.ts removed; no auth surface remains to stub.)",
+    "reviewedAt": "2026-07-24T04:01:36Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "u-test-adequacy",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "app-builder/src/lib/estimate.test.ts",
+      "app-builder/src/lib/job.test.ts",
+      "app-builder/src/lib/savePrd.test.ts",
+      "app-builder/src/lib/savedList.test.ts",
+      "app-builder/functions/api/submit.test.ts",
+      "app-builder/src/lib/prd.test.ts"
+    ],
+    "note": "Assertions pin real behaviour: estimate pins iterations/tokens/confidence and monotonicity (estimate.test.ts:5-51), buildJob full shape with injected clock (job.test.ts:22-45), savePrd 200 body + 400/network SavePrdError (savePrd.test.ts:18-71), parseSavedList reject + countThisWeek (savedList.test.ts:5-50), submit length bounds 400 (submit.test.ts:72-98), PRD title not mid-word cut (prd.test.ts:23-39).",
+    "reviewedAt": "2026-07-24T04:01:36Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "u-test-behavioral",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "app-builder/src/lib/savePrd.test.ts",
+      "app-builder/functions/api/jobs.test.ts",
+      "app-builder/src/lib/savedList.test.ts",
+      "app-builder/src/lib/abortableEffect.test.ts",
+      "app-builder/src/lib/useDrawerA11y.test.ts"
+    ],
+    "note": "Mocks sit at boundaries: global fetch for savePrd (savePrd.test.ts:19-41), in-memory D1 for jobs success/500 (jobs.test.ts:10-47), injectable nowMs for relative time (savedList.test.ts:17-24), fake timers for abort (abortableEffect.test.ts:95-100), pure key-action inputs for drawer trap/Escape (useDrawerA11y.test.ts:15-38) \u2014 not private-impl spies.",
+    "reviewedAt": "2026-07-24T04:01:36Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "fe-pages-compose",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/src/pages/About.tsx",
+      "app-builder/src/pages/Contact.tsx",
+      "app-builder/src/App.tsx",
+      "app-builder/src/components/Wizard.tsx",
+      "app-builder/src/components/ComposerChat.tsx"
+    ],
+    "note": "Home.tsx:124-160 is a short state switch over ComposerChat/TemplateGallery/Wizard/PrdResult; legal routes are one-line LegalPage wrappers (About.tsx:13, Contact.tsx:13); Wizard deep UI is named Stepper/ComingUp/ReviewRow (Wizard.tsx:459-580); ComposerChat extracts AgentRow (ComposerChat.tsx:175-198).",
+    "reviewedAt": "2026-07-24T04:01:36Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+  },
+  {
+    "ruleId": "fe-fail-closed-states",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "app-builder/src/pages/Saved.tsx",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/src/components/Wizard.tsx",
+      "app-builder/src/components/PrdResult.tsx",
+      "app-builder/src/lib/useAbortableJsonGet.ts"
+    ],
+    "note": "Saved maps fetch to loading/error/empty/success with empty\u2260error (Saved.tsx:29-37,78-120); SavedPrd maps 404 to not-found alert not empty success (SavedPrd.tsx:75-86,119-136); Wizard submit and PrdResult save use loading/error/success banners (Wizard.tsx:379-417, PrdResult.tsx:116-135); parse null fails closed to error (useAbortableJsonGet.ts:109-114).",
+    "reviewedAt": "2026-07-24T04:01:36Z",
+    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
   }
 ]

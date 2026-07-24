@@ -51,29 +51,6 @@ export function createActiveFlag(): {
 }
 
 /**
- * Start an AbortController that aborts after `timeoutMs`.
- * Clear the timer from effect cleanup (and after a successful load).
- *
- * @param timeoutMs - Milliseconds until abort (default FETCH_TIMEOUT_MS).
- * @returns Controller plus a clear() that cancels the timer.
- */
-export function createTimedAbort(timeoutMs: number = FETCH_TIMEOUT_MS): {
-  controller: AbortController;
-  clear: () => void;
-} {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, timeoutMs);
-  return {
-    controller,
-    clear: () => {
-      clearTimeout(timeoutId);
-    }
-  };
-}
-
-/**
  * Map a fetch catch into a UI error message, or null when no state update
  * should occur (inactive effect run, or AbortError from cleanup/timeout abort).
  *

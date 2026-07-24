@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { runGate } from '../gate/runGate';
 import { loadRubric } from '../rubric/index';
@@ -74,6 +75,17 @@ export async function gateApp(
   judge: Outcome[] = [],
   notApplicable: string[] = []
 ): Promise<GateReport> {
+  // Reject a hand-waved waiver of the CI lane. `--na` lets the operator pick the
+  // denominator, and the ci lane is the tempting one to drop — so a claim that
+  // ci does not apply is checked against reality: if `.github/workflows` exists,
+  // the lane DOES apply and cannot be waived. This is the guard that keeps a
+  // repo (which ships workflows) from silently excluding its own CI blockers.
+  if (notApplicable.includes('ci') && existsSync(join(dir, '.github', 'workflows'))) {
+    throw new Error(
+      `gate: refusing --na ci for ${dir}: it has .github/workflows, so the ci lane applies`
+    );
+  }
+
   const { outcomes: det, notApplicable: detNa } = await runGate(dir, checks);
   const outcomes = [...det, ...judge];
   // Fail-closed on duplicates: judge outcomes are appended after deterministic

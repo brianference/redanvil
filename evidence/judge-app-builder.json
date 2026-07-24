@@ -1,0 +1,121 @@
+[
+  {
+    "ruleId": "u-conc-idiomatic",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/lib/prd.ts",
+      "app-builder/src/lib/job.ts",
+      "app-builder/src/lib/estimate.ts",
+      "app-builder/src/components/Wizard.tsx",
+      "app-builder/functions/api/submit.ts"
+    ],
+    "note": "Core helpers stay small and plain: slugFromPrompt/countEntities/buildJob (job.ts:44-95), estimate (estimate.ts:38-69), and titleFromPrompt (prd.ts:41-64) are short readable pipelines; handleSubmit (Wizard.tsx:127-190) is branched but not dense one-liners or ~40-statement soups."
+  },
+  {
+    "ruleId": "u-conc-no-speculative-abstraction",
+    "passed": false,
+    "evidence": [
+      "app-builder/functions/lib/auth.ts",
+      "app-builder/src/lib/abortableEffect.ts",
+      "app-builder/src/lib/useAbortableJsonGet.ts",
+      "app-builder/src/lib/abortableEffect.test.ts"
+    ],
+    "note": "hashPassword (auth.ts:2-17) has zero production callers; createTimedAbort (abortableEffect.ts:60-74) is only exercised in abortableEffect.test.ts:94-110 while useAbortableJsonGet.ts:71-78 reimplements the timed AbortController inline — abstractions with no second real use."
+  },
+  {
+    "ruleId": "u-conc-use-what-exists",
+    "passed": true,
+    "evidence": [
+      "app-builder/package.json",
+      "app-builder/functions/api/submit.ts",
+      "app-builder/functions/api/prds.ts",
+      "app-builder/functions/lib/auth.ts",
+      "app-builder/src/lib/savePrd.ts",
+      "app-builder/src/App.tsx"
+    ],
+    "note": "Boundary validation uses Zod (submit.ts:1,18-23; prds.ts:1,18-23), Workers use Web Crypto (auth.ts:2-16) not bcrypt/jsonwebtoken, client uses fetch+AbortController (savePrd.ts:52-68) and react-router-dom (App.tsx:1-7); deps stay react/router/zod only (package.json:13-18)."
+  },
+  {
+    "ruleId": "u-conc-smallest-diff",
+    "passed": false,
+    "evidence": [
+      "app-builder/functions/lib/auth.ts",
+      "app-builder/src/lib/abortableEffect.ts",
+      "app-builder/src/lib/useAbortableJsonGet.ts"
+    ],
+    "note": "Dead scaffolding remains: unused hashPassword (auth.ts:2-17) and unused createTimedAbort (abortableEffect.ts:60-74) are not required for the live submit/list/save paths; production timeout logic lives only in useAbortableJsonGet.ts:71-78."
+  },
+  {
+    "ruleId": "u-val-input-validation",
+    "passed": true,
+    "evidence": [
+      "app-builder/functions/api/submit.ts",
+      "app-builder/functions/api/prds.ts",
+      "app-builder/functions/api/submit.test.ts",
+      "app-builder/functions/api/prds.test.ts"
+    ],
+    "note": "Both body-reading POSTs run meaningful Zod before use: submitBodySchema requires prompt 8–10000, appType 1–64, boolean hasAuth, int entities 0–10000 (submit.ts:18-44); savePrdBodySchema enforces slug regex and title/prompt/markdown min+max (prds.ts:18-42); tests reject over-limit bodies with 400 (submit.test.ts:72-98, prds.test.ts:27-52)."
+  },
+  {
+    "ruleId": "u-sec-no-stub-paths",
+    "passed": true,
+    "evidence": [
+      "app-builder/functions/lib/auth.ts",
+      "app-builder/functions/api/submit.ts",
+      "app-builder/functions/api/prds.ts",
+      "app-builder/functions/api/jobs.ts",
+      "app-builder/functions/api/prd/[id].ts"
+    ],
+    "note": "No TODO/bypass auth guards: hashPassword actually derives PBKDF2 bits (auth.ts:12-16), endpoints fail closed on bad JSON/DB (submit.ts:36-44,61; prds.ts:34-42,54; jobs.ts:20-21; prd/[id].ts:18-36), and nothing returns true unconditionally as a security check."
+  },
+  {
+    "ruleId": "u-test-adequacy",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/lib/estimate.test.ts",
+      "app-builder/src/lib/job.test.ts",
+      "app-builder/src/lib/savePrd.test.ts",
+      "app-builder/src/lib/savedList.test.ts",
+      "app-builder/functions/api/submit.test.ts",
+      "app-builder/src/lib/prd.test.ts"
+    ],
+    "note": "Assertions pin real behaviour: estimate pins iterations/tokens/confidence and monotonicity (estimate.test.ts:5-51), buildJob full shape with injected clock (job.test.ts:22-45), savePrd 200 body + 400/network SavePrdError (savePrd.test.ts:18-71), parseSavedList reject + countThisWeek (savedList.test.ts:5-50), submit length bounds 400 (submit.test.ts:72-98), PRD title not mid-word cut (prd.test.ts:23-39)."
+  },
+  {
+    "ruleId": "u-test-behavioral",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/lib/savePrd.test.ts",
+      "app-builder/functions/api/jobs.test.ts",
+      "app-builder/src/lib/savedList.test.ts",
+      "app-builder/src/lib/abortableEffect.test.ts",
+      "app-builder/src/lib/useDrawerA11y.test.ts"
+    ],
+    "note": "Mocks sit at boundaries: global fetch for savePrd (savePrd.test.ts:19-41), in-memory D1 for jobs success/500 (jobs.test.ts:10-47), injectable nowMs for relative time (savedList.test.ts:17-24), fake timers for abort (abortableEffect.test.ts:95-100), pure key-action inputs for drawer trap/Escape (useDrawerA11y.test.ts:15-38) — not private-impl spies."
+  },
+  {
+    "ruleId": "fe-pages-compose",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/src/pages/About.tsx",
+      "app-builder/src/pages/Contact.tsx",
+      "app-builder/src/App.tsx",
+      "app-builder/src/components/Wizard.tsx",
+      "app-builder/src/components/ComposerChat.tsx"
+    ],
+    "note": "Home.tsx:124-160 is a short state switch over ComposerChat/TemplateGallery/Wizard/PrdResult; legal routes are one-line LegalPage wrappers (About.tsx:13, Contact.tsx:13); Wizard deep UI is named Stepper/ComingUp/ReviewRow (Wizard.tsx:459-580); ComposerChat extracts AgentRow (ComposerChat.tsx:175-198)."
+  },
+  {
+    "ruleId": "fe-fail-closed-states",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/pages/Saved.tsx",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/src/components/Wizard.tsx",
+      "app-builder/src/components/PrdResult.tsx",
+      "app-builder/src/lib/useAbortableJsonGet.ts"
+    ],
+    "note": "Saved maps fetch to loading/error/empty/success with empty≠error (Saved.tsx:29-37,78-120); SavedPrd maps 404 to not-found alert not empty success (SavedPrd.tsx:75-86,119-136); Wizard submit and PrdResult save use loading/error/success banners (Wizard.tsx:379-417, PrdResult.tsx:116-135); parse null fails closed to error (useAbortableJsonGet.ts:109-114)."
+  }
+]

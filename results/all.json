@@ -89,11 +89,7 @@
         "passed": true
       },
       {
-        "ruleId": "fe-premium-nav",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-required-pages",
+        "ruleId": "fe-responsive-375",
         "passed": true
       },
       {
@@ -101,7 +97,19 @@
         "passed": true
       },
       {
-        "ruleId": "fe-responsive-375",
+        "ruleId": "fe-required-pages",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-premium-nav",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-touch-targets",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-type-floor",
         "passed": true
       },
       {
@@ -113,11 +121,11 @@
         "passed": true
       },
       {
-        "ruleId": "fe-touch-targets",
+        "ruleId": "fe-a11y-contrast",
         "passed": true
       },
       {
-        "ruleId": "fe-type-floor",
+        "ruleId": "fe-cross-link",
         "passed": true
       },
       {
@@ -130,10 +138,6 @@
       },
       {
         "ruleId": "fe-seo-og",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-cross-link",
         "passed": true
       },
       {
@@ -167,10 +171,6 @@
       {
         "ruleId": "fe-fail-closed-states",
         "passed": true
-      },
-      {
-        "ruleId": "fe-a11y-contrast",
-        "passed": true
       }
     ],
     "iterations": [
@@ -181,19 +181,19 @@
       }
     ],
     "deployUrl": "https://redanvil.pages.dev",
-    "finishedAt": "2026-07-23T06:13:05.415Z",
+    "finishedAt": "2026-07-24T04:02:29.658Z",
     "provenance": {
-      "commit": "8d61bfb36042291535c8fbca639bdef49a0a0a54",
+      "commit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54",
       "dirty": true,
-      "rubricHash": "1eb4745ada553f812dd4338b5b2116cf7fb33ca3b3d25baa6ecf5232febd08f5",
+      "rubricHash": "34f994c2eeeed4103c507b6b057f0a081ce08f0db779cf42d0b79d5b3484221e",
       "rubricRuleCount": 49,
       "node": "v22.19.0",
-      "verdictsHash": "bd00200ceba0a3dae7572698d2f6b9abbc41ba76091037181e0415b62b2c04ae",
+      "verdictsHash": "22fe61b73afabddcd4706bb7ebf6669ce1f3168ff75ef1f54e253358cb3fbc45",
       "notApplicable": [
         "ci",
         "process"
       ],
-      "generatedAt": "2026-07-23T06:13:05.459Z"
+      "generatedAt": "2026-07-24T04:02:29.705Z"
     }
   }
 ]

@@ -1,0 +1,24 @@
+[
+  {
+    "ruleId": "u-conc-no-speculative-abstraction",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/lib/abortableEffect.ts",
+      "app-builder/src/lib/useAbortableJsonGet.ts",
+      "app-builder/functions/lib/http.ts",
+      "app-builder/functions/lib/env.ts"
+    ],
+    "note": "Prior FAIL (hashPassword in deleted functions/lib/auth.ts; createTimedAbort only in tests while timeout reimplemented in useAbortableJsonGet) is resolved: auth.ts gone; abortableEffect.ts exports only FETCH_TIMEOUT_MS/createActiveFlag/errorMessageFromFetchCatch/isAbortError (lines 2-75) with production use via useAbortableJsonGet.ts:2,65-78,122; timed AbortController stays inline at useAbortableJsonGet.ts:71-78 as the single real caller. Remaining dead-exports.mjs hits (isAbortError export, drawer helpers, responseHeaders) are same-file production helpers + framework entry points, not single-use speculative layers."
+  },
+  {
+    "ruleId": "u-conc-smallest-diff",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/lib/abortableEffect.ts",
+      "app-builder/src/lib/useAbortableJsonGet.ts",
+      "app-builder/functions/lib/http.ts",
+      "app-builder/functions/lib/env.ts"
+    ],
+    "note": "Prior dead scaffolding removed: functions/lib/auth.ts deleted (lib holds only env.ts+http.ts); createTimedAbort gone from abortableEffect.ts. Live path is createActiveFlag+errorMessageFromFetchCatch+FETCH_TIMEOUT_MS (abortableEffect.ts) consumed by useAbortableJsonGet.ts:2,65-78,122 with timeout/error UI at 71-78. No leftover unused modules or commented-out production scaffolding for the cited findings."
+  }
+]

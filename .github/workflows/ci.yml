@@ -49,6 +49,10 @@ jobs:
         run: node .github/scripts/build_feed.mjs --check
       - name: Verify design rules match the skill source
         run: node .github/scripts/verify_design_rules.mjs
+      # The app gate waives the ci lane (generated apps have no workflows), so the
+      # repo's own CI blockers are scored here instead of nowhere.
+      - name: Gate the repo against its own CI-lane blockers
+        run: node .github/scripts/gate_repo_ci.mjs
 
   # Note: linting is NOT repeated here. The root `npm run lint` in the
   # orchestrator job runs `eslint .` over the whole repo, which already covers

@@ -1,3 +1,6 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { gateApp } from '../src/commands/gate';
 import type { Check } from '../src/gate/checks';
@@ -77,15 +80,36 @@ describe('gateApp', () => {
   });
 
   it('excludes a not-applicable lane from scoring, lifting a clean app', async () => {
-    // Everything passes except the ci lane; ci rules are blockers.
-    const outcomes: Outcome[] = loadRubric().map((r) => ({
-      ruleId: r.id,
-      passed: r.lane !== 'ci'
-    }));
-    const withCi = await gateApp(process.cwd(), [], outcomes);
-    const naCi = await gateApp(process.cwd(), [], outcomes, ['ci']);
-    expect(withCi.score).toBe(0); // failing ci blockers gate it to 0
-    expect(naCi.blockersFailed).toEqual([]); // ci excluded -> no blocker failures
-    expect(naCi.score).toBeGreaterThan(withCi.score);
+    // Everything passes except the ci lane; ci rules are blockers. Run against a
+    // temp dir with no .github/workflows so the --na ci guard permits the waiver
+    // (the repo root has workflows and would correctly be refused).
+    const tmp = mkdtempSync(join(tmpdir(), 'redanvil-gate-'));
+    try {
+      const outcomes: Outcome[] = loadRubric().map((r) => ({
+        ruleId: r.id,
+        passed: r.lane !== 'ci'
+      }));
+      const withCi = await gateApp(tmp, [], outcomes);
+      const naCi = await gateApp(tmp, [], outcomes, ['ci']);
+      expect(withCi.score).toBe(0); // failing ci blockers gate it to 0
+      expect(naCi.blockersFailed).toEqual([]); // ci excluded -> no blocker failures
+      expect(naCi.score).toBeGreaterThan(withCi.score);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('gateApp --na ci guard', () => {
+  it('refuses --na ci when the target directory ships .github/workflows', async () => {
+    // The repo root has .github/workflows, so waiving the ci lane there would
+    // exclude its own CI blockers from scoring.
+    await expect(gateApp(process.cwd(), [], [], ['ci'])).rejects.toThrow(/refusing --na ci/);
+  });
+
+  it('allows --na ci for an app that ships no workflows', async () => {
+    // process.cwd()/app-builder-like: use a temp dir with no .github.
+    const r = await gateApp(process.cwd() + '/app-builder', [], [], ['process']);
+    expect(r.total).toBeGreaterThan(0);
   });
 });

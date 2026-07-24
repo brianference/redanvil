@@ -806,3 +806,55 @@ export async function onRequestGet(context: { env: { DB: { prepare: (s: string) 
     expect(r.status, r.stderr).toBe(0);
   });
 });
+
+describe('check.mjs — ci lane', () => {
+  function commitWorkflow(app: string, yml: string): void {
+    write(app, '.github/workflows/ci.yml', yml);
+    const run = (a: string[]) => spawnSync('git', a, { cwd: app, encoding: 'utf8' });
+    run(['init', '-q']);
+    run(['add', '-A']);
+    run(['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'wf']);
+  }
+
+  it('ci-sha-pinned fails an action pinned to a tag, not a SHA', () => {
+    const app = makeAppDir();
+    commitWorkflow(
+      app,
+      'on: push\njobs:\n  b:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n'
+    );
+    const r = runCheck('ci-sha-pinned', app);
+    expect(r.status, r.stderr).toBe(1);
+    expect(r.stderr).toMatch(/unpinned/i);
+  });
+
+  it('ci-sha-pinned passes a 40-hex SHA pin', () => {
+    const app = makeAppDir();
+    commitWorkflow(
+      app,
+      'on: push\njobs:\n  b:\n    runs-on: ubuntu-latest\n    permissions:\n      contents: read\n    steps:\n      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4\n'
+    );
+    const r = runCheck('ci-sha-pinned', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+
+  it('ci-least-privilege fails a workflow with no permissions block', () => {
+    const app = makeAppDir();
+    commitWorkflow(
+      app,
+      'on: push\njobs:\n  b:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo hi\n'
+    );
+    const r = runCheck('ci-least-privilege', app);
+    expect(r.status, r.stderr).toBe(1);
+  });
+
+  it('reports N/A (exit 3) for an app with no workflows', () => {
+    const app = makeAppDir();
+    write(app, 'src/x.ts', 'export const x = 1;\n');
+    const run = (a: string[]) => spawnSync('git', a, { cwd: app, encoding: 'utf8' });
+    run(['init', '-q']);
+    run(['add', '-A']);
+    run(['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'x']);
+    const r = runCheck('ci-sha-pinned', app);
+    expect(r.status, r.stderr).toBe(3);
+  });
+});
