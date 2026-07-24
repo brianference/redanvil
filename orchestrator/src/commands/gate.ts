@@ -51,7 +51,18 @@ export const APP_CHECKS: Check[] = [
   det('fe-seo-assets'),
   det('fe-icon-button-labels'),
   det('u-conc-no-padding'),
-  det('hyg-no-duplication')
+  det('hyg-no-duplication'),
+  // CI lane: cases already lived in check.mjs but were never wired into the app
+  // gate, so without --na ci they fail-closed as "unevaluated" rather than
+  // measuring. Apps with no workflows get exit 3 (N/A) and leave the denominator.
+  det('ci-actionlint'),
+  det('ci-sha-pinned'),
+  det('ci-least-privilege'),
+  det('ci-no-injection'),
+  // Process lane: formerly printed "unknown rule" when invoked; only "passed"
+  // because real gate runs excluded them with --na process.
+  det('proc-conventional-commits'),
+  det('proc-pr-title-ticket')
 ];
 
 export interface GateReport {
