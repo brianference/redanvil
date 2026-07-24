@@ -84,11 +84,12 @@
     "passed": true,
     "method": "visual",
     "evidence": [
+      "evidence/traces/e2e-app-builder.zip",
       "evidence/screenshots/ab-1280-light.png"
     ],
-    "note": "Full flow verified on production INCLUDING the previously-broken path: chat composer -> wizard -> Forge PRD returns 200 and renders a real PRD with Download/Copy/Save, zero console errors. A real user hit a 400 (\"String must contain at least 1 character(s)\") because the wizard let Review be reached with app type unset while the submit schema requires appType.min(1). Fixed: app type is now required to advance from Scope and to Forge, with an inline message, so an invalid body never reaches the server. My earlier verdict tested only the happy path where app type was set -- this is the completeness gap that path missed.",
-    "reviewedAt": "2026-07-24T04:14:52Z",
-    "reviewedCommit": "d55746498861cddf73e3241cf8a4e481a5ab3a94"
+    "note": "Verified by the e2e_smoke.mjs harness against the DEPLOYED build (trace recorded): chat composer -> wizard -> Forge PRD returns 200 and renders a real PRD with Download/Copy/Save, zero console errors. The harness asserts Next is DISABLED until an app type is set (the production 400 this session fixed) and waits on the real /api/submit response, not a sleep. The generated PRD now contains the agentic sections (YAML frontmatter, CREATE TABLE DDL per entity, GIVEN/WHEN/THEN acceptance, dependency-ordered tasks, the gate command) -- confirmed present in the live rendered output.",
+    "reviewedAt": "2026-07-24T04:33:50Z",
+    "reviewedCommit": "f3edd806663fb8149d0f5aad3220e6906a730d56"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -114,9 +115,9 @@
       "evidence/axe/dashboard-dark.json",
       "evidence/axe/dashboard-light.json"
     ],
-    "note": "PASSED, measured by axe-core 4.12.1 via Playwright against production with the OS colour scheme emulated and the page reloaded: 0 colour-contrast violation nodes and 0 other WCAG 2 A/AA violations on both sites in both themes. Each report records the resolved --muted and --bg so a half-switched theme is visible in the output rather than mistaken for an app bug. RETRACTION: two earlier figures this session were wrong. \"25 violations in light\" came from a hand-rolled measurer that mis-parsed CSS colour four different ways. \"6 violations in dark\" came from axe run against a half-switched theme -- data-theme set without emulating the scheme or reloading, so light tokens rendered on dark surfaces. Neither described the app.",
-    "reviewedAt": "2026-07-23T16:22:55Z",
-    "reviewedCommit": "e4aee0685a4350441060182760a82de3c66124d9"
+    "note": "PASSED, axe-core 4.12.1 via Playwright against the deployed build with colorScheme emulated and the page reloaded: 0 colour-contrast and 0 other WCAG 2 A/AA violations on both themes. Reports in evidence/axe/. Base rule 16: measured, never hand-computed.",
+    "reviewedAt": "2026-07-24T04:33:50Z",
+    "reviewedCommit": "f3edd806663fb8149d0f5aad3220e6906a730d56"
   },
   {
     "ruleId": "fe-cross-link",

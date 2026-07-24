@@ -100,11 +100,14 @@ try {
 
   // 6. Zero console errors across the whole flow.
   console.log(`e2e smoke PASS: ${baseUrl} — submit ${submit.status()}, PRD rendered`);
-  process.exit(0);
+  process.exitCode = 0;
 } catch (err) {
   console.error(`e2e smoke FAIL: ${err instanceof Error ? err.message : err}`);
   process.exitCode = 1;
 } finally {
+  // Set exitCode above and let finally run — a process.exit() in the try block
+  // terminates before this await, so the trace (the whole point of capturing it)
+  // never gets written on success.
   if (tracePath) await context.tracing.stop({ path: tracePath });
   await browser.close();
 }
