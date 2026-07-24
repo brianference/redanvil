@@ -1,6 +1,14 @@
 import { useState, type ChangeEvent, type FormEvent, type CSSProperties } from 'react';
 import { estimate } from '../lib/estimate';
-import { countEntities, type BuildJob, type WizardAnswers } from '../lib/job';
+import {
+  countEntities,
+  isPromptReady,
+  isAppTypeReady,
+  canForgePrd,
+  MIN_PROMPT_LENGTH,
+  type BuildJob,
+  type WizardAnswers
+} from '../lib/job';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 import {
@@ -14,9 +22,6 @@ import {
   statusBannerStyle,
   stickyBarStyle
 } from './ui';
-
-/** Minimum prompt length before submit is allowed (matches job schema). */
-const MIN_PROMPT_LENGTH = 8;
 
 /** Client fetch timeout for POST /api/submit (fail closed). */
 const SUBMIT_TIMEOUT_MS = 10_000;
@@ -92,9 +97,14 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
     entities: entityCount
   });
 
-  const promptReady = value.prompt.trim().length >= MIN_PROMPT_LENGTH;
+  // Readiness predicates live in lib/job (tested there) and mirror exactly what
+  // the submit endpoint requires, so the wizard never sends a body the server
+  // will 400 on. App type used to be ungated, so an empty one reached the server
+  // and returned a raw "String must contain at least 1 character(s)".
+  const promptReady = isPromptReady(value);
+  const appTypeReady = isAppTypeReady(value);
   const isLoading = submitState.status === 'loading';
-  const canSubmit = promptReady && !isLoading;
+  const canSubmit = canForgePrd(value) && !isLoading;
   const copy = en.wizard;
 
   /**
@@ -109,6 +119,9 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
    */
   function goNext(): void {
     if (step === 1 && !promptReady) return;
+    // Step 2 (Scope) collects the app type. Do not let the user advance to Review
+    // without it — that is how an empty app type reached the server.
+    if (step === 2 && !appTypeReady) return;
     if (step < 3) setStep((step + 1) as 1 | 2 | 3);
   }
 
@@ -327,6 +340,12 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
             <p id="wizard-entities-hint" style={hintStyle()}>
               {copy.entitiesHint}
             </p>
+            {!appTypeReady && (
+              <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
+                <span aria-hidden="true">!</span>
+                <span>{copy.appTypeRequired}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -374,6 +393,12 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
               <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
                 <span aria-hidden="true">!</span>
                 <span>{copy.promptTooShort(MIN_PROMPT_LENGTH)}</span>
+              </div>
+            )}
+            {promptReady && !appTypeReady && (
+              <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
+                <span aria-hidden="true">!</span>
+                <span>{copy.appTypeRequired}</span>
               </div>
             )}
             {submitState.status === 'loading' && (
@@ -437,8 +462,8 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
           <button
             type="button"
             onClick={goNext}
-            disabled={step === 1 && !promptReady}
-            style={buttonStyle(true, step === 1 && !promptReady)}
+            disabled={(step === 1 && !promptReady) || (step === 2 && !appTypeReady)}
+            style={buttonStyle(true, (step === 1 && !promptReady) || (step === 2 && !appTypeReady))}
           >
             {copy.next}
           </button>

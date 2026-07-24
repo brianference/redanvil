@@ -86,9 +86,9 @@
     "evidence": [
       "evidence/screenshots/ab-1280-light.png"
     ],
-    "note": "Core flow verified end to end on production earlier in this session: a real description produced a downloadable 4258-character PRD with Download .md / Copy / Save.",
-    "reviewedAt": "2026-07-23T06:15:18Z",
-    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
+    "note": "Full flow verified on production INCLUDING the previously-broken path: chat composer -> wizard -> Forge PRD returns 200 and renders a real PRD with Download/Copy/Save, zero console errors. A real user hit a 400 (\"String must contain at least 1 character(s)\") because the wizard let Review be reached with app type unset while the submit schema requires appType.min(1). Fixed: app type is now required to advance from Scope and to Forge, with an inline message, so an invalid body never reaches the server. My earlier verdict tested only the happy path where app type was set -- this is the completeness gap that path missed.",
+    "reviewedAt": "2026-07-24T04:14:52Z",
+    "reviewedCommit": "d55746498861cddf73e3241cf8a4e481a5ab3a94"
   },
   {
     "ruleId": "fe-visual-review-recorded",

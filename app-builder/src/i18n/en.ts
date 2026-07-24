@@ -285,6 +285,7 @@ export const en = {
     exampleIdeas: ['Team habit tracker', 'Local marketplace', 'Clinic waitlist'] as const,
     appTypeLabel: 'App type',
     appTypePlaceholder: 'e.g. marketplace, dashboard, content site',
+    appTypeRequired: 'Pick or type an app type to continue — it shapes the PRD.',
     appTypeChipsLabel: 'Common types',
     appTypeChips: ['SaaS', 'Marketplace', 'Internal tool', 'Mobile app', 'API'] as const,
     authYes: 'Yes',

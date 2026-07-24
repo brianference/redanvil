@@ -10,6 +10,31 @@ export interface WizardAnswers {
   entities: string;
 }
 
+/** Minimum prompt length the submit endpoint enforces (z.string().trim().min(8)). */
+export const MIN_PROMPT_LENGTH = 8;
+
+/**
+ * Whether the wizard answers satisfy what the submit endpoint requires, so the
+ * client never sends a body the server will 400 on.
+ *
+ * The submit schema is `prompt: min(8)` and `appType: min(1)`. The wizard used
+ * to gate only on the prompt, so a user could reach Review with app type unset,
+ * click Forge PRD, and get back a raw "String must contain at least 1
+ * character(s)". These predicates are the single source of truth the wizard's
+ * Next/Forge gating uses.
+ */
+export function isPromptReady(answers: WizardAnswers): boolean {
+  return answers.prompt.trim().length >= MIN_PROMPT_LENGTH;
+}
+
+export function isAppTypeReady(answers: WizardAnswers): boolean {
+  return answers.appType.trim().length > 0;
+}
+
+export function canForgePrd(answers: WizardAnswers): boolean {
+  return isPromptReady(answers) && isAppTypeReady(answers);
+}
+
 /**
  * Build job payload consumed by the orchestrator (kind = job).
  * Shape must stay a valid subset of orchestrator `JobSchema` so a client-built

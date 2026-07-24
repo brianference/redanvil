@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { buildJob, countEntities, slugFromPrompt } from './job';
+import {
+  buildJob,
+  countEntities,
+  slugFromPrompt,
+  isPromptReady,
+  isAppTypeReady,
+  canForgePrd
+} from './job';
 
 describe('slugFromPrompt', () => {
   it('derives a kebab-case slug from the prompt', () => {
@@ -59,5 +66,35 @@ describe('buildJob', () => {
     expect(job.answers.hasAuth).toBe('false');
     expect(typeof job.createdAt).toBe('string');
     expect(Number.isNaN(Date.parse(job.createdAt))).toBe(false);
+  });
+});
+
+describe('wizard readiness (canForgePrd)', () => {
+  const base = {
+    prompt: 'an app to remind me to clean my dog ears',
+    appType: '',
+    hasAuth: false,
+    entities: ''
+  };
+
+  it('is not ready to forge when app type is empty — the exact production 400', () => {
+    // User typed a real prompt but never picked an app type. The submit schema is
+    // appType.min(1), so an empty one returned "String must contain at least 1
+    // character(s)". The wizard must block this before it reaches the server.
+    expect(isPromptReady(base)).toBe(true);
+    expect(isAppTypeReady(base)).toBe(false);
+    expect(canForgePrd(base)).toBe(false);
+  });
+
+  it('is not ready when app type is only whitespace', () => {
+    expect(canForgePrd({ ...base, appType: '   ' })).toBe(false);
+  });
+
+  it('is ready once both prompt and app type are provided', () => {
+    expect(canForgePrd({ ...base, appType: 'Mobile app' })).toBe(true);
+  });
+
+  it('is not ready when the prompt is too short even with an app type', () => {
+    expect(canForgePrd({ ...base, prompt: 'short', appType: 'SaaS' })).toBe(false);
   });
 });
