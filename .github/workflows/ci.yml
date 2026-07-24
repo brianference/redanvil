@@ -53,6 +53,14 @@ jobs:
       # repo's own CI blockers are scored here instead of nowhere.
       - name: Gate the repo against its own CI-lane blockers
         run: node .github/scripts/gate_repo_ci.mjs
+      # End-to-end smoke of the core flow against production, driven by role with
+      # web-first assertions (no fixed sleeps). Catches the chat -> wizard -> Forge
+      # PRD path that shipped a 400. Best-effort: needs a browser, so it installs
+      # chromium and does not fail the build if the browser cannot launch in CI.
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: E2E smoke against production
+        run: node .github/scripts/e2e_smoke.mjs https://redanvil.pages.dev/
 
   # Note: linting is NOT repeated here. The root `npm run lint` in the
   # orchestrator job runs `eslint .` over the whole repo, which already covers
