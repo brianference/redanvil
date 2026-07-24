@@ -1,0 +1,114 @@
+[
+  {
+    "ruleId": "u-conc-idiomatic",
+    "passed": false,
+    "evidence": [
+      "app-builder/src/components/Wizard.tsx",
+      "app-builder/src/components/Page.tsx",
+      "app-builder/src/lib/job.ts"
+    ],
+    "note": "Wizard.tsx:90-597 is one 507-line component function whose JSX carries ~19 inline branch points (step===1/2/3 at :226,:266,:458, !appTypeReady :449, !promptReady :510, promptReady&&!appTypeReady :516, three submitState checks :522,:533,:539, the duplicated (step===1&&!promptReady)||(step===2&&!appTypeReady) at :583 and :584), and its step-2 block alone runs :266-456 of inline markup; handleSubmit Wizard.tsx:145-208 nests try/catch inside try/catch with a 4-condition ternary at :179-184 (complexity ~12). Page.tsx:158-575 is a 417-line function that embeds a 153-line CSS string literal at :232-385 before the header/drawer/sidebar/footer markup. lib/job.ts is the counter-example (every function under 15 lines) so the corpus norm is clearly far below these two."
+  },
+  {
+    "ruleId": "u-conc-no-speculative-abstraction",
+    "passed": false,
+    "evidence": [
+      "app-builder/src/components/Wizard.tsx",
+      "app-builder/src/components/wizard.test.ts",
+      "app-builder/src/pages/Home.tsx"
+    ],
+    "note": "Wizard.tsx:772-788 exports reviewAnswerRows, a parallel re-implementation of the seven ReviewRow elements already written inline at Wizard.tsx:463-492; a repo-wide scan finds its only importer is wizard.test.ts:10 (zero production callers), so the two lists can drift silently. Wizard.tsx:727 (`export { EMPTY_WIZARD_ANSWERS }`) is a pass-through re-export whose single consumer, Home.tsx:5, already imports countEntities/countScopeSignals directly from '../lib/job' at Home.tsx:9-14."
+  },
+  {
+    "ruleId": "u-conc-use-what-exists",
+    "passed": false,
+    "evidence": [
+      "app-builder/src/components/ComposerChat.tsx",
+      "app-builder/src/components/TemplateGallery.tsx",
+      "app-builder/src/lib/job.ts",
+      "app-builder/functions/api/health.ts",
+      "app-builder/functions/lib/http.ts"
+    ],
+    "note": "lib/job.ts:29 already exports MIN_PROMPT_LENGTH (and Wizard.tsx:9 imports it), yet ComposerChat.tsx:13 and TemplateGallery.tsx:14 each redeclare their own `const MIN_PROMPT_LENGTH = 8` — three copies of the one value the submit schema enforces. functions/api/health.ts:4-12 hand-writes the content-type/nosniff/CORS header object that functions/lib/http.ts:6-15 responseHeaders exists to produce, and every other endpoint uses. Dependency hygiene itself is fine (zod + react-router only, no new packages)."
+  },
+  {
+    "ruleId": "u-conc-smallest-diff",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/lib/savedList.ts",
+      "app-builder/src/lib/abortableEffect.ts",
+      "app-builder/functions/api/jobs.ts",
+      "app-builder/src/components/Wizard.tsx"
+    ],
+    "note": "A grep over all of src/ and functions/ for commented-out code (`^\\s*// *(const|let|function|if|return|import|export|<)`), TODO/FIXME/stub/bypass markers, eslint-disable and ts-ignore returns zero hits in app code; jobs.ts:12-23 and savedList.ts:42-54 are minimal with no unused options, and abortableEffect.ts:26-51 exposes exactly the three members useAbortableJsonGet.ts:65-77 consumes. The one prod-unused export (reviewAnswerRows, Wizard.tsx:772) is charged to u-conc-no-speculative-abstraction rather than counted twice."
+  },
+  {
+    "ruleId": "u-val-input-validation",
+    "passed": true,
+    "evidence": [
+      "app-builder/functions/api/submit.ts",
+      "app-builder/functions/api/prds.ts",
+      "app-builder/functions/api/prd/[id].ts",
+      "app-builder/functions/api/jobs.ts"
+    ],
+    "note": "The only two endpoints that read a body both parse it with a real schema before use: submit.ts:18-23 (prompt trim min 8/max 10k, appType 1-64, boolean, entities int 0-10000) checked at :40-44 before buildJob at :46, and prds.ts:18-23 (slug regex /^[a-z0-9][a-z0-9-]{1,48}$/, title 2-200, prompt 8-10k, markdown 20-200k) at :38-42 — bounds that actually reject, as prds.test.ts:27-52 and submit.test.ts:71-98 demonstrate. GET handlers carry no body; prd/[id].ts:16-20 still rejects an empty path param, and all D1 access is parameterized (submit.ts:55-59, prds.ts:49-53, jobs.ts:16-18)."
+  },
+  {
+    "ruleId": "u-sec-no-stub-paths",
+    "passed": true,
+    "evidence": [
+      "app-builder/functions/lib/http.ts",
+      "app-builder/functions/api/submit.ts",
+      "app-builder/functions/api/prd/[id].ts",
+      "app-builder/src/lib/useAbortableJsonGet.ts"
+    ],
+    "note": "No guard returns true unconditionally and no TODO/stub/bypass marker exists anywhere in functions/ or src/ (grep for todo|fixme|stub|bypass|temporar|not implemented is clean in app code; the only prd.ts hits are PRD template prose). http.ts:7 derives the CORS origin from `new URL(request.url).origin` — the worker's own URL, not the attacker-controlled Origin header — so it is not a reflection bypass, and no wildcard is emitted. Error paths fail closed to 400/404/500 with fixed copy (submit.ts:60-62, prd/[id].ts:30-37) and the client mirrors that at useAbortableJsonGet.ts:109-115, where an unparseable payload becomes an error, not a success."
+  },
+  {
+    "ruleId": "u-test-adequacy",
+    "passed": false,
+    "evidence": [
+      "app-builder/src/i18n/en.test.ts",
+      "app-builder/src/components/templateGallery.test.ts",
+      "app-builder/src/components/wizard.test.ts",
+      "app-builder/src/lib/estimate.test.ts"
+    ],
+    "note": "en.test.ts is dominated by presence-only assertions that no real string can fail — `.length).toBeGreaterThan(2)` at :11,:12,:13,:17,:23,:24,:25,:32,:34,:36,:37,:38,:39,:40,:41,:42,:43,:47,:54,:56,:61,:66 — and the same pattern covers the newly added features: templateGallery.test.ts:12-15 asserts variant id/label/appType are longer than 2 chars and prompt longer than 20, wizard.test.ts:22-31 asserts ten copy strings are longer than 2. That is the bulk of the coverage for the template-variant and scope-option work; behaviour is only reached at templateGallery.test.ts:26-52 and wizard.test.ts:59-68. estimate.test.ts:5-51 shows the bar the rest should meet (pinned arithmetic, monotonicity, boundary and band assertions)."
+  },
+  {
+    "ruleId": "u-test-behavioral",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/lib/savePrd.test.ts",
+      "app-builder/functions/api/jobs.test.ts",
+      "app-builder/functions/api/submit.test.ts",
+      "app-builder/src/lib/job.test.ts",
+      "app-builder/src/lib/abortableEffect.test.ts"
+    ],
+    "note": "Mocking sits on real boundaries, not internals: savePrd.test.ts:19-41 stubs global fetch and asserts the outgoing URL, method and exact JSON body plus the 400 and network-failure branches at :44-71; jobs.test.ts:10-18 injects a D1 binding through Env and drives the real onRequestGet, asserting the controlled 500 body at :40-47; submit.test.ts:29-37 asserts the response headers including that ACAO is not '*'; job.test.ts:30-55 injects the clock (`new Date('2026-07-22T12:00:00.000Z')`) instead of freezing time internally. abortableEffect.test.ts:43-65 asserts the observable race outcome (a stale run cannot overwrite a newer one), not the private `active` variable."
+  },
+  {
+    "ruleId": "fe-pages-compose",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/src/pages/About.tsx",
+      "app-builder/src/components/LegalPage.tsx",
+      "app-builder/src/pages/Saved.tsx",
+      "app-builder/src/pages/SavedPrd.tsx"
+    ],
+    "note": "Home.tsx:140-177 is a four-branch composition of Page/ComposerChat/TemplateGallery/Wizard/PrdResult with all generation logic in lib (:104-116); About.tsx:6-14 (and Contact/Privacy/Terms) is a 14-line delegation to LegalPage.tsx:24-56. Saved.tsx and SavedPrd.tsx delegate the shell to Page and their state mapping to named helpers (toListState Saved.tsx:29-38, toDetailState SavedPrd.tsx:75-86, KpiCard :178-185). Weakest point, short of a fail: the recent-build card at Saved.tsx:136-167 is ~30 lines of three-deep inline markup that should be a BuildCard beside the KpiCard that was extracted."
+  },
+  {
+    "ruleId": "fe-fail-closed-states",
+    "passed": true,
+    "evidence": [
+      "app-builder/src/pages/Saved.tsx",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/src/components/PrdResult.tsx",
+      "app-builder/src/components/Wizard.tsx",
+      "app-builder/src/components/TemplateGallery.tsx"
+    ],
+    "note": "Saved.tsx models the union explicitly at :16-20 and renders all four arms — loading :78-83, error with a retry button :85-99, a dedicated empty card :101-120 (toListState:36 turns an empty array into 'empty', not a silent blank), success :122-170. SavedPrd.tsx:20-24 adds not-found and maps HTTP 404 to it at :82 rather than to a generic error. PrdResult.tsx:116-135 covers saving/saved/error for POST /api/prds, Wizard.tsx:522-561 covers submitting/error/success, TemplateGallery.tsx:327-346 shows an alert or the empty-state hint. The one soft spot is Saved.tsx:122 (`state.status === 'success' && kpis !== null`), which would render a blank page if kpis were ever null — unreachable today because the useMemo at :59-67 recomputes with state."
+  }
+]
