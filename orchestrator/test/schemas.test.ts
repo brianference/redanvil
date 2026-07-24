@@ -144,3 +144,28 @@ describe('RunResultSchema coherence', () => {
     expect(() => parseByKind('results', { ...base, total: 999 })).toThrow(ValidationError);
   });
 });
+
+describe('parseVerdicts method-match (F4)', () => {
+  it('rejects a visual rule supplied as a judge verdict', async () => {
+    const { parseVerdicts } = await import('../src/schemas/verdicts');
+    const v = JSON.stringify([
+      {
+        ruleId: 'fe-light-dark',
+        passed: true,
+        method: 'judge',
+        evidence: ['README.md'],
+        note: 'valid note here',
+        reviewedAt: '2026-07-23T00:00:00.000Z',
+        reviewedCommit: 'abcdef1'
+      }
+    ]);
+    let msg = '';
+    try {
+      parseVerdicts(v, 'test');
+    } catch (e) {
+      const err = e as { issues?: string[] };
+      msg = (err.issues ?? []).join(' ');
+    }
+    expect(msg).toMatch(/does not match rubric method/);
+  });
+});

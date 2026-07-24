@@ -858,3 +858,59 @@ describe('check.mjs — ci lane', () => {
     expect(r.status, r.stderr).toBe(3);
   });
 });
+
+describe('check.mjs — cross-check coverage gaps (F1, F2)', () => {
+  it('F1: catches string-CONCAT SQL injection, not only template literals', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'functions/api/u.ts',
+      'export function g(db: { prepare: (s: string) => unknown }, id: string) {\n' +
+        '  const q = "SELECT * FROM users WHERE id = \'" + id + "\'";\n' +
+        '  return db.prepare(q);\n}\n'
+    );
+    const r = runCheck('u-sec-param-sql', app);
+    expect(r.status, r.stderr).not.toBe(0);
+  });
+
+  it('F1: still passes parameterized SQL', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'functions/api/u.ts',
+      'export function g(db: { prepare: (s: string) => { bind: (...a: unknown[]) => unknown } }, id: string) {\n' +
+        "  return db.prepare('SELECT * FROM users WHERE id = ?').bind(id);\n}\n"
+    );
+    expect(runCheck('u-sec-param-sql', app).status).toBe(0);
+  });
+
+  it('F2: catches an auth stub with a statement before return true', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'functions/lib/a.ts',
+      'export function checkAuth(token: string): boolean {\n  console.log(token);\n  return true;\n}\n'
+    );
+    expect(runCheck('u-sec-no-stub-paths', app).status).not.toBe(0);
+  });
+
+  it('F2: catches a `|| true` auth guard that can never be false', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'functions/lib/a.ts',
+      "export function isAuthorized(u: { role: string }): boolean {\n  return u.role === 'admin' || true;\n}\n"
+    );
+    expect(runCheck('u-sec-no-stub-paths', app).status).not.toBe(0);
+  });
+
+  it('F2: still passes a real auth guard with a false path', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'functions/lib/a.ts',
+      'export async function checkAuth(token: string): Promise<boolean> {\n  if (!token) return false;\n  return token.length > 10;\n}\n'
+    );
+    expect(runCheck('u-sec-no-stub-paths', app).status).toBe(0);
+  });
+});

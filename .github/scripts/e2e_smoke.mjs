@@ -27,6 +27,11 @@ if (!baseUrl) {
 const traceIdx = args.indexOf('--trace');
 const tracePath = traceIdx === -1 ? null : args[traceIdx + 1];
 
+// A silent exit-0 skip when Playwright is absent means a broken CI install turns
+// the regression guard into a no-op that reports success. Skipping is only OK
+// when explicitly opted in (local dev without a browser); in CI, absence is a
+// hard failure. Default to strict; REDANVIL_E2E_ALLOW_SKIP=1 opts out.
+const allowSkip = process.env.REDANVIL_E2E_ALLOW_SKIP === '1';
 let chromium, expect;
 try {
   ({ chromium, expect } = require('playwright/test'));
@@ -34,8 +39,12 @@ try {
   try {
     ({ chromium } = require('playwright'));
   } catch {
-    console.error('e2e smoke skipped: playwright is not installed here');
-    process.exit(0);
+    if (allowSkip) {
+      console.error('e2e smoke skipped: playwright not installed (REDANVIL_E2E_ALLOW_SKIP=1)');
+      process.exit(0);
+    }
+    console.error('e2e smoke FAIL: playwright is not installed — the flow was NOT verified');
+    process.exit(2);
   }
 }
 

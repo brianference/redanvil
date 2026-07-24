@@ -73,6 +73,18 @@ export function parseVerdicts(raw: string, source: string, repoRoot = process.cw
       issues.push(
         `${v.ruleId}: method '${rule.method}' is decided by a check — it cannot be supplied as a verdict`
       );
+    } else {
+      // The declared verdict method must match how the rubric decides the rule.
+      // A `visual` rule (contrast, layout) cannot be satisfied by a `judge`
+      // (code-reading) verdict, and vice versa — the comment above promised this
+      // but only the det/hook case was enforced. `det+judge` accepts the judge
+      // half here (the det half runs as a check separately).
+      const expected = rule.method === 'det+judge' ? 'judge' : rule.method;
+      if (v.method !== expected) {
+        issues.push(
+          `${v.ruleId}: verdict method '${v.method}' does not match rubric method '${rule.method}' (expected '${expected}')`
+        );
+      }
     }
     for (const path of v.evidence) {
       if (!existsSync(join(repoRoot, path))) {

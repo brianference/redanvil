@@ -143,23 +143,35 @@ function hasSchemaValidation(content) {
   return false;
 }
 
+/** SQL clause structure that marks a string as an actual query, not prose. */
+const SQL_CLAUSE =
+  /(\bSELECT\b[\s\S]*?\bFROM\b|\bINSERT\s+INTO\b|\bUPDATE\b[\s\S]*?\bSET\b|\bDELETE\s+FROM\b)/i;
+
 /**
- * Find a template literal that contains real SQL syntax AND a ${ interpolation.
- * Scans the whole file so multi-line SQL is caught. Prose like "create, edit, and
- * delete ${e}" does not match because it lacks SQL clause structure.
+ * Find SQL built by string interpolation — in a template literal (`... ${x}`) OR
+ * by concatenation (`"SELECT ... " + id`). The template-only version missed the
+ * textbook `"SELECT * FROM t WHERE id = '" + id + "'"`, so a string-concat
+ * injection cleared the blocker. Prose like "create, edit, and delete ${e}" is
+ * ignored because it lacks SQL clause structure.
  */
 function findInterpolatedSql(content) {
   const templateRe = /`(?:\\[\s\S]|[^\\`])*`/g;
   let m;
   while ((m = templateRe.exec(content)) !== null) {
     const lit = m[0];
-    if (!/\$\{/.test(lit)) continue;
-    if (
-      /(\bSELECT\b[\s\S]*?\bFROM\b|\bINSERT\s+INTO\b|\bUPDATE\b[\s\S]*?\bSET\b|\bDELETE\s+FROM\b)/i.test(
-        lit
-      )
-    ) {
+    if (/\$\{/.test(lit) && SQL_CLAUSE.test(lit)) {
       return lit.slice(0, 120).replace(/\s+/g, ' ');
+    }
+  }
+  // Concatenation: a SQL-clause string literal adjacent to a `+`, i.e. a query
+  // string being glued to a variable. `'...' + x` or `x + '...'`.
+  const concatRe = /(['"])((?:\\.|(?!\1).)*)\1/g;
+  while ((m = concatRe.exec(content)) !== null) {
+    if (!SQL_CLAUSE.test(m[2])) continue;
+    const before = content.slice(Math.max(0, m.index - 3), m.index);
+    const after = content.slice(concatRe.lastIndex, concatRe.lastIndex + 3);
+    if (/\+\s*$/.test(before) || /^\s*\+/.test(after)) {
+      return m[0].slice(0, 120);
     }
   }
   return null;
@@ -184,18 +196,37 @@ function findUnconditionalAuthStub(content) {
     /\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*(?::\s*[^{;=]+)?\s*\{([^{}]*)\}/g;
   let m;
   while ((m = fnRe.exec(content)) !== null) {
-    if (!isAuthLikeName(m[1])) continue;
-    if (/^\s*return\s+(true|!0|1)\s*;?\s*$/.test(m[2])) {
-      return m[1];
-    }
+    if (isAuthLikeName(m[1]) && bodyAlwaysReturnsTrue(m[2])) return m[1];
   }
   // const checkAuth = (): boolean => true  /  async (x): Promise<boolean> => { return true; }
   const arrowRe =
-    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::\s*[^=]+)?=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*(?::\s*[^=]+?)?=>\s*(?:\{\s*return\s+(true|!0|1)\s*;?\s*\}|(true|!0|1))\s*;?/g;
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::\s*[^=]+)?=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*(?::\s*[^=]+?)?=>\s*(?:\{([^{}]*)\}|(true|!0|1))\s*;?/g;
   while ((m = arrowRe.exec(content)) !== null) {
-    if (isAuthLikeName(m[1])) return m[1];
+    if (!isAuthLikeName(m[1])) continue;
+    if (m[3] !== undefined || (m[2] !== undefined && bodyAlwaysReturnsTrue(m[2]))) return m[1];
   }
   return null;
+}
+
+/**
+ * True when a function body unconditionally yields a truthy result — not only a
+ * bare `return true`, but a body that logs/does other statements and then
+ * returns true, or a `return <anything> || true` that can never be false. The
+ * original "body is exactly `return true`" test let `{ log(x); return true; }`
+ * and `return role === 'admin' || true` through.
+ */
+function bodyAlwaysReturnsTrue(body) {
+  // A `... || true` / `|| !0` / `|| 1` return is always truthy.
+  if (/return\s[^;]*\|\|\s*(true|!0|1)\s*;?/.test(body)) return true;
+  // The last return in the body is a truthy constant, regardless of preceding
+  // statements — as long as there is no earlier conditional return that could
+  // return something else first (a real guard has a `return false`/`return null`
+  // path). If any `return` in the body yields a non-truthy value, it is not an
+  // unconditional stub.
+  const returns = [...body.matchAll(/return\s+([^;]+);?/g)].map((r) => r[1].trim());
+  if (returns.length === 0) return false;
+  const truthy = (r) => /^(true|!0|1)$/.test(r);
+  return returns.every(truthy);
 }
 
 /**
