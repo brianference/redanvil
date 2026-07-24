@@ -100,6 +100,10 @@
       "passed": true
     },
     {
+      "ruleId": "proc-conventional-commits",
+      "passed": true
+    },
+    {
       "ruleId": "fe-light-dark",
       "passed": true
     },
@@ -196,9 +200,9 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-24T06:00:15.391Z",
+  "finishedAt": "2026-07-24T06:37:42.611Z",
   "provenance": {
-    "commit": "3429b497c41521a3c0802249977462c1af392268",
+    "commit": "815bc002afa5e4fc76c38d137c77845237429eca",
     "dirty": false,
     "rubricHash": "45a53e66eedbb284d8289c7f2f35c986ad001b52ff4e06a0965bf33916cf2dc3",
     "rubricRuleCount": 53,
@@ -208,6 +212,6 @@
       "ci",
       "process"
     ],
-    "generatedAt": "2026-07-24T06:00:15.438Z"
+    "generatedAt": "2026-07-24T06:37:42.656Z"
   }
 }
