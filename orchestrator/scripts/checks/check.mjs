@@ -466,6 +466,83 @@ switch (ruleId) {
     }
     break;
   }
+  case 'u-data-no-placeholder': {
+    // per-app-pack: "Real data only. No dummy, fake, placeholder, or lorem ipsum
+    // content." Previously unscored prose — a shipped lorem block passed the gate.
+    const files = [...tsx(), ...walk(functionsDir, ['.ts', '.js'])].filter((f) => !isTestFile(f));
+    if (files.length === 0) notApplicable('no source files');
+    const PLACEHOLDER =
+      /lorem\s+ipsum|dolor\s+sit\s+amet|foo@(example|test)\.com|john\.?doe@|TODO:\s*replace|REPLACE_ME|<placeholder>|xxx-xxx-xxx/i;
+    const hit = firstMatch(files, PLACEHOLDER);
+    hit ? fail(`placeholder / lorem data in shipped source: ${hit}`) : pass();
+    break;
+  }
+  case 'fe-seo-assets': {
+    // per-app-pack: "Full SEO: ... a real OG image, sitemap, robots.txt". These are
+    // FILES — deterministically checkable, not something a reviewer should assert.
+    const pub = join(appDir, 'public');
+    if (!existsSync(pub)) notApplicable('no public/ directory');
+    const need = ['sitemap.xml', 'robots.txt'];
+    for (const n of need) {
+      if (!existsSync(join(pub, n))) fail(`missing SEO asset: public/${n}`);
+    }
+    const og = readdirSync(pub).some((f) => /^og[.-]|og.*\.(png|jpg|webp)$/i.test(f));
+    if (!og) fail('missing a real OG image in public/ (og.png or similar)');
+    pass();
+    break;
+  }
+  case 'u-plat-migrations': {
+    // A D1 binding implies the schema must be reproducible from the repo. The app
+    // shipped with no migrations/ at all and only a dump under backups/, so a
+    // fresh database could not be recreated.
+    const wrangler = join(appDir, 'wrangler.toml');
+    if (!existsSync(wrangler)) notApplicable('no wrangler.toml');
+    if (!/\[\[d1_databases\]\]/.test(read(wrangler))) notApplicable('no D1 binding');
+    const mig = join(appDir, 'migrations');
+    if (!existsSync(mig))
+      fail('D1 binding present but no migrations/ directory — schema is not reproducible');
+    const ddl = walk(mig, ['.sql']).some((f) => /CREATE\s+TABLE/i.test(read(f)));
+    ddl ? pass() : fail('migrations/ contains no CREATE TABLE — schema is not reproducible');
+    break;
+  }
+  case 'fe-icon-button-labels': {
+    // design rule R1.5: icon-only buttons need an accessible name. A button whose
+    // children carry no text must have aria-label / aria-labelledby.
+    const files = tsx().filter((f) => !isTestFile(f));
+    if (files.length === 0) notApplicable('no component source');
+    for (const f of files) {
+      const c = read(f);
+      // <button ...>{only an aria-hidden span / svg / entity}</button>
+      const btnRe = /<button(\s[^>]*)?>([\s\S]*?)<\/button>/g;
+      let m;
+      while ((m = btnRe.exec(c)) !== null) {
+        const attrs = m[1];
+        const inner = m[2];
+        if (/aria-label|aria-labelledby/.test(attrs)) continue;
+        // Content inside an aria-hidden element provides NO accessible name, so
+        // remove those subtrees first — otherwise a `<span aria-hidden>✕</span>`
+        // glyph reads as text and an unlabelled icon button passes.
+        const visible = inner.replace(
+          /<([a-zA-Z][\w.-]*)\b[^>]*aria-hidden\s*=\s*["{]?true[^>]*>[\s\S]*?<\/\1>/g,
+          ''
+        );
+        // A remaining JSX expression (`{copy.browseTemplates}`, `{label}`) renders
+        // real text at runtime, so it DOES give the button a name. Treating it as
+        // empty flagged a correctly-labelled i18n button. Stay conservative: only
+        // fail when nothing but markup remains after aria-hidden content is gone.
+        if (/\{[^}]*\}/.test(visible)) continue;
+        const text = visible
+          .replace(/<[^>]*>/g, '')
+          .replace(/&[a-z]+;/gi, '')
+          .trim();
+        if (text.length === 0) {
+          fail(`icon-only button without an accessible name: ${f}`);
+        }
+      }
+    }
+    pass();
+    break;
+  }
   case 'u-plat-worker-runtime': {
     // Node-only globals and modules in Worker or browser code. Unit tests run in
     // Node, where all of these exist, so a passing suite proves nothing here --

@@ -46,6 +46,10 @@ export const APP_CHECKS: Check[] = [
   det('hyg-secret-scan'),
   det('u-sec-sast'),
   det('u-plat-worker-runtime'),
+  det('u-data-no-placeholder'),
+  det('u-plat-migrations'),
+  det('fe-seo-assets'),
+  det('fe-icon-button-labels'),
   det('u-conc-no-padding'),
   det('hyg-no-duplication')
 ];

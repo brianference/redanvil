@@ -34,6 +34,13 @@ export const RULES: Rule[] = [
   // in Workers and browsers, which have neither -- the single most repeated
   // production failure in this environment.
   rule('u-plat-worker-runtime', 'security', 'blocker', 'det'),
+  // Prose in per-app-pack that was mechanically checkable but scored by a human
+  // verdict (or not at all). Converting asserted requirements into measured ones
+  // is the only way the score's "asserted surface" shrinks.
+  rule('u-data-no-placeholder', 'hygiene', 'blocker', 'det'),
+  rule('u-plat-migrations', 'security', 'blocker', 'det'),
+  rule('fe-seo-assets', 'frontend', 'major', 'det'),
+  rule('fe-icon-button-labels', 'frontend', 'blocker', 'det'),
 
   rule('u-test-presence', 'testing', 'blocker', 'det'),
   rule('u-test-adequacy', 'testing', 'major', 'det+judge'),

@@ -33,3 +33,5 @@ Promoted from prose/checklist to scored rules so the mobile design system is mea
 - fe-type-floor (blocker, visual): body text >= 16px on mobile for primary content (R3.1).
 - fe-noncolor-state (major, visual): state is never signalled by color alone; pair with icon/text/weight (R4.2).
 - fe-safe-areas (major, visual): respect top/bottom/landscape safe areas; content never trapped under fixed header/tab bar (R2.1/R2.2).
+- fe-seo-assets (major, det): public/ ships sitemap.xml, robots.txt, and a real OG image. These are files — measured, not asserted.
+- fe-icon-button-labels (blocker, det): every button whose children carry no text has aria-label or aria-labelledby (design rule R1.5).
