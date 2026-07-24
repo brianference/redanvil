@@ -1,0 +1,54 @@
+name: Drift re-gate
+
+# The scheduled outer loop from docs/claude-primitives-integration.md: the ralph
+# loop converges once and nothing re-checks production afterward. This re-runs the
+# real audits against the LIVE site on a cadence and fails (surfacing an alert) on
+# any regression — the contrast regression and the wizard 400 this project shipped
+# would each have been caught here the next day instead of by a user.
+
+on:
+  schedule:
+    # 14:00 UTC daily. GitHub Actions has real internet egress; a local cron does not.
+    - cron: '0 14 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      # Accessibility + contrast on both surfaces, both themes. axe-core, not a
+      # hand-rolled measurement (base rule 16).
+      - name: axe — app-builder (dark)
+        run: node .github/scripts/a11y_audit.mjs https://redanvil.pages.dev/ --theme dark
+      - name: axe — app-builder (light)
+        run: node .github/scripts/a11y_audit.mjs https://redanvil.pages.dev/ --theme light
+      - name: axe — dashboard (dark)
+        run: node .github/scripts/a11y_audit.mjs https://redanvil-dashboard.pages.dev/ --theme dark
+      - name: axe — dashboard (light)
+        run: node .github/scripts/a11y_audit.mjs https://redanvil-dashboard.pages.dev/ --theme light
+
+      # The core flow must still work end to end (chat -> wizard -> Forge PRD).
+      - name: E2E smoke — core flow
+        run: node .github/scripts/e2e_smoke.mjs https://redanvil.pages.dev/ --trace e2e-drift.zip
+
+      # Keep the trace when something fails, so a drift is opened, not re-driven.
+      - name: Upload e2e trace on failure
+        if: failure()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: e2e-drift-trace
+          path: e2e-drift.zip
+          if-no-files-found: ignore
