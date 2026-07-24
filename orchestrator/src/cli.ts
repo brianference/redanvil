@@ -107,9 +107,26 @@ async function writeResultFile(
   console.log(`wrote result to ${outPath}`);
 }
 
+/** Flags the CLI accepts. Anything else is a typo and must not be swallowed. */
+const KNOWN_FLAGS = new Set([
+  'threshold',
+  'judge',
+  'slug',
+  'out',
+  'deploy',
+  'na',
+  'spec',
+  'max-iters',
+  'no-isolate'
+]);
+
 async function main(): Promise<number> {
   const { positionals, values } = parseArgs({
     allowPositionals: true,
+    // Kept permissive so an unknown flag produces our own message below rather
+    // than a raw TypeError, but it is NOT ignored: `--verdicts` (the wrong name
+    // for `--judge`) was silently dropped and the gate scored 23/45 instead of
+    // 45/45 while still exiting 0. A misspelt flag must fail loudly.
     strict: false,
     options: {
       threshold: { type: 'string' },
@@ -123,6 +140,24 @@ async function main(): Promise<number> {
       'no-isolate': { type: 'boolean' }
     }
   });
+
+  const unknown = Object.keys(values).filter((k) => !KNOWN_FLAGS.has(k));
+  if (unknown.length > 0) {
+    console.error(
+      `unknown flag(s): ${unknown.map((u) => `--${u}`).join(', ')}\n` +
+        `known flags: ${[...KNOWN_FLAGS].map((k) => `--${k}`).join(', ')}`
+    );
+    return 2;
+  }
+
+  // Both write sites (gate, loop) require --slug to emit a result. Asking for
+  // output and silently not producing it is the worst outcome: the caller
+  // believes the committed result was refreshed when it still holds the previous
+  // run's rubric hash, and the gate still exits 0.
+  if (typeof values.out === 'string' && typeof values.slug !== 'string') {
+    console.error('--out requires --slug (the result file records which app was gated)');
+    return 2;
+  }
   const [command, arg] = positionals;
 
   if (command === 'validate') {

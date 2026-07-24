@@ -121,13 +121,33 @@ function parseHit(hit) {
   return { file: m[1], line: Number(m[2]), text: m[3] };
 }
 
+/**
+ * Blank out regex literals in a line, keeping its length and the rest of the code.
+ *
+ * A content scanner must not match the pattern that defines it. `u-data-no-placeholder`
+ * failed on `const PLACEHOLDER_RE = /\b(TBD|TODO|lorem ipsum)\b/i` — the detector
+ * flagging its own source, the same self-match that once blocked a secret-scanner's
+ * install commit. This removes only regex literals, so placeholder text sitting in a
+ * string, JSX, or seed object is still caught.
+ */
+function stripRegexLiterals(line) {
+  // A literal starts after an operator/punctuator (never after an identifier or `)`,
+  // where `/` is division) and runs to the next unescaped `/`, allowing char classes.
+  return line.replace(
+    /([=(,:[!&|?+]|\breturn\b|^)(\s*)\/(?![*/])(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\])+\/[dgimsuy]*/g,
+    (_m, lead, ws) => `${lead}${ws}/RE/`
+  );
+}
+
 /** Any file matching pred → returns the first offending "file: line" or null. */
-function firstMatch(files, re, skip = () => false) {
+function firstMatch(files, re, skip = () => false, sanitize = (l) => l) {
   for (const f of files) {
     if (skip(f)) continue;
     const lines = read(f).split('\n');
     for (let i = 0; i < lines.length; i++) {
-      if (re.test(lines[i])) return `${f}:${i + 1}: ${lines[i].trim().slice(0, 100)}`;
+      if (re.test(sanitize(lines[i]))) {
+        return `${f}:${i + 1}: ${lines[i].trim().slice(0, 100)}`;
+      }
     }
   }
   return null;
@@ -473,7 +493,7 @@ switch (ruleId) {
     if (files.length === 0) notApplicable('no source files');
     const PLACEHOLDER =
       /lorem\s+ipsum|dolor\s+sit\s+amet|foo@(example|test)\.com|john\.?doe@|TODO:\s*replace|REPLACE_ME|<placeholder>|xxx-xxx-xxx/i;
-    const hit = firstMatch(files, PLACEHOLDER);
+    const hit = firstMatch(files, PLACEHOLDER, () => false, stripRegexLiterals);
     hit ? fail(`placeholder / lorem data in shipped source: ${hit}`) : pass();
     break;
   }
