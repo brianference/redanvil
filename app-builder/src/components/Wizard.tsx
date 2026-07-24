@@ -2,11 +2,14 @@ import { useState, type ChangeEvent, type FormEvent, type CSSProperties } from '
 import { estimate } from '../lib/estimate';
 import {
   countEntities,
+  countScopeSignals,
   isPromptReady,
   isAppTypeReady,
   canForgePrd,
   MIN_PROMPT_LENGTH,
+  EMPTY_WIZARD_ANSWERS,
   type BuildJob,
+  type DataStorage,
   type WizardAnswers
 } from '../lib/job';
 import { en } from '../i18n/en';
@@ -91,10 +94,12 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
   const entityCount = countEntities(value.entities);
   /** One base feature for the app shell, plus one per named entity. */
   const features = Math.max(1, entityCount + (value.appType.trim() ? 1 : 0));
+  const scopeSignals = countScopeSignals(value);
   const cost = estimate({
     features,
     hasAuth: value.hasAuth,
-    entities: entityCount
+    entities: entityCount,
+    scopeSignals
   });
 
   // Readiness predicates live in lib/job (tested there) and mirror exactly what
@@ -340,6 +345,107 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
             <p id="wizard-entities-hint" style={hintStyle()}>
               {copy.entitiesHint}
             </p>
+
+            <p
+              style={{ ...fieldLabelStyle, marginTop: theme.space.lg }}
+              id="wizard-storage-label"
+            >
+              {copy.dataStorageLabel}
+            </p>
+            <p style={hintStyle()}>{copy.dataStorageHint}</p>
+            <div style={chipsRowStyle} role="group" aria-labelledby="wizard-storage-label">
+              {(
+                [
+                  ['none', copy.dataStorageOptions.none],
+                  ['simple', copy.dataStorageOptions.simple],
+                  ['relational', copy.dataStorageOptions.relational]
+                ] as const
+              ).map(([key, label]) => {
+                const selected = value.dataStorage === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    style={chipStyle(selected)}
+                    aria-pressed={selected}
+                    onClick={() => {
+                      const storage: DataStorage = key;
+                      patch({ dataStorage: storage });
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <p
+              style={{ ...fieldLabelStyle, marginTop: theme.space.lg }}
+              id="wizard-realtime-label"
+            >
+              {copy.realtimeLabel}
+            </p>
+            <p style={hintStyle()}>{copy.realtimeHint}</p>
+            <div style={chipsRowStyle} role="group" aria-labelledby="wizard-realtime-label">
+              <button
+                type="button"
+                style={chipStyle(value.hasRealtime)}
+                aria-pressed={value.hasRealtime}
+                onClick={() => {
+                  patch({ hasRealtime: true });
+                }}
+              >
+                {copy.realtimeYes}
+              </button>
+              <button
+                type="button"
+                style={chipStyle(!value.hasRealtime)}
+                aria-pressed={!value.hasRealtime}
+                onClick={() => {
+                  patch({ hasRealtime: false });
+                }}
+              >
+                {copy.realtimeNo}
+              </button>
+            </div>
+
+            <label
+              htmlFor="wizard-integrations"
+              style={{ ...labelStyle(), marginTop: theme.space.lg }}
+            >
+              {copy.integrationsLabel}
+            </label>
+            <p style={hintStyle()}>{copy.integrationsHint}</p>
+            <div style={chipsRowStyle} role="group" aria-label={copy.integrationsChipsLabel}>
+              {copy.integrationsChips.map((chip) => {
+                const selected = integrationChipSelected(value.integrations, chip);
+                return (
+                  <button
+                    key={chip}
+                    type="button"
+                    style={chipStyle(selected)}
+                    aria-pressed={selected}
+                    onClick={() => {
+                      patch({ integrations: toggleIntegrationChip(value.integrations, chip) });
+                    }}
+                  >
+                    {chip}
+                  </button>
+                );
+              })}
+            </div>
+            <input
+              id="wizard-integrations"
+              name="integrations"
+              type="text"
+              value={value.integrations}
+              onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                patch({ integrations: event.target.value })
+              }
+              placeholder={copy.integrationsPlaceholder}
+              style={{ ...fieldStyle(), marginTop: theme.space.sm }}
+            />
+
             {!appTypeReady && (
               <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
                 <span aria-hidden="true">!</span>
@@ -370,6 +476,18 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
               <ReviewRow
                 term={copy.reviewEntities}
                 detail={value.entities.trim() || copy.reviewNone}
+              />
+              <ReviewRow
+                term={copy.reviewDataStorage}
+                detail={copy.dataStorageOptions[value.dataStorage]}
+              />
+              <ReviewRow
+                term={copy.reviewRealtime}
+                detail={value.hasRealtime ? copy.reviewYes : copy.reviewNo}
+              />
+              <ReviewRow
+                term={copy.reviewIntegrations}
+                detail={value.integrations.trim() || copy.reviewNone}
               />
             </dl>
             <div role="status" aria-live="polite" style={estimateBoxStyle}>
@@ -605,13 +723,69 @@ function ReviewRow({ term, detail }: { term: string; detail: string }): JSX.Elem
   );
 }
 
-/** Empty controlled answers for first paint. */
-export const EMPTY_WIZARD_ANSWERS: WizardAnswers = {
-  prompt: '',
-  appType: '',
-  hasAuth: false,
-  entities: ''
-};
+/** Re-export empty answers so Home and tests import from the Wizard surface. */
+export { EMPTY_WIZARD_ANSWERS };
+
+/**
+ * Whether a named integration chip is already present in the free-text field.
+ *
+ * @param integrations - Current integrations string.
+ * @param chip - Chip label to test.
+ * @returns True when the chip token is present (case-insensitive).
+ */
+export function integrationChipSelected(integrations: string, chip: string): boolean {
+  const needle = chip.trim().toLowerCase();
+  if (needle.length === 0) return false;
+  return integrations
+    .split(/[,;\n]+/)
+    .map((part) => part.trim().toLowerCase())
+    .filter((part) => part.length > 0)
+    .includes(needle);
+}
+
+/**
+ * Toggle a common integration chip in/out of the free-text integrations field.
+ *
+ * @param integrations - Current integrations string.
+ * @param chip - Chip label to add or remove.
+ * @returns Updated comma-separated integrations string.
+ */
+export function toggleIntegrationChip(integrations: string, chip: string): string {
+  const parts = integrations
+    .split(/[,;\n]+/)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  const needle = chip.trim().toLowerCase();
+  const without = parts.filter((part) => part.toLowerCase() !== needle);
+  if (without.length !== parts.length) {
+    return without.join(', ');
+  }
+  return [...parts, chip.trim()].join(', ');
+}
+
+/**
+ * Human-readable review lines for the current wizard answers (pure helper for tests).
+ *
+ * @param answers - Controlled wizard answers.
+ * @returns Ordered term/detail pairs matching the Review step.
+ */
+export function reviewAnswerRows(
+  answers: WizardAnswers
+): ReadonlyArray<{ term: string; detail: string }> {
+  const copy = en.wizard;
+  return [
+    { term: copy.reviewPrompt, detail: answers.prompt.trim() || copy.reviewEmpty },
+    { term: copy.reviewAppType, detail: answers.appType.trim() || copy.reviewNotSet },
+    { term: copy.reviewAuth, detail: answers.hasAuth ? copy.reviewYes : copy.reviewNo },
+    { term: copy.reviewEntities, detail: answers.entities.trim() || copy.reviewNone },
+    { term: copy.reviewDataStorage, detail: copy.dataStorageOptions[answers.dataStorage] },
+    { term: copy.reviewRealtime, detail: answers.hasRealtime ? copy.reviewYes : copy.reviewNo },
+    {
+      term: copy.reviewIntegrations,
+      detail: answers.integrations.trim() || copy.reviewNone
+    }
+  ];
+}
 
 const formStyle: CSSProperties = {
   fontFamily: theme.type.family,

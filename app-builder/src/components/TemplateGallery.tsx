@@ -14,7 +14,7 @@ import {
 const MIN_PROMPT_LENGTH = 8;
 
 export interface TemplateSelection {
-  /** Template id, or "custom" when free-form. */
+  /** Template id, or "custom" when free-form. Variant ids use "archetype:variant". */
   id: string;
   /** Suggested app type for the wizard. */
   appType: string;
@@ -30,6 +30,9 @@ export interface TemplateGalleryProps {
   /** Return to the chat home. */
   onBack: () => void;
 }
+
+/** One starter variant under an archetype (from the locale bundle). */
+type TemplateVariant = (typeof en.templates.items)[number]['variants'][number];
 
 /**
  * Simple line-icon glyph for a template archetype (inline SVG, theme via currentColor).
@@ -97,8 +100,48 @@ function TemplateIcon({ id }: { id: string }): JSX.Element {
 }
 
 /**
- * Template gallery: card grid of app archetypes plus an “or describe your own”
- * path (Grok v3). Icons, 2-col cards, selection check, divider, composer CTAs.
+ * Resolve the effective selection from archetype + optional variant.
+ *
+ * @param archetypeId - Selected template archetype id, or null.
+ * @param variantId - Selected variant id under that archetype, or null.
+ * @param customPrompt - Free-text composer value.
+ * @returns Selection fields used by Continue.
+ */
+export function resolveTemplateSelection(
+  archetypeId: string | null,
+  variantId: string | null,
+  customPrompt: string
+): TemplateSelection {
+  const items = en.templates.items;
+  const archetype = archetypeId !== null ? items.find((item) => item.id === archetypeId) : undefined;
+  if (archetype !== undefined) {
+    const variant: TemplateVariant | undefined =
+      variantId !== null
+        ? archetype.variants.find((v) => v.id === variantId)
+        : undefined;
+    if (variant !== undefined) {
+      return {
+        id: `${archetype.id}:${variant.id}`,
+        appType: variant.appType,
+        prompt: variant.prompt
+      };
+    }
+    return {
+      id: archetype.id,
+      appType: archetype.appType,
+      prompt: archetype.prompt
+    };
+  }
+  return {
+    id: 'custom',
+    appType: '',
+    prompt: customPrompt.trim()
+  };
+}
+
+/**
+ * Template gallery: card grid of app archetypes, variant chips under the
+ * selected archetype, plus an “or describe your own” path (Grok v3).
  */
 export function TemplateGallery({
   initialPrompt = '',
@@ -107,21 +150,40 @@ export function TemplateGallery({
 }: TemplateGalleryProps): JSX.Element {
   const copy = en.templates;
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [customPrompt, setCustomPrompt] = useState(initialPrompt);
   const [error, setError] = useState<string | null>(null);
 
   const selected = copy.items.find((item) => item.id === selectedId) ?? null;
-  const effectivePrompt = (selected?.prompt ?? customPrompt).trim();
+  const effectivePrompt = (
+    selectedVariantId !== null && selected !== null
+      ? (selected.variants.find((v) => v.id === selectedVariantId)?.prompt ?? selected.prompt)
+      : (selected?.prompt ?? customPrompt)
+  ).trim();
   const canContinue = effectivePrompt.length >= MIN_PROMPT_LENGTH;
 
   /**
-   * Select a template card and seed the custom composer with its prompt.
+   * Select a template archetype and seed the composer with its default prompt.
+   * Clears any previous variant so the user can pick a starter under this type.
    */
   function selectTemplate(id: string): void {
     const item = copy.items.find((t) => t.id === id);
     if (item === undefined) return;
     setSelectedId(id);
+    setSelectedVariantId(null);
     setCustomPrompt(item.prompt);
+    setError(null);
+  }
+
+  /**
+   * Select a starter variant under the current archetype; fills prompt + appType.
+   */
+  function selectVariant(variantId: string): void {
+    if (selected === null) return;
+    const variant = selected.variants.find((v) => v.id === variantId);
+    if (variant === undefined) return;
+    setSelectedVariantId(variantId);
+    setCustomPrompt(variant.prompt);
     setError(null);
   }
 
@@ -133,19 +195,16 @@ export function TemplateGallery({
       setError(copy.emptyHint);
       return;
     }
-    if (selected !== null) {
+    const selection = resolveTemplateSelection(selectedId, selectedVariantId, customPrompt);
+    // Prefer the live composer text when the user edited after picking a template.
+    if (customPrompt.trim().length >= MIN_PROMPT_LENGTH && selection.id !== 'custom') {
       onContinue({
-        id: selected.id,
-        appType: selected.appType,
-        prompt: selected.prompt
+        ...selection,
+        prompt: customPrompt.trim()
       });
       return;
     }
-    onContinue({
-      id: 'custom',
-      appType: '',
-      prompt: customPrompt.trim()
-    });
+    onContinue(selection);
   }
 
   return (
@@ -189,6 +248,37 @@ export function TemplateGallery({
         })}
       </div>
 
+      {selected !== null && (
+        <div style={variantsBlockStyle}>
+          <p id="template-variants-label" style={variantsHeadingStyle}>
+            {copy.variantsLabel}
+          </p>
+          <p style={hintStyle()}>{copy.variantsHint}</p>
+          <div
+            style={variantsRowStyle}
+            role="group"
+            aria-labelledby="template-variants-label"
+          >
+            {selected.variants.map((variant) => {
+              const isSelected = selectedVariantId === variant.id;
+              return (
+                <button
+                  key={variant.id}
+                  type="button"
+                  style={chipStyle(isSelected)}
+                  aria-pressed={isSelected}
+                  onClick={() => {
+                    selectVariant(variant.id);
+                  }}
+                >
+                  {variant.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={orDividerStyle} role="separator">
         <span style={orDividerLineStyle} aria-hidden="true" />
         <span>{copy.orDescribe}</span>
@@ -207,6 +297,7 @@ export function TemplateGallery({
           onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
             setCustomPrompt(event.target.value);
             setSelectedId(null);
+            setSelectedVariantId(null);
             setError(null);
           }}
           placeholder={copy.composerPlaceholder}
@@ -224,6 +315,7 @@ export function TemplateGallery({
             onClick={() => {
               setCustomPrompt(example.prompt);
               setSelectedId(null);
+              setSelectedVariantId(null);
               setError(null);
             }}
           >
@@ -388,6 +480,32 @@ const checkBadgeStyle: CSSProperties = {
   justifyContent: 'center',
   fontSize: theme.type.scale[1],
   fontWeight: 700
+};
+
+const variantsBlockStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.space.xs,
+  padding: theme.space.md,
+  borderRadius: theme.radius.md,
+  border: `1px solid ${theme.color.border}`,
+  background: theme.color.surface
+};
+
+const variantsHeadingStyle: CSSProperties = {
+  margin: 0,
+  fontSize: theme.type.scale[1],
+  fontWeight: 700,
+  letterSpacing: '0.04em',
+  textTransform: 'uppercase',
+  color: theme.color.muted
+};
+
+const variantsRowStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: theme.space.sm,
+  marginTop: theme.space.xs
 };
 
 const orDividerStyle: CSSProperties = {

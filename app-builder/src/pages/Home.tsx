@@ -6,7 +6,12 @@ import { Wizard, EMPTY_WIZARD_ANSWERS } from '../components/Wizard';
 import { PrdResult } from '../components/PrdResult';
 import { generatePrd, type Prd } from '../lib/prd';
 import { estimate } from '../lib/estimate';
-import { countEntities, type BuildJob, type WizardAnswers } from '../lib/job';
+import {
+  countEntities,
+  countScopeSignals,
+  type BuildJob,
+  type WizardAnswers
+} from '../lib/job';
 import { wizardInstanceKey } from '../lib/wizardSession';
 import { en } from '../i18n/en';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
@@ -103,7 +108,8 @@ export function Home(): JSX.Element {
     const cost = estimate({
       features,
       hasAuth: current.hasAuth,
-      entities: entityCount
+      entities: entityCount,
+      scopeSignals: countScopeSignals(current)
     });
     setPrd(generatePrd(current, cost));
     setView('result');

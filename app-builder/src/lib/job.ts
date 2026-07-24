@@ -1,3 +1,6 @@
+/** How the app should persist domain data (wizard scope). */
+export type DataStorage = 'none' | 'simple' | 'relational';
+
 /** Wizard answers collected before a build job is committed. */
 export interface WizardAnswers {
   /** Free-text description of the app to build. */
@@ -8,10 +11,35 @@ export interface WizardAnswers {
   hasAuth: boolean;
   /** Comma-separated main domain entity names. */
   entities: string;
+  /**
+   * Data storage approach. Optional for callers that only set core fields
+   * (e.g. POST /api/submit); defaults to simple D1 tables.
+   */
+  dataStorage: DataStorage;
+  /** Whether the app needs realtime updates (WebSocket / live refresh). */
+  hasRealtime: boolean;
+  /** Optional integrations (free text or comma-separated chips). */
+  integrations: string;
 }
+
+/** Default data storage when the user does not change the scope control. */
+export const DEFAULT_DATA_STORAGE: DataStorage = 'simple';
 
 /** Minimum prompt length the submit endpoint enforces (z.string().trim().min(8)). */
 export const MIN_PROMPT_LENGTH = 8;
+
+/**
+ * Empty / first-paint wizard answers (controlled form defaults).
+ */
+export const EMPTY_WIZARD_ANSWERS: WizardAnswers = {
+  prompt: '',
+  appType: '',
+  hasAuth: false,
+  entities: '',
+  dataStorage: DEFAULT_DATA_STORAGE,
+  hasRealtime: false,
+  integrations: ''
+};
 
 /**
  * Whether the wizard answers satisfy what the submit endpoint requires, so the
@@ -33,6 +61,25 @@ export function isAppTypeReady(answers: WizardAnswers): boolean {
 
 export function canForgePrd(answers: WizardAnswers): boolean {
   return isPromptReady(answers) && isAppTypeReady(answers);
+}
+
+/**
+ * Count how many optional scope dimensions the user actually specified.
+ * Used so estimate confidence rises when the wizard is more complete.
+ *
+ * @param answers - Wizard form values.
+ * @returns Non-negative count of filled optional scope signals.
+ */
+export function countScopeSignals(answers: WizardAnswers): number {
+  let signals = 0;
+  if (answers.appType.trim().length > 0) signals += 1;
+  if (answers.entities.trim().length > 0) signals += 1;
+  // Explicit non-default storage is a stronger signal than the default "simple".
+  if (answers.dataStorage !== DEFAULT_DATA_STORAGE) signals += 1;
+  if (answers.hasRealtime) signals += 1;
+  if (answers.integrations.trim().length > 0) signals += 1;
+  if (answers.hasAuth) signals += 1;
+  return signals;
 }
 
 /**
@@ -94,16 +141,46 @@ export function countEntities(entities: string): number {
 }
 
 /**
+ * Normalize optional wizard fields so callers that only set core fields
+ * (submit API) still produce a complete WizardAnswers object.
+ *
+ * @param partial - Core or full wizard answers.
+ * @returns Full WizardAnswers with defaults applied.
+ */
+export function withWizardDefaults(
+  partial: Pick<WizardAnswers, 'prompt' | 'appType' | 'hasAuth' | 'entities'> &
+    Partial<Pick<WizardAnswers, 'dataStorage' | 'hasRealtime' | 'integrations'>>
+): WizardAnswers {
+  return {
+    prompt: partial.prompt,
+    appType: partial.appType,
+    hasAuth: partial.hasAuth,
+    entities: partial.entities,
+    dataStorage: partial.dataStorage ?? DEFAULT_DATA_STORAGE,
+    hasRealtime: partial.hasRealtime ?? false,
+    integrations: partial.integrations ?? ''
+  };
+}
+
+/**
  * Build a job object from wizard answers (pure).
  * Emits a full orchestrator-valid job: answers map + createdAt, plus fixed
  * targetType and threshold. Used by the client and by POST /api/submit.
  *
- * @param answers - Wizard form values.
+ * Extra scope fields are included in the answers map for local PRD use; the
+ * submit Zod schema stays on the original four fields so no migration is needed.
+ *
+ * @param answers - Wizard form values (or core subset; defaults fill the rest).
  * @param now - Clock for createdAt (injectable for tests).
  * @returns BuildJob that must pass orchestrator JobSchema.
  */
-export function buildJob(answers: WizardAnswers, now: Date = new Date()): BuildJob {
-  const prompt = answers.prompt.trim();
+export function buildJob(
+  answers: Pick<WizardAnswers, 'prompt' | 'appType' | 'hasAuth' | 'entities'> &
+    Partial<Pick<WizardAnswers, 'dataStorage' | 'hasRealtime' | 'integrations'>>,
+  now: Date = new Date()
+): BuildJob {
+  const full = withWizardDefaults(answers);
+  const prompt = full.prompt.trim();
   return {
     kind: 'job',
     slug: slugFromPrompt(prompt),
@@ -111,9 +188,12 @@ export function buildJob(answers: WizardAnswers, now: Date = new Date()): BuildJ
     targetType: 'fullstack-web',
     threshold: 90,
     answers: {
-      appType: answers.appType,
-      hasAuth: answers.hasAuth ? 'true' : 'false',
-      entities: answers.entities
+      appType: full.appType,
+      hasAuth: full.hasAuth ? 'true' : 'false',
+      entities: full.entities,
+      dataStorage: full.dataStorage,
+      hasRealtime: full.hasRealtime ? 'true' : 'false',
+      integrations: full.integrations.trim()
     },
     createdAt: now.toISOString()
   };

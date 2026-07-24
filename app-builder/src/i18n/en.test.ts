@@ -34,12 +34,28 @@ describe('en locale bundle', () => {
     expect(en.templates.sectionLabel.length).toBeGreaterThan(2);
     expect(en.templates.sectionCount(5)).toBe('5 templates');
     expect(en.templates.emptyTitle.length).toBeGreaterThan(2);
+    expect(en.templates.variantsLabel.length).toBeGreaterThan(2);
+    expect(en.wizard.dataStorageLabel.length).toBeGreaterThan(2);
+    expect(en.wizard.realtimeLabel.length).toBeGreaterThan(2);
+    expect(en.wizard.integrationsLabel.length).toBeGreaterThan(2);
+    expect(en.wizard.reviewDataStorage.length).toBeGreaterThan(2);
+    expect(en.wizard.reviewRealtime.length).toBeGreaterThan(2);
+    expect(en.wizard.reviewIntegrations.length).toBeGreaterThan(2);
   });
 
   it('exposes real legal/info page content (title, intro, sections)', () => {
     expect(en.pages.home.title.length).toBeGreaterThan(2);
     expect(en.chat.greetingBody.length).toBeGreaterThan(20);
     expect(en.templates.items.length).toBeGreaterThanOrEqual(5);
+    for (const item of en.templates.items) {
+      expect(item.variants.length).toBeGreaterThanOrEqual(3);
+      expect(item.variants.length).toBeLessThanOrEqual(4);
+      for (const variant of item.variants) {
+        expect(variant.label.length).toBeGreaterThan(2);
+        expect(variant.prompt.length).toBeGreaterThan(20);
+        expect(variant.appType.length).toBeGreaterThan(2);
+      }
+    }
     for (const key of ['about', 'contact', 'privacy', 'terms'] as const) {
       const p = en.pages[key];
       expect(p.title.length).toBeGreaterThan(2);

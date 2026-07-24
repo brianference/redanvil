@@ -49,4 +49,15 @@ describe('estimate', () => {
     expect(estimate({ features: 4, hasAuth: true, entities: 3 }).confidence).toBe('medium');
     expect(estimate({ features: 10, hasAuth: true, entities: 5 }).confidence).toBe('low');
   });
+
+  it('raises confidence when optional scope signals are filled in', () => {
+    // Shell-only becomes medium once the user filled several scope controls
+    expect(
+      estimate({ features: 1, hasAuth: false, entities: 0, scopeSignals: 3 }).confidence
+    ).toBe('medium');
+    // Mid weight becomes high with rich scope
+    expect(
+      estimate({ features: 4, hasAuth: true, entities: 3, scopeSignals: 3 }).confidence
+    ).toBe('high');
+  });
 });
