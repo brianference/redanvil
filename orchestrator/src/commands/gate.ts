@@ -139,6 +139,14 @@ export async function gateApp(
   // hard zero rather than emitting "PASS" next to a list of failed blockers.
   const consistentScore = blockersFailed.length > 0 ? 0 : score;
 
-  const evaluated = new Set(outcomes.map((o) => o.ruleId)).size;
+  // Count only outcomes for rules that survived the not-applicable filter. A check
+  // still executes for a rule whose LANE was waived (--na process runs
+  // proc-conventional-commits all the same), and counting that outcome produced
+  // "evaluated 46/45" — a numerator larger than its denominator, which is not a
+  // number anyone can act on. Scope the tally to the rules actually being scored.
+  const scoredIds = new Set(rules.map((r) => r.id));
+  const evaluated = new Set(
+    outcomes.map((o) => o.ruleId).filter((id) => scoredIds.has(id))
+  ).size;
   return { outcomes, blockersFailed, evaluated, total: rules.length, score: consistentScore };
 }
