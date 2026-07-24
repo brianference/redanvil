@@ -23,3 +23,7 @@ review-*/
 backups/*.sql
 # Full-repo bundles. A backup of the repo does not belong inside the repo.
 backups/*.bundle
+
+# Playwright traces are run artifacts, not source — hyg-no-binaries forbids committing them.
+evidence/*.zip
+evidence/traces/
