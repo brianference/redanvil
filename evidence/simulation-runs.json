@@ -1,0 +1,445 @@
+{
+  "generatedAt": "2026-07-24T06:14:15.468Z",
+  "records": [
+    {
+      "label": "field-service-offline",
+      "prd": {
+        "ok": true,
+        "detail": "all self-checks pass",
+        "chars": 29250,
+        "sections": 15,
+        "selfCheck": "12/12",
+        "slices": 8
+      },
+      "job": {
+        "ok": true,
+        "detail": "schema valid",
+        "slug": "a-field-service-app-where-techs-log-jobs-offline"
+      },
+      "scaffold": {
+        "ok": true,
+        "detail": "19 files",
+        "files": 19
+      },
+      "checks": {
+        "ok": false,
+        "detail": "15 pass / 14 fail / 5 n-a",
+        "passed": 15,
+        "failed": 14,
+        "na": 5,
+        "failedIds": [
+          "u-typing-strict",
+          "u-typing-no-any",
+          "u-conc-dead-code",
+          "u-conc-use-what-exists",
+          "u-conc-smallest-diff",
+          "u-plat-migrations",
+          "fe-seo-assets",
+          "u-test-presence",
+          "u-test-adequacy",
+          "fe-fail-closed-states",
+          "ci-actionlint",
+          "hyg-env-ignored",
+          "proc-pr-title-ticket",
+          "proc-conventional-commits"
+        ]
+      }
+    },
+    {
+      "label": "dog-care-reminders",
+      "prd": {
+        "ok": true,
+        "detail": "all self-checks pass",
+        "chars": 27379,
+        "sections": 15,
+        "selfCheck": "12/12",
+        "slices": 8
+      },
+      "job": {
+        "ok": true,
+        "detail": "schema valid",
+        "slug": "an-app-to-remind-you-when-your-dog-needs-grooming"
+      },
+      "scaffold": {
+        "ok": true,
+        "detail": "19 files",
+        "files": 19
+      },
+      "checks": {
+        "ok": false,
+        "detail": "15 pass / 14 fail / 5 n-a",
+        "passed": 15,
+        "failed": 14,
+        "na": 5,
+        "failedIds": [
+          "u-typing-strict",
+          "u-typing-no-any",
+          "u-conc-dead-code",
+          "u-conc-use-what-exists",
+          "u-conc-smallest-diff",
+          "u-plat-migrations",
+          "fe-seo-assets",
+          "u-test-presence",
+          "u-test-adequacy",
+          "fe-fail-closed-states",
+          "ci-actionlint",
+          "hyg-env-ignored",
+          "proc-pr-title-ticket",
+          "proc-conventional-commits"
+        ]
+      }
+    },
+    {
+      "label": "b2b-invoice-tracker",
+      "prd": {
+        "ok": true,
+        "detail": "all self-checks pass",
+        "chars": 32815,
+        "sections": 15,
+        "selfCheck": "12/12",
+        "slices": 9
+      },
+      "job": {
+        "ok": true,
+        "detail": "schema valid",
+        "slug": "a-b2b-invoice-tracker-with-payment-status-dunning"
+      },
+      "scaffold": {
+        "ok": true,
+        "detail": "19 files",
+        "files": 19
+      },
+      "checks": {
+        "ok": false,
+        "detail": "15 pass / 14 fail / 5 n-a",
+        "passed": 15,
+        "failed": 14,
+        "na": 5,
+        "failedIds": [
+          "u-typing-strict",
+          "u-typing-no-any",
+          "u-conc-dead-code",
+          "u-conc-use-what-exists",
+          "u-conc-smallest-diff",
+          "u-plat-migrations",
+          "fe-seo-assets",
+          "u-test-presence",
+          "u-test-adequacy",
+          "fe-fail-closed-states",
+          "ci-actionlint",
+          "hyg-env-ignored",
+          "proc-pr-title-ticket",
+          "proc-conventional-commits"
+        ]
+      }
+    },
+    {
+      "label": "parent-coach",
+      "prd": {
+        "ok": true,
+        "detail": "all self-checks pass",
+        "chars": 32360,
+        "sections": 15,
+        "selfCheck": "12/12",
+        "slices": 9
+      },
+      "job": {
+        "ok": true,
+        "detail": "schema valid",
+        "slug": "a-parent-coach-app-with-daily-prompts-and-shared"
+      },
+      "scaffold": {
+        "ok": true,
+        "detail": "19 files",
+        "files": 19
+      },
+      "checks": {
+        "ok": false,
+        "detail": "15 pass / 14 fail / 5 n-a",
+        "passed": 15,
+        "failed": 14,
+        "na": 5,
+        "failedIds": [
+          "u-typing-strict",
+          "u-typing-no-any",
+          "u-conc-dead-code",
+          "u-conc-use-what-exists",
+          "u-conc-smallest-diff",
+          "u-plat-migrations",
+          "fe-seo-assets",
+          "u-test-presence",
+          "u-test-adequacy",
+          "fe-fail-closed-states",
+          "ci-actionlint",
+          "hyg-env-ignored",
+          "proc-pr-title-ticket",
+          "proc-conventional-commits"
+        ]
+      }
+    },
+    {
+      "label": "trail-conditions",
+      "prd": {
+        "ok": true,
+        "detail": "all self-checks pass",
+        "chars": 29624,
+        "sections": 15,
+        "selfCheck": "12/12",
+        "slices": 8
+      },
+      "job": {
+        "ok": true,
+        "detail": "schema valid",
+        "slug": "a-hiking-trail-conditions-app-where-users-post-re"
+      },
+      "scaffold": {
+        "ok": true,
+        "detail": "19 files",
+        "files": 19
+      },
+      "checks": {
+        "ok": false,
+        "detail": "15 pass / 14 fail / 5 n-a",
+        "passed": 15,
+        "failed": 14,
+        "na": 5,
+        "failedIds": [
+          "u-typing-strict",
+          "u-typing-no-any",
+          "u-conc-dead-code",
+          "u-conc-use-what-exists",
+          "u-conc-smallest-diff",
+          "u-plat-migrations",
+          "fe-seo-assets",
+          "u-test-presence",
+          "u-test-adequacy",
+          "fe-fail-closed-states",
+          "ci-actionlint",
+          "hyg-env-ignored",
+          "proc-pr-title-ticket",
+          "proc-conventional-commits"
+        ]
+      }
+    },
+    {
+      "label": "inventory-scanner",
+      "prd": {
+        "ok": true,
+        "detail": "all self-checks pass",
+        "chars": 32477,
+        "sections": 15,
+        "selfCheck": "12/12",
+        "slices": 9
+      },
+      "job": {
+        "ok": true,
+        "detail": "schema valid",
+        "slug": "a-small-warehouse-inventory-app-with-barcode-scan"
+      },
+      "scaffold": {
+        "ok": true,
+        "detail": "19 files",
+        "files": 19
+      },
+      "checks": {
+        "ok": false,
+        "detail": "15 pass / 14 fail / 5 n-a",
+        "passed": 15,
+        "failed": 14,
+        "na": 5,
+        "failedIds": [
+          "u-typing-strict",
+          "u-typing-no-any",
+          "u-conc-dead-code",
+          "u-conc-use-what-exists",
+          "u-conc-smallest-diff",
+          "u-plat-migrations",
+          "fe-seo-assets",
+          "u-test-presence",
+          "u-test-adequacy",
+          "fe-fail-closed-states",
+          "ci-actionlint",
+          "hyg-env-ignored",
+          "proc-pr-title-ticket",
+          "proc-conventional-commits"
+        ]
+      }
+    },
+    {
+      "label": "reading-log",
+      "prd": {
+        "ok": true,
+        "detail": "all self-checks pass",
+        "chars": 27028,
+        "sections": 15,
+        "selfCheck": "12/12",
+        "slices": 8
+      },
+      "job": {
+        "ok": true,
+        "detail": "schema valid",
+        "slug": "a-reading-log-where-i-track-books-sessions-and-no"
+      },
+      "scaffold": {
+        "ok": true,
+        "detail": "19 files",
+        "files": 19
+      },
+      "checks": {
+        "ok": false,
+        "detail": "15 pass / 14 fail / 5 n-a",
+        "passed": 15,
+        "failed": 14,
+        "na": 5,
+        "failedIds": [
+          "u-typing-strict",
+          "u-typing-no-any",
+          "u-conc-dead-code",
+          "u-conc-use-what-exists",
+          "u-conc-smallest-diff",
+          "u-plat-migrations",
+          "fe-seo-assets",
+          "u-test-presence",
+          "u-test-adequacy",
+          "fe-fail-closed-states",
+          "ci-actionlint",
+          "hyg-env-ignored",
+          "proc-pr-title-ticket",
+          "proc-conventional-commits"
+        ]
+      }
+    },
+    {
+      "label": "clinic-scheduling",
+      "prd": {
+        "ok": true,
+        "detail": "all self-checks pass",
+        "chars": 33391,
+        "sections": 15,
+        "selfCheck": "12/12",
+        "slices": 9
+      },
+      "job": {
+        "ok": true,
+        "detail": "schema valid",
+        "slug": "a-small-clinic-appointment-scheduler-with-reminde"
+      },
+      "scaffold": {
+        "ok": true,
+        "detail": "19 files",
+        "files": 19
+      },
+      "checks": {
+        "ok": false,
+        "detail": "15 pass / 14 fail / 5 n-a",
+        "passed": 15,
+        "failed": 14,
+        "na": 5,
+        "failedIds": [
+          "u-typing-strict",
+          "u-typing-no-any",
+          "u-conc-dead-code",
+          "u-conc-use-what-exists",
+          "u-conc-smallest-diff",
+          "u-plat-migrations",
+          "fe-seo-assets",
+          "u-test-presence",
+          "u-test-adequacy",
+          "fe-fail-closed-states",
+          "ci-actionlint",
+          "hyg-env-ignored",
+          "proc-pr-title-ticket",
+          "proc-conventional-commits"
+        ]
+      }
+    },
+    {
+      "label": "landing-waitlist",
+      "prd": {
+        "ok": true,
+        "detail": "all self-checks pass",
+        "chars": 24386,
+        "sections": 15,
+        "selfCheck": "12/12",
+        "slices": 7
+      },
+      "job": {
+        "ok": true,
+        "detail": "schema valid",
+        "slug": "a-marketing-landing-page-with-an-email-waitlist-a"
+      },
+      "scaffold": {
+        "ok": true,
+        "detail": "19 files",
+        "files": 19
+      },
+      "checks": {
+        "ok": false,
+        "detail": "15 pass / 14 fail / 5 n-a",
+        "passed": 15,
+        "failed": 14,
+        "na": 5,
+        "failedIds": [
+          "u-typing-strict",
+          "u-typing-no-any",
+          "u-conc-dead-code",
+          "u-conc-use-what-exists",
+          "u-conc-smallest-diff",
+          "u-plat-migrations",
+          "fe-seo-assets",
+          "u-test-presence",
+          "u-test-adequacy",
+          "fe-fail-closed-states",
+          "ci-actionlint",
+          "hyg-env-ignored",
+          "proc-pr-title-ticket",
+          "proc-conventional-commits"
+        ]
+      }
+    },
+    {
+      "label": "expense-splitter",
+      "prd": {
+        "ok": true,
+        "detail": "all self-checks pass",
+        "chars": 32980,
+        "sections": 15,
+        "selfCheck": "12/12",
+        "slices": 9
+      },
+      "job": {
+        "ok": true,
+        "detail": "schema valid",
+        "slug": "an-app-for-splitting-shared-house-expenses-and-se"
+      },
+      "scaffold": {
+        "ok": true,
+        "detail": "19 files",
+        "files": 19
+      },
+      "checks": {
+        "ok": false,
+        "detail": "15 pass / 14 fail / 5 n-a",
+        "passed": 15,
+        "failed": 14,
+        "na": 5,
+        "failedIds": [
+          "u-typing-strict",
+          "u-typing-no-any",
+          "u-conc-dead-code",
+          "u-conc-use-what-exists",
+          "u-conc-smallest-diff",
+          "u-plat-migrations",
+          "fe-seo-assets",
+          "u-test-presence",
+          "u-test-adequacy",
+          "fe-fail-closed-states",
+          "ci-actionlint",
+          "hyg-env-ignored",
+          "proc-pr-title-ticket",
+          "proc-conventional-commits"
+        ]
+      }
+    }
+  ]
+}
