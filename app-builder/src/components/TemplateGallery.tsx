@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type CSSProperties, type ReactNode } from 'react';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
+import { MIN_PROMPT_LENGTH } from '../lib/job';
 import {
   buttonStyle,
   chipStyle,
@@ -9,9 +10,6 @@ import {
   hintStyle,
   labelStyle
 } from './ui';
-
-/** Minimum free-text length when not using a template prompt. */
-const MIN_PROMPT_LENGTH = 8;
 
 export interface TemplateSelection {
   /** Template id, or "custom" when free-form. Variant ids use "archetype:variant". */

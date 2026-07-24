@@ -6,11 +6,9 @@ import {
   type ReactNode
 } from 'react';
 import { en } from '../i18n/en';
+import { MIN_PROMPT_LENGTH } from '../lib/job';
 import { theme } from '../theme';
 import { buttonStyle, chipStyle, fieldStyle, hintStyle } from './ui';
-
-/** Minimum prompt length before send is allowed (matches job schema). */
-const MIN_PROMPT_LENGTH = 8;
 
 export interface ComposerChatProps {
   /** Current draft prompt (controlled). */
