@@ -5,8 +5,8 @@
     "finalScore": 100,
     "threshold": 90,
     "passed": true,
-    "evaluated": 41,
-    "total": 41,
+    "evaluated": 45,
+    "total": 45,
     "rules": [
       {
         "ruleId": "u-typing-strict",
@@ -74,6 +74,22 @@
       },
       {
         "ruleId": "u-plat-worker-runtime",
+        "passed": true
+      },
+      {
+        "ruleId": "u-data-no-placeholder",
+        "passed": true
+      },
+      {
+        "ruleId": "u-plat-migrations",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-seo-assets",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-icon-button-labels",
         "passed": true
       },
       {
@@ -180,20 +196,20 @@
         "blockers": []
       }
     ],
-    "deployUrl": "https://redanvil.pages.dev",
-    "finishedAt": "2026-07-24T04:35:17.303Z",
+    "deployUrl": null,
+    "finishedAt": "2026-07-24T06:00:15.391Z",
     "provenance": {
-      "commit": "f3edd806663fb8149d0f5aad3220e6906a730d56",
-      "dirty": true,
-      "rubricHash": "34f994c2eeeed4103c507b6b057f0a081ce08f0db779cf42d0b79d5b3484221e",
-      "rubricRuleCount": 49,
+      "commit": "3429b497c41521a3c0802249977462c1af392268",
+      "dirty": false,
+      "rubricHash": "45a53e66eedbb284d8289c7f2f35c986ad001b52ff4e06a0965bf33916cf2dc3",
+      "rubricRuleCount": 53,
       "node": "v22.19.0",
       "verdictsHash": "66d0cc08c595b8b34443805f4f52407b3b1cb0eaf2fd8759e2993bb80cf22d31",
       "notApplicable": [
         "ci",
         "process"
       ],
-      "generatedAt": "2026-07-24T04:35:17.346Z"
+      "generatedAt": "2026-07-24T06:00:15.438Z"
     }
   }
 ]
