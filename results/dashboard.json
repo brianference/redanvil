@@ -4,8 +4,8 @@
   "finalScore": 100,
   "threshold": 90,
   "passed": true,
-  "evaluated": 46,
-  "total": 46,
+  "evaluated": 52,
+  "total": 52,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -40,7 +40,15 @@
       "passed": true
     },
     {
+      "ruleId": "u-sec-timeouts",
+      "passed": true
+    },
+    {
       "ruleId": "u-sec-headers-cors",
+      "passed": true
+    },
+    {
+      "ruleId": "u-val-input-validation",
       "passed": true
     },
     {
@@ -97,6 +105,22 @@
     },
     {
       "ruleId": "hyg-no-duplication",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-actionlint",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-sha-pinned",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-least-privilege",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-no-injection",
       "passed": true
     },
     {
@@ -204,19 +228,18 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-25T17:36:55.339Z",
+  "finishedAt": "2026-07-25T19:00:19.471Z",
   "provenance": {
-    "commit": "4396e33287960c8d7d57d1bbbd89f28031a742b6",
+    "commit": "1da3d9d426ed57947864ed724603b6baf9a91a38",
     "dirty": false,
     "rubricHash": "6d4f856c497825026c5f565955dd32b97e5f88fe6da15290f171399a29d0397d",
     "rubricRuleCount": 55,
     "node": "v22.19.0",
-    "verdictsHash": "5503bd5fdda0e0f58c57b069913fcd23cae53b17d0a48024f8975e8750ca86d5",
+    "verdictsHash": "a81ab268a566c54115601ccde9bdf5c6e9594e1475f1e95f308cfcaf1651bef7",
     "notApplicable": [
-      "ci",
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-07-25T17:36:55.385Z"
+    "generatedAt": "2026-07-25T19:00:19.520Z"
   }
 }
