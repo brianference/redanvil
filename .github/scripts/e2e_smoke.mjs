@@ -117,13 +117,39 @@ try {
     await download.first().waitFor({ state: 'visible' });
   }
 
-  // 6. Zero console errors across the whole flow.
-  console.log(`e2e smoke PASS: ${baseUrl} — submit ${submit.status()}, PRD rendered`);
+  // 6. The other routes a user actually reaches. One flow was being recorded as
+  //    fe-product-completeness, a verdict about the WHOLE product, so Saved, the
+  //    template gallery and the legal pages were asserted by nothing. Each is
+  //    checked by role, not by scraping text.
+  const routes = [];
+  for (const [path, probe] of [
+    ['/saved', /saved/i],
+    ['/about', /about/i],
+    ['/terms', /terms/i],
+    ['/privacy', /privacy/i],
+    ['/contact', /contact/i]
+  ]) {
+    const res = await page.goto(new URL(path, baseUrl).href, { waitUntil: 'domcontentloaded' });
+    const status = res === null ? 0 : res.status();
+    await ensure(status === 200, `GET ${path} returned ${status}, expected 200`);
+    const heading = page.getByRole('heading', { level: 1 });
+    await heading.first().waitFor({ state: 'visible' });
+    const text = (await heading.first().textContent()) ?? '';
+    await ensure(probe.test(text), `${path} h1 was "${text.trim()}", expected to match ${probe}`);
+    routes.push({ path, status, h1: text.trim() });
+  }
+
+  // 7. Zero console errors across the whole flow.
+  console.log(
+    `e2e smoke PASS: ${baseUrl} — submit ${submit.status()}, PRD rendered, ` +
+      `${routes.length} further route(s) verified`
+  );
   summary = {
     url: baseUrl,
     checkedAt: new Date().toISOString(),
     submitStatus: submit.status(),
     prdRendered: true,
+    routes,
     ok: true
   };
   process.exitCode = 0;

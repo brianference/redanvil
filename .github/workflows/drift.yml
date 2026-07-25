@@ -22,6 +22,10 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
+          # Verdict freshness is checked against the commit each review was
+          # recorded at, and the default shallow clone cannot resolve any of
+          # them. Without this the re-gate below reports every verdict stale.
+          fetch-depth: 0
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: 20
@@ -43,6 +47,22 @@ jobs:
       # The core flow must still work end to end (chat -> wizard -> Forge PRD).
       - name: E2E smoke — core flow
         run: node .github/scripts/e2e_smoke.mjs https://redanvil.pages.dev/ --trace e2e-drift.zip
+
+      # Re-run the GATE, not just the live audits. Verdict freshness only ever
+      # fired when someone ran the gate by hand, so a recorded review could go
+      # stale and stay stale indefinitely with nothing noticing. This is the
+      # cadence behind that mechanism: it fails the moment a verdict stops
+      # describing the code, or a committed result stops reproducing.
+      - name: Install app deps
+        working-directory: app-builder
+        run: npm ci
+      - name: Install dashboard deps
+        working-directory: dashboard
+        run: npm ci
+      - name: Re-gate app-builder against its committed result
+        run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process
+      - name: Re-gate dashboard against its committed result
+        run: node .github/scripts/verify_results.mjs dashboard results/dashboard.json evidence/verdicts-dashboard.json ci,process
 
       # Keep the trace when something fails, so a drift is opened, not re-driven.
       - name: Upload e2e trace on failure

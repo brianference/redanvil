@@ -646,6 +646,41 @@ switch (ruleId) {
     hit ? fail(`SAST sink: ${hit}`) : pass();
     break;
   }
+  case 'u-typing-no-any': {
+    // The gate ALSO runs `npx eslint .` for this rule, but an exit code of 0
+    // from eslint proves nothing on its own: an app with no config, or a config
+    // that never enables the rule, lints clean while being full of `any`. Two
+    // separate blockers (this and u-conc-dead-code) were both decided by that
+    // one invocation. This half checks the thing the rule is actually about —
+    // that the config forbids `any` — so the pair now has distinct evidence.
+    const files = tsx();
+    if (files.length === 0) notApplicable('no typescript source to lint');
+    const CONFIGS = [
+      'eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs', 'eslint.config.ts',
+      '.eslintrc', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json', '.eslintrc.yml'
+    ];
+    const found = CONFIGS.map((n) => join(appDir, n)).filter((p) => existsSync(p));
+    if (found.length === 0) {
+      fail('no eslint config in this app, so a clean eslint run is not evidence of anything');
+    }
+    const text = found.map(read).join(EOL);
+    const RULE = /['"]?@typescript-eslint\/no-explicit-any['"]?\s*:\s*(['"])(off|warn|error)\1/;
+    const m = RULE.exec(text);
+    if (m === null) {
+      // A shared preset may enable it without naming it; accept an explicit
+      // strict/recommended-type-checked extend rather than demanding the literal.
+      if (!/strictTypeChecked|recommendedTypeChecked|eslint:recommended.*typescript/i.test(text)) {
+        fail(
+          'eslint config does not enable @typescript-eslint/no-explicit-any, ' +
+            'so the lint run cannot decide this rule'
+        );
+      }
+    } else if (m[2] !== 'error') {
+      fail(`@typescript-eslint/no-explicit-any is set to '${m[2]}', not 'error'`);
+    }
+    pass();
+    break;
+  }
   case 'u-conc-file-size': {
     // base-15 rule 8: "small, single-purpose files and functions, sized from the
     // corpus norm", and lg-role-architecture asks for "file and function size

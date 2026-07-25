@@ -99,6 +99,12 @@ export const RULES: Rule[] = [
   rule('hyg-env-ignored', 'hygiene', 'blocker', 'det'),
 
   rule('proc-pr-title-ticket', 'process', 'blocker', 'det'),
-  rule('proc-conventional-commits', 'process', 'minor', 'det'),
-  rule('proc-full-local-suite', 'process', 'major', 'hook')
+  // proc-full-local-suite used to sit here. It had no implementation anywhere,
+  // its `hook` method is fail-closed, and every real run passed `--na process`,
+  // so it failed on paper and was waived in practice on every single
+  // invocation. A rule that is always waived is not a rule; it only inflated
+  // the rubric count. What it reached for is enforced structurally instead: CI
+  // runs typecheck, lint and the full suite on every push, and
+  // verify_commit.mjs builds the commit in an isolated worktree before one.
+  rule('proc-conventional-commits', 'process', 'minor', 'det')
 ];
