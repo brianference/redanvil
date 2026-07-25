@@ -1,19 +1,19 @@
-# RedAnvil handoff — 2026-07-25 (v6.2.0)
+# RedAnvil handoff — 2026-07-25 (v7.0.0)
 
-State after the v6.2.0 release, and what is left. Written so a fresh context can pick up
+State after the v7.0.0 release, and what is left. Written so a fresh context can pick up
 without re-deriving anything.
 
 ## Where things stand
 
-- **HEAD:** `742965c` on `master`, CI green.
-- **Latest release:** `v6.2.0`. The v6.0.0 notes describe the first audit and its ten fixes.
+- **HEAD:** `eddabfa` on `master`, CI green.
+- **Latest release:** `v7.0.0` (desktop width enforced, brand system, design rules R14-R18).
 - **Production:** https://redanvil.pages.dev and https://redanvil-dashboard.pages.dev
   (Cloudflare Pages, direct upload / Type B; prod branch `main`, local branch `master`, so
   deploys must pass `--branch main`). Both verified this session by asset-hash match.
-- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v6.2.0-20260724-2130.bundle`
-  (restore-tested: clones clean, 359 files, 9 tags, `v6.2.0` → `742965c`).
-- **Gate:** app-builder 100/100 across 47/47 at **87% coverage**; dashboard 100/100 across
-  45/45 at **83% coverage**. Both with `--na ci,process`, zero stale verdicts, and both
+- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v7.0.0-20260724-2222.bundle`
+  (restore-tested: clones clean, 363 files, 10 tags, `v7.0.0` → `eddabfa`).
+- **Gate:** app-builder 100/100 across 48/48 at **87% coverage**; dashboard 100/100 across
+  46/46 at **84% coverage**. Both with `--na ci,process`, zero stale verdicts, and both
   reproduced rule-by-rule in CI.
 - **Working tree:** clean. All five delegation worktrees removed and branches deleted.
 
@@ -49,10 +49,11 @@ Ten findings were fixed; the full narrative is in the release notes. The load-be
 `docs/audit-2026-07-25.md` carries a CLOSED note per finding. Nothing outstanding from it.
 
 What that leaves as genuine next work, in rough value order:
-- **Lower the duplication ratchet.** `cross_app_duplication.mjs` measures 805 duplicated lines
-  between the two apps and the budget is set AT that number, so it can only stop the figure
-  growing. Extracting a shared shell package is the real fix and needs monorepo wiring both
-  apps currently avoid.
+- **Monorepo wiring, then lower the ratchet again.** Duplication is 772 (down from 854 after
+  the shared `design-system/shellCss.ts`). The next candidates all import React, and sharing
+  one was attempted and reverted: two React instances break every hook in the browser, and
+  `resolve.dedupe` does not fix it. A workspace package with `react` as a peer dependency is
+  the prerequisite. See the bottom of `docs/audit-2026-07-25.md`.
 - **Judge/visual rubric lanes** were improved but never re-derived from scratch.
 - **AI-suggests-features-then-user-chooses** before finalizing the PRD: requested, not built.
 - **Edge-case acceptance criteria** (`scratchpad/prd-edgecases.md`) — confirm whether the
