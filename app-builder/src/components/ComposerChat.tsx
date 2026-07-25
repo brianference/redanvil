@@ -261,7 +261,11 @@ const bubbleStyle: CSSProperties = {
 };
 
 const metaStyle: CSSProperties = {
-  fontSize: theme.type.scale[1],
+  // 16px, not 14: fe-type-floor is a blocker with a 16px body floor and this
+  // style carries real sentences ("No draft yet. Send a description...",
+  // "Full-stack scope - Mobile-first - No account required to start"). Measured
+  // at 375 on production, these were the only three nodes under the floor.
+  fontSize: theme.type.scale[2],
   color: theme.color.muted,
   lineHeight: 1.35,
   margin: 0

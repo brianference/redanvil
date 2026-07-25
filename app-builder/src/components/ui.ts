@@ -98,7 +98,11 @@ export function labelStyle(): CSSProperties {
 export function hintStyle(): CSSProperties {
   return {
     margin: `${theme.space.xs}px 0 0`,
-    fontSize: theme.type.scale[1],
+    // 16px, not 14: hints carry full sentences ("Send - I'll reply with
+    // clarifying questions, then forge a PRD"), so fe-type-floor's 16px body
+    // floor applies. labelStyle stays at 14 — it is an uppercase field label,
+    // not body copy.
+    fontSize: theme.type.scale[2],
     lineHeight: 1.4,
     color: theme.color.muted
   };
