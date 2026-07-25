@@ -1,0 +1,211 @@
+import type { CSSProperties } from 'react';
+import { theme } from '../../theme';
+
+/** Full-page shell background and type base. */
+export const shellStyle: CSSProperties = {
+  minHeight: '100vh',
+  display: 'flex',
+  flexDirection: 'column',
+  background: `radial-gradient(1200px 600px at 50% -200px, ${theme.color.surface}, ${theme.color.bg})`,
+  color: theme.color.text,
+  fontFamily: theme.type.family
+};
+
+/** Sticky header bar chrome. */
+export const barStyle: CSSProperties = {
+  position: 'sticky',
+  top: 0,
+  zIndex: 30,
+  backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
+  background: `color-mix(in srgb, ${theme.color.surface} 80%, transparent)`,
+  borderBottom: `1px solid ${theme.color.border}`,
+  paddingTop: 'env(safe-area-inset-top, 0px)'
+};
+
+/** Shared max-width column for main and footer so left/right edges align. */
+export const shellContainer: CSSProperties = {
+  width: '100%',
+  maxWidth: theme.layout.contentMaxWidth,
+  margin: '0 auto',
+  padding: `0 ${theme.space.lg}px`,
+  boxSizing: 'border-box'
+};
+
+// Note: no `display` here on purpose — the `.ra-menu-btn` class owns
+// visibility (hidden on desktop, inline-flex below 1024px).
+/** Icon button chrome for menu open/close controls. */
+export const iconButtonStyle: CSSProperties = {
+  alignItems: 'center',
+  justifyContent: 'center',
+  minWidth: theme.touch,
+  minHeight: theme.touch,
+  padding: theme.space.sm,
+  margin: 0,
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.sm,
+  background: theme.color.surface,
+  color: theme.color.text,
+  cursor: 'pointer',
+  fontSize: theme.type.scale[2],
+  lineHeight: 1,
+  fontFamily: theme.type.family
+};
+
+/**
+ * Global shell CSS injected once by Page (nav, drawer, footer grid, h1).
+ * Theme tokens only — no raw hex.
+ */
+export function shellCss(): string {
+  return `
+        * { box-sizing: border-box; }
+        body { margin: 0; overflow-x: hidden; font-size: 16px; }
+
+        .ra-nav-link {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: ${theme.touch}px;
+          min-width: ${theme.touch}px;
+          padding: ${theme.space.sm}px ${theme.space.md}px;
+          border-radius: ${theme.radius.md}px;
+          color: ${theme.color.muted};
+          text-decoration: none;
+          font-size: ${theme.type.scale[2]}px;
+          font-weight: 500;
+          font-family: ${theme.type.family};
+          border: 1px solid transparent;
+          transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+          box-sizing: border-box;
+          white-space: nowrap;
+        }
+        .ra-nav-link:hover {
+          color: ${theme.color.text};
+          background: color-mix(in srgb, ${theme.color.surfaceElevated} 80%, transparent);
+        }
+        .ra-nav-link:focus-visible {
+          outline: 2px solid ${theme.color.accent};
+          outline-offset: 2px;
+        }
+        .ra-nav-link.is-active {
+          color: ${theme.color.accentFg};
+          font-weight: 650;
+          background: ${theme.color.accentSoft};
+          border-color: color-mix(in srgb, ${theme.color.accent} 35%, ${theme.color.border});
+        }
+        .ra-nav-link.is-active:hover {
+          color: ${theme.color.accentFg};
+        }
+
+        /* Desktop: primary links live in the sticky header (fe-premium-nav). */
+        .ra-top-nav {
+          display: none;
+        }
+        .ra-menu-btn { display: none; }
+        .ra-drawer-backdrop { display: none; }
+        .ra-drawer { display: none; }
+
+        .ra-body {
+          display: flex;
+          flex: 1;
+          min-width: 0;
+          width: 100%;
+          align-items: stretch;
+        }
+        .ra-main-col {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+        }
+
+        @media (min-width: 1024px) {
+          .ra-top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex: 1;
+            min-width: 0;
+            gap: ${theme.space.xs}px;
+            margin: 0 ${theme.space.md}px;
+          }
+          .ra-menu-btn { display: none !important; }
+        }
+
+        @media (max-width: 1023px) {
+          .ra-top-nav { display: none !important; }
+          .ra-menu-btn { display: inline-flex !important; }
+          .ra-drawer-backdrop[data-open="true"] {
+            display: block !important;
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            background: color-mix(in srgb, ${theme.color.text} 55%, transparent);
+          }
+          .ra-drawer[data-open="true"] {
+            display: flex !important;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 50;
+            width: min(18rem, 86vw);
+            padding: calc(env(safe-area-inset-top, 0px) + ${theme.space.md}px) ${theme.space.md}px env(safe-area-inset-bottom, 0px);
+            background: ${theme.color.surface};
+            border-right: 1px solid ${theme.color.border};
+            box-shadow: 8px 0 32px color-mix(in srgb, ${theme.color.text} 25%, transparent);
+            gap: ${theme.space.sm}px;
+            overflow-y: auto;
+          }
+          .ra-drawer nav {
+            display: flex;
+            flex-direction: column;
+            gap: ${theme.space.xs}px;
+          }
+          .ra-drawer .ra-nav-link {
+            width: 100%;
+            justify-content: flex-start;
+          }
+          .ra-drawer-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: ${theme.space.sm}px;
+            margin-bottom: ${theme.space.sm}px;
+            min-height: ${theme.touch}px;
+          }
+          /* Hide header chrome while drawer is open — only the drawer close remains. */
+          .ra-header-controls[data-drawer-open="true"] {
+            visibility: hidden;
+            pointer-events: none;
+          }
+        }
+
+        /* Footer: 2×2 at tablet so Legal is not orphaned under a gap. */
+        .ra-footer-grid {
+          display: grid;
+          gap: ${theme.space.lg}px;
+          grid-template-columns: 1fr;
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .ra-footer-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+        @media (min-width: 1024px) {
+          .ra-footer-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+          }
+        }
+
+        @media (max-width: 560px) {
+          .ra-h1 { font-size: 1.9rem !important; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .ra-nav-link { transition: none; }
+        }
+      `;
+}
