@@ -130,7 +130,13 @@ node .github/scripts/runtime_parity.mjs <appDir> --out evidence/runtime-<slug>.j
 node .github/scripts/gate_scaffold.mjs
 node .github/scripts/verify_deployed.mjs <appDir> results/<slug>.json <prodUrl>
 node .github/scripts/judge_dissent.mjs  --out evidence/judge-dissent.json
+node .github/scripts/independent_judge.mjs <appDir> --out evidence/judge-independent-<slug>.json
 ```
+
+`independent_judge.mjs` is the one that is NOT in CI — `grok` authenticates
+interactively — so run it locally after significant work. Its output is
+UNADJUDICATED: verify every FAIL by hand and record the ones that turn out to be
+wrong as wrong, in the report. One of the first six was.
 
 Keep a bad route (`/no-such-page`) in the design-audit list on purpose — that is what proves the
 catch-all still renders.
@@ -139,7 +145,7 @@ catch-all still renders.
 
 ```
 node .github/scripts/verify_commit.mjs HEAD
-node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process
+node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json process
 node .github/scripts/build_feed.mjs --check
 node .github/scripts/verify_design_rules.mjs
 node .github/scripts/gate_repo_ci.mjs
