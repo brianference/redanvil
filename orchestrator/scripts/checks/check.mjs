@@ -395,14 +395,73 @@ switch (ruleId) {
     break;
   }
   case 'u-val-input-validation': {
-    // Function handlers that read a request body should validate with a real schema.
-    // JSON.parse alone must never satisfy this rule.
-    const files = walk(functionsDir, ['.ts', '.js']).filter((f) => !isTestFile(f));
-    const readsBody = files.filter((f) => /await\s+\w+\.json\(\)|request\.json\(\)/.test(read(f)));
-    if (readsBody.length === 0) notApplicable('no handler reads a request body');
-    for (const f of readsBody) {
-      if (!hasSchemaValidation(read(f))) {
-        fail(`request body parsed without schema validation: ${f}`);
+    // Untrusted input must be validated with a real schema. JSON.parse alone,
+    // or a hand-written chain of typeof checks, must never satisfy this rule.
+    //
+    // Two boundaries count, not one. This used to look at request bodies in
+    // `functions/` only, so an app with no write endpoints was ruled n/a
+    // entirely — and an independent judge pointed out that the dashboard's one
+    // genuinely untrusted input, a CROSS-ORIGIN JSON feed pulled straight into
+    // the client, was therefore never examined. It was being validated by a
+    // typeof chain that happily accepted `NaN`, a negative count and an empty
+    // id, because `typeof NaN === 'number'`.
+    //
+    // Same-origin responses from the app's own validated endpoints are
+    // deliberately excluded: that data already crossed a validated boundary,
+    // and firing here would be a second gate on the same input.
+    const serverFiles = walk(functionsDir, ['.ts', '.js']).filter((f) => !isTestFile(f));
+    const readsBody = serverFiles.filter((f) =>
+      /await\s+\w+\.json\(\)|request\.json\(\)/.test(read(f))
+    );
+    const clientFiles = tsx().filter((f) => !isTestFile(f));
+    const readsForeignJson = clientFiles.filter((f) => {
+      const c = read(f);
+      // A fetch of an absolute http(s) URL is another origin's data.
+      return /fetch\s*\(\s*[`'"]https?:\/\//.test(c) || /https?:\/\/[^`'"\s]+/.test(c)
+        ? /\.json\s*\(\s*\)/.test(c) && /fetch\s*\(/.test(c)
+        : false;
+    });
+    const boundaries = [...readsBody, ...readsForeignJson];
+    if (boundaries.length === 0) notApplicable('no request body and no cross-origin JSON read');
+
+    /**
+     * Whether a file validates itself, or hands the payload to a local module
+     * that does.
+     *
+     * Delegating to a named parser is better design than inlining a schema at
+     * every call site, so a per-file check that refused it would push toward
+     * worse code. Only ONE hop is followed, and the imported module must both
+     * contain real schema validation AND be called here — a mere import proves
+     * nothing.
+     */
+    const validatesDirectlyOrByDelegation = (file) => {
+      const c = read(file);
+      if (hasSchemaValidation(c)) return true;
+      const dir = file.slice(0, Math.max(file.lastIndexOf('/'), file.lastIndexOf('\\')));
+      for (const m of c.matchAll(/import\s*\{([^}]*)\}\s*from\s*['"](\.[^'"]+)['"]/g)) {
+        const names = m[1]
+          .split(',')
+          .map(
+            (n) =>
+              n
+                .trim()
+                .replace(/^type\s+/, '')
+                .split(/\s+as\s+/)[0]
+          )
+          .filter(Boolean);
+        // The imported symbol has to actually be invoked on this path.
+        if (!names.some((n) => new RegExp(`\\b${n}\\s*\\(`).test(c))) continue;
+        for (const ext of ['.ts', '.tsx', '/index.ts']) {
+          const target = join(dir, `${m[2]}${ext}`);
+          if (existsSync(target) && hasSchemaValidation(read(target))) return true;
+        }
+      }
+      return false;
+    };
+
+    for (const f of boundaries) {
+      if (!validatesDirectlyOrByDelegation(f)) {
+        fail(`untrusted JSON parsed without schema validation: ${f}`);
       }
     }
     pass();
