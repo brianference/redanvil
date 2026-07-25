@@ -1,6 +1,6 @@
-# RedAnvil handoff — 2026-07-25
+# RedAnvil handoff — 2026-07-25 (v6.2.0)
 
-State after the v6.0.0 release, and what is left. Written so a fresh context can pick up
+State after the v6.2.0 release, and what is left. Written so a fresh context can pick up
 without re-deriving anything.
 
 ## Where things stand
@@ -10,8 +10,8 @@ without re-deriving anything.
 - **Production:** https://redanvil.pages.dev and https://redanvil-dashboard.pages.dev
   (Cloudflare Pages, direct upload / Type B; prod branch `main`, local branch `master`, so
   deploys must pass `--branch main`). Both verified this session by asset-hash match.
-- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v6.1.0-20260724-2048.bundle`
-  (restore-tested: clones clean, 356 files, 8 tags, `v6.1.0` → `7c869e0`).
+- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v6.2.0-20260724-2130.bundle`
+  (restore-tested: clones clean, 359 files, 9 tags, `v6.2.0` → `742965c`).
 - **Gate:** app-builder 100/100 across 47/47 at **87% coverage**; dashboard 100/100 across
   45/45 at **83% coverage**. Both with `--na ci,process`, zero stale verdicts, and both
   reproduced rule-by-rule in CI.
@@ -74,12 +74,6 @@ washes out on white. `LOGO_HEIGHT = 112` with a `min(52vw, 440px)` cap, which le
 Implemented via `gh pr view`; `gh` is not on PATH here so it always returns N/A. It fails
 closed, so this is not urgent. Wire it to the GitHub API with the existing token if PR-title
 enforcement matters.
-
-### 4. Deferred from before
-- The judge/visual rubric lanes were improved but not re-derived from scratch.
-- AI-suggests-features-then-user-chooses flow before finalizing the PRD: requested, not built.
-- Edge-case acceptance-criteria spec in `scratchpad/prd-edgecases.md`: confirm whether the
-  failure/boundary templating landed in PRD v3.
 
 ## Key facts a fresh context will need
 
