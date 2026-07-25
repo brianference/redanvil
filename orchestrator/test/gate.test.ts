@@ -104,7 +104,11 @@ describe('gateApp --na ci guard', () => {
   it('refuses --na ci when the target directory ships .github/workflows', async () => {
     // The repo root has .github/workflows, so waiving the ci lane there would
     // exclude its own CI blockers from scoring.
-    await expect(gateApp(process.cwd(), [], [], ['ci'])).rejects.toThrow(/refusing --na ci/);
+    // Asserts the reason, not the exact sentence: the guard now reports every
+    // dishonest waiver at once, so the message names the rule and why.
+    await expect(gateApp(process.cwd(), [], [], ['ci'])).rejects.toThrow(
+      /--na ci: it has \.github\/workflows/
+    );
   });
 
   it('allows --na ci for an app that ships no workflows', async () => {
