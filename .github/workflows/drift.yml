@@ -48,6 +48,17 @@ jobs:
       - name: E2E smoke — core flow
         run: node .github/scripts/e2e_smoke.mjs https://redanvil.pages.dev/ --trace e2e-drift.zip
 
+      # The twelve design rules that used to rest on a prose note. Measuring
+      # them daily is what stops the number and the claim drifting apart again.
+      - name: Design audit — app-builder
+        run: node .github/scripts/design_audit.mjs https://redanvil.pages.dev/ --out evidence/design-app-builder.json
+      - name: Design audit — dashboard
+        run: node .github/scripts/design_audit.mjs https://redanvil-dashboard.pages.dev/ --out evidence/design-dashboard.json
+      - name: Desktop width — app-builder
+        run: node .github/scripts/desktop_width.mjs https://redanvil.pages.dev/
+      - name: Desktop width — dashboard
+        run: node .github/scripts/desktop_width.mjs https://redanvil-dashboard.pages.dev/ --routes /,/about,/contact,/terms,/privacy
+
       # Re-run the GATE, not just the live audits. Verdict freshness only ever
       # fired when someone ran the gate by hand, so a recorded review could go
       # stale and stay stale indefinitely with nothing noticing. This is the
