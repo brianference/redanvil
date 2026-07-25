@@ -1,0 +1,152 @@
+{
+  "source": "independent Grok judge run, disposable worktree, no access to the verdict file it was re-deciding",
+  "reviewedCommit": "f84e3f27323cee718d6f8f455d2a3602c9241ebe",
+  "reviewedAt": "2026-07-25T09:48:13Z",
+  "app": "app-builder",
+  "why": "The judge tier had recorded 258 verdicts and zero FAILs. That is not evidence the code is clean; judge verdicts were written by the same agent that wrote the code. This run gave the same ten judge-method rules to a reviewer with a fresh context and an instruction to cite file:line evidence.",
+  "result": {
+    "rulesJudged": 10,
+    "failed": 6,
+    "confirmedByFollowUp": 5,
+    "partlyRefuted": 1
+  },
+  "verdicts": [
+    {
+      "ruleId": "u-conc-idiomatic",
+      "passed": false,
+      "evidence": [
+        "app-builder/src/lib/prd/generate.ts",
+        "app-builder/src/components/wizard/steps/FeaturesStep.tsx",
+        "app-builder/src/components/TemplateGallery.tsx"
+      ],
+      "note": "generatePrd (generate.ts:40-311) is a single ~270-line orchestrator with 40+ statements and duplicates the full build-prompt string at 289-295 and 302-308. FeaturesStep.tsx:50 packs three selection cases into one ternary that needs the comment above to decode. TemplateGallery.tsx remains a 500+ line state+markup+style blob.",
+      "adjudication": "partly-refuted",
+      "adjudicationNote": "generatePrd is 185 lines (40-225), not the 270 claimed, and the \"duplicated build-prompt string at 289-295/302-308\" does not exist — those lines are markdown template body. The file-size half was real: TemplateGallery.tsx was 548 lines and Saved.tsx 403."
+    },
+    {
+      "ruleId": "u-conc-no-speculative-abstraction",
+      "passed": false,
+      "evidence": [
+        "app-builder/src/lib/job.ts",
+        "app-builder/src/components/wizard.test.ts",
+        "app-builder/src/components/Wizard.tsx",
+        "app-builder/src/components/ui.ts",
+        "design-system/shellCss.ts"
+      ],
+      "note": "isFeatureContinueBlocked (job.ts:85-95) is documented as 'named for the UI gate test' and has zero production callers; Wizard.tsx:109 uses only isFeatureSelectionReady. contentColumnStyle is an empty object (ui.ts:12) kept only as a style= prop. shellCss palette/metrics are real (two apps) and not the fail.",
+      "adjudication": "confirmed",
+      "adjudicationNote": "isFeatureContinueBlocked had zero production callers; contentColumnStyle was an empty object kept only as a style= prop. Both removed."
+    },
+    {
+      "ruleId": "u-conc-use-what-exists",
+      "passed": true,
+      "evidence": [
+        "app-builder/package.json",
+        "app-builder/functions/api/submit.ts",
+        "app-builder/functions/api/prds.ts",
+        "app-builder/src/components/shell/styles.ts",
+        "app-builder/src/lib/useAbortableJsonGet.ts",
+        "design-system/shellCss.ts"
+      ],
+      "note": "POST boundaries use Zod (submit.ts:18-44, prds.ts:18-42). Shell CSS is shared via design-system/shellCss.ts (styles.ts:65-91). Fetch lifecycle reuses abortableEffect helpers (useAbortableJsonGet.ts:2,65-78). Runtime deps stay react/router/zod (package.json:13-18).",
+      "adjudication": "n/a — passed",
+      "adjudicationNote": ""
+    },
+    {
+      "ruleId": "u-conc-smallest-diff",
+      "passed": false,
+      "evidence": [
+        "app-builder/src/lib/job.ts",
+        "app-builder/src/pages/SavedPrd.tsx",
+        "app-builder/src/components/ui.ts",
+        "app-builder/src/components/wizard/styles.ts",
+        "design-system/shellCss.ts"
+      ],
+      "note": "Features work added test-only isFeatureContinueBlocked (job.ts:85-95) with no product caller. Desktop-width work moved layout to .ra-content-col (shellCss.ts:167-180, ui.ts:7-10) yet SavedPrd.tsx:155-160 still sets maxWidth:'46rem' inline, and wizard formStyle keeps maxWidth:'40rem' (wizard/styles.ts:5-10).",
+      "adjudication": "confirmed",
+      "adjudicationNote": "SavedPrd.tsx kept maxWidth 46rem inline and the wizard form 40rem, both after the desktop-width work had moved layout to classes everywhere else. Both moved to CSS."
+    },
+    {
+      "ruleId": "u-val-input-validation",
+      "passed": true,
+      "evidence": [
+        "app-builder/functions/api/submit.ts",
+        "app-builder/functions/api/prds.ts",
+        "app-builder/functions/api/submit.test.ts",
+        "app-builder/functions/api/prds.test.ts"
+      ],
+      "note": "Both body-reading POSTs Zod-parse before use: submitBodySchema (submit.ts:18-44) bounds prompt/appType/hasAuth/entities; savePrdBodySchema (prds.ts:18-42) enforces slug regex and title/prompt/markdown min/max. Over-limit bodies return 400 (submit.test.ts:72-98).",
+      "adjudication": "n/a — passed",
+      "adjudicationNote": ""
+    },
+    {
+      "ruleId": "u-sec-no-stub-paths",
+      "passed": true,
+      "evidence": [
+        "app-builder/functions/api/submit.ts",
+        "app-builder/functions/api/prds.ts",
+        "app-builder/functions/api/jobs.ts",
+        "app-builder/functions/api/prd/[id].ts",
+        "app-builder/functions/lib/http.ts"
+      ],
+      "note": "No functions/lib/auth.ts and no TODO/always-true guards. Endpoints fail closed on bad JSON/DB (submit.ts:36-44,61; prds.ts:34-55; jobs.ts:20-21; prd/[id].ts:18-36). Public write paths rely on Zod + parameterized binds, not stubbed security checks.",
+      "adjudication": "n/a — passed",
+      "adjudicationNote": ""
+    },
+    {
+      "ruleId": "u-test-adequacy",
+      "passed": false,
+      "evidence": [
+        "app-builder/src/components/wizard/steps/FeaturesStep.tsx",
+        "app-builder/src/components/Wizard.tsx",
+        "app-builder/src/components/wizard.test.ts",
+        "app-builder/src/lib/job.ts",
+        "app-builder/src/lib/job.test.ts"
+      ],
+      "note": "resolveFeatureSelection (FeaturesStep.tsx:40-50) has stale-id drop and empty-vs-defaults branches, is re-exported 'for unit tests' (Wizard.tsx:333-338), yet no test file references it. canForgePrd empty-selection branch (job.ts:108-110) is never asserted in job.test.ts (only prompt/appType).",
+      "adjudication": "confirmed",
+      "adjudicationNote": "resolveFeatureSelection was re-exported \"for unit tests\" that did not exist, and canForgePrd's empty-selection branch had no assertion. Both now tested."
+    },
+    {
+      "ruleId": "u-test-behavioral",
+      "passed": false,
+      "evidence": [
+        "app-builder/src/components/wizard.test.ts",
+        "app-builder/src/i18n/en.test.ts",
+        "app-builder/src/components/templateGallery.test.ts",
+        "app-builder/src/lib/prd.test.ts",
+        "app-builder/src/lib/job.ts"
+      ],
+      "note": "Features-step coverage asserts isFeatureContinueBlocked (wizard.test.ts:113,128,137,143), a test-only dual of production isFeatureSelectionReady (job.ts:85-95). wizard.test.ts:25-39 and en.test.ts/templateGallery.test.ts lean on length>2 presence checks. prd.test.ts:278-313 is behavioral but does not rescue the gate tests.",
+      "adjudication": "confirmed",
+      "adjudicationNote": "the Features gate tests asserted isFeatureContinueBlocked, a test-only dual, so the production predicate was never under test. Tests repointed."
+    },
+    {
+      "ruleId": "fe-pages-compose",
+      "passed": false,
+      "evidence": [
+        "app-builder/src/pages/Saved.tsx",
+        "app-builder/src/pages/Home.tsx",
+        "app-builder/src/pages/SavedPrd.tsx",
+        "app-builder/src/pages/About.tsx"
+      ],
+      "note": "Saved.tsx:69-172 inlines toolbar, KPI strip, section head, full card list, and local KpiCard (178-185) plus ~20 style objects (187-403)—not a short list of named components. Home.tsx:140-176 composes well; About is a thin LegalPage wrap; Saved fails the page rule for the app.",
+      "adjudication": "confirmed",
+      "adjudicationNote": "Saved.tsx was 403 lines inlining toolbar, KPI strip, card list, a local KpiCard and ~20 style objects. Now 95 lines composing named components."
+    },
+    {
+      "ruleId": "fe-fail-closed-states",
+      "passed": true,
+      "evidence": [
+        "app-builder/src/pages/Saved.tsx",
+        "app-builder/src/pages/SavedPrd.tsx",
+        "app-builder/src/lib/useAbortableJsonGet.ts",
+        "app-builder/src/components/PrdResult.tsx",
+        "app-builder/src/components/wizard/steps/ReviewStep.tsx"
+      ],
+      "note": "Saved maps loading/error/empty/success (Saved.tsx:29-37,78-170). SavedPrd has loading/error/not-found/success (SavedPrd.tsx:20-24,75-150). useAbortableJsonGet fails closed on non-OK, parse null, and timeout (useAbortableJsonGet.ts:71-115). Save and submit surfaces expose error UI, not silent empty success.",
+      "adjudication": "n/a — passed",
+      "adjudicationNote": ""
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-07-25T07:15:52.006Z",
+  "checkedAt": "2026-07-25T17:18:20.801Z",
   "verdictFileRevisions": 34,
   "distinctJudgeVerdicts": 258,
   "judgeFails": 0,
@@ -9,6 +9,18 @@
   "failedRuleIds": [
     "fe-a11y-contrast"
   ],
+  "independentRuns": [
+    {
+      "file": "evidence/judge-independent-app-builder.json",
+      "reviewedCommit": "f84e3f27323c",
+      "judged": 10,
+      "failed": 6,
+      "confirmed": 5
+    }
+  ],
+  "independentJudged": 10,
+  "independentFails": 6,
+  "independentConfirmed": 5,
   "minFails": 0,
   "ok": true
 }

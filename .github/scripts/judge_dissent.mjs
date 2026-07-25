@@ -14,7 +14,8 @@
  *
  * Usage: node judge_dissent.mjs [--min-fails N] [--out report.json]
  */
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const args = process.argv.slice(2);
@@ -62,6 +63,32 @@ for (const file of files) {
   }
 }
 
+// Independent judge runs: the same rules re-decided by a reviewer that did not
+// write the code and could not see the verdict file it was re-deciding. These
+// are counted separately on purpose. Folding them into the self-recorded total
+// would hide the very asymmetry this script exists to publish — the point is
+// that the two populations have wildly different failure rates.
+/** @type {{ file: string, reviewedCommit: string, judged: number, failed: number, confirmed: number }[]} */
+const independent = [];
+for (const file of readdirSync('evidence').filter((f) => /^judge-independent-.*\.json$/.test(f))) {
+  const path = join('evidence', file);
+  let report;
+  try {
+    report = JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    continue;
+  }
+  const list = Array.isArray(report?.verdicts) ? report.verdicts : [];
+  if (list.length === 0) continue;
+  independent.push({
+    file: path.replace(/\\/g, '/'),
+    reviewedCommit: String(report.reviewedCommit ?? 'unknown').slice(0, 12),
+    judged: list.length,
+    failed: list.filter((v) => v?.passed === false).length,
+    confirmed: list.filter((v) => v?.adjudication === 'confirmed').length
+  });
+}
+
 const all = [...seen.values()];
 const judged = all.filter((v) => v.method === 'judge');
 const visual = all.filter((v) => v.method === 'visual');
@@ -77,6 +104,10 @@ const report = {
   distinctVisualVerdicts: visual.length,
   visualFails: visualFails.length,
   failedRuleIds: [...new Set([...judgeFails, ...visualFails].map((v) => v.ruleId))],
+  independentRuns: independent,
+  independentJudged: independent.reduce((n, r) => n + r.judged, 0),
+  independentFails: independent.reduce((n, r) => n + r.failed, 0),
+  independentConfirmed: independent.reduce((n, r) => n + r.confirmed, 0),
   minFails,
   ok: judgeFails.length >= minFails
 };
@@ -97,13 +128,32 @@ if (!report.ok) {
   );
   process.exit(1);
 }
+if (report.independentJudged > 0) {
+  console.log(
+    `\nindependent judge runs           : ${independent.length} ` +
+      `(${report.independentJudged} rules judged, ${report.independentFails} FAILs, ` +
+      `${report.independentConfirmed} confirmed on follow-up)`
+  );
+  for (const run of independent) {
+    console.log(
+      `  ${run.file} @ ${run.reviewedCommit}: ${run.failed}/${run.judged} failed, ${run.confirmed} confirmed`
+    );
+  }
+  const selfRate = judged.length > 0 ? judgeFails.length / judged.length : 0;
+  const indRate = report.independentFails / report.independentJudged;
+  console.log(
+    `  self-recorded dissent ${(selfRate * 100).toFixed(1)}% vs independent ${(indRate * 100).toFixed(1)}% ` +
+      `— the gap, not either number, is the finding.`
+  );
+}
 if (judgeFails.length === 0) {
   // Never print a green sentence over a zero. The number IS the finding, and
   // dressing it as a pass is exactly the dishonesty this whole gate exists to
   // stop.
   console.log(
-    `\njudge dissent: ZERO recorded disagreements in ${judged.length} judge verdicts. ` +
-      `Reported, not enforced — the fix is an independent reviewer, not a threshold.`
+    `\njudge dissent: ZERO disagreements in ${judged.length} SELF-RECORDED judge verdicts. ` +
+      `Reported, not enforced — the fix is an independent reviewer, not a threshold, ` +
+      `and independent runs are counted separately above.`
   );
 } else {
   console.log(
