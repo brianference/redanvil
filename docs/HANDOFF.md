@@ -5,14 +5,14 @@ without re-deriving anything.
 
 ## Where things stand
 
-- **HEAD:** `96a694b` on `master`, CI green.
+- **HEAD:** `36f1188` on `master`, CI green.
 - **Latest release:** `v8.0.0` (third audit: measured design rules, guarded lanes, scaffold
   gated in CI, deploy tied to the scored commit).
 - **Production:** https://redanvil.pages.dev and https://redanvil-dashboard.pages.dev
   (Cloudflare Pages, direct upload / Type B; prod branch `main`, local branch `master`, so
   deploys must pass `--branch main`). Both verified this session by asset-hash match.
-- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v8.0.0-20260725-0020.bundle`
-  (restore-tested by a real clone: 372 files, 11 tags, `v8.0.0` → `54fdf4f`).
+- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v8.0.0-20260725-0024.bundle`
+  (restore-tested by a real clone: 372 files, `v8.0.0` → `36f1188`).
 - **Gate:** app-builder 100/100 across 48/48 at **87% coverage** (floor 85); dashboard 100/100
   across 46/46 at **84%** (floor 80). Both with `--na ci,process`, zero stale verdicts, both
   reproduced rule-by-rule in CI, and both tied to the deployed bundle by `verify_deployed.mjs`.
@@ -58,18 +58,23 @@ finding. Open from the third:
 - **`design_audit.mjs` measures the home route only**; a mobile regression on `/saved` or a
   wizard step would not be caught.
 
-What that leaves as genuine next work, in rough value order:
-- **Monorepo wiring, then lower the ratchet again.** Duplication is 772 (down from 854 after
-  the shared `design-system/shellCss.ts`). The next candidates all import React, and sharing
-  one was attempted and reverted: two React instances break every hook in the browser, and
-  `resolve.dedupe` does not fix it. A workspace package with `react` as a peer dependency is
-  the prerequisite. See the bottom of `docs/audit-2026-07-25.md`.
-- **Judge/visual rubric lanes** were improved but never re-derived from scratch.
-- **AI-suggests-features-then-user-chooses** before finalizing the PRD: requested, not built.
-- **Edge-case acceptance criteria** (`scratchpad/prd-edgecases.md`) — confirm whether the
-  failure/boundary templating landed in PRD v3.
-- **A third audit.** The first two each found ten real defects in a system that looked green;
-  there is no reason to think a third would find none.
+Everything else on the old backlog is now done:
+- **Monorepo wiring + ratchet.** Both apps are npm workspaces, react hoists to one copy, and
+  `useDrawerA11y` shares cleanly. Duplication ratcheted 854 → 772 → **646**. Sharing React code
+  failed before the workspace conversion (two React instances break every hook in the browser);
+  that is why the wiring came first.
+- **Suggested features flow.** Built and verified by driving production: deselecting everything
+  blocks with a reason, a deselected feature is absent from the generated PRD.
+- **Edge-case acceptance criteria.** Confirmed landed: a generated PRD carries 22 GIVEN/WHEN/THEN
+  criteria of which 8 (36%) are failure/boundary paths (empty state, 500 + retry, 401, invalid
+  input).
+- **Third audit.** Done — `docs/audit-2026-07-25-third.md`, 7 of 10 closed.
+
+Next genuine work, in rough value order:
+- Lower the duplication ratchet below 646 (`linkify`, `Breadcrumbs` and `ThemeToggle` are the
+  next candidates; they import per-app theme/i18n so they need parameterising, not just moving).
+- The three open third-audit findings above.
+- Re-derive the judge lane from scratch rather than patching it — see the dissent finding.
 
 ### 2. Brand assets
 The dark lockup is the owner's own Grok Imagine artwork, recovered from two JPEG exports (over
