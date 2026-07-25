@@ -96,6 +96,18 @@ npm run gate -- app-builder --judge evidence/verdicts-app-builder.json \
 ```
 `git checkout -- results/app-builder.json` before a run if you need `provenance.dirty=false`.
 
+**Gates added since v6** (all run in CI, most also daily in `drift.yml`):
+```
+node .github/scripts/design_audit.mjs   <prodUrl> --out evidence/design-<slug>.json
+node .github/scripts/desktop_width.mjs  <prodUrl> --out evidence/width-<slug>.json
+node .github/scripts/runtime_parity.mjs <appDir> --out evidence/runtime-<slug>.json
+node .github/scripts/gate_scaffold.mjs
+node .github/scripts/verify_deployed.mjs <appDir> results/<slug>.json <prodUrl>
+node .github/scripts/judge_dissent.mjs  --out evidence/judge-dissent.json
+```
+Verdicts for those rules must cite the matching report, and a report older than the commit it
+vouches for is rejected — re-stamping a verdict is not re-measuring it.
+
 **CI parity before every push** (`verify_commit.mjs` now names these itself):
 ```
 node .github/scripts/verify_commit.mjs HEAD
