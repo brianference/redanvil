@@ -6,3 +6,4 @@
 - u-conc-use-what-exists (major, det+judge): use stdlib, framework, or the shared library before writing new code or adding a dependency.
 - u-conc-no-padding (major, det): no try/except that only logs and re-raises, no docstrings that restate the signature, no redundant intermediate variables.
 - u-conc-smallest-diff (major, det+judge): diff scoped to the ticket; generated lockfiles excluded from diff-size metrics.
+- u-conc-file-size (major, det): No source file exceeds 600 lines. Test files are exempt. A module past the cap is split by responsibility, not by line count.

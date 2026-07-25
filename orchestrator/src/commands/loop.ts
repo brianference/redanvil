@@ -4,12 +4,20 @@ import { withWorktree } from '../worktree/isolate';
 import { runLoop, type GateOutcome, type LoopResult } from '../loop/ralph';
 import { gateApp, type GateReport } from './gate';
 import { runGrok, parseGrokJson, newSessionId } from '../grok/harness';
+import { scoreRun, coderEnv } from '../loop/runRules';
 import type { Outcome } from '../gate/score';
 
 /** A completed loop plus the full gate report from its final pass. */
 export interface LoopRun {
   loop: LoopResult;
   final: GateReport;
+  /**
+   * How the run itself scored against the operational contract in
+   * rules/loop-gate.md. Previously those rules existed only as prose, so a run
+   * that edited the live tree, leaked an environment, or looped unbounded still
+   * reported the same clean result as one that did none of those things.
+   */
+  runRules: Outcome[];
 }
 
 export interface LoopCommandOptions {
@@ -34,7 +42,12 @@ export interface LoopCommandOptions {
   isolate?: boolean;
   /** Repo the worktree branches from. Defaults to the current directory. */
   repoDir?: string;
+  /** Pre-flight iteration estimate, scored by lg-budget-ceiling. */
+  estimatedIterations?: number;
 }
+
+/** Coder timeout applied when the caller sets none; mirrors the Grok harness default. */
+const DEFAULT_CODER_TIMEOUT_MS = 600_000;
 
 /** Indent a captured diagnostic so it reads as a block under its rule id. */
 function indent(text: string): string {
@@ -91,6 +104,8 @@ export async function runLoopCommand(opts: LoopCommandOptions): Promise<LoopRun>
  */
 async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun> {
   const spec = await readFile(opts.specPath, 'utf8');
+  /** Iterations that produced a real gate score, for lg-score-is-inline. */
+  let gatedIterations = 0;
   /** The full report from the most recent gate pass, for the result file. */
   let lastReport: GateReport | null = null;
   // One session for the whole loop so the coder keeps its own context across
@@ -117,6 +132,7 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
     /** Score inline. Never the coder's self-report. */
     gate: async (): Promise<GateOutcome> => {
       const report = await gateApp(dir, undefined, opts.judge, opts.notApplicable);
+      gatedIterations += 1;
       lastReport = report;
       const failed = report.outcomes.filter((o) => !o.passed);
       // Hand back the check's own diagnostic, not just the rule id. The coder
@@ -157,5 +173,15 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
     // no score to report, and must not be written out as one.
     throw new Error('loop completed without running the gate — check --max-iters');
   }
-  return { loop, final: lastReport };
+  const runRules = scoreRun({
+    isolated: opts.isolate !== false,
+    coderTimeoutMs: opts.timeoutMs ?? DEFAULT_CODER_TIMEOUT_MS,
+    coderEnv: coderEnv(),
+    maxIters: opts.maxIters,
+    gatedIterations,
+    iterations: loop.iterations,
+    estimatedIterations: opts.estimatedIterations ?? null,
+    flipFlopped: loop.flipFlopped
+  });
+  return { loop, final: lastReport, runRules };
 }

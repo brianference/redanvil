@@ -20,6 +20,10 @@ export const RULES: Rule[] = [
   rule('u-conc-no-speculative-abstraction', 'concision', 'major', 'judge'),
   rule('u-conc-use-what-exists', 'concision', 'major', 'det+judge'),
   rule('u-conc-no-padding', 'concision', 'major', 'det'),
+  // base-15 rule 8 and lg-role-architecture both ask for size caps and neither
+  // was measured, so the biggest module in the repo grew to 1365 lines with two
+  // exported functions and nothing ever said so.
+  rule('u-conc-file-size', 'concision', 'major', 'det'),
   rule('u-conc-smallest-diff', 'concision', 'major', 'det+judge'),
 
   rule('u-val-input-validation', 'security', 'blocker', 'det+judge'),

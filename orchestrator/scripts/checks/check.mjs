@@ -638,6 +638,27 @@ switch (ruleId) {
     hit ? fail(`SAST sink: ${hit}`) : pass();
     break;
   }
+  case 'u-conc-file-size': {
+    // base-15 rule 8: "small, single-purpose files and functions, sized from the
+    // corpus norm", and lg-role-architecture asks for "file and function size
+    // within caps". Both were prose. Nothing measured size, so the largest file
+    // in this repo reached 1365 lines with two exported functions and no check
+    // ever mentioned it.
+    //
+    // Tests are exempt: a thorough test file is long for a good reason, and
+    // capping it pushes people to delete cases.
+    const MAX_SOURCE_LINES = 600;
+    const files = [...tsx(), ...walk(functionsDir, ['.ts', '.js'])].filter((f) => !isTestFile(f));
+    if (files.length === 0) notApplicable('no source files');
+    for (const f of files) {
+      const lines = read(f).split(EOL).length;
+      if (lines > MAX_SOURCE_LINES) {
+        fail(`file over ${MAX_SOURCE_LINES} lines: ${f} (${lines} lines)`);
+      }
+    }
+    pass();
+    break;
+  }
   case 'u-conc-no-padding': {
     // No gratuitous padding: 3+ consecutive blank lines.
     const files = tsx();

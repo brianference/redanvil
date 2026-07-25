@@ -51,6 +51,7 @@ export const APP_CHECKS: Check[] = [
   det('fe-seo-assets'),
   det('fe-icon-button-labels'),
   det('u-conc-no-padding'),
+  det('u-conc-file-size'),
   det('hyg-no-duplication'),
   // CI lane: cases already lived in check.mjs but were never wired into the app
   // gate, so without --na ci they fail-closed as "unevaluated" rather than
@@ -72,6 +73,19 @@ export interface GateReport {
   total: number;
   /** Coverage-weighted score: passed rule weight / TOTAL rubric weight. Unevaluated rules earn nothing. */
   score: number;
+  /**
+   * Share of the whole rubric this run actually scored, 0-100.
+   *
+   * The score alone rewards narrowness: every rule a check reports as
+   * not-applicable leaves the denominator, so a thin app reaches 100 more
+   * easily than a rich one and the headline number cannot tell them apart. An
+   * app that ships no request handler, no outbound fetch and no workflows drops
+   * eight rules and scores against what remains. Coverage is what makes that
+   * visible, so "100 at 51% coverage" reads differently from "100 at 96%".
+   */
+  coverage: number;
+  /** Rule ids excluded from scoring this run, either by --na or by a check reporting n/a. */
+  notApplicable: string[];
 }
 
 /**
@@ -148,5 +162,15 @@ export async function gateApp(
   const evaluated = new Set(
     outcomes.map((o) => o.ruleId).filter((id) => scoredIds.has(id))
   ).size;
-  return { outcomes, blockersFailed, evaluated, total: rules.length, score: consistentScore };
+  const rubricSize = loadRubric().length;
+  const coverage = rubricSize === 0 ? 0 : Math.round((rules.length / rubricSize) * 100);
+  return {
+    outcomes,
+    blockersFailed,
+    evaluated,
+    total: rules.length,
+    score: consistentScore,
+    coverage,
+    notApplicable: [...na].sort()
+  };
 }

@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { z } from 'zod';
 import { ValidationError } from '../errors';
@@ -40,6 +40,75 @@ export const VerdictSchema = z.object({
 export const VerdictListSchema = z.array(VerdictSchema).min(1);
 
 export type Verdict = z.infer<typeof VerdictSchema>;
+
+/** The rule whose pass must be backed by a real axe-core report. */
+const CONTRAST_RULE_ID = 'fe-a11y-contrast';
+
+/**
+ * Shape `a11y_audit.mjs` writes. Only the fields the gate reads are modelled;
+ * anything else in the report is ignored rather than rejected.
+ */
+const AxeReportSchema = z.object({
+  url: z.string().min(1),
+  theme: z.string().min(1),
+  checkedAt: z.string().min(1),
+  axeVersion: z.string().min(1),
+  contrastViolationNodes: z.number().int().nonnegative()
+});
+
+/**
+ * Check that a passing contrast verdict is backed by axe reports showing zero
+ * contrast violations, in BOTH themes. One theme passing says nothing about the
+ * other, and this project shipped a dark-mode contrast regression while light
+ * mode was clean.
+ *
+ * @param verdict - The contrast verdict.
+ * @param repoRoot - Root that evidence paths resolve against.
+ * @returns Problems found; empty when the evidence supports the pass.
+ */
+function contrastEvidenceIssues(verdict: Verdict, repoRoot: string): string[] {
+  const issues: string[] = [];
+  const themesSeen = new Set<string>();
+
+  const reports = verdict.evidence.filter((p) => /\.json$/i.test(p));
+  if (reports.length === 0) {
+    return [
+      `${CONTRAST_RULE_ID}: a passing contrast verdict must cite an axe-core report ` +
+        `(a .json written by .github/scripts/a11y_audit.mjs), not only screenshots`
+    ];
+  }
+
+  for (const path of reports) {
+    const full = join(repoRoot, path);
+    if (!existsSync(full)) continue; // already reported as missing evidence
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(readFileSync(full, 'utf8'));
+    } catch {
+      issues.push(`${CONTRAST_RULE_ID}: ${path} is not parseable JSON`);
+      continue;
+    }
+    const report = AxeReportSchema.safeParse(parsed);
+    if (!report.success) {
+      issues.push(`${CONTRAST_RULE_ID}: ${path} is not an axe report from a11y_audit.mjs`);
+      continue;
+    }
+    if (report.data.contrastViolationNodes > 0) {
+      issues.push(
+        `${CONTRAST_RULE_ID}: ${path} records ${report.data.contrastViolationNodes} ` +
+          `contrast violation node(s) — that is a failing measurement, not a pass`
+      );
+    }
+    themesSeen.add(report.data.theme.toLowerCase());
+  }
+
+  for (const theme of ['dark', 'light']) {
+    if (!themesSeen.has(theme)) {
+      issues.push(`${CONTRAST_RULE_ID}: no axe report for the ${theme} theme`);
+    }
+  }
+  return issues;
+}
 
 /**
  * Parse and validate a verdicts file, then check it against the rubric and disk.
@@ -112,6 +181,15 @@ export function parseVerdicts(
       if (!existsSync(join(repoRoot, path))) {
         issues.push(`${v.ruleId}: evidence not found: ${path}`);
       }
+    }
+    // Contrast is the one rule with a standards-based measurement already in the
+    // repo. `a11y_audit.mjs` runs axe-core against the live site on a daily
+    // cadence, and its result touched nothing: the blocker was decided by a
+    // hand-typed note while the real measurement sat unread in evidence/axe.
+    // A pass here now has to carry that artifact, and the artifact has to say
+    // zero. Base rule 16: use the standard implementation, never a hand reading.
+    if (v.ruleId === CONTRAST_RULE_ID && v.passed) {
+      issues.push(...contrastEvidenceIssues(v, repoRoot));
     }
   }
 

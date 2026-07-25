@@ -255,7 +255,12 @@ async function main(): Promise<number> {
     const report = await gateApp(dir, undefined, judge, notApplicable);
     const verdict = report.score >= threshold ? 'PASS' : 'FAIL';
     console.log(
-      `gate: ${verdict} — score ${report.score}/100 (threshold ${threshold}), evaluated ${report.evaluated}/${report.total} rules`
+      `gate: ${verdict} — score ${report.score}/100 (threshold ${threshold}), ` +
+        `evaluated ${report.evaluated}/${report.total} rules, ` +
+        `coverage ${report.coverage}% of the full rubric` +
+        (report.notApplicable.length > 0
+          ? ` (n/a: ${report.notApplicable.join(', ')})`
+          : '')
     );
     for (const o of report.outcomes) console.log(`  ${o.passed ? 'PASS' : 'FAIL'}  ${o.ruleId}`);
     if (report.blockersFailed.length > 0) {
