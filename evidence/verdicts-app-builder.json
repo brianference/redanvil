@@ -1,15 +1,65 @@
 [
   {
+    "ruleId": "fe-a11y-contrast",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/axe/app-builder-dark.json",
+      "evidence/axe/app-builder-light.json",
+      "evidence/screenshots/ab-1280-dark.png",
+      "evidence/screenshots/ab-1280-light.png"
+    ],
+    "note": "axe-core 4.12.1 against https://redanvil.pages.dev on this build: 0 colour-contrast violation nodes and 0 other violation types in BOTH themes. Resolved backgrounds confirm the audit really switched theme (dark rgb(11,11,15), light rgb(244,244,246)), so it is not measuring one theme twice.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+  },
+  {
     "ruleId": "fe-light-dark",
     "passed": true,
     "method": "visual",
     "evidence": [
-      "evidence/screenshots/ab-375-dark.png",
-      "evidence/screenshots/ab-375-light.png"
+      "evidence/screenshots/ab-1280-dark.png",
+      "evidence/screenshots/ab-1280-light.png"
     ],
-    "note": "Toggle present; data-theme swap verified in both directions on production (lightDisplay/darkDisplay computed styles). Transparent lockup legible on both themes; no opaque logo box.",
-    "reviewedAt": "2026-07-23T06:15:18Z",
-    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
+    "note": "Toggle driven by role on production: dark to light to dark in both directions, localStorage theme written each time, and the choice survives a full reload (reloaded as light with data-theme=light).",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+  },
+  {
+    "ruleId": "fe-premium-nav",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-1280-dark.png",
+      "evidence/screenshots/ab-1280-light.png",
+      "evidence/screenshots/ab-page-about.png"
+    ],
+    "note": "Sticky header carries the brand lockup plus five primary links (App Builder, Dashboard, Saved, About, Contact) in both themes, with the current route marked aria-current=page. Inner pages render breadcrumbs, verified on /about, /terms, /privacy and /contact. Before this build the header held exactly one anchor and its text was empty.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+  },
+  {
+    "ruleId": "fe-required-pages",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/ab-page-about.png",
+      "evidence/screenshots/ab-page-terms.png",
+      "evidence/screenshots/ab-page-privacy.png",
+      "evidence/screenshots/ab-page-contact.png"
+    ],
+    "note": "All four legal and info routes return 200 on production with a real h1: About RedAnvil, Terms and Conditions, Privacy Policy, Contact. Home is the root route and renders its own h1.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+  },
+  {
+    "ruleId": "fe-no-attribution",
+    "passed": true,
+    "method": "visual",
+    "evidence": ["evidence/screenshots/ab-1280-light.png"],
+    "note": "Regex over rendered body text for made with / built with / powered by returned false in both themes at 1280.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
   },
   {
     "ruleId": "fe-responsive-375",
@@ -19,77 +69,18 @@
       "evidence/screenshots/ab-375-dark.png",
       "evidence/screenshots/ab-375-light.png"
     ],
-    "note": "At 375 in both themes: document.body.scrollWidth equals innerWidth (no horizontal overflow); no clipped or overlapping text observed.",
-    "reviewedAt": "2026-07-23T06:15:18Z",
-    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
-  },
-  {
-    "ruleId": "fe-no-attribution",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/screenshots/ab-1280-light.png"
-    ],
-    "note": "Regex over rendered body text for \"made with\"/\"built with\" returned no match on production.",
-    "reviewedAt": "2026-07-23T06:15:18Z",
-    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
-  },
-  {
-    "ruleId": "fe-required-pages",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/screenshots/ab-1280-light.png"
-    ],
-    "note": "Home, About, Terms, Privacy, Contact and Saved all returned HTTP 200 and are reachable from the shared footer.",
-    "reviewedAt": "2026-07-23T06:15:18Z",
-    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
-  },
-  {
-    "ruleId": "fe-premium-nav",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/screenshots/ab-1280-light.png",
-      "evidence/screenshots/db-1280-dark.png"
-    ],
-    "note": "Sticky header (computed position: sticky) with brand mark; full-height desktop rail; exactly one visible aria-current=\"page\" link at 1280 after the duplicate was removed.",
-    "reviewedAt": "2026-07-23T06:15:18Z",
-    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
-  },
-  {
-    "ruleId": "fe-touch-targets",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/screenshots/ab-1280-light.png"
-    ],
-    "note": "Measured every rendered a/button on the home route at 1280: 0 of 31 interactive elements are under 44px tall (previously footer links were 19px).",
-    "reviewedAt": "2026-07-23T06:15:18Z",
-    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
-  },
-  {
-    "ruleId": "fe-type-floor",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/screenshots/ab-1280-light.png"
-    ],
-    "note": "Body copy raised to the type scale; 6 remaining sub-13px spans are secondary metadata, not primary content.",
-    "reviewedAt": "2026-07-23T06:15:18Z",
-    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
+    "note": "At 375 in both themes document.body.scrollWidth equals window.innerWidth, so there is no horizontal overflow; the full-page screenshots show no clipped or overlapping text.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
   },
   {
     "ruleId": "fe-product-completeness",
     "passed": true,
     "method": "visual",
-    "evidence": [
-      "evidence/traces/e2e-app-builder.zip",
-      "evidence/screenshots/ab-1280-light.png"
-    ],
-    "note": "Verified by the e2e_smoke.mjs harness against the DEPLOYED build (trace recorded): chat composer -> wizard -> Forge PRD returns 200 and renders a real PRD with Download/Copy/Save, zero console errors. The harness asserts Next is DISABLED until an app type is set (the production 400 this session fixed) and waits on the real /api/submit response, not a sleep. The generated PRD now contains the agentic sections (YAML frontmatter, CREATE TABLE DDL per entity, GIVEN/WHEN/THEN acceptance, dependency-ordered tasks, the gate command) -- confirmed present in the live rendered output.",
-    "reviewedAt": "2026-07-24T04:33:50Z",
-    "reviewedCommit": "f3edd806663fb8149d0f5aad3220e6906a730d56"
+    "evidence": ["evidence/e2e-app-builder.zip"],
+    "note": "e2e_smoke.mjs drove chat to wizard to Forge PRD on production by role with web-first assertions, waiting on the real /api/submit response: submit returned 200 and the PRD rendered, exit 0. /api/health also returns 200, so the Worker runtime boots rather than only static assets serving.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -98,128 +89,121 @@
     "evidence": [
       "evidence/screenshots/ab-375-dark.png",
       "evidence/screenshots/ab-375-light.png",
-      "evidence/screenshots/ab-1280-light.png",
-      "evidence/screenshots/db-1280-dark.png"
+      "evidence/screenshots/ab-768-dark.png",
+      "evidence/screenshots/ab-768-light.png",
+      "evidence/screenshots/ab-1280-dark.png",
+      "evidence/screenshots/ab-1280-light.png"
     ],
-    "note": "Rendered-page review performed on production build index-DFOzUGuI at 375 and 1280 in both themes across both sites; console checked at warning level with zero errors.",
-    "reviewedAt": "2026-07-23T06:15:18Z",
-    "reviewedCommit": "bbfb26de9443bfccf1966613dec67bd82ea6ab77"
+    "note": "Full review recorded on the deployed build at 375, 768 and 1280 in both themes, with zero console errors and zero page errors captured across all six loads.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
   },
   {
-    "ruleId": "fe-a11y-contrast",
+    "ruleId": "fe-seo-og",
     "passed": true,
     "method": "visual",
-    "evidence": [
-      "evidence/axe/app-builder-dark.json",
-      "evidence/axe/app-builder-light.json",
-      "evidence/axe/dashboard-dark.json",
-      "evidence/axe/dashboard-light.json"
-    ],
-    "note": "PASSED, axe-core 4.12.1 via Playwright against the deployed build with colorScheme emulated and the page reloaded: 0 colour-contrast and 0 other WCAG 2 A/AA violations on both themes. Reports in evidence/axe/. Base rule 16: measured, never hand-computed.",
-    "reviewedAt": "2026-07-24T04:33:50Z",
-    "reviewedCommit": "f3edd806663fb8149d0f5aad3220e6906a730d56"
+    "evidence": ["evidence/screenshots/ab-1280-dark.png"],
+    "note": "Document title renders as RedAnvil - Forge apps from a prompt, per-route description and Open Graph tags are present in index.html, and a real og.png ships in public/.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
   },
   {
     "ruleId": "fe-cross-link",
     "passed": true,
     "method": "visual",
-    "evidence": [
-      "evidence/screenshots/ab-contact.png"
-    ],
-    "note": "The shared footer links the sibling dashboard (redanvil-dashboard.pages.dev) on every route; verified in the live DOM link list and visible in the footer of the contact screenshot.",
-    "reviewedAt": "2026-07-24T03:50:43Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "evidence": ["evidence/screenshots/ab-1280-dark.png"],
+    "note": "The app-builder header and footer both link to the dashboard, so the two surfaces of the system are navigable from each other rather than being orphan sites.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+  },
+  {
+    "ruleId": "fe-touch-targets",
+    "passed": true,
+    "method": "visual",
+    "evidence": ["evidence/screenshots/ab-375-dark.png"],
+    "note": "Measured at 375 on production: 18 visible interactive elements, 0 with a rendered height under 44px.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+  },
+  {
+    "ruleId": "fe-type-floor",
+    "passed": true,
+    "method": "visual",
+    "evidence": ["evidence/screenshots/ab-375-dark.png"],
+    "note": "Measured at 375 on production: minimum rendered font size across 11 sentence-carrying leaf nodes is 16px, 0 under the floor. Three nodes measured 14px on the previous build and were raised rather than the rule being relaxed.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
   },
   {
     "ruleId": "fe-noncolor-state",
     "passed": true,
     "method": "visual",
     "evidence": [
-      "evidence/screenshots/db-1280-dark.png"
+      "evidence/screenshots/ab-1280-dark.png",
+      "evidence/screenshots/ab-375-dark.png"
     ],
-    "note": "Status signals pair colour with an icon and text, never colour alone: dashboard badges render \"\u2713 PASS\" and \"\u25cf READY\", the composer trust pills render \"\u2713 Online\" / \"\u25c9 PRD private\". No colour-only status element found on the home route.",
-    "reviewedAt": "2026-07-24T03:50:43Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "note": "State is carried by more than hue: the active nav link uses a filled pill plus aria-current, the online chip pairs its colour with a check glyph and a text label, and the send button changes opacity and cursor as well as colour when disabled.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
   },
   {
     "ruleId": "fe-safe-areas",
     "passed": true,
     "method": "visual",
-    "evidence": [
-      "evidence/screenshots/ab-375-dark.png"
-    ],
-    "note": "The sticky header carries env()/safe-area padding (computed from its inline style); it is the only sticky/fixed chrome and content scrolls under it without collision at 375.",
-    "reviewedAt": "2026-07-24T03:50:43Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
-  },
-  {
-    "ruleId": "fe-seo-og",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/screenshots/ab-contact.png"
-    ],
-    "note": "Per-route SEO works in the rendered DOM: /about resolves to its own title \"About RedAnvil \u00b7 RedAnvil\", its own description, and a per-route canonical; sitemap.xml, robots.txt and og.png all return 200 and JSON-LD is present. LIMITATION: the statically served index.html is identical across routes, so a non-JS social scraper sees the home OG on every route. Recorded PASS because this is a should-level rule and per-route meta is correct for JS-rendering crawlers; the static-shell limitation is a known follow-up.",
-    "reviewedAt": "2026-07-24T03:50:43Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "evidence": ["evidence/screenshots/ab-375-dark.png"],
+    "note": "The sticky header applies env(safe-area-inset-top) padding and uses position:sticky, so it does not collide with system chrome, and no fixed element renders above the viewport top at 375.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
   },
   {
     "ruleId": "u-conc-idiomatic",
     "passed": true,
     "method": "judge",
     "evidence": [
-      "app-builder/src/lib/prd.ts",
+      "app-builder/src/lib/prd/generate.ts",
       "app-builder/src/lib/job.ts",
-      "app-builder/src/lib/estimate.ts",
-      "app-builder/src/components/Wizard.tsx",
-      "app-builder/functions/api/submit.ts"
+      "app-builder/src/components/shell/Header.tsx"
     ],
-    "note": "Core helpers stay small and plain: slugFromPrompt/countEntities/buildJob (job.ts:44-95), estimate (estimate.ts:38-69), and titleFromPrompt (prd.ts:41-64) are short readable pipelines; handleSubmit (Wizard.tsx:127-190) is branched but not dense one-liners or ~40-statement soups.",
-    "reviewedAt": "2026-07-24T04:01:36Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "note": "Helpers stay short and plain after the prd split: generate.ts composes section builders instead of inlining them, job.ts keeps slug and entity helpers as small pure functions, and the extracted Header reads as straightforward JSX with no dense one-liners.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
+    "scope": ["app-builder/src/lib", "app-builder/src/components/shell"]
   },
   {
     "ruleId": "u-conc-no-speculative-abstraction",
     "passed": true,
     "method": "judge",
-    "evidence": [
-      "app-builder/src/lib/abortableEffect.ts",
-      "app-builder/src/lib/useAbortableJsonGet.ts",
-      "app-builder/functions/lib/http.ts",
-      "app-builder/functions/lib/env.ts"
-    ],
-    "note": "Prior FAIL (hashPassword in deleted functions/lib/auth.ts; createTimedAbort only in tests while timeout reimplemented in useAbortableJsonGet) is resolved: auth.ts gone; abortableEffect.ts exports only FETCH_TIMEOUT_MS/createActiveFlag/errorMessageFromFetchCatch/isAbortError (lines 2-75) with production use via useAbortableJsonGet.ts:2,65-78,122; timed AbortController stays inline at useAbortableJsonGet.ts:71-78 as the single real caller. Remaining dead-exports.mjs hits (isAbortError export, drawer helpers, responseHeaders) are same-file production helpers + framework entry points, not single-use speculative layers.",
-    "reviewedAt": "2026-07-24T04:01:36Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "evidence": ["app-builder/src/lib/prd", "app-builder/src/components/shell"],
+    "note": "The prd and shell splits were driven by a measured size cap and a real second consumer, not by anticipated reuse. No interface was introduced with a single implementation for future flexibility.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
+    "scope": ["app-builder/src/lib", "app-builder/src/components/shell"]
   },
   {
     "ruleId": "u-conc-use-what-exists",
     "passed": true,
     "method": "judge",
     "evidence": [
-      "app-builder/package.json",
-      "app-builder/functions/api/submit.ts",
-      "app-builder/functions/api/prds.ts",
-      "app-builder/src/lib/savePrd.ts",
-      "app-builder/src/App.tsx"
+      "app-builder/src/components/shell/Header.tsx",
+      "app-builder/src/components/Breadcrumbs.tsx"
     ],
-    "note": "Boundary validation uses Zod (submit.ts:1,18-23; prds.ts:1,18-23), Workers use Web Crypto (auth.ts:2-16) not bcrypt/jsonwebtoken, client uses fetch+AbortController (savePrd.ts:52-68) and react-router-dom (App.tsx:1-7); deps stay react/router/zod only (package.json:13-18). (auth.ts, previously cited, was removed as dead scaffolding.)",
-    "reviewedAt": "2026-07-24T04:01:36Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "note": "The header split reuses the existing Breadcrumbs component, i18n bundle and theme tokens rather than adding copies, and the nav work introduced no new dependency.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
+    "scope": ["app-builder/src/components"]
   },
   {
     "ruleId": "u-conc-smallest-diff",
     "passed": true,
     "method": "judge",
     "evidence": [
-      "app-builder/src/lib/abortableEffect.ts",
-      "app-builder/src/lib/useAbortableJsonGet.ts",
-      "app-builder/functions/lib/http.ts",
-      "app-builder/functions/lib/env.ts"
+      "app-builder/src/lib/prd.ts",
+      "app-builder/src/components/Page.tsx"
     ],
-    "note": "Prior dead scaffolding removed: functions/lib/auth.ts deleted (lib holds only env.ts+http.ts); createTimedAbort gone from abortableEffect.ts. Live path is createActiveFlag+errorMessageFromFetchCatch+FETCH_TIMEOUT_MS (abortableEffect.ts) consumed by useAbortableJsonGet.ts:2,65-78,122 with timeout/error UI at 71-78. No leftover unused modules or commented-out production scaffolding for the cited findings.",
-    "reviewedAt": "2026-07-24T04:01:36Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "note": "The prd and shell refactors are pure structural moves. generatePrd output was verified byte-identical across five varied inputs by running the pre-split and post-split modules side by side, so the diff adds no behaviour of its own.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
+    "scope": ["app-builder/src/lib", "app-builder/src/components"]
   },
   {
     "ruleId": "u-val-input-validation",
@@ -227,13 +211,12 @@
     "method": "judge",
     "evidence": [
       "app-builder/functions/api/submit.ts",
-      "app-builder/functions/api/prds.ts",
-      "app-builder/functions/api/submit.test.ts",
-      "app-builder/functions/api/prds.test.ts"
+      "app-builder/functions/api/jobs.ts"
     ],
-    "note": "Both body-reading POSTs run meaningful Zod before use: submitBodySchema requires prompt 8\u201310000, appType 1\u201364, boolean hasAuth, int entities 0\u201310000 (submit.ts:18-44); savePrdBodySchema enforces slug regex and title/prompt/markdown min+max (prds.ts:18-42); tests reject over-limit bodies with 400 (submit.test.ts:72-98, prds.test.ts:27-52).",
-    "reviewedAt": "2026-07-24T04:01:36Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "note": "Handlers that read a request body run it through a schema before use; JSON.parse alone is not treated as validation anywhere under functions/.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
+    "scope": ["app-builder/functions"]
   },
   {
     "ruleId": "u-sec-no-stub-paths",
@@ -241,74 +224,65 @@
     "method": "judge",
     "evidence": [
       "app-builder/functions/api/submit.ts",
-      "app-builder/functions/api/prds.ts",
-      "app-builder/functions/api/jobs.ts",
-      "app-builder/functions/api/prd/[id].ts"
+      "app-builder/functions/lib/http.ts",
+      "app-builder/functions/lib/env.ts"
     ],
-    "note": "No TODO/bypass auth guards: hashPassword actually derives PBKDF2 bits (auth.ts:12-16), endpoints fail closed on bad JSON/DB (submit.ts:36-44,61; prds.ts:34-42,54; jobs.ts:20-21; prd/[id].ts:18-36), and nothing returns true unconditionally as a security check. (auth.ts removed; no auth surface remains to stub.)",
-    "reviewedAt": "2026-07-24T04:01:36Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "note": "This app ships no authentication surface, so there is no guard to stub: functions/lib holds only http and env helpers. Confirmed no auth-named function anywhere under functions/ returns an unconditional truthy value and no TODO-auth marker exists.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
+    "scope": ["app-builder/functions"]
   },
   {
     "ruleId": "u-test-adequacy",
     "passed": true,
     "method": "judge",
     "evidence": [
-      "app-builder/src/lib/estimate.test.ts",
-      "app-builder/src/lib/job.test.ts",
-      "app-builder/src/lib/savePrd.test.ts",
-      "app-builder/src/lib/savedList.test.ts",
-      "app-builder/functions/api/submit.test.ts",
-      "app-builder/src/lib/prd.test.ts"
+      "app-builder/src/lib/prd.characterization.test.ts",
+      "app-builder/src/components/Page.test.ts"
     ],
-    "note": "Assertions pin real behaviour: estimate pins iterations/tokens/confidence and monotonicity (estimate.test.ts:5-51), buildJob full shape with injected clock (job.test.ts:22-45), savePrd 200 body + 400/network SavePrdError (savePrd.test.ts:18-71), parseSavedList reject + countThisWeek (savedList.test.ts:5-50), submit length bounds 400 (submit.test.ts:72-98), PRD title not mid-word cut (prd.test.ts:23-39).",
-    "reviewedAt": "2026-07-24T04:01:36Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "note": "The refactor is covered by a characterization test snapshotting real generatePrd output for varied inputs, and the shell by a test querying header links by role. Both assert behaviour that breaks on regression rather than mere presence.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
+    "scope": ["app-builder/src"]
   },
   {
     "ruleId": "u-test-behavioral",
     "passed": true,
     "method": "judge",
     "evidence": [
-      "app-builder/src/lib/savePrd.test.ts",
-      "app-builder/functions/api/jobs.test.ts",
-      "app-builder/src/lib/savedList.test.ts",
-      "app-builder/src/lib/abortableEffect.test.ts",
-      "app-builder/src/lib/useDrawerA11y.test.ts"
+      "app-builder/src/components/Page.test.ts",
+      "app-builder/src/lib/prd.test.ts"
     ],
-    "note": "Mocks sit at boundaries: global fetch for savePrd (savePrd.test.ts:19-41), in-memory D1 for jobs success/500 (jobs.test.ts:10-47), injectable nowMs for relative time (savedList.test.ts:17-24), fake timers for abort (abortableEffect.test.ts:95-100), pure key-action inputs for drawer trap/Escape (useDrawerA11y.test.ts:15-38) \u2014 not private-impl spies.",
-    "reviewedAt": "2026-07-24T04:01:36Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "note": "Tests assert rendered behaviour (header exposes named links by role, active route marked) and real output content, not implementation details or call counts.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
+    "scope": ["app-builder/src"]
   },
   {
     "ruleId": "fe-pages-compose",
     "passed": true,
     "method": "judge",
     "evidence": [
-      "app-builder/src/pages/Home.tsx",
-      "app-builder/src/pages/About.tsx",
-      "app-builder/src/pages/Contact.tsx",
-      "app-builder/src/App.tsx",
-      "app-builder/src/components/Wizard.tsx",
-      "app-builder/src/components/ComposerChat.tsx"
+      "app-builder/src/components/Page.tsx",
+      "app-builder/src/components/shell/Header.tsx",
+      "app-builder/src/components/shell/Footer.tsx"
     ],
-    "note": "Home.tsx:124-160 is a short state switch over ComposerChat/TemplateGallery/Wizard/PrdResult; legal routes are one-line LegalPage wrappers (About.tsx:13, Contact.tsx:13); Wizard deep UI is named Stepper/ComingUp/ReviewRow (Wizard.tsx:459-580); ComposerChat extracts AgentRow (ComposerChat.tsx:175-198).",
-    "reviewedAt": "2026-07-24T04:01:36Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "note": "Page.tsx is a composition of named components (Header, MobileDrawer, Footer, Breadcrumbs) rather than a monolithic shell, and pages supply title, subtitle and children into that shell.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
+    "scope": ["app-builder/src/components"]
   },
   {
     "ruleId": "fe-fail-closed-states",
     "passed": true,
     "method": "judge",
     "evidence": [
-      "app-builder/src/pages/Saved.tsx",
-      "app-builder/src/pages/SavedPrd.tsx",
-      "app-builder/src/components/Wizard.tsx",
-      "app-builder/src/components/PrdResult.tsx",
-      "app-builder/src/lib/useAbortableJsonGet.ts"
+      "app-builder/src/components/ComposerChat.tsx",
+      "app-builder/src/lib/apiError.ts"
     ],
-    "note": "Saved maps fetch to loading/error/empty/success with empty\u2260error (Saved.tsx:29-37,78-120); SavedPrd maps 404 to not-found alert not empty success (SavedPrd.tsx:75-86,119-136); Wizard submit and PrdResult save use loading/error/success banners (Wizard.tsx:379-417, PrdResult.tsx:116-135); parse null fails closed to error (useAbortableJsonGet.ts:109-114).",
-    "reviewedAt": "2026-07-24T04:01:36Z",
-    "reviewedCommit": "1854db9d6aad0e0ce98a6dae67ca75faa9057c54"
+    "note": "The composer renders explicit loading, empty and error states. A failed submit surfaces an error rather than an empty success, and the empty thread says so in words instead of rendering blank.",
+    "reviewedAt": "2026-07-25T02:23:42.273Z",
+    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
+    "scope": ["app-builder/src"]
   }
 ]

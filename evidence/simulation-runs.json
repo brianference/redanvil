@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-24T06:14:15.468Z",
+  "generatedAt": "2026-07-25T02:06:50.040Z",
   "records": [
     {
       "label": "field-service-offline",
@@ -18,30 +18,27 @@
       },
       "scaffold": {
         "ok": true,
-        "detail": "19 files",
-        "files": 19
+        "detail": "27 files",
+        "files": 27
       },
       "checks": {
-        "ok": false,
-        "detail": "15 pass / 14 fail / 5 n-a",
-        "passed": 15,
-        "failed": 14,
-        "na": 5,
-        "failedIds": [
+        "ok": true,
+        "detail": "18 pass / 0 fail / 8 n-a / 9 unmeasured",
+        "passed": 18,
+        "failed": 0,
+        "na": 8,
+        "unmeasured": 9,
+        "failedIds": [],
+        "unmeasuredIds": [
           "u-typing-strict",
           "u-typing-no-any",
           "u-conc-dead-code",
           "u-conc-use-what-exists",
           "u-conc-smallest-diff",
-          "u-plat-migrations",
-          "fe-seo-assets",
           "u-test-presence",
           "u-test-adequacy",
           "fe-fail-closed-states",
-          "ci-actionlint",
-          "hyg-env-ignored",
-          "proc-pr-title-ticket",
-          "proc-conventional-commits"
+          "hyg-env-ignored"
         ]
       }
     },
@@ -62,30 +59,27 @@
       },
       "scaffold": {
         "ok": true,
-        "detail": "19 files",
-        "files": 19
+        "detail": "27 files",
+        "files": 27
       },
       "checks": {
-        "ok": false,
-        "detail": "15 pass / 14 fail / 5 n-a",
-        "passed": 15,
-        "failed": 14,
-        "na": 5,
-        "failedIds": [
+        "ok": true,
+        "detail": "18 pass / 0 fail / 8 n-a / 9 unmeasured",
+        "passed": 18,
+        "failed": 0,
+        "na": 8,
+        "unmeasured": 9,
+        "failedIds": [],
+        "unmeasuredIds": [
           "u-typing-strict",
           "u-typing-no-any",
           "u-conc-dead-code",
           "u-conc-use-what-exists",
           "u-conc-smallest-diff",
-          "u-plat-migrations",
-          "fe-seo-assets",
           "u-test-presence",
           "u-test-adequacy",
           "fe-fail-closed-states",
-          "ci-actionlint",
-          "hyg-env-ignored",
-          "proc-pr-title-ticket",
-          "proc-conventional-commits"
+          "hyg-env-ignored"
         ]
       }
     },
@@ -106,30 +100,27 @@
       },
       "scaffold": {
         "ok": true,
-        "detail": "19 files",
-        "files": 19
+        "detail": "27 files",
+        "files": 27
       },
       "checks": {
-        "ok": false,
-        "detail": "15 pass / 14 fail / 5 n-a",
-        "passed": 15,
-        "failed": 14,
-        "na": 5,
-        "failedIds": [
+        "ok": true,
+        "detail": "18 pass / 0 fail / 8 n-a / 9 unmeasured",
+        "passed": 18,
+        "failed": 0,
+        "na": 8,
+        "unmeasured": 9,
+        "failedIds": [],
+        "unmeasuredIds": [
           "u-typing-strict",
           "u-typing-no-any",
           "u-conc-dead-code",
           "u-conc-use-what-exists",
           "u-conc-smallest-diff",
-          "u-plat-migrations",
-          "fe-seo-assets",
           "u-test-presence",
           "u-test-adequacy",
           "fe-fail-closed-states",
-          "ci-actionlint",
-          "hyg-env-ignored",
-          "proc-pr-title-ticket",
-          "proc-conventional-commits"
+          "hyg-env-ignored"
         ]
       }
     },
@@ -150,30 +141,27 @@
       },
       "scaffold": {
         "ok": true,
-        "detail": "19 files",
-        "files": 19
+        "detail": "27 files",
+        "files": 27
       },
       "checks": {
-        "ok": false,
-        "detail": "15 pass / 14 fail / 5 n-a",
-        "passed": 15,
-        "failed": 14,
-        "na": 5,
-        "failedIds": [
+        "ok": true,
+        "detail": "18 pass / 0 fail / 8 n-a / 9 unmeasured",
+        "passed": 18,
+        "failed": 0,
+        "na": 8,
+        "unmeasured": 9,
+        "failedIds": [],
+        "unmeasuredIds": [
           "u-typing-strict",
           "u-typing-no-any",
           "u-conc-dead-code",
           "u-conc-use-what-exists",
           "u-conc-smallest-diff",
-          "u-plat-migrations",
-          "fe-seo-assets",
           "u-test-presence",
           "u-test-adequacy",
           "fe-fail-closed-states",
-          "ci-actionlint",
-          "hyg-env-ignored",
-          "proc-pr-title-ticket",
-          "proc-conventional-commits"
+          "hyg-env-ignored"
         ]
       }
     },
@@ -194,30 +182,27 @@
       },
       "scaffold": {
         "ok": true,
-        "detail": "19 files",
-        "files": 19
+        "detail": "27 files",
+        "files": 27
       },
       "checks": {
-        "ok": false,
-        "detail": "15 pass / 14 fail / 5 n-a",
-        "passed": 15,
-        "failed": 14,
-        "na": 5,
-        "failedIds": [
+        "ok": true,
+        "detail": "18 pass / 0 fail / 8 n-a / 9 unmeasured",
+        "passed": 18,
+        "failed": 0,
+        "na": 8,
+        "unmeasured": 9,
+        "failedIds": [],
+        "unmeasuredIds": [
           "u-typing-strict",
           "u-typing-no-any",
           "u-conc-dead-code",
           "u-conc-use-what-exists",
           "u-conc-smallest-diff",
-          "u-plat-migrations",
-          "fe-seo-assets",
           "u-test-presence",
           "u-test-adequacy",
           "fe-fail-closed-states",
-          "ci-actionlint",
-          "hyg-env-ignored",
-          "proc-pr-title-ticket",
-          "proc-conventional-commits"
+          "hyg-env-ignored"
         ]
       }
     },
@@ -238,30 +223,27 @@
       },
       "scaffold": {
         "ok": true,
-        "detail": "19 files",
-        "files": 19
+        "detail": "27 files",
+        "files": 27
       },
       "checks": {
-        "ok": false,
-        "detail": "15 pass / 14 fail / 5 n-a",
-        "passed": 15,
-        "failed": 14,
-        "na": 5,
-        "failedIds": [
+        "ok": true,
+        "detail": "18 pass / 0 fail / 8 n-a / 9 unmeasured",
+        "passed": 18,
+        "failed": 0,
+        "na": 8,
+        "unmeasured": 9,
+        "failedIds": [],
+        "unmeasuredIds": [
           "u-typing-strict",
           "u-typing-no-any",
           "u-conc-dead-code",
           "u-conc-use-what-exists",
           "u-conc-smallest-diff",
-          "u-plat-migrations",
-          "fe-seo-assets",
           "u-test-presence",
           "u-test-adequacy",
           "fe-fail-closed-states",
-          "ci-actionlint",
-          "hyg-env-ignored",
-          "proc-pr-title-ticket",
-          "proc-conventional-commits"
+          "hyg-env-ignored"
         ]
       }
     },
@@ -282,30 +264,27 @@
       },
       "scaffold": {
         "ok": true,
-        "detail": "19 files",
-        "files": 19
+        "detail": "27 files",
+        "files": 27
       },
       "checks": {
-        "ok": false,
-        "detail": "15 pass / 14 fail / 5 n-a",
-        "passed": 15,
-        "failed": 14,
-        "na": 5,
-        "failedIds": [
+        "ok": true,
+        "detail": "18 pass / 0 fail / 8 n-a / 9 unmeasured",
+        "passed": 18,
+        "failed": 0,
+        "na": 8,
+        "unmeasured": 9,
+        "failedIds": [],
+        "unmeasuredIds": [
           "u-typing-strict",
           "u-typing-no-any",
           "u-conc-dead-code",
           "u-conc-use-what-exists",
           "u-conc-smallest-diff",
-          "u-plat-migrations",
-          "fe-seo-assets",
           "u-test-presence",
           "u-test-adequacy",
           "fe-fail-closed-states",
-          "ci-actionlint",
-          "hyg-env-ignored",
-          "proc-pr-title-ticket",
-          "proc-conventional-commits"
+          "hyg-env-ignored"
         ]
       }
     },
@@ -326,30 +305,27 @@
       },
       "scaffold": {
         "ok": true,
-        "detail": "19 files",
-        "files": 19
+        "detail": "27 files",
+        "files": 27
       },
       "checks": {
-        "ok": false,
-        "detail": "15 pass / 14 fail / 5 n-a",
-        "passed": 15,
-        "failed": 14,
-        "na": 5,
-        "failedIds": [
+        "ok": true,
+        "detail": "18 pass / 0 fail / 8 n-a / 9 unmeasured",
+        "passed": 18,
+        "failed": 0,
+        "na": 8,
+        "unmeasured": 9,
+        "failedIds": [],
+        "unmeasuredIds": [
           "u-typing-strict",
           "u-typing-no-any",
           "u-conc-dead-code",
           "u-conc-use-what-exists",
           "u-conc-smallest-diff",
-          "u-plat-migrations",
-          "fe-seo-assets",
           "u-test-presence",
           "u-test-adequacy",
           "fe-fail-closed-states",
-          "ci-actionlint",
-          "hyg-env-ignored",
-          "proc-pr-title-ticket",
-          "proc-conventional-commits"
+          "hyg-env-ignored"
         ]
       }
     },
@@ -370,30 +346,27 @@
       },
       "scaffold": {
         "ok": true,
-        "detail": "19 files",
-        "files": 19
+        "detail": "27 files",
+        "files": 27
       },
       "checks": {
-        "ok": false,
-        "detail": "15 pass / 14 fail / 5 n-a",
-        "passed": 15,
-        "failed": 14,
-        "na": 5,
-        "failedIds": [
+        "ok": true,
+        "detail": "18 pass / 0 fail / 8 n-a / 9 unmeasured",
+        "passed": 18,
+        "failed": 0,
+        "na": 8,
+        "unmeasured": 9,
+        "failedIds": [],
+        "unmeasuredIds": [
           "u-typing-strict",
           "u-typing-no-any",
           "u-conc-dead-code",
           "u-conc-use-what-exists",
           "u-conc-smallest-diff",
-          "u-plat-migrations",
-          "fe-seo-assets",
           "u-test-presence",
           "u-test-adequacy",
           "fe-fail-closed-states",
-          "ci-actionlint",
-          "hyg-env-ignored",
-          "proc-pr-title-ticket",
-          "proc-conventional-commits"
+          "hyg-env-ignored"
         ]
       }
     },
@@ -414,30 +387,27 @@
       },
       "scaffold": {
         "ok": true,
-        "detail": "19 files",
-        "files": 19
+        "detail": "27 files",
+        "files": 27
       },
       "checks": {
-        "ok": false,
-        "detail": "15 pass / 14 fail / 5 n-a",
-        "passed": 15,
-        "failed": 14,
-        "na": 5,
-        "failedIds": [
+        "ok": true,
+        "detail": "18 pass / 0 fail / 8 n-a / 9 unmeasured",
+        "passed": 18,
+        "failed": 0,
+        "na": 8,
+        "unmeasured": 9,
+        "failedIds": [],
+        "unmeasuredIds": [
           "u-typing-strict",
           "u-typing-no-any",
           "u-conc-dead-code",
           "u-conc-use-what-exists",
           "u-conc-smallest-diff",
-          "u-plat-migrations",
-          "fe-seo-assets",
           "u-test-presence",
           "u-test-adequacy",
           "fe-fail-closed-states",
-          "ci-actionlint",
-          "hyg-env-ignored",
-          "proc-pr-title-ticket",
-          "proc-conventional-commits"
+          "hyg-env-ignored"
         ]
       }
     }
