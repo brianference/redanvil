@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-07-25T07:15:05.788Z",
+  "verdictFileRevisions": 34,
+  "distinctJudgeVerdicts": 258,
+  "judgeFails": 0,
+  "judgeDissentRate": 0,
+  "distinctVisualVerdicts": 399,
+  "visualFails": 2,
+  "failedRuleIds": [
+    "fe-a11y-contrast"
+  ],
+  "minFails": 0,
+  "ok": true
+}

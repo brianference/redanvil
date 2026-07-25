@@ -79,6 +79,12 @@ jobs:
       - name: Deployed build matches the scored commit — dashboard
         run: node .github/scripts/verify_deployed.mjs dashboard results/dashboard.json https://redanvil-dashboard.pages.dev/
 
+      # Publish the judge tier's dissent rate. Report-only on purpose: the
+      # measured answer is zero dissent in 258 verdicts, and the fix for that is
+      # an independent reviewer, not a threshold that forces a fake rejection.
+      - name: Judge dissent rate
+        run: node .github/scripts/judge_dissent.mjs --out evidence/judge-dissent.json
+
       # Keep the trace when something fails, so a drift is opened, not re-driven.
       - name: Upload e2e trace on failure
         if: failure()

@@ -61,11 +61,31 @@ re-measurement, which is the correct behaviour.
 
 ## Still open
 
-### 4. The judge tier almost never dissents
-24 verdicts across both apps, 19 judge-method. Two commits in the repo's history recorded a
-judge FAIL; every current verdict passes. That is not proof of rubber-stamping — the code may
-simply be clean — but a tier that has dissented twice in its lifetime provides weak signal, and
-nothing measures its dissent rate. Worth instrumenting before trusting it further.
+### 4. The judge tier has NEVER dissented — measured, still open
+
+Now instrumented, and the number is worse than this audit first estimated. I wrote that "two
+commits recorded a judge FAIL". `judge_dissent.mjs` reads every revision of both verdict files
+out of git history and measures:
+
+| | count |
+|---|---|
+| verdict-file revisions inspected | 34 |
+| distinct judge verdicts | **258** |
+| judge FAILs ever recorded | **0** |
+| distinct visual verdicts | 399 |
+| visual FAILs ever recorded | 2 (both `fe-a11y-contrast`) |
+
+The two historical failures were VISUAL, not judge. The judge tier has never once said no, in
+258 recorded opportunities. It contributes up to 30% of tier-2 weight on that record.
+
+This is deliberately **not** wired as a blocking check with a floor of 1. The honest response to
+"the judge never disagrees" is to publish the number, not to manufacture a disagreement so a
+check goes green. The script defaults to report-only and runs daily; raise the floor to 1 once
+the tier has genuinely rejected something.
+
+The real fix is upstream: judge verdicts are currently written by the same agent that wrote the
+code. An independent reviewer with no stake in the diff is the thing missing, and no amount of
+scoring fixes that.
 
 ### 5. A scaffolded app is never gated end-to-end in CI — CLOSED
 `gate_scaffold.mjs` scaffolds a real job, installs it, and runs the tool-backed checks (tsc,
