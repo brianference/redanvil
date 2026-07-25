@@ -3,12 +3,8 @@ import type { Prd } from '../lib/prd';
 import { savePrd, SavePrdError } from '../lib/savePrd';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
-import {
-  buttonStyle,
-  cardStyle,
-  errorBannerStyle,
-  statusBannerStyle
-} from './ui';
+import { LoadingBanner, ErrorBanner } from './Banner';
+import { buttonStyle, cardStyle, statusBannerStyle } from './ui';
 
 export interface PrdResultProps {
   /** The generated PRD to display and offer for download. */
@@ -112,12 +108,7 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
         </button>
       </div>
 
-      {saveState.status === 'loading' && (
-        <div role="status" aria-live="polite" aria-busy="true" style={statusBannerStyle()}>
-          <span aria-hidden="true">…</span>
-          <span>{copy.saving}</span>
-        </div>
-      )}
+      {saveState.status === 'loading' && <LoadingBanner message={copy.saving} />}
       {saveState.status === 'success' && (
         <div role="status" style={statusBannerStyle()}>
           <span aria-hidden="true">✓</span>
@@ -126,12 +117,7 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
           </a>
         </div>
       )}
-      {saveState.status === 'error' && (
-        <div role="alert" style={errorBannerStyle()}>
-          <span aria-hidden="true">!</span>
-          <span>{saveState.message}</span>
-        </div>
-      )}
+      {saveState.status === 'error' && <ErrorBanner message={saveState.message} />}
 
       <div style={cardStyle(theme.space.md)}>
         <pre style={preStyle}>{prd.markdown}</pre>

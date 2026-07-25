@@ -20,9 +20,7 @@ describe('buildFeatureSuggestions', () => {
     const defaults = defaultSelectedFeatureIds(['Trip', 'Driver'], true);
     const suggestions = buildFeatureSuggestions(['Trip', 'Driver'], true);
     expect(defaults.length).toBeGreaterThan(0);
-    expect(defaults.every((id) => suggestions.find((s) => s.id === id)?.mvp === true)).toBe(
-      true
-    );
+    expect(defaults.every((id) => suggestions.find((s) => s.id === id)?.mvp === true)).toBe(true);
     expect(defaults).not.toContain(
       suggestions.find((s) => s.title.startsWith('Manage Driver'))?.id
     );

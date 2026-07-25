@@ -3,7 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
-import { buttonStyle, cardStyle, errorBannerStyle, statusBannerStyle } from '../components/ui';
+import { LoadingBanner, ErrorBanner } from '../components/Banner';
+import { buttonStyle, cardStyle } from '../components/ui';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
@@ -116,24 +117,9 @@ export function SavedPrd(): JSX.Element {
         </Link>
       </p>
 
-      {state.status === 'loading' && (
-        <div role="status" aria-live="polite" aria-busy="true" style={statusBannerStyle()}>
-          <span aria-hidden="true">…</span>
-          <span>{copy.loading}</span>
-        </div>
-      )}
-      {state.status === 'error' && (
-        <div role="alert" style={errorBannerStyle()}>
-          <span aria-hidden="true">!</span>
-          <span>{state.message}</span>
-        </div>
-      )}
-      {state.status === 'not-found' && (
-        <div role="alert" style={errorBannerStyle()}>
-          <span aria-hidden="true">!</span>
-          <span>{copy.notFound}</span>
-        </div>
-      )}
+      {state.status === 'loading' && <LoadingBanner message={copy.loading} />}
+      {state.status === 'error' && <ErrorBanner message={state.message} />}
+      {state.status === 'not-found' && <ErrorBanner message={copy.notFound} />}
       {state.status === 'success' && (
         <section style={rootStyle} aria-label={state.prd.title}>
           <p style={readyStyle}>

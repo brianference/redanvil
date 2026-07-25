@@ -49,10 +49,7 @@ function getHeaderByRole(html: string): string {
  */
 function getNavigationByName(containerHtml: string, name: string): string {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const re = new RegExp(
-    `<nav\\b[^>]*aria-label="${escaped}"[^>]*>[\\s\\S]*?<\\/nav>`,
-    'i'
-  );
+  const re = new RegExp(`<nav\\b[^>]*aria-label="${escaped}"[^>]*>[\\s\\S]*?<\\/nav>`, 'i');
   const match = containerHtml.match(re);
   if (match === null) {
     throw new Error(`No navigation with accessible name "${name}"`);
@@ -105,20 +102,19 @@ describe('Page shell — primary header navigation', () => {
     const header = getHeaderByRole(html);
     const nav = getNavigationByName(header, en.app.primaryNav);
 
-    const aboutLink = nav.match(
-      new RegExp(`<a\\b[^>]*>\\s*${en.app.navAbout}\\s*<\\/a>`, 'i')
-    );
+    const aboutLink = nav.match(new RegExp(`<a\\b[^>]*>\\s*${en.app.navAbout}\\s*<\\/a>`, 'i'));
     expect(aboutLink).not.toBeNull();
     expect(aboutLink?.[0]).toMatch(/aria-current="page"/i);
 
-    const builderLink = nav.match(
-      new RegExp(`<a\\b[^>]*>\\s*${en.app.navBuilder}\\s*<\\/a>`, 'i')
-    );
+    const builderLink = nav.match(new RegExp(`<a\\b[^>]*>\\s*${en.app.navBuilder}\\s*<\\/a>`, 'i'));
     expect(builderLink?.[0] ?? '').not.toMatch(/aria-current="page"/i);
   });
 
   it('renders breadcrumbs on inner pages when breadcrumb prop is set', () => {
-    const html = renderPage('/saved', { title: en.pages.saved.title, breadcrumb: en.pages.saved.title });
+    const html = renderPage('/saved', {
+      title: en.pages.saved.title,
+      breadcrumb: en.pages.saved.title
+    });
     expect(html).toContain(`aria-label="${en.app.breadcrumbNav}"`);
     expect(html).toContain(en.app.breadcrumbHome);
     expect(html).toContain(en.pages.saved.title);

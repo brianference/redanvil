@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { buildJob } from '../../src/lib/job';
 import type { Env } from '../lib/env';
-import { jsonResponse } from '../lib/http';
+import { jsonResponse, readValidatedBody } from '../lib/http';
 
 /** CORS allow-methods for this endpoint (POST only). */
 const ALLOWED_METHODS = 'POST';
@@ -30,18 +30,8 @@ const submitBodySchema = z.object({
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return jsonResponse(request, { error: 'Invalid JSON body' }, 400, ALLOWED_METHODS);
-  }
-
-  const parsed = submitBodySchema.safeParse(raw);
-  if (!parsed.success) {
-    const message = parsed.error.issues[0]?.message ?? 'Invalid input';
-    return jsonResponse(request, { error: message }, 400, ALLOWED_METHODS);
-  }
+  const parsed = await readValidatedBody(request, submitBodySchema, ALLOWED_METHODS);
+  if (!parsed.ok) return parsed.response;
 
   const job = buildJob({
     prompt: parsed.data.prompt,

@@ -17,14 +17,7 @@
  *
  * Exit 0 when total duplicated lines <= budget; exit 1 when over budget.
  */
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  writeFileSync
-} from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -34,14 +27,19 @@ export const MIN_BLOCK = 8;
 /**
  * Default budget: the measured total on this repo. Ratcheted 805 -> 772 (shared
  * shell CSS) -> 646 (shared useDrawerA11y, once npm workspaces hoisted react to
- * one copy and React-dependent code could finally move). Lower it again whenever
- * real duplication is removed; never raise it to make a run pass.
- * Original note: measured total on this repo when the pass was introduced
- * (app-builder ↔ dashboard shared shell/lib; orchestrator currently contributes
- * 0). This is a ratchet to be lowered as shared code is extracted — not a
- * target. Override with `--max N` for local experiments.
+ * one copy and React-dependent code could finally move) -> 393.
+ *
+ * The last step is NOT 253 lines of deduplication and must not be read as one.
+ * The source did not change; the measurement was wrong. Identifier
+ * normalisation flattened every React props interface and component signature
+ * into the same punctuation, and multi-line import bodies survived the
+ * import filter, so shared *shape* was being counted as shared *code*. Fixing
+ * both dropped the honest total to 393. See `isDeclarationSkeleton`.
+ *
+ * Lower it again whenever real duplication is removed; never raise it to make a
+ * run pass. Override with `--max N` for local experiments.
  */
-export const DEFAULT_BUDGET = 646;
+export const DEFAULT_BUDGET = 393;
 
 /** Source extensions scanned under each app's `src/`. */
 const SRC_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
@@ -172,7 +170,8 @@ export function parseArgs(argv) {
       const raw = args[++i];
       if (raw === undefined) throw new Error('usage: --max requires a number');
       const n = Number(raw);
-      if (!Number.isFinite(n) || n < 0) throw new Error(`--max must be a non-negative number, got ${raw}`);
+      if (!Number.isFinite(n) || n < 0)
+        throw new Error(`--max must be a non-negative number, got ${raw}`);
       max = n;
       continue;
     }
@@ -452,13 +451,21 @@ export function normaliseLine(line) {
  */
 export function normaliseSource(source) {
   const stripped = stripComments(source.replace(/\r\n/g, '\n').replace(/\r/g, '\n'));
+  // Imports are wiring, not duplicated product logic. Dropping only lines that
+  // START with `import` missed the body of a multi-line one, so two sibling
+  // components importing from the same './styles' matched on
+  //   `$ ,` `$ ,` `$ ,` `} from './styles' ;`
+  // and the module specifier — a real string literal — made the block look
+  // substantive. Whole statements go, not just their first line.
+  const withoutImports = stripped.replace(
+    /^[ \t]*(?:import|export)\b[^;'"`]*?from[ \t]*['"`][^'"`]*['"`][ \t]*;?[ \t]*$/gms,
+    ''
+  );
   /** @type {string[]} */
   const lines = [];
-  for (const physical of stripped.split('\n')) {
+  for (const physical of withoutImports.split('\n')) {
     const norm = normaliseLine(physical);
     if (!norm) continue;
-    // Imports are wiring, not duplicated product logic. Matching every
-    // `import { $ } from '...'` across apps would inflate the total with noise.
     if (/^import\b/.test(norm)) continue;
     lines.push(norm);
   }
@@ -597,20 +604,14 @@ export function findDuplicatedBlocks(linesA, linesB, minBlock = MIN_BLOCK) {
     }
   }
 
-  windows.sort(
-    (x, y) => x.aStart - x.bStart - (y.aStart - y.bStart) || x.aStart - y.aStart
-  );
+  windows.sort((x, y) => x.aStart - x.bStart - (y.aStart - y.bStart) || x.aStart - y.aStart);
 
   /** @type {{ aStart: number, bStart: number, length: number }[]} */
   const blocks = [];
   for (const w of windows) {
     const diag = w.aStart - w.bStart;
     const last = blocks[blocks.length - 1];
-    if (
-      last &&
-      last.aStart - last.bStart === diag &&
-      w.aStart <= last.aStart + last.length
-    ) {
+    if (last && last.aStart - last.bStart === diag && w.aStart <= last.aStart + last.length) {
       const newEnd = Math.max(last.aStart + last.length, w.endA);
       last.length = newEnd - last.aStart;
     } else {
@@ -750,7 +751,9 @@ export function formatReport(report, topN = 15) {
         p.blocks.length === 1
           ? `1 block @${p.blocks[0].length}`
           : `${p.blocks.length} blocks (max ${Math.max(...p.blocks.map((b) => b.length))})`;
-      lines.push(`  ${p.duplicatedLines.toString().padStart(5)}  ${p.a}  ↔  ${p.b}  (${blockNote})`);
+      lines.push(
+        `  ${p.duplicatedLines.toString().padStart(5)}  ${p.a}  ↔  ${p.b}  (${blockNote})`
+      );
     }
     if (report.pairs.length > topN) {
       lines.push(`  ... and ${report.pairs.length - topN} more file pair(s)`);
@@ -798,9 +801,7 @@ export function main(argv) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(msg);
-    console.error(
-      'usage: node cross_app_duplication.mjs [--json out.json] [--max N] [repoRoot]'
-    );
+    console.error('usage: node cross_app_duplication.mjs [--json out.json] [--max N] [repoRoot]');
     return 2;
   }
 

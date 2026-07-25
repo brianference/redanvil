@@ -456,9 +456,24 @@ switch (ruleId) {
     // policy, `hyg-env-ignored` is the rule that covers them, and opening them
     // here would mean the checker itself reads secret files.
     const SCAN_EXT = [
-      '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
-      '.json', '.toml', '.yml', '.yaml', '.ini', '.cfg',
-      '.sh', '.ps1', '.sql', '.md', '.txt', '.html'
+      '.ts',
+      '.tsx',
+      '.js',
+      '.jsx',
+      '.mjs',
+      '.cjs',
+      '.json',
+      '.toml',
+      '.yml',
+      '.yaml',
+      '.ini',
+      '.cfg',
+      '.sh',
+      '.ps1',
+      '.sql',
+      '.md',
+      '.txt',
+      '.html'
     ];
     const isSecretFile = (f) => /(^|[\\/])\.(env|dev\.vars)/.test(f);
     const files = walk(appDir, SCAN_EXT).filter(
@@ -666,8 +681,15 @@ switch (ruleId) {
     const files = tsx();
     if (files.length === 0) notApplicable('no typescript source to lint');
     const CONFIGS = [
-      'eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs', 'eslint.config.ts',
-      '.eslintrc', '.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json', '.eslintrc.yml'
+      'eslint.config.js',
+      'eslint.config.mjs',
+      'eslint.config.cjs',
+      'eslint.config.ts',
+      '.eslintrc',
+      '.eslintrc.js',
+      '.eslintrc.cjs',
+      '.eslintrc.json',
+      '.eslintrc.yml'
     ];
     const found = CONFIGS.map((n) => join(appDir, n)).filter((p) => existsSync(p));
     if (found.length === 0) {

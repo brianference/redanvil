@@ -332,9 +332,7 @@ describe('generatePrd', () => {
     expect(prd.markdown).toContain('## 14. PRD Self-Check');
     expect(prd.markdown).toMatch(/\*\*Grade: \d+\/\d+ checks passed \(\d+%\)\*\*/);
     expect(prd.markdown).toMatch(/- \[x\] Machine frontmatter present/);
-    const gradeLine = prd.markdown.match(
-      /\*\*Grade: (\d+)\/(\d+) checks passed \((\d+)%\)\*\*/
-    );
+    const gradeLine = prd.markdown.match(/\*\*Grade: (\d+)\/(\d+) checks passed \((\d+)%\)\*\*/);
     expect(gradeLine).not.toBeNull();
     const passed = Number(gradeLine![1]);
     const total = Number(gradeLine![2]);
@@ -360,9 +358,7 @@ describe('evaluatePrdSelfCheck', () => {
     );
     expect(incomplete.passed).toBeLessThan(full.passed);
     expect(incomplete.percent).toBeLessThan(full.percent);
-    expect(incomplete.percent).toBe(
-      Math.round((incomplete.passed / incomplete.total) * 100)
-    );
+    expect(incomplete.percent).toBe(Math.round((incomplete.passed / incomplete.total) * 100));
     // Spot-check that several expected failures actually failed
     const byId = Object.fromEntries(incomplete.items.map((i) => [i.id, i.pass]));
     expect(byId['frontmatter']).toBe(false);

@@ -40,10 +40,7 @@ import { evaluatePrdSelfCheck } from './selfCheck';
 export function generatePrd(
   answers: Pick<WizardAnswers, 'prompt' | 'appType' | 'hasAuth' | 'entities'> &
     Partial<
-      Pick<
-        WizardAnswers,
-        'dataStorage' | 'hasRealtime' | 'integrations' | 'selectedFeatureIds'
-      >
+      Pick<WizardAnswers, 'dataStorage' | 'hasRealtime' | 'integrations' | 'selectedFeatureIds'>
     >,
   cost: TokenEstimate
 ): Prd {
@@ -67,9 +64,7 @@ export function generatePrd(
   const entityNames = selectionActive
     ? entitiesRequiredByFeatures(derivedEntityNames, features)
     : derivedEntityNames;
-  const hasAuth = selectionActive
-    ? authRequiredByFeatures(wizardHasAuth, features)
-    : wizardHasAuth;
+  const hasAuth = selectionActive ? authRequiredByFeatures(wizardHasAuth, features) : wizardHasAuth;
   const hasDomainTables = dataStorage !== 'none' && entityNames.length > 0;
   const mvpFeatures = features.filter((f) => f.mvp);
   const featureIds = features.map((f) => f.id).join(', ');
@@ -205,10 +200,7 @@ Default columns below are concrete starting points to refine — do **not** inve
 
 #### File tree and key signatures
 
-${buildFileTree(
-  frontmatterEntities.length > 0 ? frontmatterEntities : derivedEntityNames,
-  hasAuth
-)}
+${buildFileTree(frontmatterEntities.length > 0 ? frontmatterEntities : derivedEntityNames, hasAuth)}
 
 #### D1 schema (DDL)
 

@@ -1,4 +1,5 @@
 import type { Prd } from './prd';
+import { messageFromPayload } from './apiError';
 
 /** Successful save response from POST /api/prds. */
 export interface SavePrdResult {
@@ -76,13 +77,7 @@ export async function savePrd(prd: Prd): Promise<SavePrdResult> {
     }
 
     if (!response.ok) {
-      const message =
-        typeof payload === 'object' &&
-        payload !== null &&
-        'error' in payload &&
-        typeof (payload as { error: unknown }).error === 'string'
-          ? (payload as { error: string }).error
-          : `Save failed (${response.status})`;
+      const message = messageFromPayload(payload, `Save failed (${response.status})`);
       throw new SavePrdError(message, response.status);
     }
 

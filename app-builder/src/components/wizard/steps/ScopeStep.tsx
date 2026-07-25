@@ -2,17 +2,9 @@ import type { ChangeEvent } from 'react';
 import { type DataStorage, type WizardAnswers } from '../../../lib/job';
 import { en } from '../../../i18n/en';
 import { theme } from '../../../theme';
-import {
-  chipStyle,
-  errorBannerStyle,
-  fieldStyle,
-  hintStyle,
-  labelStyle
-} from '../../ui';
-import {
-  integrationChipSelected,
-  toggleIntegrationChip
-} from '../integrationChips';
+import { ErrorBanner } from '../../Banner';
+import { chipStyle, fieldStyle, hintStyle, labelStyle } from '../../ui';
+import { integrationChipSelected, toggleIntegrationChip } from '../integrationChips';
 import { chipsRowStyle, fieldLabelStyle } from '../styles';
 
 export interface ScopeStepProps {
@@ -62,9 +54,7 @@ export function ScopeStep({ value, patch, appTypeReady }: ScopeStepProps): JSX.E
         name="appType"
         type="text"
         value={value.appType}
-        onChange={(event: ChangeEvent<HTMLInputElement>) =>
-          patch({ appType: event.target.value })
-        }
+        onChange={(event: ChangeEvent<HTMLInputElement>) => patch({ appType: event.target.value })}
         placeholder={copy.appTypePlaceholder}
         style={fieldStyle()}
       />
@@ -103,9 +93,7 @@ export function ScopeStep({ value, patch, appTypeReady }: ScopeStepProps): JSX.E
         name="entities"
         type="text"
         value={value.entities}
-        onChange={(event: ChangeEvent<HTMLInputElement>) =>
-          patch({ entities: event.target.value })
-        }
+        onChange={(event: ChangeEvent<HTMLInputElement>) => patch({ entities: event.target.value })}
         placeholder={copy.entitiesPlaceholder}
         style={fieldStyle()}
         aria-describedby="wizard-entities-hint"
@@ -206,10 +194,7 @@ export function ScopeStep({ value, patch, appTypeReady }: ScopeStepProps): JSX.E
       />
 
       {!appTypeReady && (
-        <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
-          <span aria-hidden="true">!</span>
-          <span>{copy.appTypeRequired}</span>
-        </div>
+        <ErrorBanner message={copy.appTypeRequired} style={{ marginTop: theme.space.md }} />
       )}
     </div>
   );

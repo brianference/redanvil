@@ -5,26 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { en } from '../i18n/en';
 import type { Run } from '../lib/summary';
 import { RunList } from './RunList';
-
-/** Minimal run for list rendering tests. */
-function sampleRun(overrides: Partial<Run> = {}): Run {
-  return {
-    slug: 'app-builder',
-    finalScore: 100,
-    threshold: 90,
-    passed: true,
-    evaluated: 41,
-    total: 41,
-    rules: [{ ruleId: 'u-typing-strict', passed: true }],
-    iterations: [
-      { index: 1, score: 0, blockers: ['fe-responsive-375'] },
-      { index: 2, score: 100, blockers: [] }
-    ],
-    deployUrl: 'https://redanvil.pages.dev',
-    finishedAt: '2026-07-21T16:40:00.000Z',
-    ...overrides
-  };
-}
+import { sampleRun } from '../lib/runFixture';
 
 /**
  * Render RunList inside a MemoryRouter (required for Link / useNavigate).

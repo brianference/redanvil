@@ -7,9 +7,7 @@ import {
   upcomingNumStyle,
   upcomingStyle
 } from './styles';
-
-/** Wizard step index (Prompt → Scope → Features → Review). */
-export type ComingUpStep = 1 | 2 | 3 | 4;
+import type { WizardStepIndex } from './types';
 
 /**
  * Pillbox step list — numbered tiles for each wizard step.
@@ -17,14 +15,14 @@ export type ComingUpStep = 1 | 2 | 3 | 4;
  *
  * @param props.step - Current wizard step (1–4).
  */
-export function ComingUp({ step }: { step: ComingUpStep }): JSX.Element {
+export function ComingUp({ step }: { step: WizardStepIndex }): JSX.Element {
   const copy = en.wizard;
   return (
     <div style={upcomingStyle} aria-label={copy.comingUp}>
       <h2 style={upcomingHeadingStyle}>{copy.comingUp}</h2>
       <ol style={upcomingListStyle}>
         {copy.stepTitles.map((title, index) => {
-          const n = (index + 1) as ComingUpStep;
+          const n = (index + 1) as WizardStepIndex;
           const isCurrent = n === step;
           const isDone = n < step;
           return (

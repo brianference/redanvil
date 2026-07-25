@@ -1,12 +1,7 @@
 import type { ChangeEvent } from 'react';
 import { en } from '../../i18n/en';
 import { chipStyle, fieldStyle, labelStyle } from '../ui';
-import {
-  chipsStyle,
-  composerBlockStyle,
-  orDividerLineStyle,
-  orDividerStyle
-} from './styles';
+import { chipsStyle, composerBlockStyle, orDividerLineStyle, orDividerStyle } from './styles';
 
 export interface TemplateComposerProps {
   /** Controlled free-text prompt. */

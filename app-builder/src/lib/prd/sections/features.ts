@@ -42,9 +42,19 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
         `GIVEN the API returns 500 WHEN the list loads THEN an error message with a retry action is shown`
       ],
       tests: {
-        unit: [`filter${primary}s_byQuery_matchesTitle`, `filter${primary}s_byQuery_emptyReturnsEmpty`],
-        integration: [`GET /api/${primaryTable} returns 200 with items array`, `GET /api/${primaryTable}?q= matches title`],
-        e2e: [`${primaryTable}-list shows rows`, `${primaryTable}-list empty state`, `${primaryTable}-list error + retry`]
+        unit: [
+          `filter${primary}s_byQuery_matchesTitle`,
+          `filter${primary}s_byQuery_emptyReturnsEmpty`
+        ],
+        integration: [
+          `GET /api/${primaryTable} returns 200 with items array`,
+          `GET /api/${primaryTable}?q= matches title`
+        ],
+        e2e: [
+          `${primaryTable}-list shows rows`,
+          `${primaryTable}-list empty state`,
+          `${primaryTable}-list error + retry`
+        ]
       }
     },
     {
@@ -59,7 +69,10 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
       ],
       tests: {
         unit: [`${primary}RowSchema_acceptsValidRow`, `${primary}RowSchema_rejectsMissingId`],
-        integration: [`GET /api/${primaryTable}/:id returns 200 for existing`, `GET /api/${primaryTable}/:id returns 404 for missing`],
+        integration: [
+          `GET /api/${primaryTable}/:id returns 200 for existing`,
+          `GET /api/${primaryTable}/:id returns 404 for missing`
+        ],
         e2e: [`${primaryTable}-detail shows fields`, `${primaryTable}-detail not-found state`]
       }
     }
@@ -69,7 +82,8 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
     features.push({
       id: 'F3',
       name: 'Accounts',
-      behavior: 'Register and sign in with Web Crypto (PBKDF2 + HMAC-SHA256 sessions); data is scoped to the signed-in user.',
+      behavior:
+        'Register and sign in with Web Crypto (PBKDF2 + HMAC-SHA256 sessions); data is scoped to the signed-in user.',
       mvp: true,
       acceptance: [
         'GIVEN no session cookie WHEN the user registers with valid email and password THEN they receive a session and land on a signed-in view',
@@ -125,7 +139,11 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
         `POST /api/${primaryTable} returns 400 on empty title`,
         `DELETE or update path removes/updates row`
       ],
-      e2e: [`${primaryTable}-crud create`, `${primaryTable}-crud edit`, `${primaryTable}-crud delete confirm/cancel`]
+      e2e: [
+        `${primaryTable}-crud create`,
+        `${primaryTable}-crud edit`,
+        `${primaryTable}-crud delete confirm/cancel`
+      ]
     }
   });
 
@@ -145,7 +163,10 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
       ],
       tests: {
         unit: [`${pascal}CreateSchema_requiresTitle`],
-        integration: [`POST /api/${table} returns 201`, `POST /api/${table} returns 400 on invalid`],
+        integration: [
+          `POST /api/${table} returns 201`,
+          `POST /api/${table} returns 400 on invalid`
+        ],
         e2e: [`${table}-crud create and delete`]
       }
     });
@@ -155,7 +176,8 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
   features.push({
     id: pagesId,
     name: 'Required pages & SEO',
-    behavior: 'Ship Home, About, Terms, Privacy, Contact with per-route SEO, sitemap, and robots.txt.',
+    behavior:
+      'Ship Home, About, Terms, Privacy, Contact with per-route SEO, sitemap, and robots.txt.',
     mvp: false,
     acceptance: [
       'GIVEN the production build is served WHEN each required route is requested THEN each returns 200 with a unique title and description',
@@ -164,7 +186,10 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
     ],
     tests: {
       unit: ['seoMeta_uniquePerRoute'],
-      integration: ['GET /about /terms /privacy /contact return 200', 'GET /sitemap.xml and /robots.txt exist'],
+      integration: [
+        'GET /about /terms /privacy /contact return 200',
+        'GET /sitemap.xml and /robots.txt exist'
+      ],
       e2e: ['required-pages smoke all five routes']
     }
   });
@@ -180,10 +205,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
  * @param hasAuth - Whether the wizard auth flag is on.
  * @returns Suggestions with rationale and default MVP selection flag.
  */
-export function buildFeatureSuggestions(
-  entities: string[],
-  hasAuth: boolean
-): FeatureSuggestion[] {
+export function buildFeatureSuggestions(entities: string[], hasAuth: boolean): FeatureSuggestion[] {
   const features = buildFeatures(entities, hasAuth);
   const primary = entities[0] ? entityPascal(entities[0]) : 'Item';
   return features.map((feature) => ({
@@ -284,9 +306,7 @@ export function authRequiredByFeatures(
   if (!wizardHasAuth) {
     return false;
   }
-  return selectedFeatures.some(
-    (feature) => feature.id === 'F3' && feature.name === 'Accounts'
-  );
+  return selectedFeatures.some((feature) => feature.id === 'F3' && feature.name === 'Accounts');
 }
 
 /**
@@ -324,8 +344,7 @@ function rationaleForFeature(
   const manageMatch = /^Manage (.+)$/.exec(feature.name);
   if (manageMatch) {
     const label = manageMatch[1] ?? feature.name;
-    const source =
-      entities.find((entity) => entityPascal(entity) === label) ?? label;
+    const source = entities.find((entity) => entityPascal(entity) === label) ?? label;
     return `From entity ${source} (beyond MVP manage)`;
   }
   return `From scope: ${feature.name}`;

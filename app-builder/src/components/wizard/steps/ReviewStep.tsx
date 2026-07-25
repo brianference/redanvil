@@ -1,9 +1,5 @@
 import type { EstimateResult } from '../../../lib/estimate';
-import {
-  MIN_PROMPT_LENGTH,
-  type BuildJob,
-  type WizardAnswers
-} from '../../../lib/job';
+import { MIN_PROMPT_LENGTH, type BuildJob, type WizardAnswers } from '../../../lib/job';
 import { en } from '../../../i18n/en';
 import { theme } from '../../../theme';
 import { errorBannerStyle, statusBannerStyle } from '../../ui';

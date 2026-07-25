@@ -185,10 +185,7 @@ export function countEntities(entities: string): number {
 export function withWizardDefaults(
   partial: Pick<WizardAnswers, 'prompt' | 'appType' | 'hasAuth' | 'entities'> &
     Partial<
-      Pick<
-        WizardAnswers,
-        'dataStorage' | 'hasRealtime' | 'integrations' | 'selectedFeatureIds'
-      >
+      Pick<WizardAnswers, 'dataStorage' | 'hasRealtime' | 'integrations' | 'selectedFeatureIds'>
     >
 ): WizardAnswers {
   return {
@@ -218,10 +215,7 @@ export function withWizardDefaults(
 export function buildJob(
   answers: Pick<WizardAnswers, 'prompt' | 'appType' | 'hasAuth' | 'entities'> &
     Partial<
-      Pick<
-        WizardAnswers,
-        'dataStorage' | 'hasRealtime' | 'integrations' | 'selectedFeatureIds'
-      >
+      Pick<WizardAnswers, 'dataStorage' | 'hasRealtime' | 'integrations' | 'selectedFeatureIds'>
     >,
   now: Date = new Date()
 ): BuildJob {

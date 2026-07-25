@@ -7,11 +7,7 @@ import { SavedKpiStrip } from '../components/saved/SavedKpiStrip';
 import { SavedLoading } from '../components/saved/SavedLoading';
 import { SavedToolbar } from '../components/saved/SavedToolbar';
 import { en } from '../i18n/en';
-import {
-  countThisWeek,
-  parseSavedList,
-  type SavedPrdListItem
-} from '../lib/savedList';
+import { countThisWeek, parseSavedList, type SavedPrdListItem } from '../lib/savedList';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
@@ -74,19 +70,13 @@ export function Saved(): JSX.Element {
 
       {state.status === 'loading' && <SavedLoading />}
 
-      {state.status === 'error' && (
-        <SavedError message={state.message} onRetry={retry} />
-      )}
+      {state.status === 'error' && <SavedError message={state.message} onRetry={retry} />}
 
       {state.status === 'empty' && <SavedEmpty />}
 
       {state.status === 'success' && kpis !== null && (
         <>
-          <SavedKpiStrip
-            thisWeek={kpis.thisWeek}
-            total={kpis.total}
-            saved={kpis.saved}
-          />
+          <SavedKpiStrip thisWeek={kpis.thisWeek} total={kpis.total} saved={kpis.saved} />
           <SavedCardList items={state.items} />
         </>
       )}

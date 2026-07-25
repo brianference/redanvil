@@ -2,36 +2,24 @@ import { describe, it, expect } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { en } from '../i18n/en';
-import type { Run } from '../lib/summary';
 import { RunDetailBody } from './RunDetail';
-
-/** Full sample run matching the live feed shape. */
-function sampleRun(overrides: Partial<Run> = {}): Run {
-  return {
-    slug: 'app-builder',
-    finalScore: 100,
-    threshold: 90,
-    passed: true,
-    evaluated: 41,
-    total: 41,
-    rules: [
-      { ruleId: 'u-typing-strict', passed: true },
-      { ruleId: 'fe-responsive-375', passed: true },
-      { ruleId: 'hyg-env-ignored', passed: false }
-    ],
-    iterations: [
-      { index: 1, score: 0, blockers: ['fe-responsive-375'] },
-      { index: 2, score: 100, blockers: [] }
-    ],
-    deployUrl: 'https://redanvil.pages.dev',
-    finishedAt: '2026-07-21T16:40:00.000Z',
-    ...overrides
-  };
-}
+import { sampleRun } from '../lib/runFixture';
 
 describe('RunDetailBody', () => {
   it('renders score, coverage, iteration history, and per-rule breakdown', () => {
-    const html = renderToStaticMarkup(createElement(RunDetailBody, { run: sampleRun() }));
+    // The lane assertions below need one rule per lane, so the rules are stated
+    // here rather than taken from the shared fixture: this test is specifically
+    // about the per-lane grouping, and a lane heading only renders when a rule
+    // in that lane exists. Dropping to the fixture's two rules made the `hyg`
+    // assertion fail, which is the test doing its job.
+    const run = sampleRun({
+      rules: [
+        { ruleId: 'u-typing-strict', passed: true },
+        { ruleId: 'fe-responsive-375', passed: true },
+        { ruleId: 'hyg-env-ignored', passed: false }
+      ]
+    });
+    const html = renderToStaticMarkup(createElement(RunDetailBody, { run }));
 
     expect(html).toContain(en.runDetail.scoreValue(100, 90));
     expect(html).toContain(en.runDetail.coverageValue(41, 41));

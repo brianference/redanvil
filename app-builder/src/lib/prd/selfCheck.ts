@@ -32,9 +32,7 @@ export function evaluatePrdSelfCheck(
     /```yaml[\s\S]*?threshold:\s*\d+[\s\S]*?```/.test(markdown) ||
     /```yaml[\s\S]*?slug:\s*".+?"[\s\S]*?```/.test(markdown);
 
-  const problemSection = markdown.match(
-    /## 2\. Problem Statement\s*\n+([\s\S]*?)(?=\n## \d+\.)/
-  );
+  const problemSection = markdown.match(/## 2\. Problem Statement\s*\n+([\s\S]*?)(?=\n## \d+\.)/);
   const problemText = problemSection?.[1]?.trim() ?? '';
 
   const userStoryCount = (markdown.match(/As a \*\*[^*]+\*\*, I want/g) ?? []).length;
@@ -48,15 +46,12 @@ export function evaluatePrdSelfCheck(
   const acceptanceBody = acceptanceSection?.[1] ?? '';
   const featureBlocks = acceptanceBody.split(/### F\d+ —/).slice(1);
   const everyFeatureHasAcceptanceBullet =
-    featureBlocks.length > 0 &&
-    featureBlocks.every((block) => /^\s*-\s+\S+/m.test(block));
+    featureBlocks.length > 0 && featureBlocks.every((block) => /^\s*-\s+\S+/m.test(block));
 
   const entityDdlPresent =
     !hasDomainTables || entities.length === 0
       ? markdown.includes('CREATE TABLE') || markdown.includes('No D1 domain schema')
-      : entities.every((e) =>
-          markdown.includes(`CREATE TABLE IF NOT EXISTS ${entityTable(e)}`)
-        );
+      : entities.every((e) => markdown.includes(`CREATE TABLE IF NOT EXISTS ${entityTable(e)}`));
 
   const slicesWithVerify =
     (markdown.match(/### Slice \d+ —/g) ?? []).length > 0 &&
@@ -126,9 +121,7 @@ export function evaluatePrdSelfCheck(
   const total = items.length;
   const percent = total === 0 ? 0 : Math.round((passed / total) * 100);
 
-  const checklist = items
-    .map((i) => `- [${i.pass ? 'x' : ' '}] ${i.label}`)
-    .join('\n');
+  const checklist = items.map((i) => `- [${i.pass ? 'x' : ' '}] ${i.label}`).join('\n');
   const markdownOut = [
     '## 14. PRD Self-Check',
     '',

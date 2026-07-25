@@ -12,10 +12,7 @@ import {
   toggleFeatureSelection,
   toggleIntegrationChip
 } from './Wizard';
-import {
-  featureEntityNames,
-  resolveFeatureSelection
-} from './wizard/steps/FeaturesStep';
+import { featureEntityNames, resolveFeatureSelection } from './wizard/steps/FeaturesStep';
 import { defaultSelectedFeatureIds } from '../lib/prd/sections/features';
 
 describe('wizard scope options', () => {
@@ -115,9 +112,9 @@ describe('wizard feature selection Continue gate', () => {
     };
     expect(isFeatureSelectionReady(answers)).toBe(false);
     // Wizard Next uses the same gate: empty selection must disable Continue.
-    expect(
-      answers.selectedFeatureIds !== null && answers.selectedFeatureIds.length === 0
-    ).toBe(true);
+    expect(answers.selectedFeatureIds !== null && answers.selectedFeatureIds.length === 0).toBe(
+      true
+    );
   });
 
   it('allows Continue when at least one feature is selected', () => {
@@ -138,9 +135,9 @@ describe('wizard feature selection Continue gate', () => {
     );
     const restored = toggleFeatureSelection(only, 'F2', true);
     expect(restored).toEqual(['F2']);
-    expect(
-      isFeatureSelectionReady({ ...EMPTY_WIZARD_ANSWERS, selectedFeatureIds: restored })
-    ).toBe(true);
+    expect(isFeatureSelectionReady({ ...EMPTY_WIZARD_ANSWERS, selectedFeatureIds: restored })).toBe(
+      true
+    );
   });
 });
 
@@ -170,9 +167,9 @@ describe('resolveFeatureSelection', () => {
     const first = live[0];
     expect(first).toBeDefined();
     if (first === undefined) return;
-    expect(
-      resolveFeatureSelection({ ...answers, selectedFeatureIds: [first, 'F999'] })
-    ).toEqual([first]);
+    expect(resolveFeatureSelection({ ...answers, selectedFeatureIds: [first, 'F999'] })).toEqual([
+      first
+    ]);
   });
 
   it('falls back to defaults when every saved id has gone stale', () => {

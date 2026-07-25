@@ -43,9 +43,7 @@ export function chosenFeatureDetail(answers: WizardAnswers): string {
  * @param answers - Controlled wizard answers.
  * @returns Ordered term/detail pairs matching the Review step.
  */
-export function reviewAnswerRows(
-  answers: WizardAnswers
-): ReadonlyArray<ReviewAnswerRow> {
+export function reviewAnswerRows(answers: WizardAnswers): ReadonlyArray<ReviewAnswerRow> {
   const copy = en.wizard;
   return [
     { term: copy.reviewPrompt, detail: answers.prompt.trim() || copy.reviewEmpty },

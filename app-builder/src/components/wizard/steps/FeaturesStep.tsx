@@ -7,7 +7,8 @@ import { entityList } from '../../../lib/prd/naming';
 import { type WizardAnswers } from '../../../lib/job';
 import { en } from '../../../i18n/en';
 import { theme } from '../../../theme';
-import { errorBannerStyle, hintStyle } from '../../ui';
+import { ErrorBanner } from '../../Banner';
+import { hintStyle } from '../../ui';
 import { fieldLabelStyle } from '../styles';
 
 export interface FeaturesStepProps {
@@ -43,9 +44,7 @@ export function resolveFeatureSelection(value: WizardAnswers): string[] {
   if (value.selectedFeatureIds === null) {
     return defaults;
   }
-  const validIds = new Set(
-    buildFeatureSuggestions(entityNames, value.hasAuth).map((s) => s.id)
-  );
+  const validIds = new Set(buildFeatureSuggestions(entityNames, value.hasAuth).map((s) => s.id));
   const kept = value.selectedFeatureIds.filter((id) => validIds.has(id));
   return kept.length > 0 || value.selectedFeatureIds.length === 0 ? kept : defaults;
 }
@@ -74,11 +73,7 @@ export function toggleFeatureSelection(
  *
  * @param props - Controlled value, patch helper, and selection readiness.
  */
-export function FeaturesStep({
-  value,
-  patch,
-  featuresReady
-}: FeaturesStepProps): JSX.Element {
+export function FeaturesStep({ value, patch, featuresReady }: FeaturesStepProps): JSX.Element {
   const copy = en.wizard;
   const entityNames = featureEntityNames(value.entities);
   const suggestions = buildFeatureSuggestions(entityNames, value.hasAuth);
@@ -190,10 +185,7 @@ export function FeaturesStep({
         })}
       </ul>
       {!featuresReady && (
-        <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
-          <span aria-hidden="true">!</span>
-          <span>{copy.featuresRequired}</span>
-        </div>
+        <ErrorBanner message={copy.featuresRequired} style={{ marginTop: theme.space.md }} />
       )}
     </div>
   );

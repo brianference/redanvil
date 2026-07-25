@@ -1,12 +1,7 @@
 import { en } from '../../i18n/en';
 import { theme } from '../../theme';
 import { buttonStyle, hintStyle } from '../ui';
-import {
-  actionsStyle,
-  emptyStateStyle,
-  emptyTitleLineStyle,
-  errorAlertStyle
-} from './styles';
+import { actionsStyle, emptyStateStyle, emptyTitleLineStyle, errorAlertStyle } from './styles';
 
 export interface TemplateFooterProps {
   /** Whether Continue is enabled. */
@@ -43,10 +38,7 @@ export function TemplateFooter({
       {!canContinue && error === null && (
         <div role="status" style={emptyStateStyle}>
           <p style={emptyTitleLineStyle}>{copy.emptyTitle}</p>
-          <p
-            id="template-empty-hint"
-            style={{ ...hintStyle(), margin: `${theme.space.xs}px 0 0` }}
-          >
+          <p id="template-empty-hint" style={{ ...hintStyle(), margin: `${theme.space.xs}px 0 0` }}>
             {copy.emptyHint}
           </p>
         </div>

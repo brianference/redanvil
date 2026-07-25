@@ -1,10 +1,6 @@
 import { en } from '../../i18n/en';
 import { chipStyle, hintStyle } from '../ui';
-import {
-  variantsBlockStyle,
-  variantsHeadingStyle,
-  variantsRowStyle
-} from './styles';
+import { variantsBlockStyle, variantsHeadingStyle, variantsRowStyle } from './styles';
 
 /** One starter variant under an archetype (from the locale bundle). */
 type TemplateVariant = (typeof en.templates.items)[number]['variants'][number];
@@ -35,11 +31,7 @@ export function TemplateVariants({
         {copy.variantsLabel}
       </p>
       <p style={hintStyle()}>{copy.variantsHint}</p>
-      <div
-        style={variantsRowStyle}
-        role="group"
-        aria-labelledby="template-variants-label"
-      >
+      <div style={variantsRowStyle} role="group" aria-labelledby="template-variants-label">
         {variants.map((variant) => {
           const isSelected = selectedVariantId === variant.id;
           return (

@@ -42,12 +42,11 @@ export function resolveTemplateSelection(
   customPrompt: string
 ): TemplateSelection {
   const items = en.templates.items;
-  const archetype = archetypeId !== null ? items.find((item) => item.id === archetypeId) : undefined;
+  const archetype =
+    archetypeId !== null ? items.find((item) => item.id === archetypeId) : undefined;
   if (archetype !== undefined) {
     const variant: TemplateVariant | undefined =
-      variantId !== null
-        ? archetype.variants.find((v) => v.id === variantId)
-        : undefined;
+      variantId !== null ? archetype.variants.find((v) => v.id === variantId) : undefined;
     if (variant !== undefined) {
       return {
         id: `${archetype.id}:${variant.id}`,

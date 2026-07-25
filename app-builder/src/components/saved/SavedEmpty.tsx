@@ -1,12 +1,7 @@
 import { Link } from 'react-router-dom';
 import { en } from '../../i18n/en';
 import { buttonStyle } from '../ui';
-import {
-  emptyBodyStyle,
-  emptyCardStyle,
-  emptyCtaStyle,
-  emptyTitleStyle
-} from './styles';
+import { emptyBodyStyle, emptyCardStyle, emptyCtaStyle, emptyTitleStyle } from './styles';
 
 /**
  * Empty-state card when the user has no saved PRDs yet.

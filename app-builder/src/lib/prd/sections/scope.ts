@@ -61,11 +61,7 @@ export function buildUserStories(
 /**
  * Success outcome bullets — observable definition of done.
  */
-export function buildSuccessOutcome(
-  title: string,
-  features: FeatureSpec[],
-  slug: string
-): string {
+export function buildSuccessOutcome(title: string, features: FeatureSpec[], slug: string): string {
   const mvp = features.filter((f) => f.mvp);
   const lines = [
     `- A user can complete the MVP flows (${mvp.map((f) => f.id).join(', ')}) without auth walls unless auth is in scope.`,

@@ -7,16 +7,14 @@ import {
   stepperStyle,
   stepTitleStyle
 } from './styles';
-
-/** Wizard step index (Prompt → Scope → Features → Review). */
-export type WizardStep = 1 | 2 | 3 | 4;
+import type { WizardStepIndex } from './types';
 
 /**
  * Segmented step indicator with label + progress track (not color alone).
  *
  * @param props.step - Current wizard step (1–4).
  */
-export function Stepper({ step }: { step: WizardStep }): JSX.Element {
+export function Stepper({ step }: { step: WizardStepIndex }): JSX.Element {
   const copy = en.wizard;
   return (
     <div style={stepperStyle} aria-label={copy.stepOf(step)}>

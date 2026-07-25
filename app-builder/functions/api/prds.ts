@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Env } from '../lib/env';
-import { jsonResponse } from '../lib/http';
+import { jsonResponse, readValidatedBody } from '../lib/http';
 
 /** CORS allow-methods for this endpoint (POST + GET). Order matches prior local copy. */
 const ALLOWED_METHODS = 'POST, GET';
@@ -28,18 +28,8 @@ const savePrdBodySchema = z.object({
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return jsonResponse(request, { error: 'Invalid JSON body' }, 400, ALLOWED_METHODS);
-  }
-
-  const parsed = savePrdBodySchema.safeParse(raw);
-  if (!parsed.success) {
-    const message = parsed.error.issues[0]?.message ?? 'Invalid input';
-    return jsonResponse(request, { error: message }, 400, ALLOWED_METHODS);
-  }
+  const parsed = await readValidatedBody(request, savePrdBodySchema, ALLOWED_METHODS);
+  if (!parsed.ok) return parsed.response;
 
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();

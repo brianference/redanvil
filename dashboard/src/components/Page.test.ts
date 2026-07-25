@@ -49,10 +49,7 @@ function getHeaderByRole(html: string): string {
  */
 function getNavigationByName(containerHtml: string, name: string): string {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const re = new RegExp(
-    `<nav\\b[^>]*aria-label="${escaped}"[^>]*>[\\s\\S]*?<\\/nav>`,
-    'i'
-  );
+  const re = new RegExp(`<nav\\b[^>]*aria-label="${escaped}"[^>]*>[\\s\\S]*?<\\/nav>`, 'i');
   const match = containerHtml.match(re);
   if (match === null) {
     throw new Error(`No navigation with accessible name "${name}"`);
@@ -104,15 +101,11 @@ describe('Page shell — primary header navigation', () => {
     const header = getHeaderByRole(html);
     const nav = getNavigationByName(header, en.app.primaryNav);
 
-    const contactLink = nav.match(
-      new RegExp(`<a\\b[^>]*>\\s*${en.app.navContact}\\s*<\\/a>`, 'i')
-    );
+    const contactLink = nav.match(new RegExp(`<a\\b[^>]*>\\s*${en.app.navContact}\\s*<\\/a>`, 'i'));
     expect(contactLink).not.toBeNull();
     expect(contactLink?.[0]).toMatch(/aria-current="page"/i);
 
-    const runsLink = nav.match(
-      new RegExp(`<a\\b[^>]*>\\s*${en.app.navRuns}\\s*<\\/a>`, 'i')
-    );
+    const runsLink = nav.match(new RegExp(`<a\\b[^>]*>\\s*${en.app.navRuns}\\s*<\\/a>`, 'i'));
     expect(runsLink?.[0] ?? '').not.toMatch(/aria-current="page"/i);
   });
 

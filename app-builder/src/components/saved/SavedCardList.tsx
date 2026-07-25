@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom';
 import { en } from '../../i18n/en';
-import {
-  formatRelativeTime,
-  type SavedPrdListItem
-} from '../../lib/savedList';
+import { formatRelativeTime, type SavedPrdListItem } from '../../lib/savedList';
 import {
   badgeStyle,
   buildActionsStyle,

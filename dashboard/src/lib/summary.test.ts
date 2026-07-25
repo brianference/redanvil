@@ -8,6 +8,7 @@ import {
   summarize,
   type Run
 } from './summary';
+import { validFeedRow } from './runFixture';
 
 /**
  * Build a full Run for tests with optional field overrides.
@@ -27,30 +28,6 @@ function makeRun(partial: Pick<Run, 'finalScore' | 'passed'> & Partial<Run>): Ru
     iterations: partial.iterations ?? [{ index: 1, score: partial.finalScore, blockers: [] }],
     deployUrl: partial.deployUrl ?? null,
     finishedAt: partial.finishedAt ?? '2026-07-21T00:00:00.000Z'
-  };
-}
-
-/** Minimal valid feed row matching results/all.json shape. */
-function validFeedRow(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  return {
-    kind: 'results',
-    slug: 'app-builder',
-    finalScore: 100,
-    threshold: 90,
-    passed: true,
-    evaluated: 41,
-    total: 41,
-    rules: [
-      { ruleId: 'u-typing-strict', passed: true },
-      { ruleId: 'fe-responsive-375', passed: false }
-    ],
-    iterations: [
-      { index: 1, score: 0, blockers: ['fe-responsive-375'] },
-      { index: 2, score: 100, blockers: [] }
-    ],
-    deployUrl: 'https://redanvil.pages.dev',
-    finishedAt: '2026-07-21T16:40:00.000Z',
-    ...overrides
   };
 }
 

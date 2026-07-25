@@ -43,18 +43,18 @@ export function LegalPage({ title, updated, intro, sections }: LegalPageProps): 
       <div className="ra-prose-cols">
         {sections.map((s) => (
           <section key={s.heading} style={{ marginTop: theme.space.xl }}>
-          <h2 style={{ fontSize: theme.type.scale[3], margin: 0 }}>{s.heading}</h2>
-          <p
-            style={{
-              color: theme.color.muted,
-              fontSize: theme.type.scale[2],
-              lineHeight: 1.7,
-              marginTop: theme.space.sm
-            }}
-          >
-            {linkifyText(s.body)}
-          </p>
-        </section>
+            <h2 style={{ fontSize: theme.type.scale[3], margin: 0 }}>{s.heading}</h2>
+            <p
+              style={{
+                color: theme.color.muted,
+                fontSize: theme.type.scale[2],
+                lineHeight: 1.7,
+                marginTop: theme.space.sm
+              }}
+            >
+              {linkifyText(s.body)}
+            </p>
+          </section>
         ))}
       </div>
     </Page>

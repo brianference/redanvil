@@ -303,8 +303,7 @@ export const en = {
             id: 'market-makers',
             label: 'Local makers',
             appType: 'Marketplace',
-            prompt:
-              'A marketplace for local makers with listings, search, tips, and pickup slots'
+            prompt: 'A marketplace for local makers with listings, search, tips, and pickup slots'
           }
         ]
       },
@@ -350,7 +349,8 @@ export const en = {
         title: 'Mobile app',
         description: 'iOS/Android flows, push, offline',
         appType: 'Mobile app',
-        prompt: 'A mobile-first app with offline support, push notifications, and simple onboarding',
+        prompt:
+          'A mobile-first app with offline support, push notifications, and simple onboarding',
         variants: [
           {
             id: 'mobile-reminders',
@@ -370,15 +370,13 @@ export const en = {
             id: 'mobile-habits',
             label: 'Habits & streaks',
             appType: 'Mobile app',
-            prompt:
-              'A mobile habit tracker with daily check-ins, streaks, and simple onboarding'
+            prompt: 'A mobile habit tracker with daily check-ins, streaks, and simple onboarding'
           },
           {
             id: 'mobile-coach',
             label: 'Daily coach',
             appType: 'Mobile app',
-            prompt:
-              'A mobile coach app with daily prompts, progress history, and offline reading'
+            prompt: 'A mobile coach app with daily prompts, progress history, and offline reading'
           }
         ]
       },
@@ -393,8 +391,7 @@ export const en = {
             id: 'api-crud',
             label: 'CRUD + auth',
             appType: 'API backend',
-            prompt:
-              'A backend API with session auth, resource CRUD, rate limits, and OpenAPI docs'
+            prompt: 'A backend API with session auth, resource CRUD, rate limits, and OpenAPI docs'
           },
           {
             id: 'api-webhooks',

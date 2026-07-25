@@ -58,7 +58,13 @@ export function ComposerChat({
 
   return (
     <div className="ra-chat" style={rootStyle}>
-      <div className="ra-chat-thread" style={threadStyle} role="log" aria-live="polite" aria-relevant="additions">
+      <div
+        className="ra-chat-thread"
+        style={threadStyle}
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
         <AgentRow>
           <div style={bubbleStyle}>
             <p style={{ margin: 0, fontSize: theme.type.scale[2], lineHeight: 1.45 }}>
@@ -87,11 +93,7 @@ export function ComposerChat({
           </span>
         </div>
 
-        <div
-          style={chipsWrapStyle}
-          role="list"
-          aria-label={copy.examplesLabel}
-        >
+        <div style={chipsWrapStyle} role="list" aria-label={copy.examplesLabel}>
           {copy.examples.map((example) => (
             <button
               key={example.title}

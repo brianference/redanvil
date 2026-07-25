@@ -6,12 +6,7 @@ import { Wizard, EMPTY_WIZARD_ANSWERS } from '../components/Wizard';
 import { PrdResult } from '../components/PrdResult';
 import { generatePrd, type Prd } from '../lib/prd';
 import { estimate } from '../lib/estimate';
-import {
-  countEntities,
-  countScopeSignals,
-  type BuildJob,
-  type WizardAnswers
-} from '../lib/job';
+import { countEntities, countScopeSignals, type BuildJob, type WizardAnswers } from '../lib/job';
 import { wizardInstanceKey } from '../lib/wizardSession';
 import { en } from '../i18n/en';
 import { useDocumentMeta } from '../lib/useDocumentMeta';

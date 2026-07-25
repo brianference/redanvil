@@ -1,11 +1,6 @@
 import { en } from '../../i18n/en';
 import { TemplateCard } from './TemplateCard';
-import {
-  gridStyle,
-  sectionLabelStyle,
-  sectionMetaStyle,
-  sectionTitleStyle
-} from './styles';
+import { gridStyle, sectionLabelStyle, sectionMetaStyle, sectionTitleStyle } from './styles';
 
 export interface TemplateGridProps {
   /** Currently selected archetype id, or null. */

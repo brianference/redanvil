@@ -5,14 +5,7 @@
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import {
-  mkdtempSync,
-  mkdirSync,
-  writeFileSync,
-  readFileSync,
-  rmSync,
-  cpSync
-} from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, cpSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -123,6 +116,7 @@ interface CrossAppDupModule {
     ok: boolean;
     apps: string[];
   };
+  isDeclarationSkeleton: (line: string) => boolean;
   main: (argv: string[]) => number;
 }
 
@@ -343,10 +337,9 @@ describe('cross_app_duplication — not-vacuous (TEMP COPY only)', () => {
 
     let source = readFileSync(brokenScript, 'utf8');
     // Sabotage: stop replacing identifiers so renames defeat the detector.
-    const needle =
-      'tokens.push(KEYWORDS.has(word) ? word : \'$\');\n      i = j;\n      continue;';
+    const needle = "tokens.push(KEYWORDS.has(word) ? word : '$');\n      i = j;\n      continue;";
     const sabotaged =
-      "tokens.push(word); // TEMP COPY sabotage — keep raw identifiers\n      i = j;\n      continue;";
+      'tokens.push(word); // TEMP COPY sabotage — keep raw identifiers\n      i = j;\n      continue;';
     expect(source.includes(needle), 'sabotage needle must match current source').toBe(true);
     source = source.replace(needle, sabotaged);
     writeFileSync(brokenScript, source, 'utf8');
@@ -371,5 +364,74 @@ describe('cross_app_duplication — not-vacuous (TEMP COPY only)', () => {
     const realReport = real.runCrossAppDuplication(root, { budget: 9999 });
     expect(brokenReport.totalDuplicatedLines).toBe(0);
     expect(realReport.totalDuplicatedLines).toBeGreaterThanOrEqual(10);
+  });
+});
+
+describe('what counts as a copy', () => {
+  // These two carve-outs were added after unifying the in-app and cross-app
+  // definitions exposed them. Both were inflating the total with code that is
+  // identical because TypeScript only has one way to write it, not because
+  // anyone copied anything. Without these tests the corrected definition could
+  // silently regress and the ratchet would climb back with no real change.
+
+  it('does not count a props interface plus a component signature as duplication', async () => {
+    const { normaliseSource, isMostlyStyleProps, MIN_BLOCK } = await loadMod();
+    const component = (name: string, prop: string) => `
+interface ${name}Props {
+  ${prop}: string;
+  onClose: () => void;
+}
+
+export function ${name}({
+  ${prop},
+  onClose,
+  theme,
+  locale
+}: ${name}Props): JSX.Element {
+`;
+    const a = normaliseSource(component('Header', 'title'));
+    const b = normaliseSource(component('Drawer', 'label'));
+    // They DO normalise to the same text — that is the point, and why the old
+    // definition counted them.
+    expect(a).toEqual(b);
+    // But every window of them is declaration scaffolding, so none counts.
+    for (let i = 0; i + MIN_BLOCK <= a.length; i++) {
+      expect(isMostlyStyleProps(a.slice(i, i + MIN_BLOCK))).toBe(true);
+    }
+  });
+
+  it('still counts real logic that was copied and renamed', async () => {
+    const { normaliseSource, isMostlyStyleProps, MIN_BLOCK } = await loadMod();
+    const logic = (v: string) => `
+export function run(${v}: number[]): number {
+  let total = 0;
+  for (const item of ${v}) {
+    if (item < 0) {
+      throw new Error('negative value');
+    }
+    total += item * 2;
+  }
+  return total;
+}
+`;
+    const a = normaliseSource(logic('values'));
+    const b = normaliseSource(logic('items'));
+    expect(a).toEqual(b);
+    // At least one window must survive the carve-out, or the check is blind.
+    const surviving = Array.from({ length: a.length - MIN_BLOCK + 1 }, (_, i) =>
+      isMostlyStyleProps(a.slice(i, i + MIN_BLOCK))
+    ).filter((skipped) => !skipped);
+    expect(surviving.length).toBeGreaterThan(0);
+  });
+
+  it('drops a multi-line import statement, not just its first line', async () => {
+    const { normaliseSource } = await loadMod();
+    const lines = normaliseSource(
+      "import {\n  alpha,\n  beta,\n  gamma\n} from './styles';\n\nconst total = alpha + beta;\n"
+    );
+    // The `} from './styles';` tail used to survive, and its module specifier is
+    // a real string literal, which made a pure-import block look substantive.
+    expect(lines.some((l) => l.includes('./styles'))).toBe(false);
+    expect(lines).toEqual(['const $ = $ + $ ;']);
   });
 });

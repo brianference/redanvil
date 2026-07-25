@@ -12,6 +12,7 @@ import {
   type WizardAnswers
 } from '../lib/job';
 import { en } from '../i18n/en';
+import { messageFromPayload } from '../lib/apiError';
 import { theme } from '../theme';
 import { buttonStyle, cardStyle, stickyBarStyle } from './ui';
 import { ComingUp } from './wizard/ComingUp';
@@ -27,13 +28,14 @@ import {
 } from './wizard/steps/FeaturesStep';
 import { ReviewStep, type SubmitUiState } from './wizard/steps/ReviewStep';
 import { formStyle, kickerStyle } from './wizard/styles';
+import type { WizardStepIndex } from './wizard/types';
+
+/** Re-exported so Home and the page router keep importing it from Wizard. */
+export type { WizardStepIndex };
 import { defaultSelectedFeatureIds } from '../lib/prd/sections/features';
 
 /** Client fetch timeout for POST /api/submit (fail closed). */
 const SUBMIT_TIMEOUT_MS = 10_000;
-
-/** Wizard step index: 1 Prompt, 2 Scope, 3 Features, 4 Review. */
-export type WizardStepIndex = 1 | 2 | 3 | 4;
 
 export interface WizardProps {
   /** Controlled wizard answers. */
@@ -116,10 +118,8 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
    * Changing entities or auth invalidates feature ids (F5+ renumber), so clear selection.
    */
   function patch(partial: Partial<WizardAnswers>): void {
-    const entitiesChanged =
-      partial.entities !== undefined && partial.entities !== value.entities;
-    const authChanged =
-      partial.hasAuth !== undefined && partial.hasAuth !== value.hasAuth;
+    const entitiesChanged = partial.entities !== undefined && partial.entities !== value.entities;
+    const authChanged = partial.hasAuth !== undefined && partial.hasAuth !== value.hasAuth;
     const clearFeatures = entitiesChanged || authChanged;
     onChange({
       ...value,
@@ -220,13 +220,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
       }
 
       if (!response.ok) {
-        const message =
-          typeof payload === 'object' &&
-          payload !== null &&
-          'error' in payload &&
-          typeof (payload as { error: unknown }).error === 'string'
-            ? (payload as { error: string }).error
-            : copy.errors.submitFailed(response.status);
+        const message = messageFromPayload(payload, copy.errors.submitFailed(response.status));
         setSubmitState({ status: 'error', message });
         return;
       }
@@ -272,12 +266,8 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
         <p style={kickerStyle}>{copy.questionKicker(step)}</p>
 
         {step === 1 && <PromptStep value={value} patch={patch} />}
-        {step === 2 && (
-          <ScopeStep value={value} patch={patch} appTypeReady={appTypeReady} />
-        )}
-        {step === 3 && (
-          <FeaturesStep value={value} patch={patch} featuresReady={featuresReady} />
-        )}
+        {step === 2 && <ScopeStep value={value} patch={patch} appTypeReady={appTypeReady} />}
+        {step === 3 && <FeaturesStep value={value} patch={patch} featuresReady={featuresReady} />}
         {step === 4 && (
           <ReviewStep
             value={value}
