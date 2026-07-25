@@ -1,9 +1,9 @@
 {
   "kind": "results",
   "slug": "app-builder",
-  "finalScore": 0,
+  "finalScore": 100,
   "threshold": 90,
-  "passed": false,
+  "passed": true,
   "evaluated": 53,
   "total": 53,
   "rules": [
@@ -77,7 +77,7 @@
     },
     {
       "ruleId": "u-plat-worker-runtime",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-plat-runtime-parity",
@@ -227,25 +227,23 @@
   "iterations": [
     {
       "index": 1,
-      "score": 0,
-      "blockers": [
-        "u-plat-worker-runtime"
-      ]
+      "score": 100,
+      "blockers": []
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-25T18:56:27.202Z",
+  "finishedAt": "2026-07-25T18:59:53.873Z",
   "provenance": {
-    "commit": "74b24323c4a6a8cb372c4cbb7d07e17d91508c3c",
-    "dirty": true,
+    "commit": "24ab9a8dc539712c0f89a54ba61ca032c2e1fb6a",
+    "dirty": false,
     "rubricHash": "6d4f856c497825026c5f565955dd32b97e5f88fe6da15290f171399a29d0397d",
     "rubricRuleCount": 55,
     "node": "v22.19.0",
-    "verdictsHash": "107ab44e7eba5e949798449b8438c11d77bbdbda3581a01bb3b908b635cc3aa3",
+    "verdictsHash": "5c5714d4ff2ad3ae1cddb23d0f0351767f455a5b3e6c9c6c695ab5b7565a864a",
     "notApplicable": [
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-07-25T18:56:27.249Z"
+    "generatedAt": "2026-07-25T18:59:53.923Z"
   }
 }
