@@ -28,10 +28,9 @@ const APP_URL = 'https://redanvil.pages.dev';
 const DASHBOARD_URL = 'https://redanvil-dashboard.pages.dev';
 const GITHUB_URL = 'https://github.com/brianference/redanvil';
 
-const SIDEBAR_WIDTH = theme.layout.sidebarWidth;
 const LOGO_HEIGHT = 56;
 
-/** Primary nav item used in the sidebar / mobile drawer. */
+/** Primary nav item used in the header / mobile drawer. */
 interface NavItem {
   key: string;
   label: string;
@@ -141,24 +140,35 @@ function isNavActive(pathname: string, key: string): boolean {
 }
 
 /**
- * Build the ordered primary nav list (sidebar + mobile drawer).
+ * Desktop header primary links (brand mark stays separate). GitHub lives in the
+ * mobile overflow drawer and footer so the top bar stays scannable.
  */
-function primaryNavItems(): NavItem[] {
+function headerNavItems(): NavItem[] {
   return [
     { key: 'builder', label: en.app.navBuilder, to: '/' },
     { key: 'dashboard', label: en.app.navDashboard, to: null, href: DASHBOARD_URL },
     { key: 'saved', label: en.app.navSaved, to: '/saved' },
     { key: 'about', label: en.app.navAbout, to: '/about' },
-    { key: 'contact', label: en.app.navContact, to: '/contact' },
+    { key: 'contact', label: en.app.navContact, to: '/contact' }
+  ];
+}
+
+/**
+ * Mobile drawer list: primary routes plus secondary overflow (GitHub).
+ */
+function drawerNavItems(): NavItem[] {
+  return [
+    ...headerNavItems(),
     { key: 'github', label: en.app.navGitHub, to: null, href: GITHUB_URL, external: true }
   ];
 }
 
-/** Shared page shell: sticky header, full-height rail, aligned main/footer, drawer. */
+/** Shared page shell: sticky header with primary nav, aligned main/footer, drawer. */
 export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.Element {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const navItems = primaryNavItems();
+  const topNavItems = headerNavItems();
+  const drawerItems = drawerNavItems();
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
@@ -199,7 +209,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
    */
   function renderNavLink(item: NavItem, onNavigate?: () => void): JSX.Element {
     const active = isNavActive(location.pathname, item.key);
-    const className = `ra-side-link${active ? ' is-active' : ''}`;
+    const className = `ra-nav-link${active ? ' is-active' : ''}`;
     if (item.to !== null) {
       return (
         <Link
@@ -233,37 +243,47 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
         * { box-sizing: border-box; }
         body { margin: 0; overflow-x: hidden; font-size: 16px; }
 
-        .ra-side-link {
-          display: flex;
+        .ra-nav-link {
+          display: inline-flex;
           align-items: center;
+          justify-content: center;
           min-height: ${theme.touch}px;
+          min-width: ${theme.touch}px;
           padding: ${theme.space.sm}px ${theme.space.md}px;
           border-radius: ${theme.radius.md}px;
           color: ${theme.color.muted};
           text-decoration: none;
           font-size: ${theme.type.scale[2]}px;
           font-weight: 500;
+          font-family: ${theme.type.family};
           border: 1px solid transparent;
           transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-          width: 100%;
           box-sizing: border-box;
+          white-space: nowrap;
         }
-        .ra-side-link:hover {
+        .ra-nav-link:hover {
           color: ${theme.color.text};
           background: color-mix(in srgb, ${theme.color.surfaceElevated} 80%, transparent);
         }
-        .ra-side-link.is-active {
+        .ra-nav-link:focus-visible {
+          outline: 2px solid ${theme.color.accent};
+          outline-offset: 2px;
+        }
+        .ra-nav-link.is-active {
           color: ${theme.color.accentFg};
           font-weight: 650;
           background: ${theme.color.accentSoft};
           border-color: color-mix(in srgb, ${theme.color.accent} 35%, ${theme.color.border});
         }
-        .ra-side-link.is-active:hover {
+        .ra-nav-link.is-active:hover {
           color: ${theme.color.accentFg};
         }
 
+        /* Desktop: primary links live in the sticky header (fe-premium-nav). */
+        .ra-top-nav {
+          display: none;
+        }
         .ra-menu-btn { display: none; }
-        .ra-sidebar { display: none; }
         .ra-drawer-backdrop { display: none; }
         .ra-drawer { display: none; }
 
@@ -279,52 +299,31 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
           min-width: 0;
           display: flex;
           flex-direction: column;
+          width: 100%;
         }
 
-        /* Full-height rail: single background from top of body to bottom. */
         @media (min-width: 1024px) {
-          .ra-sidebar {
+          .ra-top-nav {
             display: flex;
-            flex-direction: column;
-            width: ${SIDEBAR_WIDTH}px;
-            flex-shrink: 0;
-            align-self: stretch;
-            min-height: 100%;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-            padding: ${theme.space.md}px ${theme.space.sm}px;
-            border-right: 1px solid ${theme.color.border};
-            background: color-mix(in srgb, ${theme.color.surface} 70%, ${theme.color.bg});
+            align-items: center;
+            justify-content: flex-end;
+            flex: 1;
+            min-width: 0;
             gap: ${theme.space.xs}px;
-            box-sizing: border-box;
-          }
-          .ra-sidebar nav {
-            display: flex;
-            flex-direction: column;
-            gap: ${theme.space.xs}px;
-          }
-          .ra-sidebar-label {
-            font-size: ${theme.type.scale[1]}px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            color: ${theme.color.muted};
-            padding: ${theme.space.sm}px ${theme.space.md}px ${theme.space.xs}px;
-            margin: 0;
+            margin: 0 ${theme.space.md}px;
           }
           .ra-menu-btn { display: none !important; }
         }
 
         @media (max-width: 1023px) {
+          .ra-top-nav { display: none !important; }
           .ra-menu-btn { display: inline-flex !important; }
           .ra-drawer-backdrop[data-open="true"] {
             display: block !important;
             position: fixed;
             inset: 0;
             z-index: 40;
-            background: rgba(0, 0, 0, 0.55);
+            background: color-mix(in srgb, ${theme.color.text} 55%, transparent);
           }
           .ra-drawer[data-open="true"] {
             display: flex !important;
@@ -338,7 +337,7 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             padding: calc(env(safe-area-inset-top, 0px) + ${theme.space.md}px) ${theme.space.md}px env(safe-area-inset-bottom, 0px);
             background: ${theme.color.surface};
             border-right: 1px solid ${theme.color.border};
-            box-shadow: 8px 0 32px var(--shadow, rgba(0,0,0,0.25));
+            box-shadow: 8px 0 32px color-mix(in srgb, ${theme.color.text} 25%, transparent);
             gap: ${theme.space.sm}px;
             overflow-y: auto;
           }
@@ -346,6 +345,10 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             display: flex;
             flex-direction: column;
             gap: ${theme.space.xs}px;
+          }
+          .ra-drawer .ra-nav-link {
+            width: 100%;
+            justify-content: flex-start;
           }
           .ra-drawer-head {
             display: flex;
@@ -382,23 +385,31 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
         @media (max-width: 560px) {
           .ra-h1 { font-size: 1.9rem !important; }
         }
+
+        @media (prefers-reduced-motion: reduce) {
+          .ra-nav-link { transition: none; }
+        }
       `}</style>
 
       <header ref={headerRef} style={bar}>
         <div
           style={{
             width: '100%',
-            maxWidth: 'none',
-            margin: 0,
+            maxWidth: theme.layout.contentMaxWidth,
+            margin: '0 auto',
             padding: `0 ${theme.space.md}px`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: theme.space.sm,
-            minHeight: LOGO_HEIGHT + theme.space.md
+            minHeight: LOGO_HEIGHT + theme.space.md,
+            boxSizing: 'border-box'
           }}
         >
           <Logo />
+          <nav className="ra-top-nav" aria-label={en.app.primaryNav}>
+            {topNavItems.map((item) => renderNavLink(item))}
+          </nav>
           <div
             className="ra-header-controls"
             data-drawer-open={menuOpen ? 'true' : 'false'}
@@ -451,16 +462,11 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
           </button>
         </div>
         <nav aria-label={en.app.primaryNav}>
-          {navItems.map((item) => renderNavLink(item, closeMenu))}
+          {drawerItems.map((item) => renderNavLink(item, closeMenu))}
         </nav>
       </aside>
 
       <div ref={bodyRef} className="ra-body">
-        <aside className="ra-sidebar" aria-label={en.app.primaryNav}>
-          <p className="ra-sidebar-label">{en.app.sidebarLabel}</p>
-          <nav aria-label={en.app.primaryNav}>{navItems.map((item) => renderNavLink(item))}</nav>
-        </aside>
-
         <div className="ra-main-col">
           <main
             style={{
