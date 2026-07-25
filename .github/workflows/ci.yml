@@ -63,6 +63,11 @@ jobs:
       # repo's own CI blockers are scored here instead of nowhere.
       - name: Gate the repo against its own CI-lane blockers
         run: node .github/scripts/gate_repo_ci.mjs
+      # The product's core promise is that generated apps clear the gate. Unit
+      # tests and a local probe covered the scaffold; no CI job ever took a
+      # freshly generated app through the real checks. This does.
+      - name: Gate a freshly scaffolded app
+        run: node .github/scripts/gate_scaffold.mjs
       # End-to-end smoke of the core flow against production, driven by role with
       # web-first assertions (no fixed sleeps). Catches the chat -> wizard -> Forge
       # PRD path that shipped a 400. Best-effort: needs a browser, so it installs

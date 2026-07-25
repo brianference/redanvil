@@ -67,11 +67,14 @@ judge FAIL; every current verdict passes. That is not proof of rubber-stamping �
 simply be clean — but a tier that has dissented twice in its lifetime provides weak signal, and
 nothing measures its dissent rate. Worth instrumenting before trusting it further.
 
-### 5. A scaffolded app is never gated end-to-end in CI
-Zero references to the scaffold in `ci.yml`. The scaffold is verified by unit tests and by a
-local probe, and the pipeline simulation runs `check.mjs` rules against it — but no CI job takes
-a freshly scaffolded app through the real `gateApp`. The product's core promise is "generated
-apps clear the gate", and CI never demonstrates it.
+### 5. A scaffolded app is never gated end-to-end in CI — CLOSED
+`gate_scaffold.mjs` scaffolds a real job, installs it, and runs the tool-backed checks (tsc,
+eslint, vitest, build) plus every static rule `check.mjs` implements — 27 rules run, 8 correctly
+not applicable to a fresh scaffold. Wired into CI. It also refuses to run if rule extraction
+returns an implausibly small list, because a check that silently measures nothing while printing
+PASS is worse than no check: the first version did exactly that (0 rules run, still PASS).
+
+Visual and judge rules are deliberately out of scope here — they need a rendered review.
 
 ### 6. Coverage is disclosed but not floored
 Gate reports carry coverage (87% and 84%) and it is honest, but nothing fails when it drops. A
