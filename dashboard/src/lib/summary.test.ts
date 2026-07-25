@@ -102,18 +102,32 @@ describe('parseRun', () => {
     expect(() => parseRun(validFeedRow({ rules: 'nope' }))).toThrow('malformed run');
   });
 
-  it('throws when a rule entry is malformed', () => {
-    expect(() => parseRun(validFeedRow({ rules: [{ ruleId: 'u-x' }] }))).toThrow('malformed rule');
-    expect(() => parseRun(validFeedRow({ rules: [{ passed: true }] }))).toThrow('malformed rule');
+  it('throws when a rule entry is malformed, and says which field', () => {
+    // The message now names the failing path instead of a fixed string, so a
+    // feed regression tells you what changed shape.
+    expect(() => parseRun(validFeedRow({ rules: [{ ruleId: 'u-x' }] }))).toThrow(
+      /rules\.0\.passed/
+    );
+    expect(() => parseRun(validFeedRow({ rules: [{ passed: true }] }))).toThrow(/rules\.0\.ruleId/);
   });
 
-  it('throws when an iteration entry is malformed', () => {
+  it('throws when an iteration entry is malformed, and says which field', () => {
     expect(() =>
       parseRun(validFeedRow({ iterations: [{ index: 1, score: 0, blockers: [1] }] }))
-    ).toThrow('malformed iteration');
+    ).toThrow(/iterations\.0\.blockers\.0/);
     expect(() => parseRun(validFeedRow({ iterations: [{ index: 1 }] }))).toThrow(
-      'malformed iteration'
+      /iterations\.0\.score/
     );
+  });
+
+  // Values the hand-rolled `typeof` chain accepted because it only asked about
+  // the type, never the value. `typeof NaN === 'number'` is the classic one.
+  it('rejects numerically absurd rows the old typeof narrowing let through', () => {
+    expect(() => parseRun(validFeedRow({ finalScore: Number.NaN }))).toThrow(/finalScore/);
+    expect(() => parseRun(validFeedRow({ total: -1 }))).toThrow(/total/);
+    expect(() => parseRun(validFeedRow({ evaluated: 1.5 }))).toThrow(/evaluated/);
+    expect(() => parseRun(validFeedRow({ slug: '' }))).toThrow(/slug/);
+    expect(() => parseRun(validFeedRow({ finishedAt: '' }))).toThrow(/finishedAt/);
   });
 });
 

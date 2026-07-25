@@ -1,0 +1,151 @@
+{
+  "source": "independent judge (grok, disposable worktree, no access to the verdict file)",
+  "reviewedCommit": "4bc2b429d4d90d0ed510cd0dbd93a3013fa92d82",
+  "app": "dashboard",
+  "rulesRequested": [
+    "u-conc-idiomatic",
+    "u-conc-no-speculative-abstraction",
+    "u-conc-use-what-exists",
+    "u-conc-smallest-diff",
+    "u-val-input-validation",
+    "u-sec-no-stub-paths",
+    "u-test-adequacy",
+    "u-test-behavioral",
+    "fe-pages-compose",
+    "fe-fail-closed-states"
+  ],
+  "why": "Judge verdicts are otherwise written by the same agent that wrote the code. This run exists to produce dissent that self-review structurally cannot.",
+  "result": {
+    "rulesJudged": 10,
+    "failed": 4,
+    "citationsMissingOnDisk": 0
+  },
+  "adjudication": "UNADJUDICATED — each FAIL must be verified by hand before it is treated as real, and each one that turns out to be wrong must be recorded as wrong.",
+  "verdicts": [
+    {
+      "ruleId": "u-conc-idiomatic",
+      "passed": true,
+      "evidence": [
+        "dashboard/src/lib/summary.ts",
+        "dashboard/src/lib/relativeTime.ts",
+        "dashboard/src/pages/Home.tsx",
+        "dashboard/src/components/RunList.tsx"
+      ],
+      "note": "Checked summarize (summary.ts:176-196), ruleLane/groupRulesByLane (58-84), formatRelativeTime (relativeTime.ts:7-30), Home state switch (Home.tsx:21-56), and RunList meta assembly (RunList.tsx:159-163). Helpers are short plain pipelines; no dense one-liners that need a comment to decode.",
+      "missingEvidence": []
+    },
+    {
+      "ruleId": "u-conc-no-speculative-abstraction",
+      "passed": true,
+      "evidence": [
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/components/KpiStrip.tsx",
+        "dashboard/src/components/StatusBadge.tsx",
+        "dashboard/src/lib/useDrawerA11y.ts"
+      ],
+      "note": "Named pieces have production callers: RunDetailBody (RunDetail.tsx:294-301) is rendered by RunDetail (378-381); KpiStrip/StatusBadge are used from Home/RunList/RunDetail; useDrawerA11y is a re-export of design-system (useDrawerA11y.ts:8-13). No test-only duals with zero production callers; BackToRunsLink (307-312) is used on three recovery paths (350, 361, 373).",
+      "missingEvidence": []
+    },
+    {
+      "ruleId": "u-conc-use-what-exists",
+      "passed": false,
+      "evidence": [
+        "dashboard/src/lib/summary.ts",
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/package.json",
+        "orchestrator/src/schemas/results.ts",
+        "app-builder/functions/api/submit.ts"
+      ],
+      "note": "Untrusted feed is validated with hand-rolled typeof checks in parseRun/parseRunsFeed (summary.ts:128-169) and consumed at useRuns.ts:38. The monorepo already standardizes Zod (app-builder submit.ts; orchestrator RunResultSchema at results.ts:3-72 with range/refine checks). dashboard/package.json:13-17 has no zod, so the app reimplements weaker schema logic instead of the existing library/schema. Shell correctly uses design-system (shell/styles.ts:3,65; useDrawerA11y.ts:8-13) — that does not rescue the feed boundary.",
+      "missingEvidence": []
+    },
+    {
+      "ruleId": "u-conc-smallest-diff",
+      "passed": true,
+      "evidence": [
+        "dashboard/src/pages/Home.tsx",
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/App.tsx",
+        "dashboard/functions/api/health.ts"
+      ],
+      "note": "Git was not run (task forbids it). Judged product surface: App.tsx:15-22 routes are list/detail plus required legal pages; functions/ only health.ts; no drive-by features, auth scaffolding, or unrelated data layers beyond the read-only runs feed.",
+      "missingEvidence": []
+    },
+    {
+      "ruleId": "u-val-input-validation",
+      "passed": false,
+      "evidence": [
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/lib/summary.ts",
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/package.json",
+        "orchestrator/src/schemas/results.ts"
+      ],
+      "note": "The only untrusted input is the cross-origin results feed (useRuns.ts:34-39). Boundary validation is parseRunsFeed/parseRun (summary.ts:128-169): typeof field checks only — no Zod/safeParse, and dashboard has no zod dependency (package.json:13-17). parseRun accepts any number scores, any finishedAt string, empty rules, and no passed↔score coherence; RunResultSchema (orchestrator/src/schemas/results.ts:47-66) already enforces those. Route slug is only decodeURIComponent + find (RunDetail.tsx:320-321,366) with no schema. No request-body handlers exist, but the feed still reaches UI logic without the required schema library.",
+      "missingEvidence": []
+    },
+    {
+      "ruleId": "u-sec-no-stub-paths",
+      "passed": true,
+      "evidence": [
+        "dashboard/functions/api/health.ts",
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/lib/summary.ts"
+      ],
+      "note": "No auth surface to stub: functions/ only health.ts (real JSON + CORS headers, lines 1-12). Grep of dashboard for TODO/FIXME/stub security markers finds none in app code. Feed path fails closed on HTTP/parse errors (useRuns.ts:36-51; parseRun throws at summary.ts:129-145) rather than bypassing checks.",
+      "missingEvidence": []
+    },
+    {
+      "ruleId": "u-test-adequacy",
+      "passed": false,
+      "evidence": [
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/pages/Home.tsx",
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/pages/RunDetail.test.ts",
+        "dashboard/src/lib/relativeTime.ts",
+        "dashboard/src/lib/relativeTime.test.ts"
+      ],
+      "note": "Public branches with zero assertions: useRuns timeout/HTTP/parse error paths (useRuns.ts:36-51) have no test file; Home loading/error/empty (Home.tsx:21-47) untested; RunDetail loading/error/missing-slug/not-found (RunDetail.tsx:334-375) untested — RunDetail.test.ts only mounts RunDetailBody (export noted 'for tests' at 292-293). formatRelativeTime months/years (relativeTime.ts:25-29) have no cases in relativeTime.test.ts (only justNow/m/h/d + invalid). Parser/list/KPI suites do not cover these product branches.",
+      "missingEvidence": []
+    },
+    {
+      "ruleId": "u-test-behavioral",
+      "passed": false,
+      "evidence": [
+        "dashboard/src/i18n/en.test.ts",
+        "dashboard/src/pages/RunDetail.test.ts",
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/lib/useRuns.ts"
+      ],
+      "note": "en.test.ts asserts presence via length > 2 for menu/titles/KPI/headings (en.test.ts:76-77,88-93,101-105) — the anti-pattern the rule calls out — rather than exact copy or rendered behaviour. Core error branches of the product (useRuns timeout/error at useRuns.ts:41-51; RunDetail error/not-found at RunDetail.tsx:344-375) are never exercised; tests only render the pure body (RunDetail.test.ts:5-8,22) so the suite does not assert the fail-closed UI behaviour the pages implement.",
+      "missingEvidence": []
+    },
+    {
+      "ruleId": "fe-pages-compose",
+      "passed": true,
+      "evidence": [
+        "dashboard/src/pages/Home.tsx",
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/pages/About.tsx",
+        "dashboard/src/pages/Contact.tsx",
+        "dashboard/src/components/Page.tsx"
+      ],
+      "note": "Home success return is Page + KpiStrip + RunList (Home.tsx:51-55); loading/error/empty only add status chrome. RunDetail success is Page + RunDetailBody (378-381); RunDetailBody is RunHeader + IterationHistory + RuleBreakdown (295-300). About/Contact/Terms/Privacy are Page + ContentSections. Page.tsx:67-114 composes Header, MobileDrawer, Footer. State stays on the page; children receive props.",
+      "missingEvidence": []
+    },
+    {
+      "ruleId": "fe-fail-closed-states",
+      "passed": true,
+      "evidence": [
+        "dashboard/src/pages/Home.tsx",
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/components/RunList.tsx",
+        "dashboard/src/pages/NotFound.tsx"
+      ],
+      "note": "Home: loading (21-28), error role=alert (31-38), empty with KPI zeros (41-47), ready (50-56). RunDetail: loading/error/missing slug/not-found/success (334-381) with recovery link. useRuns maps non-OK, parse throw, and timeout to error (useRuns.ts:36-51), never to ready with []. RunList empty (RunList.tsx:236-241); iteration/rules empty states in RunDetail.tsx:192-195,260-263. NotFound is an explicit 404 shell (NotFound.tsx:19-54). Failure does not render as a clean empty success.",
+      "missingEvidence": []
+    }
+  ]
+}

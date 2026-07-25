@@ -22,6 +22,7 @@ import {
   buildDesignSpecifications,
   buildVerificationSection
 } from './sections/architecture';
+import { buildDesignDirection } from './sections/design';
 import { evaluatePrdSelfCheck } from './selfCheck';
 
 /**
@@ -240,6 +241,10 @@ ${routeMap}
 ### 7.3 Design specifications
 
 ${buildDesignSpecifications()}
+
+### 7.3a Design direction (binding)
+
+${buildDesignDirection(`${prompt}|${full.appType}|${full.entities}`)}
 
 ## 8. Core Features (MVP first)
 

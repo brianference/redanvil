@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 /** One rule result from the gate feed. */
 export interface RunRule {
   ruleId: string;
@@ -84,78 +86,61 @@ export function groupRulesByLane(rules: readonly RunRule[]): readonly RuleLaneGr
 }
 
 /**
- * Validate one iteration object. Throws on malformed input.
+ * Schema for the results feed.
+ *
+ * These were hand-rolled `typeof` chains. An independent judge failed
+ * `u-conc-use-what-exists` on them: this monorepo already validates every
+ * boundary with Zod, and the one place consuming genuinely untrusted,
+ * cross-origin JSON was the place not using it. Hand-written narrowing also
+ * accepts anything it forgot to mention — `finalScore: NaN`, a negative total,
+ * an empty slug — because `typeof NaN === 'number'`.
+ *
+ * Fail closed: `.parse` throws, `useRuns` turns that into a visible error state,
+ * and a malformed feed is never rendered as a clean empty success.
  */
-function parseIteration(value: unknown): RunIteration {
-  if (typeof value !== 'object' || value === null) {
-    throw new Error('malformed iteration');
-  }
-  const row = value as Record<string, unknown>;
-  if (
-    typeof row.index !== 'number' ||
-    typeof row.score !== 'number' ||
-    !Array.isArray(row.blockers)
-  ) {
-    throw new Error('malformed iteration');
-  }
-  if (!row.blockers.every((b): b is string => typeof b === 'string')) {
-    throw new Error('malformed iteration');
-  }
-  return {
-    index: row.index,
-    score: row.score,
-    blockers: row.blockers
-  };
-}
+const iterationSchema = z.object({
+  index: z.number().int().finite(),
+  score: z.number().finite(),
+  blockers: z.array(z.string())
+});
 
-/**
- * Validate one rule result object. Throws on malformed input.
- */
-function parseRule(value: unknown): RunRule {
-  if (typeof value !== 'object' || value === null) {
-    throw new Error('malformed rule');
-  }
-  const row = value as Record<string, unknown>;
-  if (typeof row.ruleId !== 'string' || typeof row.passed !== 'boolean') {
-    throw new Error('malformed rule');
-  }
-  return { ruleId: row.ruleId, passed: row.passed };
-}
+const ruleSchema = z.object({
+  ruleId: z.string().min(1),
+  passed: z.boolean()
+});
+
+const runSchema = z.object({
+  slug: z.string().min(1),
+  finalScore: z.number().finite(),
+  threshold: z.number().finite(),
+  passed: z.boolean(),
+  evaluated: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  rules: z.array(ruleSchema),
+  iterations: z.array(iterationSchema),
+  // Unknown/invalid URLs collapse to null rather than rejecting the whole row:
+  // a bad deploy link must not hide an otherwise valid run.
+  deployUrl: z.unknown().transform(safeUrl),
+  finishedAt: z.string().min(1)
+});
 
 /**
  * Validate one feed row into a Run. Throws on any malformed field (fail closed).
+ *
+ * @param row - Untrusted feed row.
+ * @returns The validated run.
  */
 export function parseRun(row: unknown): Run {
-  if (typeof row !== 'object' || row === null) {
-    throw new Error('malformed run');
+  const parsed = runSchema.safeParse(row);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    // Name the field that failed. The hand-rolled version threw a fixed
+    // "malformed run" for every cause, so a feed regression told you nothing
+    // about which field had changed shape.
+    const where = issue === undefined ? '' : ` at ${issue.path.join('.') || '(root)'}`;
+    throw new Error(`malformed run${where}: ${issue?.message ?? 'invalid'}`);
   }
-  const r = row as Record<string, unknown>;
-  if (
-    typeof r.slug !== 'string' ||
-    typeof r.finalScore !== 'number' ||
-    typeof r.threshold !== 'number' ||
-    typeof r.passed !== 'boolean' ||
-    typeof r.evaluated !== 'number' ||
-    typeof r.total !== 'number' ||
-    !Array.isArray(r.rules) ||
-    !Array.isArray(r.iterations) ||
-    typeof r.finishedAt !== 'string'
-  ) {
-    throw new Error('malformed run');
-  }
-
-  return {
-    slug: r.slug,
-    finalScore: r.finalScore,
-    threshold: r.threshold,
-    passed: r.passed,
-    evaluated: r.evaluated,
-    total: r.total,
-    rules: r.rules.map(parseRule),
-    iterations: r.iterations.map(parseIteration),
-    deployUrl: safeUrl(r.deployUrl),
-    finishedAt: r.finishedAt
-  };
+  return parsed.data;
 }
 
 /**
