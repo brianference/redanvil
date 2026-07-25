@@ -5,15 +5,15 @@ without re-deriving anything.
 
 ## Where things stand
 
-- **HEAD:** `7c869e0` on `master`, CI green.
-- **Latest release:** `v6.1.0`. The v6.0.0 notes still describe the audit and its ten fixes.
+- **HEAD:** `742965c` on `master`, CI green.
+- **Latest release:** `v6.2.0`. The v6.0.0 notes describe the first audit and its ten fixes.
 - **Production:** https://redanvil.pages.dev and https://redanvil-dashboard.pages.dev
   (Cloudflare Pages, direct upload / Type B; prod branch `main`, local branch `master`, so
   deploys must pass `--branch main`). Both verified this session by asset-hash match.
 - **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v6.1.0-20260724-2048.bundle`
   (restore-tested: clones clean, 356 files, 8 tags, `v6.1.0` → `7c869e0`).
-- **Gate:** app-builder 100/100 across 47/47 at **85% coverage**; dashboard 100/100 across
-  45/45 at **82% coverage**. Both with `--na ci,process`, zero stale verdicts, and both
+- **Gate:** app-builder 100/100 across 47/47 at **87% coverage**; dashboard 100/100 across
+  45/45 at **83% coverage**. Both with `--na ci,process`, zero stale verdicts, and both
   reproduced rule-by-rule in CI.
 - **Working tree:** clean. All five delegation worktrees removed and branches deleted.
 
@@ -45,16 +45,20 @@ Ten findings were fixed; the full narrative is in the release notes. The load-be
 
 ## Remaining tasks (priority order)
 
-### 1. The remaining 8 findings from the second audit
-See `docs/audit-2026-07-25.md`. Findings 1 and 2 are **done** in v6.1.0: runtime parity is a
-real boot-and-curl check (`u-plat-runtime-parity`, proven to fail against a 500 health
-endpoint), and the dashboard is gated with its own verdicts and CI reproduction job.
+### 1. Second audit: all ten findings are closed (v6.2.0)
+`docs/audit-2026-07-25.md` carries a CLOSED note per finding. Nothing outstanding from it.
 
-The eight remaining are unchanged. Most valuable next:
-- **#3** — 385 identical lines across the two shell trees, structurally invisible because
-  `hyg-no-duplication` runs per app directory.
-- **#7** — `drift.yml` never re-runs the gate, so verdict staleness has no cadence behind it.
-  It needs `fetch-depth: 0` when added.
+What that leaves as genuine next work, in rough value order:
+- **Lower the duplication ratchet.** `cross_app_duplication.mjs` measures 805 duplicated lines
+  between the two apps and the budget is set AT that number, so it can only stop the figure
+  growing. Extracting a shared shell package is the real fix and needs monorepo wiring both
+  apps currently avoid.
+- **Judge/visual rubric lanes** were improved but never re-derived from scratch.
+- **AI-suggests-features-then-user-chooses** before finalizing the PRD: requested, not built.
+- **Edge-case acceptance criteria** (`scratchpad/prd-edgecases.md`) — confirm whether the
+  failure/boundary templating landed in PRD v3.
+- **A third audit.** The first two each found ten real defects in a system that looked green;
+  there is no reason to think a third would find none.
 
 ### 2. Brand assets
 The dark lockup is the owner's own Grok Imagine artwork, recovered from two JPEG exports (over
