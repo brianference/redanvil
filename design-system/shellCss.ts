@@ -141,7 +141,7 @@ export function shellCss(c: ShellCssTokens, m: ShellCssMetrics): string {
         }
         @media (min-width: 1024px) {
           .ra-prose-lead {
-            max-width: 56rem;
+            max-width: 64rem;
           }
           .ra-prose-cols {
             column-count: 2;
@@ -151,6 +151,42 @@ export function shellCss(c: ShellCssTokens, m: ShellCssMetrics): string {
             max-width: none;
             break-inside: avoid;
             page-break-inside: avoid;
+          }
+        }
+        /* A third column past 1600 so a 94%-wide container does not turn each
+           column into an over-long line. Width is used; measure is protected. */
+        @media (min-width: 1600px) {
+          .ra-prose-lead {
+            max-width: 76rem;
+          }
+          .ra-prose-cols {
+            column-count: 3;
+          }
+        }
+
+        /* Builder content column (template gallery, PRD result). The cap used
+           to be an inline maxWidth of 46rem, which no media query could lift —
+           the template screen therefore sat in ~55% of a wide desktop with the
+           rest empty. Class here, lifted from 1024 up. */
+        .ra-content-col {
+          display: flex;
+          flex-direction: column;
+          gap: ${m.space.lg}px;
+          width: 100%;
+          max-width: 46rem;
+        }
+        @media (min-width: 1024px) {
+          .ra-content-col {
+            max-width: none;
+          }
+          /* Archetype cards use the width instead of stacking two-wide. */
+          .ra-tpl-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          }
+        }
+        @media (min-width: 1600px) {
+          .ra-tpl-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
           }
         }
 

@@ -29,6 +29,6 @@ export const theme = {
   touch: 44,
   /** Shared content column max-width (main + footer align). Wide enough for 1280 without a dead right band; prose still caps itself. */
   layout: {
-    contentMaxWidth: '80rem'
+    contentMaxWidth: '94%'
   }
 } as const;

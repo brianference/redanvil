@@ -206,7 +206,7 @@ export function TemplateGallery({
   }
 
   return (
-    <div style={contentColumnStyle}>
+    <div className="ra-content-col" style={contentColumnStyle}>
       <p style={subStyle}>{copy.subtitle}</p>
 
       <div style={sectionLabelStyle}>
@@ -214,7 +214,7 @@ export function TemplateGallery({
         <span style={sectionMetaStyle}>{copy.sectionCount(copy.items.length)}</span>
       </div>
 
-      <div style={gridStyle} role="listbox" aria-label={copy.gridLabel}>
+      <div className="ra-tpl-grid" style={gridStyle} role="listbox" aria-label={copy.gridLabel}>
         {copy.items.map((item, index) => {
           const isSelected = selectedId === item.id;
           const isWide = index === copy.items.length - 1 && copy.items.length % 2 === 1;

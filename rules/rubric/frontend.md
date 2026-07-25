@@ -35,3 +35,4 @@ Promoted from prose/checklist to scored rules so the mobile design system is mea
 - fe-safe-areas (major, visual): respect top/bottom/landscape safe areas; content never trapped under fixed header/tab bar (R2.1/R2.2).
 - fe-seo-assets (major, det): public/ ships sitemap.xml, robots.txt, and a real OG image. These are files — measured, not asserted.
 - fe-icon-button-labels (blocker, det): every button whose children carry no text has aria-label or aria-labelledby (design rule R1.5).
+- fe-desktop-width (blocker, visual): every route's main content occupies at least 80% of the viewport at 1440 and 1920. Measured on the rendered page by `.github/scripts/desktop_width.mjs`; a passing verdict must cite its report. A rem cap cannot hold a percentage promise — use a percentage on the container and protect the line measure with column counts, never by starving the container.

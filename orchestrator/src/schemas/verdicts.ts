@@ -43,6 +43,78 @@ export type Verdict = z.infer<typeof VerdictSchema>;
 
 /** The rule whose pass must be backed by a real axe-core report. */
 const CONTRAST_RULE_ID = 'fe-a11y-contrast';
+/** The rule whose pass must be backed by a real rendered-width measurement. */
+const WIDTH_RULE_ID = 'fe-desktop-width';
+
+/** Shape `desktop_width.mjs` writes. Only the fields the gate reads are modelled. */
+const WidthReportSchema = z.object({
+  baseUrl: z.string().min(1),
+  checkedAt: z.string().min(1),
+  minPct: z.number(),
+  results: z
+    .array(
+      z.object({
+        route: z.string().min(1),
+        width: z.number(),
+        mainPct: z.number().nullable(),
+        ok: z.boolean()
+      })
+    )
+    .min(1),
+  ok: z.boolean()
+});
+
+/**
+ * Check that a passing desktop-width verdict is backed by a real measurement
+ * across more than one desktop width. One width proves nothing: a rem cap reads
+ * as 90% at 1600 and 75% at 1920, which is exactly how this shipped narrow four
+ * times before the rule existed.
+ *
+ * @param verdict - The width verdict.
+ * @param repoRoot - Root that evidence paths resolve against.
+ * @returns Problems found; empty when the evidence supports the pass.
+ */
+function widthEvidenceIssues(verdict: Verdict, repoRoot: string): string[] {
+  const issues: string[] = [];
+  const reports = verdict.evidence.filter((p) => /\.json$/i.test(p));
+  if (reports.length === 0) {
+    return [
+      `${WIDTH_RULE_ID}: a passing verdict must cite a report from ` +
+        `.github/scripts/desktop_width.mjs, not only screenshots`
+    ];
+  }
+  for (const path of reports) {
+    const full = join(repoRoot, path);
+    if (!existsSync(full)) continue;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(readFileSync(full, 'utf8'));
+    } catch {
+      issues.push(`${WIDTH_RULE_ID}: ${path} is not parseable JSON`);
+      continue;
+    }
+    const report = WidthReportSchema.safeParse(parsed);
+    if (!report.success) {
+      issues.push(`${WIDTH_RULE_ID}: ${path} is not a desktop_width report`);
+      continue;
+    }
+    const failed = report.data.results.filter((r) => !r.ok);
+    if (failed.length > 0) {
+      issues.push(
+        `${WIDTH_RULE_ID}: ${path} records ${failed.length} route/width combination(s) ` +
+          `under ${report.data.minPct}% — that is a failing measurement, not a pass`
+      );
+    }
+    const widths = new Set(report.data.results.map((r) => r.width));
+    if (widths.size < 2) {
+      issues.push(
+        `${WIDTH_RULE_ID}: ${path} measured only one viewport width; a rem cap passes ` +
+          `at one width and fails at another, so at least two are required`
+      );
+    }
+  }
+  return issues;
+}
 
 /**
  * Shape `a11y_audit.mjs` writes. Only the fields the gate reads are modelled;
@@ -190,6 +262,9 @@ export function parseVerdicts(
     // zero. Base rule 16: use the standard implementation, never a hand reading.
     if (v.ruleId === CONTRAST_RULE_ID && v.passed) {
       issues.push(...contrastEvidenceIssues(v, repoRoot));
+    }
+    if (v.ruleId === WIDTH_RULE_ID && v.passed) {
+      issues.push(...widthEvidenceIssues(v, repoRoot));
     }
   }
 

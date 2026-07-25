@@ -87,6 +87,11 @@ export const RULES: Rule[] = [
   rule('fe-type-floor', 'frontend', 'blocker', 'visual'), // R3.1 >=16px body
   rule('fe-noncolor-state', 'frontend', 'major', 'visual'), // R4.2 state not by color alone
   rule('fe-safe-areas', 'frontend', 'major', 'visual'), // R2.1/R2.2 safe areas, no chrome collision
+  // "The content is too narrow on desktop" was reported four times in one
+  // session, on four different screens, each time a container capped in rem (or
+  // by an inline style no media query could lift) inside a wide shell. Stated
+  // as the outcome a person sees and measured on the rendered page.
+  rule('fe-desktop-width', 'frontend', 'blocker', 'visual'),
 
   rule('ci-actionlint', 'ci', 'major', 'det'),
   rule('ci-sha-pinned', 'ci', 'blocker', 'det'),

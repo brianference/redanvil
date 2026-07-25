@@ -2,15 +2,14 @@ import type { CSSProperties } from 'react';
 import { theme } from '../theme';
 
 /**
- * Narrow content column used by PRD result and template gallery screens.
+ * Content column used by the PRD result and template gallery screens.
+ *
+ * Layout lives in the `.ra-content-col` CSS class, NOT here. An inline
+ * maxWidth cannot be lifted by a media query, which is exactly why the template
+ * screen stayed at 46rem on a 1920 desktop while the shell around it was 94%.
+ * Callers must set className="ra-content-col".
  */
-export const contentColumnStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.space.lg,
-  width: '100%',
-  maxWidth: '46rem'
-};
+export const contentColumnStyle: CSSProperties = {};
 
 /**
  * Shared surface card used across builder screens.

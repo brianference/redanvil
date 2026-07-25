@@ -232,3 +232,66 @@ Only a real visual review catches it — it renders fine in code review and pass
 - Bottom sheets that cover CTA with no drag handle / dismiss
 - Horizontal pager without index
 - Status communicated only by red/green color
+
+## R14 — Layout belongs in CSS, never in an inline style (blocker)
+
+An inline `style` beats a class rule, so any layout property set inline is
+invisible to every media query. This cost four rounds of rework in one session:
+
+- `ComposerChat` had `display: flex` inline. The desktop two-column grid was
+  declared, deployed, and did nothing — the composer stayed stacked under the
+  thread.
+- `contentColumnStyle` had `maxWidth: '46rem'` inline. The template gallery and
+  PRD result sat in ~55% of a 1920 desktop while the shell around them was 94%.
+- Earlier, an inline `display` silently broke a responsive logo swap.
+
+**Rule:** `display`, `maxWidth`, `gridTemplateColumns`, `flexDirection` and
+`position` go in a CSS class. Inline style is for values that genuinely vary per
+instance (a computed height, a per-item colour). If an element has a className
+AND a layout property inline, that is the bug.
+
+## R15 — A width promise must be a percentage, not a rem cap (blocker)
+
+`min(90rem, 100%)` measured 90% of a 1600 viewport and **75%** of a 1920 one. A
+fixed cap does not hold a percentage promise; it just stops scaling. State the
+requirement as the outcome ("at least 80% of the viewport") and use a percentage
+on the container.
+
+Protect the line measure with **column counts**, never by starving the
+container: prose goes 1 → 2 columns at 1024 and 3 at 1600; the builder chat
+splits into conversation + sticky composer at 1024; archetype cards go 2 → 3 →
+4. Enforced by `fe-desktop-width`, measured at two widths because one width
+cannot distinguish a percentage from a cap.
+
+## R16 — Nav and brand must share one material (major)
+
+Primary nav links carry the same treatment as the brand lockup: a brushed-metal
+vertical gradient with a lit top edge on hover, and the brand's accent glow on
+the active item.
+
+The link **text** keeps a solid token colour. Gradient-clipped text renders as
+`color: transparent`, which axe cannot evaluate, and `fe-a11y-contrast` is a
+blocker — so the metal lives in the surface and the bevel, not the letterforms.
+
+## R17 — A logo is two assets, and neither is a JPEG (blocker)
+
+Dark-designed brand art (silver wordmark, accent glow) reads on near-black and
+washes out on white. Ship `logo-lockup.png` and `logo-lockup-dark.png`, swapped
+by a CSS class keyed off `data-theme` — never an inline `display`, per R13. Mark
+one image `aria-hidden` and put the accessible name on the wrapping link, or axe
+reports a serious link-name violation when only the hidden image is visible.
+
+A JPEG cannot carry alpha. Grok Imagine renders its transparency checkerboard
+into the pixels, so a "transparent" JPEG export ships a grey grid. Recover real
+alpha by asking for the SAME artwork over two backgrounds (checkerboard and
+solid black) and solving `a = 1 - delta/B`; see the `grok-imagine-logo` skill.
+Verify with invariants before trusting the result, then render it on both themes
+at real size and at 32px and 24px.
+
+## R18 — Footer height comes out of the column count (major)
+
+Measured at 375, a single-column footer was 828px — **35% of the whole page** —
+for nine short links. Touch targets must stay ≥44px, so the height cannot come
+out of the tap area: flow the link groups into balanced columns instead. Three
+groups in a 2-column grid orphans the third beside dead space; use multi-column
+so the heights balance.

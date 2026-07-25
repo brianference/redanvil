@@ -49,11 +49,13 @@ export const theme = {
     // splits into conversation + sticky composer from 1024 up, so the width is
     // used rather than padded. 88vw keeps a margin on very large screens while
     // clearing the "at least 80%" bar; 90rem stops it stretching forever on an
-    // ultrawide. NOT vw: an 88vw cap also shrank the 375 header, cutting the
-    // logo-to-button gap from 52px back to 8px. 100% keeps mobile full-bleed
-    // (its margin comes from the container padding) and the rem cap only ever
-    // engages on a wide screen.
-    contentMaxWidth: 'min(90rem, 100%)'
+    // A PERCENTAGE, not a rem cap. min(90rem, ...) measured 90% at 1600 but
+    // only 75% at 1920 — a fixed cap cannot hold a percentage promise, it just
+    // stops scaling. 94% holds at every width; readability is protected by the
+    // column counts below (chat splits in two, prose in two then three), not by
+    // starving the container. Mobile is unaffected: its margin is the
+    // container's own padding.
+    contentMaxWidth: '94%'
   },
   type: tokens.type
 } as const;
