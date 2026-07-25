@@ -42,10 +42,9 @@ export const theme = {
   },
   /** Minimum touch target edge length (R1.1). */
   touch: 44,
-  /** Shared content column max-width (main + footer align). */
+  /** Shared content column max-width (main + footer align). Wide enough for 1280 without a dead right band; prose still caps itself. */
   layout: {
-    sidebarWidth: 220,
-    contentMaxWidth: '68rem'
+    contentMaxWidth: '80rem'
   },
   type: tokens.type
 } as const;
