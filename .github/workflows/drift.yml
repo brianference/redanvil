@@ -66,9 +66,9 @@ jobs:
       # describing the code, or a committed result stops reproducing.
       # Root install only: both apps are npm workspaces (single hoisted react).
       - name: Re-gate app-builder against its committed result
-        run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process
+        run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json process
       - name: Re-gate dashboard against its committed result
-        run: node .github/scripts/verify_results.mjs dashboard results/dashboard.json evidence/verdicts-dashboard.json ci,process
+        run: node .github/scripts/verify_results.mjs dashboard results/dashboard.json evidence/verdicts-dashboard.json process
 
       # A green result and a stale production build must not coexist. Needs the
       # apps built so the scored bundle can be compared with what is served.
