@@ -1,11 +1,11 @@
 {
   "kind": "results",
-  "slug": "app-builder",
+  "slug": "dashboard",
   "finalScore": 100,
   "threshold": 90,
   "passed": true,
-  "evaluated": 47,
-  "total": 47,
+  "evaluated": 45,
+  "total": 45,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -44,10 +44,6 @@
       "passed": true
     },
     {
-      "ruleId": "u-val-input-validation",
-      "passed": true
-    },
-    {
       "ruleId": "fe-theme-tokens-only",
       "passed": true
     },
@@ -81,10 +77,6 @@
     },
     {
       "ruleId": "u-data-no-placeholder",
-      "passed": true
-    },
-    {
-      "ruleId": "u-plat-migrations",
       "passed": true
     },
     {
@@ -208,19 +200,19 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-25T03:44:23.353Z",
+  "finishedAt": "2026-07-25T03:43:57.833Z",
   "provenance": {
     "commit": "535188382deb89a55891b1711e6a2e2ebf7d49ca",
     "dirty": true,
     "rubricHash": "4b7e93f01c3b72c93f424d091047df52f6deef54513daab2a286ee37b6f090dc",
     "rubricRuleCount": 55,
     "node": "v22.19.0",
-    "verdictsHash": "17ff6404c7be89c320c0a0297df7c16e026de399256e00b6394d20d7447e2247",
+    "verdictsHash": "8603ab975f6bb12ce2f8b87f3ed775403802b56428dee0fb06b8b1d574735d27",
     "notApplicable": [
       "ci",
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-07-25T03:44:23.399Z"
+    "generatedAt": "2026-07-25T03:43:57.878Z"
   }
 }

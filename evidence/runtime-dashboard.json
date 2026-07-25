@@ -1,0 +1,18 @@
+{
+  "appDir": "C:\\Users\\brian\\RedAnvil\\dashboard",
+  "checkedAt": "2026-07-25T03:42:36.789Z",
+  "port": 58010,
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "ok": true
+}

@@ -45,8 +45,15 @@ jobs:
       - name: Install app deps (gate runs real checks against the app)
         working-directory: app-builder
         run: npm ci
+      - name: Install dashboard deps
+        working-directory: dashboard
+        run: npm ci
       - name: Verify results were produced by the gate
         run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process
+      # The dashboard ships to production too. Gating only app-builder left half
+      # the deployed surface with no measured score at all.
+      - name: Verify dashboard results were produced by the gate
+        run: node .github/scripts/verify_results.mjs dashboard results/dashboard.json evidence/verdicts-dashboard.json ci,process
       # The dashboard fetches results/all.json directly, so the artifact the
       # public site displays must be derived from the verified per-run files
       # rather than hand-maintained alongside them.
