@@ -1,93 +1,77 @@
-# RedAnvil handoff — 2026-07-24
+# RedAnvil handoff — 2026-07-25
 
-State of the project after the v5.0.0 release, and what is left to do. Written so a fresh
-context can pick up without re-deriving anything.
+State after the v6.0.0 release, and what is left. Written so a fresh context can pick up
+without re-deriving anything.
 
 ## Where things stand
 
-- **HEAD:** `688a9fa` on `master`, CI green.
-- **Latest release:** `v5.0.0` — https://github.com/brianference/redanvil/releases/tag/v5.0.0
-- **Production:** https://redanvil.pages.dev (Cloudflare Pages project `redanvil`, prod branch
-  `main`; local branch is `master`, so deploys must pass `--branch main`).
-- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v5.0.0-20260723-2337.bundle`
-  (restore-tested: clones clean, 296 files, 6 tags, `v5.0.0` → `688a9fa`).
-- **Working tree:** clean. Both delegation worktrees removed, both merged branches deleted.
-- **Gate:** 100/100 across 45/45 rules with `--na ci,process`; 93/100 at 46/47 without the
-  waiver (the three newly-implemented checks genuinely run).
+- **HEAD:** `0c32583` on `master`, CI green.
+- **Latest release:** `v6.0.0` — https://github.com/brianference/redanvil/releases/tag/v6.0.0
+  (four screenshots attached as release assets)
+- **Production:** https://redanvil.pages.dev and https://redanvil-dashboard.pages.dev
+  (Cloudflare Pages, direct upload / Type B; prod branch `main`, local branch `master`, so
+  deploys must pass `--branch main`). Both verified this session by asset-hash match.
+- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v6.0.0-20260724-1942.bundle`
+  (restore-tested: clones clean, 347 files, 7 tags, `v6.0.0` → `0c32583`).
+- **Gate:** 100/100 across 46/46 applicable rules at **85% coverage** of the full rubric,
+  with `--na ci,process`. Zero stale verdicts. The 100 is earned against verdicts recorded
+  at the current commit, not inherited.
+- **Working tree:** clean. All four delegation worktrees removed and branches deleted.
+
+## What changed in v6.0.0
+
+An audit of RedAnvil against its own rules found the score was resting on expired evidence.
+Ten findings were fixed; the full narrative is in the release notes. The load-bearing ones:
+
+1. **Verdict freshness.** `reviewedCommit` was schema-validated and read by nothing. Verdicts
+   now carry a scope and are dropped when anything in it changes since review. Turning this on
+   scored the then-current tree at 0/100 with ten visual blockers failing — that was the honest
+   number. `orchestrator/src/gate/freshness.ts`.
+2. **Operational rules are scored.** 30 `lg-*` rules in `rules/loop-gate.md` were prose. Seven
+   are now scored from the run record (`orchestrator/src/loop/runRules.ts`) and bound to the
+   corpus file by test.
+3. **Three evadable checks.** `fe-no-unsanitized-html` (first match only),
+   `hyg-secret-scan` (src/functions only, four key shapes), `fe-theme-tokens-only` (no CSS).
+   Red-green tests in `orchestrator/test/checkEvasions.test.ts`.
+4. **Contrast is decided by axe**, not a note. A passing `fe-a11y-contrast` verdict must cite
+   an axe report with zero violation nodes in BOTH themes.
+5. **Loop feedback carries diagnostics**, reports its best iteration, and stops on stagnation.
+6. **The scaffold produces an app that builds** — 27 files, verified to install, typecheck,
+   test, lint and build a production bundle.
+7. **Site**: real header nav with `aria-current`, dead desktop rail removed, centred column,
+   regenerated brand mark with no baked halo.
+8. `u-conc-file-size` (600 lines) plus the `prd/*` and `shell/*` splits.
+9. Score reports now disclose **coverage** and the waived rule ids.
+10. Rubric markdown ↔ encoded rules bound in both directions.
 
 ## Remaining tasks (priority order)
 
-### 1. Logo dark-mode halo — NOT fixed, needs new art
-The mark has a pale desaturated "splash" baked around the anvil base. It vanishes on white
-and reads as a bright smudge on the dark header (`--bg #0b0b0f`). It is in both lockups
-(`app-builder/public/logo-lockup.png` and `-dark.png`), so only dark mode looks wrong.
+### 1. The 10 further findings from the second audit
+See `docs/audit-2026-07-25.md` for the full list with evidence. The two worth doing first:
+- **`u-plat-worker-runtime` is a static grep, not runtime parity.** `lg-runtime-parity` is a
+  declared blocker that says boot `wrangler pages dev` and curl a live endpoint. Nothing does.
+- **The dashboard has no results file and is never gated.** Only `app-builder` is scored, so
+  half the shipped surface has no measured score at all.
 
-Six pixel treatments were tried and **all rejected on visual review**: stripping the splash
-ate the anvil's horn and base; softer variants left a hard seam where the 36%-width region
-boundary cut through it. The splash and the anvil's specular highlights are the same colour
-family, so no classifier separates them. Conclusion: this needs a **regenerated mark**, not a
-filter. Take it to Grok Imagine (`grok image_gen`) — a clean transparent anvil lockup with no
-baked background residue, wordmark untouched. Review rendered on `#0b0b0f` before accepting.
-Gallery of the failed attempts is in the scratchpad `logo/` dir if useful for the prompt.
+### 2. Dashboard verdicts and gating
+`evidence/verdicts-dashboard.json` does not exist. The dashboard was deployed and audited with
+axe this session (0 violations, both themes) but has no recorded verdicts and no
+`results/dashboard.json`, so `build_feed.mjs` reports one run when two apps ship.
 
-### 2. README screenshots — outstanding from an earlier request
-The user asked twice to add screenshots to the README and the GitHub release. Not done.
-Need real rendered screenshots of https://redanvil.pages.dev (App Builder chat, wizard, a
-generated PRD) at desktop + 375px, both themes, embedded in `README.md` and attached to the
-v5.0.0 release. Use the Playwright harness, production URL only.
+### 3. `proc-pr-title-ticket` is N/A locally
+Implemented via `gh pr view`; `gh` is not on PATH here so it always returns N/A. It fails
+closed, so this is not urgent. Wire it to the GitHub API with the existing token if PR-title
+enforcement matters.
 
-### 3. Scaffold ships apps that fail their own rule pack
-Every generated app starts life failing two deterministic rules that are knowable at scaffold
-time (confirmed identical across all 10 simulation runs):
-- `fe-seo-assets` — scaffold emits `public/robots.txt` but not `public/sitemap.xml`.
-- `u-plat-migrations` — `wrangler.toml` declares a D1 binding but no `migrations/` directory,
-  so the schema is not reproducible. The PRD already contains the DDL to write.
-
-Fix in `orchestrator/src/commands/scaffold.ts`: emit `public/sitemap.xml` and
-`migrations/0001_init.sql` (from the job's DDL). This raises the floor for every build instead
-of making the loop pay for it each time. Good candidate to delegate to Grok in a worktree.
-
-### 4. `verify_commit.mjs` gives a false green
-It checks a ref out into a throwaway worktree and builds it (typecheck, tests, app build), but
-CI also runs `results-provenance`, `build_feed --check`, and `verify_design_rules`. Twice this
-session it reported "stands alone — safe to push" and CI then failed on the provenance job.
-Either extend it to run those three jobs too, or make it print exactly which CI jobs it does
-NOT cover so the green is not mistaken for full parity. Current workaround: run the three CI
-scripts manually before pushing (documented below).
-
-### 5. `proc-pr-title-ticket` is N/A locally
-Implemented (option a): reads a real PR title via `gh pr view` and exits 3 when there is no PR
-or no `gh`. On this machine `gh` is not on PATH, so it is always N/A. If PR-title enforcement
-matters, install `gh` or wire the check to the GitHub API with the existing token. Not urgent —
-it fails closed (N/A, never a silent pass).
-
-### 6. Deferred from before this session (verify still wanted)
-- "improve the 22 judge/visual checks" — the deterministic side got attention (19 → 28 declared,
-  now all implemented); the judge/visual rubric lanes were not revisited this round.
-- AI-suggests-features-then-user-chooses flow before finalizing the PRD — requested, not built.
-- Edge-case acceptance-criteria spec in `scratchpad/prd-edgecases.md` — was queued for Grok;
-  confirm whether it landed (PRD v3 has bullet acceptance criteria, but the failure/boundary
-  edge-case templating from that spec may not be in).
-
-## What was done this session (context, don't redo)
-
-- Fixed the red HEAD: PRD v3 restructure completed and committed (`0603de1`).
-- Resolved 3 of 4 judge-disagreement defects (`071f6bf`): `Wizard.tsx` 915 → 270 lines, split
-  into `wizard/steps/*`; `reviewAnswerRows` wired into the Review step; `MIN_PROMPT_LENGTH`
-  deduped to the single `lib/job.ts` export. The 4th (presence-only assertions) measured 1/49 —
-  already remediated by an earlier pass.
-- Fixed the scanner self-match and two silent CLI skips (`3429b49`).
-- Deployed PRD v3 to production; verified by asset hash + deployed bundle contents.
-- Ran the 10-run pipeline simulation (`54503cf`) — new harness at
-  `orchestrator/scripts/simulate_pipeline.mts`, records in `evidence/simulation-runs.json`,
-  learnings in `docs/simulation-learnings.md`.
-- Implemented the 3 unimplemented det rules + coverage test (`ddef68a` merge), fixed the
-  `evaluated 46/45` tally bug (`bb75d93`).
-- Cut v5.0.0, released, backed up.
+### 4. Deferred from before
+- The judge/visual rubric lanes were improved but not re-derived from scratch.
+- AI-suggests-features-then-user-chooses flow before finalizing the PRD: requested, not built.
+- Edge-case acceptance-criteria spec in `scratchpad/prd-edgecases.md`: confirm whether the
+  failure/boundary templating landed in PRD v3.
 
 ## Key facts a fresh context will need
 
-**Deploy** (Cloudflare Pages, direct-upload / Type B — `git push` does NOT deploy):
+**Deploy** (Type B — `git push` does NOT deploy):
 ```
 cd app-builder && npm run build
 export CLOUDFLARE_API_TOKEN=<NewCloudFlareAccountToken from x-search-mcp-server/.env>
@@ -95,62 +79,66 @@ export CLOUDFLARE_ACCOUNT_ID=dd01b432f0329f87bb1cc1a3fad590ee
 npx wrangler pages deploy dist --project-name redanvil --branch main --commit-dirty=true
 ```
 Then verify: fetch `https://redanvil.pages.dev/`, extract `assets/index-<hash>.js`, confirm it
-matches local `dist/`. The bare alias is edge-cached ~30–60s after deploy; the per-deploy
-`<hash>.redanvil.pages.dev` URL is the uncached verification target (never reported as the result).
-Also curl `/api/health` — a 200 on `/` only proves static assets served.
+matches local `dist/`. Also curl `/api/health`. The dashboard is the same with
+`--project-name redanvil-dashboard`. Never report the hashed per-deploy URL.
 
-**Gate** (flags are strict now — unknown flags exit 2; `--out` requires `--slug`):
+**Gate**:
 ```
 npm run gate -- app-builder --judge evidence/verdicts-app-builder.json \
   --na ci,process --slug app-builder --out results/app-builder.json
 ```
-`--na ci,process` is correct for `app-builder` (it has no `.github/workflows`; the gate refuses
-`--na ci` on a dir that does). The gate self-sees its own `results/*.json` write as a
-modification, so `git checkout -- results/app-builder.json` before a run if you need a clean
-`provenance.dirty=false`.
+`git checkout -- results/app-builder.json` before a run if you need `provenance.dirty=false`.
 
-**CI-parity checks to run locally before every push** (this is the `verify_commit.mjs` gap):
+**CI parity before every push** (`verify_commit.mjs` now names these itself):
 ```
-node .github/scripts/verify_commit.mjs HEAD          # build/tests in isolated worktree
+node .github/scripts/verify_commit.mjs HEAD
 node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process
 node .github/scripts/build_feed.mjs --check
 node .github/scripts/verify_design_rules.mjs
-rm -f results/app-builder.json.verify.json           # scratch file the first one writes
+node .github/scripts/gate_repo_ci.mjs
+rm -f results/app-builder.json.verify.json
 ```
 
-**GitHub API** (`gh` not on PATH here): source the token from
-`workspace/projects/x-search-mcp-server/.env` (`GITHUB_TOKEN`/`GH_TOKEN`), call
-`api.github.com/repos/brianference/redanvil/...` directly. Never print the token — length +
-prefix only.
-
-**Grok delegation** (per the teamwork protocol in `docs/claude-grok-teamwork.md` and CLAUDE.md):
-give Grok a disposable worktree, never `git add`/commit while it runs, verify the COMMIT not the
-tree before pushing. Invocation:
+**Re-recording verdicts** (needed whenever the render scope changes):
 ```
-git worktree add -q -b fix/<name> <scratchpad>/wt-<name> HEAD
-# copy node_modules for root + app-builder + dashboard into the worktree so Grok can run the gate
-grok --no-auto-update --always-approve --no-alt-screen --cwd <worktree> \
-  --session-id $(node -e "console.log(crypto.randomUUID())") --output-format plain \
-  --prompt-file <spec.md>
+node .github/scripts/a11y_audit.mjs <prodUrl> --theme dark  --out evidence/axe/app-builder-dark.json
+node .github/scripts/a11y_audit.mjs <prodUrl> --theme light --out evidence/axe/app-builder-light.json
+node .github/scripts/e2e_smoke.mjs <prodUrl> --out evidence/e2e-app-builder.json
 ```
-Grok can spawn its own subagent team — tell it to use disjoint file ownership. Always
-independently verify its work (run the suite yourself, red-green any new check) before merging.
+Then screenshots at 375/768/1280 in both themes into `evidence/screenshots/`, and update
+`reviewedCommit` in `evidence/verdicts-app-builder.json`. Visual verdicts are scoped to
+`app-builder/src`, `app-builder/public`, `app-builder/index.html`.
 
-**Environment gotchas:**
-- `tsx -e "..."` inline hangs in this shell — write a `.mts` file and run it instead.
+**GitHub API** (`gh` not on PATH): source `GITHUB_TOKEN` from
+`workspace/projects/x-search-mcp-server/.env`, call `api.github.com/repos/brianference/redanvil/...`
+directly. Never print the token — length and prefix only.
+
+**Grok delegation**: disposable worktree, never `git add` while a run is in flight, verify the
+COMMIT not the tree. Spec files under the session scratchpad; four ran cleanly this session.
+
+## Environment gotchas (all hit this session)
+
+- **NEVER junction `node_modules` into a git worktree.** `git worktree remove --force` follows
+  the junction and deletes the real directory — it wiped root, `app-builder` and `dashboard`
+  `node_modules` plus the entire `orchestrator/` tree (via the npm workspace symlink) in one
+  command. Run `npm ci` in the worktree, or `cmd /c rmdir "<link>"` before removing it.
+  Recovery is `git restore` plus `npm ci`.
+- **Python heredocs mangle `\n` and `\r\n`** inside replacement strings, producing literal
+  newlines in source. This broke `runGate.ts` and `e2e_smoke.mjs` this session. Use the Edit
+  tool for anything containing escapes.
+- CI checks out **shallow** by default, so verdict freshness cannot resolve any
+  `reviewedCommit`. The provenance job sets `fetch-depth: 0`; any new job that gates must too.
+- Each app installs standalone in CI, so a type package present only via the root hoist
+  (`@types/node`) passes locally and fails there.
+- `tsx -e "..."` inline hangs in this shell; write a `.mts` file.
 - `grep -P` is unavailable; use `LC_ALL=C grep -E`.
-- `check.mjs` has heredoc-escape hazards — build control chars via `String.fromCharCode()`
-  (`NUL`/`EOL` constants at the top of the file).
-- `$(...)` around a piped command captures the LAST command's exit code; `echo "exit=$?"` after
-  a `| head` reports head's status, not the tool's. Redirect to a temp file and read `$?` for the
-  real exit code.
+- `$(...)` around a pipe captures the LAST command's exit code.
 
-## Standing rules set this session (now in CLAUDE.md + memory)
-- **Never report bogus numbers** — validate the measurer before quoting it.
-- **Judge disagreement → the fail wins** and gets diagnosed (memory:
-  `feedback_judge_disagreement_fail_wins`). All 4 disagreements this session were real defects.
-- **Grok reviews Claude's PRs too**, not only the reverse.
-- **Teamwork protocol** — worktree isolation, never stage mid-delegation, verify the commit not
-  the tree (`docs/claude-grok-teamwork.md`).
-- **Declared-but-unimplemented rules** pass silently via n/a; bind the rubric to its
-  implementations with a coverage test (memory: `reference_declared_but_unimplemented_rules`).
+## Standing rules (CLAUDE.md + memory)
+
+- Never report a number from an unvalidated measurement; sanity-check against an invariant.
+- Judge disagreement → the fail wins and gets diagnosed.
+- Grok reviews Claude's work too, not only the reverse.
+- Worktree isolation; never stage mid-delegation; verify the commit, not the tree.
+- Declared-but-unimplemented rules pass silently; bind every rubric to its implementation.
+- **New:** a recorded review is only evidence for the commit it was recorded at.
