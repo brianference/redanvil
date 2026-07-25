@@ -1,34 +1,8 @@
 {
   "url": "https://redanvil.pages.dev/",
-  "checkedAt": "2026-07-25T05:42:45.746Z",
-  "submitStatus": 200,
-  "prdRendered": true,
-  "routes": [
-    {
-      "path": "/saved",
-      "status": 200,
-      "h1": "Saved builds"
-    },
-    {
-      "path": "/about",
-      "status": 200,
-      "h1": "About RedAnvil"
-    },
-    {
-      "path": "/terms",
-      "status": 200,
-      "h1": "Terms and Conditions"
-    },
-    {
-      "path": "/privacy",
-      "status": 200,
-      "h1": "Privacy Policy"
-    },
-    {
-      "path": "/contact",
-      "status": 200,
-      "h1": "Contact"
-    }
-  ],
-  "ok": true
+  "checkedAt": "2026-07-25T05:52:45.002Z",
+  "submitStatus": null,
+  "prdRendered": false,
+  "ok": false,
+  "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /forge prd/i }) to be visible\u001b[22m\n"
 }
