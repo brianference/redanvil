@@ -8,4 +8,4 @@ export const DASHBOARD_URL = 'https://redanvil-dashboard.pages.dev';
 export const GITHUB_URL = 'https://github.com/brianference/redanvil';
 
 /** Default logo lockup height in the sticky header (px). */
-export const LOGO_HEIGHT = 56;
+export const LOGO_HEIGHT = 112;

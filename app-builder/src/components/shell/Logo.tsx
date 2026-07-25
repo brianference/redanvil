@@ -30,7 +30,7 @@ export function Logo({ height = LOGO_HEIGHT }: LogoProps): JSX.Element {
         src="/logo-lockup.png"
         alt=""
         height={height}
-        style={{ height, width: 'auto', maxWidth: 'min(58vw, 260px)', objectFit: 'contain' }}
+        style={{ height, width: 'auto', maxWidth: 'min(64vw, 440px)', objectFit: 'contain' }}
       />
       <img
         className="ra-logo-dark"
@@ -38,7 +38,7 @@ export function Logo({ height = LOGO_HEIGHT }: LogoProps): JSX.Element {
         alt=""
         aria-hidden="true"
         height={height}
-        style={{ height, width: 'auto', maxWidth: 'min(58vw, 260px)', objectFit: 'contain' }}
+        style={{ height, width: 'auto', maxWidth: 'min(64vw, 440px)', objectFit: 'contain' }}
       />
     </a>
   );

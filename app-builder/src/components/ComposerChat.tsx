@@ -23,8 +23,7 @@ export interface ComposerChatProps {
 
 /**
  * Conversational home: agent greeting, example chips, and a warm composer
- * (Grok v1 base + Claude variation 2 chat feel). Uses the approved logo mark
- * for the agent avatar — no new brand art.
+ * (Grok v1 base + Claude variation 2 chat feel).
  */
 export function ComposerChat({
   prompt,
@@ -89,7 +88,7 @@ export function ComposerChat({
         </div>
 
         <div
-          style={{ ...chipsWrapStyle, paddingLeft: 42 }}
+          style={chipsWrapStyle}
           role="list"
           aria-label={copy.examplesLabel}
         >
@@ -110,7 +109,7 @@ export function ComposerChat({
         </div>
 
         {prompt.trim().length === 0 && (
-          <p style={{ ...hintStyle(), paddingLeft: 42 }} role="status">
+          <p style={{ ...hintStyle() }} role="status">
             {copy.emptyHint}
           </p>
         )}
@@ -168,25 +167,14 @@ export function ComposerChat({
 }
 
 /**
- * Agent message row with the square anvil mark as avatar (legible in both themes).
+ * Agent message row. The sender name labels the message; there is no avatar
+ * chip — a 32px repeat of the brand mark beside every bubble added no
+ * information and read as clutter next to the name that already says who is
+ * speaking.
  */
 function AgentRow({ children }: { children: ReactNode }): JSX.Element {
   return (
     <div style={rowStyle}>
-      <div style={avatarStyle} aria-hidden="true">
-        <img
-          src="/logo-mark.png"
-          alt=""
-          width={28}
-          height={28}
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: theme.radius.sm,
-            objectFit: 'contain'
-          }}
-        />
-      </div>
       <div style={bubbleStackStyle}>
         <span style={senderStyle}>{en.chat.agentName}</span>
         {children}
@@ -218,25 +206,12 @@ const rowStyle: CSSProperties = {
   maxWidth: '100%'
 };
 
-const avatarStyle: CSSProperties = {
-  width: 32,
-  height: 32,
-  borderRadius: '50%',
-  flexShrink: 0,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: theme.color.accentSoft,
-  border: `1px solid ${theme.color.border}`,
-  overflow: 'hidden'
-};
-
 const bubbleStackStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 6,
   minWidth: 0,
-  maxWidth: 'calc(100% - 42px)'
+  maxWidth: '100%'
 };
 
 const senderStyle: CSSProperties = {
@@ -274,8 +249,7 @@ const metaStyle: CSSProperties = {
 const trustRowStyle: CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
-  gap: theme.space.sm,
-  paddingLeft: 42
+  gap: theme.space.sm
 };
 
 /**
