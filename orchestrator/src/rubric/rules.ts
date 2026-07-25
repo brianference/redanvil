@@ -38,6 +38,10 @@ export const RULES: Rule[] = [
   // in Workers and browsers, which have neither -- the single most repeated
   // production failure in this environment.
   rule('u-plat-worker-runtime', 'security', 'blocker', 'det'),
+  // Implements lg-runtime-parity: boot wrangler pages dev and curl live paths.
+  // The static grep (u-plat-worker-runtime) cannot see a Workers-incompatible
+  // transitive dependency; only a real runtime boot catches that failure class.
+  rule('u-plat-runtime-parity', 'security', 'blocker', 'det'),
   // Prose in per-app-pack that was mechanically checkable but scored by a human
   // verdict (or not at all). Converting asserted requirements into measured ones
   // is the only way the score's "asserted surface" shrinks.
