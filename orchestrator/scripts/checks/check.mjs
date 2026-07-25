@@ -396,7 +396,15 @@ switch (ruleId) {
     // Anything under src/ is source, not an asset directory — `src/assets/` is
     // still a binary committed into source, which is what this rule forbids.
     const underSrc = (f) => /(^|[\\/])src[\\/]/.test(f);
-    const isAssetDir = (f) => !underSrc(f) && /(^|[\\/])(public|assets|static)[\\/]/.test(f);
+    // `images` and `screenshots` are included because both ARE asset
+    // directories: the rule's intent is that images live somewhere designated
+    // and stay inside a size budget, not that only three directory names exist.
+    // Review screenshots in particular are load-bearing here — the gate refuses
+    // a verdict whose evidence path does not exist, so they have to be
+    // committed. The size budget below still applies to every one of them.
+    // Running this against the repo, not only a generated app, surfaced it.
+    const isAssetDir = (f) =>
+      !underSrc(f) && /(^|[\\/])(public|assets|static|images|screenshots)[\\/]/.test(f);
     /** Largest single asset an app should ship. */
     const MAX_ASSET_BYTES = 750 * 1024;
 
