@@ -90,4 +90,18 @@ if (failed > 0) {
   console.error(`\n${sha} does NOT stand alone: ${failed} check(s) failed. Do not push.`);
   process.exit(1);
 }
-console.log(`\n${sha} stands alone — safe to push.`);
+// "Safe to push" used to be printed without qualification, and CI then failed
+// twice on jobs this script never runs. It builds the commit; it does not
+// reproduce the gate, the derived feed, the design-rule drift check, or the
+// repo's own CI-lane blockers. Naming the gap is the difference between a green
+// that means something and a green that gets trusted for more than it covers.
+const NOT_COVERED = [
+  'node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process',
+  'node .github/scripts/build_feed.mjs --check',
+  'node .github/scripts/verify_design_rules.mjs',
+  'node .github/scripts/gate_repo_ci.mjs'
+];
+console.log(`\n${sha} builds and tests clean in isolation.`);
+console.log(`\nThis does NOT cover ${NOT_COVERED.length} CI job(s). Run these before pushing:`);
+for (const cmd of NOT_COVERED) console.log(`  ${cmd}`);
+console.log('  rm -f results/app-builder.json.verify.json');
