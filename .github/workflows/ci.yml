@@ -33,6 +33,11 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
+          # Full history: the gate checks each verdict against the commit it was
+          # recorded at, and the default shallow clone has one commit, so every
+          # reviewedCommit is unresolvable and all 24 verdicts drop as stale.
+          # That reads as 24 design regressions when nothing changed at all.
+          fetch-depth: 0
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: 20

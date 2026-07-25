@@ -110,10 +110,24 @@ function git(args: string[], repoRoot: string): string | null {
  * @returns A probe usable by `findStaleVerdicts`.
  */
 export function gitChangeProbe(repoRoot: string): ChangeProbe {
+  // A shallow clone (CI's default `fetch-depth: 1`) holds one commit, so every
+  // reviewedCommit looks unresolvable and every verdict drops as stale. Failing
+  // closed is right, but reporting it as 24 design regressions is not: the cause
+  // is the checkout, not the code. Detect it once and say so.
+  const shallow = git(['rev-parse', '--is-shallow-repository'], repoRoot)?.trim() === 'true';
+
   return (commit, scope) => {
     // Resolve the commit first so "unknown commit" is distinguishable from
     // "nothing changed" — both make `git diff` print nothing.
-    if (git(['cat-file', '-e', `${commit}^{commit}`], repoRoot) === null) return null;
+    if (git(['cat-file', '-e', `${commit}^{commit}`], repoRoot) === null) {
+      if (shallow) {
+        console.error(
+          `freshness: cannot resolve ${commit.slice(0, 12)} — this is a SHALLOW clone. ` +
+            `Check out with fetch-depth: 0 so verdicts can be checked against their commit.`
+        );
+      }
+      return null;
+    }
 
     const changed = git(['diff', '--name-only', commit, '--', ...scope], repoRoot);
     if (changed === null) return null;
