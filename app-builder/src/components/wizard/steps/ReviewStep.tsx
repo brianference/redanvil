@@ -66,7 +66,7 @@ function ReviewRow({ term, detail }: { term: string; detail: string }): JSX.Elem
 }
 
 /**
- * Step 3 — review derived rows, estimate, and submit status banners.
+ * Step 4 — review derived rows (including chosen features), estimate, and submit banners.
  * Rows come from {@link reviewAnswerRows} so the unit test guards the real UI path.
  *
  * @param props - Answers, estimate, readiness flags, and submit state.
@@ -83,7 +83,7 @@ export function ReviewStep({
 
   return (
     <div>
-      <p id="wizard-q-3" style={fieldLabelStyle}>
+      <p id="wizard-q-4" style={fieldLabelStyle}>
         {copy.reviewHeading}
       </p>
       <dl style={reviewListStyle}>

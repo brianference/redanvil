@@ -8,20 +8,23 @@ import {
   upcomingStyle
 } from './styles';
 
+/** Wizard step index (Prompt → Scope → Features → Review). */
+export type ComingUpStep = 1 | 2 | 3 | 4;
+
 /**
  * Pillbox step list — numbered tiles for each wizard step.
  * Current step uses accent border + filled number (not color alone).
  *
- * @param props.step - Current wizard step (1–3).
+ * @param props.step - Current wizard step (1–4).
  */
-export function ComingUp({ step }: { step: 1 | 2 | 3 }): JSX.Element {
+export function ComingUp({ step }: { step: ComingUpStep }): JSX.Element {
   const copy = en.wizard;
   return (
     <div style={upcomingStyle} aria-label={copy.comingUp}>
       <h2 style={upcomingHeadingStyle}>{copy.comingUp}</h2>
       <ol style={upcomingListStyle}>
         {copy.stepTitles.map((title, index) => {
-          const n = (index + 1) as 1 | 2 | 3;
+          const n = (index + 1) as ComingUpStep;
           const isCurrent = n === step;
           const isDone = n < step;
           return (

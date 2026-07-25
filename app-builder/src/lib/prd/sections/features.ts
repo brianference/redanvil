@@ -2,8 +2,27 @@ import type { FeatureSpec } from '../types';
 import { entityPascal, entityTable } from '../naming';
 
 /**
+ * One feature suggestion shown in the wizard Features step before the PRD is forged.
+ * Ids and titles match {@link buildFeatures} so the user's pick is exactly what ships.
+ */
+export interface FeatureSuggestion {
+  /** Stable feature id (F1, F2, …). */
+  id: string;
+  /** Feature title shown in the wizard and the PRD. */
+  title: string;
+  /** One-line rationale tied to the user's scope answers. */
+  rationale: string;
+  /** Whether this feature is MVP by default (selected on first paint). */
+  mvp: boolean;
+}
+
+/**
  * Template core features from entities + auth flag (F1, F2, …).
  * MVP features come first (browse, detail, access, manage primary); rest are beyond MVP.
+ *
+ * @param entities - Domain entity names (primary first).
+ * @param hasAuth - Whether the wizard auth flag is on.
+ * @returns Ordered feature specs for the PRD sections.
  */
 export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec[] {
   const primary = entities[0] ? entityPascal(entities[0]) : 'Item';
@@ -154,7 +173,169 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
 }
 
 /**
+ * Build wizard feature suggestions from the same derivation as the PRD.
+ * Does not invent a parallel list — titles and ids come from {@link buildFeatures}.
+ *
+ * @param entities - Domain entity names (primary first).
+ * @param hasAuth - Whether the wizard auth flag is on.
+ * @returns Suggestions with rationale and default MVP selection flag.
+ */
+export function buildFeatureSuggestions(
+  entities: string[],
+  hasAuth: boolean
+): FeatureSuggestion[] {
+  const features = buildFeatures(entities, hasAuth);
+  const primary = entities[0] ? entityPascal(entities[0]) : 'Item';
+  return features.map((feature) => ({
+    id: feature.id,
+    title: feature.name,
+    rationale: rationaleForFeature(feature, entities, hasAuth, primary),
+    mvp: feature.mvp
+  }));
+}
+
+/**
+ * Default selected ids for the Features step (MVP features only).
+ *
+ * @param entities - Domain entity names (primary first).
+ * @param hasAuth - Whether the wizard auth flag is on.
+ * @returns Feature ids that should start selected.
+ */
+export function defaultSelectedFeatureIds(entities: string[], hasAuth: boolean): string[] {
+  return buildFeatureSuggestions(entities, hasAuth)
+    .filter((suggestion) => suggestion.mvp)
+    .map((suggestion) => suggestion.id);
+}
+
+/**
+ * Filter derived features by the user's explicit selection.
+ * When `selectedFeatureIds` is null or undefined, returns every feature (legacy behaviour).
+ *
+ * @param features - Full list from {@link buildFeatures}.
+ * @param selectedFeatureIds - Chosen ids, or null/undefined for no filter.
+ * @returns Features to include in the PRD.
+ */
+export function filterFeaturesBySelection(
+  features: FeatureSpec[],
+  selectedFeatureIds: string[] | null | undefined
+): FeatureSpec[] {
+  if (selectedFeatureIds == null) {
+    return features;
+  }
+  const selected = new Set(selectedFeatureIds);
+  return features.filter((feature) => selected.has(feature.id));
+}
+
+/**
+ * Domain entities still required by the selected features (for schema / API / file tree).
+ * Preserves the original entity order. Empty when no entity-scoped feature remains.
+ *
+ * @param allEntities - Full entity list used to derive features.
+ * @param selectedFeatures - Features that will appear in the PRD.
+ * @returns Entities that still have schema rows or feature work.
+ */
+export function entitiesRequiredByFeatures(
+  allEntities: string[],
+  selectedFeatures: FeatureSpec[]
+): string[] {
+  if (selectedFeatures.length === 0) {
+    return [];
+  }
+  const primaryLabel = allEntities[0] ? entityPascal(allEntities[0]) : 'Item';
+  const needed = new Set<string>();
+
+  for (const feature of selectedFeatures) {
+    if (feature.id === 'F1' || feature.id === 'F2' || feature.id === 'F4') {
+      needed.add(allEntities[0] ?? 'Item');
+      continue;
+    }
+    const manageMatch = /^Manage (.+)$/.exec(feature.name);
+    if (manageMatch) {
+      const pascal = manageMatch[1] ?? '';
+      if (pascal === primaryLabel) {
+        needed.add(allEntities[0] ?? 'Item');
+      } else {
+        const match = allEntities.find((entity) => entityPascal(entity) === pascal);
+        if (match) {
+          needed.add(match);
+        }
+      }
+    }
+  }
+
+  if (allEntities.length === 0 && needed.has('Item')) {
+    return ['Item'];
+  }
+  return allEntities.filter((entity) => needed.has(entity));
+}
+
+/**
+ * Whether auth tables/routes stay in the PRD after feature selection.
+ * Legacy path (no selection filter applied upstream) keeps the wizard flag as-is.
+ *
+ * @param wizardHasAuth - Auth flag from the Scope step.
+ * @param selectedFeatures - Features that will appear in the PRD.
+ * @returns True when auth schema and routes must remain.
+ */
+export function authRequiredByFeatures(
+  wizardHasAuth: boolean,
+  selectedFeatures: FeatureSpec[]
+): boolean {
+  if (!wizardHasAuth) {
+    return false;
+  }
+  return selectedFeatures.some(
+    (feature) => feature.id === 'F3' && feature.name === 'Accounts'
+  );
+}
+
+/**
+ * One-line rationale for a derived feature, tied to the user's scope answers.
+ *
+ * @param feature - Feature from {@link buildFeatures}.
+ * @param entities - Domain entity names.
+ * @param hasAuth - Wizard auth flag.
+ * @param primary - PascalCase primary entity label.
+ * @returns Rationale string for the Features step.
+ */
+function rationaleForFeature(
+  feature: FeatureSpec,
+  entities: string[],
+  hasAuth: boolean,
+  primary: string
+): string {
+  if (feature.id === 'F1') {
+    return `From entity ${primary} (browse and search the list)`;
+  }
+  if (feature.id === 'F2') {
+    return `From entity ${primary} (open a single record)`;
+  }
+  if (feature.id === 'F3') {
+    return hasAuth
+      ? 'From sign-in = Yes (accounts and session-scoped data)'
+      : 'From sign-in = No (public pages and APIs)';
+  }
+  if (feature.id === 'F4') {
+    return `From entity ${primary} (create, edit, and delete)`;
+  }
+  if (feature.name.startsWith('Required pages')) {
+    return 'Required product pages for every app (About, Terms, Privacy, Contact)';
+  }
+  const manageMatch = /^Manage (.+)$/.exec(feature.name);
+  if (manageMatch) {
+    const label = manageMatch[1] ?? feature.name;
+    const source =
+      entities.find((entity) => entityPascal(entity) === label) ?? label;
+    return `From entity ${source} (beyond MVP manage)`;
+  }
+  return `From scope: ${feature.name}`;
+}
+
+/**
  * Render §8 Core Features with MVP first, then Beyond MVP.
+ *
+ * @param features - Features to render (already filtered by selection when applicable).
+ * @returns Markdown for the Core Features section body.
  */
 export function renderCoreFeatures(features: FeatureSpec[]): string {
   const mvp = features.filter((f) => f.mvp);
@@ -178,6 +359,9 @@ export function renderCoreFeatures(features: FeatureSpec[]): string {
 
 /**
  * Render §9 Acceptance Criteria as bullet lists per feature.
+ *
+ * @param features - Features to render (already filtered by selection when applicable).
+ * @returns Markdown for the Acceptance Criteria section body.
  */
 export function renderAcceptanceCriteria(features: FeatureSpec[]): string {
   return features
@@ -190,6 +374,9 @@ export function renderAcceptanceCriteria(features: FeatureSpec[]): string {
 
 /**
  * Render §10 Test Plan with named cases per feature.
+ *
+ * @param features - Features to render (already filtered by selection when applicable).
+ * @returns Markdown for the Test Plan section body.
  */
 export function renderTestPlan(features: FeatureSpec[]): string {
   return features

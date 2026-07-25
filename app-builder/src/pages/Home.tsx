@@ -27,7 +27,7 @@ export function Home(): JSX.Element {
   const [view, setView] = useState<BuilderView>('chat');
   const [answers, setAnswers] = useState<WizardAnswers>(EMPTY_WIZARD_ANSWERS);
   const [prd, setPrd] = useState<Prd | null>(null);
-  const [wizardStartStep, setWizardStartStep] = useState<1 | 2 | 3>(1);
+  const [wizardStartStep, setWizardStartStep] = useState<1 | 2 | 3 | 4>(1);
   /**
    * Bumped only on intentional new-wizard-session events (chat send, template
    * continue, reset). Used as the Wizard React key so typing the prompt never

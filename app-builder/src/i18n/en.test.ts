@@ -30,7 +30,7 @@ describe('en locale bundle', () => {
 
   it('exposes wizard pillbox and template gallery copy', () => {
     expect(en.wizard.comingUp.length).toBeGreaterThan(2);
-    expect(en.wizard.stepTitles).toHaveLength(3);
+    expect(en.wizard.stepTitles).toHaveLength(4);
     expect(en.templates.sectionLabel.length).toBeGreaterThan(2);
     expect(en.templates.sectionCount(5)).toBe('5 templates');
     expect(en.templates.emptyTitle.length).toBeGreaterThan(2);
@@ -69,7 +69,7 @@ describe('en locale bundle', () => {
   });
 
   it('formats wizard interpolations without any', () => {
-    expect(en.wizard.stepOf(2)).toBe('Step 2 of 3');
+    expect(en.wizard.stepOf(2)).toBe('Step 2 of 4');
     expect(en.wizard.promptHint(8)).toContain('8');
     expect(en.wizard.errors.submitFailed(500)).toBe('Submit failed (500)');
     expect(en.wizard.errors.timeout).toBe('Request timed out');

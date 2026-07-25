@@ -86,7 +86,8 @@ describe('wizard readiness (canForgePrd)', () => {
     entities: '',
     dataStorage: 'simple' as const,
     hasRealtime: false,
-    integrations: ''
+    integrations: '',
+    selectedFeatureIds: null as string[] | null
   };
 
   it('is not ready to forge when app type is empty — the exact production 400', () => {
