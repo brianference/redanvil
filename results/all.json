@@ -5,8 +5,8 @@
     "finalScore": 100,
     "threshold": 90,
     "passed": true,
-    "evaluated": 45,
-    "total": 45,
+    "evaluated": 46,
+    "total": 46,
     "rules": [
       {
         "ruleId": "u-typing-strict",
@@ -97,6 +97,10 @@
         "passed": true
       },
       {
+        "ruleId": "u-conc-file-size",
+        "passed": true
+      },
+      {
         "ruleId": "hyg-no-duplication",
         "passed": true
       },
@@ -105,19 +109,11 @@
         "passed": true
       },
       {
+        "ruleId": "fe-a11y-contrast",
+        "passed": true
+      },
+      {
         "ruleId": "fe-light-dark",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-responsive-375",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-no-attribution",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-required-pages",
         "passed": true
       },
       {
@@ -125,11 +121,15 @@
         "passed": true
       },
       {
-        "ruleId": "fe-touch-targets",
+        "ruleId": "fe-required-pages",
         "passed": true
       },
       {
-        "ruleId": "fe-type-floor",
+        "ruleId": "fe-no-attribution",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-responsive-375",
         "passed": true
       },
       {
@@ -141,11 +141,19 @@
         "passed": true
       },
       {
-        "ruleId": "fe-a11y-contrast",
+        "ruleId": "fe-seo-og",
         "passed": true
       },
       {
         "ruleId": "fe-cross-link",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-touch-targets",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-type-floor",
         "passed": true
       },
       {
@@ -154,10 +162,6 @@
       },
       {
         "ruleId": "fe-safe-areas",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-seo-og",
         "passed": true
       },
       {
@@ -201,19 +205,20 @@
       }
     ],
     "deployUrl": null,
-    "finishedAt": "2026-07-24T06:37:42.611Z",
+    "finishedAt": "2026-07-25T02:27:04.826Z",
     "provenance": {
-      "commit": "815bc002afa5e4fc76c38d137c77845237429eca",
+      "commit": "cdbb541f205a84e7ff8e39e89e65a8d71ab00b44",
       "dirty": false,
-      "rubricHash": "45a53e66eedbb284d8289c7f2f35c986ad001b52ff4e06a0965bf33916cf2dc3",
-      "rubricRuleCount": 53,
+      "rubricHash": "b7fe851210e5db839bf7374c253850f9f1a0c13dae701c1e7dc55c578251b5e4",
+      "rubricRuleCount": 54,
       "node": "v22.19.0",
-      "verdictsHash": "66d0cc08c595b8b34443805f4f52407b3b1cb0eaf2fd8759e2993bb80cf22d31",
+      "verdictsHash": "51b880eef573596b260507550e68f81a2b408d4843030a37bcdb573c13a6ec47",
       "notApplicable": [
         "ci",
         "process"
       ],
-      "generatedAt": "2026-07-24T06:37:42.656Z"
+      "staleVerdicts": [],
+      "generatedAt": "2026-07-25T02:27:04.870Z"
     }
   }
 ]
