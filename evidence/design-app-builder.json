@@ -1,0 +1,56 @@
+{
+  "baseUrl": "https://redanvil.pages.dev/",
+  "checkedAt": "2026-07-25T06:53:03.972Z",
+  "findings": {
+    "fe-touch-targets": {
+      "ok": true,
+      "detail": "18 interactive elements at 375, 0 under 44px"
+    },
+    "fe-type-floor": {
+      "ok": true,
+      "detail": "minimum body font 16px at 375, 0 node(s) under 16px"
+    },
+    "fe-responsive-375": {
+      "ok": true,
+      "detail": "no horizontal overflow at 375"
+    },
+    "fe-safe-areas": {
+      "ok": true,
+      "detail": "header position sticky, padding-top 0px"
+    },
+    "fe-premium-nav": {
+      "ok": true,
+      "detail": "5 header link(s) [App Builder, Dashboard, Saved, About, Contact], aria-current on \"App Builder\""
+    },
+    "fe-noncolor-state": {
+      "ok": true,
+      "detail": "active nav item: weight 650, gradient background true, aria-current present true"
+    },
+    "fe-no-attribution": {
+      "ok": true,
+      "detail": "no attribution text"
+    },
+    "fe-cross-link": {
+      "ok": true,
+      "detail": "cross-site link present"
+    },
+    "fe-seo-og": {
+      "ok": true,
+      "detail": "title \"RedAnvil — Forge apps from a prompt\", description present, og:image present"
+    },
+    "fe-light-dark": {
+      "ok": true,
+      "detail": "dark -> light, stored \"light\", survived reload as light"
+    },
+    "fe-required-pages": {
+      "ok": true,
+      "detail": "/about 200 \"About RedAnvil\"; /contact 200 \"Contact\"; /terms 200 \"Terms and Conditions\"; /privacy 200 \"Privacy Policy\""
+    },
+    "fe-visual-review-recorded": {
+      "ok": true,
+      "detail": "0 console/page error(s) across the measured loads"
+    }
+  },
+  "consoleErrors": [],
+  "ok": true
+}

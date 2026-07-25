@@ -46,6 +46,80 @@ const CONTRAST_RULE_ID = 'fe-a11y-contrast';
 /** The rule whose pass must be backed by a real rendered-width measurement. */
 const WIDTH_RULE_ID = 'fe-desktop-width';
 
+/**
+ * Rules measured by `design_audit.mjs`.
+ *
+ * Third-audit finding: 15 rules had method `visual` and only three were backed
+ * by a machine report. The other twelve rested on a hand-typed note — even
+ * though most were genuinely being measured in throwaway scripts whose numbers
+ * were then retyped into a sentence. The measurement existed; the evidence
+ * chain did not. A passing verdict for any of these must now cite a report in
+ * which that specific rule is `ok`.
+ */
+const DESIGN_AUDIT_RULE_IDS: ReadonlySet<string> = new Set([
+  'fe-touch-targets',
+  'fe-type-floor',
+  'fe-responsive-375',
+  'fe-safe-areas',
+  'fe-premium-nav',
+  'fe-noncolor-state',
+  'fe-no-attribution',
+  'fe-cross-link',
+  'fe-seo-og',
+  'fe-light-dark',
+  'fe-required-pages',
+  'fe-visual-review-recorded'
+]);
+
+/** Shape `design_audit.mjs` writes. */
+const DesignAuditSchema = z.object({
+  baseUrl: z.string().min(1),
+  checkedAt: z.string().min(1),
+  findings: z.record(z.string(), z.object({ ok: z.boolean(), detail: z.string() })),
+  ok: z.boolean()
+});
+
+/**
+ * Check that a passing verdict for a design-audit rule cites a report in which
+ * THAT rule was measured and passed.
+ *
+ * @param verdict - The verdict being validated.
+ * @param repoRoot - Root that evidence paths resolve against.
+ * @returns Problems found; empty when the evidence supports the pass.
+ */
+function designAuditIssues(verdict: Verdict, repoRoot: string): string[] {
+  const reports = verdict.evidence.filter((p) => /\.json$/i.test(p));
+  for (const path of reports) {
+    const full = join(repoRoot, path);
+    if (!existsSync(full)) continue;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(readFileSync(full, 'utf8'));
+    } catch {
+      continue;
+    }
+    const report = DesignAuditSchema.safeParse(parsed);
+    if (!report.success) continue;
+    const finding = report.data.findings[verdict.ruleId];
+    if (finding === undefined) {
+      return [
+        `${verdict.ruleId}: ${path} is a design audit but does not measure this rule`
+      ];
+    }
+    if (!finding.ok) {
+      return [
+        `${verdict.ruleId}: ${path} records a FAILING measurement (${finding.detail}) — ` +
+          `that is not a pass`
+      ];
+    }
+    return [];
+  }
+  return [
+    `${verdict.ruleId}: a passing verdict must cite a report from ` +
+      `.github/scripts/design_audit.mjs measuring this rule, not only screenshots`
+  ];
+}
+
 /** Shape `desktop_width.mjs` writes. Only the fields the gate reads are modelled. */
 const WidthReportSchema = z.object({
   baseUrl: z.string().min(1),
@@ -314,6 +388,9 @@ export function parseVerdicts(
     // change was carried forward onto a commit where the flow was broken, and
     // the freshness check passed because the FILE had not moved. A cited report
     // must have been produced at or after the commit it vouches for.
+    if (v.passed && DESIGN_AUDIT_RULE_IDS.has(v.ruleId)) {
+      issues.push(...designAuditIssues(v, repoRoot));
+    }
     if (v.passed && freshness !== undefined) {
       issues.push(...staleReportIssues(v, repoRoot));
     }
