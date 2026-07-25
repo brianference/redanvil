@@ -77,7 +77,7 @@
     "ruleId": "fe-product-completeness",
     "passed": true,
     "method": "visual",
-    "evidence": ["evidence/e2e-app-builder.zip"],
+    "evidence": ["evidence/e2e-app-builder.json"],
     "note": "e2e_smoke.mjs drove chat to wizard to Forge PRD on production by role with web-first assertions, waiting on the real /api/submit response: submit returned 200 and the PRD rendered, exit 0. /api/health also returns 200, so the Worker runtime boots rather than only static assets serving.",
     "reviewedAt": "2026-07-25T02:23:42.273Z",
     "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"

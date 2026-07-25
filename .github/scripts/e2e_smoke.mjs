@@ -16,6 +16,7 @@
  * Exit 0 = flow works end to end, 1 = a step failed, 2 = harness/usage error.
  */
 import { createRequire } from 'node:module';
+import { writeFileSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const args = process.argv.slice(2);
@@ -26,6 +27,15 @@ if (!baseUrl) {
 }
 const traceIdx = args.indexOf('--trace');
 const tracePath = traceIdx === -1 ? null : args[traceIdx + 1];
+// A committable summary. The trace is a .zip, which is gitignored here and is a
+// forbidden binary under hyg-no-binaries, so it can never serve as verdict
+// evidence in CI: the gate checks that every evidence path exists, and the zip
+// only ever existed on the machine that ran the smoke. This writes the same
+// shape the axe audit does, so fe-product-completeness can cite a real artifact.
+/** Result summary, written whether the flow passed or failed. */
+let summary = null;
+const outIdx = args.indexOf('--out');
+const outPath = outIdx === -1 ? null : args[outIdx + 1];
 
 // A silent exit-0 skip when Playwright is absent means a broken CI install turns
 // the regression guard into a no-op that reports success. Skipping is only OK
@@ -109,14 +119,32 @@ try {
 
   // 6. Zero console errors across the whole flow.
   console.log(`e2e smoke PASS: ${baseUrl} — submit ${submit.status()}, PRD rendered`);
+  summary = {
+    url: baseUrl,
+    checkedAt: new Date().toISOString(),
+    submitStatus: submit.status(),
+    prdRendered: true,
+    ok: true
+  };
   process.exitCode = 0;
 } catch (err) {
   console.error(`e2e smoke FAIL: ${err instanceof Error ? err.message : err}`);
+  summary = {
+    url: baseUrl,
+    checkedAt: new Date().toISOString(),
+    submitStatus: null,
+    prdRendered: false,
+    ok: false,
+    error: err instanceof Error ? err.message : String(err)
+  };
   process.exitCode = 1;
 } finally {
   // Set exitCode above and let finally run — a process.exit() in the try block
   // terminates before this await, so the trace (the whole point of capturing it)
   // never gets written on success.
   if (tracePath) await context.tracing.stop({ path: tracePath });
+  // Written on failure too: a summary that only appears when the flow passed is
+  // a summary nobody can use to see that it stopped passing.
+  if (outPath) writeFileSync(outPath, `${JSON.stringify(summary, null, 2)}\n`);
   await browser.close();
 }
