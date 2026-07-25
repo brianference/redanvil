@@ -36,6 +36,11 @@ export const en = {
     sidebarLabel: 'Navigate'
   },
   pages: {
+    notFound: {
+      title: 'Page not found',
+      body: 'That address does not match a page on RedAnvil. It may have moved, or the link may be incomplete.',
+      home: 'Back to home'
+    },
     home: {
       title: 'What app should we forge?',
       subtitle:

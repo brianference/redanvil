@@ -6,6 +6,7 @@ import { Privacy } from './pages/Privacy';
 import { Contact } from './pages/Contact';
 import { Saved } from './pages/Saved';
 import { SavedPrd } from './pages/SavedPrd';
+import { NotFound } from './pages/NotFound';
 
 /** App router: composes the required pages. */
 export function App(): JSX.Element {
@@ -19,6 +20,8 @@ export function App(): JSX.Element {
         <Route path="/contact" element={<Contact />} />
         <Route path="/saved" element={<Saved />} />
         <Route path="/prd/:id" element={<SavedPrd />} />
+        {/* Catch-all: an unmatched route used to render an empty document. */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,22 +1,22 @@
 {
-  "baseUrl": "https://redanvil.pages.dev/",
-  "checkedAt": "2026-07-25T16:47:54.964Z",
+  "baseUrl": "https://redanvil.pages.dev",
+  "checkedAt": "2026-07-25T17:31:06.338Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
-      "detail": "6 route(s) at 375; every interactive element >= 44px"
+      "detail": "7 route(s) at 375; every interactive element >= 44px"
     },
     "fe-type-floor": {
       "ok": true,
-      "detail": "6 route(s) at 375, smallest body font 16px; nothing under 16px"
+      "detail": "7 route(s) at 375, smallest body font 16px; nothing under 16px"
     },
     "fe-responsive-375": {
       "ok": true,
-      "detail": "no horizontal overflow at 375 on 6 route(s)"
+      "detail": "no horizontal overflow at 375 on 7 route(s)"
     },
     "fe-safe-areas": {
       "ok": true,
-      "detail": "header sticky on all 6 route(s), padding-top 0px"
+      "detail": "header sticky on all 7 route(s), padding-top 0px"
     },
     "fe-premium-nav": {
       "ok": true,
@@ -44,7 +44,7 @@
     },
     "fe-required-pages": {
       "ok": true,
-      "detail": "/about 200 \"About RedAnvil\"; /contact 200 \"Contact\"; /terms 200 \"Terms and Conditions\"; /privacy 200 \"Privacy Policy\"; /saved 200 \"Saved builds\""
+      "detail": "/about 200 \"About RedAnvil\"; /contact 200 \"Contact\"; /terms 200 \"Terms and Conditions\"; /privacy 200 \"Privacy Policy\"; /saved 200 \"Saved builds\"; /no-such-page 200 \"Page not found\""
     },
     "fe-visual-review-recorded": {
       "ok": true,

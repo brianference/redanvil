@@ -9,3 +9,13 @@ export const GITHUB_URL = 'https://github.com/brianference/redanvil';
 
 /** Default logo lockup height in the sticky header (px). */
 export const LOGO_HEIGHT = 112;
+
+/**
+ * Footer lockup height, px.
+ *
+ * The lockup is a 440x149 raster with the tagline baked into the pixels, so it
+ * does not degrade gracefully: at 48px the tagline rendered about five pixels
+ * tall and read as a grey smear, which a measured check cannot see and a visual
+ * review can. 80px keeps it legible without competing with the 112px header.
+ */
+export const FOOTER_LOGO_HEIGHT = 80;

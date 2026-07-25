@@ -5,6 +5,7 @@ import { Terms } from './pages/Terms';
 import { Privacy } from './pages/Privacy';
 import { Contact } from './pages/Contact';
 import { RunDetail } from './pages/RunDetail';
+import { NotFound } from './pages/NotFound';
 
 /** App router: composes the required pages plus run detail. */
 export function App(): JSX.Element {
@@ -17,6 +18,8 @@ export function App(): JSX.Element {
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/contact" element={<Contact />} />
+        {/* Catch-all: an unmatched route used to render an empty document. */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

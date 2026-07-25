@@ -2,6 +2,7 @@ import { en } from '../../i18n/en';
 import { theme } from '../../theme';
 import { DASHBOARD_URL, GITHUB_URL } from './constants';
 import { Logo } from './Logo';
+import { FOOTER_LOGO_HEIGHT } from './constants';
 import { shellContainer } from './styles';
 
 interface FooterColProps {
@@ -74,7 +75,7 @@ export function Footer(): JSX.Element {
         }}
       >
         <div className="ra-footer-brand">
-          <Logo height={48} />
+          <Logo height={FOOTER_LOGO_HEIGHT} />
           <p
             style={{
               color: theme.color.muted,

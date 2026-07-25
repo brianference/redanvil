@@ -9,3 +9,22 @@ export const GITHUB_URL = 'https://github.com/brianference/redanvil';
 
 /** Default logo lockup height in the sticky header (px). */
 export const LOGO_HEIGHT = 112;
+
+/**
+ * Minimum edge of a standalone tap target, px (WCAG 2.5.8 AA).
+ *
+ * Only for targets that are NOT a link inside a sentence — 2.5.8 exempts those,
+ * and enforcing 44px on inline prose links produced a confident false FAIL once
+ * already.
+ */
+export const TOUCH_TARGET_MIN_PX = 44;
+
+/**
+ * Footer lockup height, px.
+ *
+ * The lockup is a 440x149 raster with the tagline baked into the pixels, so it
+ * does not degrade gracefully: at 48px the tagline rendered about five pixels
+ * tall and read as a grey smear, which a measured check cannot see and a visual
+ * review can. 80px keeps it legible without competing with the 112px header.
+ */
+export const FOOTER_LOGO_HEIGHT = 80;

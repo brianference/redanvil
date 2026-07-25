@@ -1,6 +1,6 @@
 {
-  "baseUrl": "https://redanvil-dashboard.pages.dev/",
-  "checkedAt": "2026-07-25T07:06:58.835Z",
+  "baseUrl": "https://redanvil-dashboard.pages.dev",
+  "checkedAt": "2026-07-25T17:31:43.786Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -43,6 +43,13 @@
       "ok": true
     },
     {
+      "route": "/saved",
+      "width": 1440,
+      "status": 200,
+      "mainPct": 93,
+      "ok": true
+    },
+    {
       "route": "/",
       "width": 1920,
       "status": 200,
@@ -72,6 +79,13 @@
     },
     {
       "route": "/privacy",
+      "width": 1920,
+      "status": 200,
+      "mainPct": 93,
+      "ok": true
+    },
+    {
+      "route": "/saved",
       "width": 1920,
       "status": 200,
       "mainPct": 93,
