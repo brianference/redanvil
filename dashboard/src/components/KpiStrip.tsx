@@ -34,6 +34,11 @@ const valueStyle: CSSProperties = {
   fontVariantNumeric: 'tabular-nums'
 };
 
+// A KPI label is two or three words and it is the only thing telling you what
+// the number means, so it wraps rather than truncating. Three cards across a
+// 375px viewport rendered "TOTAL R…" and "AVG SCO…", which no measured check
+// caught — fe-responsive-375 tests horizontal overflow, and an ellipsis is not
+// overflow. It took looking at the screenshot.
 const labelStyle: CSSProperties = {
   fontSize: theme.type.scale[1],
   fontWeight: 600,
@@ -41,9 +46,7 @@ const labelStyle: CSSProperties = {
   marginTop: 3,
   textTransform: 'uppercase',
   letterSpacing: '0.04em',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis'
+  overflowWrap: 'anywhere'
 };
 
 /**

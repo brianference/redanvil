@@ -85,11 +85,14 @@ const metaStyle: CSSProperties = {
   flexWrap: 'wrap'
 };
 
+// "100 · 46/46 rules · 1 iteration" is the run's whole summary, and at 375 it
+// was truncating to "1 iter…" — the iteration count, which is the part you
+// actually scan for, cut in half. It wraps now. The title above still
+// truncates, deliberately: a slug can be arbitrarily long and it is a link
+// whose full text is one tap away.
 const metaTextStyle: CSSProperties = {
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  minWidth: 0
+  minWidth: 0,
+  overflowWrap: 'anywhere'
 };
 
 const actionsStyle: CSSProperties = {
