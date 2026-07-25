@@ -3,15 +3,16 @@ import {
   useEffect,
   useRef,
   useState,
-  type CSSProperties,
   type ReactNode
 } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { en } from '../i18n/en';
+import { useLocation } from 'react-router-dom';
 import { useDrawerA11y } from '../lib/useDrawerA11y';
 import { theme } from '../theme';
 import { Breadcrumbs } from './Breadcrumbs';
-import { ThemeToggle } from './ThemeToggle';
+import { Footer } from './shell/Footer';
+import { Header } from './shell/Header';
+import { MobileDrawer } from './shell/MobileDrawer';
+import { shellContainer, shellCss, shellStyle } from './shell/styles';
 
 export interface PageProps {
   /** Page title, rendered as the single h1. */
@@ -24,151 +25,12 @@ export interface PageProps {
   children: ReactNode;
 }
 
-const APP_URL = 'https://redanvil.pages.dev';
-const DASHBOARD_URL = 'https://redanvil-dashboard.pages.dev';
-const GITHUB_URL = 'https://github.com/brianference/redanvil';
-
-const LOGO_HEIGHT = 56;
-
-/** Primary nav item used in the header / mobile drawer. */
-interface NavItem {
-  key: string;
-  label: string;
-  /** Internal SPA path, or null when the item is external. */
-  to: string | null;
-  /** External absolute URL when `to` is null. */
-  href?: string;
-  /** Open in a new tab (external only). */
-  external?: boolean;
-}
-
-const shell: CSSProperties = {
-  minHeight: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  background: `radial-gradient(1200px 600px at 50% -200px, ${theme.color.surface}, ${theme.color.bg})`,
-  color: theme.color.text,
-  fontFamily: theme.type.family
-};
-
-const bar: CSSProperties = {
-  position: 'sticky',
-  top: 0,
-  zIndex: 30,
-  backdropFilter: 'blur(10px)',
-  WebkitBackdropFilter: 'blur(10px)',
-  background: `color-mix(in srgb, ${theme.color.surface} 80%, transparent)`,
-  borderBottom: `1px solid ${theme.color.border}`,
-  paddingTop: 'env(safe-area-inset-top, 0px)'
-};
-
-/** Shared max-width column for main and footer so left/right edges align. */
-const shellContainer: CSSProperties = {
-  width: '100%',
-  maxWidth: theme.layout.contentMaxWidth,
-  margin: '0 auto',
-  padding: `0 ${theme.space.lg}px`,
-  boxSizing: 'border-box'
-};
-
-// Note: no `display` here on purpose — the `.ra-menu-btn` class owns
-// visibility (hidden on desktop, inline-flex below 1024px).
-const iconButton: CSSProperties = {
-  alignItems: 'center',
-  justifyContent: 'center',
-  minWidth: theme.touch,
-  minHeight: theme.touch,
-  padding: theme.space.sm,
-  margin: 0,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.sm,
-  background: theme.color.surface,
-  color: theme.color.text,
-  cursor: 'pointer',
-  fontSize: theme.type.scale[2],
-  lineHeight: 1,
-  fontFamily: theme.type.family
-};
-
 /**
- * Site logo: single transparent lockup for both themes (no theme-swap, no grey box).
+ * Shared page shell: sticky header with primary nav, aligned main/footer, drawer.
  */
-function Logo({ height = LOGO_HEIGHT }: { height?: number }): JSX.Element {
-  return (
-    <a
-      href={APP_URL}
-      aria-label={en.app.logoAlt}
-      style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}
-    >
-      {/* Two transparent lockups, one per theme. The single-image version was
-          illegible in dark: the wordmark measured ~2:1 against the header. CSS
-          classes own visibility — never an inline `display`, which beats the
-          class rule and silently breaks the swap.
-
-          Both images are decorative and the LINK carries the accessible name.
-          Naming them individually left the anchor nameless in dark, because the
-          only visible image there was aria-hidden — axe flagged it as a serious
-          link-name violation on both sites. */}
-      <img
-        className="ra-logo-light"
-        src="/logo-lockup.png"
-        alt=""
-        height={height}
-        style={{ height, width: 'auto', maxWidth: 'min(58vw, 260px)', objectFit: 'contain' }}
-      />
-      <img
-        className="ra-logo-dark"
-        src="/logo-lockup-dark.png"
-        alt=""
-        aria-hidden="true"
-        height={height}
-        style={{ height, width: 'auto', maxWidth: 'min(58vw, 260px)', objectFit: 'contain' }}
-      />
-    </a>
-  );
-}
-
-/**
- * Whether a primary nav item is the current page (for active styles).
- */
-function isNavActive(pathname: string, key: string): boolean {
-  if (key === 'builder') return pathname === '/';
-  if (key === 'saved') return pathname === '/saved' || pathname.startsWith('/prd/');
-  if (key === 'about') return pathname === '/about';
-  if (key === 'contact') return pathname === '/contact';
-  return false;
-}
-
-/**
- * Desktop header primary links (brand mark stays separate). GitHub lives in the
- * mobile overflow drawer and footer so the top bar stays scannable.
- */
-function headerNavItems(): NavItem[] {
-  return [
-    { key: 'builder', label: en.app.navBuilder, to: '/' },
-    { key: 'dashboard', label: en.app.navDashboard, to: null, href: DASHBOARD_URL },
-    { key: 'saved', label: en.app.navSaved, to: '/saved' },
-    { key: 'about', label: en.app.navAbout, to: '/about' },
-    { key: 'contact', label: en.app.navContact, to: '/contact' }
-  ];
-}
-
-/**
- * Mobile drawer list: primary routes plus secondary overflow (GitHub).
- */
-function drawerNavItems(): NavItem[] {
-  return [
-    ...headerNavItems(),
-    { key: 'github', label: en.app.navGitHub, to: null, href: GITHUB_URL, external: true }
-  ];
-}
-
-/** Shared page shell: sticky header with primary nav, aligned main/footer, drawer. */
 export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.Element {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const topNavItems = headerNavItems();
-  const drawerItems = drawerNavItems();
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
@@ -204,267 +66,25 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
     onClose: closeMenu
   });
 
-  /**
-   * Render one nav link (internal Link or external anchor).
-   */
-  function renderNavLink(item: NavItem, onNavigate?: () => void): JSX.Element {
-    const active = isNavActive(location.pathname, item.key);
-    const className = `ra-nav-link${active ? ' is-active' : ''}`;
-    if (item.to !== null) {
-      return (
-        <Link
-          key={item.key}
-          to={item.to}
-          className={className}
-          aria-current={active ? 'page' : undefined}
-          onClick={onNavigate}
-        >
-          {item.label}
-        </Link>
-      );
-    }
-    return (
-      <a
-        key={item.key}
-        href={item.href}
-        className={className}
-        target={item.external === true ? '_blank' : undefined}
-        rel={item.external === true ? 'noreferrer' : undefined}
-        onClick={onNavigate}
-      >
-        {item.label}
-      </a>
-    );
-  }
-
   return (
-    <div className="ra-shell" style={shell}>
-      <style>{`
-        * { box-sizing: border-box; }
-        body { margin: 0; overflow-x: hidden; font-size: 16px; }
+    <div className="ra-shell" style={shellStyle}>
+      <style>{shellCss()}</style>
 
-        .ra-nav-link {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: ${theme.touch}px;
-          min-width: ${theme.touch}px;
-          padding: ${theme.space.sm}px ${theme.space.md}px;
-          border-radius: ${theme.radius.md}px;
-          color: ${theme.color.muted};
-          text-decoration: none;
-          font-size: ${theme.type.scale[2]}px;
-          font-weight: 500;
-          font-family: ${theme.type.family};
-          border: 1px solid transparent;
-          transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-          box-sizing: border-box;
-          white-space: nowrap;
-        }
-        .ra-nav-link:hover {
-          color: ${theme.color.text};
-          background: color-mix(in srgb, ${theme.color.surfaceElevated} 80%, transparent);
-        }
-        .ra-nav-link:focus-visible {
-          outline: 2px solid ${theme.color.accent};
-          outline-offset: 2px;
-        }
-        .ra-nav-link.is-active {
-          color: ${theme.color.accentFg};
-          font-weight: 650;
-          background: ${theme.color.accentSoft};
-          border-color: color-mix(in srgb, ${theme.color.accent} 35%, ${theme.color.border});
-        }
-        .ra-nav-link.is-active:hover {
-          color: ${theme.color.accentFg};
-        }
-
-        /* Desktop: primary links live in the sticky header (fe-premium-nav). */
-        .ra-top-nav {
-          display: none;
-        }
-        .ra-menu-btn { display: none; }
-        .ra-drawer-backdrop { display: none; }
-        .ra-drawer { display: none; }
-
-        .ra-body {
-          display: flex;
-          flex: 1;
-          min-width: 0;
-          width: 100%;
-          align-items: stretch;
-        }
-        .ra-main-col {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-        }
-
-        @media (min-width: 1024px) {
-          .ra-top-nav {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            flex: 1;
-            min-width: 0;
-            gap: ${theme.space.xs}px;
-            margin: 0 ${theme.space.md}px;
-          }
-          .ra-menu-btn { display: none !important; }
-        }
-
-        @media (max-width: 1023px) {
-          .ra-top-nav { display: none !important; }
-          .ra-menu-btn { display: inline-flex !important; }
-          .ra-drawer-backdrop[data-open="true"] {
-            display: block !important;
-            position: fixed;
-            inset: 0;
-            z-index: 40;
-            background: color-mix(in srgb, ${theme.color.text} 55%, transparent);
-          }
-          .ra-drawer[data-open="true"] {
-            display: flex !important;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            z-index: 50;
-            width: min(18rem, 86vw);
-            padding: calc(env(safe-area-inset-top, 0px) + ${theme.space.md}px) ${theme.space.md}px env(safe-area-inset-bottom, 0px);
-            background: ${theme.color.surface};
-            border-right: 1px solid ${theme.color.border};
-            box-shadow: 8px 0 32px color-mix(in srgb, ${theme.color.text} 25%, transparent);
-            gap: ${theme.space.sm}px;
-            overflow-y: auto;
-          }
-          .ra-drawer nav {
-            display: flex;
-            flex-direction: column;
-            gap: ${theme.space.xs}px;
-          }
-          .ra-drawer .ra-nav-link {
-            width: 100%;
-            justify-content: flex-start;
-          }
-          .ra-drawer-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: ${theme.space.sm}px;
-            margin-bottom: ${theme.space.sm}px;
-            min-height: ${theme.touch}px;
-          }
-          /* Hide header chrome while drawer is open — only the drawer close remains. */
-          .ra-header-controls[data-drawer-open="true"] {
-            visibility: hidden;
-            pointer-events: none;
-          }
-        }
-
-        /* Footer: 2×2 at tablet so Legal is not orphaned under a gap. */
-        .ra-footer-grid {
-          display: grid;
-          gap: ${theme.space.lg}px;
-          grid-template-columns: 1fr;
-        }
-        @media (min-width: 768px) and (max-width: 1023px) {
-          .ra-footer-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-        @media (min-width: 1024px) {
-          .ra-footer-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-          }
-        }
-
-        @media (max-width: 560px) {
-          .ra-h1 { font-size: 1.9rem !important; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .ra-nav-link { transition: none; }
-        }
-      `}</style>
-
-      <header ref={headerRef} style={bar}>
-        <div
-          style={{
-            width: '100%',
-            maxWidth: theme.layout.contentMaxWidth,
-            margin: '0 auto',
-            padding: `0 ${theme.space.md}px`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: theme.space.sm,
-            minHeight: LOGO_HEIGHT + theme.space.md,
-            boxSizing: 'border-box'
-          }}
-        >
-          <Logo />
-          <nav className="ra-top-nav" aria-label={en.app.primaryNav}>
-            {topNavItems.map((item) => renderNavLink(item))}
-          </nav>
-          <div
-            className="ra-header-controls"
-            data-drawer-open={menuOpen ? 'true' : 'false'}
-            style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, flexShrink: 0 }}
-          >
-            <ThemeToggle />
-            <button
-              ref={menuBtnRef}
-              type="button"
-              className="ra-menu-btn"
-              style={iconButton}
-              aria-expanded={menuOpen}
-              aria-controls="ra-side-drawer"
-              aria-label={menuOpen ? en.app.menuClose : en.app.menuOpen}
-              onClick={() => {
-                setMenuOpen((open) => !open);
-              }}
-            >
-              <span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div
-        className="ra-drawer-backdrop"
-        data-open={menuOpen ? 'true' : 'false'}
-        aria-hidden={!menuOpen}
-        onClick={closeMenu}
+      <Header
+        menuOpen={menuOpen}
+        headerRef={headerRef}
+        menuBtnRef={menuBtnRef}
+        onToggleMenu={() => {
+          setMenuOpen((open) => !open);
+        }}
       />
-      <aside
-        ref={drawerRef}
-        id="ra-side-drawer"
-        className="ra-drawer"
-        data-open={menuOpen ? 'true' : 'false'}
-        aria-label={en.app.primaryNav}
-        aria-hidden={!menuOpen}
-        tabIndex={-1}
-      >
-        <div className="ra-drawer-head">
-          <Logo height={48} />
-          <button
-            ref={closeBtnRef}
-            type="button"
-            style={iconButton}
-            aria-label={en.app.menuClose}
-            onClick={closeMenu}
-          >
-            <span aria-hidden="true">✕</span>
-          </button>
-        </div>
-        <nav aria-label={en.app.primaryNav}>
-          {drawerItems.map((item) => renderNavLink(item, closeMenu))}
-        </nav>
-      </aside>
+
+      <MobileDrawer
+        open={menuOpen}
+        drawerRef={drawerRef}
+        closeBtnRef={closeBtnRef}
+        onClose={closeMenu}
+      />
 
       <div ref={bodyRef} className="ra-body">
         <div className="ra-main-col">
@@ -497,135 +117,9 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             <div style={{ marginTop: theme.space.xl }}>{children}</div>
           </main>
 
-          <footer
-            style={{
-              borderTop: `1px solid ${theme.color.border}`,
-              background: `color-mix(in srgb, ${theme.color.surface} 50%, transparent)`,
-              marginTop: theme.space.xl
-            }}
-          >
-            <div
-              className="ra-footer-grid"
-              style={{
-                ...shellContainer,
-                padding: `${theme.space.xl}px ${theme.space.lg}px`
-              }}
-            >
-              <div>
-                <Logo height={48} />
-                <p
-                  style={{
-                    color: theme.color.muted,
-                    fontSize: theme.type.scale[2],
-                    marginTop: theme.space.sm,
-                    maxWidth: '18rem',
-                    lineHeight: 1.5
-                  }}
-                >
-                  {en.app.footerTagline}
-                </p>
-              </div>
-              <FooterCol
-                heading={en.app.footerProduct}
-                links={[
-                  { label: en.app.footerAppBuilder, href: '/' },
-                  { label: en.app.footerDashboard, href: DASHBOARD_URL },
-                  { label: en.app.navSaved, href: '/saved' },
-                  { label: en.app.footerGitHub, href: GITHUB_URL }
-                ]}
-              />
-              <FooterCol
-                heading={en.app.footerCompany}
-                links={[
-                  { label: en.app.footerAbout, href: '/about' },
-                  { label: en.app.footerContact, href: '/contact' }
-                ]}
-              />
-              <FooterCol
-                heading={en.app.footerLegal}
-                links={[
-                  { label: en.app.footerTerms, href: '/terms' },
-                  { label: en.app.footerPrivacy, href: '/privacy' }
-                ]}
-              />
-            </div>
-            <div
-              style={{
-                borderTop: `1px solid ${theme.color.border}`,
-                paddingBottom: 'env(safe-area-inset-bottom, 0px)'
-              }}
-            >
-              <div
-                style={{
-                  ...shellContainer,
-                  padding: `${theme.space.md}px ${theme.space.lg}px`,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: theme.space.sm
-                }}
-              >
-                <small style={{ color: theme.color.muted, fontSize: theme.type.scale[1] }}>
-                  {en.app.footerCopyright(new Date().getFullYear())}
-                </small>
-                <small style={{ color: theme.color.muted, fontSize: theme.type.scale[1] }}>
-                  {en.app.footerQuality}
-                </small>
-              </div>
-            </div>
-          </footer>
+          <Footer />
         </div>
       </div>
-    </div>
-  );
-}
-
-interface FooterColProps {
-  heading: string;
-  links: { label: string; href: string }[];
-}
-
-/** One labeled column of footer links (≥44px targets, ≥8px gap). */
-function FooterCol({ heading, links }: FooterColProps): JSX.Element {
-  return (
-    <div>
-      <p
-        style={{
-          color: theme.color.text,
-          fontSize: theme.type.scale[2],
-          fontWeight: 600,
-          margin: `0 0 ${theme.space.sm}px`
-        }}
-      >
-        {heading}
-      </p>
-      <ul
-        style={{
-          listStyle: 'none',
-          padding: 0,
-          margin: 0,
-          display: 'grid',
-          gap: theme.space.sm
-        }}
-      >
-        {links.map((l) => (
-          <li key={l.label}>
-            <a
-              href={l.href}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                minHeight: theme.touch,
-                color: theme.color.muted,
-                textDecoration: 'none',
-                fontSize: theme.type.scale[2]
-              }}
-            >
-              {l.label}
-            </a>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
