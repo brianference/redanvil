@@ -1,0 +1,159 @@
+import type { DataStorage } from '../../job';
+import type { FeatureSpec, SliceSpec } from '../types';
+import { PRD_THRESHOLD, REQUIRED_PAGES } from '../types';
+import { entityPascal, entityTable } from '../naming';
+
+/**
+ * Build vertical slices: Slice 0 walking skeleton, then one slice per MVP feature, then non-MVP.
+ */
+export function buildSlices(opts: {
+  slug: string;
+  entities: string[];
+  hasAuth: boolean;
+  features: FeatureSpec[];
+  dataStorage: DataStorage;
+}): SliceSpec[] {
+  const { slug, entities, hasAuth, features, dataStorage } = opts;
+  const primary = entities[0] ? entityPascal(entities[0]) : 'Item';
+  const primaryTable = entities[0] ? entityTable(entities[0]) : 'items';
+  const entityLabel =
+    entities.length > 0 ? entities.map((e) => entityPascal(e)).join(', ') : 'Item';
+
+  const slices: SliceSpec[] = [
+    {
+      index: 0,
+      name: 'Walking skeleton',
+      mvp: true,
+      db:
+        dataStorage === 'none'
+          ? 'No domain migration yet (storage = none); wrangler.toml D1 binding present if auth later needs it'
+          : `migrations/0001_init.sql with DDL for ${entityLabel}${hasAuth ? ' + users/sessions' : ''}; wrangler.toml D1 binding DB`,
+      api: 'GET /api/health → `{ "status": "ok" }` (functions/api/health.ts)',
+      ui: 'Home page shell (Layout + theme tokens + i18n stub) loads at `/`',
+      tests: 'unit: health handler returns ok; e2e: home loads 200',
+      verify: `npx tsc --noEmit && npx vitest run && npm run build; curl -sf http://127.0.0.1:<port>/api/health → {"status":"ok"}`,
+      dependsOn: 'None (first slice)'
+    }
+  ];
+
+  let next = 1;
+  for (const feature of features) {
+    const isPrimaryBrowse = feature.id === 'F1';
+    const isPrimaryDetail = feature.id === 'F2';
+    const isAccess = feature.id === 'F3';
+    const isPrimaryManage = feature.id === 'F4';
+    const isPages = feature.name.startsWith('Required pages');
+
+    let db = 'No new migration (tables from Slice 0)';
+    let api = 'No new endpoint';
+    let ui = 'No new screen';
+    let tests = feature.tests.unit
+      .concat(feature.tests.integration, feature.tests.e2e)
+      .map((c) => `\`${c}\``)
+      .join(', ');
+
+    if (isPrimaryBrowse) {
+      db = `Use \`${primaryTable}\` table from Slice 0; seed rows for list tests`;
+      api = `GET /api/${primaryTable} (+ optional ?q=); contract in §7`;
+      ui = `${primary}ListPage at \`/${primaryTable}\` with loading / empty / error states`;
+    } else if (isPrimaryDetail) {
+      db = `Read one row from \`${primaryTable}\``;
+      api = `GET /api/${primaryTable}/:id`;
+      ui = `${primary}DetailPage at \`/${primaryTable}/:id\` with back link`;
+    } else if (isAccess && hasAuth) {
+      db = 'users + sessions tables (from Slice 0 DDL)';
+      api = 'POST /api/auth/register, /api/auth/sign-in, /api/auth/sign-out';
+      ui = 'Register + Sign-in pages; session-aware nav';
+    } else if (isAccess && !hasAuth) {
+      db = 'No auth tables';
+      api = 'Confirm domain routes have no auth middleware';
+      ui = 'No login UI; public nav only';
+    } else if (isPrimaryManage) {
+      db = `INSERT/UPDATE/DELETE on \`${primaryTable}\``;
+      api = `POST /api/${primaryTable} (+ update/delete as specified); Zod ${primary}CreateSchema`;
+      ui = `Create/edit form + confirm dialog before delete on ${primary} manage UI`;
+    } else if (isPages) {
+      db = 'No domain change';
+      api = 'Static routes only';
+      ui = `${REQUIRED_PAGES.join(', ')} pages + sitemap.xml + robots.txt + per-route SEO`;
+    } else {
+      // Secondary entity manage
+      const match = feature.name.match(/^Manage (.+)$/);
+      const pascal = match?.[1] ?? feature.name;
+      const table = entityTable(pascal);
+      db = `Use \`${table}\` table from Slice 0`;
+      api = `GET/POST /api/${table}, GET /api/${table}/:id`;
+      ui = `${pascal} list/detail/manage screens`;
+    }
+
+    const verifyCmd = isPages
+      ? 'test -f public/sitemap.xml && test -f public/robots.txt && npx playwright test tests/required-pages.spec.ts'
+      : isAccess && hasAuth
+        ? 'npx vitest run functions/api/auth.test.ts && npx playwright test tests/auth.spec.ts'
+        : isAccess && !hasAuth
+          ? 'npx playwright test tests/smoke-public.spec.ts'
+          : isPrimaryBrowse
+            ? `npx vitest run functions/api/${primaryTable}.test.ts && npx playwright test tests/${primaryTable}-list.spec.ts`
+            : isPrimaryDetail
+              ? `npx playwright test tests/${primaryTable}-detail.spec.ts`
+              : isPrimaryManage
+                ? `npx vitest run src/lib/schemas.test.ts && npx playwright test tests/${primaryTable}-crud.spec.ts`
+                : `npx vitest run && npx playwright test tests/${entityTable(feature.name.replace(/^Manage /, ''))}-crud.spec.ts`;
+
+    slices.push({
+      index: next,
+      name: feature.name,
+      mvp: feature.mvp,
+      db,
+      api,
+      ui,
+      tests,
+      verify: verifyCmd,
+      dependsOn: `Slice ${next - 1}`
+    });
+    next += 1;
+  }
+
+  // Final quality slice after features
+  slices.push({
+    index: next,
+    name: 'A11y, visual, and full gate',
+    mvp: false,
+    db: 'No schema change',
+    api: 'No new endpoint',
+    ui: 'axe-clean interactive controls; light + dark at 375 / 768 / 1280',
+    tests: '`a11y zero serious/critical`, visual regression screenshots',
+    verify: `npx playwright test tests/a11y.spec.ts; from monorepo root: npm run gate -- ${slug} --threshold ${PRD_THRESHOLD}`,
+    dependsOn: `Slice ${next - 1}`
+  });
+
+  return slices;
+}
+
+/**
+ * Render §11 Build Plan as vertical slices.
+ */
+export function renderBuildPlan(slices: SliceSpec[]): string {
+  const intro = [
+    'Each slice is a **tracer bullet** that crosses DB + API + UI + tests for **one** capability.',
+    'Ship and verify a slice before starting the next. Dependency order is explicit.',
+    'Do **not** build horizontally (all DDL, then all APIs, then all UI) — that delays end-to-end feedback.'
+  ].join(' ');
+
+  const body = slices
+    .map((s) => {
+      const tag = s.mvp ? ' [MVP]' : '';
+      return [
+        `### Slice ${s.index} — ${s.name}${tag}`,
+        `- DB: ${s.db}`,
+        `- API: ${s.api}`,
+        `- UI: ${s.ui}`,
+        `- Tests: ${s.tests}`,
+        `- Verify: \`${s.verify}\`  → expected result: command exits 0 / assertions pass`,
+        `- Depends on: ${s.dependsOn}`
+      ].join('\n');
+    })
+    .join('\n\n');
+
+  return `${intro}\n\n${body}`;
+}

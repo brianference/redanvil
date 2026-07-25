@@ -1,0 +1,7 @@
+{
+  "dashboard-auth-two-entities": "2e1cf0fa891e4dff36b8d6507bf69ff0bd3b5bf06415ac353f87159abf950f09",
+  "mobile-no-auth-two-entities": "521d5747a9d7b8e459dc1cb5433e45470e0dab0eaae17d01b5c742e768e3aca3",
+  "marketplace-auth-scoped": "22feff81fabd79d11f9f95add70ab65d8e258f5504521460aebebfb39a2996f2",
+  "empty-entities-no-auth": "3fc8f4c486dd9688b872c83b6ae38ad3ca778cfac64f52fb3b1474845d1a91c3",
+  "long-prompt-many-entities": "10a761700488daf7665b85c5addf55a5fb08b9fc53cb552fd419abe4179c0756"
+}
