@@ -41,12 +41,10 @@ jobs:
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: 20
-      - run: npm ci
-      - name: Install app deps (gate runs real checks against the app)
-        working-directory: app-builder
-        run: npm ci
-      - name: Install dashboard deps
-        working-directory: dashboard
+      # One install at the root: app-builder and dashboard are npm workspaces
+      # now, so react is hoisted to a single copy. Installing them separately
+      # would recreate the two-React-instances bug that broke every hook.
+      - name: Install workspace deps
         run: npm ci
       - name: Verify results were produced by the gate
         run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process
@@ -76,9 +74,7 @@ jobs:
 
   # Note: linting is NOT repeated here. The root `npm run lint` in the
   # orchestrator job runs `eslint .` over the whole repo, which already covers
-  # every file in both apps (50 of the 99 files it lints). Running it per-app
-  # would also fail: eslint is a root devDependency, absent from each app's own
-  # node_modules after a standalone `npm ci` (exit 127).
+  # every file in both apps.
   apps:
     runs-on: ubuntu-latest
     strategy:
@@ -91,8 +87,8 @@ jobs:
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: 20
-      - name: Install
-        working-directory: ${{ matrix.app }}
+      # Workspace install at the root; see the note in results-provenance.
+      - name: Install workspace deps
         run: npm ci
       - name: Typecheck
         working-directory: ${{ matrix.app }}

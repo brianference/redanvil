@@ -6,7 +6,9 @@
     "node": ">=20.10"
   },
   "workspaces": [
-    "orchestrator"
+    "orchestrator",
+    "app-builder",
+    "dashboard"
   ],
   "scripts": {
     "typecheck": "tsc -p orchestrator/tsconfig.json",
