@@ -1,12 +1,14 @@
-import { useMemo, type CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
 import { Page } from '../components/Page';
+import { SavedCardList } from '../components/saved/SavedCardList';
+import { SavedEmpty } from '../components/saved/SavedEmpty';
+import { SavedError } from '../components/saved/SavedError';
+import { SavedKpiStrip } from '../components/saved/SavedKpiStrip';
+import { SavedLoading } from '../components/saved/SavedLoading';
+import { SavedToolbar } from '../components/saved/SavedToolbar';
 import { en } from '../i18n/en';
-import { theme } from '../theme';
-import { buttonStyle, errorBannerStyle, statusBannerStyle } from '../components/ui';
 import {
   countThisWeek,
-  formatRelativeTime,
   parseSavedList,
   type SavedPrdListItem
 } from '../lib/savedList';
@@ -68,336 +70,26 @@ export function Saved(): JSX.Element {
 
   return (
     <Page title={copy.title} subtitle={copy.subtitle} breadcrumb={copy.title}>
-      <div style={toolbarStyle}>
-        <Link to="/" style={buttonStyle(true)}>
-          <span aria-hidden="true">+</span>
-          {copy.newBuild}
-        </Link>
-      </div>
+      <SavedToolbar />
 
-      {state.status === 'loading' && (
-        <div role="status" aria-live="polite" aria-busy="true" style={statusBannerStyle()}>
-          <span aria-hidden="true">…</span>
-          <span>{copy.loading}</span>
-        </div>
-      )}
+      {state.status === 'loading' && <SavedLoading />}
 
       {state.status === 'error' && (
-        <div role="alert" style={errorBannerStyle()}>
-          <span aria-hidden="true">!</span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0 }}>{state.message}</p>
-            <button
-              type="button"
-              style={{ ...buttonStyle(false), marginTop: theme.space.sm }}
-              onClick={retry}
-            >
-              {copy.errorRetry}
-            </button>
-          </div>
-        </div>
+        <SavedError message={state.message} onRetry={retry} />
       )}
 
-      {state.status === 'empty' && (
-        <div role="status" style={emptyCardStyle}>
-          <p style={{ margin: 0, fontWeight: 650, fontSize: theme.type.scale[2] }}>{copy.empty}</p>
-          <p
-            style={{
-              margin: `${theme.space.sm}px 0 0`,
-              color: theme.color.muted,
-              fontSize: theme.type.scale[2]
-            }}
-          >
-            {copy.emptyHint}
-          </p>
-          <Link
-            to="/"
-            style={{ ...buttonStyle(true), marginTop: theme.space.md, display: 'inline-flex' }}
-          >
-            {copy.emptyCta}
-          </Link>
-        </div>
-      )}
+      {state.status === 'empty' && <SavedEmpty />}
 
       {state.status === 'success' && kpis !== null && (
         <>
-          <div style={kpiStripStyle} role="group" aria-label={copy.kpiLabel}>
-            <KpiCard value={kpis.thisWeek} label={copy.kpiThisWeek} />
-            <KpiCard value={kpis.total} label={copy.kpiTotal} />
-            <KpiCard value={kpis.saved} label={copy.kpiSaved} />
-          </div>
-
-          <div style={sectionHeadStyle}>
-            <h2 style={sectionTitleStyle}>{copy.sectionRecent}</h2>
-            <span style={sectionMetaStyle}>{copy.countMeta(state.items.length)}</span>
-          </div>
-
-          <ul style={listStyle} aria-label={copy.listLabel}>
-            {state.items.map((item) => (
-              <li key={item.id}>
-                <div style={buildCardStyle}>
-                  <span style={buildIconStyle} aria-hidden="true">
-                    ✓
-                  </span>
-                  <div style={buildBodyStyle}>
-                    <Link to={`/prd/${item.id}`} style={buildTitleLinkStyle}>
-                      {item.title}
-                    </Link>
-                    <div style={buildMetaStyle}>
-                      <span style={badgeStyle}>
-                        <span aria-hidden="true">● </span>
-                        {copy.statusReady}
-                      </span>
-                      <span style={sourceBadgeStyle}>{copy.sourcePublic}</span>
-                      <span style={metaEllipsisStyle}>{copy.itemMeta(item.slug)}</span>
-                    </div>
-                  </div>
-                  <div style={buildActionsStyle}>
-                    <span style={buildTimeStyle}>{formatRelativeTime(item.created_at)}</span>
-                    <Link
-                      to={`/prd/${item.id}`}
-                      style={rowActionStyle}
-                      aria-label={copy.openAria(item.title)}
-                    >
-                      {copy.openAction}
-                    </Link>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <SavedKpiStrip
+            thisWeek={kpis.thisWeek}
+            total={kpis.total}
+            saved={kpis.saved}
+          />
+          <SavedCardList items={state.items} />
         </>
       )}
     </Page>
   );
 }
-
-/**
- * One glanceable KPI tile (value + uppercase label).
- */
-function KpiCard({ value, label }: { value: number; label: string }): JSX.Element {
-  return (
-    <div style={kpiStyle}>
-      <div style={kpiValStyle}>{value}</div>
-      <div style={kpiLblStyle}>{label}</div>
-    </div>
-  );
-}
-
-const toolbarStyle: CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: theme.space.sm,
-  marginBottom: theme.space.md
-};
-
-const emptyCardStyle: CSSProperties = {
-  background: theme.color.surface,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.md,
-  padding: theme.space.lg,
-  boxShadow: theme.shadow.card,
-  maxWidth: '28rem'
-};
-
-const kpiStripStyle: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-  gap: theme.space.sm,
-  marginBottom: theme.space.md,
-  maxWidth: '40rem'
-};
-
-const kpiStyle: CSSProperties = {
-  background: theme.color.surface,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: 10,
-  padding: '10px 10px 9px',
-  boxShadow: theme.shadow.card,
-  minWidth: 0
-};
-
-const kpiValStyle: CSSProperties = {
-  fontSize: theme.type.scale[3],
-  fontWeight: 750,
-  letterSpacing: '-0.03em',
-  lineHeight: 1.1,
-  color: theme.color.text,
-  fontVariantNumeric: 'tabular-nums'
-};
-
-const kpiLblStyle: CSSProperties = {
-  fontSize: theme.type.scale[1],
-  fontWeight: 600,
-  color: theme.color.muted,
-  marginTop: 3,
-  textTransform: 'uppercase',
-  letterSpacing: '0.04em',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis'
-};
-
-const sectionHeadStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: theme.space.sm,
-  marginBottom: theme.space.sm,
-  minHeight: 32,
-  maxWidth: '40rem'
-};
-
-const sectionTitleStyle: CSSProperties = {
-  margin: 0,
-  fontSize: theme.type.scale[1],
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  color: theme.color.muted
-};
-
-const sectionMetaStyle: CSSProperties = {
-  fontSize: theme.type.scale[1],
-  color: theme.color.muted,
-  fontWeight: 500,
-  fontVariantNumeric: 'tabular-nums'
-};
-
-const listStyle: CSSProperties = {
-  listStyle: 'none',
-  padding: 0,
-  margin: 0,
-  display: 'grid',
-  gap: theme.space.sm,
-  maxWidth: '40rem'
-};
-
-const buildCardStyle: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 10,
-  minHeight: 56,
-  padding: '10px 12px',
-  background: theme.color.surface,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.md,
-  boxShadow: theme.shadow.card,
-  boxSizing: 'border-box'
-};
-
-const buildIconStyle: CSSProperties = {
-  width: 36,
-  height: 36,
-  borderRadius: 9,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-  fontSize: 15,
-  fontWeight: 700,
-  background: theme.color.successSoft,
-  color: theme.color.success,
-  border: `1px solid color-mix(in srgb, ${theme.color.success} 30%, ${theme.color.border})`
-};
-
-const buildBodyStyle: CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 2
-};
-
-const buildTitleLinkStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  minHeight: theme.touch,
-  fontSize: theme.type.scale[2],
-  fontWeight: 650,
-  lineHeight: 1.25,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  color: theme.color.text,
-  textDecoration: 'none',
-  maxWidth: '100%'
-};
-
-const buildMetaStyle: CSSProperties = {
-  fontSize: theme.type.scale[2],
-  color: theme.color.muted,
-  display: 'flex',
-  flexWrap: 'wrap',
-  alignItems: 'center',
-  gap: theme.space.sm,
-  minWidth: 0
-};
-
-const metaEllipsisStyle: CSSProperties = {
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  minWidth: 0
-};
-
-const badgeStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  fontSize: theme.type.scale[2],
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '0.03em',
-  padding: '2px 7px',
-  borderRadius: theme.radius.pill,
-  background: theme.color.successSoft,
-  color: theme.color.success,
-  flexShrink: 0,
-  lineHeight: 1.3
-};
-
-const sourceBadgeStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  fontSize: theme.type.scale[2],
-  fontWeight: 600,
-  padding: '2px 7px',
-  borderRadius: theme.radius.pill,
-  background: theme.color.chipBg,
-  color: theme.color.muted,
-  border: `1px solid ${theme.color.border}`,
-  flexShrink: 0,
-  lineHeight: 1.3
-};
-
-const buildActionsStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-end',
-  gap: theme.space.sm,
-  flexShrink: 0
-};
-
-const buildTimeStyle: CSSProperties = {
-  fontSize: theme.type.scale[1],
-  color: theme.color.muted,
-  fontVariantNumeric: 'tabular-nums'
-};
-
-const rowActionStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minHeight: theme.touch,
-  minWidth: theme.touch,
-  padding: `0 ${theme.space.sm}px`,
-  fontSize: theme.type.scale[1],
-  fontWeight: 650,
-  fontFamily: theme.type.family,
-  borderRadius: theme.radius.sm,
-  border: `1px solid ${theme.color.border}`,
-  background: theme.color.bg,
-  color: theme.color.text,
-  textDecoration: 'none',
-  boxSizing: 'border-box'
-};
