@@ -5,18 +5,17 @@ without re-deriving anything.
 
 ## Where things stand
 
-- **HEAD:** `0c32583` on `master`, CI green.
-- **Latest release:** `v6.0.0` — https://github.com/brianference/redanvil/releases/tag/v6.0.0
-  (four screenshots attached as release assets)
+- **HEAD:** `7c869e0` on `master`, CI green.
+- **Latest release:** `v6.1.0`. The v6.0.0 notes still describe the audit and its ten fixes.
 - **Production:** https://redanvil.pages.dev and https://redanvil-dashboard.pages.dev
   (Cloudflare Pages, direct upload / Type B; prod branch `main`, local branch `master`, so
   deploys must pass `--branch main`). Both verified this session by asset-hash match.
-- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v6.0.0-20260724-1942.bundle`
-  (restore-tested: clones clean, 347 files, 7 tags, `v6.0.0` → `0c32583`).
-- **Gate:** 100/100 across 46/46 applicable rules at **85% coverage** of the full rubric,
-  with `--na ci,process`. Zero stale verdicts. The 100 is earned against verdicts recorded
-  at the current commit, not inherited.
-- **Working tree:** clean. All four delegation worktrees removed and branches deleted.
+- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v6.1.0-20260724-2048.bundle`
+  (restore-tested: clones clean, 356 files, 8 tags, `v6.1.0` → `7c869e0`).
+- **Gate:** app-builder 100/100 across 47/47 at **85% coverage**; dashboard 100/100 across
+  45/45 at **82% coverage**. Both with `--na ci,process`, zero stale verdicts, and both
+  reproduced rule-by-rule in CI.
+- **Working tree:** clean. All five delegation worktrees removed and branches deleted.
 
 ## What changed in v6.0.0
 
@@ -46,17 +45,26 @@ Ten findings were fixed; the full narrative is in the release notes. The load-be
 
 ## Remaining tasks (priority order)
 
-### 1. The 10 further findings from the second audit
-See `docs/audit-2026-07-25.md` for the full list with evidence. The two worth doing first:
-- **`u-plat-worker-runtime` is a static grep, not runtime parity.** `lg-runtime-parity` is a
-  declared blocker that says boot `wrangler pages dev` and curl a live endpoint. Nothing does.
-- **The dashboard has no results file and is never gated.** Only `app-builder` is scored, so
-  half the shipped surface has no measured score at all.
+### 1. The remaining 8 findings from the second audit
+See `docs/audit-2026-07-25.md`. Findings 1 and 2 are **done** in v6.1.0: runtime parity is a
+real boot-and-curl check (`u-plat-runtime-parity`, proven to fail against a 500 health
+endpoint), and the dashboard is gated with its own verdicts and CI reproduction job.
 
-### 2. Dashboard verdicts and gating
-`evidence/verdicts-dashboard.json` does not exist. The dashboard was deployed and audited with
-axe this session (0 violations, both themes) but has no recorded verdicts and no
-`results/dashboard.json`, so `build_feed.mjs` reports one run when two apps ship.
+The eight remaining are unchanged. Most valuable next:
+- **#3** — 385 identical lines across the two shell trees, structurally invisible because
+  `hyg-no-duplication` runs per app directory.
+- **#7** — `drift.yml` never re-runs the gate, so verdict staleness has no cadence behind it.
+  It needs `fetch-depth: 0` when added.
+
+### 2. Brand assets
+The dark lockup is the owner's own Grok Imagine artwork, recovered from two JPEG exports (over
+the transparency checkerboard, and over solid black) by exact two-background matting — a JPEG
+cannot carry alpha and Grok Imagine renders the checkerboard into the pixels. Recipe and script
+live in the `grok-imagine-logo` skill.
+
+Light and dark ship **different** lockups on purpose: the dark art has a silver wordmark that
+washes out on white. `LOGO_HEIGHT = 112` with a `min(52vw, 440px)` cap, which leaves a measured
+52px gap to the header buttons at 375.
 
 ### 3. `proc-pr-title-ticket` is N/A locally
 Implemented via `gh pr view`; `gh` is not on PATH here so it always returns N/A. It fails
