@@ -13,6 +13,16 @@ import { join, extname } from 'node:path';
 import { runCiActionlint } from './ci-actionlint.mjs';
 import { runProcConventionalCommits } from './proc-conventional-commits.mjs';
 import { runProcPrTitleTicket } from './proc-pr-title-ticket.mjs';
+// The cross-app duplication pass already owns the definition of "the same code":
+// comments stripped, whitespace collapsed, identifiers normalised, keywords kept.
+// This check used to compare raw trimmed lines instead, so the two passes
+// disagreed about what duplication means — a copy that renamed one variable was
+// duplication across apps and not duplication inside one. One definition now.
+import {
+  normaliseSource,
+  isMostlyStyleProps,
+  MIN_BLOCK
+} from '../../../.github/scripts/cross_app_duplication.mjs';
 
 /** NUL separator for `git ls-files -z`, built from a code point so no text transform can mangle it. */
 const NUL = String.fromCharCode(0);
@@ -719,27 +729,19 @@ switch (ruleId) {
     // the no-speculative-abstraction rule. This mirrors token-based tools (jscpd).
     const files = [...tsx(), ...walk(functionsDir, ['.ts', '.js'])];
     const seen = new Map();
-    const WIN = 8;
-    const isPropLine = (l) => /^[\w'"[\]-]+\s*:\s*.+,?$/.test(l); // style/object property
+    // Framework-mandated boilerplate that cannot (and must not) be abstracted:
+    // Cloudflare Pages Function handler signatures are exported per-route by design.
+    const isBoilerplate = (l) =>
+      /onRequest(Post|Get|Put|Delete|Patch)?\b|Promise<Response>|export async function/.test(l);
     for (const f of files) {
-      const lines = read(f)
-        .split('\n')
-        .map((l) => l.trim())
-        .filter(
-          (l) =>
-            l.length > 8 && !l.startsWith('//') && !l.startsWith('*') && !l.startsWith('import')
-        );
-      // Framework-mandated boilerplate that cannot (and must not) be abstracted:
-      // Cloudflare Pages Function handler signatures are exported per-route by design.
-      const isBoilerplate = (l) =>
-        /onRequest(Post|Get|Put|Delete|Patch)?\b|:\s*Promise<Response>|export async function/.test(
-          l
-        );
-      for (let i = 0; i + WIN <= lines.length; i++) {
-        const win = lines.slice(i, i + WIN);
-        const propShare = win.filter(isPropLine).length / WIN;
-        if (propShare > 0.6) continue; // mostly style props → not substantive duplication
-        if (win.some(isBoilerplate)) continue; // platform-required handler signatures
+      const lines = normaliseSource(read(f)).filter((l) => l.length > 0);
+      for (let i = 0; i + MIN_BLOCK <= lines.length; i++) {
+        const win = lines.slice(i, i + MIN_BLOCK);
+        // Two style objects both reading shared theme tokens is consistent token
+        // use, not harmful duplication — collapsing them would trip the
+        // no-speculative-abstraction rule instead.
+        if (isMostlyStyleProps(win)) continue;
+        if (win.some(isBoilerplate)) continue;
         const block = win.join('\n');
         const prev = seen.get(block);
         if (prev && prev !== f) fail(`duplicated code across ${prev} and ${f}`);

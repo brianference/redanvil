@@ -493,14 +493,79 @@ export function isLowSubstanceLine(line) {
 }
 
 /**
- * Whether a block is mostly style/low-substance lines (skip as non-product).
+ * Keywords that only ever describe a declaration's shape. A line built purely
+ * from these, `$`, literals-free punctuation and type punctuation carries no
+ * evidence of copy-paste: every React component in the repo has the same one.
+ */
+const DECLARATION_KEYWORDS = new Set([
+  'export',
+  'import',
+  'from',
+  'default',
+  'function',
+  'const',
+  'let',
+  'var',
+  'class',
+  'interface',
+  'type',
+  'enum',
+  'extends',
+  'implements',
+  'readonly',
+  'public',
+  'private',
+  'protected',
+  'static',
+  'declare',
+  'async',
+  'void',
+  'string',
+  'number',
+  'boolean',
+  'unknown',
+  'any',
+  'never',
+  'null',
+  'undefined',
+  'this'
+]);
+
+/**
+ * True when a normalised line is nothing but declaration scaffolding.
+ *
+ * Identifier normalisation is lossy on purpose — it is what lets the pass see a
+ * renamed copy — but it also flattens `interface Props { onClose: () => void }`
+ * plus `export function Header({ a, b, c }: Props): JSX.Element {` into pure
+ * punctuation. Every component file in both apps matches that, so it was being
+ * counted as duplication in the cross-app total. Real duplicated logic keeps a
+ * literal or a control-flow keyword; a declaration skeleton keeps neither.
+ *
+ * @param {string} line Normalised line.
+ * @returns {boolean}
+ */
+export function isDeclarationSkeleton(line) {
+  const words = line.match(/[A-Za-z_][A-Za-z0-9_]*/g) ?? [];
+  if (/['"`]/.test(line)) return false; // a string literal is real content
+  if (/\b\d/.test(line)) return false; // so is a numeric literal
+  return words.every((w) => DECLARATION_KEYWORDS.has(w));
+}
+
+/**
+ * Whether a block is mostly style/low-substance lines, or is nothing but
+ * declaration scaffolding (skip as non-product in both cases).
  * @param {string[]} lines Slice of normalised lines in the block.
  * @returns {boolean}
  */
 export function isMostlyStyleProps(lines) {
   if (lines.length === 0) return false;
   const low = lines.filter(isLowSubstanceLine).length;
-  return low / lines.length > 0.6;
+  if (low / lines.length > 0.6) return true;
+  const substantive = lines.filter(
+    (l) => !isLowSubstanceLine(l) && !isDeclarationSkeleton(l)
+  ).length;
+  // Fewer than two lines of real content is a shape, not a copy.
+  return substantive < 2;
 }
 
 /**
