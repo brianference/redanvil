@@ -1,20 +1,21 @@
-# RedAnvil handoff — 2026-07-25 (v7.0.0)
+# RedAnvil handoff — 2026-07-25 (v8.0.0)
 
-State after the v7.0.0 release, and what is left. Written so a fresh context can pick up
+State after the v8.0.0 release, and what is left. Written so a fresh context can pick up
 without re-deriving anything.
 
 ## Where things stand
 
-- **HEAD:** `eddabfa` on `master`, CI green.
-- **Latest release:** `v7.0.0` (desktop width enforced, brand system, design rules R14-R18).
+- **HEAD:** `96a694b` on `master`, CI green.
+- **Latest release:** `v8.0.0` (third audit: measured design rules, guarded lanes, scaffold
+  gated in CI, deploy tied to the scored commit).
 - **Production:** https://redanvil.pages.dev and https://redanvil-dashboard.pages.dev
   (Cloudflare Pages, direct upload / Type B; prod branch `main`, local branch `master`, so
   deploys must pass `--branch main`). Both verified this session by asset-hash match.
-- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v7.0.0-20260724-2222.bundle`
-  (restore-tested: clones clean, 363 files, 10 tags, `v7.0.0` → `eddabfa`).
-- **Gate:** app-builder 100/100 across 48/48 at **87% coverage**; dashboard 100/100 across
-  46/46 at **84% coverage**. Both with `--na ci,process`, zero stale verdicts, and both
-  reproduced rule-by-rule in CI.
+- **Backup:** `C:\Users\brian\Backups\redanvil\redanvil-v8.0.0-20260725-0020.bundle`
+  (restore-tested by a real clone: 372 files, 11 tags, `v8.0.0` → `54fdf4f`).
+- **Gate:** app-builder 100/100 across 48/48 at **87% coverage** (floor 85); dashboard 100/100
+  across 46/46 at **84%** (floor 80). Both with `--na ci,process`, zero stale verdicts, both
+  reproduced rule-by-rule in CI, and both tied to the deployed bundle by `verify_deployed.mjs`.
 - **Working tree:** clean. All five delegation worktrees removed and branches deleted.
 
 ## What changed in v6.0.0
@@ -45,8 +46,17 @@ Ten findings were fixed; the full narrative is in the release notes. The load-be
 
 ## Remaining tasks (priority order)
 
-### 1. Second audit: all ten findings are closed (v6.2.0)
-`docs/audit-2026-07-25.md` carries a CLOSED note per finding. Nothing outstanding from it.
+### 1. Audits one and two fully closed; third audit has 3 open of 10
+`docs/audit-2026-07-25.md` (second) and `docs/audit-2026-07-25-third.md` carry a CLOSED note per
+finding. Open from the third:
+- **The judge tier has NEVER dissented** — 0 fails in 258 recorded judge verdicts across 34
+  verdict-file revisions. Measured daily by `judge_dissent.mjs`, deliberately report-only. The
+  fix is an independent reviewer, not a threshold: judge verdicts are currently written by the
+  same agent that wrote the code.
+- **`hyg-no-duplication` is exact-match within one app** while the cross-app pass normalises
+  identifiers, so the two disagree about what duplication means.
+- **`design_audit.mjs` measures the home route only**; a mobile regression on `/saved` or a
+  wizard step would not be caught.
 
 What that leaves as genuine next work, in rough value order:
 - **Monorepo wiring, then lower the ratchet again.** Duplication is 772 (down from 854 after
