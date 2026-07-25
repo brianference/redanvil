@@ -63,7 +63,53 @@ function wrangler(dir: string): string {
   return read(join(dir, 'wrangler.toml'));
 }
 
+/** Any source file at all means the universal lanes apply. */
+function hasSource(dir: string): boolean {
+  return walk(join(dir, 'src'), ['.ts', '.tsx', '.js', '.jsx']).length > 0 ||
+    walk(join(dir, 'functions'), ['.ts', '.js']).length > 0;
+}
+
+/** Any rendered component means the frontend lane applies. */
+function hasFrontend(dir: string): boolean {
+  return walk(join(dir, 'src'), ['.tsx', '.css']).length > 0;
+}
+
 const CHECKS: WaiverCheck[] = [
+  // LANE waivers are the biggest lever of all: --na frontend removes 22 rules
+  // at once, every visual blocker among them, and until now only the ci lane
+  // was checked. A lane is waivable only when its subject genuinely is not
+  // present. `process` is the one exception — it describes how a change was
+  // made, which cannot be decided from the app directory at all.
+  {
+    id: 'frontend',
+    applies: hasFrontend,
+    reason: 'it ships rendered components, so the frontend lane applies'
+  },
+  {
+    id: 'typing',
+    applies: hasSource,
+    reason: 'it ships source, so the typing lane applies'
+  },
+  {
+    id: 'concision',
+    applies: hasSource,
+    reason: 'it ships source, so the concision lane applies'
+  },
+  {
+    id: 'security',
+    applies: hasSource,
+    reason: 'it ships source, so the security lane applies'
+  },
+  {
+    id: 'hygiene',
+    applies: hasSource,
+    reason: 'it ships source, so the hygiene lane applies'
+  },
+  {
+    id: 'testing',
+    applies: hasSource,
+    reason: 'it ships source, so the testing lane applies'
+  },
   {
     id: 'ci',
     applies: (dir) => existsSync(join(dir, '.github', 'workflows')),

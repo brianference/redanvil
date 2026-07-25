@@ -100,3 +100,32 @@ describe('every waiver is checked against reality, not just the ci lane', () => 
     expect(() => assertWaiversAreReal(appDir(), ['process'])).not.toThrow();
   });
 });
+
+describe('lane waivers are checked too, not just individual rules', () => {
+  it('refuses --na frontend on an app that ships components', () => {
+    // The widest lever in the whole gate: this one flag removes 22 rules,
+    // including every visual blocker, and nothing used to look.
+    const d = appDir();
+    write(d, 'src/components/Page.tsx', 'export const Page = () => null;\n');
+    expect(() => assertWaiversAreReal(d, ['frontend'])).toThrow(/frontend lane applies/i);
+  });
+
+  it('refuses --na security, typing, concision, hygiene and testing on an app with source', () => {
+    const d = appDir();
+    write(d, 'src/main.ts', 'export const a = 1;\n');
+    for (const lane of ['security', 'typing', 'concision', 'hygiene', 'testing']) {
+      expect(() => assertWaiversAreReal(d, [lane]), lane).toThrow(new RegExp(`${lane} lane applies`, 'i'));
+    }
+  });
+
+  it('still allows a lane waiver when the subject genuinely is absent', () => {
+    // An empty directory ships nothing, so nothing in those lanes applies.
+    expect(() => assertWaiversAreReal(appDir(), ['frontend', 'typing', 'testing'])).not.toThrow();
+  });
+
+  it('keeps allowing --na process, which the app directory cannot decide', () => {
+    const d = appDir();
+    write(d, 'src/main.ts', 'export const a = 1;\n');
+    expect(() => assertWaiversAreReal(d, ['process'])).not.toThrow();
+  });
+});
