@@ -10,8 +10,13 @@
       "evidence/screenshots/ab-1280-light.png"
     ],
     "note": "axe-core 4.12.1 against https://redanvil.pages.dev on this build: 0 colour-contrast violation nodes and 0 other violation types in BOTH themes. Resolved backgrounds confirm the audit really switched theme (dark rgb(11,11,15), light rgb(244,244,246)), so it is not measuring one theme twice.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-light-dark",
@@ -22,8 +27,13 @@
       "evidence/screenshots/ab-1280-light.png"
     ],
     "note": "Toggle driven by role on production: dark to light to dark in both directions, localStorage theme written each time, and the choice survives a full reload (reloaded as light with data-theme=light).",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-premium-nav",
@@ -35,8 +45,13 @@
       "evidence/screenshots/ab-page-about.png"
     ],
     "note": "Sticky header carries the brand lockup plus five primary links (App Builder, Dashboard, Saved, About, Contact) in both themes, with the current route marked aria-current=page. Inner pages render breadcrumbs, verified on /about, /terms, /privacy and /contact. Before this build the header held exactly one anchor and its text was empty.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-required-pages",
@@ -49,17 +64,29 @@
       "evidence/screenshots/ab-page-contact.png"
     ],
     "note": "All four legal and info routes return 200 on production with a real h1: About RedAnvil, Terms and Conditions, Privacy Policy, Contact. Home is the root route and renders its own h1.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-no-attribution",
     "passed": true,
     "method": "visual",
-    "evidence": ["evidence/screenshots/ab-1280-light.png"],
+    "evidence": [
+      "evidence/screenshots/ab-1280-light.png"
+    ],
     "note": "Regex over rendered body text for made with / built with / powered by returned false in both themes at 1280.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-responsive-375",
@@ -70,17 +97,29 @@
       "evidence/screenshots/ab-375-light.png"
     ],
     "note": "At 375 in both themes document.body.scrollWidth equals window.innerWidth, so there is no horizontal overflow; the full-page screenshots show no clipped or overlapping text.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-product-completeness",
     "passed": true,
     "method": "visual",
-    "evidence": ["evidence/e2e-app-builder.json"],
+    "evidence": [
+      "evidence/e2e-app-builder.json"
+    ],
     "note": "e2e_smoke.mjs drove chat to wizard to Forge PRD on production by role with web-first assertions, waiting on the real /api/submit response: submit returned 200 and the PRD rendered, exit 0. /api/health also returns 200, so the Worker runtime boots rather than only static assets serving.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -95,44 +134,77 @@
       "evidence/screenshots/ab-1280-light.png"
     ],
     "note": "Full review recorded on the deployed build at 375, 768 and 1280 in both themes, with zero console errors and zero page errors captured across all six loads.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-seo-og",
     "passed": true,
     "method": "visual",
-    "evidence": ["evidence/screenshots/ab-1280-dark.png"],
+    "evidence": [
+      "evidence/screenshots/ab-1280-dark.png"
+    ],
     "note": "Document title renders as RedAnvil - Forge apps from a prompt, per-route description and Open Graph tags are present in index.html, and a real og.png ships in public/.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-cross-link",
     "passed": true,
     "method": "visual",
-    "evidence": ["evidence/screenshots/ab-1280-dark.png"],
+    "evidence": [
+      "evidence/screenshots/ab-1280-dark.png"
+    ],
     "note": "The app-builder header and footer both link to the dashboard, so the two surfaces of the system are navigable from each other rather than being orphan sites.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-touch-targets",
     "passed": true,
     "method": "visual",
-    "evidence": ["evidence/screenshots/ab-375-dark.png"],
+    "evidence": [
+      "evidence/screenshots/ab-375-dark.png"
+    ],
     "note": "Measured at 375 on production: 18 visible interactive elements, 0 with a rendered height under 44px.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-type-floor",
     "passed": true,
     "method": "visual",
-    "evidence": ["evidence/screenshots/ab-375-dark.png"],
+    "evidence": [
+      "evidence/screenshots/ab-375-dark.png"
+    ],
     "note": "Measured at 375 on production: minimum rendered font size across 11 sentence-carrying leaf nodes is 16px, 0 under the floor. Three nodes measured 14px on the previous build and were raised rather than the rule being relaxed.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-noncolor-state",
@@ -143,17 +215,29 @@
       "evidence/screenshots/ab-375-dark.png"
     ],
     "note": "State is carried by more than hue: the active nav link uses a filled pill plus aria-current, the online chip pairs its colour with a check glyph and a text label, and the send button changes opacity and cursor as well as colour when disabled.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "fe-safe-areas",
     "passed": true,
     "method": "visual",
-    "evidence": ["evidence/screenshots/ab-375-dark.png"],
+    "evidence": [
+      "evidence/screenshots/ab-375-dark.png"
+    ],
     "note": "The sticky header applies env(safe-area-inset-top) padding and uses position:sticky, so it does not collide with system chrome, and no fixed element renders above the viewport top at 375.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca"
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src",
+      "app-builder/public",
+      "app-builder/index.html"
+    ]
   },
   {
     "ruleId": "u-conc-idiomatic",
@@ -165,19 +249,28 @@
       "app-builder/src/components/shell/Header.tsx"
     ],
     "note": "Helpers stay short and plain after the prd split: generate.ts composes section builders instead of inlining them, job.ts keeps slug and entity helpers as small pure functions, and the extracted Header reads as straightforward JSX with no dense one-liners.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
-    "scope": ["app-builder/src/lib", "app-builder/src/components/shell"]
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src/lib",
+      "app-builder/src/components/shell"
+    ]
   },
   {
     "ruleId": "u-conc-no-speculative-abstraction",
     "passed": true,
     "method": "judge",
-    "evidence": ["app-builder/src/lib/prd", "app-builder/src/components/shell"],
+    "evidence": [
+      "app-builder/src/lib/prd",
+      "app-builder/src/components/shell"
+    ],
     "note": "The prd and shell splits were driven by a measured size cap and a real second consumer, not by anticipated reuse. No interface was introduced with a single implementation for future flexibility.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
-    "scope": ["app-builder/src/lib", "app-builder/src/components/shell"]
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src/lib",
+      "app-builder/src/components/shell"
+    ]
   },
   {
     "ruleId": "u-conc-use-what-exists",
@@ -188,9 +281,11 @@
       "app-builder/src/components/Breadcrumbs.tsx"
     ],
     "note": "The header split reuses the existing Breadcrumbs component, i18n bundle and theme tokens rather than adding copies, and the nav work introduced no new dependency.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
-    "scope": ["app-builder/src/components"]
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src/components"
+    ]
   },
   {
     "ruleId": "u-conc-smallest-diff",
@@ -201,9 +296,12 @@
       "app-builder/src/components/Page.tsx"
     ],
     "note": "The prd and shell refactors are pure structural moves. generatePrd output was verified byte-identical across five varied inputs by running the pre-split and post-split modules side by side, so the diff adds no behaviour of its own.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
-    "scope": ["app-builder/src/lib", "app-builder/src/components"]
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src/lib",
+      "app-builder/src/components"
+    ]
   },
   {
     "ruleId": "u-val-input-validation",
@@ -214,9 +312,11 @@
       "app-builder/functions/api/jobs.ts"
     ],
     "note": "Handlers that read a request body run it through a schema before use; JSON.parse alone is not treated as validation anywhere under functions/.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
-    "scope": ["app-builder/functions"]
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/functions"
+    ]
   },
   {
     "ruleId": "u-sec-no-stub-paths",
@@ -228,9 +328,11 @@
       "app-builder/functions/lib/env.ts"
     ],
     "note": "This app ships no authentication surface, so there is no guard to stub: functions/lib holds only http and env helpers. Confirmed no auth-named function anywhere under functions/ returns an unconditional truthy value and no TODO-auth marker exists.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
-    "scope": ["app-builder/functions"]
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/functions"
+    ]
   },
   {
     "ruleId": "u-test-adequacy",
@@ -241,9 +343,11 @@
       "app-builder/src/components/Page.test.ts"
     ],
     "note": "The refactor is covered by a characterization test snapshotting real generatePrd output for varied inputs, and the shell by a test querying header links by role. Both assert behaviour that breaks on regression rather than mere presence.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
-    "scope": ["app-builder/src"]
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src"
+    ]
   },
   {
     "ruleId": "u-test-behavioral",
@@ -254,9 +358,11 @@
       "app-builder/src/lib/prd.test.ts"
     ],
     "note": "Tests assert rendered behaviour (header exposes named links by role, active route marked) and real output content, not implementation details or call counts.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
-    "scope": ["app-builder/src"]
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src"
+    ]
   },
   {
     "ruleId": "fe-pages-compose",
@@ -268,9 +374,11 @@
       "app-builder/src/components/shell/Footer.tsx"
     ],
     "note": "Page.tsx is a composition of named components (Header, MobileDrawer, Footer, Breadcrumbs) rather than a monolithic shell, and pages supply title, subtitle and children into that shell.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
-    "scope": ["app-builder/src/components"]
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src/components"
+    ]
   },
   {
     "ruleId": "fe-fail-closed-states",
@@ -281,8 +389,10 @@
       "app-builder/src/lib/apiError.ts"
     ],
     "note": "The composer renders explicit loading, empty and error states. A failed submit surfaces an error rather than an empty success, and the empty thread says so in words instead of rendering blank.",
-    "reviewedAt": "2026-07-25T02:23:42.273Z",
-    "reviewedCommit": "2399d00ff331d56cce704c06dfe03a436cd00aca",
-    "scope": ["app-builder/src"]
+    "reviewedAt": "2026-07-25T02:32:33.044Z",
+    "reviewedCommit": "8326819d19f61a275593aeef506ac45e61c59621",
+    "scope": [
+      "app-builder/src"
+    ]
   }
 ]
