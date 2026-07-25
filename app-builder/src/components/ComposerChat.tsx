@@ -200,7 +200,9 @@ const rootStyle: CSSProperties = {
   flexDirection: 'column',
   gap: theme.space.lg,
   width: '100%',
-  maxWidth: '40rem'
+  // 44rem inside a 64rem shell: wide enough that the thread does not read as a
+  // narrow strip on desktop, still short enough to keep a comfortable measure.
+  maxWidth: '44rem'
 };
 
 const threadStyle: CSSProperties = {

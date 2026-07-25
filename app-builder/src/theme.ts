@@ -44,7 +44,13 @@ export const theme = {
   touch: 44,
   /** Shared content column max-width (main + footer align). Wide enough for 1280 without a dead right band; prose still caps itself. */
   layout: {
-    contentMaxWidth: '80rem'
+    // 64rem, not 80: the app-builder column is a heading plus a chat thread, and
+    // at 80rem on a 1280 viewport the shell filled the width while the content
+    // inside stayed ~40rem, leaving half the screen empty to the right of every
+    // page. Narrowing the shell centres the whole column as one unit instead of
+    // centring the chat away from its own heading. The dashboard keeps 80rem
+    // because its tables genuinely use the width.
+    contentMaxWidth: '64rem'
   },
   type: tokens.type
 } as const;

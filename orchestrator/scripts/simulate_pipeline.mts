@@ -106,7 +106,15 @@ interface RunRecord {
   prd: StageResult & { chars: number; sections: number; selfCheck: string; slices: number };
   job: StageResult & { slug: string };
   scaffold: StageResult & { files: number };
-  checks: StageResult & { passed: number; failed: number; na: number; failedIds: string[] };
+  checks: StageResult & {
+    passed: number;
+    failed: number;
+    na: number;
+    /** Rules check.mjs has no case for, so this harness cannot decide them. */
+    unmeasured: number;
+    failedIds: string[];
+    unmeasuredIds: string[];
+  };
 }
 
 /** Count files recursively, so scaffold output size is measured not assumed. */
@@ -126,12 +134,23 @@ function runChecks(appDir: string): RunRecord['checks'] {
   // the sweep rather than a list hard-coded here that could drift from it.
   const ids = RULES.filter((r) => r.method === 'det' || r.method === 'det+judge').map((r) => r.id);
   if (ids.length === 0) {
-    return { ok: false, detail: 'rubric exposed no det rules', passed: 0, failed: 0, na: 0, failedIds: [] };
+    return {
+      ok: false,
+      detail: 'rubric exposed no det rules',
+      passed: 0,
+      failed: 0,
+      na: 0,
+      unmeasured: 0,
+      failedIds: [],
+      unmeasuredIds: []
+    };
   }
   let passed = 0,
     failed = 0,
-    na = 0;
+    na = 0,
+    unmeasured = 0;
   const failedIds: string[] = [];
+  const unmeasuredIds: string[] = [];
   for (const id of ids) {
     const r = spawnSync('node', [join(REPO, 'orchestrator/scripts/checks/check.mjs'), id, appDir], {
       encoding: 'utf8',
@@ -139,12 +158,28 @@ function runChecks(appDir: string): RunRecord['checks'] {
     });
     if (r.status === 0) passed++;
     else if (r.status === 3) na++;
-    else {
+    else if (r.status === 2) {
+      // Exit 2 is "check.mjs has no case for this rule" — the tool-backed rules
+      // (tsc, eslint, vitest, git check-ignore) live in APP_CHECKS, not here.
+      // Counting it as a violation made the scaffold look like it broke nine
+      // rules it does not break: a failure nothing had measured.
+      unmeasured++;
+      unmeasuredIds.push(id);
+    } else {
       failed++;
       failedIds.push(id);
     }
   }
-  return { ok: failed === 0, detail: `${passed} pass / ${failed} fail / ${na} n-a`, passed, failed, na, failedIds };
+  return {
+    ok: failed === 0,
+    detail: `${passed} pass / ${failed} fail / ${na} n-a / ${unmeasured} unmeasured`,
+    passed,
+    failed,
+    na,
+    unmeasured,
+    failedIds,
+    unmeasuredIds
+  };
 }
 
 const root = mkdtempSync(join(tmpdir(), 'redanvil-sim-'));
@@ -209,9 +244,27 @@ for (const idea of IDEAS) {
   try {
     rec.checks = countFiles(appDir) > 0
       ? runChecks(appDir)
-      : { ok: false, detail: 'nothing scaffolded to check', passed: 0, failed: 0, na: 0, failedIds: [] };
+      : {
+          ok: false,
+          detail: 'nothing scaffolded to check',
+          passed: 0,
+          failed: 0,
+          na: 0,
+          unmeasured: 0,
+          failedIds: [],
+          unmeasuredIds: []
+        };
   } catch (e) {
-    rec.checks = { ok: false, detail: `THREW: ${(e as Error).message}`, passed: 0, failed: 0, na: 0, failedIds: [] };
+    rec.checks = {
+      ok: false,
+      detail: `THREW: ${(e as Error).message}`,
+      passed: 0,
+      failed: 0,
+      na: 0,
+      unmeasured: 0,
+      failedIds: [],
+      unmeasuredIds: []
+    };
   }
 
   records.push(rec as RunRecord);
@@ -230,6 +283,14 @@ console.log('PRD self-check clean:', records.filter((r) => r.prd.ok).length, '/'
 console.log('job schema valid    :', records.filter((r) => r.job.ok).length, '/', n);
 console.log('scaffold ok         :', records.filter((r) => r.scaffold.ok).length, '/', n);
 console.log('checks all-pass     :', records.filter((r) => r.checks.ok).length, '/', n);
+const allUnmeasured = [...new Set(records.flatMap((r) => r.checks.unmeasuredIds))].sort();
+if (allUnmeasured.length > 0) {
+  console.log(
+    `
+rules this harness cannot decide (no check.mjs case; scored via APP_CHECKS instead):
+  ${allUnmeasured.join(', ')}`
+  );
+}
 const allFailed = records.flatMap((r) => r.checks.failedIds);
 const tally = new Map<string, number>();
 for (const id of allFailed) tally.set(id, (tally.get(id) ?? 0) + 1);
