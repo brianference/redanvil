@@ -3,7 +3,6 @@ import { en } from '../i18n/en';
 import {
   EMPTY_WIZARD_ANSWERS,
   countScopeSignals,
-  isFeatureContinueBlocked,
   isFeatureSelectionReady,
   type WizardAnswers
 } from '../lib/job';
@@ -13,6 +12,11 @@ import {
   toggleFeatureSelection,
   toggleIntegrationChip
 } from './Wizard';
+import {
+  featureEntityNames,
+  resolveFeatureSelection
+} from './wizard/steps/FeaturesStep';
+import { defaultSelectedFeatureIds } from '../lib/prd/sections/features';
 
 describe('wizard scope options', () => {
   it('defaults optional scope to simple storage, no realtime, empty integrations', () => {
@@ -110,7 +114,6 @@ describe('wizard feature selection Continue gate', () => {
       selectedFeatureIds: []
     };
     expect(isFeatureSelectionReady(answers)).toBe(false);
-    expect(isFeatureContinueBlocked(answers.selectedFeatureIds)).toBe(true);
     // Wizard Next uses the same gate: empty selection must disable Continue.
     expect(
       answers.selectedFeatureIds !== null && answers.selectedFeatureIds.length === 0
@@ -125,7 +128,6 @@ describe('wizard feature selection Continue gate', () => {
       selectedFeatureIds: ['F1']
     };
     expect(isFeatureSelectionReady(answers)).toBe(true);
-    expect(isFeatureContinueBlocked(answers.selectedFeatureIds)).toBe(false);
   });
 
   it('toggleFeatureSelection deselects and can empty the list (UI path for the gate)', () => {
@@ -134,12 +136,58 @@ describe('wizard feature selection Continue gate', () => {
     expect(isFeatureSelectionReady({ ...EMPTY_WIZARD_ANSWERS, selectedFeatureIds: only })).toBe(
       false
     );
-    expect(isFeatureContinueBlocked(only)).toBe(true);
     const restored = toggleFeatureSelection(only, 'F2', true);
     expect(restored).toEqual(['F2']);
     expect(
       isFeatureSelectionReady({ ...EMPTY_WIZARD_ANSWERS, selectedFeatureIds: restored })
     ).toBe(true);
-    expect(isFeatureContinueBlocked(restored)).toBe(false);
+  });
+});
+
+// resolveFeatureSelection decides what the Features step shows and what reaches
+// generatePrd. It was re-exported "for unit tests" that never existed — an
+// independent judge caught the comment vouching for coverage that was not there.
+// Its stale-id branch is the interesting one: changing the entity list renumbers
+// feature ids, so a saved selection can point at ids that no longer exist.
+describe('resolveFeatureSelection', () => {
+  const answers = {
+    ...EMPTY_WIZARD_ANSWERS,
+    prompt: 'an app to track dog grooming appointments',
+    appType: 'Mobile app',
+    entities: 'Dog, Appointment'
+  };
+
+  it('falls back to MVP defaults when nothing has been chosen yet', () => {
+    const resolved = resolveFeatureSelection({ ...answers, selectedFeatureIds: null });
+    expect(resolved.length).toBeGreaterThan(0);
+    expect(resolved).toEqual(
+      defaultSelectedFeatureIds(featureEntityNames(answers.entities), answers.hasAuth)
+    );
+  });
+
+  it('keeps the ids that still exist and drops the ones that do not', () => {
+    const live = resolveFeatureSelection({ ...answers, selectedFeatureIds: null });
+    const first = live[0];
+    expect(first).toBeDefined();
+    if (first === undefined) return;
+    expect(
+      resolveFeatureSelection({ ...answers, selectedFeatureIds: [first, 'F999'] })
+    ).toEqual([first]);
+  });
+
+  it('falls back to defaults when every saved id has gone stale', () => {
+    // Not the same as the user deselecting everything: the selection was real,
+    // the ids just no longer resolve, so defaults are the honest answer.
+    const resolved = resolveFeatureSelection({
+      ...answers,
+      selectedFeatureIds: ['F999', 'F998']
+    });
+    expect(resolved).toEqual(
+      defaultSelectedFeatureIds(featureEntityNames(answers.entities), answers.hasAuth)
+    );
+  });
+
+  it('respects a deliberate empty selection instead of re-adding defaults', () => {
+    expect(resolveFeatureSelection({ ...answers, selectedFeatureIds: [] })).toEqual([]);
   });
 });

@@ -6,7 +6,6 @@ import { theme } from '../theme';
 import {
   buttonStyle,
   cardStyle,
-  contentColumnStyle,
   errorBannerStyle,
   statusBannerStyle
 } from './ui';
@@ -74,7 +73,7 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
   const saving = saveState.status === 'loading';
 
   return (
-    <section className="ra-content-col" style={contentColumnStyle} aria-label={copy.sectionLabel}>
+    <section className="ra-content-col" aria-label={copy.sectionLabel}>
       <div style={heroStyle}>
         <p style={readyBadgeStyle}>
           <span aria-hidden="true">✓ </span>

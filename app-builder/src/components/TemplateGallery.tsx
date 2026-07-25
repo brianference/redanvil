@@ -5,7 +5,6 @@ import { MIN_PROMPT_LENGTH } from '../lib/job';
 import {
   buttonStyle,
   chipStyle,
-  contentColumnStyle,
   fieldStyle,
   hintStyle,
   labelStyle
@@ -206,7 +205,7 @@ export function TemplateGallery({
   }
 
   return (
-    <div className="ra-content-col" style={contentColumnStyle}>
+    <div className="ra-content-col">
       <p style={subStyle}>{copy.subtitle}</p>
 
       <div style={sectionLabelStyle}>

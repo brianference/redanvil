@@ -2,16 +2,6 @@ import type { CSSProperties } from 'react';
 import { theme } from '../theme';
 
 /**
- * Content column used by the PRD result and template gallery screens.
- *
- * Layout lives in the `.ra-content-col` CSS class, NOT here. An inline
- * maxWidth cannot be lifted by a media query, which is exactly why the template
- * screen stayed at 46rem on a 1920 desktop while the shell around it was 94%.
- * Callers must set className="ra-content-col".
- */
-export const contentColumnStyle: CSSProperties = {};
-
-/**
  * Shared surface card used across builder screens.
  */
 export function cardStyle(padding: number = theme.space.lg): CSSProperties {

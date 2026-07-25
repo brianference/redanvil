@@ -58,12 +58,20 @@ const record = (rule, ok, detail) => {
 
 try {
   // --- Mobile pass: touch targets, type floor, overflow, safe areas ---
+  //
+  // Measured on EVERY route, not just the home page. Third audit finding #8:
+  // checking `/` alone meant a 14px caption or a 40px tap target on /saved or a
+  // wizard step would never be seen — and those are exactly the screens that
+  // change most.
+  const mobileRoutes = ['/', ...routes];
+  const perRoute = [];
+  for (const route of mobileRoutes) {
   const m = await browser.newPage({ viewport: { width: 375, height: 800 }, colorScheme: 'dark' });
   m.on('console', (e) => {
-    if (e.type() === 'error') consoleErrors.push(`375/dark: ${e.text().slice(0, 120)}`);
+    if (e.type() === 'error') consoleErrors.push(`375/dark ${route}: ${e.text().slice(0, 120)}`);
   });
-  m.on('pageerror', (e) => consoleErrors.push(`375/dark: ${String(e).slice(0, 120)}`));
-  await m.goto(baseUrl, { waitUntil: 'networkidle' });
+  m.on('pageerror', (e) => consoleErrors.push(`375/dark ${route}: ${String(e).slice(0, 120)}`));
+  await m.goto(new URL(route, baseUrl).href, { waitUntil: 'networkidle' });
 
   const mobile = await m.evaluate(
     ([touchMin, typeMin]) => {
@@ -72,8 +80,15 @@ try {
         const r = el.getBoundingClientRect();
         return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0;
       };
+      // WCAG 2.5.8 exempts a target that is "in a sentence or block of text".
+      // An inline link inside a paragraph is not a tap target you aim at, and
+      // counting it reported a confident FAIL for correct markup — an
+      // over-strict measurement is as wrong as a lenient one.
+      const inlineInText = (el) =>
+        el.tagName === 'A' && getComputedStyle(el).display === 'inline';
       const targets = [...document.querySelectorAll('a,button,input,select,textarea,[role=button]')]
-        .filter(visible);
+        .filter(visible)
+        .filter((el) => !inlineInText(el));
       const small = targets
         .filter((el) => el.getBoundingClientRect().height < touchMin)
         .map((el) => (el.textContent || '').trim().slice(0, 30));
@@ -99,28 +114,45 @@ try {
     [TOUCH_MIN, TYPE_MIN]
   );
   await m.close();
+  perRoute.push({ route, ...mobile });
+  }
 
+  const badTargets = perRoute.filter((r) => r.smallTargets.length > 0);
   record(
     'fe-touch-targets',
-    mobile.smallTargets.length === 0,
-    `${mobile.interactive} interactive elements at 375, ${mobile.smallTargets.length} under ${TOUCH_MIN}px` +
-      (mobile.smallTargets.length > 0 ? `: ${mobile.smallTargets.join(' | ')}` : '')
+    badTargets.length === 0,
+    `${perRoute.length} route(s) at 375; ` +
+      (badTargets.length === 0
+        ? `every interactive element >= ${TOUCH_MIN}px`
+        : badTargets.map((r) => `${r.route}: ${r.smallTargets.join(' | ')}`).join('; '))
   );
+  const badType = perRoute.filter((r) => r.tinyText.length > 0);
+  const minFont = Math.min(...perRoute.map((r) => r.minFontPx ?? Infinity));
   record(
     'fe-type-floor',
-    mobile.tinyText.length === 0,
-    `minimum body font ${mobile.minFontPx}px at 375, ${mobile.tinyText.length} node(s) under ${TYPE_MIN}px` +
-      (mobile.tinyText.length > 0 ? `: ${mobile.tinyText.join(' | ')}` : '')
+    badType.length === 0,
+    `${perRoute.length} route(s) at 375, smallest body font ${Number.isFinite(minFont) ? minFont : 'n/a'}px; ` +
+      (badType.length === 0
+        ? `nothing under ${TYPE_MIN}px`
+        : badType.map((r) => `${r.route}: ${r.tinyText.join(' | ')}`).join('; '))
   );
+  const overflowing = perRoute.filter((r) => r.overflow);
   record(
     'fe-responsive-375',
-    !mobile.overflow,
-    mobile.overflow ? 'body scrollWidth exceeds innerWidth at 375' : 'no horizontal overflow at 375'
+    overflowing.length === 0,
+    overflowing.length === 0
+      ? `no horizontal overflow at 375 on ${perRoute.length} route(s)`
+      : `overflow at 375 on: ${overflowing.map((r) => r.route).join(', ')}`
+  );
+  const unstuck = perRoute.filter(
+    (r) => r.headerPosition !== 'sticky' && r.headerPosition !== 'fixed'
   );
   record(
     'fe-safe-areas',
-    mobile.headerPosition === 'sticky' || mobile.headerPosition === 'fixed',
-    `header position ${mobile.headerPosition}, padding-top ${mobile.headerPaddingTop}`
+    unstuck.length === 0,
+    unstuck.length === 0
+      ? `header sticky on all ${perRoute.length} route(s), padding-top ${perRoute[0].headerPaddingTop}`
+      : `header not sticky on: ${unstuck.map((r) => r.route).join(', ')}`
   );
 
   // --- Desktop pass: nav, attribution, cross-link, SEO, non-colour state ---

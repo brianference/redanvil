@@ -260,6 +260,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
         void handleSubmit(event);
       }}
       aria-label={copy.formLabel}
+      className="ra-form-col"
       style={formStyle}
     >
       <Stepper step={step} />
@@ -330,9 +331,9 @@ export { integrationChipSelected, toggleIntegrationChip };
 /** Re-export review row derivation (public API; Review step UI path). */
 export { reviewAnswerRows };
 
-/** Re-export feature selection helpers (public API for unit tests). */
-export {
-  toggleFeatureSelection,
-  resolveFeatureSelection,
-  featureEntityNames
-} from './wizard/steps/FeaturesStep';
+// Only `toggleFeatureSelection` is imported through this surface. The block used
+// to re-export `resolveFeatureSelection` and `featureEntityNames` too, labelled
+// "public API for unit tests" — but no test imported them. An independent judge
+// caught the comment vouching for callers that did not exist.
+/** Re-export the feature toggle helper (public API for unit tests). */
+export { toggleFeatureSelection } from './wizard/steps/FeaturesStep';

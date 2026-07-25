@@ -1,12 +1,13 @@
 import type { CSSProperties } from 'react';
 import { theme } from '../../theme';
 
-/** Outer form layout for the wizard. */
+/**
+ * Outer form typography for the wizard.
+ * Width lives in `.ra-form-col` so a media query can lift it (rule R14).
+ */
 export const formStyle: CSSProperties = {
   fontFamily: theme.type.family,
-  color: theme.color.text,
-  maxWidth: '40rem',
-  width: '100%'
+  color: theme.color.text
 };
 
 /** Step indicator block spacing. */

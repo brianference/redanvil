@@ -82,19 +82,6 @@ export function isFeatureSelectionReady(answers: WizardAnswers): boolean {
 }
 
 /**
- * Whether the Next control on the Features step should stay disabled.
- * Same rule as {@link isFeatureSelectionReady} but named for the UI gate test.
- *
- * @param selectedFeatureIds - Explicit selection, or null before materialization.
- * @returns True when Continue must be blocked.
- */
-export function isFeatureContinueBlocked(
-  selectedFeatureIds: string[] | null
-): boolean {
-  return selectedFeatureIds !== null && selectedFeatureIds.length === 0;
-}
-
-/**
  * Whether Forge PRD may run: prompt, app type, and a non-empty feature pick
  * when the user has already made an explicit selection.
  *

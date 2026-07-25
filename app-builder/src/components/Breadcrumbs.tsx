@@ -10,7 +10,7 @@ export interface BreadcrumbsProps {
 
 const navStyle: CSSProperties = {
   marginBottom: theme.space.md,
-  fontSize: theme.type.scale[1],
+  fontSize: theme.type.scale[2],
   lineHeight: 1.5
 };
 

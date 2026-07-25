@@ -1,22 +1,22 @@
 {
   "baseUrl": "https://redanvil-dashboard.pages.dev/",
-  "checkedAt": "2026-07-25T07:06:39.296Z",
+  "checkedAt": "2026-07-25T16:48:01.288Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
-      "detail": "13 interactive elements at 375, 0 under 44px"
+      "detail": "5 route(s) at 375; every interactive element >= 44px"
     },
     "fe-type-floor": {
       "ok": true,
-      "detail": "minimum body font 16px at 375, 0 node(s) under 16px"
+      "detail": "5 route(s) at 375, smallest body font 16px; nothing under 16px"
     },
     "fe-responsive-375": {
       "ok": true,
-      "detail": "no horizontal overflow at 375"
+      "detail": "no horizontal overflow at 375 on 5 route(s)"
     },
     "fe-safe-areas": {
       "ok": true,
-      "detail": "header position sticky, padding-top 0px"
+      "detail": "header sticky on all 5 route(s), padding-top 0px"
     },
     "fe-premium-nav": {
       "ok": true,

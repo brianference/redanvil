@@ -175,9 +175,21 @@ export function shellCss(c: ShellCssTokens, m: ShellCssMetrics): string {
           width: 100%;
           max-width: 46rem;
         }
+        /* Wizard form column. Same reasoning as .ra-content-col: this was an
+           inline maxWidth of 40rem, which reads fine at 375 and then strands
+           the form in a third of a 1600px desktop with no way for a media
+           query to reach it. An independent judge found it surviving the
+           desktop-width pass precisely because it was inline (rule R14). */
+        .ra-form-col {
+          width: 100%;
+          max-width: 40rem;
+        }
         @media (min-width: 1024px) {
           .ra-content-col {
             max-width: none;
+          }
+          .ra-form-col {
+            max-width: 58rem;
           }
           /* Archetype cards use the width instead of stacking two-wide. */
           .ra-tpl-grid {

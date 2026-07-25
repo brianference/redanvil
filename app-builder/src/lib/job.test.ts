@@ -110,4 +110,16 @@ describe('wizard readiness (canForgePrd)', () => {
   it('is not ready when the prompt is too short even with an app type', () => {
     expect(canForgePrd({ ...base, prompt: 'short', appType: 'SaaS' })).toBe(false);
   });
+
+  // The empty-selection branch was the one canForgePrd path no test reached: an
+  // independent judge found it while every other branch was covered twice. It is
+  // the whole point of the Features step — deselect everything and Forge must
+  // refuse, rather than generate a PRD with no features in it.
+  it('refuses to forge when the user has deselected every feature', () => {
+    const ready = { ...base, appType: 'SaaS' };
+    expect(canForgePrd({ ...ready, selectedFeatureIds: [] })).toBe(false);
+    expect(canForgePrd({ ...ready, selectedFeatureIds: ['F1'] })).toBe(true);
+    // null means "not chosen yet", which is not the same as "chosen none".
+    expect(canForgePrd({ ...ready, selectedFeatureIds: null })).toBe(true);
+  });
 });

@@ -27,7 +27,10 @@ const introStyle: CSSProperties = {
 
 const updatedStyle: CSSProperties = {
   color: theme.color.muted,
-  fontSize: theme.type.scale[1],
+  // 16px: fe-type-floor is a blocker with a 16px body floor. Broadening the
+  // design audit from `/` to every route is what surfaced this — measuring one
+  // page hid a 14px line on four others.
+  fontSize: theme.type.scale[2],
   margin: `${theme.space.sm}px 0 0`
 };
 

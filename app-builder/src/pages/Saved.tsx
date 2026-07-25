@@ -325,7 +325,7 @@ const buildTitleLinkStyle: CSSProperties = {
 };
 
 const buildMetaStyle: CSSProperties = {
-  fontSize: theme.type.scale[1],
+  fontSize: theme.type.scale[2],
   color: theme.color.muted,
   display: 'flex',
   flexWrap: 'wrap',
@@ -344,7 +344,7 @@ const metaEllipsisStyle: CSSProperties = {
 const badgeStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  fontSize: theme.type.scale[1],
+  fontSize: theme.type.scale[2],
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.03em',
@@ -359,7 +359,7 @@ const badgeStyle: CSSProperties = {
 const sourceBadgeStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  fontSize: theme.type.scale[1],
+  fontSize: theme.type.scale[2],
   fontWeight: 600,
   padding: '2px 7px',
   borderRadius: theme.radius.pill,
