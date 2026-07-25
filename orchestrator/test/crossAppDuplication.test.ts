@@ -87,6 +87,9 @@ interface CrossAppDupModule {
   discoverApps: (repoRoot: string) => string[];
   normaliseLine: (line: string) => string;
   normaliseSource: (source: string) => string[];
+  isStylePropLine: (line: string) => boolean;
+  isLowSubstanceLine: (line: string) => boolean;
+  isMostlyStyleProps: (lines: string[]) => boolean;
   findDuplicatedBlocks: (
     linesA: string[],
     linesB: string[],
