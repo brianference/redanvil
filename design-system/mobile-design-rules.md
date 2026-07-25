@@ -295,3 +295,35 @@ for nine short links. Touch targets must stay ≥44px, so the height cannot come
 out of the tap area: flow the link groups into balanced columns instead. Three
 groups in a 2-column grid orphans the third beside dead space; use multi-column
 so the heights balance.
+
+## R19 — A raster lockup has a minimum legible size (major)
+
+A lockup with the tagline baked into the pixels does not degrade gracefully. The
+440x149 brand lockup at a 48px footer height renders its tagline about five
+pixels tall — a grey smear, not type. Measured checks do not see this: contrast
+passes, no rule names a minimum image size, and the DOM is correct.
+
+Set the footer height from the asset's own proportions, not from a round number
+that looks reasonable in code. Here that is 80px against a 112px header. If a
+mark needs to go smaller than its tagline can survive, it needs a separate
+mark-only asset — do not scale the lockup and hope.
+
+Corollary: any rule that can only be judged from a rendered page needs a
+screenshot artifact, produced by a script rather than ad hoc, or "the visual
+review passed" is an unverifiable claim.
+
+## R20 — Every router needs a catch-all route (blocker)
+
+Without one, an unmatched URL renders an **empty document** — no header, no
+heading, no way back — and it is invisible in testing because nothing links to a
+bad URL. It surfaced here only when a design audit was pointed at a route that
+turned out not to exist.
+
+Ship a `NotFound` page inside the normal shell (header, footer, an h1, a link
+home) and point the route audit at a deliberately bad path so the empty-document
+failure cannot come back.
+
+A 404's "back to home" control is a standalone CTA, not a link inside a
+sentence, so the WCAG 2.5.8 inline-text exemption does not apply to it: it needs
+a real 44px target. The reverse error matters too — enforcing 44px on inline
+prose links produces a confident FAIL against correct markup.
