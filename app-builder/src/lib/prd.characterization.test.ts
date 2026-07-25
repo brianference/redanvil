@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { generatePrd } from './prd';
-import { CASES, prdPayload, prdDigest } from './prd.characterization.cases';
+import { CASES, prdPayload, prdDigest } from '../../test-support/prdCharacterizationCases';
 
 const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), 'prd.characterization.fixtures');
 

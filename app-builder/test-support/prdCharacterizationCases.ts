@@ -2,15 +2,20 @@
  * Characterization inputs for generatePrd, shared by the test and the
  * regeneration script.
  *
+ * Deliberately OUTSIDE `src/`. It imports `node:crypto` for the digest, and
+ * `u-plat-worker-runtime` correctly failed it while it lived in the browser
+ * source tree — a Node-only import there is one stray `import` away from being
+ * bundled into a Worker or a browser build, where `node:crypto` does not exist.
+ *
  * They live here rather than inside the test so the script that rewrites the
  * goldens provably uses the SAME inputs the test asserts against. Duplicating
  * them would let the two drift, and a golden generated from different inputs
  * than the test replays is worse than no golden.
  */
 import { createHash } from 'node:crypto';
-import { estimate } from './estimate';
-import { type Prd, type TokenEstimate } from './prd';
-import type { WizardAnswers } from './job';
+import { estimate } from '../src/lib/estimate';
+import { type Prd, type TokenEstimate } from '../src/lib/prd';
+import type { WizardAnswers } from '../src/lib/job';
 
 export const CASES: ReadonlyArray<{
   id: string;

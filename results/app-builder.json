@@ -1,11 +1,11 @@
 {
   "kind": "results",
   "slug": "app-builder",
-  "finalScore": 100,
+  "finalScore": 0,
   "threshold": 90,
-  "passed": true,
-  "evaluated": 48,
-  "total": 48,
+  "passed": false,
+  "evaluated": 53,
+  "total": 53,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -37,6 +37,10 @@
     },
     {
       "ruleId": "u-sec-no-stub-paths",
+      "passed": true
+    },
+    {
+      "ruleId": "u-sec-timeouts",
       "passed": true
     },
     {
@@ -73,7 +77,7 @@
     },
     {
       "ruleId": "u-plat-worker-runtime",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "u-plat-runtime-parity",
@@ -105,6 +109,22 @@
     },
     {
       "ruleId": "hyg-no-duplication",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-actionlint",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-sha-pinned",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-least-privilege",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-no-injection",
       "passed": true
     },
     {
@@ -207,24 +227,25 @@
   "iterations": [
     {
       "index": 1,
-      "score": 100,
-      "blockers": []
+      "score": 0,
+      "blockers": [
+        "u-plat-worker-runtime"
+      ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-25T17:36:11.335Z",
+  "finishedAt": "2026-07-25T18:56:27.202Z",
   "provenance": {
-    "commit": "354ac5bfdf58d0ae80f0b5254a6d53863ccd614d",
-    "dirty": false,
+    "commit": "74b24323c4a6a8cb372c4cbb7d07e17d91508c3c",
+    "dirty": true,
     "rubricHash": "6d4f856c497825026c5f565955dd32b97e5f88fe6da15290f171399a29d0397d",
     "rubricRuleCount": 55,
     "node": "v22.19.0",
-    "verdictsHash": "554049ad4102a161b3f71f445cebf99050551e0612d06971cece5677150a7ea9",
+    "verdictsHash": "107ab44e7eba5e949798449b8438c11d77bbdbda3581a01bb3b908b635cc3aa3",
     "notApplicable": [
-      "ci",
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-07-25T17:36:11.379Z"
+    "generatedAt": "2026-07-25T18:56:27.249Z"
   }
 }

@@ -11,7 +11,7 @@
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CASES, prdPayload, prdDigest } from '../src/lib/prd.characterization.cases';
+import { CASES, prdPayload, prdDigest } from '../test-support/prdCharacterizationCases';
 import { generatePrd } from '../src/lib/prd';
 
 const here = dirname(fileURLToPath(import.meta.url));
