@@ -32,15 +32,16 @@ import { pathToFileURL } from 'node:url';
 export const MIN_BLOCK = 8;
 
 /**
- * Default budget: the measured total on this repo. Ratcheted 805 -> 772 after
- * the shared shell CSS moved into design-system/shellCss.ts. Lower it again
- * whenever real duplication is removed; never raise it to make a run pass.
+ * Default budget: the measured total on this repo. Ratcheted 805 -> 772 (shared
+ * shell CSS) -> 646 (shared useDrawerA11y, once npm workspaces hoisted react to
+ * one copy and React-dependent code could finally move). Lower it again whenever
+ * real duplication is removed; never raise it to make a run pass.
  * Original note: measured total on this repo when the pass was introduced
  * (app-builder ↔ dashboard shared shell/lib; orchestrator currently contributes
  * 0). This is a ratchet to be lowered as shared code is extracted — not a
  * target. Override with `--max N` for local experiments.
  */
-export const DEFAULT_BUDGET = 772;
+export const DEFAULT_BUDGET = 646;
 
 /** Source extensions scanned under each app's `src/`. */
 const SRC_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
