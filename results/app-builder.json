@@ -212,19 +212,19 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-25T07:09:14.987Z",
+  "finishedAt": "2026-07-25T17:36:11.335Z",
   "provenance": {
-    "commit": "f059094e9eaa84b1aa70bd00687ebafe8ec3341a",
+    "commit": "354ac5bfdf58d0ae80f0b5254a6d53863ccd614d",
     "dirty": false,
     "rubricHash": "6d4f856c497825026c5f565955dd32b97e5f88fe6da15290f171399a29d0397d",
     "rubricRuleCount": 55,
     "node": "v22.19.0",
-    "verdictsHash": "e358547ba906b210d813f69c128587606d5fdc6e32b7852e070b9d5579460f4a",
+    "verdictsHash": "554049ad4102a161b3f71f445cebf99050551e0612d06971cece5677150a7ea9",
     "notApplicable": [
       "ci",
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-07-25T07:09:15.034Z"
+    "generatedAt": "2026-07-25T17:36:11.379Z"
   }
 }
