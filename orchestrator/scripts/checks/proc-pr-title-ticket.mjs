@@ -132,18 +132,118 @@ export function fetchPrTitle(appDir) {
 }
 
 /**
+ * Parse `owner/repo` out of a git remote URL (ssh or https).
+ *
+ * @param {string} remoteUrl Raw `git remote get-url origin` output.
+ * @returns {{ owner: string, repo: string } | null}
+ */
+export function parseRemote(remoteUrl) {
+  const m = /github\.com[/:]([^/]+)\/(.+?)(?:\.git)?\s*$/.exec(String(remoteUrl).trim());
+  if (m === null) return null;
+  return { owner: m[1], repo: m[2] };
+}
+
+/**
+ * Fetch the PR title from the GitHub REST API.
+ *
+ * `gh` is not installed on every machine that runs this gate, and on the one it
+ * was written for it never has been — so the rule returned "gh not available"
+ * forever and quietly left the denominator. A missing CLI is a tooling gap, not
+ * a property of the code being judged, and the two must not look the same.
+ *
+ * Asks for PRs containing the current commit first (works after a merge), then
+ * for an open PR on the current branch.
+ *
+ * @param {string} appDir Directory to resolve git context from.
+ * @param {(url: string, headers: Record<string,string>) => Promise<{ ok: boolean, json: unknown }>} httpGet Injected fetcher.
+ * @returns {Promise<{ ok: true, title: string, source: string } | { ok: false, reason: string }>}
+ */
+export async function fetchPrTitleFromApi(appDir, httpGet) {
+  const token = process.env['GITHUB_TOKEN'] ?? process.env['GH_TOKEN'] ?? '';
+  if (token.length === 0) return { ok: false, reason: 'no GITHUB_TOKEN for the PR lookup' };
+
+  /** @param {string[]} args */
+  const git = (args) => {
+    try {
+      return execFileSync('git', args, {
+        cwd: appDir,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore']
+      }).trim();
+    } catch {
+      return '';
+    }
+  };
+  const remote = parseRemote(git(['remote', 'get-url', 'origin']));
+  if (remote === null) return { ok: false, reason: 'no github remote' };
+  const sha = git(['rev-parse', 'HEAD']);
+  const branch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
+  const headers = {
+    authorization: `Bearer ${token}`,
+    accept: 'application/vnd.github+json',
+    'user-agent': 'redanvil-gate'
+  };
+  const base = `https://api.github.com/repos/${remote.owner}/${remote.repo}`;
+
+  if (sha.length > 0) {
+    const res = await httpGet(`${base}/commits/${sha}/pulls`, headers);
+    const list = Array.isArray(res.json) ? res.json : [];
+    if (res.ok && list.length > 0 && typeof list[0]?.title === 'string') {
+      return { ok: true, title: list[0].title, source: `PR #${list[0].number} for commit` };
+    }
+  }
+  if (branch.length > 0 && branch !== 'HEAD') {
+    const res = await httpGet(
+      `${base}/pulls?state=all&head=${remote.owner}:${branch}&per_page=1`,
+      headers
+    );
+    const list = Array.isArray(res.json) ? res.json : [];
+    if (res.ok && list.length > 0 && typeof list[0]?.title === 'string') {
+      return { ok: true, title: list[0].title, source: `PR #${list[0].number} for ${branch}` };
+    }
+  }
+  // Reaching here means the API answered and there is genuinely no PR. That is a
+  // real property of this repository (it pushes straight to master), not a
+  // tooling gap, and the message says so rather than blaming a missing binary.
+  return { ok: false, reason: 'repository has no pull request for this commit or branch' };
+}
+
+/**
+ * Default fetcher for {@link fetchPrTitleFromApi}.
+ *
+ * @param {string} url Absolute URL.
+ * @param {Record<string,string>} headers Request headers.
+ * @returns {Promise<{ ok: boolean, json: unknown }>}
+ */
+async function httpGetJson(url, headers) {
+  try {
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(15_000) });
+    const json = await res.json().catch(() => null);
+    return { ok: res.ok, json };
+  } catch {
+    return { ok: false, json: null };
+  }
+}
+
+/**
  * Run the proc-pr-title-ticket check against appDir.
  *
- * @param {string} appDir App or repository directory (cwd for `gh`).
+ * Tries `gh` first (fastest when present), then the REST API. Only when both
+ * agree there is no PR does the rule leave the denominator.
+ *
+ * @param {string} appDir App or repository directory.
  * @param {{ pass: () => never, fail: (msg?: string) => never, notApplicable: (why?: string) => never }} io Outcome callbacks.
- * @returns {never}
+ * @param {(url: string, headers: Record<string,string>) => Promise<{ ok: boolean, json: unknown }>} [httpGet] Injected fetcher (tests).
+ * @returns {Promise<never>}
  */
-export function runProcPrTitleTicket(appDir, io) {
-  const fetched = fetchPrTitle(appDir);
-  if (!fetched.ok) {
-    return io.notApplicable(fetched.reason);
-  }
-  return checkPrTitle(fetched.title, io);
+export async function runProcPrTitleTicket(appDir, io, httpGet = httpGetJson) {
+  const viaCli = fetchPrTitle(appDir);
+  if (viaCli.ok) return checkPrTitle(viaCli.title, io);
+
+  const viaApi = await fetchPrTitleFromApi(appDir, httpGet);
+  if (viaApi.ok) return checkPrTitle(viaApi.title, io);
+
+  return io.notApplicable(viaApi.reason);
 }
 
 /**
@@ -186,5 +286,5 @@ if (isCliMain()) {
     console.error('usage: node proc-pr-title-ticket.mjs <appDir>');
     process.exit(EXIT_USAGE);
   }
-  runProcPrTitleTicket(appDir, processIo());
+  await runProcPrTitleTicket(appDir, processIo());
 }

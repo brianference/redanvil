@@ -102,6 +102,42 @@ function trackedFiles(dir) {
   }
 }
 
+/**
+ * Workflows that actually build and deploy this app, and the directory they
+ * live in.
+ *
+ * The CI lane used to look only inside `appDir`. In a monorepo an app has no
+ * `.github/workflows` of its own — the repo's workflows are what typecheck,
+ * test, build and deploy it — so all four `ci-*` rules returned "no workflow
+ * files" and left the denominator, while the workflows they describe existed
+ * and were unexamined by that lane.
+ *
+ * Falls back to the enclosing git repository. A standalone scaffold with no
+ * repo workflows still gets nothing, which is the correct n/a.
+ *
+ * @param {string} dir App directory.
+ * @returns {{ root: string, files: string[] }}
+ */
+function resolveWorkflows(dir) {
+  const own = trackedFiles(dir).filter((f) => /\.github[/\\]workflows[/\\].+\.ya?ml$/.test(f));
+  if (own.length > 0) return { root: dir, files: own };
+  let repoRoot = '';
+  try {
+    repoRoot = execFileSync('git', ['rev-parse', '--show-toplevel'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+  } catch {
+    return { root: dir, files: [] };
+  }
+  if (repoRoot.length === 0) return { root: dir, files: [] };
+  const repoFiles = trackedFiles(repoRoot).filter((f) =>
+    /\.github[/\\]workflows[/\\].+\.ya?ml$/.test(f)
+  );
+  return { root: repoRoot, files: repoFiles };
+}
+
 /** Files whose raw literals are legitimately allowed (token/theme definitions). */
 const isThemeFile = (f) => /theme\.(ts|css)$|tokens?\.(ts|json)$/.test(f);
 /**
@@ -309,8 +345,16 @@ switch (ruleId) {
     break;
   }
   case 'u-sec-timeouts': {
-    // Each function file that calls fetch must itself carry an AbortSignal/timeout.
-    const files = walk(functionsDir, ['.ts', '.js']);
+    // Every file that calls fetch must itself carry an AbortSignal/timeout.
+    //
+    // This used to walk `functions/` only, so it returned n/a for both apps —
+    // neither backend makes an outbound call — while the CLIENT made four, one
+    // of them cross-origin to raw.githubusercontent.com with no timeout at all.
+    // A hung request there left the dashboard on its loading skeleton forever:
+    // a failure rendered as a clean pending state. The rule is about explicit
+    // timeouts on calls that can hang, and a browser fetch hangs the same way a
+    // server one does.
+    const files = [...walk(functionsDir, ['.ts', '.js']), ...tsx()].filter((f) => !isTestFile(f));
     const fetchFiles = files.filter((f) => /\bfetch\s*\(/.test(read(f)));
     if (fetchFiles.length === 0) notApplicable('no outbound fetch in this app');
     for (const f of fetchFiles) {
@@ -512,11 +556,14 @@ switch (ruleId) {
   case 'ci-sha-pinned':
   case 'ci-least-privilege':
   case 'ci-no-injection': {
-    // CI-lane checks over .github/workflows. If the target ships no workflows the
-    // lane does not apply and must be waived by the caller, not passed here.
-    const wf = trackedFiles(appDir).filter((f) => /\.github[\/]workflows[\/].+\.ya?ml$/.test(f));
+    // CI-lane checks over .github/workflows — the app's own, or the enclosing
+    // repo's, because in a monorepo those are the workflows that build this app.
+    // If neither exists the lane genuinely does not apply and must be waived by
+    // the caller, not passed here.
+    const resolved = resolveWorkflows(appDir);
+    const wf = resolved.files;
     if (wf.length === 0) notApplicable('no workflow files');
-    const read2 = (f) => read(join(appDir, f));
+    const read2 = (f) => read(join(resolved.root, f));
     if (ruleId === 'ci-sha-pinned') {
       // Every third-party `uses:` must pin a 40-hex SHA (with a version comment).
       for (const f of wf) {
@@ -775,7 +822,9 @@ switch (ruleId) {
   }
   case 'ci-actionlint': {
     // Structural workflow lint in JS — never silent-pass when actionlint is missing.
-    runCiActionlint(appDir, { pass, fail, notApplicable, EOL });
+    // Linted against the directory that actually holds this app's workflows,
+    // which in a monorepo is the repo root, not the app.
+    runCiActionlint(resolveWorkflows(appDir).root, { pass, fail, notApplicable, EOL });
     break;
   }
   case 'proc-conventional-commits': {
@@ -783,8 +832,12 @@ switch (ruleId) {
     break;
   }
   case 'proc-pr-title-ticket': {
-    // Option (a): measure via `gh pr view` when a PR exists; N/A otherwise.
-    runProcPrTitleTicket(appDir, { pass, fail, notApplicable });
+    // `gh pr view` first, then the REST API — a machine without the CLI is a
+    // tooling gap, not a property of the code, and this rule spent its whole
+    // life reporting "gh not available" because of one. Still n/a when both
+    // agree there is no PR; on a repo that pushes straight to master there is
+    // nothing to measure and inventing a pass would be fabrication.
+    await runProcPrTitleTicket(appDir, { pass, fail, notApplicable });
     break;
   }
   default:

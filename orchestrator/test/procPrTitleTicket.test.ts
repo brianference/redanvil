@@ -174,3 +174,101 @@ describe('CLI harness', () => {
     expect(r.stderr).toMatch(/n\/a:/i);
   });
 });
+
+/** Outcome callbacks the check calls instead of exiting. */
+interface Outcome {
+  pass: () => never;
+  fail: (m?: string) => never;
+  notApplicable: (w?: string) => never;
+}
+
+describe('proc-pr-title-ticket via the GitHub API', () => {
+  // The CLI path had never once run on the machine this gate was built for —
+  // `gh` is not installed there — so the rule reported "gh not available" for
+  // its whole life and silently left the denominator. These tests exercise the
+  // API path with an injected fetcher so it does not depend on a binary, a
+  // network, or a token.
+
+  interface PrTitleModule {
+    parseRemote: (url: string) => { owner: string; repo: string } | null;
+    runProcPrTitleTicket: (
+      appDir: string,
+      io: Outcome,
+      httpGet: (url: string) => Promise<{ ok: boolean; json: unknown }>
+    ) => Promise<void>;
+  }
+
+  /** Load the module fresh so env changes take effect. */
+  const load = async (): Promise<PrTitleModule> =>
+    (await import(
+      `${pathToFileURL(SCRIPT).href}?t=${Date.now()}${Math.random()}`
+    )) as unknown as PrTitleModule;
+
+  /** Collect the outcome instead of exiting the process. */
+  const collector = (): { io: Outcome; out: string[] } => {
+    const out: string[] = [];
+    return {
+      out,
+      io: {
+        pass: () => out.push('pass') as never,
+        fail: (m?: string) => out.push(`fail:${m ?? ''}`) as never,
+        notApplicable: (w?: string) => out.push(`na:${w ?? ''}`) as never
+      }
+    };
+  };
+
+  it('parses owner/repo from both ssh and https remotes', async () => {
+    const { parseRemote } = await load();
+    expect(parseRemote('https://github.com/brianference/redanvil.git')).toEqual({
+      owner: 'brianference',
+      repo: 'redanvil'
+    });
+    expect(parseRemote('git@github.com:brianference/redanvil.git')).toEqual({
+      owner: 'brianference',
+      repo: 'redanvil'
+    });
+    expect(parseRemote('https://gitlab.com/x/y.git')).toBeNull();
+  });
+
+  it('passes when the API returns a ticket-prefixed PR title', async () => {
+    const mod = await load();
+    process.env['GITHUB_TOKEN'] = 'test-token-not-a-secret';
+    const { io, out } = collector();
+    await mod.runProcPrTitleTicket(process.cwd(), io, async (url: string) =>
+      url.includes('/pulls')
+        ? { ok: true, json: [{ number: 7, title: 'RA-42: add the thing' }] }
+        : { ok: true, json: [] }
+    );
+    expect(out).toEqual(['pass']);
+  });
+
+  it('FAILS when the API returns a PR title with no ticket key', async () => {
+    const mod = await load();
+    process.env['GITHUB_TOKEN'] = 'test-token-not-a-secret';
+    const { io, out } = collector();
+    await mod.runProcPrTitleTicket(process.cwd(), io, async () => ({
+      ok: true,
+      json: [{ number: 8, title: 'just fixing stuff' }]
+    }));
+    expect(out[0]).toMatch(/^fail:/);
+  });
+
+  it('reports a missing token distinctly from a repo with no PRs', async () => {
+    const mod = await load();
+    delete process.env['GITHUB_TOKEN'];
+    delete process.env['GH_TOKEN'];
+    const noToken = collector();
+    await mod.runProcPrTitleTicket(process.cwd(), noToken.io, async () => ({
+      ok: true,
+      json: []
+    }));
+    expect(noToken.out[0]).toMatch(/no GITHUB_TOKEN/);
+
+    process.env['GITHUB_TOKEN'] = 'test-token-not-a-secret';
+    const noPr = collector();
+    await mod.runProcPrTitleTicket(process.cwd(), noPr.io, async () => ({ ok: true, json: [] }));
+    // A repo that pushes straight to master genuinely has nothing to measure.
+    // That must not read as "the tool is missing", which is what it used to say.
+    expect(noPr.out[0]).toMatch(/no pull request for this commit or branch/);
+  });
+});
