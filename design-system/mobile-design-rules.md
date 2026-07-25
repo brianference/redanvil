@@ -327,3 +327,32 @@ A 404's "back to home" control is a standalone CTA, not a link inside a
 sentence, so the WCAG 2.5.8 inline-text exemption does not apply to it: it needs
 a real 44px target. The reverse error matters too — enforcing 44px on inline
 prose links produces a confident FAIL against correct markup.
+
+## R21 — Constraints are not a design (blocker for generated apps)
+
+A rule pack that says "tokens only, AA contrast, 16px body floor, 44px targets,
+sticky header, five required routes" is necessary and **identical for every
+app**. An agent handed only constraints satisfies all of them and ships the same
+centred column under a sticky header every single time. The rules are working;
+nothing is asking for a different product.
+
+Every generated app must therefore carry a **layout archetype** and a **visual
+direction** alongside the constraints:
+
+- The archetype must differ **structurally** — where navigation lives, how the
+  primary surface is divided, what the eye lands on first. Recolouring one
+  archetype must not produce another. Split workbench, command canvas, timeline
+  chronicle, metric board, guided flow, focus hero, kanban lanes, map + list.
+- State what the app must **not** default to, by name. "Be creative" is not a
+  specification; "do not build a card grid" is.
+- Specify how the archetype resolves at 375. If the mobile answer is "the same
+  thing but narrower", the archetype has not been applied.
+- Pick the direction from the app's own inputs, deterministically. A spec that
+  changes when you regenerate it is not a spec.
+- Build the token set first, then the shell, then screens. Choosing colours
+  while writing components is how everything drifts back to default.
+- Source **three** real references before writing components, and take one idea
+  from each rather than copying a layout wholesale.
+
+A reference implementation of the rules is not a template. Reusing its shell,
+palette or component structure is the specific failure this rule prevents.

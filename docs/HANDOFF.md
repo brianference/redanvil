@@ -1,20 +1,21 @@
-# RedAnvil handoff — 2026-07-25 (v9.0.0)
+# RedAnvil handoff — 2026-07-25 (v10.0.0)
 
-State after v9.0.0, and what is left. Written so a fresh context can pick up without
+State after v10.0.0, and what is left. Written so a fresh context can pick up without
 re-deriving anything.
 
 ## Where things stand
 
-- **HEAD:** `6b970dd` on `master`.
-- **Latest release:** `v9.0.0` (independent judge, corrected duplication definition, 404
-  pages, per-route design audit).
+- **HEAD:** see `git log -1`; v10.0.0 tagged.
+- **Latest release:** `v10.0.0` (both apps independently judged, coverage floored at 90%,
+  per-app design direction).
 - **Production:** https://redanvil.pages.dev and https://redanvil-dashboard.pages.dev
   (Cloudflare Pages, direct upload / Type B; prod branch `main`, local branch `master`, so
   deploys must pass `--branch main`). Both verified by asset-hash match against the scored
   commit, and `/api/health` returns `{"status":"ok"}`.
-- **Gate:** app-builder 100/100 across 48/48 at **87% coverage** (floor 85); dashboard 100/100
-  across 46/46 at **84%** (floor 80). Both `--na ci,process`, zero stale verdicts, both
-  reproduced rule-by-rule, both scored from a clean tree and tied to the deployed bundle.
+- **Gate:** app-builder 100/100 across **53/53** at **96% coverage**; dashboard 100/100 across
+  **52/52** at **95%**. Both run `--na process --min-coverage 90` — the CI lane is no longer
+  waived. Zero stale verdicts, both reproduced rule-by-rule, both scored from a clean tree and
+  tied to the deployed bundle.
 - **Working tree:** clean.
 
 ## What changed in v9.0.0
@@ -43,18 +44,43 @@ the detail; the load-bearing parts:
    set deterministically. Design rules **R19** (raster lockup minimum legible size) and **R20**
    (every router needs a catch-all) added and synced to the mobile-ux skill.
 
+## What changed in v10.0.0
+
+1. **Both apps independently judged.** `independent_judge.mjs` makes the reviewer repeatable:
+   disposable worktree, fresh context, no access to the verdict file, credentials scrubbed,
+   cited paths checked to exist on disk. The dashboard's first run returned **4 FAILs** against
+   10/10 self-recorded passes; all four were verified and real. Across both apps: **10 FAILs in
+   20 rules, 9 confirmed, 1 refuted and recorded as refuted.**
+2. **The judge contradicted the gate and won.** It flagged `u-val-input-validation` on the
+   dashboard, which the gate had marked n/a "no input". The cross-origin results feed IS
+   untrusted input, and it was validated by a hand-rolled `typeof` chain that accepted
+   `NaN`, `-1`, `1.5` and empty strings. Now Zod, and the rule now covers client reads of
+   cross-origin JSON.
+3. **Coverage floored at 90% and cleared by measurement.** Six rules were leaving the
+   denominator for reasons about tooling and scope, not code: `u-sec-timeouts` walked
+   `functions/` only (missing a client fetch with no timeout at all), and the four `ci-*` rules
+   looked for workflows inside the app directory in a monorepo where they live at the root.
+4. **`proc-pr-title-ticket` finally runs.** It falls back to the REST API instead of reporting
+   a missing `gh` binary forever. Still n/a here — this repo has zero PRs — but the reason is
+   now true.
+5. **Design direction per app.** §7.3a picks a layout archetype and visual direction from the
+   app's own inputs. Measured over eight sample ideas: six distinct archetypes, five distinct
+   visual directions. Design rule **R21**.
+
 ## Remaining tasks (priority order)
 
-1. **`proc-pr-title-ticket` is N/A locally.** Implemented via `gh pr view`; `gh` is not on PATH
-   so it always returns N/A. Fails closed, so it is honest, but it has never been measured
-   here. Wire it to the GitHub API with the existing token if PR-title enforcement matters.
-2. **Lower the duplication ratchet below 387.** The remaining worst offenders are all genuine
-   shared shell code: `Page.tsx` (60), `shell/styles.ts` (57), `NavLinks` (42), `MobileDrawer`
-   (36), `useDocumentMeta` (36), `Footer` (34), `ThemeToggle` (31), `Logo` (29), `Header` (26),
+1. **Lower the duplication ratchet below 387.** The worst offenders are all genuine shared
+   shell code: `Page.tsx` (60), `shell/styles.ts` (57), `NavLinks` (42), `MobileDrawer` (36),
+   `useDocumentMeta` (36), `Footer` (34), `ThemeToggle` (31), `Logo` (29), `Header` (26),
    `Breadcrumbs` (22), `linkify` (20). They import per-app theme/i18n, so they need
    parameterising rather than moving — the same shape `shellCss.ts` already uses.
-3. **Run the independent judge on the dashboard too**, and on a cadence rather than once. One
-   run found five real defects in app-builder; the dashboard has never had one.
+2. **Keep the independent judge on a cadence.** `judge_dissent.mjs` reports how far each review
+   is behind HEAD and names any app that has never had one. It cannot run in CI (`grok`
+   authenticates interactively), so it needs running locally after significant work:
+   `node .github/scripts/independent_judge.mjs <app>`.
+3. **Generate an app end-to-end against the new §7.3a** and check the result actually looks
+   different. The variation is proven at the spec level by test; it has not yet been proven at
+   the built-app level.
 4. **A fourth audit.** Three have each found real problems; the returns have not diminished.
 
 ## Key facts a fresh context will need
