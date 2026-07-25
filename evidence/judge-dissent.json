@@ -1,10 +1,10 @@
 {
-  "checkedAt": "2026-07-25T18:52:46.142Z",
-  "verdictFileRevisions": 36,
-  "distinctJudgeVerdicts": 277,
+  "checkedAt": "2026-07-25T19:16:30.825Z",
+  "verdictFileRevisions": 42,
+  "distinctJudgeVerdicts": 334,
   "judgeFails": 0,
   "judgeDissentRate": 0,
-  "distinctVisualVerdicts": 429,
+  "distinctVisualVerdicts": 519,
   "visualFails": 2,
   "failedRuleIds": [
     "fe-a11y-contrast"
@@ -13,7 +13,7 @@
     {
       "file": "evidence/judge-independent-app-builder.json",
       "reviewedCommit": "f84e3f27323c",
-      "commitsBehindHead": 18,
+      "commitsBehindHead": 36,
       "judged": 10,
       "failed": 6,
       "confirmed": 5
@@ -21,7 +21,7 @@
     {
       "file": "evidence/judge-independent-dashboard.json",
       "reviewedCommit": "4bc2b429d4d9",
-      "commitsBehindHead": 2,
+      "commitsBehindHead": 20,
       "judged": 10,
       "failed": 4,
       "confirmed": 4
