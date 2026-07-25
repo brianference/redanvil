@@ -33,6 +33,14 @@ export type Provenance = {
    * not disclose what was waived is not fully describing its own score.
    */
   notApplicable: string[];
+  /**
+   * Rule ids whose recorded verdict was DROPPED as stale (its reviewed subject
+   * changed since `reviewedCommit`). Disclosed because a dropped verdict is the
+   * difference between "this rule was reviewed and passed" and "nothing has
+   * looked at this rule since the code moved" — and the score cannot show that
+   * on its own.
+   */
+  staleVerdicts: string[];
   generatedAt: string;
 };
 
@@ -75,7 +83,11 @@ function sha256(text: string): string {
  */
 export function collectProvenance(
   cwd: string = process.cwd(),
-  opts: { verdictsRaw?: string | null; notApplicable?: string[] } = {}
+  opts: {
+    verdictsRaw?: string | null;
+    notApplicable?: string[];
+    staleVerdicts?: string[];
+  } = {}
 ): Provenance {
   const commit = git(['rev-parse', 'HEAD'], cwd);
   const status = git(['status', '--porcelain'], cwd);
@@ -87,6 +99,7 @@ export function collectProvenance(
     node: process.version,
     verdictsHash: typeof opts.verdictsRaw === 'string' ? sha256(opts.verdictsRaw) : null,
     notApplicable: [...(opts.notApplicable ?? [])].sort(),
+    staleVerdicts: [...(opts.staleVerdicts ?? [])].sort(),
     generatedAt: new Date().toISOString()
   };
 }

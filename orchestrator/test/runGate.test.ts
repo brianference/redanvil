@@ -22,7 +22,15 @@ describe('runGate', () => {
       failCheck('u-sec-param-sql')
     ]);
     expect(outcomes).toContainEqual({ ruleId: 'u-typing-strict', passed: true });
-    expect(outcomes).toContainEqual({ ruleId: 'u-sec-param-sql', passed: false });
+    expect(outcomes).toContainEqual(
+      expect.objectContaining({ ruleId: 'u-sec-param-sql', passed: false })
+    );
+    // A failing check must carry its own diagnostic, so the loop can hand the
+    // coder the reason rather than only the rule id.
+    expect(
+      outcomes.find((o) => o.ruleId === 'u-sec-param-sql')?.detail,
+      'a failed outcome carries the check output'
+    ).toBeTruthy();
   });
 
   it('collapses the score to 0 when a blocker check fails (degradation)', async () => {
@@ -54,6 +62,14 @@ describe('runGate not-applicable', () => {
       { ruleId: 'u-sec-param-sql', command: process.execPath, args: ['-e', 'process.exit(9)'] }
     ]);
     expect(notApplicable).toEqual([]);
-    expect(outcomes).toContainEqual({ ruleId: 'u-sec-param-sql', passed: false });
+    expect(outcomes).toContainEqual(
+      expect.objectContaining({ ruleId: 'u-sec-param-sql', passed: false })
+    );
+    // A failing check must carry its own diagnostic, so the loop can hand the
+    // coder the reason rather than only the rule id.
+    expect(
+      outcomes.find((o) => o.ruleId === 'u-sec-param-sql')?.detail,
+      'a failed outcome carries the check output'
+    ).toBeTruthy();
   });
 });

@@ -355,18 +355,30 @@ switch (ruleId) {
     break;
   }
   case 'fe-theme-tokens-only': {
-    // No raw hex colors in components/pages (theme/token files exempt).
-    const files = tsx().filter((f) => /[\\/](components|pages)[\\/]/.test(f));
+    // No raw hex colours anywhere a colour can be rendered from. Restricting the
+    // scan to components/ and pages/ .tsx meant a hardcoded colour in a
+    // stylesheet, in src/App.tsx, or in any other src module satisfied a rule
+    // whose entire point is that colour comes from tokens.
+    const files = walk(src, ['.ts', '.tsx', '.css']).filter((f) => !isTestFile(f));
+    if (files.length === 0) notApplicable('no rendered source');
     const hit = firstMatch(files, /#[0-9a-fA-F]{3,8}\b/, isThemeFile);
-    hit ? fail(`raw hex in component: ${hit}`) : pass();
+    hit ? fail(`raw hex outside the token layer: ${hit}`) : pass();
     break;
   }
   case 'fe-no-unsanitized-html': {
-    const hit = firstMatch(tsx(), /dangerouslySetInnerHTML/);
-    if (!hit) pass();
-    // Allowed only if a sanitizer is imported in the same file.
-    const { file: f } = parseHit(hit);
-    /DOMPurify|sanitize/i.test(read(f)) ? pass() : fail(`unsanitized HTML: ${hit}`);
+    // EVERY occurrence, not just the first. `firstMatch` returned a single hit
+    // for the whole app and only that file was asked whether it sanitizes, so a
+    // sanitized file earlier in walk order hid every unsanitized use after it.
+    for (const f of tsx()) {
+      const c = read(f);
+      if (!/dangerouslySetInnerHTML/.test(c)) continue;
+      // Require a sanitizer CALL in the same file. Matching the bare word
+      // `sanitize` anywhere also accepted a comment promising to sanitize later.
+      if (!/\bDOMPurify\s*\.\s*sanitize\s*\(|\bsanitizeHtml\s*\(|\bsanitize\s*\(/i.test(c)) {
+        fail(`unsanitized HTML: ${f}`);
+      }
+    }
+    pass();
     break;
   }
   case 'hyg-no-binaries': {
@@ -417,12 +429,40 @@ switch (ruleId) {
     break;
   }
   case 'hyg-secret-scan': {
-    const files = [...tsx(), ...walk(functionsDir, ['.ts', '.js'])];
-    const hit = firstMatch(
-      files,
-      /-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|sk_live_[0-9a-zA-Z]{16,}|xox[baprs]-[0-9a-zA-Z-]{10,}/
+    // Scans the WHOLE app, not just src/ and functions/. A credential is most
+    // often committed in exactly the places this used to skip: wrangler.toml, a
+    // JSON config, a workflow file, a shell script. Two source directories is
+    // not a secret scan.
+    //
+    // `.env` and `.dev.vars` are deliberately NOT read. They are gitignored by
+    // policy, `hyg-env-ignored` is the rule that covers them, and opening them
+    // here would mean the checker itself reads secret files.
+    const SCAN_EXT = [
+      '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+      '.json', '.toml', '.yml', '.yaml', '.ini', '.cfg',
+      '.sh', '.ps1', '.sql', '.md', '.txt', '.html'
+    ];
+    const isSecretFile = (f) => /(^|[\\/])\.(env|dev\.vars)/.test(f);
+    const files = walk(appDir, SCAN_EXT).filter(
+      (f) => !isSecretFile(f) && !/[\\/](dist|build|coverage)[\\/]/.test(f)
     );
-    hit ? fail(`possible secret: ${hit}`) : pass();
+    if (files.length === 0) notApplicable('no scannable files');
+    // Provider key shapes. The original set covered four issuers and missed the
+    // ones this environment actually uses (GitHub, Google, xAI, Anthropic).
+    const SECRET =
+      /-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|sk_live_[0-9a-zA-Z]{16,}|xox[baprs]-[0-9a-zA-Z-]{10,}|gh[pousr]_[0-9A-Za-z]{30,}|github_pat_[0-9A-Za-z_]{50,}|AIza[0-9A-Za-z_-]{30,}|xai-[0-9A-Za-z]{20,}|sk-ant-[0-9A-Za-z_-]{20,}|sk-proj-[0-9A-Za-z_-]{20,}|glpat-[0-9A-Za-z_-]{20,}/;
+    // A redacted example in a doc is not a leak, and the detector must not match
+    // the pattern that defines it.
+    const REDACTED = /\bREDACTED\b|\bEXAMPLE\b|x{8,}|\.{3,}|<[a-z-]+>/i;
+    for (const f of files) {
+      const lines = read(f).split(EOL);
+      for (let i = 0; i < lines.length; i++) {
+        const line = stripRegexLiterals(lines[i]);
+        if (!SECRET.test(line) || REDACTED.test(line)) continue;
+        fail(`possible secret: ${f}:${i + 1}`);
+      }
+    }
+    pass();
     break;
   }
   case 'fe-i18n-central-copy': {

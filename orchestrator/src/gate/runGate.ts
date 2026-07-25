@@ -25,6 +25,29 @@ export interface GateRunResult {
  * and the gate proceeds rather than hanging (rules/loop-gate.md:
  * lg-inline-critical-path).
  */
+/** Longest diagnostic carried per rule, so feedback stays readable in a prompt. */
+const MAX_DETAIL_CHARS = 400;
+/** Longest run of lines kept from a check's output before truncation. */
+const MAX_DETAIL_LINES = 8;
+
+/**
+ * The most useful line(s) a failed check produced. `check.mjs` prints its reason
+ * to stderr (`interpolated SQL: path/file.ts:12: ...`); tool checks like tsc and
+ * eslint print to stdout. Prefer stderr, fall back to stdout, and say plainly
+ * when a check was killed rather than reporting empty output.
+ *
+ * @param r Result of the check process.
+ * @returns A trimmed diagnostic for the coder.
+ */
+function failDetail(r: { stdout: string; stderr: string; timedOut: boolean }): string {
+  if (r.timedOut) return 'check exceeded its wall-clock timeout and was killed';
+  const text = (r.stderr.trim() || r.stdout.trim()).replace(/\r\n/g, '\n');
+  if (text.length === 0) return 'check failed with no output';
+  const lines = text.split('\n').filter((l) => l.trim().length > 0);
+  const joined = lines.slice(0, MAX_DETAIL_LINES).join('\n');
+  return joined.length > MAX_DETAIL_CHARS ? `${joined.slice(0, MAX_DETAIL_CHARS)}...` : joined;
+}
+
 export async function runGate(repoDir: string, checks: Check[]): Promise<GateRunResult> {
   const outcomes: Outcome[] = [];
   const notApplicable: string[] = [];
@@ -37,7 +60,10 @@ export async function runGate(repoDir: string, checks: Check[]): Promise<GateRun
       notApplicable.push(c.ruleId);
       continue;
     }
-    outcomes.push({ ruleId: c.ruleId, passed: r.code === 0 });
+    const passed = r.code === 0;
+    outcomes.push(
+      passed ? { ruleId: c.ruleId, passed } : { ruleId: c.ruleId, passed, detail: failDetail(r) }
+    );
   }
   return { outcomes, notApplicable };
 }

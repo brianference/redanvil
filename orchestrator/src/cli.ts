@@ -2,7 +2,7 @@
 import { parseArgs } from 'node:util';
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateFile } from './commands/validate';
 import { rubricSummary } from './commands/rubric';
@@ -11,6 +11,8 @@ import { gateApp } from './commands/gate';
 import type { Outcome } from './gate/score';
 import { collectProvenance } from './gate/provenance';
 import { parseVerdicts } from './schemas/verdicts';
+import { gitChangeProbe } from './gate/freshness';
+import type { StaleVerdict } from './gate/freshness';
 import { indexOutcomes } from './gate/score';
 import { runLoopCommand } from './commands/loop';
 
@@ -21,6 +23,8 @@ interface SharedRunFlags {
   notApplicable: string[];
   /** Raw verdicts file text, hashed into provenance. Null when none was supplied. */
   verdictsRaw: string | null;
+  /** Verdicts dropped because their subject changed since they were recorded. */
+  staleVerdicts: StaleVerdict[];
 }
 
 /** One measured iteration record written into a results payload. */
@@ -35,10 +39,12 @@ interface IterationRecord {
  * Behaviour matches the prior inline branches (defaults, empty judge, split na).
  *
  * @param values - Parsed CLI option bag from parseArgs.
- * @returns Threshold, judge outcomes, and not-applicable lanes.
+ * @param appDir - The directory being gated, used to scope verdict freshness.
+ * @returns Threshold, judge outcomes, not-applicable lanes, and stale verdicts.
  */
 async function parseSharedRunFlags(
-  values: Record<string, string | boolean | undefined>
+  values: Record<string, string | boolean | undefined>,
+  appDir: string
 ): Promise<SharedRunFlags> {
   const threshold = typeof values.threshold === 'string' ? Number(values.threshold) : 90;
   // Keep the raw text: provenance hashes it, so a swapped or edited verdicts
@@ -46,10 +52,15 @@ async function parseSharedRunFlags(
   // against whatever verdicts it is handed and can only confirm determinism.
   const verdictsRaw =
     typeof values.judge === 'string' ? await readFile(values.judge, 'utf8') : null;
-  const judge: Outcome[] =
+  const repoRoot = process.cwd();
+  const parsedVerdicts =
     typeof values.judge === 'string' && verdictsRaw !== null
-      ? parseVerdicts(verdictsRaw, values.judge)
-      : [];
+      ? parseVerdicts(verdictsRaw, values.judge, repoRoot, {
+          appDirRel: relative(repoRoot, resolve(appDir)).split(sep).join('/') || '.',
+          probe: gitChangeProbe(repoRoot)
+        })
+      : { outcomes: [] as Outcome[], stale: [] as StaleVerdict[] };
+  const judge = parsedVerdicts.outcomes;
   const notApplicable =
     typeof values.na === 'string'
       ? values.na
@@ -57,7 +68,26 @@ async function parseSharedRunFlags(
           .map((s) => s.trim())
           .filter(Boolean)
       : [];
-  return { threshold, judge, notApplicable, verdictsRaw };
+  return { threshold, judge, notApplicable, verdictsRaw, staleVerdicts: parsedVerdicts.stale };
+}
+
+/**
+ * Print every dropped verdict so a failing blocker is traceable to an expired
+ * review rather than looking like an unexplained regression.
+ *
+ * @param stale - Verdicts dropped for staleness.
+ */
+function reportStaleVerdicts(stale: StaleVerdict[]): void {
+  if (stale.length === 0) return;
+  console.error(
+    `\ngate: ${stale.length} verdict(s) dropped as stale — their subject changed since review.\n` +
+      `These rules are now unrecorded and fail closed. Re-review and update the verdicts file.`
+  );
+  for (const s of stale) {
+    const files = s.changedFiles.length > 0 ? ` (${s.changedFiles.join(', ')})` : '';
+    console.error(`  ${s.ruleId}: ${s.reason}${files}`);
+  }
+  console.error('');
 }
 
 /**
@@ -81,6 +111,7 @@ async function writeResultFile(
     deployUrl: string | null;
     verdictsRaw: string | null;
     notApplicable: string[];
+    staleVerdicts: string[];
   }
 ): Promise<void> {
   const result = {
@@ -100,7 +131,8 @@ async function writeResultFile(
     // score. Re-checkable by CI, so a hand-authored result file is detectable.
     provenance: collectProvenance(process.cwd(), {
       verdictsRaw: args.verdictsRaw,
-      notApplicable: args.notApplicable
+      notApplicable: args.notApplicable,
+      staleVerdicts: args.staleVerdicts
     })
   };
   await writeFile(outPath, JSON.stringify(result, null, 2) + '\n');
@@ -217,7 +249,9 @@ async function main(): Promise<number> {
       );
       return 2;
     }
-    const { threshold, judge, notApplicable, verdictsRaw } = await parseSharedRunFlags(values);
+    const { threshold, judge, notApplicable, verdictsRaw, staleVerdicts } =
+      await parseSharedRunFlags(values, dir);
+    reportStaleVerdicts(staleVerdicts);
     const report = await gateApp(dir, undefined, judge, notApplicable);
     const verdict = report.score >= threshold ? 'PASS' : 'FAIL';
     console.log(
@@ -244,6 +278,7 @@ async function main(): Promise<number> {
         iterations: [{ index: 1, score: report.score, blockers: report.blockersFailed }],
         deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
         verdictsRaw,
+        staleVerdicts: staleVerdicts.map((s) => s.ruleId),
         notApplicable
       });
     }
@@ -266,7 +301,9 @@ async function main(): Promise<number> {
       console.error(`loop: no such spec file: ${values.spec}`);
       return 2;
     }
-    const { threshold, judge, notApplicable, verdictsRaw } = await parseSharedRunFlags(values);
+    const { threshold, judge, notApplicable, verdictsRaw, staleVerdicts } =
+      await parseSharedRunFlags(values, dir);
+    reportStaleVerdicts(staleVerdicts);
     const maxIters = typeof values['max-iters'] === 'string' ? Number(values['max-iters']) : 5;
 
     const { loop: result, final } = await runLoopCommand({
@@ -304,6 +341,7 @@ async function main(): Promise<number> {
         iterations: result.records,
         deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
         verdictsRaw,
+        staleVerdicts: staleVerdicts.map((s) => s.ruleId),
         notApplicable
       });
     }

@@ -2,7 +2,21 @@ import { loadRubric, JUDGE_WEIGHT_CAP } from '../rubric/index';
 import { FAIL_CLOSED_METHODS } from '../rubric/types';
 import type { Rule } from '../rubric/types';
 
-export type Outcome = { ruleId: string; passed: boolean };
+export type Outcome = {
+  ruleId: string;
+  passed: boolean;
+  /**
+   * Verbatim diagnostic from the check that decided this rule (file, line, and
+   * the offending text). Optional because judge and visual outcomes arrive from
+   * a verdicts file rather than a process.
+   *
+   * This exists because the loop used to hand the coder nothing but rule ids:
+   * `rules failed: u-sec-param-sql` with no location, so every iteration
+   * re-derived what the gate already knew and printed. The checks were always
+   * this specific; the runner threw the text away.
+   */
+  detail?: string;
+};
 
 const isJudge = (r: Rule): boolean => r.method === 'judge' || r.method === 'det+judge';
 

@@ -3,6 +3,8 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { ValidationError } from '../errors';
 import { loadRubric } from '../rubric/index';
+import { findStaleVerdicts, verdictScope } from '../gate/freshness';
+import type { ChangeProbe, StaleVerdict } from '../gate/freshness';
 import type { Outcome } from '../gate/score';
 
 /**
@@ -24,7 +26,15 @@ export const VerdictSchema = z.object({
   /** One line on what was observed, so a reader can challenge the verdict. */
   note: z.string().min(3),
   reviewedAt: z.string().datetime(),
-  reviewedCommit: z.string().min(7)
+  reviewedCommit: z.string().min(7),
+  /**
+   * Repo-relative path prefixes this verdict speaks for. Optional: with no scope
+   * the verdict covers the whole app directory, which is the conservative
+   * reading. Narrowing it keeps an unrelated edit from expiring a verdict, but
+   * a scope that is too narrow is a way to make a verdict immortal, so it is
+   * reviewed like any other claim.
+   */
+  scope: z.array(z.string().min(1)).optional()
 });
 
 export const VerdictListSchema = z.array(VerdictSchema).min(1);
@@ -39,12 +49,24 @@ export type Verdict = z.infer<typeof VerdictSchema>;
  * declared method disagrees with the rubric, and any evidence path that does
  * not exist.
  *
+ * Freshness is checked when `freshness` is supplied: a verdict whose reviewed
+ * subject changed since `reviewedCommit` is DROPPED from the returned outcomes
+ * and reported separately. Dropping leaves its rule unrecorded, which fails
+ * closed. A recorded review that no longer describes the code is not a weaker
+ * pass, it is not a review at all.
+ *
  * @param raw - Raw file contents.
  * @param source - Path used in error messages.
  * @param repoRoot - Root that evidence paths resolve against.
- * @returns Outcomes suitable for the gate.
+ * @param freshness - App dir (repo-relative) and change probe. Omit to skip the check.
+ * @returns Fresh outcomes for the gate, plus any verdicts found stale.
  */
-export function parseVerdicts(raw: string, source: string, repoRoot = process.cwd()): Outcome[] {
+export function parseVerdicts(
+  raw: string,
+  source: string,
+  repoRoot = process.cwd(),
+  freshness?: { appDirRel: string; probe: ChangeProbe }
+): { outcomes: Outcome[]; stale: StaleVerdict[] } {
   let json: unknown;
   try {
     json = JSON.parse(raw);
@@ -95,5 +117,20 @@ export function parseVerdicts(raw: string, source: string, repoRoot = process.cw
 
   if (issues.length > 0) throw new ValidationError(`${source}: invalid verdicts`, issues);
 
-  return parsed.data.map((v) => ({ ruleId: v.ruleId, passed: v.passed }));
+  const stale =
+    freshness === undefined
+      ? []
+      : findStaleVerdicts(
+          parsed.data,
+          (v) => verdictScope(v, freshness.appDirRel),
+          freshness.probe
+        );
+  const staleIds = new Set(stale.map((s) => s.ruleId));
+
+  return {
+    outcomes: parsed.data
+      .filter((v) => !staleIds.has(v.ruleId))
+      .map((v) => ({ ruleId: v.ruleId, passed: v.passed })),
+    stale
+  };
 }

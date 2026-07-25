@@ -36,6 +36,14 @@ export interface LoopCommandOptions {
   repoDir?: string;
 }
 
+/** Indent a captured diagnostic so it reads as a block under its rule id. */
+function indent(text: string): string {
+  return text
+    .split('\n')
+    .map((line) => `    ${line}`)
+    .join('\n');
+}
+
 /**
  * Build the coder prompt for one iteration. The first pass gets the spec; later
  * passes get the spec plus the gate's verbatim failures, so the coder is always
@@ -110,14 +118,35 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
     gate: async (): Promise<GateOutcome> => {
       const report = await gateApp(dir, undefined, opts.judge, opts.notApplicable);
       lastReport = report;
-      const failed = report.outcomes.filter((o) => !o.passed).map((o) => o.ruleId);
+      const failed = report.outcomes.filter((o) => !o.passed);
+      // Hand back the check's own diagnostic, not just the rule id. The coder
+      // otherwise has to rediscover a location the gate already printed, which
+      // costs an iteration per failure.
+      const detailed =
+        failed.length > 0
+          ? failed
+              .map((o) => `- ${o.ruleId}\n${indent(o.detail ?? 'no diagnostic captured')}`)
+              .join('\n')
+          : 'no rules failed';
+      // Rules that failed with no recorded outcome at all are fail-closed
+      // (visual/judge with no fresh verdict). The coder cannot fix those by
+      // editing code, so name them separately instead of sending it hunting.
+      const recorded = new Set(report.outcomes.map((o) => o.ruleId));
+      const unreviewed = report.blockersFailed.filter((id) => !recorded.has(id));
       const feedback = [
         `score ${report.score}/100 (threshold ${opts.threshold}), evaluated ${report.evaluated}/${report.total}`,
         report.blockersFailed.length > 0
           ? `blockers failed: ${report.blockersFailed.join(', ')}`
           : 'no blockers failed',
-        failed.length > 0 ? `rules failed: ${failed.join(', ')}` : 'no rules failed'
-      ].join('\n');
+        unreviewed.length > 0
+          ? `awaiting a recorded review (NOT fixable by editing code): ${unreviewed.join(', ')}`
+          : '',
+        '',
+        'failing checks, with the gate output verbatim:',
+        detailed
+      ]
+        .filter((line) => line !== '')
+        .join('\n');
       return { score: report.score, blockers: report.blockersFailed, feedback };
     }
   };
