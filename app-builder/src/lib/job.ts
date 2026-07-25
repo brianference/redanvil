@@ -20,6 +20,12 @@ export interface WizardAnswers {
   hasRealtime: boolean;
   /** Optional integrations (free text or comma-separated chips). */
   integrations: string;
+  /**
+   * Feature ids (F1, F2, …) the user chose on the Features step.
+   * `null` means no selection yet — generatePrd keeps legacy behaviour (all
+   * derived features). A non-null array is an explicit pick (may be empty).
+   */
+  selectedFeatureIds: string[] | null;
 }
 
 /** Default data storage when the user does not change the scope control. */
@@ -38,7 +44,8 @@ export const EMPTY_WIZARD_ANSWERS: WizardAnswers = {
   entities: '',
   dataStorage: DEFAULT_DATA_STORAGE,
   hasRealtime: false,
-  integrations: ''
+  integrations: '',
+  selectedFeatureIds: null
 };
 
 /**
@@ -59,8 +66,49 @@ export function isAppTypeReady(answers: WizardAnswers): boolean {
   return answers.appType.trim().length > 0;
 }
 
+/**
+ * Whether the Features step allows Continue: at least one feature id is selected.
+ * `null` (not yet materialized) is ready — the step / goNext seed MVP defaults,
+ * which are always non-empty. An explicit empty array fails closed.
+ *
+ * @param answers - Wizard form values.
+ * @returns True when Continue may advance past the Features step.
+ */
+export function isFeatureSelectionReady(answers: WizardAnswers): boolean {
+  if (answers.selectedFeatureIds === null) {
+    return true;
+  }
+  return answers.selectedFeatureIds.length > 0;
+}
+
+/**
+ * Whether the Next control on the Features step should stay disabled.
+ * Same rule as {@link isFeatureSelectionReady} but named for the UI gate test.
+ *
+ * @param selectedFeatureIds - Explicit selection, or null before materialization.
+ * @returns True when Continue must be blocked.
+ */
+export function isFeatureContinueBlocked(
+  selectedFeatureIds: string[] | null
+): boolean {
+  return selectedFeatureIds !== null && selectedFeatureIds.length === 0;
+}
+
+/**
+ * Whether Forge PRD may run: prompt, app type, and a non-empty feature pick
+ * when the user has already made an explicit selection.
+ *
+ * @param answers - Wizard form values.
+ * @returns True when the submit action may fire.
+ */
 export function canForgePrd(answers: WizardAnswers): boolean {
-  return isPromptReady(answers) && isAppTypeReady(answers);
+  if (!isPromptReady(answers) || !isAppTypeReady(answers)) {
+    return false;
+  }
+  if (answers.selectedFeatureIds !== null && answers.selectedFeatureIds.length === 0) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -149,7 +197,12 @@ export function countEntities(entities: string): number {
  */
 export function withWizardDefaults(
   partial: Pick<WizardAnswers, 'prompt' | 'appType' | 'hasAuth' | 'entities'> &
-    Partial<Pick<WizardAnswers, 'dataStorage' | 'hasRealtime' | 'integrations'>>
+    Partial<
+      Pick<
+        WizardAnswers,
+        'dataStorage' | 'hasRealtime' | 'integrations' | 'selectedFeatureIds'
+      >
+    >
 ): WizardAnswers {
   return {
     prompt: partial.prompt,
@@ -158,7 +211,8 @@ export function withWizardDefaults(
     entities: partial.entities,
     dataStorage: partial.dataStorage ?? DEFAULT_DATA_STORAGE,
     hasRealtime: partial.hasRealtime ?? false,
-    integrations: partial.integrations ?? ''
+    integrations: partial.integrations ?? '',
+    selectedFeatureIds: partial.selectedFeatureIds ?? null
   };
 }
 
@@ -176,7 +230,12 @@ export function withWizardDefaults(
  */
 export function buildJob(
   answers: Pick<WizardAnswers, 'prompt' | 'appType' | 'hasAuth' | 'entities'> &
-    Partial<Pick<WizardAnswers, 'dataStorage' | 'hasRealtime' | 'integrations'>>,
+    Partial<
+      Pick<
+        WizardAnswers,
+        'dataStorage' | 'hasRealtime' | 'integrations' | 'selectedFeatureIds'
+      >
+    >,
   now: Date = new Date()
 ): BuildJob {
   const full = withWizardDefaults(answers);
@@ -193,7 +252,10 @@ export function buildJob(
       entities: full.entities,
       dataStorage: full.dataStorage,
       hasRealtime: full.hasRealtime ? 'true' : 'false',
-      integrations: full.integrations.trim()
+      integrations: full.integrations.trim(),
+      ...(full.selectedFeatureIds !== null
+        ? { selectedFeatureIds: full.selectedFeatureIds.join(',') }
+        : {})
     },
     createdAt: now.toISOString()
   };

@@ -7,7 +7,10 @@ import { buildFrontmatter } from './sections/frontmatter';
 import { buildNonGoals, buildSuccessOutcome, buildUserStories } from './sections/scope';
 import { authDdl, buildFileTree, entityApiContract, entityDdl } from './sections/schema';
 import {
+  authRequiredByFeatures,
   buildFeatures,
+  entitiesRequiredByFeatures,
+  filterFeaturesBySelection,
   renderAcceptanceCriteria,
   renderCoreFeatures,
   renderTestPlan
@@ -36,7 +39,12 @@ import { evaluatePrdSelfCheck } from './selfCheck';
  */
 export function generatePrd(
   answers: Pick<WizardAnswers, 'prompt' | 'appType' | 'hasAuth' | 'entities'> &
-    Partial<Pick<WizardAnswers, 'dataStorage' | 'hasRealtime' | 'integrations'>>,
+    Partial<
+      Pick<
+        WizardAnswers,
+        'dataStorage' | 'hasRealtime' | 'integrations' | 'selectedFeatureIds'
+      >
+    >,
   cost: TokenEstimate
 ): Prd {
   const full = withWizardDefaults(answers);
@@ -45,19 +53,30 @@ export function generatePrd(
   const title = titleFromPrompt(prompt);
   const entities = entityList(full.entities);
   const appType = full.appType.trim() || 'web application';
-  const hasAuth = full.hasAuth;
+  const wizardHasAuth = full.hasAuth;
   const dataStorage = full.dataStorage;
   const hasRealtime = full.hasRealtime;
   const integrations = full.integrations;
+  const selectedFeatureIds = full.selectedFeatureIds;
 
-  const entityNames = entities.length > 0 ? entities : ['Item'];
-  const features = buildFeatures(entityNames, hasAuth);
+  // Full derivation uses wizard scope; selection filters after (legacy: no selection = all).
+  const derivedEntityNames = entities.length > 0 ? entities : ['Item'];
+  const allFeatures = buildFeatures(derivedEntityNames, wizardHasAuth);
+  const features = filterFeaturesBySelection(allFeatures, selectedFeatureIds);
+  const selectionActive = selectedFeatureIds != null;
+  const entityNames = selectionActive
+    ? entitiesRequiredByFeatures(derivedEntityNames, features)
+    : derivedEntityNames;
+  const hasAuth = selectionActive
+    ? authRequiredByFeatures(wizardHasAuth, features)
+    : wizardHasAuth;
+  const hasDomainTables = dataStorage !== 'none' && entityNames.length > 0;
   const mvpFeatures = features.filter((f) => f.mvp);
   const featureIds = features.map((f) => f.id).join(', ');
   const mvpIds = mvpFeatures.map((f) => f.id).join(', ');
   const slices = buildSlices({
     slug,
-    entities: entityNames,
+    entities: entityNames.length > 0 ? entityNames : derivedEntityNames,
     hasAuth,
     features,
     dataStorage
@@ -66,13 +85,14 @@ export function generatePrd(
 
   const ddlBlocks = [
     ...(hasAuth ? [authDdl()] : []),
-    ...(dataStorage === 'none' ? [] : entityNames.map((e) => entityDdl(e, hasAuth)))
+    ...(hasDomainTables ? entityNames.map((e) => entityDdl(e, hasAuth)) : [])
   ].join('\n\n');
 
-  const apiBlocks =
-    dataStorage === 'none'
+  const apiBlocks = !hasDomainTables
+    ? dataStorage === 'none'
       ? '_No domain CRUD tables (data storage = none). Health (and auth if in scope) still required._'
-      : entityNames.map((e) => entityApiContract(e)).join('\n\n');
+      : '_No domain CRUD tables for the selected features. Health (and auth if in scope) still required._'
+    : entityNames.map((e) => entityApiContract(e)).join('\n\n');
   const authApi = hasAuth
     ? [
         '',
@@ -101,21 +121,24 @@ export function generatePrd(
     '| Path | Page |',
     '|------|------|',
     '| `/` | Home |',
-    dataStorage === 'none' ? '' : `| \`/${primaryTable}\` | List |`,
-    dataStorage === 'none' ? '' : `| \`/${primaryTable}/:id\` | Detail |`,
+    hasDomainTables ? `| \`/${primaryTable}\` | List |` : '',
+    hasDomainTables ? `| \`/${primaryTable}/:id\` | Detail |` : '',
     ...REQUIRED_PAGES.filter((p) => p !== 'Home').map((p) => `| \`/${p.toLowerCase()}\` | ${p} |`),
     hasAuth ? '| `/sign-in`, `/register` | Auth |' : ''
   ]
     .filter(Boolean)
     .join('\n');
 
-  const entityListLabel = entityNames.map((e) => entityPascal(e)).join(', ');
+  const entityListLabel =
+    entityNames.length > 0
+      ? entityNames.map((e) => entityPascal(e)).join(', ')
+      : 'none (feature selection)';
 
   const promptClause = /[.!?]$/.test(prompt) ? prompt : `${prompt}.`;
   const introduction = [
     `**${title}** is a **${appType}** that addresses: ${promptClause}`,
     `It ships as a full-stack Cloudflare app (Pages + Pages Functions + D1) with gate threshold **${PRD_THRESHOLD}**.`,
-    `MVP scope is ${mvpIds}; ship those vertical slices before Beyond-MVP work.`
+    `MVP scope is ${mvpIds || 'none'}; ship those vertical slices before Beyond-MVP work.`
   ].join(' ');
 
   const problemStatement = [
@@ -130,14 +153,17 @@ export function generatePrd(
     hasAuth
       ? 'Authentication uses Web Crypto only (PBKDF2 + HMAC session cookies); all domain rows are scoped to the signed-in user.'
       : 'The product is fully public — no register/login, no session middleware, no user-owned scoping.',
-    `Users complete MVP flows (${mvpIds}) first: browse and manage the primary entity, open detail, and ${hasAuth ? 'sign in' : 'use the app anonymously'}.`,
+    `Users complete MVP flows (${mvpIds || 'none'}) first: browse and manage the primary entity, open detail, and ${hasAuth ? 'sign in' : 'use the app anonymously'}.`,
     'Each capability is delivered as a vertical slice (DB + API + UI + tests) so something works end-to-end after every slice, not only at the end of a horizontal phase plan.'
   ].join(' ');
+
+  const frontmatterEntities =
+    entityNames.length > 0 ? entityNames : selectionActive ? [] : derivedEntityNames;
 
   // Body without self-check first; grade against that body + section stubs, then append grade.
   const bodyBeforeSelfCheck = `# Implementation Spec — ${title}
 
-${buildFrontmatter({ slug, title, appType, hasAuth, entities: entityNames })}
+${buildFrontmatter({ slug, title, appType, hasAuth, entities: frontmatterEntities })}
 
 > Generated by RedAnvil App Builder. Paste this whole document into Claude (or Grok) to build the app. Threshold to ship: **score >= ${PRD_THRESHOLD}** on the RedAnvil rubric.
 
@@ -161,7 +187,7 @@ ${buildSuccessOutcome(title, features, slug)}
 
 ## 5. Non-goals / Out of scope
 
-${buildNonGoals(hasAuth, entityNames, appType, integrations)}
+${buildNonGoals(hasAuth, frontmatterEntities, appType, integrations)}
 
 ## 6. User Stories
 
@@ -179,13 +205,18 @@ Default columns below are concrete starting points to refine — do **not** inve
 
 #### File tree and key signatures
 
-${buildFileTree(entityNames, hasAuth)}
+${buildFileTree(
+  frontmatterEntities.length > 0 ? frontmatterEntities : derivedEntityNames,
+  hasAuth
+)}
 
 #### D1 schema (DDL)
 
 ${
-  dataStorage === 'none' && !hasAuth
-    ? '_No D1 domain schema for this build (data storage = none, auth off)._'
+  !hasDomainTables && !hasAuth
+    ? dataStorage === 'none'
+      ? '_No D1 domain schema for this build (data storage = none, auth off)._'
+      : '_No D1 domain schema for the selected features (auth off)._'
     : `\`\`\`sql
 ${ddlBlocks || '-- (auth tables only when hasAuth; no domain tables when storage is none)'}
 \`\`\`
@@ -248,8 +279,8 @@ ${buildCodingStandard()}
 `;
 
   const selfCheck = evaluatePrdSelfCheck(bodyBeforeSelfCheck + '\n## 14. PRD Self-Check\n', {
-    entities: entityNames,
-    hasDomainTables: dataStorage !== 'none'
+    entities: frontmatterEntities.length > 0 ? frontmatterEntities : derivedEntityNames,
+    hasDomainTables
   });
 
   // Re-evaluate once the self-check section structure is known: sections-order needs §14 heading.
@@ -264,8 +295,8 @@ ${buildCodingStandard()}
     `_Effort (human/orchestrator only): ~${cost.iterations} iterations, ~${cost.tokens.toLocaleString()} tokens (${cost.confidence} confidence)._\n`;
 
   const finalCheck = evaluatePrdSelfCheck(draftWithStub14, {
-    entities: entityNames,
-    hasDomainTables: dataStorage !== 'none'
+    entities: frontmatterEntities.length > 0 ? frontmatterEntities : derivedEntityNames,
+    hasDomainTables
   });
 
   const markdown =

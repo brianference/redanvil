@@ -274,6 +274,60 @@ describe('generatePrd', () => {
     expect(again.title).toBe(prd.title);
   });
 
+  it('includes only selected features and omits deselected ones (acceptance, tests, schema)', () => {
+    // Full derivation with auth + two entities yields F1–F4 MVP, F5 Manage Driver, F6 pages.
+    // Deselect F5 (secondary manage) and F3 (Accounts): selected work stays; dropped work vanishes.
+    const selected = generatePrd(
+      {
+        prompt: 'Build an app for tracking tesla driving stats',
+        appType: 'dashboard',
+        hasAuth: true,
+        entities: 'trips, drivers',
+        selectedFeatureIds: ['F1', 'F2', 'F4']
+      },
+      cost
+    );
+    const md = selected.markdown;
+
+    // Selected features present in core features, acceptance, and test plan
+    expect(md).toMatch(/### F1 — Browse & search Trip/);
+    expect(md).toMatch(/### F2 — Trip detail/);
+    expect(md).toMatch(/### F4 — Manage Trip/);
+    expect(md).toContain('GIVEN seeded trips exist WHEN the user opens the list');
+    expect(md).toContain('filterTrips_byQuery_matchesTitle');
+
+    // Deselected secondary entity feature (and its schema rows) absent
+    expect(md).not.toMatch(/### F5 — Manage Driver/);
+    expect(md).not.toContain('CREATE TABLE IF NOT EXISTS drivers');
+    expect(md).not.toContain('DriverCreateSchema');
+    expect(md).not.toContain('GET | `/api/drivers`');
+
+    // Deselected Accounts feature (and auth-only schema) absent
+    expect(md).not.toMatch(/### F3 — Accounts/);
+    expect(md).not.toContain('CREATE TABLE IF NOT EXISTS users');
+    expect(md).not.toContain('POST | `/api/auth/register`');
+    expect(md).toContain('hasAuth: false');
+
+    // Beyond-MVP pages feature was not selected either
+    expect(md).not.toMatch(/### F\d+ — Required pages & SEO/);
+  });
+
+  it('keeps legacy output when selectedFeatureIds is omitted (no selection)', () => {
+    const legacy = generatePrd(
+      {
+        prompt: 'Build an app for tracking tesla driving stats',
+        appType: 'dashboard',
+        hasAuth: true,
+        entities: 'trips, drivers'
+      },
+      cost
+    );
+    expect(legacy.markdown).toBe(prd.markdown);
+    expect(legacy.markdown).toMatch(/### F5 — Manage Driver/);
+    expect(legacy.markdown).toContain('CREATE TABLE IF NOT EXISTS drivers');
+    expect(legacy.markdown).toMatch(/### F3 — Accounts/);
+  });
+
   it('grades itself in §14 with a computed score (not hardcoded)', () => {
     expect(prd.markdown).toContain('## 14. PRD Self-Check');
     expect(prd.markdown).toMatch(/\*\*Grade: \d+\/\d+ checks passed \(\d+%\)\*\*/);

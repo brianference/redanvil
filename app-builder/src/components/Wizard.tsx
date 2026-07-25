@@ -5,6 +5,7 @@ import {
   countScopeSignals,
   isPromptReady,
   isAppTypeReady,
+  isFeatureSelectionReady,
   canForgePrd,
   EMPTY_WIZARD_ANSWERS,
   type BuildJob,
@@ -19,11 +20,20 @@ import { reviewAnswerRows } from './wizard/reviewRows';
 import { Stepper } from './wizard/Stepper';
 import { PromptStep } from './wizard/steps/PromptStep';
 import { ScopeStep } from './wizard/steps/ScopeStep';
+import {
+  FeaturesStep,
+  featureEntityNames,
+  resolveFeatureSelection
+} from './wizard/steps/FeaturesStep';
 import { ReviewStep, type SubmitUiState } from './wizard/steps/ReviewStep';
 import { formStyle, kickerStyle } from './wizard/styles';
+import { defaultSelectedFeatureIds } from '../lib/prd/sections/features';
 
 /** Client fetch timeout for POST /api/submit (fail closed). */
 const SUBMIT_TIMEOUT_MS = 10_000;
+
+/** Wizard step index: 1 Prompt, 2 Scope, 3 Features, 4 Review. */
+export type WizardStepIndex = 1 | 2 | 3 | 4;
 
 export interface WizardProps {
   /** Controlled wizard answers. */
@@ -33,7 +43,7 @@ export interface WizardProps {
   /** Called with the server job only after a successful submit. */
   onSubmit: (job: BuildJob) => void;
   /** Optional: start on a specific step (e.g. 2 when prompt already set). */
-  initialStep?: 1 | 2 | 3;
+  initialStep?: WizardStepIndex;
 }
 
 /**
@@ -72,12 +82,11 @@ function parseBuildJob(payload: unknown): BuildJob | null {
 }
 
 /**
- * Three-step clarifying-questions wizard: free-text intent, structured
- * scope (type / auth / entities), then review with a token estimate and submit.
- * Grok v2 base + Claude variation 3 pill chips and clear step indicators.
+ * Four-step clarifying wizard: free-text intent, structured scope, feature
+ * selection from the real PRD derivation, then review with estimate and submit.
  */
 export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardProps): JSX.Element {
-  const [step, setStep] = useState<1 | 2 | 3>(initialStep);
+  const [step, setStep] = useState<WizardStepIndex>(initialStep);
   const [submitState, setSubmitState] = useState<SubmitUiState>({ status: 'idle' });
 
   const entityCount = countEntities(value.entities);
@@ -97,33 +106,80 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
   // and returned a raw "String must contain at least 1 character(s)".
   const promptReady = isPromptReady(value);
   const appTypeReady = isAppTypeReady(value);
+  const featuresReady = isFeatureSelectionReady(value);
   const isLoading = submitState.status === 'loading';
   const canSubmit = canForgePrd(value) && !isLoading;
   const copy = en.wizard;
 
   /**
-   * Patch a single answer field into the controlled value.
+   * Patch answer fields into the controlled value.
+   * Changing entities or auth invalidates feature ids (F5+ renumber), so clear selection.
    */
   function patch(partial: Partial<WizardAnswers>): void {
-    onChange({ ...value, ...partial });
+    const entitiesChanged =
+      partial.entities !== undefined && partial.entities !== value.entities;
+    const authChanged =
+      partial.hasAuth !== undefined && partial.hasAuth !== value.hasAuth;
+    const clearFeatures = entitiesChanged || authChanged;
+    onChange({
+      ...value,
+      ...partial,
+      ...(clearFeatures ? { selectedFeatureIds: null } : {})
+    });
   }
 
   /**
    * Advance to the next step when the current step is valid.
+   * Leaving Scope materializes MVP feature defaults so Review / generatePrd
+   * receive an explicit selection matching what the Features step shows.
    */
   function goNext(): void {
     if (step === 1 && !promptReady) return;
-    // Step 2 (Scope) collects the app type. Do not let the user advance to Review
-    // without it — that is how an empty app type reached the server.
+    // Step 2 (Scope) collects the app type. Do not let the user advance without it.
     if (step === 2 && !appTypeReady) return;
-    if (step < 3) setStep((step + 1) as 1 | 2 | 3);
+    if (step === 2) {
+      const entityNames = featureEntityNames(value.entities);
+      const nextSelection =
+        value.selectedFeatureIds === null
+          ? defaultSelectedFeatureIds(entityNames, value.hasAuth)
+          : resolveFeatureSelection(value);
+      if (
+        value.selectedFeatureIds === null ||
+        nextSelection.join(',') !== value.selectedFeatureIds.join(',')
+      ) {
+        onChange({ ...value, selectedFeatureIds: nextSelection });
+      }
+    }
+    // Step 3 (Features) requires at least one selected feature.
+    if (step === 3) {
+      // Persist the resolved selection (MVP defaults) even if the user never toggled.
+      const resolved = resolveFeatureSelection(value);
+      if (resolved.length === 0) return;
+      if (
+        value.selectedFeatureIds === null ||
+        resolved.join(',') !== value.selectedFeatureIds.join(',')
+      ) {
+        onChange({ ...value, selectedFeatureIds: resolved });
+      }
+    }
+    if (step < 4) setStep((step + 1) as WizardStepIndex);
   }
 
   /**
    * Return to the previous step.
    */
   function goBack(): void {
-    if (step > 1) setStep((step - 1) as 1 | 2 | 3);
+    if (step > 1) setStep((step - 1) as WizardStepIndex);
+  }
+
+  /**
+   * Whether the Next control for the current step is enabled.
+   */
+  function nextDisabled(): boolean {
+    if (step === 1) return !promptReady;
+    if (step === 2) return !appTypeReady;
+    if (step === 3) return !featuresReady;
+    return true;
   }
 
   /**
@@ -196,6 +252,8 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
     }
   }
 
+  const disableNext = nextDisabled();
+
   return (
     <form
       onSubmit={(event) => {
@@ -217,6 +275,9 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
           <ScopeStep value={value} patch={patch} appTypeReady={appTypeReady} />
         )}
         {step === 3 && (
+          <FeaturesStep value={value} patch={patch} featuresReady={featuresReady} />
+        )}
+        {step === 4 && (
           <ReviewStep
             value={value}
             cost={cost}
@@ -240,17 +301,17 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
             {copy.back}
           </button>
         )}
-        {step < 3 && (
+        {step < 4 && (
           <button
             type="button"
             onClick={goNext}
-            disabled={(step === 1 && !promptReady) || (step === 2 && !appTypeReady)}
-            style={buttonStyle(true, (step === 1 && !promptReady) || (step === 2 && !appTypeReady))}
+            disabled={disableNext}
+            style={buttonStyle(true, disableNext)}
           >
             {copy.next}
           </button>
         )}
-        {step === 3 && (
+        {step === 4 && (
           <button type="submit" disabled={!canSubmit} style={buttonStyle(true, !canSubmit)}>
             {isLoading ? copy.submitting : copy.submit}
           </button>
@@ -268,3 +329,10 @@ export { integrationChipSelected, toggleIntegrationChip };
 
 /** Re-export review row derivation (public API; Review step UI path). */
 export { reviewAnswerRows };
+
+/** Re-export feature selection helpers (public API for unit tests). */
+export {
+  toggleFeatureSelection,
+  resolveFeatureSelection,
+  featureEntityNames
+} from './wizard/steps/FeaturesStep';
