@@ -13,6 +13,14 @@ const CHECK_SCRIPT = join(
   dirname(fileURLToPath(import.meta.url)),
   '../../scripts/checks/check.mjs'
 );
+/**
+ * Absolute path to the runtime-parity script (boots wrangler pages dev).
+ * Implements lg-runtime-parity / u-plat-runtime-parity.
+ */
+const RUNTIME_PARITY_SCRIPT = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../.github/scripts/runtime_parity.mjs'
+);
 /** One static check via check.mjs, scanning the app dir (`.` since cwd = app dir at run time). */
 const det = (ruleId: string): Check => ({
   ruleId,
@@ -46,6 +54,14 @@ export const APP_CHECKS: Check[] = [
   det('hyg-secret-scan'),
   det('u-sec-sast'),
   det('u-plat-worker-runtime'),
+  // Real Workers boot + live HTTP. Build + wrangler pages dev can approach the
+  // default 180s check ceiling, so give this check an explicit 5-minute budget.
+  {
+    ruleId: 'u-plat-runtime-parity',
+    command: 'node',
+    args: [RUNTIME_PARITY_SCRIPT, '.'],
+    timeoutMs: 300_000
+  },
   det('u-data-no-placeholder'),
   det('u-plat-migrations'),
   det('fe-seo-assets'),
