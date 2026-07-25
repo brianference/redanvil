@@ -73,7 +73,7 @@ export function Footer(): JSX.Element {
           padding: `${theme.space.xl}px ${theme.space.lg}px`
         }}
       >
-        <div>
+        <div className="ra-footer-brand">
           <Logo height={48} />
           <p
             style={{
@@ -87,28 +87,30 @@ export function Footer(): JSX.Element {
             {en.app.footerTagline}
           </p>
         </div>
-        <FooterCol
-          heading={en.app.footerProduct}
-          links={[
-            { label: en.app.footerAppBuilder, href: APP_URL },
-            { label: en.app.footerDashboard, href: DASHBOARD_URL },
-            { label: en.app.footerGitHub, href: GITHUB_URL }
-          ]}
-        />
-        <FooterCol
-          heading={en.app.footerCompany}
-          links={[
-            { label: en.app.footerAbout, href: '/about' },
-            { label: en.app.footerContact, href: '/contact' }
-          ]}
-        />
-        <FooterCol
-          heading={en.app.footerLegal}
-          links={[
-            { label: en.app.footerTerms, href: '/terms' },
-            { label: en.app.footerPrivacy, href: '/privacy' }
-          ]}
-        />
+        <div className="ra-footer-cols">
+          <FooterCol
+            heading={en.app.footerProduct}
+            links={[
+              { label: en.app.footerAppBuilder, href: APP_URL },
+              { label: en.app.footerDashboard, href: DASHBOARD_URL },
+              { label: en.app.footerGitHub, href: GITHUB_URL }
+            ]}
+          />
+          <FooterCol
+            heading={en.app.footerCompany}
+            links={[
+              { label: en.app.footerAbout, href: '/about' },
+              { label: en.app.footerContact, href: '/contact' }
+            ]}
+          />
+          <FooterCol
+            heading={en.app.footerLegal}
+            links={[
+              { label: en.app.footerTerms, href: '/terms' },
+              { label: en.app.footerPrivacy, href: '/privacy' }
+            ]}
+          />
+        </div>
       </div>
       <div style={{ borderTop: `1px solid ${theme.color.border}` }}>
         <div

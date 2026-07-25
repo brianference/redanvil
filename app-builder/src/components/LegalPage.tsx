@@ -28,17 +28,21 @@ export function LegalPage({ title, updated, intro, sections }: LegalPageProps): 
         {updated}
       </p>
       <p
+        className="ra-prose-lead"
         style={{
           color: theme.color.text,
           fontSize: theme.type.scale[3],
-          maxWidth: '44rem',
           marginTop: theme.space.sm
         }}
       >
         {intro}
       </p>
-      {sections.map((s) => (
-        <section key={s.heading} style={{ maxWidth: '44rem', marginTop: theme.space.xl }}>
+      {/* Width caps live in CSS, not inline: an inline maxWidth beats the
+          desktop media query, which is how a responsive rule silently died in
+          this repo once already. */}
+      <div className="ra-prose-cols">
+        {sections.map((s) => (
+          <section key={s.heading} style={{ marginTop: theme.space.xl }}>
           <h2 style={{ fontSize: theme.type.scale[3], margin: 0 }}>{s.heading}</h2>
           <p
             style={{
@@ -51,7 +55,8 @@ export function LegalPage({ title, updated, intro, sections }: LegalPageProps): 
             {linkifyText(s.body)}
           </p>
         </section>
-      ))}
+        ))}
+      </div>
     </Page>
   );
 }

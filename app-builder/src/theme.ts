@@ -44,13 +44,16 @@ export const theme = {
   touch: 44,
   /** Shared content column max-width (main + footer align). Wide enough for 1280 without a dead right band; prose still caps itself. */
   layout: {
-    // 64rem, not 80: the app-builder column is a heading plus a chat thread, and
-    // at 80rem on a 1280 viewport the shell filled the width while the content
-    // inside stayed ~40rem, leaving half the screen empty to the right of every
-    // page. Narrowing the shell centres the whole column as one unit instead of
-    // centring the chat away from its own heading. The dashboard keeps 80rem
-    // because its tables genuinely use the width.
-    contentMaxWidth: '64rem'
+    // Was 64rem, which centred the column but left a wide desktop mostly empty.
+    // The fix for that is a two-column layout, not a narrow shell: `.ra-chat`
+    // splits into conversation + sticky composer from 1024 up, so the width is
+    // used rather than padded. 88vw keeps a margin on very large screens while
+    // clearing the "at least 80%" bar; 90rem stops it stretching forever on an
+    // ultrawide. NOT vw: an 88vw cap also shrank the 375 header, cutting the
+    // logo-to-button gap from 52px back to 8px. 100% keeps mobile full-bleed
+    // (its margin comes from the container padding) and the rem cap only ever
+    // engages on a wide screen.
+    contentMaxWidth: 'min(90rem, 100%)'
   },
   type: tokens.type
 } as const;

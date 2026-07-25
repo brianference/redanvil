@@ -57,8 +57,8 @@ export function ComposerChat({
   }
 
   return (
-    <div style={rootStyle}>
-      <div style={threadStyle} role="log" aria-live="polite" aria-relevant="additions">
+    <div className="ra-chat" style={rootStyle}>
+      <div className="ra-chat-thread" style={threadStyle} role="log" aria-live="polite" aria-relevant="additions">
         <AgentRow>
           <div style={bubbleStyle}>
             <p style={{ margin: 0, fontSize: theme.type.scale[2], lineHeight: 1.45 }}>
@@ -115,7 +115,7 @@ export function ComposerChat({
         )}
       </div>
 
-      <div style={composerShellStyle}>
+      <div className="ra-chat-composer" style={composerShellStyle}>
         <form onSubmit={handleSubmit} aria-label={copy.composerLabel} style={composerFormStyle}>
           <label htmlFor="composer-prompt" style={visuallyHiddenStyle}>
             {copy.composerLabel}
@@ -183,14 +183,13 @@ function AgentRow({ children }: { children: ReactNode }): JSX.Element {
   );
 }
 
+// Layout for `.ra-chat` lives ENTIRELY in CSS (see shell/styles.ts). Not one
+// property of it belongs here: an inline `display` or `maxWidth` beats a media
+// query outright, so the desktop two-column rule would be dead on arrival. That
+// is exactly what happened on the first attempt — the grid was declared and the
+// inline `display: flex` kept the composer stacked under the thread.
 const rootStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.space.lg,
-  width: '100%',
-  // 44rem inside a 64rem shell: wide enough that the thread does not read as a
-  // narrow strip on desktop, still short enough to keep a comfortable measure.
-  maxWidth: '44rem'
+  width: '100%'
 };
 
 const threadStyle: CSSProperties = {
