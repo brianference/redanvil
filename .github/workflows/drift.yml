@@ -70,6 +70,15 @@ jobs:
       - name: Re-gate dashboard against its committed result
         run: node .github/scripts/verify_results.mjs dashboard results/dashboard.json evidence/verdicts-dashboard.json ci,process
 
+      # A green result and a stale production build must not coexist. Needs the
+      # apps built so the scored bundle can be compared with what is served.
+      - name: Build both apps
+        run: npm run build --workspace app-builder && npm run build --workspace dashboard
+      - name: Deployed build matches the scored commit — app-builder
+        run: node .github/scripts/verify_deployed.mjs app-builder results/app-builder.json https://redanvil.pages.dev/
+      - name: Deployed build matches the scored commit — dashboard
+        run: node .github/scripts/verify_deployed.mjs dashboard results/dashboard.json https://redanvil-dashboard.pages.dev/
+
       # Keep the trace when something fails, so a drift is opened, not re-driven.
       - name: Upload e2e trace on failure
         if: failure()

@@ -81,10 +81,24 @@ if (served !== local) {
   );
   process.exit(1);
 }
-if (head !== scoredCommit) {
+// HEAD moving past the scored commit is normal — committing the result file
+// itself does it. What matters is whether the APP changed since it was scored:
+// if it did, the bundle production serves is no longer the thing that scored.
+const changedSinceScored = (
+  spawnSync('git', ['diff', '--name-only', scoredCommit, 'HEAD', '--', appDir], {
+    encoding: 'utf8'
+  }).stdout ?? ''
+)
+  .split('\n')
+  .map((line) => line.trim())
+  .filter((line) => line.length > 0);
+
+if (changedSinceScored.length > 0) {
   console.error(
-    `\nverify_deployed FAIL: the built output matches production, but HEAD (${head.slice(0, 12)}) ` +
-      `is not the scored commit (${scoredCommit.slice(0, 12)}), so the bundle cannot be attributed to it.`
+    `\nverify_deployed FAIL: ${changedSinceScored.length} file(s) under ${appDir} changed between ` +
+      `the scored commit ${scoredCommit.slice(0, 12)} and HEAD ${head.slice(0, 12)}, so the ` +
+      `deployed bundle is not the thing that was scored:\n  ` +
+      changedSinceScored.slice(0, 5).join('\n  ')
   );
   process.exit(1);
 }

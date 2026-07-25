@@ -76,10 +76,9 @@ PASS is worse than no check: the first version did exactly that (0 rules run, st
 
 Visual and judge rules are deliberately out of scope here — they need a rendered review.
 
-### 6. Coverage is disclosed but not floored
-Gate reports carry coverage (87% and 84%) and it is honest, but nothing fails when it drops. A
-run could waive its way to 40% coverage and still print 100/100 beside it. A `--min-coverage`
-floor exists as an idea in the second audit and was never implemented.
+### 6. Coverage is disclosed but not floored — CLOSED
+`--min-coverage` makes the denominator a gate. Proven both ways: 85 passes at the current 87%,
+95 fails with the reason. Both apps now run with a floor (85 and 80).
 
 ### 7. `hyg-no-duplication` is still exact-match within one app
 The cross-app pass normalises identifiers; the per-app rule does not, so a rename still defeats
@@ -94,7 +93,11 @@ measured for the mobile rules.
 Unchanged from the second audit: `gh` is not on PATH, so it always returns N/A. It fails closed,
 so it is honest, but it has never once been measured here.
 
-### 10. Nothing checks that the deployed bundle matches the gated commit
-The gate scores a working tree; the deploy verification compares an asset hash to a local build.
-Neither ties the SCORED commit to the DEPLOYED artifact. A green result and a stale production
-build can coexist silently — the same class as the stale verdict, one layer out.
+### 10. Nothing checks that the deployed bundle matches the gated commit — CLOSED
+`verify_deployed.mjs` compares what production serves against the build of the scored commit,
+and refuses a result produced from a dirty tree (which describes no commit at all). It caught
+exactly that on its first run. Runs daily in `drift.yml` for both apps.
+
+A first version required `HEAD == scoredCommit`, which is wrong — committing the result file
+itself moves HEAD. It now fails only when files under the app directory changed between the
+scored commit and HEAD, which is the condition that actually breaks attribution.
