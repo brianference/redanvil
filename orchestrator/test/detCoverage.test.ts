@@ -8,9 +8,7 @@ import { APP_CHECKS } from '../src/commands/gate';
  * Path to the deterministic rule checker. Cases are extracted from source text
  * so this coverage test tracks reality and cannot drift from a hard-coded list.
  */
-const CHECK_SCRIPT_PATH = fileURLToPath(
-  new URL('../scripts/checks/check.mjs', import.meta.url)
-);
+const CHECK_SCRIPT_PATH = fileURLToPath(new URL('../scripts/checks/check.mjs', import.meta.url));
 
 /**
  * Matches switch `case 'rule-id':` labels in check.mjs, including fall-through
@@ -74,19 +72,17 @@ describe('det rule implementation coverage', () => {
     const appIds = appCheckRuleIds();
 
     const pureDetRules = loadRubric().filter((rule) => rule.method === 'det');
-    expect(pureDetRules.length, 'expected at least one pure-det rule in the rubric').toBeGreaterThan(
-      0
-    );
+    expect(
+      pureDetRules.length,
+      'expected at least one pure-det rule in the rubric'
+    ).toBeGreaterThan(0);
 
     const unimplemented = pureDetRules
       .map((rule) => rule.id)
       .filter((id) => !appIds.has(id) && !caseIds.has(id))
       .sort();
 
-    expect(
-      unimplemented,
-      `unimplemented det rules: ${unimplemented.join(', ')}`
-    ).toEqual([]);
+    expect(unimplemented, `unimplemented det rules: ${unimplemented.join(', ')}`).toEqual([]);
   });
 
   it('every det+judge rule either has a det implementation or is an explicit judge-only hybrid', () => {
@@ -97,9 +93,7 @@ describe('det rule implementation coverage', () => {
     const hybrids = loadRubric().filter((rule) => rule.method === 'det+judge');
     const unimplemented = hybrids
       .map((rule) => rule.id)
-      .filter(
-        (id) => !appIds.has(id) && !caseIds.has(id) && !JUDGE_ONLY_DET_HYBRIDS.has(id)
-      )
+      .filter((id) => !appIds.has(id) && !caseIds.has(id) && !JUDGE_ONLY_DET_HYBRIDS.has(id))
       .sort();
 
     expect(

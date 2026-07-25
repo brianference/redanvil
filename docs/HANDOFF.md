@@ -47,8 +47,10 @@ Ten findings were fixed; the full narrative is in the release notes. The load-be
 ## Remaining tasks (priority order)
 
 ### 1. Audits one and two fully closed; third audit has 3 open of 10
+
 `docs/audit-2026-07-25.md` (second) and `docs/audit-2026-07-25-third.md` carry a CLOSED note per
 finding. Open from the third:
+
 - **The judge tier has NEVER dissented** — 0 fails in 258 recorded judge verdicts across 34
   verdict-file revisions. Measured daily by `judge_dissent.mjs`, deliberately report-only. The
   fix is an independent reviewer, not a threshold: judge verdicts are currently written by the
@@ -59,6 +61,7 @@ finding. Open from the third:
   wizard step would not be caught.
 
 Everything else on the old backlog is now done:
+
 - **Monorepo wiring + ratchet.** Both apps are npm workspaces, react hoists to one copy, and
   `useDrawerA11y` shares cleanly. Duplication ratcheted 854 → 772 → **646**. Sharing React code
   failed before the workspace conversion (two React instances break every hook in the browser);
@@ -71,12 +74,14 @@ Everything else on the old backlog is now done:
 - **Third audit.** Done — `docs/audit-2026-07-25-third.md`, 7 of 10 closed.
 
 Next genuine work, in rough value order:
+
 - Lower the duplication ratchet below 646 (`linkify`, `Breadcrumbs` and `ThemeToggle` are the
   next candidates; they import per-app theme/i18n so they need parameterising, not just moving).
 - The three open third-audit findings above.
 - Re-derive the judge lane from scratch rather than patching it — see the dissent finding.
 
 ### 2. Brand assets
+
 The dark lockup is the owner's own Grok Imagine artwork, recovered from two JPEG exports (over
 the transparency checkerboard, and over solid black) by exact two-background matting — a JPEG
 cannot carry alpha and Grok Imagine renders the checkerboard into the pixels. Recipe and script
@@ -87,6 +92,7 @@ washes out on white. `LOGO_HEIGHT = 112` with a `min(52vw, 440px)` cap, which le
 52px gap to the header buttons at 375.
 
 ### 3. `proc-pr-title-ticket` is N/A locally
+
 Implemented via `gh pr view`; `gh` is not on PATH here so it always returns N/A. It fails
 closed, so this is not urgent. Wire it to the GitHub API with the existing token if PR-title
 enforcement matters.
@@ -94,24 +100,29 @@ enforcement matters.
 ## Key facts a fresh context will need
 
 **Deploy** (Type B — `git push` does NOT deploy):
+
 ```
 cd app-builder && npm run build
 export CLOUDFLARE_API_TOKEN=<NewCloudFlareAccountToken from x-search-mcp-server/.env>
 export CLOUDFLARE_ACCOUNT_ID=dd01b432f0329f87bb1cc1a3fad590ee
 npx wrangler pages deploy dist --project-name redanvil --branch main --commit-dirty=true
 ```
+
 Then verify: fetch `https://redanvil.pages.dev/`, extract `assets/index-<hash>.js`, confirm it
 matches local `dist/`. Also curl `/api/health`. The dashboard is the same with
 `--project-name redanvil-dashboard`. Never report the hashed per-deploy URL.
 
 **Gate**:
+
 ```
 npm run gate -- app-builder --judge evidence/verdicts-app-builder.json \
   --na ci,process --slug app-builder --out results/app-builder.json
 ```
+
 `git checkout -- results/app-builder.json` before a run if you need `provenance.dirty=false`.
 
 **Gates added since v6** (all run in CI, most also daily in `drift.yml`):
+
 ```
 node .github/scripts/design_audit.mjs   <prodUrl> --out evidence/design-<slug>.json
 node .github/scripts/desktop_width.mjs  <prodUrl> --out evidence/width-<slug>.json
@@ -120,10 +131,12 @@ node .github/scripts/gate_scaffold.mjs
 node .github/scripts/verify_deployed.mjs <appDir> results/<slug>.json <prodUrl>
 node .github/scripts/judge_dissent.mjs  --out evidence/judge-dissent.json
 ```
+
 Verdicts for those rules must cite the matching report, and a report older than the commit it
 vouches for is rejected — re-stamping a verdict is not re-measuring it.
 
 **CI parity before every push** (`verify_commit.mjs` now names these itself):
+
 ```
 node .github/scripts/verify_commit.mjs HEAD
 node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json ci,process
@@ -134,11 +147,13 @@ rm -f results/app-builder.json.verify.json
 ```
 
 **Re-recording verdicts** (needed whenever the render scope changes):
+
 ```
 node .github/scripts/a11y_audit.mjs <prodUrl> --theme dark  --out evidence/axe/app-builder-dark.json
 node .github/scripts/a11y_audit.mjs <prodUrl> --theme light --out evidence/axe/app-builder-light.json
 node .github/scripts/e2e_smoke.mjs <prodUrl> --out evidence/e2e-app-builder.json
 ```
+
 Then screenshots at 375/768/1280 in both themes into `evidence/screenshots/`, and update
 `reviewedCommit` in `evidence/verdicts-app-builder.json`. Visual verdicts are scoped to
 `app-builder/src`, `app-builder/public`, `app-builder/index.html`.

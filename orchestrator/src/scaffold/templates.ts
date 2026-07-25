@@ -63,13 +63,16 @@ function migrationSql(job: Job): string {
   const entities =
     job.entities.length > 0
       ? job.entities
-      : [{ name: slugToTableName(job.slug), fields: [] as { name: string; type: 'text' | 'integer' | 'real' | 'blob' }[] }];
+      : [
+          {
+            name: slugToTableName(job.slug),
+            fields: [] as { name: string; type: 'text' | 'integer' | 'real' | 'blob' }[]
+          }
+        ];
 
   const blocks = entities.map((entity) => {
     const table = entityToTableName(entity.name);
-    const fieldLines = entity.fields.map(
-      (field) => `  ${field.name} ${SQL_TYPE[field.type]},`
-    );
+    const fieldLines = entity.fields.map((field) => `  ${field.name} ${SQL_TYPE[field.type]},`);
     const cols = [
       '  id INTEGER PRIMARY KEY AUTOINCREMENT,',
       ...fieldLines,
@@ -121,8 +124,10 @@ function sitemapXml(slug: string): string {
   const urls = paths
     .map((path) => {
       const loc = path === '/' ? `${origin}/` : `${origin}${path}`;
-      const priority = path === '/' ? '1.0' : path === '/about' || path === '/contact' ? '0.6' : '0.3';
-      const changefreq = path === '/' ? 'weekly' : path === '/about' || path === '/contact' ? 'monthly' : 'yearly';
+      const priority =
+        path === '/' ? '1.0' : path === '/about' || path === '/contact' ? '0.6' : '0.3';
+      const changefreq =
+        path === '/' ? 'weekly' : path === '/about' || path === '/contact' ? 'monthly' : 'yearly';
       return (
         `  <url>\n` +
         `    <loc>${loc}</loc>\n` +

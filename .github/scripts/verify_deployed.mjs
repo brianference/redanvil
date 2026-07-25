@@ -66,8 +66,9 @@ const served = /assets\/(index-[A-Za-z0-9_-]+\.js)/.exec(html)?.[1] ?? null;
 // Is the working tree still at the scored commit, with the built output current?
 const head = spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout?.trim() ?? '';
 const dirty =
-  (spawnSync('git', ['status', '--porcelain', '--', appDir], { encoding: 'utf8' }).stdout ?? '')
-    .trim().length > 0;
+  (
+    spawnSync('git', ['status', '--porcelain', '--', appDir], { encoding: 'utf8' }).stdout ?? ''
+  ).trim().length > 0;
 
 console.log(`scored commit : ${scoredCommit.slice(0, 12)}`);
 console.log(`working HEAD  : ${head.slice(0, 12)}${dirty ? ' (app dir DIRTY)' : ''}`);

@@ -39,9 +39,7 @@ for (const rule of RULES) {
   const out = `${r.stdout || ''}${r.stderr || ''}`.trim();
   if (r.status === 0) {
     // Surface the total/budget line so CI logs show headroom without dumping the table twice.
-    const passLine = out
-      .split(/\r?\n/)
-      .find((l) => l.startsWith('PASS  cross-app-duplication'));
+    const passLine = out.split(/\r?\n/).find((l) => l.startsWith('PASS  cross-app-duplication'));
     console.log(passLine || 'PASS  cross-app-duplication');
   } else {
     failed++;

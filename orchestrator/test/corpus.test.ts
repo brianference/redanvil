@@ -48,8 +48,10 @@ describe('rubric markdown and encoded rules stay in lockstep', () => {
     // against. Both directions have bitten this repo, so both are asserted.
     const undocumented = [...encoded].filter((id) => !documented.has(id)).sort();
     const unencoded = [...documented].filter((id) => !encoded.has(id)).sort();
-    expect(unencoded, `documented but not encoded (scored by nothing): ${unencoded.join(', ')}`)
-      .toEqual([]);
+    expect(
+      unencoded,
+      `documented but not encoded (scored by nothing): ${unencoded.join(', ')}`
+    ).toEqual([]);
     expect(undocumented, `encoded but not documented: ${undocumented.join(', ')}`).toEqual([]);
   });
 });

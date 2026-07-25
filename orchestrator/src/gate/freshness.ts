@@ -146,10 +146,7 @@ export function gitChangeProbe(repoRoot: string): ChangeProbe {
 
     const changed = git(['diff', '--name-only', commit, '--', ...scope], repoRoot);
     if (changed === null) return null;
-    const untracked = git(
-      ['ls-files', '--others', '--exclude-standard', '--', ...scope],
-      repoRoot
-    );
+    const untracked = git(['ls-files', '--others', '--exclude-standard', '--', ...scope], repoRoot);
 
     const lines = (text: string): string[] =>
       text

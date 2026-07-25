@@ -8,3 +8,9 @@ evidence/*.json
 # Verified byte-for-byte by .github/scripts/verify_design_rules.mjs, so any
 # reformat here reads as drift from the source of truth.
 design-system/mobile-design-rules.md
+
+# Golden characterization output for generatePrd. These are recorded PRD bytes,
+# not source: reformatting them rewrites the thing the test compares against, so
+# `prettier --write` silently turns a real regression check into a tautology.
+# A run of `--write .` did exactly that and broke all five fixtures at once.
+app-builder/src/lib/prd.characterization.fixtures/

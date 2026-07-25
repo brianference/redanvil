@@ -166,9 +166,7 @@ export async function gateApp(
   // "evaluated 46/45" — a numerator larger than its denominator, which is not a
   // number anyone can act on. Scope the tally to the rules actually being scored.
   const scoredIds = new Set(rules.map((r) => r.id));
-  const evaluated = new Set(
-    outcomes.map((o) => o.ruleId).filter((id) => scoredIds.has(id))
-  ).size;
+  const evaluated = new Set(outcomes.map((o) => o.ruleId).filter((id) => scoredIds.has(id))).size;
   const rubricSize = loadRubric().length;
   const coverage = rubricSize === 0 ? 0 : Math.round((rules.length / rubricSize) * 100);
   return {

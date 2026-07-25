@@ -30,16 +30,16 @@ measure 12/12. `drift.yml` runs it daily.
 The second audit closed individual-rule waivers. Lane waivers were left open, and they are the
 wider lever:
 
-| `--na` lane | rules removed | guarded before |
-|---|---|---|
-| frontend | 22 (every visual blocker) | no |
-| security | 9 | no |
-| concision | 7 | no |
-| hygiene | 5 | no |
-| typing | 3 | no |
-| testing | 3 | no |
-| ci | 4 | yes |
-| process | 2 | n/a |
+| `--na` lane | rules removed             | guarded before |
+| ----------- | ------------------------- | -------------- |
+| frontend    | 22 (every visual blocker) | no             |
+| security    | 9                         | no             |
+| concision   | 7                         | no             |
+| hygiene     | 5                         | no             |
+| typing      | 3                         | no             |
+| testing     | 3                         | no             |
+| ci          | 4                         | yes            |
+| process     | 2                         | n/a            |
 
 Measured: 50 of 55 rules, including 31 blockers, were removable by a flag with no reality check.
 
@@ -67,13 +67,13 @@ Now instrumented, and the number is worse than this audit first estimated. I wro
 commits recorded a judge FAIL". `judge_dissent.mjs` reads every revision of both verdict files
 out of git history and measures:
 
-| | count |
-|---|---|
-| verdict-file revisions inspected | 34 |
-| distinct judge verdicts | **258** |
-| judge FAILs ever recorded | **0** |
-| distinct visual verdicts | 399 |
-| visual FAILs ever recorded | 2 (both `fe-a11y-contrast`) |
+|                                  | count                       |
+| -------------------------------- | --------------------------- |
+| verdict-file revisions inspected | 34                          |
+| distinct judge verdicts          | **258**                     |
+| judge FAILs ever recorded        | **0**                       |
+| distinct visual verdicts         | 399                         |
+| visual FAILs ever recorded       | 2 (both `fe-a11y-contrast`) |
 
 The two historical failures were VISUAL, not judge. The judge tier has never once said no, in
 258 recorded opportunities. It contributes up to 30% of tier-2 weight on that record.
@@ -88,6 +88,7 @@ code. An independent reviewer with no stake in the diff is the thing missing, an
 scoring fixes that.
 
 ### 5. A scaffolded app is never gated end-to-end in CI — CLOSED
+
 `gate_scaffold.mjs` scaffolds a real job, installs it, and runs the tool-backed checks (tsc,
 eslint, vitest, build) plus every static rule `check.mjs` implements — 27 rules run, 8 correctly
 not applicable to a fresh scaffold. Wired into CI. It also refuses to run if rule extraction
@@ -97,23 +98,28 @@ PASS is worse than no check: the first version did exactly that (0 rules run, st
 Visual and judge rules are deliberately out of scope here — they need a rendered review.
 
 ### 6. Coverage is disclosed but not floored — CLOSED
+
 `--min-coverage` makes the denominator a gate. Proven both ways: 85 passes at the current 87%,
 95 fails with the reason. Both apps now run with a floor (85 and 80).
 
 ### 7. `hyg-no-duplication` is still exact-match within one app
+
 The cross-app pass normalises identifiers; the per-app rule does not, so a rename still defeats
 it inside a single app. The two now disagree about what duplication means.
 
 ### 8. The design audit measures the home route only
+
 `design_audit.mjs` checks touch targets, type floor and overflow on `/` alone. A regression on
 `/saved` or a wizard step would not be caught. Required pages are status-checked but not
 measured for the mobile rules.
 
 ### 9. `proc-pr-title-ticket` is still N/A on this machine
+
 Unchanged from the second audit: `gh` is not on PATH, so it always returns N/A. It fails closed,
 so it is honest, but it has never once been measured here.
 
 ### 10. Nothing checks that the deployed bundle matches the gated commit — CLOSED
+
 `verify_deployed.mjs` compares what production serves against the build of the scored commit,
 and refuses a result produced from a dirty tree (which describes no commit at all). It caught
 exactly that on its first run. Runs daily in `drift.yml` for both apps.

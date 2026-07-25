@@ -7,12 +7,12 @@ deterministic gate checks. Every figure below came out of
 
 ## What the runs measured
 
-| Stage | Result |
-|---|---|
-| PRD self-check clean | 10 / 10 |
-| Job passes `JobSchema` | 10 / 10 |
-| Scaffold succeeds | 10 / 10 (19 files each) |
-| Deterministic checks all-pass on the bare scaffold | 0 / 10 |
+| Stage                                              | Result                  |
+| -------------------------------------------------- | ----------------------- |
+| PRD self-check clean                               | 10 / 10                 |
+| Job passes `JobSchema`                             | 10 / 10                 |
+| Scaffold succeeds                                  | 10 / 10 (19 files each) |
+| Deterministic checks all-pass on the bare scaffold | 0 / 10                  |
 
 PRD size ranged 24,386–33,391 characters with 7–9 vertical slices, tracking entity count and
 whether auth was in scope. The checks line was identical on every run: **15 pass / 14 fail /

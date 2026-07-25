@@ -34,7 +34,10 @@ function write(dir: string, rel: string, body: string): void {
  * @returns status and stderr.
  */
 function run(ruleId: string, dir: string): { status: number | null; stderr: string } {
-  const r = spawnSync(process.execPath, [CHECK, ruleId, dir], { encoding: 'utf8', env: process.env });
+  const r = spawnSync(process.execPath, [CHECK, ruleId, dir], {
+    encoding: 'utf8',
+    env: process.env
+  });
   return { status: r.status, stderr: r.stderr };
 }
 

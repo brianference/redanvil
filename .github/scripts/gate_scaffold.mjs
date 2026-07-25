@@ -84,7 +84,14 @@ try {
     const ok = r.code === 0;
     if (!ok) failed += 1;
     console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${rule}`);
-    if (!ok) console.log(r.out.split('\n').slice(-8).map((l) => `        ${l}`).join('\n'));
+    if (!ok)
+      console.log(
+        r.out
+          .split('\n')
+          .slice(-8)
+          .map((l) => `        ${l}`)
+          .join('\n')
+      );
   }
 
   // 4. Every static rule check.mjs implements.
@@ -94,13 +101,18 @@ try {
   // A rule list that silently comes back empty would make this whole check
   // vacuous while still printing PASS. Refuse rather than pretend.
   if (ruleIds.length < 10) {
-    console.error(`scaffold gate FAIL: only ${ruleIds.length} rule(s) found in check.mjs — extraction is broken`);
+    console.error(
+      `scaffold gate FAIL: only ${ruleIds.length} rule(s) found in check.mjs — extraction is broken`
+    );
     process.exit(2);
   }
   let na = 0;
   for (const rule of ruleIds) {
     const r = run('node', [CHECK, rule, appDir], REPO);
-    if (r.code === 3) { na += 1; continue; }
+    if (r.code === 3) {
+      na += 1;
+      continue;
+    }
     const ok = r.code === 0;
     if (!ok) failed += 1;
     console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${rule}`);

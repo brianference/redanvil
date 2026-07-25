@@ -64,13 +64,21 @@ describe('every waiver is checked against reality, not just the ci lane', () => 
 
   it('rejects waiving u-sec-timeouts when a function really calls fetch', () => {
     const d = appDir();
-    write(d, 'functions/api/x.ts', 'export async function onRequest(){ return fetch("https://a"); }\n');
+    write(
+      d,
+      'functions/api/x.ts',
+      'export async function onRequest(){ return fetch("https://a"); }\n'
+    );
     expect(() => assertWaiversAreReal(d, ['u-sec-timeouts'])).toThrow(/outbound fetch/i);
   });
 
   it('rejects waiving u-val-input-validation when a handler really reads a body', () => {
     const d = appDir();
-    write(d, 'functions/api/x.ts', 'export async function onRequest(c){ const b = await c.request.json(); return new Response(b); }\n');
+    write(
+      d,
+      'functions/api/x.ts',
+      'export async function onRequest(c){ const b = await c.request.json(); return new Response(b); }\n'
+    );
     expect(() => assertWaiversAreReal(d, ['u-val-input-validation'])).toThrow(/request body/i);
   });
 
@@ -114,7 +122,9 @@ describe('lane waivers are checked too, not just individual rules', () => {
     const d = appDir();
     write(d, 'src/main.ts', 'export const a = 1;\n');
     for (const lane of ['security', 'typing', 'concision', 'hygiene', 'testing']) {
-      expect(() => assertWaiversAreReal(d, [lane]), lane).toThrow(new RegExp(`${lane} lane applies`, 'i'));
+      expect(() => assertWaiversAreReal(d, [lane]), lane).toThrow(
+        new RegExp(`${lane} lane applies`, 'i')
+      );
     }
   });
 

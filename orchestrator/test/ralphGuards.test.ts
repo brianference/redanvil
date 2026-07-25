@@ -23,7 +23,11 @@ function replay(scores: number[]): {
       gate: async (): Promise<GateOutcome> => {
         const score = scores[Math.min(index, scores.length - 1)] ?? 0;
         index += 1;
-        return { score, blockers: score >= 90 ? [] : ['u-test-presence'], feedback: `score ${score}` };
+        return {
+          score,
+          blockers: score >= 90 ? [] : ['u-test-presence'],
+          feedback: `score ${score}`
+        };
       }
     }
   };

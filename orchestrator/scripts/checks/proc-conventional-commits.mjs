@@ -56,12 +56,7 @@ function readRecentCommits(appDir) {
     // %x00 is git's hex escape for NUL so multi-field records stay parseable.
     out = execFileSync(
       'git',
-      [
-        'log',
-        '-n',
-        String(RECENT_COMMIT_WINDOW),
-        `--format=%H%x00%s%x00%P`
-      ],
+      ['log', '-n', String(RECENT_COMMIT_WINDOW), `--format=%H%x00%s%x00%P`],
       {
         cwd: appDir,
         encoding: 'utf8',

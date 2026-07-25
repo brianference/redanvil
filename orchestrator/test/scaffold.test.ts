@@ -88,9 +88,7 @@ describe('scaffoldApp', () => {
     expect(sitemap).toContain('xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
     for (const path of ['/', '/about', '/terms', '/privacy', '/contact']) {
       const loc =
-        path === '/'
-          ? 'https://demo-app.pages.dev/'
-          : `https://demo-app.pages.dev${path}`;
+        path === '/' ? 'https://demo-app.pages.dev/' : `https://demo-app.pages.dev${path}`;
       expect(sitemap).toContain(`<loc>${loc}</loc>`);
     }
   });

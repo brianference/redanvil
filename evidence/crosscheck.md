@@ -10,11 +10,11 @@ Independent skeptic attack on gate 100/100, check tests, wizard 400 fix, scoring
 
 ## Test suite counts (real runs)
 
-| Scope | Command | Result |
-| --- | --- | --- |
-| Root (orchestrator workspace) | `npm test` | **19** files, **133** tests, all passed, ~3.5s |
-| app-builder | `npx vitest run` | **13** files, **70** tests, all passed, ~0.7s |
-| dashboard | `npx vitest run` | **7** files, **40** tests, all passed, ~0.7s |
+| Scope                         | Command          | Result                                         |
+| ----------------------------- | ---------------- | ---------------------------------------------- |
+| Root (orchestrator workspace) | `npm test`       | **19** files, **133** tests, all passed, ~3.5s |
+| app-builder                   | `npx vitest run` | **13** files, **70** tests, all passed, ~0.7s  |
+| dashboard                     | `npx vitest run` | **7** files, **40** tests, all passed, ~0.7s   |
 
 ---
 
@@ -24,7 +24,7 @@ Independent skeptic attack on gate 100/100, check tests, wizard 400 fix, scoring
 
 **Claim attacked:** Deterministic security checks would fail a genuinely defective app.
 
-**What is wrong:** `findInterpolatedSql` only inspects **template literals** with `` ${} ``. The textbook SQLi pattern `"SELECT … '" + id + "'"` never matches, so the check exits 0.
+**What is wrong:** `findInterpolatedSql` only inspects **template literals** with `${}`. The textbook SQLi pattern `"SELECT … '" + id + "'"` never matches, so the check exits 0.
 
 **Reproduction:**
 
@@ -180,19 +180,19 @@ and `parseRun(validFeedRow())` is expected to succeed (`:105`). A fabricated fee
 
 **Reproduction:** empty temp app with only `src/empty.ts` and empty `functions/`:
 
-| Rule | Exit |
-| --- | --- |
-| u-sec-param-sql | 0 |
-| u-sec-no-stub-paths | 0 |
-| fe-theme-tokens-only | 0 |
-| fe-no-unsanitized-html | 0 |
-| hyg-secret-scan | 0 |
-| u-sec-sast | 0 |
-| u-conc-no-padding | 0 |
-| hyg-no-duplication | 0 |
-| u-typing-scoped-ignores | 0 |
-| u-val-input-validation | 3 (N/A — honest) |
-| u-sec-timeouts | 3 (N/A — honest) |
+| Rule                    | Exit             |
+| ----------------------- | ---------------- |
+| u-sec-param-sql         | 0                |
+| u-sec-no-stub-paths     | 0                |
+| fe-theme-tokens-only    | 0                |
+| fe-no-unsanitized-html  | 0                |
+| hyg-secret-scan         | 0                |
+| u-sec-sast              | 0                |
+| u-conc-no-padding       | 0                |
+| hyg-no-duplication      | 0                |
+| u-typing-scoped-ignores | 0                |
+| u-val-input-validation  | 3 (N/A — honest) |
+| u-sec-timeouts          | 3 (N/A — honest) |
 
 **Also:** `hyg-no-binaries` on a temp dir with an 800KB PNG under `src/assets/` (untracked) → exit=0, because only `git ls-files` paths count. Correct for “committed binaries,” but a defective fixture that is not a git repo cannot fail this rule.
 
@@ -202,13 +202,13 @@ These are **not** fully vacuous on real apps with code (they do catch specific p
 
 ### F8 — LOW: Weakest tests in the suite (would not catch a broken implementation)
 
-| Rank | Location | Weakness | Broken impl that still passes |
-| --- | --- | --- | --- |
-| 1 | `orchestrator/test/smoke.test.ts:5–7` | Only asserts `redanvilVersion()` matches semver | Entire product can be deleted; smoke still green |
-| 2 | `app-builder/src/i18n/en.test.ts:5–52` (and dashboard twin) | Presence / `length > 2` / static string equality on copy objects | Wrong runtime wiring; buttons show keys; i18n never loaded — as long as `en.ts` literals stay long enough |
-| 3 | `app-builder/functions/api/submit.test.ts` | No empty/`""`/`"   "` appType cases | Server accepts whitespace `appType` forever (F3); over-limit tests still pass |
-| 4 | `orchestrator/test/gate.test.ts:11–20, 61–79` | Injects `node -e 'process.exit(0)'` as “checks” | Real `check.mjs` / APP_CHECKS can be broken; gate wiring tests still pass |
-| 5 | `dashboard/src/lib/summary.test.ts:34–54, 103–105` | `validFeedRow` is **incoherent** (score 100 + failed rule) and is accepted | Dashboard continues to display impossible scores |
+| Rank | Location                                                    | Weakness                                                                   | Broken impl that still passes                                                                             |
+| ---- | ----------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1    | `orchestrator/test/smoke.test.ts:5–7`                       | Only asserts `redanvilVersion()` matches semver                            | Entire product can be deleted; smoke still green                                                          |
+| 2    | `app-builder/src/i18n/en.test.ts:5–52` (and dashboard twin) | Presence / `length > 2` / static string equality on copy objects           | Wrong runtime wiring; buttons show keys; i18n never loaded — as long as `en.ts` literals stay long enough |
+| 3    | `app-builder/functions/api/submit.test.ts`                  | No empty/`""`/`"   "` appType cases                                        | Server accepts whitespace `appType` forever (F3); over-limit tests still pass                             |
+| 4    | `orchestrator/test/gate.test.ts:11–20, 61–79`               | Injects `node -e 'process.exit(0)'` as “checks”                            | Real `check.mjs` / APP_CHECKS can be broken; gate wiring tests still pass                                 |
+| 5    | `dashboard/src/lib/summary.test.ts:34–54, 103–105`          | `validFeedRow` is **incoherent** (score 100 + failed rule) and is accepted | Dashboard continues to display impossible scores                                                          |
 
 No tautological “assert mock’s own return” patterns stood out as dominant. `checks.test.ts` is comparatively strong (see below).
 
@@ -220,19 +220,19 @@ No tautological “assert mock’s own return” patterns stood out as dominant.
 
 Ran `node orchestrator/scripts/checks/check.mjs <ruleId> app-builder` for all check.mjs-backed APP_CHECKS:
 
-| Rule | Exit | Matches results? |
-| --- | --- | --- |
-| u-typing-scoped-ignores … hyg-no-duplication (13 rules) | 0 | Yes (`passed: true`) |
-| hyg-no-binaries | 0 | Yes |
-| u-sec-timeouts | **3** N/A (`no outbound fetch`) | Not listed in the 41 — correctly dropped from denominator |
+| Rule                                                    | Exit                            | Matches results?                                          |
+| ------------------------------------------------------- | ------------------------------- | --------------------------------------------------------- |
+| u-typing-scoped-ignores … hyg-no-duplication (13 rules) | 0                               | Yes (`passed: true`)                                      |
+| hyg-no-binaries                                         | 0                               | Yes                                                       |
+| u-sec-timeouts                                          | **3** N/A (`no outbound fetch`) | Not listed in the 41 — correctly dropped from denominator |
 
 Also: `npx tsc --noEmit` → 0, `npx eslint . --max-warnings 0` → 0, `git check-ignore .env` → 0 inside `app-builder`.
 
 **Defective fixtures that correctly FAIL (3 picks):**
 
-1. `u-val-input-validation` — `request.json()` without schema → exit=1  
-2. `u-sec-param-sql` — template interpolated SQL → exit=1  
-3. `fe-theme-tokens-only` — raw `#ff0000` in component → exit=1  
+1. `u-val-input-validation` — `request.json()` without schema → exit=1
+2. `u-sec-param-sql` — template interpolated SQL → exit=1
+3. `fe-theme-tokens-only` — raw `#ff0000` in component → exit=1
 
 **Caveat on “41 real checks”:** Of the 41 evaluated rules, **22 are not APP_CHECKS** (visual/judge/`det+judge` without det): e.g. `fe-light-dark`, `fe-a11y-contrast`, `u-conc-idiomatic`, `u-test-behavioral`, … Those are backed by `evidence/verdicts-app-builder.json` (evidence paths + notes), not by `check.mjs`. Rubric size 49; `--na ci` + `--na process` + det N/A timeouts → 41.
 
@@ -242,9 +242,9 @@ Also: `npx tsc --noEmit` → 0, `npx eslint . --max-warnings 0` → 0, `git chec
 
 Temp copies of `check.mjs` with:
 
-1. `hasSchemaValidation` always `return true`  
-2. `findInterpolatedSql` always `return null`  
-3. `dangerouslySetInnerHTML` regex neutered  
+1. `hasSchemaValidation` always `return true`
+2. `findInterpolatedSql` always `return null`
+3. `dangerouslySetInnerHTML` regex neutered
 
 …all exit **0** on defective fixtures that the real script fails.
 
@@ -252,20 +252,20 @@ Temp copies of `check.mjs` with:
 
 ### C3 — Scoring integrity (orchestrator path) holds for the three classic smuggles
 
-| Attack | Result |
-| --- | --- |
-| `parseOutcomes(..., "passed":"yes")` | **REJECTED** ValidationError |
-| `computeScore` with all `passed: "yes"` (smuggled types) | **score 0**, full blocker list (`passed === true` in `score.ts:24`) |
-| Pure-`det` rule as verdict | **REJECTED** |
-| Result with `finalScore:100` + failed rule | **REJECTED** by `RunResultSchema` refine; `validateFile` → `ok: false` |
-| Real `results/app-builder.json` | `validateFile` → `{ ok: true, kind: 'results' }` |
+| Attack                                                   | Result                                                                 |
+| -------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `parseOutcomes(..., "passed":"yes")`                     | **REJECTED** ValidationError                                           |
+| `computeScore` with all `passed: "yes"` (smuggled types) | **score 0**, full blocker list (`passed === true` in `score.ts:24`)    |
+| Pure-`det` rule as verdict                               | **REJECTED**                                                           |
+| Result with `finalScore:100` + failed rule               | **REJECTED** by `RunResultSchema` refine; `validateFile` → `ok: false` |
+| Real `results/app-builder.json`                          | `validateFile` → `{ ok: true, kind: 'results' }`                       |
 
 Does **not** hold for dashboard feed parsing (F6) or method-mismatch verdicts (F4).
 
 ### C4 — Wizard empty-`appType` UI path is closed; chat/template cannot Forge without a type
 
-- No client path sets Forge enabled with empty type when using Wizard controls.  
-- Composer only sets `prompt` and opens step 2; Next stays disabled until type (`Wizard.tsx` + e2e intent).  
+- No client path sets Forge enabled with empty type when using Wizard controls.
+- Composer only sets `prompt` and opens step 2; Next stays disabled until type (`Wizard.tsx` + e2e intent).
 - Server still rejects `""` (but not `"   "` — F3).
 
 ### C5 — e2e asserts Next disabled + real submit response **when Playwright loads**
@@ -276,23 +276,23 @@ Source inspection of `.github/scripts/e2e_smoke.mjs:63–89` confirms both asser
 
 ## Summary table
 
-| Claim | Verdict under attack |
-| --- | --- |
-| Gate 100 is fully “real” measurement | **Partial** — det exits match; many rules are verdicts; F1/F2 false-pass holes |
-| check.mjs tests not vacuous | **Holds** for broken-check probes on 3 rules |
-| Wizard 400 fix real | **Mostly holds** on UI; **fails** on whitespace API + missing API tests |
-| Scoring integrity | **Holds** in orchestrator validate/score; **fails** on dashboard + verdict method mismatch |
-| e2e guards regression | **Partial** — real asserts if run; skip=0; never hits empty appType POST |
+| Claim                                | Verdict under attack                                                                       |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| Gate 100 is fully “real” measurement | **Partial** — det exits match; many rules are verdicts; F1/F2 false-pass holes             |
+| check.mjs tests not vacuous          | **Holds** for broken-check probes on 3 rules                                               |
+| Wizard 400 fix real                  | **Mostly holds** on UI; **fails** on whitespace API + missing API tests                    |
+| Scoring integrity                    | **Holds** in orchestrator validate/score; **fails** on dashboard + verdict method mismatch |
+| e2e guards regression                | **Partial** — real asserts if run; skip=0; never hits empty appType POST                   |
 
 ---
 
 ## Highest-value fixes (not applied; report only)
 
-1. Extend `u-sec-param-sql` to string-concat / `+` SQL construction, not only templates.  
-2. Harden stub-auth detection beyond single-statement bodies.  
-3. `appType: z.string().trim().min(1)` + unit tests for `""` and `"   "`.  
-4. In `parseVerdicts`, require `v.method === rule.method` (or allow only the non-det half of `det+judge`).  
-5. e2e: exit non-zero if Playwright missing in CI; optional negative case POST without app type.  
+1. Extend `u-sec-param-sql` to string-concat / `+` SQL construction, not only templates.
+2. Harden stub-auth detection beyond single-statement bodies.
+3. `appType: z.string().trim().min(1)` + unit tests for `""` and `"   "`.
+4. In `parseVerdicts`, require `v.method === rule.method` (or allow only the non-det half of `det+judge`).
+5. e2e: exit non-zero if Playwright missing in CI; optional negative case POST without app type.
 6. Dashboard: reuse `RunResultSchema` (or the same refinements) before rendering KPIs.
 
 ---

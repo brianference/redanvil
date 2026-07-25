@@ -22,7 +22,11 @@ function verdict(over: Partial<Verdict> = {}): Verdict {
 
 describe('verdict freshness', () => {
   it('keeps a verdict whose reviewed scope has not changed since it was recorded', () => {
-    const stale = findStaleVerdicts([verdict()], () => ['app-builder'], () => []);
+    const stale = findStaleVerdicts(
+      [verdict()],
+      () => ['app-builder'],
+      () => []
+    );
     expect(stale).toEqual([]);
   });
 
@@ -41,7 +45,11 @@ describe('verdict freshness', () => {
     // A probe returning null means "I cannot tell". Unknown is a failure, never a
     // silent pass: an unresolvable commit is exactly how a fabricated or
     // rebased-away verdict would look.
-    const stale = findStaleVerdicts([verdict()], () => ['app-builder'], () => null);
+    const stale = findStaleVerdicts(
+      [verdict()],
+      () => ['app-builder'],
+      () => null
+    );
     expect(stale).toHaveLength(1);
     expect(stale[0]?.reason).toMatch(/not resolvable/i);
   });
@@ -59,7 +67,11 @@ describe('verdict freshness', () => {
     // A judge verdict about a single module should not be invalidated by an
     // unrelated edit elsewhere in the app, otherwise every verdict expires on
     // every commit and the whole mechanism gets waived out of frustration.
-    const v = verdict({ ruleId: 'u-conc-idiomatic', method: 'judge', scope: ['app-builder/src/lib'] });
+    const v = verdict({
+      ruleId: 'u-conc-idiomatic',
+      method: 'judge',
+      scope: ['app-builder/src/lib']
+    });
     expect(verdictScope(v, 'app-builder')).toEqual(['app-builder/src/lib']);
   });
 

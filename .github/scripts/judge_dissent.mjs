@@ -30,14 +30,18 @@ const minFails = Number(flag('min-fails', '0'));
 const outPath = flag('out', null);
 
 /** Run git, returning stdout or ''. */
-const git = (a) => spawnSync('git', a, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).stdout ?? '';
+const git = (a) =>
+  spawnSync('git', a, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).stdout ?? '';
 
 const files = ['evidence/verdicts-app-builder.json', 'evidence/verdicts-dashboard.json'];
 const seen = new Map();
 let revisions = 0;
 
 for (const file of files) {
-  const commits = git(['log', '--format=%H', '--', file]).split('\n').map((s) => s.trim()).filter(Boolean);
+  const commits = git(['log', '--format=%H', '--', file])
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
   for (const commit of commits) {
     const raw = git(['show', `${commit}:${file}`]);
     if (raw.trim().length === 0) continue;
@@ -83,7 +87,8 @@ console.log(`distinct judge verdicts          : ${judged.length}`);
 console.log(`judge FAILs ever recorded        : ${judgeFails.length}`);
 console.log(`judge dissent rate               : ${(report.judgeDissentRate * 100).toFixed(1)}%`);
 console.log(`distinct visual verdicts         : ${visual.length} (${visualFails.length} fails)`);
-if (report.failedRuleIds.length > 0) console.log(`rules ever failed                : ${report.failedRuleIds.join(', ')}`);
+if (report.failedRuleIds.length > 0)
+  console.log(`rules ever failed                : ${report.failedRuleIds.join(', ')}`);
 
 if (!report.ok) {
   console.error(

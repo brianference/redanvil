@@ -102,9 +102,7 @@ function designAuditIssues(verdict: Verdict, repoRoot: string): string[] {
     if (!report.success) continue;
     const finding = report.data.findings[verdict.ruleId];
     if (finding === undefined) {
-      return [
-        `${verdict.ruleId}: ${path} is a design audit but does not measure this rule`
-      ];
+      return [`${verdict.ruleId}: ${path} is a design audit but does not measure this rule`];
     }
     if (!finding.ok) {
       return [

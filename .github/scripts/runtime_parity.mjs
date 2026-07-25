@@ -345,16 +345,7 @@ export async function requestPath(port, path, requireJson) {
  */
 export function spawnWranglerPagesDev(appDir, port) {
   const useShell = process.platform === 'win32';
-  const args = [
-    'wrangler',
-    'pages',
-    'dev',
-    'dist',
-    '--port',
-    String(port),
-    '--ip',
-    '127.0.0.1'
-  ];
+  const args = ['wrangler', 'pages', 'dev', 'dist', '--port', String(port), '--ip', '127.0.0.1'];
   /** Mutable buffer shared with callers that read live output. */
   const output = { text: '' };
   const child = spawn('npx', args, {
@@ -462,16 +453,12 @@ export async function runRuntimeParity(appDir, opts = {}) {
 
     const build = ensureBuild(appDir);
     if (!build.ok) {
-      finish(
-        EXIT_FAIL,
-        `runtime_parity: build failed\n${build.output}`,
-        {
-          appDir,
-          port: null,
-          results: [],
-          ok: false
-        }
-      );
+      finish(EXIT_FAIL, `runtime_parity: build failed\n${build.output}`, {
+        appDir,
+        port: null,
+        results: [],
+        ok: false
+      });
       return { exitCode, report, message };
     }
 
@@ -496,11 +483,12 @@ export async function runRuntimeParity(appDir, opts = {}) {
       });
       processOutput += bootResult.processOutput;
       if (bootResult.exitHint === EXIT_INFRA) {
-        finish(
-          EXIT_INFRA,
-          'runtime_parity: wrangler cannot be run (infra)',
-          { appDir, port, results: bootResult.results, ok: false }
-        );
+        finish(EXIT_INFRA, 'runtime_parity: wrangler cannot be run (infra)', {
+          appDir,
+          port,
+          results: bootResult.results,
+          ok: false
+        });
         return { exitCode, report, message };
       }
       const verdict = evaluateParity(bootResult.results, processOutput);
@@ -536,11 +524,12 @@ export async function runRuntimeParity(appDir, opts = {}) {
     processOutput += live.text;
 
     if (spawnError || isInfraFailure(processOutput)) {
-      finish(
-        EXIT_INFRA,
-        `runtime_parity: wrangler cannot be run (infra)\n${processOutput}`,
-        { appDir, port, results: [], ok: false }
-      );
+      finish(EXIT_INFRA, `runtime_parity: wrangler cannot be run (infra)\n${processOutput}`, {
+        appDir,
+        port,
+        results: [],
+        ok: false
+      });
       return { exitCode, report, message };
     }
 
@@ -548,11 +537,12 @@ export async function runRuntimeParity(appDir, opts = {}) {
     if (child.exitCode !== null || child.signalCode !== null) {
       processOutput += live.text;
       if (isInfraFailure(processOutput) || child.exitCode === 127) {
-        finish(
-          EXIT_INFRA,
-          `runtime_parity: wrangler cannot be run (infra)\n${processOutput}`,
-          { appDir, port, results: [], ok: false }
-        );
+        finish(EXIT_INFRA, `runtime_parity: wrangler cannot be run (infra)\n${processOutput}`, {
+          appDir,
+          port,
+          results: [],
+          ok: false
+        });
       } else {
         finish(
           EXIT_FAIL,
@@ -568,11 +558,12 @@ export async function runRuntimeParity(appDir, opts = {}) {
 
     if (!ready) {
       if (isInfraFailure(processOutput)) {
-        finish(
-          EXIT_INFRA,
-          `runtime_parity: wrangler cannot be run (infra)\n${processOutput}`,
-          { appDir, port, results: [], ok: false }
-        );
+        finish(EXIT_INFRA, `runtime_parity: wrangler cannot be run (infra)\n${processOutput}`, {
+          appDir,
+          port,
+          results: [],
+          ok: false
+        });
       } else {
         finish(
           EXIT_FAIL,
@@ -584,11 +575,12 @@ export async function runRuntimeParity(appDir, opts = {}) {
     }
 
     if (isCancelled()) {
-      finish(
-        EXIT_FAIL,
-        `runtime_parity: overall wall-clock ceiling (${overallMs}ms) exceeded`,
-        { appDir, port, results: [], ok: false }
-      );
+      finish(EXIT_FAIL, `runtime_parity: overall wall-clock ceiling (${overallMs}ms) exceeded`, {
+        appDir,
+        port,
+        results: [],
+        ok: false
+      });
       return { exitCode, report, message };
     }
 
@@ -601,7 +593,9 @@ export async function runRuntimeParity(appDir, opts = {}) {
     processOutput += live.text;
 
     const verdict = evaluateParity(results, processOutput);
-    const pathSummary = results.map((r) => `${r.path}:${r.status ?? '—'}|${r.ok ? 'ok' : 'FAIL'}`).join(' ');
+    const pathSummary = results
+      .map((r) => `${r.path}:${r.status ?? '—'}|${r.ok ? 'ok' : 'FAIL'}`)
+      .join(' ');
     finish(
       verdict.ok ? EXIT_PASS : EXIT_FAIL,
       verdict.ok

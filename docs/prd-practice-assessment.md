@@ -5,15 +5,15 @@ coding agent**, without conflicting with what RedAnvil already enforces?
 
 ## Adopt — real gaps in our PRD
 
-| Practice | Why it matters here | Cost |
-|---|---|---|
-| **Vertical slices (tracer bullets)** | Our task graph is HORIZONTAL (scaffold → DDL → schemas → health → CRUD → UI). That is exactly the anti-pattern: nothing works end-to-end until the last phase, so feedback comes late. Each slice should cross DB + API + UI + test for ONE feature. **Highest-impact change available.** | Medium |
-| **Standard section names** (Introduction, Problem Statement, Solution Overview, User Stories, Technical Requirements, Acceptance Criteria, Constraints) | Predictable headings are easier for a model to navigate than our bespoke ordering. Cheap, and it subsumes the missing Problem Statement / User Stories. | Low |
-| **Definition of done / success outcome** | The PRD says what to build, never what "successful" looks like. A coder cannot self-check against an outcome that is not stated. | Low |
-| **MVP-first core features** | Nothing marks which features are the minimum that solves the problem, so an agent builds everything at once. | Low |
-| **API contracts with example request/response** | We list routes; we do not give concrete payloads. Examples remove ambiguity that regenerates as bugs. | Low |
-| **Explicit test cases per feature** (unit / integration / e2e) | We name test *categories*. Named cases per feature bind acceptance criteria to real tests. | Medium |
-| **Graded PRD self-validation** | RedAnvil grades the APP (the 100-point rubric) but never grades the PRD. A completeness score + checklist ("is this spec buildable?") is squarely in the project's spirit and closes a genuine gap. | Medium |
+| Practice                                                                                                                                                | Why it matters here                                                                                                                                                                                                                                                                       | Cost   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **Vertical slices (tracer bullets)**                                                                                                                    | Our task graph is HORIZONTAL (scaffold → DDL → schemas → health → CRUD → UI). That is exactly the anti-pattern: nothing works end-to-end until the last phase, so feedback comes late. Each slice should cross DB + API + UI + test for ONE feature. **Highest-impact change available.** | Medium |
+| **Standard section names** (Introduction, Problem Statement, Solution Overview, User Stories, Technical Requirements, Acceptance Criteria, Constraints) | Predictable headings are easier for a model to navigate than our bespoke ordering. Cheap, and it subsumes the missing Problem Statement / User Stories.                                                                                                                                   | Low    |
+| **Definition of done / success outcome**                                                                                                                | The PRD says what to build, never what "successful" looks like. A coder cannot self-check against an outcome that is not stated.                                                                                                                                                          | Low    |
+| **MVP-first core features**                                                                                                                             | Nothing marks which features are the minimum that solves the problem, so an agent builds everything at once.                                                                                                                                                                              | Low    |
+| **API contracts with example request/response**                                                                                                         | We list routes; we do not give concrete payloads. Examples remove ambiguity that regenerates as bugs.                                                                                                                                                                                     | Low    |
+| **Explicit test cases per feature** (unit / integration / e2e)                                                                                          | We name test _categories_. Named cases per feature bind acceptance criteria to real tests.                                                                                                                                                                                                | Medium |
+| **Graded PRD self-validation**                                                                                                                          | RedAnvil grades the APP (the 100-point rubric) but never grades the PRD. A completeness score + checklist ("is this spec buildable?") is squarely in the project's spirit and closes a genuine gap.                                                                                       | Medium |
 
 ## Already have — no change needed
 
@@ -29,12 +29,12 @@ coding agent**, without conflicting with what RedAnvil already enforces?
 
 ## Do not adopt — would conflict
 
-| Suggestion | Why not |
-|---|---|
+| Suggestion                                        | Why not                                                                                                                                                                                                                                               |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **PRD-Taskmaster plugin** (`/plugin install prd`) | It is a competing PRD generator. Installing it alongside RedAnvil's own generator creates two sources of truth for the same artifact and two grading systems. **Take the ideas — graded validation, placeholder-proof, task graph — not the plugin.** |
-| **ChatPRD MCP** | An external dependency to make the PRD "queryable". Ours is already machine-readable via frontmatter and parsed by the orchestrator; adding an MCP for it is redundant surface. |
-| **Ralph PRD skill trigger phrases** | RedAnvil *is* the PRD tool. A second skill claiming "create a prd" would compete for routing. |
-| **Model-agnostic cheap-model routing** | Out of scope. The split is already Claude orchestrates / Grok builds. |
+| **ChatPRD MCP**                                   | An external dependency to make the PRD "queryable". Ours is already machine-readable via frontmatter and parsed by the orchestrator; adding an MCP for it is redundant surface.                                                                       |
+| **Ralph PRD skill trigger phrases**               | RedAnvil _is_ the PRD tool. A second skill claiming "create a prd" would compete for routing.                                                                                                                                                         |
+| **Model-agnostic cheap-model routing**            | Out of scope. The split is already Claude orchestrates / Grok builds.                                                                                                                                                                                 |
 
 ## Multi-agent: one idea sharper than ours
 

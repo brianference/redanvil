@@ -200,16 +200,11 @@ describe('runtime_parity — pure decision logic', () => {
       ).ok
     ).toBe(true);
 
-    expect(
-      evaluateParity([{ path: '/', status: 500, ok: false }], 'Ready').ok
-    ).toBe(false);
+    expect(evaluateParity([{ path: '/', status: 500, ok: false }], 'Ready').ok).toBe(false);
 
-    expect(
-      evaluateParity(
-        [{ path: '/api/health', status: 200, ok: false }],
-        'Ready'
-      ).ok
-    ).toBe(false);
+    expect(evaluateParity([{ path: '/api/health', status: 200, ok: false }], 'Ready').ok).toBe(
+      false
+    );
 
     expect(
       evaluateParity(
@@ -358,9 +353,9 @@ describe('runtime_parity — not-vacuous (TEMP COPY only)', () => {
     let source = readFileSync(brokenScript, 'utf8');
     // Sabotage: always report no health endpoints so a real health file is invisible.
     const needle =
-      'export function discoverHealthPaths(appDir) {\n  const apiDir = join(appDir, \'functions\', \'api\');\n  if (!existsSync(apiDir)) return [];';
+      "export function discoverHealthPaths(appDir) {\n  const apiDir = join(appDir, 'functions', 'api');\n  if (!existsSync(apiDir)) return [];";
     const sabotaged =
-      'export function discoverHealthPaths(appDir) {\n  void appDir;\n  return []; // TEMP COPY sabotage\n  const apiDir = join(appDir, \'functions\', \'api\');\n  if (!existsSync(apiDir)) return [];';
+      "export function discoverHealthPaths(appDir) {\n  void appDir;\n  return []; // TEMP COPY sabotage\n  const apiDir = join(appDir, 'functions', 'api');\n  if (!existsSync(apiDir)) return [];";
     expect(source.includes(needle), 'sabotage needle must match current source').toBe(true);
     source = source.replace(needle, sabotaged);
     writeFileSync(brokenScript, source, 'utf8');
@@ -382,7 +377,8 @@ describe('runtime_parity — not-vacuous (TEMP COPY only)', () => {
     cpSync(SCRIPT, brokenScript);
 
     let source = readFileSync(brokenScript, 'utf8');
-    const needle = 'export function evaluateParity(results, processOutput) {\n  if (hasRuntimeException(processOutput)) {';
+    const needle =
+      'export function evaluateParity(results, processOutput) {\n  if (hasRuntimeException(processOutput)) {';
     const sabotaged =
       'export function evaluateParity(results, processOutput) {\n  void results; void processOutput;\n  return { ok: true, reason: null }; // TEMP COPY sabotage\n  if (hasRuntimeException(processOutput)) {';
     expect(source.includes(needle), 'sabotage needle must match current source').toBe(true);

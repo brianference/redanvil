@@ -196,19 +196,33 @@ for (const idea of IDEAS) {
     const out = generatePrd(answers, { iterations: 2, tokens: 400000, confidence: 'low' });
     markdown = out.markdown;
     const sc = evaluatePrdSelfCheck(markdown, {
-      entities: (partial.entities ?? '').split(',').map((s) => s.trim()).filter(Boolean),
+      entities: (partial.entities ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
       hasDomainTables: true
     });
     rec.prd = {
       ok: sc.items.every((i) => i.pass),
-      detail: sc.items.filter((i) => !i.pass).map((i) => i.id).join(',') || 'all self-checks pass',
+      detail:
+        sc.items
+          .filter((i) => !i.pass)
+          .map((i) => i.id)
+          .join(',') || 'all self-checks pass',
       chars: markdown.length,
       sections: (markdown.match(/^## /gm) ?? []).length,
       selfCheck: `${sc.items.filter((i) => i.pass).length}/${sc.items.length}`,
       slices: (markdown.match(/^### Slice \d+/gm) ?? []).length
     };
   } catch (e) {
-    rec.prd = { ok: false, detail: `THREW: ${(e as Error).message}`, chars: 0, sections: 0, selfCheck: '0/0', slices: 0 };
+    rec.prd = {
+      ok: false,
+      detail: `THREW: ${(e as Error).message}`,
+      chars: 0,
+      sections: 0,
+      selfCheck: '0/0',
+      slices: 0
+    };
   }
 
   // Stage 2 — job (must satisfy the real schema)
@@ -242,18 +256,19 @@ for (const idea of IDEAS) {
 
   // Stage 4 — deterministic checks against the scaffold
   try {
-    rec.checks = countFiles(appDir) > 0
-      ? runChecks(appDir)
-      : {
-          ok: false,
-          detail: 'nothing scaffolded to check',
-          passed: 0,
-          failed: 0,
-          na: 0,
-          unmeasured: 0,
-          failedIds: [],
-          unmeasuredIds: []
-        };
+    rec.checks =
+      countFiles(appDir) > 0
+        ? runChecks(appDir)
+        : {
+            ok: false,
+            detail: 'nothing scaffolded to check',
+            passed: 0,
+            failed: 0,
+            na: 0,
+            unmeasured: 0,
+            failedIds: [],
+            unmeasuredIds: []
+          };
   } catch (e) {
     rec.checks = {
       ok: false,
@@ -300,7 +315,10 @@ console.log('\nmost common failing checks across runs:');
   .forEach(([id, c]) => console.log(`  ${String(c).padStart(2)}/${n}  ${id}`));
 
 const outPath = join(REPO, 'evidence', 'simulation-runs.json');
-writeFileSync(outPath, JSON.stringify({ generatedAt: new Date().toISOString(), records }, null, 2) + '\n');
+writeFileSync(
+  outPath,
+  JSON.stringify({ generatedAt: new Date().toISOString(), records }, null, 2) + '\n'
+);
 console.log('\nwrote', outPath);
 if (!KEEP) rmSync(root, { recursive: true, force: true });
 else console.log('kept scaffolds at', root);

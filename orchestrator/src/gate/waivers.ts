@@ -65,8 +65,10 @@ function wrangler(dir: string): string {
 
 /** Any source file at all means the universal lanes apply. */
 function hasSource(dir: string): boolean {
-  return walk(join(dir, 'src'), ['.ts', '.tsx', '.js', '.jsx']).length > 0 ||
-    walk(join(dir, 'functions'), ['.ts', '.js']).length > 0;
+  return (
+    walk(join(dir, 'src'), ['.ts', '.tsx', '.js', '.jsx']).length > 0 ||
+    walk(join(dir, 'functions'), ['.ts', '.js']).length > 0
+  );
 }
 
 /** Any rendered component means the frontend lane applies. */

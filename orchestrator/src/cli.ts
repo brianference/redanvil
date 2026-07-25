@@ -272,9 +272,7 @@ async function main(): Promise<number> {
       `gate: ${verdict} — score ${report.score}/100 (threshold ${threshold}), ` +
         `evaluated ${report.evaluated}/${report.total} rules, ` +
         `coverage ${report.coverage}% of the full rubric` +
-        (report.notApplicable.length > 0
-          ? ` (n/a: ${report.notApplicable.join(', ')})`
-          : '')
+        (report.notApplicable.length > 0 ? ` (n/a: ${report.notApplicable.join(', ')})` : '')
     );
     for (const o of report.outcomes) console.log(`  ${o.passed ? 'PASS' : 'FAIL'}  ${o.ruleId}`);
     if (report.blockersFailed.length > 0) {

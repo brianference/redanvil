@@ -25,7 +25,9 @@ const require = createRequire(import.meta.url);
 const args = process.argv.slice(2);
 const baseUrl = args[0];
 if (baseUrl === undefined || baseUrl.startsWith('--')) {
-  console.error('usage: node desktop_width.mjs <baseUrl> [--min N] [--routes a,b] [--widths w,w] [--out f.json]');
+  console.error(
+    'usage: node desktop_width.mjs <baseUrl> [--min N] [--routes a,b] [--widths w,w] [--out f.json]'
+  );
   process.exit(2);
 }
 
