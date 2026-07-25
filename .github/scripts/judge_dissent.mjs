@@ -28,6 +28,18 @@ const flag = (n, d) => {
 // manufacture a disagreement so a check goes green. Raise the floor to 1 once
 // the judge tier has genuinely rejected something.
 const minFails = Number(flag('min-fails', '0'));
+/**
+ * Apps that should each have an independent review. Listed explicitly so a new
+ * app cannot quietly join the repo with only self-recorded verdicts.
+ */
+const APPS = ['app-builder', 'dashboard'];
+/**
+ * How far an independent review may drift behind HEAD before it is called stale.
+ * Reported, not enforced — `grok` authenticates interactively, so the reviewer
+ * cannot run in CI and a hard failure here would only block on something CI is
+ * unable to fix.
+ */
+const MAX_COMMITS_BEHIND = Number(flag('max-commits-behind', '40'));
 const outPath = flag('out', null);
 
 /** Run git, returning stdout or ''. */
@@ -80,9 +92,18 @@ for (const file of readdirSync('evidence').filter((f) => /^judge-independent-.*\
   }
   const list = Array.isArray(report?.verdicts) ? report.verdicts : [];
   if (list.length === 0) continue;
+  // How long ago was that commit? An independent review is evidence about the
+  // tree it read, and this repo moves fast — a report from 200 commits back is
+  // history, not assurance.
+  const commit = String(report.reviewedCommit ?? '');
+  const behind =
+    commit.length > 0
+      ? Number((git(['rev-list', '--count', `${commit}..HEAD`]) || '').trim() || Number.NaN)
+      : Number.NaN;
   independent.push({
     file: path.replace(/\\/g, '/'),
-    reviewedCommit: String(report.reviewedCommit ?? 'unknown').slice(0, 12),
+    reviewedCommit: commit.slice(0, 12),
+    commitsBehindHead: Number.isFinite(behind) ? behind : null,
     judged: list.length,
     failed: list.filter((v) => v?.passed === false).length,
     confirmed: list.filter((v) => v?.adjudication === 'confirmed').length
@@ -135,8 +156,29 @@ if (report.independentJudged > 0) {
       `${report.independentConfirmed} confirmed on follow-up)`
   );
   for (const run of independent) {
+    const age =
+      run.commitsBehindHead === null ? '' : `, ${run.commitsBehindHead} commit(s) behind HEAD`;
     console.log(
-      `  ${run.file} @ ${run.reviewedCommit}: ${run.failed}/${run.judged} failed, ${run.confirmed} confirmed`
+      `  ${run.file} @ ${run.reviewedCommit}: ${run.failed}/${run.judged} failed, ` +
+        `${run.confirmed} confirmed${age}`
+    );
+  }
+  // Apps that have never been reviewed by anyone but their own author.
+  const reviewed = new Set(
+    independent.map((r) => /judge-independent-(.+)\.json$/.exec(r.file)?.[1]).filter(Boolean)
+  );
+  const unreviewed = APPS.filter((a) => !reviewed.has(a));
+  if (unreviewed.length > 0) {
+    console.log(`  NEVER independently judged: ${unreviewed.join(', ')}`);
+  }
+  const stalest = independent
+    .map((r) => r.commitsBehindHead)
+    .filter((n) => typeof n === 'number')
+    .sort((a, b) => b - a)[0];
+  if (typeof stalest === 'number' && stalest > MAX_COMMITS_BEHIND) {
+    console.log(
+      `  STALE: the oldest independent review is ${stalest} commits behind HEAD ` +
+        `(threshold ${MAX_COMMITS_BEHIND}). Re-run: node .github/scripts/independent_judge.mjs <app>`
     );
   }
   const selfRate = judged.length > 0 ? judgeFails.length / judged.length : 0;
