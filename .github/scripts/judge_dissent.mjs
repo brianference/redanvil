@@ -92,4 +92,16 @@ if (!report.ok) {
   );
   process.exit(1);
 }
-console.log('\njudge dissent PASS: the judge tier has demonstrably disagreed at least once');
+if (judgeFails.length === 0) {
+  // Never print a green sentence over a zero. The number IS the finding, and
+  // dressing it as a pass is exactly the dishonesty this whole gate exists to
+  // stop.
+  console.log(
+    `\njudge dissent: ZERO recorded disagreements in ${judged.length} judge verdicts. ` +
+      `Reported, not enforced — the fix is an independent reviewer, not a threshold.`
+  );
+} else {
+  console.log(
+    `\njudge dissent PASS: ${judgeFails.length} recorded disagreement(s) in ${judged.length} judge verdicts`
+  );
+}
