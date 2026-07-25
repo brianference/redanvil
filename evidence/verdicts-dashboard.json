@@ -10,8 +10,8 @@
       "evidence/screenshots/db-1280-light.png"
     ],
     "note": "axe-core 4.12.1 against https://redanvil-dashboard.pages.dev on this build: 0 colour-contrast violation nodes and 0 other violation types in BOTH themes. Resolved backgrounds confirm the audit really switched theme (dark rgb(11,11,15), light rgb(246,247,251)).",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -27,8 +27,8 @@
       "evidence/screenshots/db-1280-light.png"
     ],
     "note": "Both themes render correctly on production with data-theme resolving to dark and light respectively, and the theme-swapped brand lockup showing the correct file in each. Captured at 375, 768 and 1280 in both themes.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -44,8 +44,8 @@
       "evidence/screenshots/db-1280-light.png"
     ],
     "note": "Sticky header carries the brand lockup plus four primary links (App Builder, Runs, About, Contact) in both themes, with the current route marked aria-current=page (measured as 'Runs' on the index).",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -61,8 +61,8 @@
       "evidence/screenshots/db-1280-light.png"
     ],
     "note": "All four legal and info routes return 200 on production with a real h1: About, Contact, Terms, Privacy. The run index is the root route.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -77,8 +77,8 @@
       "evidence/screenshots/db-1280-light.png"
     ],
     "note": "Regex over rendered body text for made with / built with / powered by returned false in both themes at 1280.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -94,8 +94,8 @@
       "evidence/screenshots/db-375-light.png"
     ],
     "note": "At 375 in both themes document.body.scrollWidth equals window.innerWidth, so there is no horizontal overflow; the full-page screenshots show no clipped or overlapping text.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -111,8 +111,8 @@
       "evidence/screenshots/db-1280-dark.png"
     ],
     "note": "The dashboard's core feature is showing real gate runs, and it does: the index renders a run card carrying measured values from the committed results feed (score 100, 46/46 rules, 1 iteration) rather than an empty shell, plus KPI tiles derived from the same data. Runtime parity passes on the real Workers runtime (/ 200 and /api/health 200), so this is a booting app and not just static assets.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -132,8 +132,8 @@
       "evidence/screenshots/db-1280-light.png"
     ],
     "note": "First recorded review of this app. Captured on the deployed build at 375, 768 and 1280 in both themes, with zero console errors and zero page errors across all six loads.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -148,8 +148,8 @@
       "evidence/screenshots/db-1280-dark.png"
     ],
     "note": "Route title and description are present and a real og.png ships in dashboard/public, which the deterministic fe-seo-assets check also confirms alongside robots.txt and sitemap.xml.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -164,8 +164,8 @@
       "evidence/screenshots/db-1280-dark.png"
     ],
     "note": "The dashboard header and footer both link to the app builder, and the app builder links back, so the two surfaces of the system are navigable from each other.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -180,8 +180,8 @@
       "evidence/screenshots/db-375-dark.png"
     ],
     "note": "Measured at 375 on production: 12 visible interactive elements, 0 with a rendered height under 44px.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -196,8 +196,8 @@
       "evidence/screenshots/db-375-dark.png"
     ],
     "note": "Measured at 375 on production: minimum rendered font size across sentence-carrying leaf nodes is 16px, 0 under the floor. The run card's result line measured 14px on the previous build and was raised rather than the rule being relaxed.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -213,8 +213,8 @@
       "evidence/screenshots/db-375-dark.png"
     ],
     "note": "Run state is carried by more than hue: the status badge pairs its colour with a check glyph and the word PASS, and the active nav link uses a filled pill plus aria-current.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -229,8 +229,8 @@
       "evidence/screenshots/db-375-dark.png"
     ],
     "note": "The sticky header applies env(safe-area-inset-top) padding and uses position:sticky, so it does not collide with system chrome, and no fixed element renders above the viewport top at 375.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -246,8 +246,8 @@
       "dashboard/src/components/shell/Header.tsx"
     ],
     "note": "RunCard and the shell components read as short, plain composition: helpers like formatRelativeTime and the meta assembly are small pure expressions, with no dense one-liners.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src"
     ]
@@ -261,8 +261,8 @@
       "dashboard/src/pages"
     ],
     "note": "Components exist because a page renders them. No interface was introduced with a single implementation, and the shell split mirrors the app builder because both apps genuinely need the same shell, not because reuse was anticipated.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src"
     ]
@@ -276,8 +276,8 @@
       "dashboard/src/theme.ts"
     ],
     "note": "The shell reuses the existing theme tokens and i18n bundle rather than adding copies, and the run feed is read from the committed results artifact instead of a new data layer. No new dependency was added.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src"
     ]
@@ -290,8 +290,8 @@
       "dashboard/src/components/RunList.tsx"
     ],
     "note": "The change in this build is a single font-size token on the run meta line, made because a measurement showed it under the blocker floor. Nothing else was touched.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src"
     ]
@@ -304,8 +304,8 @@
       "dashboard/functions/api/health.ts"
     ],
     "note": "This app ships no authentication surface, so there is no guard to stub: functions/ contains only the health endpoint. No auth-named function returns an unconditional truthy value and there is no TODO-auth marker.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/functions"
     ]
@@ -318,8 +318,8 @@
       "dashboard/src/components/Page.test.ts"
     ],
     "note": "Tests query the header's primary links by role and name and assert the active route, which breaks if the shell regresses, rather than asserting mere presence.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src"
     ]
@@ -332,8 +332,8 @@
       "dashboard/src/components/Page.test.ts"
     ],
     "note": "Assertions are on rendered behaviour (named links exposed by role, active route marked) rather than implementation details or call counts.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src"
     ]
@@ -348,8 +348,8 @@
       "dashboard/src/components/RunList.tsx"
     ],
     "note": "Page.tsx composes named shell components (Header, MobileDrawer, Footer) and pages supply title, subtitle and children; RunList is composed of RunCard and StatusBadge rather than one monolithic render.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src"
     ]
@@ -363,8 +363,8 @@
       "dashboard/src/pages/RunDetail.tsx"
     ],
     "note": "The run list and detail views render explicit loading, empty and error states; a failed feed fetch surfaces an error rather than rendering as a clean empty list.",
-    "reviewedAt": "2026-07-25T04:06:40.233Z",
-    "reviewedCommit": "3137416164639cad116d2efdf2d0c92a72239200",
+    "reviewedAt": "2026-07-25T04:47:26.632Z",
+    "reviewedCommit": "4b4e91a1c1a3302b91a9a5191ac72d4a85a2f60f",
     "scope": [
       "dashboard/src"
     ]

@@ -32,12 +32,15 @@ import { pathToFileURL } from 'node:url';
 export const MIN_BLOCK = 8;
 
 /**
- * Default budget: measured total on this repo when the pass was introduced
+ * Default budget: the measured total on this repo. Ratcheted 805 -> 772 after
+ * the shared shell CSS moved into design-system/shellCss.ts. Lower it again
+ * whenever real duplication is removed; never raise it to make a run pass.
+ * Original note: measured total on this repo when the pass was introduced
  * (app-builder ↔ dashboard shared shell/lib; orchestrator currently contributes
  * 0). This is a ratchet to be lowered as shared code is extracted — not a
  * target. Override with `--max N` for local experiments.
  */
-export const DEFAULT_BUDGET = 805;
+export const DEFAULT_BUDGET = 772;
 
 /** Source extensions scanned under each app's `src/`. */
 const SRC_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);

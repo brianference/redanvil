@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { theme } from '../../theme';
+import { shellCss as sharedShellCss } from '../../../../design-system/shellCss';
 
 /** Full-page shell background and type base. */
 export const shellStyle: CSSProperties = {
@@ -56,87 +57,45 @@ export const iconButtonStyle: CSSProperties = {
  * Global shell CSS injected once by Page (nav, drawer, footer grid, h1).
  * Theme tokens only — no raw hex.
  */
+/**
+ * Nav, prose and footer CSS shared with every other RedAnvil app. Kept in
+ * design-system/ so the two shells cannot drift apart, and so the cross-app
+ * duplication budget stops climbing every time the shell is touched.
+ */
+const SHARED_SHELL_CSS = sharedShellCss(
+  {
+    bg: theme.color.bg,
+    surface: theme.color.surface,
+    surfaceRaised: theme.color.surface2,
+    text: theme.color.text,
+    muted: theme.color.muted,
+    accent: theme.color.accent,
+    accentFg: theme.color.accentFg,
+    border: theme.color.border,
+    borderStrong: theme.color.border
+  },
+  {
+    touch: theme.touch,
+    space: {
+      sm: theme.space.sm,
+      md: theme.space.md,
+      lg: theme.space.lg,
+      xl: theme.space.xl
+    },
+    radiusMd: theme.radius.md,
+    // ?? 16 satisfies noUncheckedIndexedAccess; 16 is also the fe-type-floor
+    // body minimum, so the fallback is the rule's own value, not a guess.
+    fontBody: theme.type.scale[2] ?? 16,
+    fontFamily: theme.type.family
+  }
+);
+
 export function shellCss(): string {
   return `
         * { box-sizing: border-box; }
         body { margin: 0; overflow-x: hidden; font-size: 16px; }
 
-        /* Nav links echo the brand lockup: brushed-metal surface with a lit top
-           edge, and the crimson glow the anvil carries. The TEXT keeps a solid
-           token colour on purpose — gradient-clipped text renders as
-           color:transparent, which axe cannot evaluate for contrast, and
-           fe-a11y-contrast is a blocker. The metal is in the surface and the
-           bevel, not in the letterforms. */
-        .ra-nav-link {
-          position: relative;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: ${theme.touch}px;
-          min-width: ${theme.touch}px;
-          padding: ${theme.space.sm}px ${theme.space.md}px;
-          border-radius: ${theme.radius.md}px;
-          color: ${theme.color.muted};
-          text-decoration: none;
-          font-size: ${theme.type.scale[2]}px;
-          font-weight: 550;
-          letter-spacing: 0.01em;
-          font-family: ${theme.type.family};
-          border: 1px solid transparent;
-          background: transparent;
-          transition:
-            color 0.18s ease,
-            background 0.18s ease,
-            border-color 0.18s ease,
-            box-shadow 0.18s ease,
-            text-shadow 0.18s ease;
-          box-sizing: border-box;
-          white-space: nowrap;
-        }
-        .ra-nav-link:hover {
-          color: ${theme.color.text};
-          /* Vertical gradient = light catching the top face, like the anvil. */
-          background: linear-gradient(
-            180deg,
-            color-mix(in srgb, ${theme.color.surface2} 92%, ${theme.color.text}) 0%,
-            ${theme.color.surface} 100%
-          );
-          border-color: color-mix(in srgb, ${theme.color.border} 85%, ${theme.color.text});
-          /* Lit top edge over a soft drop, the bevel the mark has. */
-          box-shadow:
-            inset 0 1px 0 color-mix(in srgb, ${theme.color.text} 22%, transparent),
-            inset 0 -1px 0 color-mix(in srgb, ${theme.color.bg} 45%, transparent),
-            0 1px 6px color-mix(in srgb, ${theme.color.bg} 55%, transparent);
-        }
-        .ra-nav-link:focus-visible {
-          outline: 2px solid ${theme.color.accent};
-          outline-offset: 2px;
-        }
-        .ra-nav-link.is-active {
-          color: ${theme.color.accentFg};
-          font-weight: 650;
-          background: linear-gradient(
-            180deg,
-            color-mix(in srgb, ${theme.color.accent} 14%, ${theme.color.surface}) 0%,
-            color-mix(in srgb, ${theme.color.accent} 9%, ${theme.color.surface}) 100%
-          );
-          border-color: color-mix(in srgb, ${theme.color.accent} 45%, ${theme.color.border});
-          /* The crimson bloom off the anvil's top, at nav scale. */
-          box-shadow:
-            inset 0 1px 0 color-mix(in srgb, ${theme.color.text} 18%, transparent),
-            0 0 12px color-mix(in srgb, ${theme.color.accent} 28%, transparent);
-          text-shadow: 0 0 10px color-mix(in srgb, ${theme.color.accent} 45%, transparent);
-        }
-        .ra-nav-link.is-active:hover {
-          color: ${theme.color.accentFg};
-          border-color: color-mix(in srgb, ${theme.color.accent} 60%, ${theme.color.border});
-          box-shadow:
-            inset 0 1px 0 color-mix(in srgb, ${theme.color.text} 22%, transparent),
-            0 0 16px color-mix(in srgb, ${theme.color.accent} 38%, transparent);
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .ra-nav-link { transition: none; }
-        }
+${SHARED_SHELL_CSS}
 
         /* Desktop: primary links live in the sticky header (fe-premium-nav). */
         .ra-top-nav {
@@ -223,33 +182,6 @@ export function shellCss(): string {
           }
         }
 
-        /* Footer. Mobile is TWO columns, not one: measured at 375 the single
-           column made the footer 828px tall — 35% of the whole page — for nine
-           short links. The brand block spans both so the link columns sit side
-           by side underneath it. Targets stay >=44px (fe-touch-targets); the
-           height comes out of the column count, not out of the tap area. */
-        .ra-footer-grid {
-          display: grid;
-          gap: ${theme.space.lg}px ${theme.space.md}px;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          align-items: start;
-        }
-        .ra-footer-brand {
-          grid-column: 1 / -1;
-        }
-        @media (min-width: 768px) and (max-width: 1023px) {
-          .ra-footer-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-        @media (min-width: 1024px) {
-          .ra-footer-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-          }
-          .ra-footer-brand {
-            grid-column: auto;
-          }
-        }
 
         @media (max-width: 560px) {
           .ra-h1 { font-size: 1.9rem !important; }
