@@ -149,7 +149,8 @@ const KNOWN_FLAGS = new Set([
   'na',
   'spec',
   'max-iters',
-  'no-isolate'
+  'no-isolate',
+  'min-coverage'
 ]);
 
 async function main(): Promise<number> {
@@ -169,7 +170,8 @@ async function main(): Promise<number> {
       na: { type: 'string' },
       spec: { type: 'string' },
       'max-iters': { type: 'string' },
-      'no-isolate': { type: 'boolean' }
+      'no-isolate': { type: 'boolean' },
+      'min-coverage': { type: 'string' }
     }
   });
 
@@ -253,7 +255,19 @@ async function main(): Promise<number> {
       await parseSharedRunFlags(values, dir);
     reportStaleVerdicts(staleVerdicts);
     const report = await gateApp(dir, undefined, judge, notApplicable);
-    const verdict = report.score >= threshold ? 'PASS' : 'FAIL';
+    // Coverage was disclosed but never enforced: a run could waive its way down
+    // to a handful of rules and still print 100/100 beside it. --min-coverage
+    // makes the denominator a gate too, not just a disclosure.
+    const minCoverage =
+      typeof values['min-coverage'] === 'string' ? Number(values['min-coverage']) : 0;
+    const coverageShort = report.coverage < minCoverage;
+    if (coverageShort) {
+      console.error(
+        `gate: coverage ${report.coverage}% is below the required ${minCoverage}% — ` +
+          `the score is measured against too little of the rubric to mean anything`
+      );
+    }
+    const verdict = report.score >= threshold && !coverageShort ? 'PASS' : 'FAIL';
     console.log(
       `gate: ${verdict} — score ${report.score}/100 (threshold ${threshold}), ` +
         `evaluated ${report.evaluated}/${report.total} rules, ` +
