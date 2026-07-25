@@ -72,7 +72,10 @@ const titleStyle: CSSProperties = {
 };
 
 const metaStyle: CSSProperties = {
-  fontSize: theme.type.scale[1],
+  // 16px, not 14: fe-type-floor is a blocker with a 16px body floor, and this
+  // line carries the run's actual result ("100 - 46/46 rules - 1 iteration").
+  // Measured at 375 on production, it was the only node under the floor.
+  fontSize: theme.type.scale[2],
   color: theme.color.muted,
   marginTop: 2,
   display: 'flex',
