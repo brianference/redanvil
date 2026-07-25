@@ -84,6 +84,21 @@ export function findStaleVerdicts(
   return stale;
 }
 
+/**
+ * Committer timestamp of a commit, as epoch milliseconds, or null when the
+ * commit cannot be resolved.
+ *
+ * @param commit - Commit-ish to resolve.
+ * @param repoRoot - Repository to ask.
+ * @returns Epoch ms, or null.
+ */
+export function commitTimeMs(commit: string, repoRoot: string): number | null {
+  const out = git(['show', '-s', '--format=%ct', commit], repoRoot);
+  if (out === null) return null;
+  const seconds = Number(out.trim());
+  return Number.isFinite(seconds) ? seconds * 1000 : null;
+}
+
 /** Run a git command in `repoRoot`, returning null when it fails for any reason. */
 function git(args: string[], repoRoot: string): string | null {
   try {

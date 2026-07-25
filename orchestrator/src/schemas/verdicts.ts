@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { ValidationError } from '../errors';
 import { loadRubric } from '../rubric/index';
-import { findStaleVerdicts, verdictScope } from '../gate/freshness';
+import { findStaleVerdicts, verdictScope, commitTimeMs } from '../gate/freshness';
 import type { ChangeProbe, StaleVerdict } from '../gate/freshness';
 import type { Outcome } from '../gate/score';
 
@@ -182,6 +182,49 @@ function contrastEvidenceIssues(verdict: Verdict, repoRoot: string): string[] {
   return issues;
 }
 
+/** Report shape common to every evidence artifact: it records when it ran. */
+const TimestampedReportSchema = z.object({ checkedAt: z.string().min(1) });
+
+/**
+ * Reject a verdict whose cited report predates the commit it vouches for.
+ *
+ * Re-stamping `reviewedCommit` is cheap; re-running the measurement is not, and
+ * nothing previously forced the two to happen together.
+ *
+ * @param verdict - The verdict being validated.
+ * @param repoRoot - Repository root.
+ * @returns Problems found; empty when every cited report is at least as new as the commit.
+ */
+function staleReportIssues(verdict: Verdict, repoRoot: string): string[] {
+  const commitMs = commitTimeMs(verdict.reviewedCommit, repoRoot);
+  if (commitMs === null) return [];
+  const issues: string[] = [];
+  for (const path of verdict.evidence.filter((p) => /\.json$/i.test(p))) {
+    const full = join(repoRoot, path);
+    if (!existsSync(full)) continue;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(readFileSync(full, 'utf8'));
+    } catch {
+      continue;
+    }
+    const report = TimestampedReportSchema.safeParse(parsed);
+    if (!report.success) continue;
+    const ranMs = Date.parse(report.data.checkedAt);
+    if (!Number.isFinite(ranMs)) continue;
+    // One minute of slack: a report written moments before the commit that
+    // contains it is the normal, honest ordering.
+    if (ranMs < commitMs - 60_000) {
+      issues.push(
+        `${verdict.ruleId}: ${path} was produced at ${report.data.checkedAt}, BEFORE the ` +
+          `commit it vouches for (${verdict.reviewedCommit.slice(0, 12)}). Re-run the ` +
+          `measurement; re-stamping a verdict is not re-measuring it.`
+      );
+    }
+  }
+  return issues;
+}
+
 /**
  * Parse and validate a verdicts file, then check it against the rubric and disk.
  *
@@ -265,6 +308,14 @@ export function parseVerdicts(
     }
     if (v.ruleId === WIDTH_RULE_ID && v.passed) {
       issues.push(...widthEvidenceIssues(v, repoRoot));
+    }
+    // A verdict can be re-stamped to a newer commit without re-running the
+    // measurement it cites. That happened: an e2e report from before a wizard
+    // change was carried forward onto a commit where the flow was broken, and
+    // the freshness check passed because the FILE had not moved. A cited report
+    // must have been produced at or after the commit it vouches for.
+    if (v.passed && freshness !== undefined) {
+      issues.push(...staleReportIssues(v, repoRoot));
     }
   }
 

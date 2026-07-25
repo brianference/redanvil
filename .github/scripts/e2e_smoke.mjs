@@ -98,6 +98,33 @@ try {
   }
   await next.click();
 
+  // 3b. Features step: the user chooses which suggested features go into the
+  //     PRD. Assert the gate here rather than clicking past it — deselecting
+  //     everything must BLOCK, which is the whole point of the step.
+  const featureBoxes = page.locator('input[type=checkbox]');
+  await featureBoxes.first().waitFor({ state: 'visible' });
+  const featureCount = await featureBoxes.count();
+  await ensure(featureCount > 0, 'features step showed no suggestions to choose from');
+
+  for (let i = 0; i < featureCount; i += 1) {
+    const box = featureBoxes.nth(i);
+    if (await box.isChecked()) await box.uncheck();
+  }
+  if (expect) {
+    await expect(next).toBeDisabled();
+  } else {
+    await ensure(await next.isDisabled(), 'Next must be disabled with no feature selected');
+  }
+
+  // Re-select the first suggestion and continue.
+  await featureBoxes.first().check();
+  if (expect) {
+    await expect(next).toBeEnabled();
+  } else {
+    await ensure(await next.isEnabled(), 'Next must enable once a feature is selected');
+  }
+  await next.click();
+
   // 4. Forge the PRD and wait on the REAL network signal, not a sleep.
   const forge = page.getByRole('button', { name: /forge prd/i });
   await forge.waitFor({ state: 'visible' });
