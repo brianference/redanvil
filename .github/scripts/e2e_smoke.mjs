@@ -79,18 +79,34 @@ try {
   await page.getByRole('textbox', { name: /describe your app/i }).fill(prompt);
   await page.getByRole('button', { name: /send description/i }).click();
 
-  // 2. On the Scope step, Next must be DISABLED until an app type is chosen.
-  //    This is the exact production bug: an empty app type must not be submittable.
+  // 2. The Scope step arrives with the default app type already chosen, so Next
+  //    is enabled and the matching chip is pressed. A default that selects no
+  //    chip would look like a bug, so assert the chip, not just the value.
   const next = page.getByRole('button', { name: /^next$/i });
   await next.waitFor({ state: 'visible' });
+  const appType = page.getByRole('textbox', { name: /^app type$/i });
+  const mobileChip = page.getByRole('button', { name: /^mobile app$/i });
+  if (expect) {
+    await expect(next).toBeEnabled();
+    await expect(appType).toHaveValue(/mobile app/i);
+    await expect(mobileChip).toHaveAttribute('aria-pressed', 'true');
+  } else {
+    await ensure(await next.isEnabled(), 'Next should be enabled by the default app type');
+    await ensure(/mobile app/i.test(await appType.inputValue()), 'app type should be pre-filled');
+  }
+
+  // 3. Clearing it must DISABLE Next. This is the exact production bug — an
+  //    empty app type must not be submittable — and the default would otherwise
+  //    hide the gate from this test forever rather than prove it still works.
+  await appType.fill('');
   if (expect) {
     await expect(next).toBeDisabled();
   } else {
-    await ensure(await next.isDisabled(), 'Next should be disabled before an app type is set');
+    await ensure(await next.isDisabled(), 'Next should be disabled with an empty app type');
   }
 
-  // 3. Pick an app type; Next must ENABLE.
-  await page.getByRole('button', { name: /^mobile app$/i }).click();
+  // 3a. Re-pick an app type; Next must ENABLE again.
+  await mobileChip.click();
   if (expect) {
     await expect(next).toBeEnabled();
   } else {
