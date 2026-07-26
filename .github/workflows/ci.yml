@@ -22,6 +22,12 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
+      # desktopWidth.test.ts renders fixture pages to prove the width check
+      # measures painted content rather than a container. Without a browser the
+      # script exits 2 and the test fails loudly rather than skipping, which is
+      # the right direction — but the test is worth running, so install one.
+      - name: Install Chromium for the rendered-fixture tests
+        run: npx playwright install --with-deps chromium
       - run: npm test
 
   # Reproduces the committed gate result instead of trusting it. A results file
