@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil.pages.dev",
-  "checkedAt": "2026-07-26T05:47:48.514Z",
+  "checkedAt": "2026-07-26T06:03:50.865Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -40,21 +40,21 @@
     {
       "step": "step2-scope",
       "width": 1920,
-      "pct": 48,
-      "ok": false
+      "pct": 91,
+      "ok": true
     },
     {
       "step": "step3-features",
       "width": 1920,
-      "pct": 48,
-      "ok": false
+      "pct": 91,
+      "ok": true
     },
     {
       "step": "step4-review",
       "width": 1920,
-      "pct": 48,
-      "ok": false
+      "pct": 91,
+      "ok": true
     }
   ],
-  "ok": false
+  "ok": true
 }

@@ -351,18 +351,34 @@ function rationaleForFeature(
   hasAuth: boolean,
   primary: string
 ): string {
-  if (feature.id === 'F1') {
+  // Keyed to the FEATURE, never to its id. These used to switch on F1..F4,
+  // which silently became wrong the moment ids were assigned dynamically: with
+  // two capability features leading, "Search airline flight" was captioned
+  // "browse and search the list" and every rationale was off by two.
+  if (feature.name.startsWith('Search ') || feature.name.startsWith('Filter and sort ')) {
+    return 'From your description (the core job the app does)';
+  }
+  if (feature.name.startsWith('Schedule ') || feature.name.startsWith('Alerts for ')) {
+    return 'From your description (the core job the app does)';
+  }
+  if (feature.name.startsWith('Compute ') || feature.name.endsWith(' history')) {
+    return 'From your description (supporting capability)';
+  }
+  if (feature.name.startsWith('Import and export ')) {
+    return 'From your description (supporting capability)';
+  }
+  if (feature.name.startsWith('Browse & search ')) {
     return `From entity ${primary} (browse and search the list)`;
   }
-  if (feature.id === 'F2') {
+  if (feature.name.endsWith(' detail')) {
     return `From entity ${primary} (open a single record)`;
   }
-  if (feature.id === 'F3') {
+  if (feature.name === 'Accounts' || feature.name === 'Public access') {
     return hasAuth
       ? 'From sign-in = Yes (accounts and session-scoped data)'
       : 'From sign-in = No (public pages and APIs)';
   }
-  if (feature.id === 'F4') {
+  if (feature.name === `Manage ${primary}`) {
     return `From entity ${primary} (create, edit, and delete)`;
   }
   if (feature.name.startsWith('Required pages')) {

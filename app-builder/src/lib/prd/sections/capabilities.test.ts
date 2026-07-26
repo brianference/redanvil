@@ -79,3 +79,36 @@ describe('features derived for a real prompt', () => {
     expect(ids).toEqual(ids.map((_, i) => `F${i + 1}`));
   });
 });
+
+describe('rationales describe the feature they sit under', () => {
+  // They used to switch on hard-coded F1..F4, which silently became wrong the
+  // moment ids were assigned dynamically: with two capability features leading,
+  // "Search airline flight" was captioned "browse and search the list" and
+  // every rationale in the wizard was off by two.
+  it('never captions a capability feature with an entity CRUD rationale', () => {
+    const suggestions = buildFeatureSuggestions(['flight times'], false, FLIGHT);
+    const search = suggestions.find((s) => /^Search /.test(s.title));
+    const filter = suggestions.find((s) => /^Filter and sort /.test(s.title));
+    expect(search?.rationale).toMatch(/your description/i);
+    expect(filter?.rationale).toMatch(/your description/i);
+    expect(search?.rationale).not.toMatch(/browse and search the list/i);
+  });
+
+  it('still explains entity features by their entity', () => {
+    const suggestions = buildFeatureSuggestions(['flight times'], false, FLIGHT);
+    expect(suggestions.find((s) => /^Browse & search /.test(s.title))?.rationale).toMatch(
+      /browse and search the list/i
+    );
+    expect(suggestions.find((s) => / detail$/.test(s.title))?.rationale).toMatch(
+      /open a single record/i
+    );
+  });
+
+  it('gives every feature a rationale, whatever leads the list', () => {
+    for (const prompt of [FLIGHT, 'a simple notes app', 'a shift scheduling app with alerts']) {
+      for (const s of buildFeatureSuggestions(['notes', 'tags'], false, prompt)) {
+        expect(s.rationale.trim().length, `${s.title} has no rationale`).toBeGreaterThan(8);
+      }
+    }
+  });
+});
