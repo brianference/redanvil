@@ -13,6 +13,15 @@ export interface ScaffoldInput {
   corpusDir: string;
   /** ISO timestamp for the conformance manifest; injected so callers control the clock. */
   builtAt: string;
+  /**
+   * The generated PRD for THIS app, if the caller has it.
+   *
+   * The job returned by `/api/submit` does not carry it — the PRD is generated
+   * in the browser — so it has to be passed in. Without it the app ships only
+   * the generic rule pack, and §7.3a (the layout archetype and visual direction
+   * chosen for this specific product) never reaches whoever builds it.
+   */
+  prdMarkdown?: string;
 }
 
 export interface ScaffoldResult {
@@ -20,6 +29,8 @@ export interface ScaffoldResult {
   conformancePath: string;
   /** True when the output directory was initialised as a git repository. */
   gitInitialised: boolean;
+  /** True when the app's own PRD was written to `PRD.md`. */
+  prdIncluded: boolean;
 }
 
 /**
@@ -56,6 +67,7 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
     'conformance.json': JSON.stringify(conformance, null, 2) + '\n',
     'design-system/mobile-design-rules.md': designRules,
     'design-system/screen-patterns.md': screenPatterns,
+    ...(input.prdMarkdown === undefined ? {} : { 'PRD.md': input.prdMarkdown }),
     ...appFiles(job)
   };
 
@@ -75,7 +87,8 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
   return {
     files: Object.keys(files),
     conformancePath: join(outDir, 'conformance.json'),
-    gitInitialised
+    gitInitialised,
+    prdIncluded: input.prdMarkdown !== undefined
   };
 }
 

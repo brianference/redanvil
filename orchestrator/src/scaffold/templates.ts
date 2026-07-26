@@ -409,12 +409,14 @@ export function appFiles(job: Job): Record<string, string> {
       `    <App />\n` +
       `  </StrictMode>\n` +
       `);\n`,
-    // Tokens live inside the app at design-system/tokens.json so the import
-    // resolves without reaching outside the generated tree (fe-theme-tokens-only).
-    'src/theme.ts':
-      `import tokens from '../design-system/tokens.json';\n\n` +
-      `/** Theme tokens are the single source of styling truth (fe-theme-tokens-only). */\n` +
-      `export const theme = tokens;\n`,
+    // `fe-light-dark` is a BLOCKER: light and dark, a visible toggle, a stated
+    // default, AA in both. The scaffold used to ship one flat token object and
+    // no stylesheet at all, so a generated app could not satisfy the rule from
+    // its own starting point — the builder had to invent the entire theme
+    // system before the gate could pass. It ships one now, dark by default.
+    'src/theme.css': themeCss(),
+    'src/theme.ts': themeTs(),
+    'src/components/ThemeToggle.tsx': themeToggleTsx(),
     'src/i18n/en.ts': i18nEnTs(job),
     'src/lib/routes.ts': routesTs(),
     'src/lib/routes.test.ts': routesTestTs(),
@@ -491,4 +493,168 @@ export function appFiles(job: Job): Record<string, string> {
 
   for (const p of PAGES) files[`src/pages/${p}.tsx`] = pageComponent(p);
   return files;
+}
+
+/**
+ * Light and dark CSS variables, dark by default.
+ *
+ * Raw hex is correct here and nowhere else — this file IS the token definition,
+ * which is why `fe-theme-tokens-only` exempts `theme.css`.
+ *
+ * Dark is the default deliberately, and the choice is STATED rather than
+ * inherited from `prefers-color-scheme`: a product designed dark-first should
+ * open dark, or most visitors never see the design it was built as. A saved
+ * choice always wins, so this sets the starting point, not the user's control.
+ *
+ * @returns Contents of `src/theme.css`.
+ */
+function themeCss(): string {
+  return [
+    '/* Theme variables. Dark is the default; light is opt-in via data-theme. */',
+    ':root {',
+    '  --bg: #0b0b0f;',
+    '  --surface: #15151d;',
+    '  --surface-elevated: #1c1c26;',
+    '  --text: #f5f5f7;',
+    '  --text-on-accent: #ffffff;',
+    '  --muted: #9b9ba6;',
+    '  --accent: #e5484d;',
+    '  --border: #2b2b36;',
+    '}',
+    '',
+    ":root[data-theme='light'] {",
+    '  --bg: #f4f4f6;',
+    '  --surface: #ffffff;',
+    '  --surface-elevated: #ffffff;',
+    '  --text: #111114;',
+    '  --text-on-accent: #ffffff;',
+    '  --muted: #5c5c68;',
+    '  --accent: #c62828;',
+    '  --border: #d8d8e0;',
+    '}',
+    '',
+    'html {',
+    '  background: var(--bg);',
+    '  color: var(--text);',
+    '}',
+    '',
+    'body {',
+    '  margin: 0;',
+    '  font-family:',
+    '    system-ui,',
+    '    -apple-system,',
+    '    Segoe UI,',
+    '    sans-serif;',
+    '  /* 16px floor: fe-type-floor is a blocker. */',
+    '  font-size: 16px;',
+    '  line-height: 1.5;',
+    '}',
+    ''
+  ].join('\n');
+}
+
+/**
+ * Theme accessor. Values are CSS variables so a theme swap needs no re-render.
+ *
+ * @returns Contents of `src/theme.ts`.
+ */
+function themeTs(): string {
+  return [
+    "import tokens from '../design-system/tokens.json';",
+    '',
+    '/**',
+    ' * Styling truth for the app (fe-theme-tokens-only).',
+    ' *',
+    ' * Colours resolve through CSS variables defined in `theme.css`, so switching',
+    ' * theme is a single attribute on <html> rather than a React re-render. Space,',
+    ' * radius and type come straight from the shared token file.',
+    ' */',
+    'export const theme = {',
+    '  color: {',
+    "    bg: 'var(--bg)',",
+    "    surface: 'var(--surface)',",
+    "    surfaceElevated: 'var(--surface-elevated)',",
+    "    text: 'var(--text)',",
+    "    textOnAccent: 'var(--text-on-accent)',",
+    "    muted: 'var(--muted)',",
+    "    accent: 'var(--accent)',",
+    "    border: 'var(--border)'",
+    '  },',
+    '  space: tokens.space,',
+    '  radius: tokens.radius,',
+    '  type: tokens.type',
+    '} as const;',
+    ''
+  ].join('\n');
+}
+
+/**
+ * Theme toggle: flips `data-theme`, persists the choice, states the default.
+ *
+ * @returns Contents of `src/components/ThemeToggle.tsx`.
+ */
+function themeToggleTsx(): string {
+  return [
+    "import { useCallback, useEffect, useState } from 'react';",
+    "import { theme } from '../theme';",
+    '',
+    "type ThemeChoice = 'light' | 'dark';",
+    '',
+    '/**',
+    " * The user's saved choice, else the brand default.",
+    ' *',
+    ' * Dark is the stated default. A saved choice always wins.',
+    ' *',
+    ' * @param stored - Raw localStorage value, or null.',
+    ' * @returns The theme to apply.',
+    ' */',
+    'function resolveTheme(stored: string | null): ThemeChoice {',
+    "  return stored === 'light' || stored === 'dark' ? stored : 'dark';",
+    '}',
+    '',
+    '/**',
+    ' * Header control that switches between light and dark.',
+    ' *',
+    ' * @returns The toggle button.',
+    ' */',
+    'export function ThemeToggle(): JSX.Element {',
+    "  const [mode, setMode] = useState<ThemeChoice>('dark');",
+    '',
+    '  useEffect(() => {',
+    "    const next = resolveTheme(localStorage.getItem('theme'));",
+    '    setMode(next);',
+    '    document.documentElement.dataset.theme = next;',
+    '  }, []);',
+    '',
+    '  const toggle = useCallback((): void => {',
+    '    setMode((current): ThemeChoice => {',
+    "      const next: ThemeChoice = current === 'dark' ? 'light' : 'dark';",
+    '      document.documentElement.dataset.theme = next;',
+    "      localStorage.setItem('theme', next);",
+    '      return next;',
+    '    });',
+    '  }, []);',
+    '',
+    '  return (',
+    '    <button',
+    '      type="button"',
+    '      onClick={toggle}',
+    "      aria-label={mode === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}",
+    '      style={{',
+    '        minWidth: 44,',
+    '        minHeight: 44,',
+    '        borderRadius: theme.radius.md,',
+    '        border: `1px solid ${theme.color.border}`,',
+    '        background: theme.color.surface,',
+    '        color: theme.color.text,',
+    '        fontSize: theme.type.scale[2],',
+    "        cursor: 'pointer'",
+    '      }}',
+    '    >',
+    "      <span aria-hidden=\"true\">{mode === 'dark' ? '☀' : '☾'}</span>",
+    '    </button>',
+    '  );',
+    '}',
+    ''
+  ].join('\n');
 }

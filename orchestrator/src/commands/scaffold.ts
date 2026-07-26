@@ -12,8 +12,9 @@ export async function scaffoldFromJobFile(
   jobPath: string,
   outDir: string,
   corpusDir: string,
-  builtAt: string
-): Promise<{ ok: true; files: number } | { ok: false; issues: string[] }> {
+  builtAt: string,
+  prdMarkdown?: string
+): Promise<{ ok: true; files: number; prdIncluded: boolean } | { ok: false; issues: string[] }> {
   let raw: unknown;
   try {
     raw = JSON.parse(await readFile(jobPath, 'utf8'));
@@ -23,8 +24,14 @@ export async function scaffoldFromJobFile(
   try {
     const parsed = parseByKind('job', raw);
     if (parsed.kind !== 'job') return { ok: false, issues: ['payload is not a job'] };
-    const result = await scaffoldApp({ job: parsed.value, outDir, corpusDir, builtAt });
-    return { ok: true, files: result.files.length };
+    const result = await scaffoldApp({
+      job: parsed.value,
+      outDir,
+      corpusDir,
+      builtAt,
+      prdMarkdown
+    });
+    return { ok: true, files: result.files.length, prdIncluded: result.prdIncluded };
   } catch (err) {
     if (err instanceof ValidationError) return { ok: false, issues: err.issues };
     throw err;

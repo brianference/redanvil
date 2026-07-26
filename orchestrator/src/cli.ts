@@ -143,6 +143,7 @@ async function writeResultFile(
 const KNOWN_FLAGS = new Set([
   'threshold',
   'judge',
+  'prd',
   'slug',
   'out',
   'deploy',
@@ -164,6 +165,7 @@ async function main(): Promise<number> {
     options: {
       threshold: { type: 'string' },
       judge: { type: 'string' },
+      prd: { type: 'string' },
       slug: { type: 'string' },
       out: { type: 'string' },
       deploy: { type: 'string' },
@@ -218,13 +220,40 @@ async function main(): Promise<number> {
     const jobPath = positionals[1];
     const outDir = positionals[2];
     if (!jobPath || !outDir) {
-      console.error('usage: redanvil scaffold <job.json> <outDir>');
+      console.error('usage: redanvil scaffold <job.json> <outDir> [--prd <PRD.md>]');
       return 2;
     }
     const corpusDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'rules');
-    const r = await scaffoldFromJobFile(jobPath, outDir, corpusDir, new Date().toISOString());
+    // The PRD is generated in the browser, so the job file cannot carry it.
+    // Passing it in is what puts §7.3a — the layout archetype and visual
+    // direction chosen for THIS app — in front of whoever builds it.
+    const prdPath = typeof values.prd === 'string' ? values.prd : undefined;
+    let prdMarkdown: string | undefined;
+    if (prdPath !== undefined) {
+      try {
+        prdMarkdown = await readFile(prdPath, 'utf8');
+      } catch (err) {
+        console.error(`could not read PRD at ${prdPath}: ${(err as Error).message}`);
+        return 2;
+      }
+    }
+    const r = await scaffoldFromJobFile(
+      jobPath,
+      outDir,
+      corpusDir,
+      new Date().toISOString(),
+      prdMarkdown
+    );
     if (r.ok) {
       console.log(`scaffolded ${r.files} files into ${outDir}`);
+      if (!r.prdIncluded) {
+        // Loud, not silent. Without it the app carries only the generic rule
+        // pack, and the design direction picked for this product is lost.
+        console.warn(
+          'warning: no PRD included. Re-run with --prd <downloaded PRD.md> so the app ' +
+            'ships the spec it was generated from (§7.3a design direction included).'
+        );
+      }
       return 0;
     }
     console.error('scaffold failed:');
