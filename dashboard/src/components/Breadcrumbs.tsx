@@ -1,5 +1,10 @@
-import type { CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
+/**
+ * Thin wrapper: supplies this app's theme and copy to the shared Breadcrumbs.
+ */
+import {
+  Breadcrumbs as SharedBreadcrumbs,
+  type BreadcrumbsProps as SharedProps
+} from '../../../design-system/Breadcrumbs';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 
@@ -8,62 +13,21 @@ export interface BreadcrumbsProps {
   current: string;
 }
 
-const navStyle: CSSProperties = {
-  marginBottom: theme.space.md,
-  fontSize: theme.type.scale[2],
-  lineHeight: 1.5
-};
-
-const listStyle: CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  alignItems: 'center',
-  gap: theme.space.xs,
-  listStyle: 'none',
-  margin: 0,
-  padding: 0
-};
-
-const sepStyle: CSSProperties = {
-  color: theme.color.muted,
-  userSelect: 'none'
-};
-
-const currentStyle: CSSProperties = {
-  color: theme.color.text,
-  fontWeight: 500
-};
-
 /**
  * Inner-page trail: Home / &lt;page&gt;. Home links to /.
  */
 export function Breadcrumbs({ current }: BreadcrumbsProps): JSX.Element {
-  return (
-    <nav aria-label={en.app.breadcrumbNav} style={navStyle}>
-      <ol style={listStyle}>
-        <li>
-          <Link
-            to="/"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              minHeight: theme.touch,
-              color: theme.color.muted,
-              textDecoration: 'underline',
-              textUnderlineOffset: 3,
-              fontSize: theme.type.scale[2]
-            }}
-          >
-            {en.app.breadcrumbHome}
-          </Link>
-        </li>
-        <li aria-hidden="true" style={sepStyle}>
-          /
-        </li>
-        <li style={currentStyle} aria-current="page">
-          {current}
-        </li>
-      </ol>
-    </nav>
-  );
+  const tokens: SharedProps['tokens'] = {
+    marginBottom: theme.space.md,
+    gap: theme.space.xs,
+    fontSize: theme.type.scale[2] ?? 16,
+    touch: theme.touch,
+    muted: theme.color.muted,
+    text: theme.color.text
+  };
+  const copy: SharedProps['copy'] = {
+    navLabel: en.app.breadcrumbNav,
+    homeLabel: en.app.breadcrumbHome
+  };
+  return <SharedBreadcrumbs current={current} tokens={tokens} copy={copy} />;
 }

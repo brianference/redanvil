@@ -1,66 +1,49 @@
+/**
+ * App-builder shell chrome: shared style objects + CSS, plus the home chat grid
+ * that only this product needs.
+ */
 import type { CSSProperties } from 'react';
-import { theme } from '../../theme';
+import { shellChromeCss } from '../../../../design-system/shellChromeCss';
 import { shellCss as sharedShellCss } from '../../../../design-system/shellCss';
+import {
+  makeBarStyle,
+  makeIconButtonStyle,
+  makeShellContainer,
+  makeShellStyle,
+  type ShellStyleTokens
+} from '../../../../design-system/shellStyles';
+import { theme } from '../../theme';
+
+const styleTokens: ShellStyleTokens = {
+  bg: theme.color.bg,
+  surface: theme.color.surface,
+  text: theme.color.text,
+  fontFamily: theme.type.family,
+  border: theme.color.border,
+  contentMaxWidth: theme.layout.contentMaxWidth,
+  spaceLg: theme.space.lg,
+  spaceSm: theme.space.sm,
+  touch: theme.touch,
+  radiusSm: theme.radius.sm,
+  fontSize: theme.type.scale[2] ?? 16
+};
 
 /** Full-page shell background and type base. */
-export const shellStyle: CSSProperties = {
-  minHeight: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  background: `radial-gradient(1200px 600px at 50% -200px, ${theme.color.surface}, ${theme.color.bg})`,
-  color: theme.color.text,
-  fontFamily: theme.type.family
-};
+export const shellStyle: CSSProperties = makeShellStyle(styleTokens);
 
 /** Sticky header bar chrome. */
-export const barStyle: CSSProperties = {
-  position: 'sticky',
-  top: 0,
-  zIndex: 30,
-  backdropFilter: 'blur(10px)',
-  WebkitBackdropFilter: 'blur(10px)',
-  background: `color-mix(in srgb, ${theme.color.surface} 80%, transparent)`,
-  borderBottom: `1px solid ${theme.color.border}`,
-  paddingTop: 'env(safe-area-inset-top, 0px)'
-};
+export const barStyle: CSSProperties = makeBarStyle(styleTokens);
 
 /** Shared max-width column for main and footer so left/right edges align. */
-export const shellContainer: CSSProperties = {
-  width: '100%',
-  maxWidth: theme.layout.contentMaxWidth,
-  margin: '0 auto',
-  padding: `0 ${theme.space.lg}px`,
-  boxSizing: 'border-box'
-};
+export const shellContainer: CSSProperties = makeShellContainer(styleTokens);
 
 // Note: no `display` here on purpose — the `.ra-menu-btn` class owns
 // visibility (hidden on desktop, inline-flex below 1024px).
 /** Icon button chrome for menu open/close controls. */
-export const iconButtonStyle: CSSProperties = {
-  alignItems: 'center',
-  justifyContent: 'center',
-  minWidth: theme.touch,
-  minHeight: theme.touch,
-  padding: theme.space.sm,
-  margin: 0,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.sm,
-  background: theme.color.surface,
-  color: theme.color.text,
-  cursor: 'pointer',
-  fontSize: theme.type.scale[2],
-  lineHeight: 1,
-  fontFamily: theme.type.family
-};
+export const iconButtonStyle: CSSProperties = makeIconButtonStyle(styleTokens);
 
 /**
- * Global shell CSS injected once by Page (nav, drawer, footer grid, h1).
- * Theme tokens only — no raw hex.
- */
-/**
- * Nav, prose and footer CSS shared with every other RedAnvil app. Kept in
- * design-system/ so the two shells cannot drift apart, and so the cross-app
- * duplication budget stops climbing every time the shell is touched.
+ * Nav, prose and footer CSS shared with every other RedAnvil app.
  */
 const SHARED_SHELL_CSS = sharedShellCss(
   {
@@ -90,98 +73,28 @@ const SHARED_SHELL_CSS = sharedShellCss(
   }
 );
 
+const CHROME_CSS = shellChromeCss({
+  text: theme.color.text,
+  surface: theme.color.surface,
+  border: theme.color.border,
+  drawerBackdrop: `color-mix(in srgb, ${theme.color.text} 55%, transparent)`,
+  drawerShadow: `8px 0 32px color-mix(in srgb, ${theme.color.text} 25%, transparent)`,
+  spaceXs: theme.space.xs,
+  spaceSm: theme.space.sm,
+  spaceMd: theme.space.md,
+  touch: theme.touch
+});
+
+/**
+ * Global shell CSS injected once by Page (nav, drawer, footer grid, h1).
+ * Theme tokens only — no raw hex. Includes the home composer grid unique to
+ * this app.
+ */
 export function shellCss(): string {
   return `
-        * { box-sizing: border-box; }
-        body { margin: 0; overflow-x: hidden; font-size: 16px; }
+${CHROME_CSS}
 
 ${SHARED_SHELL_CSS}
-
-        /* Desktop: primary links live in the sticky header (fe-premium-nav). */
-        .ra-top-nav {
-          display: none;
-        }
-        .ra-menu-btn { display: none; }
-        .ra-drawer-backdrop { display: none; }
-        .ra-drawer { display: none; }
-
-        .ra-body {
-          display: flex;
-          flex: 1;
-          min-width: 0;
-          width: 100%;
-          align-items: stretch;
-        }
-        .ra-main-col {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          width: 100%;
-        }
-
-        @media (min-width: 1024px) {
-          .ra-top-nav {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            flex: 1;
-            min-width: 0;
-            gap: ${theme.space.xs}px;
-            margin: 0 ${theme.space.md}px;
-          }
-          .ra-menu-btn { display: none !important; }
-        }
-
-        @media (max-width: 1023px) {
-          .ra-top-nav { display: none !important; }
-          .ra-menu-btn { display: inline-flex !important; }
-          .ra-drawer-backdrop[data-open="true"] {
-            display: block !important;
-            position: fixed;
-            inset: 0;
-            z-index: 40;
-            background: color-mix(in srgb, ${theme.color.text} 55%, transparent);
-          }
-          .ra-drawer[data-open="true"] {
-            display: flex !important;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            z-index: 50;
-            width: min(18rem, 86vw);
-            padding: calc(env(safe-area-inset-top, 0px) + ${theme.space.md}px) ${theme.space.md}px env(safe-area-inset-bottom, 0px);
-            background: ${theme.color.surface};
-            border-right: 1px solid ${theme.color.border};
-            box-shadow: 8px 0 32px color-mix(in srgb, ${theme.color.text} 25%, transparent);
-            gap: ${theme.space.sm}px;
-            overflow-y: auto;
-          }
-          .ra-drawer nav {
-            display: flex;
-            flex-direction: column;
-            gap: ${theme.space.xs}px;
-          }
-          .ra-drawer .ra-nav-link {
-            width: 100%;
-            justify-content: flex-start;
-          }
-          .ra-drawer-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: ${theme.space.sm}px;
-            margin-bottom: ${theme.space.sm}px;
-            min-height: ${theme.touch}px;
-          }
-          /* Hide header chrome while drawer is open — only the drawer close remains. */
-          .ra-header-controls[data-drawer-open="true"] {
-            visibility: hidden;
-            pointer-events: none;
-          }
-        }
 
         /* Home composer. Mobile keeps the single stacked column it always had.
            From 1024 up it becomes two columns — the conversation on the left,
@@ -212,15 +125,6 @@ ${SHARED_SHELL_CSS}
             top: ${theme.space.xl}px;
             min-width: 0;
           }
-        }
-
-
-        @media (max-width: 560px) {
-          .ra-h1 { font-size: 1.9rem !important; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .ra-nav-link { transition: none; }
         }
       `;
 }

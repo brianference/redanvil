@@ -1,134 +1,62 @@
+/**
+ * Thin wrapper: supplies dashboard product links and copy to the shared Footer.
+ */
+import { Footer as SharedFooter, type FooterTokens } from '../../../../design-system/Footer';
 import { en } from '../../i18n/en';
 import { theme } from '../../theme';
-import { APP_URL, DASHBOARD_URL, GITHUB_URL } from './constants';
+import { APP_URL, DASHBOARD_URL, FOOTER_LOGO_HEIGHT, GITHUB_URL } from './constants';
 import { Logo } from './Logo';
-import { FOOTER_LOGO_HEIGHT } from './constants';
 import { shellContainer } from './styles';
-
-interface FooterColProps {
-  heading: string;
-  links: { label: string; href: string }[];
-}
-
-/** One labeled column of footer links (≥44px targets, ≥8px gap). */
-function FooterCol({ heading, links }: FooterColProps): JSX.Element {
-  return (
-    <div>
-      <p
-        style={{
-          color: theme.color.text,
-          fontSize: theme.type.scale[2],
-          fontWeight: 600,
-          margin: `0 0 ${theme.space.sm}px`
-        }}
-      >
-        {heading}
-      </p>
-      <ul
-        style={{
-          listStyle: 'none',
-          padding: 0,
-          margin: 0,
-          display: 'grid',
-          gap: theme.space.sm
-        }}
-      >
-        {links.map((link) => (
-          <li key={link.label}>
-            <a
-              href={link.href}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                minHeight: theme.touch,
-                color: theme.color.muted,
-                textDecoration: 'none',
-                fontSize: theme.type.scale[2]
-              }}
-            >
-              {link.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 /**
  * Multi-column site footer: brand tagline, product/company/legal links, copyright.
  */
 export function Footer(): JSX.Element {
+  const tokens: FooterTokens = {
+    border: theme.color.border,
+    surface: theme.color.surface,
+    text: theme.color.text,
+    muted: theme.color.muted,
+    spaceSm: theme.space.sm,
+    spaceMd: theme.space.md,
+    spaceLg: theme.space.lg,
+    spaceXl: theme.space.xl,
+    touch: theme.touch,
+    fontBody: theme.type.scale[2] ?? 16,
+    fontSmall: theme.type.scale[1] ?? 14
+  };
+
   return (
-    <footer
-      style={{
-        borderTop: `1px solid ${theme.color.border}`,
-        background: `color-mix(in srgb, ${theme.color.surface} 50%, transparent)`,
-        marginTop: theme.space.xl
-      }}
-    >
-      <div
-        className="ra-footer-grid"
-        style={{
-          ...shellContainer,
-          padding: `${theme.space.xl}px ${theme.space.lg}px`
-        }}
-      >
-        <div className="ra-footer-brand">
-          <Logo height={FOOTER_LOGO_HEIGHT} />
-          <p
-            className="ra-footer-tagline"
-            style={{
-              color: theme.color.muted,
-              fontSize: theme.type.scale[2],
-              marginTop: theme.space.sm,
-              lineHeight: 1.5
-            }}
-          >
-            {en.app.footerTagline}
-          </p>
-        </div>
-        <div className="ra-footer-cols">
-          <FooterCol
-            heading={en.app.footerProduct}
-            links={[
-              { label: en.app.footerAppBuilder, href: APP_URL },
-              { label: en.app.footerDashboard, href: DASHBOARD_URL },
-              { label: en.app.footerGitHub, href: GITHUB_URL }
-            ]}
-          />
-          <FooterCol
-            heading={en.app.footerCompany}
-            links={[
-              { label: en.app.footerAbout, href: '/about' },
-              { label: en.app.footerContact, href: '/contact' }
-            ]}
-          />
-          <FooterCol
-            heading={en.app.footerLegal}
-            links={[
-              { label: en.app.footerTerms, href: '/terms' },
-              { label: en.app.footerPrivacy, href: '/privacy' }
-            ]}
-          />
-        </div>
-      </div>
-      <div style={{ borderTop: `1px solid ${theme.color.border}` }}>
-        <div
-          style={{
-            ...shellContainer,
-            padding: `${theme.space.md}px ${theme.space.lg}px`,
-            display: 'flex',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: theme.space.sm
-          }}
-        >
-          <small style={{ color: theme.color.muted, fontSize: theme.type.scale[1] }}>
-            {en.app.footerCopyright}
-          </small>
-        </div>
-      </div>
-    </footer>
+    <SharedFooter
+      tokens={tokens}
+      shellContainer={shellContainer}
+      logo={<Logo height={FOOTER_LOGO_HEIGHT} />}
+      tagline={en.app.footerTagline}
+      columns={[
+        {
+          heading: en.app.footerProduct,
+          links: [
+            { label: en.app.footerAppBuilder, href: APP_URL },
+            { label: en.app.footerDashboard, href: DASHBOARD_URL },
+            { label: en.app.footerGitHub, href: GITHUB_URL }
+          ]
+        },
+        {
+          heading: en.app.footerCompany,
+          links: [
+            { label: en.app.footerAbout, href: '/about' },
+            { label: en.app.footerContact, href: '/contact' }
+          ]
+        },
+        {
+          heading: en.app.footerLegal,
+          links: [
+            { label: en.app.footerTerms, href: '/terms' },
+            { label: en.app.footerPrivacy, href: '/privacy' }
+          ]
+        }
+      ]}
+      copyright={en.app.footerCopyright}
+    />
   );
 }
