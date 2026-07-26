@@ -33,12 +33,12 @@ export function SavedCardList({ items }: SavedCardListProps): JSX.Element {
   const copy = en.pages.saved;
   return (
     <>
-      <div style={sectionHeadStyle}>
+      <div className="ra-saved-col" style={sectionHeadStyle}>
         <h2 style={sectionTitleStyle}>{copy.sectionRecent}</h2>
         <span style={sectionMetaStyle}>{copy.countMeta(items.length)}</span>
       </div>
 
-      <ul style={listStyle} aria-label={copy.listLabel}>
+      <ul className="ra-saved-col ra-saved-list" style={listStyle} aria-label={copy.listLabel}>
         {items.map((item) => (
           <li key={item.id}>
             <div style={buildCardStyle}>

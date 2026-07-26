@@ -707,6 +707,52 @@ switch (ruleId) {
     ddl ? pass() : fail('migrations/ contains no CREATE TABLE — schema is not reproducible');
     break;
   }
+  case 'fe-no-inline-width': {
+    // Width caps belong in CSS, where a media query can lift them.
+    //
+    // An inline style beats a class, so an inline cap is unliftable by
+    // definition. This shipped FOUR separate times here — the template gallery,
+    // the saved-PRD page, the wizard form, and the Saved page — and every time
+    // it held a desktop layout to a third of the screen while every other check
+    // passed, because the width check was measuring the container rather than
+    // what is painted inside it.
+    //
+    // Scoped to `maxWidth`, deliberately. All four incidents were a maxWidth
+    // ceiling on a layout container, and that is the shape a media query cannot
+    // lift. A fixed `width` is how an icon, badge, avatar or 1px divider is
+    // drawn — sizing a 36px status chip is not a layout decision, and flagging
+    // it would push toward worse code for no gain. `minWidth: 0` is the
+    // flexbox shrink idiom and removes a floor rather than imposing a ceiling.
+    const files = tsx().filter((f) => !isTestFile(f));
+    if (files.length === 0) notApplicable('no rendered source');
+    // Quotes are optional on BOTH sides rather than back-referenced: a mangled
+    // backreference made the first version match nothing at all, so it passed
+    // both apps while a 40rem cap sat in each. A check that cannot fail is
+    // worse than no check, which is why this one has a red test.
+    const capRe = /\bmaxWidth\s*:\s*['"`]?\s*\d+(?:\.\d+)?\s*(?:rem|px|em|ch|pt)?\s*['"`]?\s*[,}]/;
+    const hit = firstMatch(
+      files,
+      capRe,
+      () => false,
+      (line) => {
+        // A `100%` / `100vw` ceiling is not a ceiling. Blank it before matching
+        // so the rule cannot be "satisfied" by removing a legitimate one.
+        if (/maxWidth\s*:\s*['"`]?\s*100\s*(%|vw)/.test(line)) return '';
+        // A cap written inside a CSS template string is in exactly the right
+        // place; this rule is only about JS style objects.
+        if (/@media|min-width\s*:|max-width\s*:/.test(line)) return '';
+        return line;
+      }
+    );
+    if (hit !== null) {
+      const { file, line, text } = parseHit(hit);
+      fail(
+        `inline width cap (move it to a CSS class so a media query can lift it): ${file}:${line}: ${text}`
+      );
+    }
+    pass();
+    break;
+  }
   case 'fe-icon-button-labels': {
     // design rule R1.5: icon-only buttons need an accessible name. A button whose
     // children carry no text must have aria-label / aria-labelledby.

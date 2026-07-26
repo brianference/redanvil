@@ -1,3 +1,9 @@
+// Width and column counts for this page live in CSS (`.ra-saved-*` in
+// shellCss), never in these objects. Three `maxWidth: '40rem'` caps here held
+// the Saved page to 33% of a 1920 viewport while the corrected width check
+// reported 93% — the check was measuring the container, and an inline cap beats
+// every media query. That is design rule R14, and this file is where it was
+// still being broken.
 import type { CSSProperties } from 'react';
 import { theme } from '../../theme';
 
@@ -15,8 +21,7 @@ export const emptyCardStyle: CSSProperties = {
   border: `1px solid ${theme.color.border}`,
   borderRadius: theme.radius.md,
   padding: theme.space.lg,
-  boxShadow: theme.shadow.card,
-  maxWidth: '28rem'
+  boxShadow: theme.shadow.card
 };
 
 /** Empty-state body paragraph. */
@@ -58,10 +63,8 @@ export const errorMessageStyle: CSSProperties = {
 /** Three-up KPI strip above the recent list. */
 export const kpiStripStyle: CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
   gap: theme.space.sm,
-  marginBottom: theme.space.md,
-  maxWidth: '40rem'
+  marginBottom: theme.space.md
 };
 
 /** One KPI tile chrome. */
@@ -104,8 +107,7 @@ export const sectionHeadStyle: CSSProperties = {
   justifyContent: 'space-between',
   gap: theme.space.sm,
   marginBottom: theme.space.sm,
-  minHeight: 32,
-  maxWidth: '40rem'
+  minHeight: 32
 };
 
 /** "Recent" section title. */
@@ -132,8 +134,7 @@ export const listStyle: CSSProperties = {
   padding: 0,
   margin: 0,
   display: 'grid',
-  gap: theme.space.sm,
-  maxWidth: '40rem'
+  gap: theme.space.sm
 };
 
 /** Single build card row. */

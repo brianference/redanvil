@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil-dashboard.pages.dev",
-  "checkedAt": "2026-07-25T19:13:41.819Z",
+  "checkedAt": "2026-07-25T23:58:59.820Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -11,84 +11,110 @@
       "route": "/",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 90,
+      "contentBox": {
+        "left": 67,
+        "right": 1373
+      },
       "ok": true
     },
     {
       "route": "/about",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 90,
+      "contentBox": {
+        "left": 67,
+        "right": 1373
+      },
       "ok": true
     },
     {
       "route": "/contact",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 89,
+      "contentBox": {
+        "left": 67,
+        "right": 1357
+      },
       "ok": true
     },
     {
       "route": "/terms",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 89,
+      "contentBox": {
+        "left": 67,
+        "right": 1356
+      },
       "ok": true
     },
     {
       "route": "/privacy",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
-      "ok": true
-    },
-    {
-      "route": "/saved",
-      "width": 1440,
-      "status": 200,
-      "mainPct": 93,
+      "contentPct": 88,
+      "contentBox": {
+        "left": 67,
+        "right": 1344
+      },
       "ok": true
     },
     {
       "route": "/",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 91,
+      "contentBox": {
+        "left": 82,
+        "right": 1838
+      },
       "ok": true
     },
     {
       "route": "/about",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 91,
+      "contentBox": {
+        "left": 82,
+        "right": 1838
+      },
       "ok": true
     },
     {
       "route": "/contact",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 90,
+      "contentBox": {
+        "left": 82,
+        "right": 1820
+      },
       "ok": true
     },
     {
       "route": "/terms",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 91,
+      "contentBox": {
+        "left": 82,
+        "right": 1829
+      },
       "ok": true
     },
     {
       "route": "/privacy",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
-      "ok": true
-    },
-    {
-      "route": "/saved",
-      "width": 1920,
-      "status": 200,
-      "mainPct": 93,
+      "contentPct": 91,
+      "contentBox": {
+        "left": 82,
+        "right": 1834
+      },
       "ok": true
     }
   ],

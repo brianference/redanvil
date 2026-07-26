@@ -72,6 +72,7 @@ try {
     for (const route of routes) {
       const page = await browser.newPage({ viewport: { width, height: 1000 } });
       let pct = null;
+      let measured = null;
       let status = 0;
       try {
         const res = await page.goto(new URL(route, baseUrl).href, {
@@ -80,19 +81,89 @@ try {
         });
         status = res === null ? 0 : res.status();
         if (status === 200) {
-          pct = await page.evaluate(() => {
+          measured = await page.evaluate(() => {
             const main = document.querySelector('main');
             if (main === null) return null;
-            const box = main.getBoundingClientRect();
+
+            // Measure what is PAINTED, not the box that contains it.
+            //
+            // This used to return `main.getBoundingClientRect().width`. A
+            // block-level element is 100% of its parent by default, so `main`
+            // measured 94% of a 1920 viewport on a page whose content sat in
+            // the left third — the check reported 93% while the user was
+            // looking at two thirds of empty screen. The container was never
+            // the thing the rule is about.
+            //
+            // Painted means: a leaf element carrying real text, or an element
+            // that draws a background, border or shadow. Header and footer are
+            // excluded because they legitimately span full width and would mask
+            // any narrow body beneath them.
+            const transparent = (c) => c === 'transparent' || c === 'rgba(0, 0, 0, 0)' || c === '';
+            const paints = (el, s) => {
+              if (!transparent(s.backgroundColor)) return true;
+              if (s.backgroundImage !== 'none') return true;
+              if (s.boxShadow !== 'none') return true;
+              const bw = ['Top', 'Right', 'Bottom', 'Left'].some(
+                (side) =>
+                  parseFloat(s[`border${side}Width`]) > 0 &&
+                  !transparent(s[`border${side}Color`]) &&
+                  s[`border${side}Style`] !== 'none'
+              );
+              return bw;
+            };
+
+            let left = Infinity;
+            let right = -Infinity;
+            for (const el of main.querySelectorAll('*')) {
+              if (el.closest('header') !== null || el.closest('footer') !== null) continue;
+              const r = el.getBoundingClientRect();
+              if (r.width <= 0 || r.height <= 0) continue;
+              const s = getComputedStyle(el);
+              if (s.visibility === 'hidden' || s.display === 'none') continue;
+              const hasOwnText =
+                [...el.childNodes].some(
+                  (n) => n.nodeType === 3 && (n.textContent ?? '').trim().length > 0
+                ) || el.children.length === 0;
+              if (!hasOwnText && !paints(el, s)) continue;
+
+              // A text-bearing element's BOX can still be full width while its
+              // glyphs sit in the left third — an <h1> is block-level. Measure
+              // the text's own client rects, which bound the glyphs.
+              if (hasOwnText && el.children.length === 0) {
+                const range = document.createRange();
+                range.selectNodeContents(el);
+                for (const tr of range.getClientRects()) {
+                  if (tr.width <= 0 || tr.height <= 0) continue;
+                  left = Math.min(left, tr.left);
+                  right = Math.max(right, tr.right);
+                }
+                continue;
+              }
+              left = Math.min(left, r.left);
+              right = Math.max(right, r.right);
+            }
+            if (!Number.isFinite(left) || !Number.isFinite(right)) return null;
             // Round DOWN so a borderline layout is reported as failing, not passing.
-            return Math.floor((box.width / window.innerWidth) * 100);
+            return {
+              pct: Math.floor(((right - left) / window.innerWidth) * 100),
+              left: Math.round(left),
+              right: Math.round(right)
+            };
           });
+          pct = measured === null ? null : measured.pct;
         }
       } catch (err) {
         console.error(`  ${route} @ ${width}: ${err instanceof Error ? err.message : err}`);
       }
       await page.close();
-      results.push({ route, width, status, mainPct: pct, ok: pct !== null && pct >= minPct });
+      results.push({
+        route,
+        width,
+        status,
+        contentPct: pct,
+        contentBox: measured === null ? null : { left: measured.left, right: measured.right },
+        ok: pct !== null && pct >= minPct
+      });
     }
   }
 } finally {
@@ -111,7 +182,7 @@ const summary = {
 if (outPath !== null) writeFileSync(outPath, `${JSON.stringify(summary, null, 2)}\n`);
 
 for (const r of results) {
-  const shown = r.mainPct === null ? `status ${r.status}` : `${r.mainPct}%`;
+  const shown = r.contentPct === null ? `status ${r.status}` : `${r.contentPct}%`;
   console.log(`  ${r.ok ? 'ok  ' : 'FAIL'} ${r.route} @ ${r.width} -> ${shown}`);
 }
 

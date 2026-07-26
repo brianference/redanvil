@@ -98,10 +98,10 @@ export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.
             </h1>
             {subtitle !== undefined && (
               <p
+                className="ra-prose-lead"
                 style={{
                   color: theme.color.muted,
                   fontSize: theme.type.scale[3],
-                  maxWidth: '40rem',
                   marginTop: theme.space.sm
                 }}
               >

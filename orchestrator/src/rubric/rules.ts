@@ -92,6 +92,7 @@ export const RULES: Rule[] = [
   // by an inline style no media query could lift) inside a wide shell. Stated
   // as the outcome a person sees and measured on the rendered page.
   rule('fe-desktop-width', 'frontend', 'blocker', 'visual'),
+  rule('fe-no-inline-width', 'frontend', 'blocker', 'det'),
 
   rule('ci-actionlint', 'ci', 'major', 'det'),
   rule('ci-sha-pinned', 'ci', 'blocker', 'det'),

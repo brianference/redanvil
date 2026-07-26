@@ -144,13 +144,22 @@ export function shellCss(c: ShellCssTokens, m: ShellCssMetrics): string {
             max-width: 64rem;
           }
           .ra-prose-cols {
-            column-count: 2;
             column-gap: ${m.space.xl}px;
           }
           .ra-prose-cols > section {
-            max-width: none;
             break-inside: avoid;
             page-break-inside: avoid;
+          }
+          /* Column count follows the CONTENT, not the viewport alone. A fixed
+             column-count: 3 left Contact — which has two sections — with an
+             empty right third, so its content ended at 60% of a 1920 viewport
+             while Terms reached 91%. These quantity queries only add a column
+             once there is something to put in it. */
+          .ra-prose-cols:has(> section:nth-child(2)) {
+            column-count: 2;
+          }
+          .ra-prose-cols:has(> section:nth-child(2)) > section {
+            max-width: none;
           }
         }
         /* A third column past 1600 so a 94%-wide container does not turn each
@@ -159,7 +168,7 @@ export function shellCss(c: ShellCssTokens, m: ShellCssMetrics): string {
           .ra-prose-lead {
             max-width: 76rem;
           }
-          .ra-prose-cols {
+          .ra-prose-cols:has(> section:nth-child(3)) {
             column-count: 3;
           }
         }
@@ -175,6 +184,55 @@ export function shellCss(c: ShellCssTokens, m: ShellCssMetrics): string {
           width: 100%;
           max-width: 46rem;
         }
+        /* The footer's brand blurb sits in one column of a multi-column footer
+           and is meant to stay a short measure — but the cap still belongs
+           here, not inline, so a wider footer can lift it rather than leaving
+           a ragged 18rem block in a 400px column. */
+        .ra-footer-tagline {
+          max-width: 18rem;
+        }
+        @media (min-width: 1600px) {
+          .ra-footer-tagline {
+            max-width: 24rem;
+          }
+        }
+
+        /* Saved-page surfaces. These were three inline 40rem maxWidth caps
+           in the page's own style objects, which held the content to 33% of a
+           1920 viewport — two thirds of the screen empty — while the width
+           check reported 93% because it was measuring the container rather
+           than what is painted inside it. Width and column count belong here,
+           where a media query can reach them (R14, R15). */
+        .ra-saved-col {
+          width: 100%;
+          max-width: 40rem;
+        }
+        .ra-saved-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        @media (min-width: 1024px) {
+          .ra-saved-col {
+            max-width: none;
+          }
+          /* More cards per row rather than three stretched ones: a KPI tile
+             that spans 500px reads as a mistake, not as a use of the width. */
+          .ra-saved-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+          }
+          .ra-saved-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+        @media (min-width: 1600px) {
+          .ra-saved-grid {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+          }
+          .ra-saved-list {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+        }
+
         /* Wizard form column. Same reasoning as .ra-content-col: this was an
            inline maxWidth of 40rem, which reads fine at 375 and then strands
            the form in a third of a 1600px desktop with no way for a media

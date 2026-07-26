@@ -19,7 +19,12 @@ export interface SavedKpiStripProps {
 export function SavedKpiStrip({ thisWeek, total, saved }: SavedKpiStripProps): JSX.Element {
   const copy = en.pages.saved;
   return (
-    <div style={kpiStripStyle} role="group" aria-label={copy.kpiLabel}>
+    <div
+      className="ra-saved-col ra-saved-grid"
+      style={kpiStripStyle}
+      role="group"
+      aria-label={copy.kpiLabel}
+    >
       <KpiCard value={thisWeek} label={copy.kpiThisWeek} />
       <KpiCard value={total} label={copy.kpiTotal} />
       <KpiCard value={saved} label={copy.kpiSaved} />

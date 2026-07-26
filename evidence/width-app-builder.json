@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil.pages.dev",
-  "checkedAt": "2026-07-25T19:13:08.771Z",
+  "checkedAt": "2026-07-25T23:57:04.549Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -11,84 +11,132 @@
       "route": "/",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 90,
+      "contentBox": {
+        "left": 67,
+        "right": 1373
+      },
       "ok": true
     },
     {
       "route": "/about",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 90,
+      "contentBox": {
+        "left": 67,
+        "right": 1366
+      },
       "ok": true
     },
     {
       "route": "/contact",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 89,
+      "contentBox": {
+        "left": 67,
+        "right": 1357
+      },
       "ok": true
     },
     {
       "route": "/terms",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 89,
+      "contentBox": {
+        "left": 67,
+        "right": 1361
+      },
       "ok": true
     },
     {
       "route": "/privacy",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 87,
+      "contentBox": {
+        "left": 67,
+        "right": 1333
+      },
       "ok": true
     },
     {
       "route": "/saved",
       "width": 1440,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 90,
+      "contentBox": {
+        "left": 67,
+        "right": 1373
+      },
       "ok": true
     },
     {
       "route": "/",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 91,
+      "contentBox": {
+        "left": 82,
+        "right": 1838
+      },
       "ok": true
     },
     {
       "route": "/about",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 90,
+      "contentBox": {
+        "left": 82,
+        "right": 1822
+      },
       "ok": true
     },
     {
       "route": "/contact",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 86,
+      "contentBox": {
+        "left": 82,
+        "right": 1740
+      },
       "ok": true
     },
     {
       "route": "/terms",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 91,
+      "contentBox": {
+        "left": 82,
+        "right": 1831
+      },
       "ok": true
     },
     {
       "route": "/privacy",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 89,
+      "contentBox": {
+        "left": 82,
+        "right": 1801
+      },
       "ok": true
     },
     {
       "route": "/saved",
       "width": 1920,
       "status": 200,
-      "mainPct": 93,
+      "contentPct": 91,
+      "contentBox": {
+        "left": 82,
+        "right": 1838
+      },
       "ok": true
     }
   ],

@@ -77,11 +77,11 @@ export function Footer(): JSX.Element {
         <div className="ra-footer-brand">
           <Logo height={FOOTER_LOGO_HEIGHT} />
           <p
+            className="ra-footer-tagline"
             style={{
               color: theme.color.muted,
               fontSize: theme.type.scale[2],
               marginTop: theme.space.sm,
-              maxWidth: '18rem',
               lineHeight: 1.5
             }}
           >

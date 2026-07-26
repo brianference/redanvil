@@ -17,11 +17,15 @@ export interface ContentSectionsProps {
   sections: readonly ContentSection[];
 }
 
+// Width lives in `.ra-prose-lead` / `.ra-prose-cols`, not here. These were
+// inline 40rem caps, which no media query can lift, and they held every
+// dashboard content page to 33% of a 1920 viewport. The app-builder side had
+// already moved to the shared prose classes; this file had not, and the width
+// check could not see it because it was measuring the container.
 const introStyle: CSSProperties = {
   color: theme.color.text,
   fontSize: theme.type.scale[2],
   lineHeight: 1.6,
-  maxWidth: '40rem',
   margin: 0
 };
 
@@ -35,8 +39,7 @@ const updatedStyle: CSSProperties = {
 };
 
 const sectionStyle: CSSProperties = {
-  marginTop: theme.space.xl,
-  maxWidth: '40rem'
+  marginTop: theme.space.xl
 };
 
 const headingStyle: CSSProperties = {
@@ -61,14 +64,18 @@ const bodyStyle: CSSProperties = {
 export function ContentSections({ intro, updated, sections }: ContentSectionsProps): JSX.Element {
   return (
     <>
-      <p style={introStyle}>{intro}</p>
+      <p className="ra-prose-lead" style={introStyle}>
+        {intro}
+      </p>
       {updated !== undefined && <p style={updatedStyle}>{updated}</p>}
-      {sections.map((section) => (
-        <section key={section.heading} style={sectionStyle}>
-          <h2 style={headingStyle}>{section.heading}</h2>
-          <p style={bodyStyle}>{linkifyText(section.body)}</p>
-        </section>
-      ))}
+      <div className="ra-prose-cols">
+        {sections.map((section) => (
+          <section key={section.heading} style={sectionStyle}>
+            <h2 style={headingStyle}>{section.heading}</h2>
+            <p style={bodyStyle}>{linkifyText(section.body)}</p>
+          </section>
+        ))}
+      </div>
     </>
   );
 }
