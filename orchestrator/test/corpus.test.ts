@@ -55,3 +55,27 @@ describe('rubric markdown and encoded rules stay in lockstep', () => {
     expect(undocumented, `encoded but not documented: ${undocumented.join(', ')}`).toEqual([]);
   });
 });
+
+describe('every det rule is actually runnable', () => {
+  // A det rule has to be registered in THREE places: the rubric markdown, the
+  // encoded RULES array, and the runner list in commands/gate.ts. The first two
+  // were already bound by test. The third was not, so `fe-no-inline-width` was
+  // documented, encoded, implemented in check.mjs — and never executed. It
+  // failed closed as an unevaluated blocker rather than passing silently, which
+  // is the right direction, but nothing said why.
+  it('every det rule in RULES is wired into the gate runner', async () => {
+    const gateSrc = await readFile(
+      join(repoRoot, 'orchestrator', 'src', 'commands', 'gate.ts'),
+      'utf8'
+    );
+    const { RULES } = await import('../src/rubric/rules');
+    const detRules = RULES.filter((r) => r.method === 'det').map((r) => r.id);
+    const missing = detRules.filter(
+      (id) => !gateSrc.includes(`'${id}'`) && !gateSrc.includes(`"${id}"`)
+    );
+    expect(
+      missing,
+      `det rule(s) declared but never run by the gate: ${missing.join(', ')}`
+    ).toEqual([]);
+  });
+});
