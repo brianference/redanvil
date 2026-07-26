@@ -5,8 +5,24 @@ import {
   slugFromPrompt,
   isPromptReady,
   isAppTypeReady,
-  canForgePrd
+  canForgePrd,
+  DEFAULT_APP_TYPE,
+  EMPTY_WIZARD_ANSWERS
 } from './job';
+import { en } from '../i18n/en';
+
+describe('DEFAULT_APP_TYPE', () => {
+  it('is one of the rendered chips, so the chip row opens with a selection', () => {
+    // The chip is selected by string equality with `value.appType`. A default
+    // that is not in this list selects nothing and looks like a bug.
+    expect(en.wizard.appTypeChips).toContain(DEFAULT_APP_TYPE);
+  });
+
+  it('pre-fills the wizard so Scope is satisfied on first paint', () => {
+    expect(EMPTY_WIZARD_ANSWERS.appType).toBe(DEFAULT_APP_TYPE);
+    expect(isAppTypeReady(EMPTY_WIZARD_ANSWERS)).toBe(true);
+  });
+});
 
 describe('slugFromPrompt', () => {
   it('derives a kebab-case slug from the prompt', () => {

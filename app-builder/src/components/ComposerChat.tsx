@@ -123,6 +123,18 @@ export function ComposerChat({
       </div>
 
       <div className="ra-chat-composer">
+        {/* Above the composer, not below it. A template is an alternative to
+            typing a description, so it has to be visible BEFORE the user starts
+            typing one — under the panel it only ever got read after the work it
+            was meant to save had already been done. */}
+        <button
+          type="button"
+          onClick={onBrowseTemplates}
+          style={{ ...buttonStyle(false), width: '100%', marginBottom: theme.space.md }}
+        >
+          {copy.browseTemplates}
+        </button>
+
         <div style={composerShellStyle}>
           {/* A titled panel, not a bare textarea. The right side is where the
             user acts, so it should look like the place to act — reported as
@@ -166,18 +178,6 @@ export function ComposerChat({
             </div>
           </form>
         </div>
-
-        {/* Outside the panel's border, inside the same column. Within the
-            border it read as part of the composer; as a separate grid row it
-            drifted hundreds of pixels below, because the row height came from
-            the taller instructions column. */}
-        <button
-          type="button"
-          onClick={onBrowseTemplates}
-          style={{ ...buttonStyle(false), width: '100%', marginTop: theme.space.md }}
-        >
-          {copy.browseTemplates}
-        </button>
       </div>
     </div>
   );

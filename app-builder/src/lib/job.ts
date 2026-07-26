@@ -31,6 +31,17 @@ export interface WizardAnswers {
 /** Default data storage when the user does not change the scope control. */
 export const DEFAULT_DATA_STORAGE: DataStorage = 'simple';
 
+/**
+ * App type pre-selected on first paint.
+ *
+ * Every app RedAnvil generates is a mobile-first responsive web UI, so an unset
+ * app type made the most common answer the one the user had to supply by hand —
+ * and left Scope gated on a field whose value was already known. It must stay a
+ * member of `en.wizard.appTypeChips` or the chip row shows nothing selected;
+ * `job.test.ts` asserts that.
+ */
+export const DEFAULT_APP_TYPE = 'Mobile app';
+
 /** Minimum prompt length the submit endpoint enforces (z.string().trim().min(8)). */
 export const MIN_PROMPT_LENGTH = 8;
 
@@ -39,7 +50,7 @@ export const MIN_PROMPT_LENGTH = 8;
  */
 export const EMPTY_WIZARD_ANSWERS: WizardAnswers = {
   prompt: '',
-  appType: '',
+  appType: DEFAULT_APP_TYPE,
   hasAuth: false,
   entities: '',
   dataStorage: DEFAULT_DATA_STORAGE,
