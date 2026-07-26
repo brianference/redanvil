@@ -128,7 +128,12 @@ const WidthReportSchema = z.object({
       z.object({
         route: z.string().min(1),
         width: z.number(),
-        mainPct: z.number().nullable(),
+        // `contentPct`, not `mainPct`: the report used to record the width of
+        // the `main` container, which is 100% of its parent by default and so
+        // read 93% for a page whose content sat in the left third. It now
+        // records the PAINTED extent. Requiring the new field name means an old
+        // report cannot quietly satisfy the rule it was wrong about.
+        contentPct: z.number().nullable(),
         ok: z.boolean()
       })
     )

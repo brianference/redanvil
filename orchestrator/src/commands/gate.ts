@@ -68,6 +68,11 @@ export const APP_CHECKS: Check[] = [
   det('u-plat-migrations'),
   det('fe-seo-assets'),
   det('fe-icon-button-labels'),
+  // Implemented in check.mjs AND encoded in the rubric, but a det rule only
+  // runs if it is ALSO listed here. Omitting it fails the gate as an
+  // unevaluated blocker rather than passing silently, which is the correct
+  // direction — but it is a third place a rule has to be registered.
+  det('fe-no-inline-width'),
   det('u-conc-no-padding'),
   det('u-conc-file-size'),
   det('hyg-no-duplication'),
