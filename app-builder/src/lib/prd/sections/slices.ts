@@ -38,11 +38,29 @@ export function buildSlices(opts: {
 
   let next = 1;
   for (const feature of features) {
-    const isPrimaryBrowse = feature.id === 'F1';
-    const isPrimaryDetail = feature.id === 'F2';
-    const isAccess = feature.id === 'F3';
-    const isPrimaryManage = feature.id === 'F4';
+    // Keyed to the FEATURE, never to its id. These used to test `feature.id ===
+    // 'F1'`, which stopped meaning "browse the primary entity" the moment
+    // capability features could lead the list. The result was a spec whose
+    // slices contradicted its own features: "Slice 1 — Search airline flight"
+    // built a CRUD list page, and every unmatched feature fell through to the
+    // secondary-entity branch, which invented a table from the feature NAME —
+    // hence `public_access` and `compute_airline_flight_totals` tables.
+    const isPrimaryBrowse = feature.name === `Browse & search ${primary}`;
+    const isPrimaryDetail = feature.name === `${primary} detail`;
+    const isAccess = feature.name === 'Accounts' || feature.name === 'Public access';
+    const isPrimaryManage = feature.name === `Manage ${primary}`;
     const isPages = feature.name.startsWith('Required pages');
+    const isSecondaryManage = /^Manage .+$/.test(feature.name) && !isPrimaryManage;
+    // Capability features come from the prompt, not from an entity. They must
+    // never mint a table: "Compute airline flight totals" is a calculation over
+    // existing rows, not a new noun to store.
+    const isCapability =
+      !isPrimaryBrowse &&
+      !isPrimaryDetail &&
+      !isAccess &&
+      !isPrimaryManage &&
+      !isPages &&
+      !isSecondaryManage;
 
     let db = 'No new migration (tables from Slice 0)';
     let api = 'No new endpoint';
@@ -76,6 +94,11 @@ export function buildSlices(opts: {
       db = 'No domain change';
       api = 'Static routes only';
       ui = `${REQUIRED_PAGES.join(', ')} pages + sitemap.xml + robots.txt + per-route SEO`;
+    } else if (isCapability) {
+      // Reads and computes over the entity tables that already exist.
+      db = `Query \`${primaryTable}\`; add indexes for the fields this feature filters or sorts on`;
+      api = `POST /api/search — accepts the query and every filter named in §9, returns ordered results`;
+      ui = `The screens this feature needs, per §7.3a: query input, results, and its controls`;
     } else {
       // Secondary entity manage
       const match = feature.name.match(/^Manage (.+)$/);
@@ -96,9 +119,11 @@ export function buildSlices(opts: {
             ? `npx vitest run functions/api/${primaryTable}.test.ts && npx playwright test tests/${primaryTable}-list.spec.ts`
             : isPrimaryDetail
               ? `npx playwright test tests/${primaryTable}-detail.spec.ts`
-              : isPrimaryManage
-                ? `npx vitest run src/lib/schemas.test.ts && npx playwright test tests/${primaryTable}-crud.spec.ts`
-                : `npx vitest run && npx playwright test tests/${entityTable(feature.name.replace(/^Manage /, ''))}-crud.spec.ts`;
+              : isCapability
+                ? `npx vitest run && npx playwright test tests/search.spec.ts`
+                : isPrimaryManage
+                  ? `npx vitest run src/lib/schemas.test.ts && npx playwright test tests/${primaryTable}-crud.spec.ts`
+                  : `npx vitest run && npx playwright test tests/${entityTable(feature.name.replace(/^Manage /, ''))}-crud.spec.ts`;
 
     slices.push({
       index: next,

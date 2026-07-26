@@ -194,6 +194,24 @@ export const en = {
       'Describe the product in plain language. I’ll ask a few sharp questions, then generate a downloadable PRD you can ship to engineering.',
     greetingMeta: 'Full-stack scope · Mobile-first · No account required to start',
     starterLine: 'Try a starter, or type your own idea below.',
+    howHeading: 'How this works',
+    steps: [
+      {
+        title: 'Describe the product',
+        body: 'Plain language is enough. Say what it does and who it is for.'
+      },
+      {
+        title: 'Answer four short questions',
+        body: 'App type, sign-in, the nouns it stores, and which features to keep.'
+      },
+      {
+        title: 'Get a downloadable PRD',
+        body: 'Features, acceptance criteria, data model, tests, and a build plan.'
+      }
+    ],
+    startersHeading: 'Start from an example',
+    chatTitle: 'Describe your app',
+    chatSubtitle: 'RedAnvil replies with clarifying questions, then forges the PRD.',
     trustOnline: 'Online',
     trustPrivate: 'PRD private to you',
     trustStatusLabel: 'Service status',

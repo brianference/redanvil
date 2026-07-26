@@ -85,7 +85,12 @@ export function entityPascal(name: string): string {
 export function entityTable(name: string): string {
   const pascal = entityPascal(name);
   const snake = pascal.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
-  if (snake.endsWith('s')) return snake;
+  // English plurals, not `${word}s`. An entity called "search" produced a table
+  // named `searchs`, which then appeared in the DDL, the routes and every test
+  // name in the spec. Cheap to get right, and wrong forever once it ships in a
+  // migration.
+  if (/(?:s|x|z|ch|sh)$/.test(snake)) return `${snake}es`;
+  if (/[^aeiou]y$/.test(snake)) return `${snake.slice(0, -1)}ies`;
   return `${snake}s`;
 }
 

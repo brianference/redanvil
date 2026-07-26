@@ -1,10 +1,4 @@
-import {
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-  type CSSProperties,
-  type ReactNode
-} from 'react';
+import { useState, type ChangeEvent, type FormEvent, type CSSProperties } from 'react';
 import { en } from '../i18n/en';
 import { MIN_PROMPT_LENGTH } from '../lib/job';
 import { theme } from '../theme';
@@ -65,22 +59,31 @@ export function ComposerChat({
         aria-live="polite"
         aria-relevant="additions"
       >
-        <AgentRow>
-          <div style={bubbleStyle}>
-            <p style={{ margin: 0, fontSize: theme.type.scale[2], lineHeight: 1.45 }}>
-              {copy.greetingBody}
-            </p>
-            <p style={{ ...metaStyle, marginTop: theme.space.sm }}>{copy.greetingMeta}</p>
-          </div>
-        </AgentRow>
-
-        <AgentRow>
-          <div style={bubbleStyle}>
-            <p style={{ margin: 0, fontSize: theme.type.scale[2], lineHeight: 1.45 }}>
-              {copy.starterLine}
-            </p>
-          </div>
-        </AgentRow>
+        {/* Instructions, presented as instructions.
+            These were two speech bubbles labelled "RedAnvil", which read as a
+            conversation the user had already had — reported as "it is unclear
+            that the left are instructions, they look like chat bubbles". A
+            numbered list says what to do; a bubble implies someone said it. */}
+        <section aria-labelledby="how-heading" style={howPanelStyle}>
+          <h2 id="how-heading" style={howHeadingStyle}>
+            {copy.howHeading}
+          </h2>
+          <p style={howLeadStyle}>{copy.greetingBody}</p>
+          <ol style={stepListStyle}>
+            {copy.steps.map((step, index) => (
+              <li key={step.title} style={stepItemStyle}>
+                <span aria-hidden="true" style={stepNumberStyle}>
+                  {index + 1}
+                </span>
+                <span style={stepTextStyle}>
+                  <strong style={stepTitleStyle}>{step.title}</strong>
+                  <span style={stepBodyStyle}>{step.body}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p style={howMetaStyle}>{copy.greetingMeta}</p>
+        </section>
 
         <div style={trustRowStyle} aria-label={copy.trustStatusLabel}>
           <span style={trustPillStyle(true)}>
@@ -92,6 +95,8 @@ export function ComposerChat({
             {copy.trustPrivate}
           </span>
         </div>
+
+        <h2 style={startersHeadingStyle}>{copy.startersHeading}</h2>
 
         <div style={chipsWrapStyle} role="list" aria-label={copy.examplesLabel}>
           {copy.examples.map((example) => (
@@ -117,49 +122,59 @@ export function ComposerChat({
         )}
       </div>
 
-      <div className="ra-chat-composer" style={composerShellStyle}>
-        <form onSubmit={handleSubmit} aria-label={copy.composerLabel} style={composerFormStyle}>
-          <label htmlFor="composer-prompt" style={visuallyHiddenStyle}>
-            {copy.composerLabel}
-          </label>
-          <textarea
-            id="composer-prompt"
-            name="prompt"
-            rows={3}
-            value={prompt}
-            onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
-              onPromptChange(event.target.value);
-              if (showTooShort && event.target.value.trim().length >= MIN_PROMPT_LENGTH) {
-                setShowTooShort(false);
-              }
-            }}
-            placeholder={copy.composerPlaceholder}
-            style={{ ...fieldStyle(), minHeight: 88, resize: 'none' }}
-            aria-describedby="composer-hint"
-            aria-invalid={showTooShort}
-          />
-          <div style={composerFooterStyle}>
-            <p id="composer-hint" style={{ ...hintStyle(), margin: 0, flex: 1 }}>
-              {showTooShort ? copy.tooShort(MIN_PROMPT_LENGTH) : copy.composerHint}
-            </p>
-            <button
-              type="submit"
-              style={buttonStyle(true, !ready)}
-              disabled={!ready}
-              aria-label={copy.sendAria}
-            >
-              {copy.sendAria}
-            </button>
+      <div className="ra-chat-composer">
+        <div style={composerShellStyle}>
+          {/* A titled panel, not a bare textarea. The right side is where the
+            user acts, so it should look like the place to act — reported as
+            "make it look more like an interactive chat window and taller". */}
+          <div style={chatHeaderStyle}>
+            <h2 style={chatTitleStyle}>{copy.chatTitle}</h2>
+            <p style={chatSubtitleStyle}>{copy.chatSubtitle}</p>
           </div>
-        </form>
+          <form onSubmit={handleSubmit} aria-label={copy.composerLabel} style={composerFormStyle}>
+            <label htmlFor="composer-prompt" style={visuallyHiddenStyle}>
+              {copy.composerLabel}
+            </label>
+            <textarea
+              id="composer-prompt"
+              name="prompt"
+              rows={8}
+              value={prompt}
+              onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
+                onPromptChange(event.target.value);
+                if (showTooShort && event.target.value.trim().length >= MIN_PROMPT_LENGTH) {
+                  setShowTooShort(false);
+                }
+              }}
+              placeholder={copy.composerPlaceholder}
+              style={{ ...fieldStyle(), minHeight: 88, resize: 'none' }}
+              aria-describedby="composer-hint"
+              aria-invalid={showTooShort}
+            />
+            <div style={composerFooterStyle}>
+              <p id="composer-hint" style={{ ...hintStyle(), margin: 0, flex: 1 }}>
+                {showTooShort ? copy.tooShort(MIN_PROMPT_LENGTH) : copy.composerHint}
+              </p>
+              <button
+                type="submit"
+                style={buttonStyle(true, !ready)}
+                disabled={!ready}
+                aria-label={copy.sendAria}
+              >
+                {copy.sendAria}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Outside the panel's border, inside the same column. Within the
+            border it read as part of the composer; as a separate grid row it
+            drifted hundreds of pixels below, because the row height came from
+            the taller instructions column. */}
         <button
           type="button"
           onClick={onBrowseTemplates}
-          style={{
-            ...buttonStyle(false),
-            width: '100%',
-            marginTop: theme.space.sm
-          }}
+          style={{ ...buttonStyle(false), width: '100%', marginTop: theme.space.md }}
         >
           {copy.browseTemplates}
         </button>
@@ -168,22 +183,11 @@ export function ComposerChat({
   );
 }
 
-/**
- * Agent message row. The sender name labels the message; there is no avatar
- * chip — a 32px repeat of the brand mark beside every bubble added no
- * information and read as clutter next to the name that already says who is
- * speaking.
- */
-function AgentRow({ children }: { children: ReactNode }): JSX.Element {
-  return (
-    <div style={rowStyle}>
-      <div style={bubbleStackStyle}>
-        <span style={senderStyle}>{en.chat.agentName}</span>
-        {children}
-      </div>
-    </div>
-  );
-}
+// AgentRow and its bubble/sender styles are gone. They rendered the left column
+// as a conversation the user had supposedly already had, which is exactly the
+// confusion reported: instructions that look like chat. The instructions are a
+// numbered list now, and the only chat-shaped thing on the page is the panel
+// you actually type into.
 
 // Layout for `.ra-chat` lives ENTIRELY in CSS (see shell/styles.ts). Not one
 // property of it belongs here: an inline `display` or `maxWidth` beats a media
@@ -198,53 +202,6 @@ const threadStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: 14
-};
-
-const rowStyle: CSSProperties = {
-  display: 'flex',
-  gap: 10,
-  alignItems: 'flex-end',
-  maxWidth: '100%'
-};
-
-const bubbleStackStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 6,
-  minWidth: 0,
-  maxWidth: '100%'
-};
-
-const senderStyle: CSSProperties = {
-  fontSize: theme.type.scale[0],
-  fontWeight: 600,
-  color: theme.color.muted,
-  paddingLeft: 4
-};
-
-const bubbleStyle: CSSProperties = {
-  padding: '12px 14px',
-  borderRadius: 18,
-  borderBottomLeftRadius: 6,
-  fontSize: theme.type.scale[2],
-  lineHeight: 1.45,
-  color: theme.color.text,
-  background: theme.color.surfaceElevated,
-  border: `1px solid ${theme.color.border}`,
-  boxShadow: theme.shadow.card,
-  wordBreak: 'break-word',
-  overflowWrap: 'anywhere' as const
-};
-
-const metaStyle: CSSProperties = {
-  // 16px, not 14: fe-type-floor is a blocker with a 16px body floor and this
-  // style carries real sentences ("No draft yet. Send a description...",
-  // "Full-stack scope - Mobile-first - No account required to start"). Measured
-  // at 375 on production, these were the only three nodes under the floor.
-  fontSize: theme.type.scale[2],
-  color: theme.color.muted,
-  lineHeight: 1.35,
-  margin: 0
 };
 
 const trustRowStyle: CSSProperties = {
@@ -324,19 +281,24 @@ const exampleDescStyle: CSSProperties = {
  * Composer + template CTA in normal document flow (not sticky) so it never
  * paints over the agent thread at narrow widths (fe-responsive-375).
  */
+// The chat panel: one bordered surface containing its header and its form, so
+// it reads as a window you type into rather than a stray field floating beside
+// the instructions. Height comes from the textarea and from `.ra-chat-composer`
+// in CSS, never from an inline cap.
 const composerShellStyle: CSSProperties = {
   position: 'relative',
   zIndex: 1,
-  marginTop: theme.space.md,
-  paddingTop: theme.space.md,
   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-  borderTop: `1px solid ${theme.color.border}`,
-  background: `color-mix(in srgb, ${theme.color.bg} 92%, transparent)`
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.md,
+  overflow: 'hidden',
+  background: theme.color.surface,
+  boxShadow: theme.shadow.card
 };
 
 const composerFormStyle: CSSProperties = {
   background: theme.color.surface,
-  border: `1px solid ${theme.color.border}`,
+  border: 'none',
   borderRadius: 16,
   padding: 14,
   boxShadow: theme.shadow.composer,
@@ -362,4 +324,113 @@ const visuallyHiddenStyle: CSSProperties = {
   clip: 'rect(0, 0, 0, 0)',
   whiteSpace: 'nowrap',
   border: 0
+};
+
+// --- Instructions panel (left) ------------------------------------------------
+// Deliberately NOT bubble-shaped. A bubble says "someone said this to you"; a
+// numbered list says "do these things".
+const howPanelStyle: CSSProperties = {
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.md,
+  background: theme.color.surface,
+  padding: theme.space.lg
+};
+
+const howHeadingStyle: CSSProperties = {
+  margin: 0,
+  fontSize: theme.type.scale[3],
+  fontWeight: 650,
+  color: theme.color.text
+};
+
+const howLeadStyle: CSSProperties = {
+  margin: `${theme.space.sm}px 0 0`,
+  fontSize: theme.type.scale[2],
+  lineHeight: 1.55,
+  color: theme.color.muted
+};
+
+const stepListStyle: CSSProperties = {
+  listStyle: 'none',
+  margin: `${theme.space.lg}px 0 0`,
+  padding: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.space.md
+};
+
+const stepItemStyle: CSSProperties = {
+  display: 'flex',
+  gap: theme.space.md,
+  alignItems: 'flex-start'
+};
+
+const stepNumberStyle: CSSProperties = {
+  flexShrink: 0,
+  width: 28,
+  height: 28,
+  borderRadius: 999,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: theme.type.scale[1],
+  fontWeight: 700,
+  color: theme.color.textOnAccent,
+  background: theme.color.accent
+};
+
+const stepTextStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 2,
+  minWidth: 0
+};
+
+const stepTitleStyle: CSSProperties = {
+  fontSize: theme.type.scale[2],
+  fontWeight: 650,
+  color: theme.color.text
+};
+
+const stepBodyStyle: CSSProperties = {
+  fontSize: theme.type.scale[2],
+  lineHeight: 1.5,
+  color: theme.color.muted
+};
+
+const howMetaStyle: CSSProperties = {
+  margin: `${theme.space.lg}px 0 0`,
+  paddingTop: theme.space.md,
+  borderTop: `1px solid ${theme.color.border}`,
+  fontSize: theme.type.scale[2],
+  color: theme.color.muted
+};
+
+const startersHeadingStyle: CSSProperties = {
+  margin: `${theme.space.sm}px 0 0`,
+  fontSize: theme.type.scale[2],
+  fontWeight: 650,
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  color: theme.color.muted
+};
+
+// --- Chat window (right) -------------------------------------------------------
+const chatHeaderStyle: CSSProperties = {
+  padding: `${theme.space.md}px ${theme.space.lg}px`,
+  borderBottom: `1px solid ${theme.color.border}`,
+  background: theme.color.surfaceElevated
+};
+
+const chatTitleStyle: CSSProperties = {
+  margin: 0,
+  fontSize: theme.type.scale[2],
+  fontWeight: 650,
+  color: theme.color.text
+};
+
+const chatSubtitleStyle: CSSProperties = {
+  margin: '2px 0 0',
+  fontSize: theme.type.scale[2],
+  color: theme.color.muted
 };

@@ -112,7 +112,10 @@ ${SHARED_SHELL_CSS}
           .ra-chat {
             max-width: none;
             display: grid;
-            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+            /* Even columns. 1.1fr / 0.9fr made the side you TYPE INTO the
+               smaller of the two, which is backwards — the instructions are
+               read once and the composer is used every time. */
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             gap: ${theme.space.xl}px;
             align-items: start;
           }
@@ -124,7 +127,28 @@ ${SHARED_SHELL_CSS}
             /* Clear the sticky header plus a breath of space. */
             top: ${theme.space.xl}px;
             min-width: 0;
+            /* The composer column ended ~300px short of the instructions,
+               leaving the right half of the fold empty. Growing the panel to a
+               share of the viewport balances the two without a fixed height
+               that would break on a short screen. */
+            display: flex;
+            flex-direction: column;
+            min-height: 60vh;
           }
+          .ra-chat-composer > div {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+          }
+          .ra-chat-composer form {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+          }
+          .ra-chat-composer textarea {
+            flex: 1;
+          }
+
         }
       `;
 }
