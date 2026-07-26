@@ -272,6 +272,22 @@ for (const app of apps) {
     fail(`${app.slug} result is not tied to the deployed build`);
   }
   console.log(`    ${app.slug}: production serves the scored commit`);
+
+  // Commit THIS app's result before gating the next one. Gating writes
+  // results/<slug>.json, which dirties the tree — so the second app scored with
+  // provenance.dirty=true and could not be tied to its deploy, even though
+  // nothing about the second app had changed.
+  if (!flag('no-commit')) {
+    run('git', ['add', `results/${app.slug}.json`]);
+    if (run('git', ['diff', '--cached', '--name-only']).out.trim().length > 0) {
+      run('git', [
+        'commit',
+        '-q',
+        '-m',
+        `chore(gate): ${app.slug} rescored at ${head.slice(0, 12)}`
+      ]);
+    }
+  }
 }
 
 run('node', ['.github/scripts/build_feed.mjs']);
