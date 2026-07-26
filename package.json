@@ -17,7 +17,8 @@
     "test": "vitest run",
     "gate": "tsx orchestrator/src/cli.ts gate",
     "loop": "tsx orchestrator/src/cli.ts loop",
-    "rubric": "tsx orchestrator/src/cli.ts rubric"
+    "rubric": "tsx orchestrator/src/cli.ts rubric",
+    "reverify": "node .github/scripts/reverify.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
