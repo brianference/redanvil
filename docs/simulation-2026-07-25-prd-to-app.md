@@ -77,6 +77,16 @@ builder how to build. Anything added to one and not the other reaches half the b
 rule now means asking which channel carries it — and preferably making one derive from the
 other.
 
+### 4. A new browser-backed test had no browser in CI — FIXED
+
+The width regression test renders fixture pages, and only the `apps` CI job installed Chromium.
+The orchestrator job could not launch one, so all three fixture tests failed.
+
+They failed **loudly rather than skipping**, which is the behaviour worth keeping — a missing
+browser must never read as "the layout is fine". But it passed locally because this machine
+already had browsers, and only CI is an honest environment for that question. The orchestrator
+job installs Chromium now.
+
 ## Still true after the fixes
 
 A generated app is a _correct skeleton_, not a finished product: it has the required pages, the
