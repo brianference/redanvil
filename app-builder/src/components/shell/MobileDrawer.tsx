@@ -1,7 +1,12 @@
+/**
+ * Thin wrapper: supplies app-builder nav, logo, and labels to the shared drawer.
+ */
 import type { RefObject } from 'react';
+import { useLocation } from 'react-router-dom';
+import { MobileDrawer as SharedMobileDrawer } from '../../../../design-system/MobileDrawer';
 import { en } from '../../i18n/en';
 import { Logo } from './Logo';
-import { drawerNavItems, NavLink } from './NavLinks';
+import { drawerNavItems, isNavActive } from './NavLinks';
 import { iconButtonStyle } from './styles';
 
 export interface MobileDrawerProps {
@@ -24,44 +29,19 @@ export function MobileDrawer({
   closeBtnRef,
   onClose
 }: MobileDrawerProps): JSX.Element {
-  const drawerItems = drawerNavItems();
-  const openAttr = open ? 'true' : 'false';
-
+  const location = useLocation();
   return (
-    <>
-      <div
-        className="ra-drawer-backdrop"
-        data-open={openAttr}
-        aria-hidden={!open}
-        onClick={onClose}
-      />
-      <aside
-        ref={drawerRef}
-        id="ra-side-drawer"
-        className="ra-drawer"
-        data-open={openAttr}
-        aria-label={en.app.primaryNav}
-        aria-hidden={!open}
-        tabIndex={-1}
-      >
-        <div className="ra-drawer-head">
-          <Logo height={48} />
-          <button
-            ref={closeBtnRef}
-            type="button"
-            style={iconButtonStyle}
-            aria-label={en.app.menuClose}
-            onClick={onClose}
-          >
-            <span aria-hidden="true">✕</span>
-          </button>
-        </div>
-        <nav aria-label={en.app.primaryNav}>
-          {drawerItems.map((item) => (
-            <NavLink key={item.key} item={item} onNavigate={onClose} />
-          ))}
-        </nav>
-      </aside>
-    </>
+    <SharedMobileDrawer
+      open={open}
+      drawerRef={drawerRef}
+      closeBtnRef={closeBtnRef}
+      onClose={onClose}
+      logo={<Logo height={48} />}
+      items={drawerNavItems()}
+      isActive={(key) => isNavActive(location.pathname, key)}
+      navLabel={en.app.primaryNav}
+      closeLabel={en.app.menuClose}
+      iconButtonStyle={iconButtonStyle}
+    />
   );
 }

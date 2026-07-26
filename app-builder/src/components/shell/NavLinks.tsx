@@ -1,18 +1,15 @@
-import { Link, useLocation } from 'react-router-dom';
+/**
+ * App-builder nav items and active-route rules.
+ *
+ * Shared `NavLink` markup lives in design-system; this file owns product IA
+ * (Builder / Dashboard / Saved / About / Contact) and which path is current.
+ */
+import { useLocation } from 'react-router-dom';
+import { NavLink as SharedNavLink, type NavItem } from '../../../../design-system/NavLink';
 import { en } from '../../i18n/en';
 import { DASHBOARD_URL, GITHUB_URL } from './constants';
 
-/** Primary nav item used in the header / mobile drawer. */
-export interface NavItem {
-  key: string;
-  label: string;
-  /** Internal SPA path, or null when the item is external. */
-  to: string | null;
-  /** External absolute URL when `to` is null. */
-  href?: string;
-  /** Open in a new tab (external only). */
-  external?: boolean;
-}
+export type { NavItem };
 
 /**
  * Whether a primary nav item is the current page (for active styles).
@@ -65,36 +62,15 @@ export interface NavLinkProps {
 }
 
 /**
- * One primary nav link (internal SPA Link or external anchor).
- * Sets `aria-current="page"` on the active internal route.
+ * One primary nav link with app-builder active-route rules.
  */
 export function NavLink({ item, onNavigate }: NavLinkProps): JSX.Element {
   const location = useLocation();
-  const active = isNavActive(location.pathname, item.key);
-  const className = `ra-nav-link${active ? ' is-active' : ''}`;
-
-  if (item.to !== null) {
-    return (
-      <Link
-        to={item.to}
-        className={className}
-        aria-current={active ? 'page' : undefined}
-        onClick={onNavigate}
-      >
-        {item.label}
-      </Link>
-    );
-  }
-
   return (
-    <a
-      href={item.href}
-      className={className}
-      target={item.external === true ? '_blank' : undefined}
-      rel={item.external === true ? 'noreferrer' : undefined}
-      onClick={onNavigate}
-    >
-      {item.label}
-    </a>
+    <SharedNavLink
+      item={item}
+      active={isNavActive(location.pathname, item.key)}
+      onNavigate={onNavigate}
+    />
   );
 }

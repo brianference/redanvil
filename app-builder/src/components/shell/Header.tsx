@@ -1,10 +1,15 @@
+/**
+ * Thin wrapper: supplies app-builder nav, brand, and chrome to the shared Header.
+ */
 import type { RefObject } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Header as SharedHeader } from '../../../../design-system/Header';
 import { en } from '../../i18n/en';
 import { theme } from '../../theme';
 import { ThemeToggle } from '../ThemeToggle';
 import { LOGO_HEIGHT } from './constants';
 import { Logo } from './Logo';
-import { headerNavItems, NavLink } from './NavLinks';
+import { headerNavItems, isNavActive } from './NavLinks';
 import { barStyle, iconButtonStyle } from './styles';
 
 export interface HeaderProps {
@@ -27,50 +32,31 @@ export function Header({
   menuBtnRef,
   onToggleMenu
 }: HeaderProps): JSX.Element {
-  const topNavItems = headerNavItems();
-
+  const location = useLocation();
   return (
-    <header ref={headerRef} style={barStyle}>
-      <div
-        style={{
-          width: '100%',
-          maxWidth: theme.layout.contentMaxWidth,
-          margin: '0 auto',
-          padding: `0 ${theme.space.md}px`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: theme.space.sm,
-          minHeight: LOGO_HEIGHT + theme.space.md,
-          boxSizing: 'border-box'
-        }}
-      >
-        <Logo />
-        <nav className="ra-top-nav" aria-label={en.app.primaryNav}>
-          {topNavItems.map((item) => (
-            <NavLink key={item.key} item={item} />
-          ))}
-        </nav>
-        <div
-          className="ra-header-controls"
-          data-drawer-open={menuOpen ? 'true' : 'false'}
-          style={{ display: 'flex', alignItems: 'center', gap: theme.space.sm, flexShrink: 0 }}
-        >
-          <ThemeToggle />
-          <button
-            ref={menuBtnRef}
-            type="button"
-            className="ra-menu-btn"
-            style={iconButtonStyle}
-            aria-expanded={menuOpen}
-            aria-controls="ra-side-drawer"
-            aria-label={menuOpen ? en.app.menuClose : en.app.menuOpen}
-            onClick={onToggleMenu}
-          >
-            <span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span>
-          </button>
-        </div>
-      </div>
-    </header>
+    <SharedHeader
+      menuOpen={menuOpen}
+      headerRef={headerRef}
+      menuBtnRef={menuBtnRef}
+      onToggleMenu={onToggleMenu}
+      barStyle={barStyle}
+      iconButtonStyle={iconButtonStyle}
+      tokens={{
+        contentMaxWidth: theme.layout.contentMaxWidth,
+        paddingX: theme.space.md,
+        gap: theme.space.sm,
+        controlsGap: theme.space.sm,
+        minHeight: LOGO_HEIGHT + theme.space.md
+      }}
+      copy={{
+        primaryNav: en.app.primaryNav,
+        menuClose: en.app.menuClose,
+        menuOpen: en.app.menuOpen
+      }}
+      logo={<Logo />}
+      themeToggle={<ThemeToggle />}
+      items={headerNavItems()}
+      isActive={(key) => isNavActive(location.pathname, key)}
+    />
   );
 }

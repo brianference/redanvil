@@ -1,6 +1,12 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useDrawerA11y } from '../lib/useDrawerA11y';
+/**
+ * Thin wrapper: supplies dashboard shell chrome and subcomponents to the
+ * shared Page orchestrator.
+ */
+import type { ReactNode } from 'react';
+import {
+  Page as SharedPage,
+  type PageProps as SharedPageProps
+} from '../../../design-system/Page';
 import { theme } from '../theme';
 import { Breadcrumbs } from './Breadcrumbs';
 import { Footer } from './shell/Footer';
@@ -23,97 +29,30 @@ export interface PageProps {
  * Shared page shell: sticky header with primary nav, aligned main/footer, drawer.
  */
 export function Page({ title, subtitle, breadcrumb, children }: PageProps): JSX.Element {
-  const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuBtnRef = useRef<HTMLButtonElement>(null);
-  const closeBtnRef = useRef<HTMLButtonElement>(null);
-  const drawerRef = useRef<HTMLElement>(null);
-  const headerRef = useRef<HTMLElement>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-
-  /**
-   * Close the mobile nav drawer.
-   */
-  const closeMenu = useCallback((): void => {
-    setMenuOpen(false);
-  }, []);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [menuOpen]);
-
-  useDrawerA11y({
-    open: menuOpen,
-    drawerRef,
-    triggerRef: menuBtnRef,
-    initialFocusRef: closeBtnRef,
-    backgroundRefs: [headerRef, bodyRef],
-    onClose: closeMenu
-  });
+  const chrome: SharedPageProps['chrome'] = {
+    spaceXl: theme.space.xl,
+    spaceLg: theme.space.lg,
+    spaceSm: theme.space.sm,
+    h1Size: theme.type.scale[5] ?? 32,
+    subtitleSize: theme.type.scale[3] ?? 18,
+    muted: theme.color.muted
+  };
 
   return (
-    <div className="ra-shell" style={shellStyle}>
-      <style>{shellCss()}</style>
-
-      <Header
-        menuOpen={menuOpen}
-        headerRef={headerRef}
-        menuBtnRef={menuBtnRef}
-        onToggleMenu={() => {
-          setMenuOpen((open) => !open);
-        }}
-      />
-
-      <MobileDrawer
-        open={menuOpen}
-        drawerRef={drawerRef}
-        closeBtnRef={closeBtnRef}
-        onClose={closeMenu}
-      />
-
-      <div ref={bodyRef} className="ra-body">
-        <div className="ra-main-col">
-          <main
-            style={{
-              ...shellContainer,
-              flex: 1,
-              padding: `${theme.space.xl}px ${theme.space.lg}px`
-            }}
-          >
-            {breadcrumb !== undefined && <Breadcrumbs current={breadcrumb} />}
-            <h1
-              className="ra-h1"
-              style={{ fontSize: theme.type.scale[5], margin: 0, letterSpacing: '-0.02em' }}
-            >
-              {title}
-            </h1>
-            {subtitle !== undefined && (
-              <p
-                className="ra-prose-lead"
-                style={{
-                  color: theme.color.muted,
-                  fontSize: theme.type.scale[3],
-                  marginTop: theme.space.sm
-                }}
-              >
-                {subtitle}
-              </p>
-            )}
-            <div style={{ marginTop: theme.space.xl }}>{children}</div>
-          </main>
-
-          <Footer />
-        </div>
-      </div>
-    </div>
+    <SharedPage
+      title={title}
+      subtitle={subtitle}
+      breadcrumb={breadcrumb}
+      shellStyle={shellStyle}
+      shellContainer={shellContainer}
+      shellCss={shellCss}
+      chrome={chrome}
+      Header={Header}
+      MobileDrawer={MobileDrawer}
+      Footer={Footer}
+      Breadcrumbs={Breadcrumbs}
+    >
+      {children}
+    </SharedPage>
   );
 }
