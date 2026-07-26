@@ -34,12 +34,17 @@ export const MIN_BLOCK = 8;
  * normalisation flattened every React props interface and component signature
  * into the same punctuation, and multi-line import bodies survived the
  * import filter, so shared *shape* was being counted as shared *code*. Fixing
- * both dropped the honest total to 393, and the shared banners/helpers took it to 387. See `isDeclarationSkeleton`.
+ * both dropped the honest total to 393, and the shared banners/helpers took it to 387.
+ *
+ * 387 -> 40 IS real deduplication: the twelve shell units both apps had copied
+ * (Page, Header, Footer, NavLink, MobileDrawer, Logo, ThemeToggle, Breadcrumbs,
+ * linkify, useDocumentMeta, shellStyles, shellChromeCss) now live once in
+ * design-system/ and take tokens and copy from each app. See `isDeclarationSkeleton`.
  *
  * Lower it again whenever real duplication is removed; never raise it to make a
  * run pass. Override with `--max N` for local experiments.
  */
-export const DEFAULT_BUDGET = 387;
+export const DEFAULT_BUDGET = 40;
 
 /** Source extensions scanned under each app's `src/`. */
 const SRC_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);

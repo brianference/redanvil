@@ -78,12 +78,7 @@ export function MobileDrawer({
         </div>
         <nav aria-label={navLabel}>
           {items.map((item) => (
-            <NavLink
-              key={item.key}
-              item={item}
-              active={isActive(item.key)}
-              onNavigate={onClose}
-            />
+            <NavLink key={item.key} item={item} active={isActive(item.key)} onNavigate={onClose} />
           ))}
         </nav>
       </aside>

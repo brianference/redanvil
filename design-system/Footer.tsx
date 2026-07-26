@@ -158,9 +158,7 @@ export function Footer({
       <div
         style={{
           borderTop: `1px solid ${tokens.border}`,
-          ...(safeAreaBottom
-            ? { paddingBottom: 'env(safe-area-inset-bottom, 0px)' }
-            : {})
+          ...(safeAreaBottom ? { paddingBottom: 'env(safe-area-inset-bottom, 0px)' } : {})
         }}
       >
         <div

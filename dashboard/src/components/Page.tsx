@@ -3,10 +3,7 @@
  * shared Page orchestrator.
  */
 import type { ReactNode } from 'react';
-import {
-  Page as SharedPage,
-  type PageProps as SharedPageProps
-} from '../../../design-system/Page';
+import { Page as SharedPage, type PageProps as SharedPageProps } from '../../../design-system/Page';
 import { theme } from '../theme';
 import { Breadcrumbs } from './Breadcrumbs';
 import { Footer } from './shell/Footer';
