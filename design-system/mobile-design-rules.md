@@ -171,7 +171,7 @@ barebones site). Verified on the rendered page at 375 / 768 / 1280 in both theme
 
 | ID | Rule | Level | Rubric rule |
 |----|------|-------|-------------|
-| R13.1 | Light AND dark mode with a visible toggle; every color from a semantic token per theme; default follows system; choice persists; both pass AA | must | fe-light-dark |
+| R13.1 | Light AND dark mode with a visible toggle; every color from a semantic token per theme; a **stated brand default** (system-follow is one option, not the only one); a saved choice always wins and persists; both pass AA | must | fe-light-dark |
 | R13.2 | Polished sticky top nav with brand mark and primary links that have clear hover AND active states (not bare text); overflow in a menu; breadcrumbs on inner/detail pages | must | fe-premium-nav |
 | R13.3 | Home, About, Terms, Privacy, Contact all present and reachable from the shared nav/footer | must | fe-required-pages |
 | R13.4 | No "made with" / "built with" attribution text anywhere in the UI | must | fe-no-attribution |

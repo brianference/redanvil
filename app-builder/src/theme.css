@@ -68,34 +68,11 @@
   --progress-fill: #c62828;
 }
 
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) {
-    --bg: #f4f4f6;
-    --surface: #ffffff;
-    --surface-elevated: #ffffff;
-    --text: #111114;
-    --text-on-accent: #ffffff;
-    --muted: #5c5c68;
-    --accent: #c62828;
-    --accent-fg: #c62828;
-    --accent-soft: color-mix(in srgb, #c62828 12%, transparent);
-    --border: #e2e2e8;
-    --border-strong: #c8c8d0;
-    --chip-bg: #ffffff;
-    --success: #218358;
-    --success-soft: color-mix(in srgb, #218358 12%, transparent);
-    --error: #c62828;
-    --error-soft: color-mix(in srgb, #c62828 10%, transparent);
-    --warning: #ad5700;
-    --skeleton: #e8e8ee;
-    --skeleton-shine: #f4f4f8;
-    --focus-ring: 0 0 0 3px color-mix(in srgb, #c62828 35%, transparent);
-    --shadow-card: 0 1px 2px color-mix(in srgb, #111 6%, transparent);
-    --shadow-composer: 0 -8px 24px color-mix(in srgb, #111 6%, transparent);
-    --progress-track: #e2e2e8;
-    --progress-fill: #c62828;
-  }
-}
+/* Dark is the default, deliberately: the brand art, the accent glow and the
+   near-black surface are what this product is designed as, and falling
+   through to the system preference meant most visitors never saw it. The
+   toggle still wins, and a saved choice persists — this sets the starting
+   point, not the user's control. Light lives under [data-theme='light'].  */
 
 @media (prefers-reduced-motion: reduce) {
   *,

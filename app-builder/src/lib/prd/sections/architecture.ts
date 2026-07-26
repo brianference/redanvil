@@ -80,7 +80,7 @@ export function buildDesignSpecifications(): string {
     '#### Theme and tokens',
     '',
     '- [ ] Semantic theme tokens only (no raw hex/rgb/px for color/space in components). Tokens resolve per theme (light + dark).',
-    '- [ ] Light and dark themes ship with a visible theme toggle; default follows system preference; choice may persist.',
+    '- [ ] Light and dark themes ship with a visible theme toggle. Pick a **brand default** and state it; a saved choice always wins and persists. Following the system preference is a valid choice, not the only one — a product designed dark-first should open dark, or most visitors never see the design it was built as.',
     '- [ ] WCAG AA contrast: at least **4.5:1** for body text, **3:1** for large text and UI chrome. Measure with **axe-core**, not hand-parsed CSS.',
     '',
     '#### Type and spacing',

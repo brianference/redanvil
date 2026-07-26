@@ -39,24 +39,11 @@
   --scrim: rgba(0, 0, 0, 0.55);
 }
 
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme]) {
-    --bg: #f6f7fb;
-    --surface: #ffffff;
-    --surface-2: #eef0f6;
-    --text: #16161d;
-    --muted: #5b6270;
-    --accent: #c62828;
-    --accent-fg: #c62828;
-    --border: #e4e6ee;
-    --success: #156b3c;
-    --success-soft: #e6f6ed;
-    --error: #c62828;
-    --error-soft: #fde8e8;
-    --shadow: 0 1px 2px rgba(22, 22, 29, 0.06);
-    --scrim: rgba(0, 0, 0, 0.55);
-  }
-}
+/* Dark is the default, deliberately: the brand art, the accent glow and the
+   near-black surface are what this product is designed as, and falling
+   through to the system preference meant most visitors never saw it. The
+   toggle still wins, and a saved choice persists — this sets the starting
+   point, not the user's control. Light lives under [data-theme='light'].  */
 
 /* Theme-aware brand lockup. Both files are transparent PNGs of the SAME approved
    lockup; only the wordmark tone differs, because a dark wordmark on the dark

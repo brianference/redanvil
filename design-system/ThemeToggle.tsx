@@ -46,16 +46,20 @@ export interface ThemeToggleProps {
 }
 
 /**
- * Resolve the effective theme: saved preference, else system preference.
+ * Resolve the effective theme: the user's saved choice, else dark.
+ *
+ * Dark is the brand default. It used to fall through to the system preference,
+ * which meant most visitors landed on light and never saw the design the brand
+ * art was built for — the dark lockup, the accent glow, the near-black surface.
+ *
+ * A SAVED choice still wins outright: this changes the starting point, not the
+ * user's control over it.
  *
  * @param stored - Value from localStorage, or null.
  * @returns Effective light or dark choice.
  */
 function resolveTheme(stored: string | null): ThemeChoice {
   if (stored === 'light' || stored === 'dark') return stored;
-  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: light)').matches) {
-    return 'light';
-  }
   return 'dark';
 }
 

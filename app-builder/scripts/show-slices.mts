@@ -14,4 +14,10 @@ const prd = generatePrd(
 );
 const start = prd.markdown.indexOf('## 11. Build Plan');
 const end = prd.markdown.indexOf('## 12.');
-console.log(prd.markdown.slice(start, end).split('\n').filter((l) => /^### Slice|^- DB:|^- API:/.test(l)).join('\n'));
+console.log(
+  prd.markdown
+    .slice(start, end)
+    .split('\n')
+    .filter((l) => /^### Slice|^- DB:|^- API:/.test(l))
+    .join('\n')
+);
