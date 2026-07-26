@@ -26,7 +26,7 @@
  * Exit 0 when every app is measured, gated, reproduced and tied to its deploy.
  */
 import { spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
@@ -265,6 +265,11 @@ for (const app of apps) {
     fail(`${app.slug} did not reproduce`);
   }
   console.log(`    ${(v.out.split('\n').find((l) => l.includes('reproduced')) ?? '').trim()}`);
+
+  // verify_results writes results/<slug>.json.verify.json. It is untracked, so
+  // leaving it behind dirties the tree — which is why the SECOND app scored
+  // with provenance.dirty=true while the first was fine.
+  rmSync(`results/${app.slug}.json.verify.json`, { force: true });
 
   const d = script('verify_deployed.mjs', [app.dir, `results/${app.slug}.json`, app.url]);
   if (d.code !== 0) {
