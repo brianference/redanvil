@@ -1,19 +1,19 @@
-# RedAnvil handoff — 2026-07-25 (v10.0.0)
+# RedAnvil handoff — 2026-07-25 (v11.0.0)
 
-State after v10.0.0, and what is left. Written so a fresh context can pick up without
+State after v11.0.0, and what is left. Written so a fresh context can pick up without
 re-deriving anything.
 
 ## Where things stand
 
-- **HEAD:** see `git log -1`; v10.0.0 tagged.
-- **Latest release:** `v10.0.0` (both apps independently judged, coverage floored at 90%,
-  per-app design direction).
+- **HEAD:** see `git log -1`; v11.0.0 tagged.
+- **Latest release:** `v11.0.0` (desktop width measured on painted content, shared shell,
+  duplication 394 -> 40).
 - **Production:** https://redanvil.pages.dev and https://redanvil-dashboard.pages.dev
   (Cloudflare Pages, direct upload / Type B; prod branch `main`, local branch `master`, so
   deploys must pass `--branch main`). Both verified by asset-hash match against the scored
   commit, and `/api/health` returns `{"status":"ok"}`.
-- **Gate:** app-builder 100/100 across **53/53** at **96% coverage**; dashboard 100/100 across
-  **52/52** at **95%**. Both run `--na process --min-coverage 90` — the CI lane is no longer
+- **Gate:** app-builder 100/100 across **54/54** at **96% coverage**; dashboard 100/100 across
+  **53/53** at **95%**. Both run `--na process --min-coverage 90` — the CI lane is no longer
   waived. Zero stale verdicts, both reproduced rule-by-rule, both scored from a clean tree and
   tied to the deployed bundle.
 - **Working tree:** clean.
@@ -67,21 +67,36 @@ the detail; the load-bearing parts:
    app's own inputs. Measured over eight sample ideas: six distinct archetypes, five distinct
    visual directions. Design rule **R21**.
 
+## What changed in v11.0.0
+
+1. **The desktop-width check was measuring a container.** `main.getBoundingClientRect().width`
+   is 100% by default, so it reported 93% for pages whose content sat in the left third. It
+   now measures PAINTED extent — text client rects plus painted surfaces, excluding
+   header/footer. Four pages that had been "passing" were at 32-60%.
+2. **Three causes fixed and enforced:** inline `maxWidth` caps (new blocker rule
+   `fe-no-inline-width`, red-tested), a fixed column count that ignored content (now a `:has()`
+   quantity query), and the dashboard's content pages never adopting the shared prose classes.
+   The requirement ships in §7.3 of every generated PRD, plus design rule **R22**.
+3. **Shared shell.** Twelve units moved into `design-system/` parameterised by tokens and copy.
+   Duplication **394 -> 40**, real deduplication this time.
+4. **A det rule can be declared and never run** — it needs registering in the rubric markdown,
+   `RULES`, AND the runner list in `commands/gate.ts`. A test now binds the third.
+
 ## Remaining tasks (priority order)
 
-1. **Lower the duplication ratchet below 387.** The worst offenders are all genuine shared
+1. **Re-run the independent judge on both apps.** Both reviews are well behind HEAD after this
+   session's work, and `judge_dissent.mjs` will say how far. The worst offenders are all genuine shared
    shell code: `Page.tsx` (60), `shell/styles.ts` (57), `NavLinks` (42), `MobileDrawer` (36),
    `useDocumentMeta` (36), `Footer` (34), `ThemeToggle` (31), `Logo` (29), `Header` (26),
    `Breadcrumbs` (22), `linkify` (20). They import per-app theme/i18n, so they need
    parameterising rather than moving — the same shape `shellCss.ts` already uses.
-2. **Keep the independent judge on a cadence.** `judge_dissent.mjs` reports how far each review
-   is behind HEAD and names any app that has never had one. It cannot run in CI (`grok`
-   authenticates interactively), so it needs running locally after significant work:
-   `node .github/scripts/independent_judge.mjs <app>`.
-3. **Generate an app end-to-end against the new §7.3a** and check the result actually looks
-   different. The variation is proven at the spec level by test; it has not yet been proven at
-   the built-app level.
-4. **A fourth audit.** Three have each found real problems; the returns have not diminished.
+2. **Lower the ratchet below 40** if the remaining shared code is worth parameterising; the
+   easy wins are gone.
+3. **Build an app end-to-end from a generated PRD** and inspect the result. §7.3a is now proven
+   at the spec level (a shift-scheduling dashboard gets Split workbench + Editorial, printed by
+   `app-builder/scripts/show-design-directions.mts` and `gen-sample-prd.mts`), but no generated
+   app has been built and looked at.
+4. **A fifth audit.** Four have each found real problems; the returns have not diminished.
 
 ## Key facts a fresh context will need
 
