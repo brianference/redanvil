@@ -60,3 +60,31 @@ Rule updates:
 
 R10.6 / R10.7 added: header brand mark is a small optimized asset, never the hero
 banner; favicon/app icon derive from the same mark.
+
+## 2026-07-25 — desktop width, shared shell (v11.0.0)
+
+**A measurement can be confidently wrong in the flattering direction, and only a
+user looking at the site will catch it.** `desktop_width.mjs` measured
+`main.getBoundingClientRect().width`. A block element is 100% of its parent by
+default, so it reported 93% for pages whose content sat in the left third of a
+1920 screen. Four pages across two apps were narrow behind that number.
+
+What changed, and what to carry forward:
+
+- Measure **painted** extent, never a container box: text via its own client
+  rects (an `<h1>`'s box is full width while its glyphs are not), plus anything
+  drawing a background, border or shadow. Exclude header and footer.
+- **Inline `maxWidth` is the recurring cause** — eight occurrences now across
+  this repo. Enforced statically by `fe-no-inline-width` so it is caught before
+  a deploy rather than by a rendered measurement afterwards.
+- **Column counts must follow the content.** A fixed `column-count: 3` on a
+  two-section page leaves an empty third column and reads as 60% of the screen.
+  A `:has()` quantity query only adds a column when there is something to put
+  in it.
+- **An ellipsis is not overflow.** `fe-responsive-375` tests horizontal
+  overflow, so truncated KPI labels (`TOTAL R…`) passed every check. Only the
+  screenshot showed it.
+
+Shared shell: twelve units parameterised into `design-system/` (duplication
+394 → 40). The pattern that works is tokens-plus-copy props, so each app keeps
+its own palette and wording while the markup lives once.
