@@ -40,11 +40,13 @@ export function featureEntityNames(entitiesField: string): string[] {
  */
 export function resolveFeatureSelection(value: WizardAnswers): string[] {
   const entityNames = featureEntityNames(value.entities);
-  const defaults = defaultSelectedFeatureIds(entityNames, value.hasAuth);
+  const defaults = defaultSelectedFeatureIds(entityNames, value.hasAuth, value.prompt);
   if (value.selectedFeatureIds === null) {
     return defaults;
   }
-  const validIds = new Set(buildFeatureSuggestions(entityNames, value.hasAuth).map((s) => s.id));
+  const validIds = new Set(
+    buildFeatureSuggestions(entityNames, value.hasAuth, value.prompt).map((s) => s.id)
+  );
   const kept = value.selectedFeatureIds.filter((id) => validIds.has(id));
   return kept.length > 0 || value.selectedFeatureIds.length === 0 ? kept : defaults;
 }
@@ -76,7 +78,7 @@ export function toggleFeatureSelection(
 export function FeaturesStep({ value, patch, featuresReady }: FeaturesStepProps): JSX.Element {
   const copy = en.wizard;
   const entityNames = featureEntityNames(value.entities);
-  const suggestions = buildFeatureSuggestions(entityNames, value.hasAuth);
+  const suggestions = buildFeatureSuggestions(entityNames, value.hasAuth, value.prompt);
   const selected = resolveFeatureSelection(value);
   const selectedSet = new Set(selected);
 

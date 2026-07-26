@@ -141,7 +141,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
       const entityNames = featureEntityNames(value.entities);
       const nextSelection =
         value.selectedFeatureIds === null
-          ? defaultSelectedFeatureIds(entityNames, value.hasAuth)
+          ? defaultSelectedFeatureIds(entityNames, value.hasAuth, value.prompt)
           : resolveFeatureSelection(value);
       if (
         value.selectedFeatureIds === null ||

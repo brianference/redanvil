@@ -297,7 +297,7 @@ describe('generatePrd', () => {
     expect(md).toContain('filterTrips_byQuery_matchesTitle');
 
     // Deselected secondary entity feature (and its schema rows) absent
-    expect(md).not.toMatch(/### F5 — Manage Driver/);
+    expect(md).not.toMatch(/### F\d+ — Manage Driver/);
     expect(md).not.toContain('CREATE TABLE IF NOT EXISTS drivers');
     expect(md).not.toContain('DriverCreateSchema');
     expect(md).not.toContain('GET | `/api/drivers`');
@@ -323,9 +323,13 @@ describe('generatePrd', () => {
       cost
     );
     expect(legacy.markdown).toBe(prd.markdown);
-    expect(legacy.markdown).toMatch(/### F5 — Manage Driver/);
+    // Assert the FEATURE, not its position. Feature ids renumber whenever the
+    // prompt yields a capability — "tracking tesla driving stats" now adds a
+    // history feature — and a test pinned to `F5` fails for a reason that has
+    // nothing to do with the behaviour it is checking.
+    expect(legacy.markdown).toMatch(/### F\d+ — Manage Driver/);
     expect(legacy.markdown).toContain('CREATE TABLE IF NOT EXISTS drivers');
-    expect(legacy.markdown).toMatch(/### F3 — Accounts/);
+    expect(legacy.markdown).toMatch(/### F\d+ — Accounts/);
   });
 
   it('grades itself in §14 with a computed score (not hardcoded)', () => {

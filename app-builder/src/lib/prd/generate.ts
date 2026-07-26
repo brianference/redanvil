@@ -59,7 +59,7 @@ export function generatePrd(
 
   // Full derivation uses wizard scope; selection filters after (legacy: no selection = all).
   const derivedEntityNames = entities.length > 0 ? entities : ['Item'];
-  const allFeatures = buildFeatures(derivedEntityNames, wizardHasAuth);
+  const allFeatures = buildFeatures(derivedEntityNames, wizardHasAuth, prompt);
   const features = filterFeaturesBySelection(allFeatures, selectedFeatureIds);
   const selectionActive = selectedFeatureIds != null;
   const entityNames = selectionActive

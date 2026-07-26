@@ -28,7 +28,7 @@ export function chosenFeatureDetail(answers: WizardAnswers): string {
   }
   const listed = entityList(answers.entities);
   const entityNames = listed.length > 0 ? listed : ['Item'];
-  const suggestions = buildFeatureSuggestions(entityNames, answers.hasAuth);
+  const suggestions = buildFeatureSuggestions(entityNames, answers.hasAuth, answers.prompt);
   const byId = new Map(suggestions.map((s) => [s.id, s.title]));
   const titles = answers.selectedFeatureIds
     .map((id) => byId.get(id))

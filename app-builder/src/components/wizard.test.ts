@@ -158,7 +158,11 @@ describe('resolveFeatureSelection', () => {
     const resolved = resolveFeatureSelection({ ...answers, selectedFeatureIds: null });
     expect(resolved.length).toBeGreaterThan(0);
     expect(resolved).toEqual(
-      defaultSelectedFeatureIds(featureEntityNames(answers.entities), answers.hasAuth)
+      defaultSelectedFeatureIds(
+        featureEntityNames(answers.entities),
+        answers.hasAuth,
+        answers.prompt
+      )
     );
   });
 
@@ -180,7 +184,11 @@ describe('resolveFeatureSelection', () => {
       selectedFeatureIds: ['F999', 'F998']
     });
     expect(resolved).toEqual(
-      defaultSelectedFeatureIds(featureEntityNames(answers.entities), answers.hasAuth)
+      defaultSelectedFeatureIds(
+        featureEntityNames(answers.entities),
+        answers.hasAuth,
+        answers.prompt
+      )
     );
   });
 

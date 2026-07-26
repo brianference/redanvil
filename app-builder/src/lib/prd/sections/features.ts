@@ -1,5 +1,6 @@
 import type { FeatureSpec } from '../types';
 import { entityPascal, entityTable } from '../naming';
+import { capabilityFeatures, detectCapabilities } from './capabilities';
 
 /**
  * One feature suggestion shown in the wizard Features step before the PRD is forged.
@@ -24,7 +25,13 @@ export interface FeatureSuggestion {
  * @param hasAuth - Whether the wizard auth flag is on.
  * @returns Ordered feature specs for the PRD sections.
  */
-export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec[] {
+export function buildFeatures(entities: string[], hasAuth: boolean, prompt = ''): FeatureSpec[] {
+  // What the app is FOR comes first. Entities say what it stores; only the
+  // prompt says what it does, and it was not being read at all — a request for
+  // "the lowest cost airline flight, nonstop or one layover, with limits on
+  // layover duration, arrival time and total travel time" produced a CRUD app
+  // over a table with `title` and `description`, containing no flight search.
+  const capabilities = capabilityFeatures(detectCapabilities(prompt, entities), 1);
   const primary = entities[0] ? entityPascal(entities[0]) : 'Item';
   const primaryTable = entities[0] ? entityTable(entities[0]) : 'items';
   const secondary = entities.slice(1);
@@ -194,7 +201,19 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
     }
   });
 
-  return features;
+  // Capability features lead WITHIN their tier, but MVP still comes first
+  // overall — the PRD promises "ship only the MVP set and have a working
+  // product", and a beyond-MVP capability sitting at F1 breaks that. Putting
+  // capabilities first unconditionally made a "track" prompt open with a
+  // non-MVP feature ahead of the MVP ones.
+  const combined = [...capabilities, ...features];
+  const ordered = [...combined.filter((f) => f.mvp), ...combined.filter((f) => !f.mvp)];
+
+  // Ids are assigned here rather than hard-coded, because the entity templates
+  // were written when F1 was always "Browse & search <Entity>" and that is no
+  // longer the first thing the app does. Slices and acceptance bind to
+  // feature.id, so one renumbering point keeps every reference consistent.
+  return ordered.map((feature, index) => ({ ...feature, id: `F${index + 1}` }));
 }
 
 /**
@@ -205,8 +224,12 @@ export function buildFeatures(entities: string[], hasAuth: boolean): FeatureSpec
  * @param hasAuth - Whether the wizard auth flag is on.
  * @returns Suggestions with rationale and default MVP selection flag.
  */
-export function buildFeatureSuggestions(entities: string[], hasAuth: boolean): FeatureSuggestion[] {
-  const features = buildFeatures(entities, hasAuth);
+export function buildFeatureSuggestions(
+  entities: string[],
+  hasAuth: boolean,
+  prompt = ''
+): FeatureSuggestion[] {
+  const features = buildFeatures(entities, hasAuth, prompt);
   const primary = entities[0] ? entityPascal(entities[0]) : 'Item';
   return features.map((feature) => ({
     id: feature.id,
@@ -223,8 +246,12 @@ export function buildFeatureSuggestions(entities: string[], hasAuth: boolean): F
  * @param hasAuth - Whether the wizard auth flag is on.
  * @returns Feature ids that should start selected.
  */
-export function defaultSelectedFeatureIds(entities: string[], hasAuth: boolean): string[] {
-  return buildFeatureSuggestions(entities, hasAuth)
+export function defaultSelectedFeatureIds(
+  entities: string[],
+  hasAuth: boolean,
+  prompt = ''
+): string[] {
+  return buildFeatureSuggestions(entities, hasAuth, prompt)
     .filter((suggestion) => suggestion.mvp)
     .map((suggestion) => suggestion.id);
 }
