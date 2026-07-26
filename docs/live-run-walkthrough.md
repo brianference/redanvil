@@ -154,12 +154,19 @@ npm run gate -- "$APP" --judge evidence/verdicts-<slug>.json \
 `git checkout -- results/` first if you need `provenance.dirty=false`, and gate one app at a
 time — another app's modified result file also makes the tree dirty.
 
-## 9. Prove the score
+## 8-9. Measure, record and prove — one command
 
 ```bash
-node .github/scripts/verify_results.mjs  <slug> results/<slug>.json evidence/verdicts-<slug>.json process
-node .github/scripts/verify_deployed.mjs "$APP" results/<slug>.json $P
+npm run reverify
 ```
+
+Deploy first, then run it. It refuses a dirty tree, refuses a stale deploy (20
+consecutive probes, because the alias serves a mix for a minute or two), measures
+against the deployed build, stamps verdicts to HEAD **after** measuring, gates one
+app at a time on a clean tree, reproduces each result, and ties each to its deploy.
+
+`--app <slug>` for one app, `--skip-propagation` when you have already confirmed
+the deploy, `--no-commit` to inspect without committing.
 
 The first re-runs the gate and compares rule by rule. The second proves production is serving
 the build that was scored. A score nobody can reproduce is a claim.
