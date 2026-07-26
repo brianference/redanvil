@@ -1,0 +1,60 @@
+{
+  "baseUrl": "https://redanvil.pages.dev",
+  "checkedAt": "2026-07-26T05:47:48.514Z",
+  "minPct": 80,
+  "widths": [
+    1440,
+    1920
+  ],
+  "results": [
+    {
+      "step": "step1-prompt",
+      "width": 1440,
+      "pct": 90,
+      "ok": true
+    },
+    {
+      "step": "step2-scope",
+      "width": 1440,
+      "pct": 90,
+      "ok": true
+    },
+    {
+      "step": "step3-features",
+      "width": 1440,
+      "pct": 90,
+      "ok": true
+    },
+    {
+      "step": "step4-review",
+      "width": 1440,
+      "pct": 90,
+      "ok": true
+    },
+    {
+      "step": "step1-prompt",
+      "width": 1920,
+      "pct": 91,
+      "ok": true
+    },
+    {
+      "step": "step2-scope",
+      "width": 1920,
+      "pct": 48,
+      "ok": false
+    },
+    {
+      "step": "step3-features",
+      "width": 1920,
+      "pct": 48,
+      "ok": false
+    },
+    {
+      "step": "step4-review",
+      "width": 1920,
+      "pct": 48,
+      "ok": false
+    }
+  ],
+  "ok": false
+}

@@ -126,6 +126,17 @@ try {
                 ) || el.children.length === 0;
               if (!hasOwnText && !paints(el, s)) continue;
 
+              // A leaf that PAINTS counts by its box. An <input> is a leaf with
+              // no text nodes, so routing it through the text-rect path yielded
+              // nothing at all — a 1719px text field contributed zero and
+              // form-heavy screens measured ~48% while their controls spanned
+              // the viewport. Painted box where it paints, glyph rects where it
+              // is bare text, union of both.
+              if (paints(el, s)) {
+                left = Math.min(left, r.left);
+                right = Math.max(right, r.right);
+              }
+
               // A text-bearing element's BOX can still be full width while its
               // glyphs sit in the left third — an <h1> is block-level. Measure
               // the text's own client rects, which bound the glyphs.
@@ -139,8 +150,10 @@ try {
                 }
                 continue;
               }
-              left = Math.min(left, r.left);
-              right = Math.max(right, r.right);
+              if (!paints(el, s)) {
+                left = Math.min(left, r.left);
+                right = Math.max(right, r.right);
+              }
             }
             if (!Number.isFinite(left) || !Number.isFinite(right)) return null;
             // Round DOWN so a borderline layout is reported as failing, not passing.

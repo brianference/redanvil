@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>form wide</title>
+<style>
+  body {
+    margin: 0;
+    font: 16px/1.5 system-ui;
+  }
+  main {
+    width: 100%;
+  }
+  .form {
+    width: 94%;
+    margin: 0 auto;
+  }
+  /* An empty input has NO text nodes and NO text client rects. It is a leaf
+     that paints a border, and it is the widest thing on the screen. */
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid #888;
+  }
+  label {
+    font-size: 14px;
+  }
+</style>
+<main>
+  <div class="form">
+    <label for="q">Search</label>
+    <input id="q" type="text" />
+  </div>
+</main>

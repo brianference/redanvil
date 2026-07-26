@@ -246,8 +246,22 @@ export function shellCss(c: ShellCssTokens, m: ShellCssMetrics): string {
           .ra-content-col {
             max-width: none;
           }
+          /* The wizard steps are the longest screens in the product and they
+             were held to 58rem — 48% of a 1920 viewport. The width check never
+             saw it, because it measures ROUTES and every wizard step is a state
+             inside "/". Reported from a live run, not by a rule. */
           .ra-form-col {
-            max-width: 58rem;
+            max-width: none;
+          }
+          /* Fields stay a readable measure inside the wider form: the point is
+             to use the width for layout, not to stretch a single input across
+             the screen. */
+          .ra-form-col .ra-field {
+            max-width: 44rem;
+          }
+          /* Choice grids are what should actually consume the extra width. */
+          .ra-choice-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
           /* Archetype cards use the width instead of stacking two-wide. */
           .ra-tpl-grid {

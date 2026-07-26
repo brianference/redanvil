@@ -96,6 +96,7 @@ export function FeaturesStep({ value, patch, featuresReady }: FeaturesStepProps)
       </p>
       <p style={hintStyle()}>{copy.featuresHint}</p>
       <ul
+        className="ra-choice-grid"
         style={{
           listStyle: 'none',
           margin: `${theme.space.md}px 0 0`,

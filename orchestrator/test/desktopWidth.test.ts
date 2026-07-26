@@ -110,6 +110,17 @@ describe('desktop_width measures painted content, not a container', () => {
     expect(code).toBe(0);
   }, 200_000);
 
+  it('counts a painted form control that has no text of its own', async () => {
+    handle = handle ?? (await serveFixtures());
+    const { code, out } = await measure(handle.base, '/form-wide.html');
+    // An empty <input> is a leaf with no text nodes, so the glyph-rect path
+    // returns nothing for it. Routing painted leaves through that path made a
+    // 1719px field contribute zero, and every wizard step measured ~48% while
+    // its controls spanned the viewport. A painted leaf counts by its box.
+    expect(out, out).toMatch(/desktop width PASS/);
+    expect(code).toBe(0);
+  }, 200_000);
+
   it('does not let a full-width footer rescue a narrow body', async () => {
     handle = handle ?? (await serveFixtures());
     const { code, out } = await measure(handle.base, '/footer-only-wide.html');

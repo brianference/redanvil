@@ -162,14 +162,30 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
         onChange({ ...value, selectedFeatureIds: resolved });
       }
     }
-    if (step < 4) setStep((step + 1) as WizardStepIndex);
+    if (step < 4) goToStep((step + 1) as WizardStepIndex);
+  }
+
+  /**
+   * Move to a step and put the user at the top of it.
+   *
+   * Advancing kept the scroll position, so on the Features and Review steps —
+   * the two long ones — the next screen opened halfway down its own content
+   * with the heading off-screen above. Nothing in the DOM is wrong, which is
+   * why no rule caught it; it is only visible to someone actually clicking
+   * through the flow.
+   */
+  function goToStep(next: WizardStepIndex): void {
+    setStep(next);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
   }
 
   /**
    * Return to the previous step.
    */
   function goBack(): void {
-    if (step > 1) setStep((step - 1) as WizardStepIndex);
+    if (step > 1) goToStep((step - 1) as WizardStepIndex);
   }
 
   /**

@@ -82,7 +82,7 @@ export function ReviewStep({
       <p id="wizard-q-4" style={fieldLabelStyle}>
         {copy.reviewHeading}
       </p>
-      <dl style={reviewListStyle}>
+      <dl className="ra-choice-grid" style={reviewListStyle}>
         {rows.map((row) => (
           <ReviewRow key={row.term} term={row.term} detail={row.detail} />
         ))}
