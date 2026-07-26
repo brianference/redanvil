@@ -124,10 +124,39 @@ sat in each; it now has a red test proving a rem cap fails, a px cap fails, and 
 icon width and `minWidth: 0` pass. Design rule **R22**, and the requirement now ships in §7.3 of
 every generated PRD.
 
+## 6. The duplication ratchet — CLOSED
+
+The width fixes pushed duplication from 387 to **394**, over a budget that refuses to rise, and
+that was the forcing function for work that had been deferred three times.
+
+Both apps carried near-identical copies of their entire shell. They were never shared because
+each copy imported its own app's theme and i18n, so the answer was **parameterisation**, not
+relocation — the shape `design-system/shellCss.ts` and `hooks/useDrawerA11y.ts` already used.
+
+Twelve units now live once in `design-system/` and take tokens plus copy from each app:
+`useDocumentMeta`, `linkify`, `Breadcrumbs`, `ThemeToggle`, `Logo`, `NavLink`, `Header`,
+`Footer`, `MobileDrawer`, `Page`, `shellStyles`, `shellChromeCss`. Each app keeps a thin
+wrapper at the old path, so no call site outside those files changed and each site keeps its
+own copy — the dashboard still says "Runs" where app-builder says "Saved".
+
+**394 → 40**, and this one IS deduplication rather than a measurement correction. Verified by
+running all three suites, both builds and every check against the merged tree rather than
+trusting the delegate's report, then by measuring both deployed sites: identical rendering,
+12/12 design rules, zero axe violations in both themes, e2e green.
+
+## 7. A det rule can be declared and never run — CLOSED
+
+`fe-no-inline-width` was written into the rubric markdown, encoded in `RULES`, and implemented
+in `check.mjs` — and never executed, because a det rule must ALSO appear in the runner list in
+`commands/gate.ts`. Three registration points, two of them bound by test.
+
+It failed closed as an unevaluated blocker rather than passing silently, which is the right
+direction, but nothing said why. A test now binds every det rule in `RULES` to the runner list,
+red-tested by removing the registration.
+
 ## Still open
 
-- **The duplication ratchet.** Sharing the shell between the two apps is in progress; the
-  budget is the forcing function and refuses to rise.
 - **The independent judge is not on a cadence.** `grok` authenticates interactively, so CI
   cannot run it. `judge_dissent.mjs` reports how far each review has drifted behind HEAD and
-  names any app that has never had one, but a human has to act on that.
+  names any app that has never had one, but a human has to act on that. Both current reviews
+  are now well behind HEAD and are due a re-run.
