@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>footer only wide</title>
+<style>
+  body {
+    margin: 0;
+    font: 16px/1.5 system-ui;
+  }
+  footer {
+    width: 100%;
+    background: #eee;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+  main {
+    width: 100%;
+  }
+  .col {
+    max-width: 380px;
+  }
+</style>
+<main>
+  <div class="col"><p>Body content is narrow.</p></div>
+  <footer>But the footer spans the entire viewport and must not rescue the score.</footer>
+</main>

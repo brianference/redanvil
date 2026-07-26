@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>narrow</title>
+<style>
+  body {
+    margin: 0;
+    font: 16px/1.5 system-ui;
+  }
+  header,
+  footer {
+    width: 100%;
+    background: #eee;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+  main {
+    width: 100%;
+  }
+  /* The bug, reproduced exactly: main is full width, the content is not. */
+  .col {
+    max-width: 400px;
+  }
+</style>
+<header>site header spanning the full width</header>
+<main>
+  <h1>Saved builds</h1>
+  <div class="col">
+    <p>
+      Content capped at 400px inside a full-width main. A container measurement reports ~100%; the
+      painted content is a fraction of the viewport.
+    </p>
+    <p>This is the shape that shipped narrow four times.</p>
+  </div>
+</main>
+<footer>footer spanning the full width</footer>

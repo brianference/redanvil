@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>wide</title>
+<style>
+  body {
+    margin: 0;
+    font: 16px/1.5 system-ui;
+  }
+  header,
+  footer {
+    width: 100%;
+    background: #eee;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+  main {
+    width: 100%;
+  }
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    width: 94%;
+    margin: 0 auto;
+  }
+</style>
+<header>site header spanning the full width</header>
+<main>
+  <h1 style="width: 94%; margin: 0 auto">A heading that really does span the width</h1>
+  <div class="cols">
+    <section>
+      <h2>One</h2>
+      <p>Real content in column one, wide enough to matter.</p>
+    </section>
+    <section>
+      <h2>Two</h2>
+      <p>Real content in column two, wide enough to matter.</p>
+    </section>
+    <section>
+      <h2>Three</h2>
+      <p>Real content in column three, wide enough to matter.</p>
+    </section>
+  </div>
+</main>
+<footer>footer spanning the full width</footer>
