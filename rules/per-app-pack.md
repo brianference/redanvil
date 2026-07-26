@@ -33,6 +33,17 @@ Injected into every app RedAnvil generates, on top of the base-15 and the rubric
 - All user-facing copy follows the Human Writing Guidelines: no banned words, `--` not unicode em-dashes (max 2 per page), sentence-case headings, plain direct wording. This applies to the app UI, the README, and release notes.
 - Real brand logo and OG/social image, generated via Grok Imagine (the grok CLI `image_gen` tool) or a hand-authored SVG mark — never an emoji or placeholder icon. Visually review every generated image before shipping it.
 - Clean, modern, responsive, mobile-first. Sticky header. Organized professional footer.
-- No overlapping text at 375px. Verified at 375 / 768 / 1280.
+- No overlapping text at 375px. Verified at 375 / 768 / 1280. An ellipsis is not overflow: a truncated label still fails, and only a rendered screenshot shows it.
+
+## Desktop width (blocker)
+
+- Every route's **painted content** occupies at least **80% of the viewport** at both 1440 and 1920. Measure what is drawn — text via its own client rects, plus anything painting a background/border/shadow — **never a container box**. A `div` or `h1` is 100% wide by default, so measuring the container reports ~93% for a page whose content sits in the left third. That mistake hid four narrow pages in RedAnvil's own apps.
+- **No `maxWidth` cap in a JS style object.** Width belongs in a CSS class where a media query can lift it; an inline style beats a class, so an inline cap is unliftable by definition. (`100%` is fine — it caps nothing. A fixed `width` on an icon, badge or 1px divider is fine. `minWidth: 0` is the flex/grid shrink idiom and is fine.) Enforced by `fe-no-inline-width`.
+- Protect the line measure with **column counts, never by starving the container** — and let the column count follow the CONTENT (a `:has()` quantity query), or a page with two sections leaves an empty third column and reads as 60% of the screen.
+
+## Design direction
+
+- Constraints are not a design. This rule pack is identical for every app, so following only these produces the same centred column under a sticky header every time. The PRD's **§7.3a Design direction** names a layout archetype and a visual direction for THIS app, and it is binding — build that, and do not fall back to the shells it rules out.
+- A reference implementation of these rules is not a template. Do not reproduce RedAnvil's own shell, palette or component structure.
 - Theme tokens only (see `/design-system`); WCAG AA contrast; confirmation before destructive actions.
 - Loading, error, and empty states on every screen; no failure rendered as a clean empty success.

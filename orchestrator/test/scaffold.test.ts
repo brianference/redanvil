@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { mkdtemp, rm, readFile, access } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -190,5 +192,68 @@ describe('scaffold migrations from job.entities', () => {
     expect(sql).toContain('price_cents INTEGER');
     expect(sql).toContain('display_name TEXT');
     expect(sql).not.toContain('CREATE TABLE IF NOT EXISTS market_app');
+  });
+});
+
+describe('a scaffold is usable the moment it exists', () => {
+  let out: string;
+  beforeAll(async () => {
+    out = await mkdtemp(join(tmpdir(), 'redanvil-scaffold-usable-'));
+    if (job.kind !== 'job') throw new Error('job fixture invalid');
+    await scaffoldApp({
+      job: job.value,
+      outDir: out,
+      corpusDir,
+      builtAt: '2026-07-21T00:00:00.000Z'
+    });
+  });
+  afterAll(async () => {
+    await rm(out, { recursive: true, force: true });
+  });
+
+  // Both of these were found by scaffolding a real job and trying to build it,
+  // which nothing had done end-to-end before.
+
+  it('ships every design file its own CLAUDE.md tells the builder to read', async () => {
+    const claude = await readFile(join(out, 'CLAUDE.md'), 'utf8');
+    // Pull the design-system paths the rule pack actually cites, so this test
+    // tracks the pack rather than a hard-coded list that can drift from it.
+    const cited = [...claude.matchAll(/`?\/?(design-system\/[\w.-]+\.md)`?/g)]
+      .map((m) => m[1])
+      .filter((rel): rel is string => rel !== undefined);
+    expect(cited.length, 'the rule pack should cite design guidance').toBeGreaterThan(0);
+    for (const rel of new Set(cited)) {
+      expect(
+        existsSync(join(out, rel)),
+        `CLAUDE.md tells the builder to follow ${rel}, but the scaffold does not ship it`
+      ).toBe(true);
+    }
+  });
+
+  it('is a git repository with one commit, so git-backed rules can run', async () => {
+    // `hyg-env-ignored` is a security blocker implemented as `git check-ignore
+    // .env`, which exits 128 outside a repository. Every generated app failed
+    // it on day one despite shipping a correct .gitignore.
+    const inside = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], {
+      cwd: out,
+      encoding: 'utf8'
+    });
+    expect(inside.stdout.trim()).toBe('true');
+
+    const ignored = spawnSync('git', ['check-ignore', '.env'], { cwd: out, encoding: 'utf8' });
+    expect(ignored.status, '.env must be git-ignored in a fresh scaffold').toBe(0);
+
+    const log = spawnSync('git', ['log', '--oneline'], { cwd: out, encoding: 'utf8' });
+    expect(log.stdout.trim().length).toBeGreaterThan(0);
+  });
+
+  it('carries the desktop-width rules into the app the builder reads', async () => {
+    // These lived only in the PRD. An agent starting from a scaffold never saw
+    // them, so the two guidance channels had silently diverged.
+    const claude = await readFile(join(out, 'CLAUDE.md'), 'utf8');
+    expect(claude).toMatch(/80% of the viewport/);
+    expect(claude).toMatch(/never a container box/i);
+    expect(claude).toMatch(/maxWidth/);
+    expect(claude).toMatch(/Design direction/i);
   });
 });
