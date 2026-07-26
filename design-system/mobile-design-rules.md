@@ -356,3 +356,35 @@ direction** alongside the constraints:
 
 A reference implementation of the rules is not a template. Reusing its shell,
 palette or component structure is the specific failure this rule prevents.
+
+## R22 — Desktop width is measured on painted content, never on a container (blocker)
+
+Every route's painted content must occupy **at least 80% of the viewport at 1440
+and 1920**, on every web app, generated or not.
+
+Measure what is **drawn**: text via its own client rects, plus anything painting
+a background, border or shadow. Exclude header and footer — they legitimately
+span full width and will mask a narrow body beneath them.
+
+Never measure a container box. A `<div>` or an `<h1>` is 100% of its parent by
+default, so `main.getBoundingClientRect().width` reported **93%** for a page
+whose content sat in the left third of a 1920 screen. Four pages across two apps
+were narrow for weeks behind that number, and only a user looking at the site
+caught it.
+
+Causes, in the order they actually occur:
+
+1. **An inline `maxWidth` in a JS style object.** An inline style beats a class,
+   so no media query can lift it. This shipped four times here — template
+   gallery, saved PRD, wizard form, saved page — and once more in each app's
+   footer and page subtitle. Enforced statically by `fe-no-inline-width`.
+   (`100%` caps nothing. A fixed `width` on an icon, badge or 1px divider is
+   fine. `minWidth: 0` is the flex/grid shrink idiom and is fine.)
+2. **A rem cap where a percentage was promised.** `min(90rem, 100%)` measures
+   90% at 1600 and 75% at 1920. A rem cap cannot hold a percentage promise.
+3. **A column count that ignores the content.** A fixed `column-count: 3` on a
+   page with two sections leaves an empty third column — 60% of the screen. Use
+   a `:has()` quantity query so a column is only added once there is something
+   to put in it.
+
+Protect the line measure with column counts, never by starving the container.
