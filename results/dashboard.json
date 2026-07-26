@@ -4,8 +4,8 @@
   "finalScore": 100,
   "threshold": 90,
   "passed": true,
-  "evaluated": 52,
-  "total": 52,
+  "evaluated": 53,
+  "total": 53,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -93,6 +93,10 @@
     },
     {
       "ruleId": "fe-icon-button-labels",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-no-inline-width",
       "passed": true
     },
     {
@@ -228,18 +232,18 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-25T19:15:19.029Z",
+  "finishedAt": "2026-07-26T00:34:28.544Z",
   "provenance": {
-    "commit": "f053368e4cc98614c324a0121bc103514895049f",
+    "commit": "b11b16e76f876eea3a43b9b5ffa540a65812544a",
     "dirty": false,
-    "rubricHash": "6d4f856c497825026c5f565955dd32b97e5f88fe6da15290f171399a29d0397d",
-    "rubricRuleCount": 55,
+    "rubricHash": "ec501ec071f2a313167a98277b66a23dd949dbc6615ade93d2ee6841d12b981c",
+    "rubricRuleCount": 56,
     "node": "v22.19.0",
-    "verdictsHash": "a60f5dca4a946d0cfb5e23cddde305374ec8ac44ca49820ca85e5f51719cc7fa",
+    "verdictsHash": "19a84ae608403749e8e5f6ade1929e5ec71d47e8b45df7d771b65b318eb9ad1e",
     "notApplicable": [
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-07-25T19:15:19.080Z"
+    "generatedAt": "2026-07-26T00:34:28.592Z"
   }
 }
