@@ -86,13 +86,48 @@ you actually scan for. Both wrap now.
 This is the same class as v9's footer lockup, and the same conclusion: a rule that can only be
 judged from a rendered page needs a screenshot artifact produced every time, not a note.
 
+## 5. The desktop-width check was measuring the wrong thing — CLOSED
+
+Reported from outside: /saved, /about, /terms and /privacy look narrow on desktop. The check
+said 93%.
+
+`desktop_width.mjs` measured `main.getBoundingClientRect().width`. A block element is 100% of
+its parent by default, so it reported 93% for a page whose content sat in the **left third** of
+a 1920 viewport. The container was never the thing the rule is about.
+
+It now measures what is **painted**: text via its own client rects — an `<h1>`'s box is full
+width while its glyphs are not — plus anything drawing a background, border or shadow, with
+header and footer excluded because they legitimately span full width and mask a narrow body.
+
+With the corrected measurement, four pages that had been "passing" were not:
+
+| route                                           | reported | actual     |
+| ----------------------------------------------- | -------- | ---------- |
+| `/saved` @ 1920                                 | 93%      | **33%**    |
+| `/contact` @ 1920                               | 93%      | **60%**    |
+| dashboard `/about`, `/terms`, `/privacy` @ 1920 | 93%      | **32-33%** |
+
+Three distinct causes, all now fixed and all now enforced:
+
+1. **Inline `maxWidth` caps** — three on the Saved page, plus both page subtitles and both
+   footer taglines. An inline style beats a class, so no media query can lift it. This is the
+   sixth, seventh and eighth occurrence of the same bug in this repo.
+2. **A column count that ignored the content** — a fixed `column-count: 3` left Contact, which
+   has two sections, with an empty right third. A `:has()` quantity query only adds a column
+   once there is something to put in it.
+3. **The dashboard's content pages never adopted the shared prose classes** and kept their own
+   inline caps.
+
+New blocker `fe-no-inline-width` catches cause (1) statically, before a deploy. Its first
+version matched **nothing** — a mangled backreference — and passed both apps while a 40rem cap
+sat in each; it now has a red test proving a rem cap fails, a px cap fails, and `100%`, a fixed
+icon width and `minWidth: 0` pass. Design rule **R22**, and the requirement now ships in §7.3 of
+every generated PRD.
+
 ## Still open
 
-- **The duplication ratchet is 387** and every remaining offender is genuine shared shell code
-  needing parameterisation, not relocation.
+- **The duplication ratchet.** Sharing the shell between the two apps is in progress; the
+  budget is the forcing function and refuses to rise.
 - **The independent judge is not on a cadence.** `grok` authenticates interactively, so CI
   cannot run it. `judge_dissent.mjs` reports how far each review has drifted behind HEAD and
   names any app that has never had one, but a human has to act on that.
-- **§7.3a is proven at the spec level, not the built-app level.** The variation is enforced by
-  test on what the PRD says; no app has yet been generated end-to-end and inspected to confirm
-  it actually looks different.
