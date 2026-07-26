@@ -200,10 +200,31 @@ if (flag('no-gate')) {
   process.exit(0);
 }
 
-console.log(
-  '\n    NOTE: the evidence just changed, so the tree is dirty again. Commit it, ' +
-    'then run with --skip-propagation to gate.'
-);
+// --- 4b. commit the generated evidence --------------------------------------
+// The gate must run on a CLEAN tree, and steps 3 and 4 just dirtied it. The
+// first version skipped this and its own verify_deployed caught it: "produced
+// from a DIRTY tree, so the score does not describe any commit". Evidence and
+// verdicts are generated artifacts, so committing them is part of the cycle
+// rather than a side effect being smuggled in.
+if (!flag('no-commit')) {
+  step('4b', 'commit the regenerated evidence (the gate needs a clean tree)');
+  run('git', ['add', 'evidence/']);
+  const staged = run('git', ['diff', '--cached', '--name-only']).out.trim();
+  if (staged.length === 0) {
+    console.log('    nothing changed');
+  } else {
+    const c = run('git', [
+      'commit',
+      '-q',
+      '-m',
+      `chore(evidence): re-measure at ${head.slice(0, 12)}`
+    ]);
+    if (c.code !== 0) fail(`could not commit evidence:\n${c.out}`);
+    console.log(`    committed ${staged.split('\n').length} file(s)`);
+  }
+} else {
+  console.log('\n    --no-commit: the tree stays dirty, so the gate below cannot tie to a deploy.');
+}
 
 // --- 5. gate, reproduce, tie to the deploy -----------------------------------
 step(5, 'gate, reproduce, tie to deploy');
@@ -258,5 +279,16 @@ const feed = script('build_feed.mjs', ['--check']);
 if (feed.code !== 0) fail('results feed does not match the result files');
 console.log('    feed matches the result files');
 
+// results/ and the feed are generated too. Leaving them uncommitted would make
+// the NEXT run's clean-tree check fail for a reason the user did not cause.
+if (!flag('no-commit')) {
+  run('git', ['add', 'results/', 'evidence/']);
+  const staged = run('git', ['diff', '--cached', '--name-only']).out.trim();
+  if (staged.length > 0) {
+    run('git', ['commit', '-q', '-m', `chore(gate): rescore at ${head.slice(0, 12)}`]);
+    console.log('    committed results/');
+  }
+}
+
 console.log('\nreverify PASS: both apps measured, gated, reproduced and tied to their deploys.');
-console.log('Commit results/ and evidence/, then push.');
+console.log('Nothing left to do but `git push`.');
