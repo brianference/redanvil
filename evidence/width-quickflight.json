@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://quickflight.pages.dev",
-  "checkedAt": "2026-07-27T01:22:38.771Z",
+  "checkedAt": "2026-07-27T07:38:50.595Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -22,10 +22,10 @@
       "route": "/flights",
       "width": 1440,
       "status": 200,
-      "contentPct": 96,
+      "contentPct": 97,
       "contentBox": {
-        "left": 24,
-        "right": 1416
+        "left": 15,
+        "right": 1425
       },
       "ok": true
     },
@@ -33,10 +33,10 @@
       "route": "/about",
       "width": 1440,
       "status": 200,
-      "contentPct": 96,
+      "contentPct": 97,
       "contentBox": {
-        "left": 24,
-        "right": 1416
+        "left": 15,
+        "right": 1425
       },
       "ok": true
     },
@@ -44,32 +44,10 @@
       "route": "/contact",
       "width": 1440,
       "status": 200,
-      "contentPct": 96,
+      "contentPct": 97,
       "contentBox": {
-        "left": 24,
-        "right": 1416
-      },
-      "ok": true
-    },
-    {
-      "route": "/terms",
-      "width": 1440,
-      "status": 200,
-      "contentPct": 96,
-      "contentBox": {
-        "left": 24,
-        "right": 1416
-      },
-      "ok": true
-    },
-    {
-      "route": "/privacy",
-      "width": 1440,
-      "status": 200,
-      "contentPct": 96,
-      "contentBox": {
-        "left": 24,
-        "right": 1416
+        "left": 15,
+        "right": 1425
       },
       "ok": true
     },
@@ -79,7 +57,7 @@
       "status": 200,
       "contentPct": 100,
       "contentBox": {
-        "left": 0,
+        "left": -1,
         "right": 1920
       },
       "ok": true
@@ -88,10 +66,10 @@
       "route": "/flights",
       "width": 1920,
       "status": 200,
-      "contentPct": 97,
+      "contentPct": 98,
       "contentBox": {
-        "left": 24,
-        "right": 1896
+        "left": 15,
+        "right": 1905
       },
       "ok": true
     },
@@ -99,10 +77,10 @@
       "route": "/about",
       "width": 1920,
       "status": 200,
-      "contentPct": 97,
+      "contentPct": 98,
       "contentBox": {
-        "left": 24,
-        "right": 1896
+        "left": 15,
+        "right": 1905
       },
       "ok": true
     },
@@ -110,32 +88,10 @@
       "route": "/contact",
       "width": 1920,
       "status": 200,
-      "contentPct": 97,
+      "contentPct": 98,
       "contentBox": {
-        "left": 24,
-        "right": 1896
-      },
-      "ok": true
-    },
-    {
-      "route": "/terms",
-      "width": 1920,
-      "status": 200,
-      "contentPct": 97,
-      "contentBox": {
-        "left": 24,
-        "right": 1896
-      },
-      "ok": true
-    },
-    {
-      "route": "/privacy",
-      "width": 1920,
-      "status": 200,
-      "contentPct": 97,
-      "contentBox": {
-        "left": 24,
-        "right": 1896
+        "left": 15,
+        "right": 1905
       },
       "ok": true
     }

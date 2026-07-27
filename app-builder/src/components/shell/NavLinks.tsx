@@ -20,6 +20,7 @@ export type { NavItem };
  */
 export function isNavActive(pathname: string, key: string): boolean {
   if (key === 'builder') return pathname === '/';
+  if (key === 'examples') return pathname === '/examples';
   if (key === 'saved') return pathname === '/saved' || pathname.startsWith('/prd/');
   if (key === 'about') return pathname === '/about';
   if (key === 'contact') return pathname === '/contact';
@@ -36,6 +37,7 @@ export function headerNavItems(): NavItem[] {
   return [
     { key: 'builder', label: en.app.navBuilder, to: '/' },
     { key: 'dashboard', label: en.app.navDashboard, to: null, href: DASHBOARD_URL },
+    { key: 'examples', label: en.app.navExamples, to: '/examples' },
     { key: 'saved', label: en.app.navSaved, to: '/saved' },
     { key: 'about', label: en.app.navAbout, to: '/about' },
     { key: 'contact', label: en.app.navContact, to: '/contact' }

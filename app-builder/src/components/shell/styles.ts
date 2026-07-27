@@ -150,5 +150,70 @@ ${SHARED_SHELL_CSS}
           }
 
         }
+
+        /* Examples. The prompt and the PRD sit side by side from 900 up; below
+           that they stack. Width lives here rather than inline so the media
+           query can lift it (R14) and so the page still paints across the
+           viewport at 1440 and 1920 (R22). */
+        .ex-story {
+          display: flex;
+          flex-direction: column;
+          gap: ${theme.space.xl}px;
+          padding-bottom: ${theme.space.xl}px;
+        }
+        .ex-story + .ex-story {
+          border-top: 1px solid ${theme.color.border};
+          padding-top: ${theme.space.xl}px;
+        }
+        .ex-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: ${theme.space.lg}px;
+        }
+        @media (min-width: 900px) {
+          .ex-grid {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+            align-items: start;
+          }
+        }
+        .ex-shot {
+          display: block;
+          width: 100%;
+          height: auto;
+          border: 1px solid ${theme.color.border};
+          border-radius: ${theme.radius.sm}px;
+        }
+        /* Store-style strip: captioned phones in a row that scrolls on its own
+           rather than making the page scroll sideways (fe-responsive-375). */
+        .ex-screens {
+          list-style: none;
+          margin: 0;
+          padding: 0 0 ${theme.space.sm}px;
+          display: grid;
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(240px, 1fr);
+          gap: ${theme.space.lg}px;
+          overflow-x: auto;
+          scroll-snap-type: x mandatory;
+        }
+        .ex-screen {
+          min-width: 0;
+          scroll-snap-align: start;
+        }
+        .ex-phone {
+          display: block;
+          width: 100%;
+          height: auto;
+          border: 1px solid ${theme.color.border};
+          border-radius: ${theme.radius.md}px;
+          background: ${theme.color.surface};
+        }
+        @media (min-width: 900px) {
+          .ex-screens {
+            grid-auto-flow: row;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            overflow-x: visible;
+          }
+        }
       `;
 }

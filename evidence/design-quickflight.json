@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://quickflight.pages.dev",
-  "checkedAt": "2026-07-27T01:22:25.365Z",
+  "checkedAt": "2026-07-27T07:41:43.490Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -16,15 +16,15 @@
     },
     "fe-safe-areas": {
       "ok": true,
-      "detail": "header sticky on all 6 route(s), padding-top 8px"
+      "detail": "header sticky on all 6 route(s), padding-top 11px"
     },
     "fe-premium-nav": {
       "ok": true,
-      "detail": "5 header link(s) [QFQuickFlight, Search, Browse, About, Contact], aria-current on \"Search\""
+      "detail": "5 header link(s) [QuickFlight, Search, Browse, About, Contact], aria-current on \"Search\""
     },
     "fe-noncolor-state": {
       "ok": true,
-      "detail": "active nav item: weight 600, gradient background false, aria-current present true"
+      "detail": "active nav item: weight 700, gradient background false, aria-current present true"
     },
     "fe-no-attribution": {
       "ok": true,
@@ -40,7 +40,7 @@
     },
     "fe-light-dark": {
       "ok": true,
-      "detail": "dark -> light, stored \"light\", survived reload as light"
+      "detail": "light -> dark, stored \"dark\", survived reload as dark"
     },
     "fe-required-pages": {
       "ok": true,

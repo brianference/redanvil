@@ -24,6 +24,7 @@ export const en = {
     navBuilder: 'App Builder',
     navDashboard: 'Dashboard',
     navGitHub: 'GitHub',
+    navExamples: 'Examples',
     navSaved: 'Saved',
     navAbout: 'About',
     navContact: 'Contact',
@@ -40,6 +41,20 @@ export const en = {
       title: 'Page not found',
       body: 'That address does not match a page on RedAnvil. It may have moved, or the link may be incomplete.',
       home: 'Back to home'
+    },
+    examples: {
+      title: 'Examples',
+      intro:
+        'One prompt, followed all the way to a deployed app. Every screen below is a real screenshot of a real deployment -- nothing here is a mockup.',
+      stepPrompt: 'The prompt',
+      stepPrd: 'The PRD it produced',
+      stepApp: 'The app that shipped',
+      prdNote:
+        'RedAnvil turns the answers into a full implementation spec: features, acceptance criteria, a data model, a test plan, and a vertical-slice build plan. This is the review step, exactly as the builder renders it.',
+      prdAlt: (name: string): string =>
+        `The RedAnvil wizard review step showing the answers that generated the ${name} spec`,
+      screensLabel: (name: string): string => `${name} screens`,
+      viewLive: 'Open the live app'
     },
     home: {
       title: 'What app should we forge?',

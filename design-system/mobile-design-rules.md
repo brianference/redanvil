@@ -493,3 +493,34 @@ part of the deliverable, not a failure to hide.
 
 A design nobody chose, implemented perfectly, deployed, gated, and thrown away.
 The rules were all green the entire time.
+
+## R25 — A mockup is a contract, and the palette in it must be measured (blocker)
+
+Once the user picks a design, hand the **rendered mockup file itself** to whoever
+implements it and say plainly: this is the contract, do not redesign. Prose
+descriptions of an approved design drift; a file does not.
+
+But a mockup is drawn by eye, and an eye cannot measure contrast. Two failures
+follow from that, and both happened here:
+
+1. **Measure the mockup's palette before implementing it.** QuickFlight's
+   approved palette shipped a tertiary text tone that failed WCAG AA in BOTH
+   themes — 3.48:1 on light, 4.32:1 on dark. It was approved, implemented
+   faithfully, deployed, and then failed axe on the live build. Run axe-core
+   against the mockup, or at minimum against the first built screen, before the
+   rest of the app inherits the token.
+2. **A mockup's type scale is not a type scale.** Small captions that read fine
+   in a 375px frame on a large monitor are still below the 16px body floor. The
+   mockup showed 14px metadata lines; the floor is 16px. Reconcile the scale
+   against the rules before building, not after.
+
+Fixing a token after the build means re-measuring, re-deploying, and re-gating
+every screen that inherited it.
+
+### Also: an approved asset can still be wrong at size
+
+A logo approved at 1024px can be illegible at 30px, and a mark drawn in one hue
+can clash with an accent chosen separately. Check the approved asset **at its
+real rendered size, on both themes, next to the accent** before wiring it in.
+The fix is to adjust the rendering or recolour the asset — never to quietly
+swap the mark the user chose (R10.6).

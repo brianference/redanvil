@@ -41,7 +41,7 @@ const APPS = [
     slug: 'app-builder',
     dir: 'app-builder',
     url: 'https://redanvil.pages.dev',
-    designRoutes: '/about,/contact,/terms,/privacy,/saved,/no-such-page',
+    designRoutes: '/about,/contact,/terms,/privacy,/saved,/examples,/no-such-page',
     widthRoutes: null,
     e2e: true,
     wizard: true,
