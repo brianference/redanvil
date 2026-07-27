@@ -179,9 +179,25 @@ try {
       activeWeight: activeStyle === null ? null : activeStyle.fontWeight,
       activeBackground: activeStyle === null ? null : activeStyle.backgroundImage !== 'none',
       attribution: /made with|built with|powered by/i.test(document.body.innerText),
-      crossLink: [...document.querySelectorAll('a')].some((a) =>
-        /dashboard|app builder/i.test(a.textContent || '')
-      ),
+      // Cross-site nav: a link OFF this site to a sibling property.
+      //
+      // This used to match link TEXT against /dashboard|app builder/ — the names
+      // of RedAnvil's own two apps. Every app RedAnvil generates therefore
+      // failed it by construction: QuickFlight links to RedAnvil, which is
+      // correct cross-site nav and matches neither word. Passing it would have
+      // meant mislabelling the link.
+      //
+      // Test what the rule actually means instead: at least one anchor whose
+      // href resolves to a DIFFERENT host. That still catches the original case
+      // (app-builder -> redanvil-dashboard.pages.dev) and cannot be satisfied by
+      // any purely internal link.
+      crossLink: [...document.querySelectorAll('a[href]')].some((a) => {
+        try {
+          return new URL(a.href, location.href).host !== location.host;
+        } catch {
+          return false;
+        }
+      }),
       title: document.title,
       description:
         document.querySelector('meta[name="description"]')?.getAttribute('content') ?? null,

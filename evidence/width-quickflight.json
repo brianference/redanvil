@@ -1,0 +1,144 @@
+{
+  "baseUrl": "https://quickflight.pages.dev",
+  "checkedAt": "2026-07-27T01:22:38.771Z",
+  "minPct": 80,
+  "widths": [
+    1440,
+    1920
+  ],
+  "results": [
+    {
+      "route": "/",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 100,
+      "contentBox": {
+        "left": 0,
+        "right": 1440
+      },
+      "ok": true
+    },
+    {
+      "route": "/flights",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 96,
+      "contentBox": {
+        "left": 24,
+        "right": 1416
+      },
+      "ok": true
+    },
+    {
+      "route": "/about",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 96,
+      "contentBox": {
+        "left": 24,
+        "right": 1416
+      },
+      "ok": true
+    },
+    {
+      "route": "/contact",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 96,
+      "contentBox": {
+        "left": 24,
+        "right": 1416
+      },
+      "ok": true
+    },
+    {
+      "route": "/terms",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 96,
+      "contentBox": {
+        "left": 24,
+        "right": 1416
+      },
+      "ok": true
+    },
+    {
+      "route": "/privacy",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 96,
+      "contentBox": {
+        "left": 24,
+        "right": 1416
+      },
+      "ok": true
+    },
+    {
+      "route": "/",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 100,
+      "contentBox": {
+        "left": 0,
+        "right": 1920
+      },
+      "ok": true
+    },
+    {
+      "route": "/flights",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 97,
+      "contentBox": {
+        "left": 24,
+        "right": 1896
+      },
+      "ok": true
+    },
+    {
+      "route": "/about",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 97,
+      "contentBox": {
+        "left": 24,
+        "right": 1896
+      },
+      "ok": true
+    },
+    {
+      "route": "/contact",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 97,
+      "contentBox": {
+        "left": 24,
+        "right": 1896
+      },
+      "ok": true
+    },
+    {
+      "route": "/terms",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 97,
+      "contentBox": {
+        "left": 24,
+        "right": 1896
+      },
+      "ok": true
+    },
+    {
+      "route": "/privacy",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 97,
+      "contentBox": {
+        "left": 24,
+        "right": 1896
+      },
+      "ok": true
+    }
+  ],
+  "ok": true
+}

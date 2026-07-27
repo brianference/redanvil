@@ -1,0 +1,18 @@
+{
+  "appDir": "C:\\Users\\brian\\RedAnvil-apps\\quickflight",
+  "checkedAt": "2026-07-27T01:12:10.178Z",
+  "port": 53577,
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "ok": true
+}
