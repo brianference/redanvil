@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { generatePrd, evaluatePrdSelfCheck, PRD_SECTION_HEADINGS } from './prd';
 import { estimate } from './estimate';
+import { DEFAULT_APP_TYPE, EMPTY_WIZARD_ANSWERS } from './job';
 
 const cost = estimate({ features: 3, hasAuth: true, entities: 2 });
 const prd = generatePrd(
@@ -423,5 +424,32 @@ describe('generatePrd sample: dog care reminders', () => {
     expect(sample.markdown).toMatch(/Request:\s*\{/);
     expect(sample.markdown).toMatch(/Response:\s*201\s*\{/);
     expect(sample.markdown).toMatch(/\*\*Grade: \d+\/\d+ checks passed/);
+  });
+});
+
+describe('default app type reaches the PRD', () => {
+  // The wizard now opens with an app type already chosen, so a user can go
+  // chat -> Scope -> Forge without touching the field. That default is not
+  // cosmetic: §5 and the user stories branch on whether the type says "mobile".
+  // Nothing pinned that reach, so a change to DEFAULT_APP_TYPE could silently
+  // flip every untouched PRD to the web-only wording.
+  const untouched = generatePrd(
+    {
+      prompt: 'a mobile-first app that finds the lowest cost airline flight',
+      appType: EMPTY_WIZARD_ANSWERS.appType,
+      hasAuth: EMPTY_WIZARD_ANSWERS.hasAuth,
+      entities: 'flight'
+    },
+    estimate({ features: 2, hasAuth: false, entities: 1 })
+  );
+
+  it('carries the default into the frontmatter', () => {
+    expect(firstYamlFence(untouched.markdown)).toContain(`appType: "${DEFAULT_APP_TYPE}"`);
+  });
+
+  it('selects the mobile-first non-goal and the mobile user role', () => {
+    expect(untouched.markdown).toContain('do not build a native iOS/Android shell');
+    expect(untouched.markdown).not.toContain('No native mobile shell');
+    expect(untouched.markdown).toContain('As a **mobile user**');
   });
 });

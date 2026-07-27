@@ -82,12 +82,19 @@ export function Home(): JSX.Element {
    */
   function handleTemplateContinue(selection: TemplateSelection): void {
     const prev = answersRef.current;
+    // An archetype names its own app type; the "describe your own" path returns
+    // an empty one, which means "this template did not pick a type" — NOT "the
+    // type is empty". So it keeps whatever is already answered (the default on
+    // a fresh session), and still opens on Prompt so the user confirms their own
+    // wording. The two readings looked interchangeable while the default was
+    // '' and only diverged once it was not; naming the flag keeps them apart.
+    const templatePickedType = selection.appType.trim().length > 0;
     updateAnswers({
       ...prev,
       prompt: selection.prompt,
-      appType: selection.appType || prev.appType
+      appType: templatePickedType ? selection.appType : prev.appType
     });
-    setWizardStartStep(selection.appType ? 2 : 1);
+    setWizardStartStep(templatePickedType ? 2 : 1);
     bumpWizardSession();
     setView('wizard');
   }
