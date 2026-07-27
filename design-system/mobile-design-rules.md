@@ -591,3 +591,68 @@ Both directions are equally dangerous:
 - **Assert against the DOM you actually have.** A padding fix was applied to
   `.page-pad`, a container that does not exist on that page, and changed nothing.
   Query the deployed DOM before writing a selector into a fix or a test.
+
+## R27 — A component is done when it WORKS, not when it renders (blocker)
+
+Every static and visual check can pass on an app that does not function. This is
+not hypothetical: a build scored 12/12 design rules, zero axe violations in both
+themes, 100/100 on the full rubric, 49 unit tests green — and shipped a calendar
+that could not select a date range and a route that could not be changed at all.
+The route strip was a **static display styled to look like a control**.
+
+Contrast, touch targets, type floor, painted width and console errors say nothing
+about whether clicking a thing does anything. Unit tests over pure functions say
+nothing either — the filter functions were correct and well tested; they were
+just never wired to a control the user could reach.
+
+### Every interactive component needs acceptance tests that drive the real UI
+
+For each control, assert against **what the user observes**, not the control's own
+appearance:
+
+- **Selection** — clicking marks it selected, and the selection is exposed in
+  ARIA (`aria-pressed` / `aria-current`), not by colour alone.
+- **Ranges** — where the domain has ranges (dates, prices, times), clicking a
+  second endpoint forms a range: both ends and everything between. Order must not
+  matter. A third click starts a new range.
+- **Filters and sorts** — assert on the RESULT ROWS. "Nonstop only" means every
+  remaining row says nonstop. "Cheapest" means the prices are ascending. A
+  changed class name is not evidence.
+- **Inputs** — the field is editable, has an accessible name, and changing it
+  re-queries. A read-only strip that looks like an input is a defect.
+- **Empty and error** — an impossible combination names what excluded everything;
+  a failed request never leaves stale results on screen.
+- **Reversibility** — clearing a filter restores the previous set; toggling twice
+  returns to the start.
+- **Keyboard** — every control is focusable and activates with Enter/Space.
+
+### Test hygiene these tests need themselves (see R26)
+
+- **One fresh page per test.** A single shared page meant one probe selected a
+  date with no inventory and every later probe read "0 rows" and scored working
+  filters as broken.
+- **Scope selectors to the region you mean.** A layover-airport test searched the
+  whole page for `/PDX/`, matched a result row printing "54M PDX", and **passed
+  against a build with no such control**. A false pass certifies a missing
+  feature as present.
+- **Read the right node.** A day cell's `textContent` was "15175" — day 15 plus
+  its $175 fare — so an exact match on "15" failed and a working calendar was
+  reported broken.
+
+### Check the category's own conventions first
+
+Before deciding what a component should do, look at what shipping products in the
+category do (R23 already sources them). A flight calendar has a date range. A
+flight search has origin and destination. Missing table stakes is a defect even
+when nothing in the spec named it.
+
+## R28 — A brand mark gets header room proportional to its detail (should)
+
+A 44px slot suits a simple glyph. A full-colour illustrative mark — gradients,
+tapered strokes, an aircraft — turns to mush at that size. Size the header lockup
+to the mark, and let the header grow rather than the mark shrink: 88px in a 104px
+header is a reasonable floor for a detailed mark.
+
+Verify at the real rendered size on both themes, and check the header still fits
+at 375 without overflow or collision before shipping (R25 already requires the
+asset check; this is the layout half).

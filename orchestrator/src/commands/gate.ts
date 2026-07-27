@@ -43,6 +43,7 @@ export const APP_CHECKS: Check[] = [
   { ruleId: 'u-test-presence', command: 'npx', args: ['vitest', 'run'] },
   { ruleId: 'hyg-env-ignored', command: 'git', args: ['check-ignore', '.env'] },
   // Static rule checks (real greps/AST-lite over the app source).
+  det('u-test-acceptance'),
   det('u-typing-scoped-ignores'),
   det('u-sec-param-sql'),
   det('u-sec-no-stub-paths'),

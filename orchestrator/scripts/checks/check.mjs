@@ -12,6 +12,7 @@ import { execFileSync } from 'node:child_process';
 import { join, extname } from 'node:path';
 import { runCiActionlint } from './ci-actionlint.mjs';
 import { runProcConventionalCommits } from './proc-conventional-commits.mjs';
+import { runTestAcceptance } from './u-test-acceptance.mjs';
 import { runProcPrTitleTicket } from './proc-pr-title-ticket.mjs';
 // The cross-app duplication pass already owns the definition of "the same code":
 // comments stripped, whitespace collapsed, identifiers normalised, keywords kept.
@@ -930,6 +931,10 @@ switch (ruleId) {
     // Linted against the directory that actually holds this app's workflows,
     // which in a monorepo is the repo root, not the app.
     runCiActionlint(resolveWorkflows(appDir).root, { pass, fail, notApplicable, EOL });
+    break;
+  }
+  case 'u-test-acceptance': {
+    runTestAcceptance(appDir, { pass, fail, notApplicable });
     break;
   }
   case 'proc-conventional-commits': {

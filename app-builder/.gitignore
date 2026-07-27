@@ -5,3 +5,5 @@ dist/
 .wrangler/
 *.tsbuildinfo
 logos/
+playwright-report/
+test-results/

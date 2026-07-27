@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://quickflight.pages.dev",
-  "checkedAt": "2026-07-27T18:56:29.284Z",
+  "checkedAt": "2026-07-27T20:06:38.438Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
