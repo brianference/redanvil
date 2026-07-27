@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil.pages.dev",
-  "checkedAt": "2026-07-27T21:56:36.322Z",
+  "checkedAt": "2026-07-27T22:07:21.793Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -25,7 +25,7 @@
       "contentPct": 90,
       "contentBox": {
         "left": 67,
-        "right": 1366
+        "right": 1373
       },
       "ok": true
     },
@@ -36,7 +36,7 @@
       "contentPct": 89,
       "contentBox": {
         "left": 67,
-        "right": 1357
+        "right": 1363
       },
       "ok": true
     },
@@ -44,10 +44,10 @@
       "route": "/terms",
       "width": 1440,
       "status": 200,
-      "contentPct": 89,
+      "contentPct": 90,
       "contentBox": {
         "left": 67,
-        "right": 1361
+        "right": 1373
       },
       "ok": true
     },
@@ -55,10 +55,10 @@
       "route": "/privacy",
       "width": 1440,
       "status": 200,
-      "contentPct": 87,
+      "contentPct": 90,
       "contentBox": {
         "left": 67,
-        "right": 1333
+        "right": 1373
       },
       "ok": true
     },
@@ -88,10 +88,10 @@
       "route": "/about",
       "width": 1920,
       "status": 200,
-      "contentPct": 90,
+      "contentPct": 91,
       "contentBox": {
         "left": 82,
-        "right": 1822
+        "right": 1838
       },
       "ok": true
     },
@@ -99,10 +99,10 @@
       "route": "/contact",
       "width": 1920,
       "status": 200,
-      "contentPct": 86,
+      "contentPct": 91,
       "contentBox": {
         "left": 82,
-        "right": 1740
+        "right": 1837
       },
       "ok": true
     },
@@ -113,7 +113,7 @@
       "contentPct": 91,
       "contentBox": {
         "left": 82,
-        "right": 1831
+        "right": 1838
       },
       "ok": true
     },
@@ -121,10 +121,10 @@
       "route": "/privacy",
       "width": 1920,
       "status": 200,
-      "contentPct": 89,
+      "contentPct": 91,
       "contentBox": {
         "left": 82,
-        "right": 1801
+        "right": 1838
       },
       "ok": true
     },
