@@ -279,6 +279,199 @@ function routesTs(): string {
  *
  * @returns Vitest module source.
  */
+/**
+ * Starter acceptance spec (R27).
+ *
+ * A generated app must be able to prove its controls do something from the day
+ * it exists. Without this the scaffold shipped only unit tests, and unit tests
+ * over pure functions cannot see whether a control is wired to anything — the
+ * failure that let a calendar with no range selection and a route that could not
+ * be changed pass every static check.
+ *
+ * This is a floor, not a finished suite: the builder extends it per feature.
+ */
+function acceptanceSpecTs(): string {
+  return (
+    `import { test, expect } from '@playwright/test';
+
+` +
+    `/**
+` +
+    ` * Acceptance tests: drive the REAL UI and assert on what a user observes.
+` +
+    ` *
+` +
+    ` * Extend this per feature. Assert on the RESULT a control produces -- the
+` +
+    ` * rows a filter leaves, the value an input holds, the state a selection
+` +
+    ` * exposes -- never on the control restyling itself.
+` +
+    ` *
+` +
+    ` * Hygiene that these tests need themselves:
+` +
+    ` *  - one fresh page per test; shared state makes one check decide another
+` +
+    ` *  - scope selectors to the region you mean, or you will match a result row
+` +
+    ` *  - wait on a real signal, never a fixed sleep
+` +
+    ` */
+
+` +
+    `test('the home page renders its main heading', async ({ page }) => {
+` +
+    `  await page.goto('/');
+` +
+    `  await expect(page.getByRole('heading').first()).toBeVisible();
+` +
+    `});
+
+` +
+    `test('primary navigation reaches the required pages', async ({ page }) => {
+` +
+    `  for (const path of ['/about', '/contact', '/terms', '/privacy']) {
+` +
+    `    await page.goto(path);
+` +
+    `    await expect(page.getByRole('heading').first()).toBeVisible();
+` +
+    `  }
+` +
+    `});
+
+` +
+    `test('the theme toggle flips the theme and the choice survives a reload', async ({ page }) => {
+` +
+    `  await page.goto('/');
+` +
+    `  const before = await page.evaluate(() => document.documentElement.dataset.theme ?? 'light');
+` +
+    `  await page.getByRole('button', { name: /dark|light|theme/i }).first().click();
+` +
+    `  await expect
+` +
+    `    .poll(async () => page.evaluate(() => document.documentElement.dataset.theme))
+` +
+    `    .not.toBe(before);
+` +
+    `  const after = await page.evaluate(() => document.documentElement.dataset.theme);
+` +
+    `  await page.reload();
+` +
+    `  await expect
+` +
+    `    .poll(async () => page.evaluate(() => document.documentElement.dataset.theme))
+` +
+    `    .toBe(after);
+` +
+    `});
+
+` +
+    `test('an unknown path shows a not-found page with a way back', async ({ page }) => {
+` +
+    `  await page.goto('/no-such-page');
+` +
+    `  await expect(page.getByText(/not found|no such|404/i).first()).toBeVisible();
+` +
+    `  await expect(page.getByRole('link').first()).toBeVisible();
+` +
+    `});
+`
+  );
+}
+
+/** Playwright config for the starter acceptance suite. */
+function playwrightConfigTs(): string {
+  return (
+    `import { defineConfig, devices } from '@playwright/test';
+
+` +
+    `/**
+` +
+    ` * Acceptance tests run against a real server (R27).
+` +
+    ` * BASE_URL targets a deployment; otherwise a local preview is started.
+` +
+    ` */
+` +
+    `const baseURL = process.env.BASE_URL ?? 'http://127.0.0.1:4173';
+
+` +
+    `export default defineConfig({
+` +
+    `  testDir: './tests',
+` +
+    `  fullyParallel: true,
+` +
+    `  reporter: [['list']],
+` +
+    `  timeout: 30_000,
+` +
+    `  expect: { timeout: 8_000 },
+` +
+    `  use: { baseURL, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
+` +
+    `  projects: [
+` +
+    `    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+` +
+    `    { name: 'mobile', use: { ...devices['iPhone 13'] } }
+` +
+    `  ],
+` +
+    `  webServer: process.env.BASE_URL
+` +
+    `    ? undefined
+` +
+    `    : {
+` +
+    `        command: 'npx vite preview --port 4173 --strictPort',
+` +
+    `        url: 'http://127.0.0.1:4173/',
+` +
+    `        reuseExistingServer: true,
+` +
+    `        timeout: 120_000
+` +
+    `      }
+` +
+    `});
+`
+  );
+}
+
+/**
+ * Vitest config for the scaffold.
+ *
+ * Without this, vitest's default glob swallows `tests/*.spec.ts` — the
+ * Playwright acceptance suite — and fails trying to run browser specs in Node.
+ * Unit tests live beside their source; acceptance tests live in `tests/` and
+ * belong to Playwright.
+ */
+function vitestConfigTs(): string {
+  return (
+    `import { defineConfig } from 'vitest/config';
+
+` +
+    `export default defineConfig({
+` +
+    `  test: {
+` +
+    `    include: ['src/**/*.test.ts', 'functions/**/*.test.ts'],
+` +
+    `    exclude: ['tests/**', 'node_modules/**', 'dist/**'],
+` +
+    `    environment: 'node'
+` +
+    `  }
+` +
+    `});
+`
+  );
+}
+
 function routesTestTs(): string {
   return (
     `import { describe, it, expect } from 'vitest';\n` +
@@ -324,7 +517,8 @@ export function appFiles(job: Job): Record<string, string> {
             preview: 'wrangler pages dev ./dist',
             typecheck: 'tsc -b',
             lint: 'eslint . --max-warnings 0',
-            test: 'vitest run'
+            test: 'vitest run',
+            'test:e2e': 'playwright test'
           },
           dependencies: {
             react: '^18.3.0',
@@ -332,6 +526,10 @@ export function appFiles(job: Job): Record<string, string> {
             'react-router-dom': '^6.26.0'
           },
           devDependencies: {
+            // Ships with the scaffold because `tests/acceptance.spec.ts` does
+            // (R27) — a spec the app cannot run is not a test.
+            '@playwright/test': '^1.61.1',
+            '@cloudflare/workers-types': '^4.20240909.0',
             '@types/react': '^18.3.0',
             '@types/react-dom': '^18.3.0',
             '@typescript-eslint/eslint-plugin': '^8.0.0',
@@ -420,6 +618,9 @@ export function appFiles(job: Job): Record<string, string> {
     'src/i18n/en.ts': i18nEnTs(job),
     'src/lib/routes.ts': routesTs(),
     'src/lib/routes.test.ts': routesTestTs(),
+    'tests/acceptance.spec.ts': acceptanceSpecTs(),
+    'playwright.config.ts': playwrightConfigTs(),
+    'vitest.config.ts': vitestConfigTs(),
     'src/components/Page.tsx':
       `import type { ReactNode } from 'react';\n` +
       `import { en } from '../i18n/en';\n\n` +
