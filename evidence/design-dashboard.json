@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil-dashboard.pages.dev",
-  "checkedAt": "2026-07-27T01:25:20.399Z",
+  "checkedAt": "2026-07-27T07:45:44.012Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,

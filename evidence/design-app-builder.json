@@ -1,26 +1,26 @@
 {
   "baseUrl": "https://redanvil.pages.dev",
-  "checkedAt": "2026-07-27T01:24:40.792Z",
+  "checkedAt": "2026-07-27T07:44:55.672Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
-      "detail": "7 route(s) at 375; every interactive element >= 44px"
+      "detail": "8 route(s) at 375; every interactive element >= 44px"
     },
     "fe-type-floor": {
       "ok": true,
-      "detail": "7 route(s) at 375, smallest body font 16px; nothing under 16px"
+      "detail": "8 route(s) at 375, smallest body font 16px; nothing under 16px"
     },
     "fe-responsive-375": {
       "ok": true,
-      "detail": "no horizontal overflow at 375 on 7 route(s)"
+      "detail": "no horizontal overflow at 375 on 8 route(s)"
     },
     "fe-safe-areas": {
       "ok": true,
-      "detail": "header sticky on all 7 route(s), padding-top 0px"
+      "detail": "header sticky on all 8 route(s), padding-top 0px"
     },
     "fe-premium-nav": {
       "ok": true,
-      "detail": "5 header link(s) [App Builder, Dashboard, Saved, About, Contact], aria-current on \"App Builder\""
+      "detail": "6 header link(s) [App Builder, Dashboard, Examples, Saved, About, Contact], aria-current on \"App Builder\""
     },
     "fe-noncolor-state": {
       "ok": true,
@@ -44,7 +44,7 @@
     },
     "fe-required-pages": {
       "ok": true,
-      "detail": "/about 200 \"About RedAnvil\"; /contact 200 \"Contact\"; /terms 200 \"Terms and Conditions\"; /privacy 200 \"Privacy Policy\"; /saved 200 \"Saved builds\"; /no-such-page 200 \"Page not found\""
+      "detail": "/about 200 \"About RedAnvil\"; /contact 200 \"Contact\"; /terms 200 \"Terms and Conditions\"; /privacy 200 \"Privacy Policy\"; /saved 200 \"Saved builds\"; /examples 200 \"Examples\"; /no-such-page 200 \"Page not found\""
     },
     "fe-visual-review-recorded": {
       "ok": true,
