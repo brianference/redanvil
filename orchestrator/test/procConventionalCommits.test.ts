@@ -101,6 +101,28 @@ describe('proc-conventional-commits', () => {
     expect(r.status, r.stderr).toBe(0);
   });
 
+  it('accepts the ticket prefix that base rule 13 requires', () => {
+    // Rule 13 mandates a ticket-prefixed subject. The pattern used to anchor the
+    // type at position 0, so following the standard failed the check that
+    // enforces the standard.
+    const app = makeAppDir();
+    initRepo(app);
+    commitFile(app, 'a.txt', 'a\n', 'RA-124 fix(reverify): report every bundle served');
+    commitFile(app, 'b.txt', 'b\n', 'ABC-7 feat: add x');
+
+    const r = runCheck(app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+
+  it('still rejects a non-ticket prefix before the type', () => {
+    const app = makeAppDir();
+    initRepo(app);
+    commitFile(app, 'a.txt', 'a\n', 'wip fix: not a ticket');
+
+    const r = runCheck(app);
+    expect(r.status, r.stderr).toBe(1);
+  });
+
   it('fails and quotes the first non-conventional subject', () => {
     const app = makeAppDir();
     initRepo(app);

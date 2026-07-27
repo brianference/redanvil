@@ -20,12 +20,19 @@ const NUL = String.fromCharCode(0);
 const EOL = String.fromCharCode(10);
 
 /**
- * Conventional Commits subject: type(scope)?: description
+ * Conventional Commits subject: `TICKET-1 type(scope)?: description`
  * Types: feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert
  * Subject after `: ` must be non-empty.
+ *
+ * The ticket prefix is OPTIONAL here but REQUIRED by base rule 13 ("PR
+ * discipline: ticket-prefixed title, conventional commits"). This pattern used
+ * to anchor the type at position 0, so every commit that followed rule 13
+ * failed the rule that enforces rule 13 — the standard and its check disagreed,
+ * and the check was the one that was wrong. Optional rather than required
+ * because the scaffold and the gate's own automated commits carry no ticket.
  */
 const CONVENTIONAL_SUBJECT_RE =
-  /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^)]+\))?!?: .+/;
+  /^([A-Z][A-Z0-9]+-\d+ )?(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^)]+\))?!?: .+/;
 
 /**
  * True when this file was invoked directly as the Node entrypoint.
