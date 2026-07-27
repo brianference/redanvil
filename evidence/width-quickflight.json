@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://quickflight.pages.dev",
-  "checkedAt": "2026-07-27T20:02:12.381Z",
+  "checkedAt": "2026-07-27T21:47:24.660Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -30,6 +30,17 @@
       "ok": true
     },
     {
+      "route": "/terms",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 97,
+      "contentBox": {
+        "left": 15,
+        "right": 1425
+      },
+      "ok": true
+    },
+    {
       "route": "/",
       "width": 1920,
       "status": 200,
@@ -42,6 +53,17 @@
     },
     {
       "route": "/flights",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 98,
+      "contentBox": {
+        "left": 15,
+        "right": 1905
+      },
+      "ok": true
+    },
+    {
+      "route": "/terms",
       "width": 1920,
       "status": 200,
       "contentPct": 98,

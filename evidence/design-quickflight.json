@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://quickflight.pages.dev",
-  "checkedAt": "2026-07-27T20:06:38.438Z",
+  "checkedAt": "2026-07-27T21:47:12.573Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -44,7 +44,7 @@
     },
     "fe-required-pages": {
       "ok": true,
-      "detail": "/about 200 \"About\"; /contact 200 \"Contact\"; /terms 200 \"Terms\"; /privacy 200 \"Privacy\"; /flights 200 \"Browse flights\""
+      "detail": "/terms 200 \"Terms and conditions\" 860w/14§; /privacy 200 \"Privacy policy\" 898w/12§; /about 200 \"About\" 300w/4§; /contact 200 \"Contact\" 301w/5§; /flights 200 \"Browse flights\" 28w/1§"
     },
     "fe-visual-review-recorded": {
       "ok": true,

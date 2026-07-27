@@ -656,3 +656,127 @@ header is a reasonable floor for a detailed mark.
 Verify at the real rendered size on both themes, and check the header still fits
 at 375 without overflow or collision before shipping (R25 already requires the
 asset check; this is the layout half).
+
+## R29 — Search for an existing API or library before building the capability (blocker)
+
+R23 asks what shipping products in the category *look* like. R29 asks what
+already *exists* to build them with. Both run before code.
+
+For every substantive capability — search, payments, maps, auth, geocoding,
+scheduling, notifications, a domain dataset — search first:
+
+```bash
+node ~/.claude/skills/design-inspo-x/scripts/integration_scan.mjs \
+  --capability "<what you are building>" \
+  --terms "<domain terms, comma separated>" \
+  --runtime "<the runtime it must run in>" --out INTEGRATIONS.md
+```
+
+It searches GitHub, ranks by stars, and records each candidate with its licence,
+language and last push, flagging archived, stale and unclear-licence repos. It
+writes `INTEGRATIONS.md`. **No `INTEGRATIONS.md` means this step did not run.**
+
+### The table is evidence, not a decision
+
+Fill in the assessment. For each serious candidate, state:
+
+- **Cost at this app's volume**, including what the free tier actually returns.
+  *A free tier that omits the data you need is not a free tier* — three flight
+  APIs advertise generous free tiers and none of them return fares, which is the
+  only field a fare-search product needs.
+- **Licence fit.** `NOASSERTION` means unclear, and unclear is a risk, not a
+  detail.
+- **Runtime fit.** The best library in the world does not help if it cannot run
+  where your code runs. Every zero-cost flight-fare library is Python; Cloudflare
+  Workers run V8. That single fact decided the architecture.
+- **Terms of service.** A library that reverse-engineers a provider's internal
+  endpoints can work perfectly and still be something you must not ship.
+- **Failure mode.** What happens when it breaks, and who finds out.
+
+### Prefer the hybrid when the request path is the problem
+
+When a dependency is too fragile or too encumbered to sit in the request path,
+that is rarely a reason to hand-build data. Move it **out of the request path**:
+fetch on a schedule in CI, write to your own store, serve from the store. Real
+data, no fragile runtime dependency, and it removes hand-transcription — which is
+usually the actual defect.
+
+### Never let "no API" become "I will type the data in"
+
+Hand-transcribing values from a real source is better than inventing them and
+worse than automating them. If you transcribe, say so plainly, record the source
+and date on every row, and treat the ingest as unfinished work.
+
+## R30 — Required pages must say something (blocker)
+
+"Required pages" was satisfied for a long time by a 200 and an `<h1>`. That let
+four pages ship whose entire body was one placeholder sentence — *"Terms page for
+quickflight."* — because the scaffold emitted that string and no check ever asked
+whether the document said anything.
+
+A Terms or Privacy page that exists but is empty is **worse than a missing one**:
+it looks answered, so nobody looks again.
+
+### The floor
+
+Measured on the main content, so a large nav and footer cannot inflate a stub:
+
+- **Terms and Privacy:** at least 150 words and at least 3 headed sections.
+- Real `<h2>` headings and lists. A wall of `<p>` is not a document.
+- A last-updated date on each.
+
+Those are a floor for a small app, not a target. Southwest's Terms runs to 25
+sections with an indexed table of contents.
+
+### Privacy Policy — sections that must exist
+
+What is collected · what is NOT collected · why · who else receives it, named ·
+cookies and local storage · where data lives and any international transfer · how
+long it is kept · user rights (access, correction, deletion, portability,
+objection) and how to exercise them · children · security · how changes are
+signalled · contact.
+
+### Terms — sections that must exist
+
+Acceptance and eligibility · what the service is · **the product's central
+disclaimer** · acceptable use · intellectual property · third-party services ·
+disclaimer of warranties · limitation of liability · indemnity · availability ·
+changes to the terms · governing law and dispute resolution · contact.
+
+### Every statement must be TRUE for that app
+
+Boilerplate about cookies you do not set or accounts you do not have is as wrong
+as omitting a disclosure. Write from what the app actually does. If the product
+has one clause that matters more than the rest — for a fare tool, *these prices
+are a snapshot and are not bookable* — that clause leads.
+
+These are not legal advice and a real product should have them reviewed.
+
+## R31 — Identify the competitors and study their actual pages (blocker for a new app UI)
+
+R23 sources App Store screenshots for the *product* screens. R31 covers the rest
+of the site — and the features you did not think to build.
+
+Before designing, name the two or three real products a user would compare this
+to, then look at what they actually ship:
+
+```bash
+node ~/.claude/skills/design-inspo-x/scripts/competitor_scan.mjs \
+  --product "flight search" \
+  --competitors "Southwest,Google Flights,Expedia,United" \
+  --pages "terms,privacy,about,contact" --out COMPETITORS.md
+```
+
+Record, per competitor:
+
+- **Features and controls** the product screen has that yours does not. A flight
+  search has origin, destination, passengers with ages, and a date range; a build
+  that shipped none of those passed every rule it had.
+- **Page structure** for terms, privacy, about and contact — section headings, a
+  table of contents, related-policy navigation, how long they actually are.
+- **Components** worth borrowing, named individually (R23's borrow-one-idea rule
+  still applies: take the mechanism, change the execution).
+- **What they do that you deliberately will not**, and why.
+
+Missing table stakes is a defect even when nothing in the spec named it. The spec
+is not the standard; the category is.

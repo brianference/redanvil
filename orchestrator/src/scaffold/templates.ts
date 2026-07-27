@@ -155,9 +155,18 @@ function i18nEnTs(job: Job): string {
   const pages = PAGES.map((name) => {
     const key = name.toLowerCase();
     return (
+      // NOT a placeholder sentence. `body: '<Name> page for <slug>.'` is exactly
+      // what shipped four one-sentence legal pages, because fe-required-pages
+      // checked only for a 200 and an h1. The string now states the obligation,
+      // so a build that leaves it fails the substance check loudly (R30) instead
+      // of passing as a finished document.
       `  ${key}: {\n` +
       `    title: '${name}',\n` +
-      `    body: '${name} page for ${job.slug}.'\n` +
+      `    body:\n` +
+      `      'TODO(R30): replace with the real ${key} document for ${job.slug}. ' +\n` +
+      `      'Terms and Privacy need at least 150 words across at least 3 headed ' +\n` +
+      `      'sections, and every statement must be TRUE for this app rather than ' +\n` +
+      `      'boilerplate. The clause list is in design-system/mobile-design-rules.md R30.'\n` +
       `  }`
     );
   }).join(',\n');

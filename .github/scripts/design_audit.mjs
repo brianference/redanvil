@@ -257,15 +257,39 @@ try {
   for (const route of routes) {
     const res = await p.goto(new URL(route, baseUrl).href, { waitUntil: 'domcontentloaded' });
     const status = res === null ? 0 : res.status();
-    const h1 = await p.evaluate(() => document.querySelector('h1')?.textContent?.trim() ?? null);
-    pages.push({ route, status, h1 });
+    const facts = await p.evaluate(() => {
+      const main = document.querySelector('main') ?? document.body;
+      const text = (main.innerText ?? '').trim();
+      return {
+        h1: document.querySelector('h1')?.textContent?.trim() ?? null,
+        // Words and headed sections in the MAIN content, so a big nav and footer
+        // cannot make a one-sentence document look substantial.
+        words: text ? text.split(/\s+/).length : 0,
+        sections: main.querySelectorAll('h2, h3').length
+      };
+    });
+    pages.push({ route, status, ...facts });
   }
   await p.close();
+  // Presence was the whole test for a long time: 200 + an h1. That passed four
+  // pages whose entire body was one placeholder sentence ("Terms page for
+  // quickflight."), because nothing ever asked whether the document said
+  // anything. A Terms or Privacy page that exists but is empty is worse than
+  // missing -- it looks answered. Substance is now part of the rule (R30).
+  const THIN_WORDS = 150;
+  const THIN_SECTIONS = 3;
+  const legal = pages.filter((x) => /\/(terms|privacy)/.test(x.route));
+  const thin = legal.filter((x) => x.words < THIN_WORDS || x.sections < THIN_SECTIONS);
   const badPages = pages.filter((x) => x.status !== 200 || x.h1 === null);
   record(
     'fe-required-pages',
-    badPages.length === 0,
-    pages.map((x) => `${x.route} ${x.status} "${x.h1 ?? 'NO H1'}"`).join('; ')
+    badPages.length === 0 && thin.length === 0,
+    pages
+      .map((x) => `${x.route} ${x.status} "${x.h1 ?? 'NO H1'}" ${x.words}w/${x.sections}§`)
+      .join('; ') +
+      (thin.length > 0
+        ? ` -- THIN: ${thin.map((t) => `${t.route} has ${t.words} words in ${t.sections} section(s), needs >=${THIN_WORDS} and >=${THIN_SECTIONS}`).join('; ')}`
+        : '')
   );
 
   record(
