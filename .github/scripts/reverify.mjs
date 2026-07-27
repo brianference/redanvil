@@ -113,7 +113,12 @@ if (!flag('skip-propagation')) {
     if (local.length === 0) fail(`no built bundle in ${distDir}`);
 
     let streak = 0;
-    let last = '';
+    let probes = 0;
+    // Every bundle the alias served, with a count. Reporting only the LAST
+    // probe made a flapping edge indistinguishable from a missing deploy: the
+    // failure read "production serves X, local build is X", because the run
+    // ended on a matching probe after an earlier one broke the streak.
+    const seen = new Map();
     for (let i = 0; i < 250 && streak < 20; i += 1) {
       const html = run('curl', [
         '-s',
@@ -121,13 +126,24 @@ if (!flag('skip-propagation')) {
         'Cache-Control: no-cache',
         `${app.url}/?rv=${i}${Math.floor(i * 7919)}`
       ]).out;
-      last = /assets\/(index-[A-Za-z0-9_-]+\.js)/.exec(html)?.[1] ?? '(none)';
-      streak = last === local ? streak + 1 : 0;
+      const got = /assets\/(index-[A-Za-z0-9_-]+\.js)/.exec(html)?.[1] ?? '(none)';
+      seen.set(got, (seen.get(got) ?? 0) + 1);
+      streak = got === local ? streak + 1 : 0;
+      probes = i + 1;
     }
     if (streak < 20) {
+      const tally = [...seen.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([bundle, n]) => `${bundle} ×${n}`)
+        .join(', ');
+      const flapping = seen.size > 1 && seen.has(local);
       fail(
-        `${app.slug}: production serves ${last}, local build is ${local}. ` +
-          `Deploy first, or wait for the alias to settle — measuring now measures the previous build.`
+        `${app.slug}: never saw 20 consecutive probes of the local build ${local} ` +
+          `in ${probes} probes. Served: ${tally}.\n  ` +
+          (flapping
+            ? 'The alias is still alternating between builds across edge nodes. ' +
+              'Wait a minute and re-run — measuring now would measure a mix.'
+            : 'Production is not serving this build at all. Deploy first.')
       );
     }
     console.log(`    ${app.slug}: ${local}`);
