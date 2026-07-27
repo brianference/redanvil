@@ -388,3 +388,108 @@ Causes, in the order they actually occur:
    to put in it.
 
 Protect the line measure with column counts, never by starving the container.
+
+## R23 — Look at what shipped in this category before designing (blocker for a new app UI)
+
+R21 says constraints are not a design. R23 says where the design comes from:
+**the real App Store, searched by the app's own domain keywords, before a single
+component is written.**
+
+An agent that designs from the rule pack alone converges on the same centred
+column every time, because the rule pack is identical for every app. An agent
+that has first looked at sixteen shipping products in the same category has seen
+sixteen answers to the same problem, and can take one idea from each.
+
+### The step (mandatory, and it produces an artifact)
+
+```bash
+node ~/.claude/skills/design-inspo-x/scripts/appstore_refs.mjs \
+  --terms "<domain keywords, comma separated>" \
+  --out design-refs/<slug> --limit 6 --shots 4
+```
+
+- Terms come from the PRD's own domain nouns and verbs — a flight app searches
+  `flights, airline, flight tracker, cheap flights`, not `travel app`.
+- The script hits the public iTunes Search API (no key, documented, and Apple
+  already serves these screenshots publicly on every store page). It ranks by
+  **rating count**, because a design that survived millions of users is evidence
+  and a concept shot is not, and it drops Games.
+- It writes `SOURCES.md` with the app names, genres, rating counts and store
+  URLs. **A run with no `SOURCES.md` did not do this step**, and the design work
+  that follows is unevidenced.
+- It exits non-zero when nothing matched, so a build step can depend on it and
+  fail closed instead of quietly skipping the research.
+
+### What to do with the refs
+
+- **Name the component you are borrowing, per reference.** "KAYAK: a colour-coded
+  fare calendar so the cheapest date is visible before you pick one." "Flighty:
+  the duration as an oversized numeral in the left gutter." "Singapore Airlines:
+  the cabin-window mask as the photo frame." Vague admiration is not an input.
+- **Take ONE idea from each, and change it.** Borrow the *mechanism*, not the
+  execution: the same idea in a different shape, density, or position. If a
+  reviewer can name the app you copied, you copied.
+- **Never take** a brand mark, wordmark, palette, mascot, or an entire screen
+  layout. Those are the parts that belong to someone else.
+- Feed the refs into the exploration, not the polish. Choosing a component after
+  the shell is built means it gets bolted on.
+
+### Failure this rule exists to prevent
+
+QuickFlight shipped a correct, accessible, gate-passing flight search that the
+user rejected on sight: *"the site design isn't unique enough, it looks like all
+the other sites."* Every measurable rule passed. Nothing had asked what a flight
+app is supposed to feel like, and no shipping flight app had been looked at.
+
+## R24 — The design is chosen by the user from options, never by the builder (blocker)
+
+R21 says constraints are not a design. R23 says where design ideas come from.
+R24 says **who decides**, because getting that wrong wasted an entire build.
+
+QuickFlight was specified with one archetype and one visual direction, built
+faithfully, gated to 100/100, and deployed. The user's first reaction was *"the
+site design isn't unique enough."* Nothing was wrong with the execution. The
+error was that a single direction went straight to implementation without anyone
+choosing it.
+
+### The gate
+
+For a new app UI, **no implementation begins until the user has picked from a
+rendered gallery.** In order:
+
+1. **R23 App Store intake** — real refs, `SOURCES.md` on disk.
+2. **Generate options** — minimum 3, target 5–10 for a new product. Claude and
+   Grok both produce sets; Grok's are the default starting point.
+3. **Every option is structurally distinct.** Different archetype, not a recolour.
+   If option B can be turned into option C by editing a palette, it is one option.
+4. **Every option renders dark AND light** in the same file, at 375.
+5. **Build a gallery, open the folder AND the gallery.** Never describe options in
+   prose and never ship one to production to "show" it.
+6. **The user picks — including a mix** ("stack of 4, calendar of 1, colours of
+   2"). Expect the answer to be a blend and design the options so blending works.
+7. Only then implement.
+
+### What is the user's call, not the builder's
+
+Do not decide these silently. They are cheap to ask about inside a gallery and
+expensive to unwind after a build:
+
+- **Accent colour.** QuickFlight shipped orange; the user's response was "do not
+  use orange as the colours."
+- **Default theme.** Dark-by-default was assumed twice and reversed twice.
+- **Which view is the landing view** when a product has more than one (map vs
+  calendar vs list).
+- **The logo**, chosen from a reviewed set — see R10.6.
+
+### Generated assets belong in this phase
+
+Logos, backgrounds, icon sets and textures are generated **before** the build,
+reviewed by eye, and presented in the same gallery — never iterated live against
+a deployed site (R10.6). **Say honestly which ones are bad.** In this session two
+of five logos and five of sixteen icons were not usable; marking them as such is
+part of the deliverable, not a failure to hide.
+
+### Failure this rule exists to prevent
+
+A design nobody chose, implemented perfectly, deployed, gated, and thrown away.
+The rules were all green the entire time.

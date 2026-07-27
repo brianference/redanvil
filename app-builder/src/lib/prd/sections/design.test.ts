@@ -68,7 +68,14 @@ describe('design direction', () => {
     expect(md).toContain(chosen.archetype.name);
     expect(md).toContain(chosen.visual.name);
     expect(md).toMatch(/Do not copy RedAnvil/);
-    expect(md).toMatch(/three.{0,20}real references/i);
+    // R23 + R24: the section must send the builder to the real App Store first and
+    // block implementation until the user has picked. "Find three references" used
+    // to stand here, and it was prose that named no source and left no artifact —
+    // so it got skipped, and a design nobody chose shipped and was thrown away.
+    expect(md).toMatch(/appstore_refs\.mjs/);
+    expect(md).toMatch(/SOURCES\.md/);
+    expect(md).toMatch(/starting hypothesis, not a decision/i);
+    expect(md).toMatch(/user's calls|let the user pick/i);
     // It must still defer to the constraints rather than replace them.
     expect(md).toMatch(/axe-core/);
     expect(md).toMatch(/44px/);
