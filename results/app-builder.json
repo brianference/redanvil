@@ -4,8 +4,8 @@
   "finalScore": 100,
   "threshold": 90,
   "passed": true,
-  "evaluated": 54,
-  "total": 54,
+  "evaluated": 55,
+  "total": 55,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -25,6 +25,10 @@
     },
     {
       "ruleId": "hyg-env-ignored",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-acceptance",
       "passed": true
     },
     {
@@ -236,18 +240,18 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-27T19:06:27.753Z",
+  "finishedAt": "2026-07-27T20:18:48.665Z",
   "provenance": {
-    "commit": "6f7c3db10c7f2c2afa65d06db8680cb04eec3d2d",
+    "commit": "7fb7cf849d4b597d3cc9f3cb02fad9034adcf7c8",
     "dirty": false,
-    "rubricHash": "ec501ec071f2a313167a98277b66a23dd949dbc6615ade93d2ee6841d12b981c",
-    "rubricRuleCount": 56,
+    "rubricHash": "2b13de524a9ab46fafe778dba9bed992fd8c29899543e5d3c9af034300ea2e09",
+    "rubricRuleCount": 57,
     "node": "v22.19.0",
-    "verdictsHash": "b666420336bd133808d606d848fcdff46ec8d12d68d78239ea6c36b29d76ee76",
+    "verdictsHash": "8f5a0b41de8000f7b7a7cbf1a8191586089c661044b8b8856b0025627e21feba",
     "notApplicable": [
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-07-27T19:06:27.802Z"
+    "generatedAt": "2026-07-27T20:18:48.712Z"
   }
 }
