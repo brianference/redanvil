@@ -517,6 +517,36 @@ follow from that, and both happened here:
 Fixing a token after the build means re-measuring, re-deploying, and re-gating
 every screen that inherited it.
 
+### Do not encode your taste as a ban in a generation brief
+
+Use `references/logo-brief-template.md` verbatim rather than writing a brief from
+scratch — it encodes the two rules below and the post-generation review steps.
+
+A generation brief is a specification, and every "no X" in it is a design decision
+you made on the user's behalf without showing them X.
+
+Concretely: a logo brief here banned gradients, dimensional shading, drop shadows,
+and the orbit/globe/swoosh device, and asked for "flat vector" single-colour
+monoline marks. The tool complied perfectly and produced austere line art. The
+user then ran the same tool with "professional polished logos" and no bans, got
+visibly richer results, and asked why ours were worse. The honest answer was: the
+brief, not the tool.
+
+- **Ban only what is disqualifying**, not what you personally dislike. "Must read
+  at 32px" and "no real airline liveries" are requirements. "No gradients" and
+  "no swoosh" are opinions.
+- A category convention exists because it works. If you think it is a cliche,
+  generate it *well* alongside your alternative and let the user choose (R24) —
+  do not delete it from the option set silently.
+- When a hard constraint really does conflict with richness, **generate both**: a
+  rich version for the header and marketing, and a flat single-colour companion
+  of the same mark that survives a favicon and recolours for dark mode. That is
+  two assets from one idea, which R10.7 already wants.
+- Adjectives lose to constraints. "Premium" next to "flat, one colour, no
+  gradient, no shadow" resolves to flat every time. If the brief's constraints
+  contradict its adjective, the constraints win — so check them against each
+  other before sending.
+
 ### Also: an approved asset can still be wrong at size
 
 A logo approved at 1024px can be illegible at 30px, and a mark drawn in one hue
@@ -524,3 +554,40 @@ can clash with an accent chosen separately. Check the approved asset **at its
 real rendered size, on both themes, next to the accent** before wiring it in.
 The fix is to adjust the rendering or recolour the asset — never to quietly
 swap the mark the user chose (R10.6).
+
+## R26 — A new test or measurement must be shown to discriminate (blocker)
+
+Before trusting anything you just wrote that reports pass/fail, prove it can
+report **both**. Run it against a state you know is broken and a state you know
+is good. If you cannot make it flip, it is not a test — it is a constant, and a
+constant that happens to read "fail" is as useless as one that reads "pass".
+
+The failure this exists for: a scroll-clearance check used
+`element.scrollIntoView({ block: 'end' })` and then asserted the element's bottom
+was above a sticky bar. `block: 'end'` **aligns the element's bottom to the
+viewport bottom by definition**, so the assertion was false no matter what the
+page did. It reported the bug correctly, then kept reporting it after a correct
+fix — and the only reason the flaw surfaced was that the fix appeared to change
+nothing. Had the fix been applied first, the same test would have "confirmed" a
+bug that was already gone.
+
+Both directions are equally dangerous:
+
+- **Cannot fail** — a screenshot harness that wrote twelve files and exited 0
+  whether or not the theme ever switched. Every "verified in both themes"
+  verdict it produced described one theme photographed twice.
+- **Cannot pass** — the scroll check above. Wastes a fix cycle and, worse,
+  discredits a change that actually worked.
+
+### The discipline
+
+- **Flip it on purpose.** Break the thing in a TEMP COPY, confirm red; restore,
+  confirm green. Never break it in place.
+- **Suspect any check whose result does not move after a change that should have
+  moved it.** That is the signal, and it is easy to misread as "the fix failed".
+- **Prefer an invariant the tool cannot fake** — light and dark renders cannot be
+  byte-identical; a measured width cannot exceed the viewport; a filter cannot
+  return rows it excludes.
+- **Assert against the DOM you actually have.** A padding fix was applied to
+  `.page-pad`, a container that does not exist on that page, and changed nothing.
+  Query the deployed DOM before writing a selector into a fix or a test.

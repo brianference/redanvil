@@ -72,9 +72,23 @@ export function ExampleStory({ example }: ExampleStoryProps): JSX.Element {
           </dl>
         </section>
 
+        <section aria-labelledby={`brand-${example.slug}`} style={panelStyle}>
+          <h3 id={`brand-${example.slug}`} style={stepStyle}>
+            <span style={numStyle}>2</span>
+            {copy.stepBrand}
+          </h3>
+          <p style={noteStyle}>{copy.brandNote}</p>
+          <img
+            src={example.logo}
+            alt={copy.brandAlt(example.name)}
+            loading="lazy"
+            className="ex-logo"
+          />
+        </section>
+
         <section aria-labelledby={`prd-${example.slug}`} style={panelStyle}>
           <h3 id={`prd-${example.slug}`} style={stepStyle}>
-            <span style={numStyle}>2</span>
+            <span style={numStyle}>3</span>
             {copy.stepPrd}
           </h3>
           <p style={noteStyle}>{copy.prdNote}</p>

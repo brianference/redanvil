@@ -17,7 +17,7 @@ describe('shipped examples', () => {
   it('every referenced screenshot exists on disk', () => {
     const missing: string[] = [];
     for (const ex of EXAMPLES) {
-      const paths = [ex.reviewShot, ...ex.screens.map((s) => s.src)];
+      const paths = [ex.reviewShot, ex.logo, ...ex.screens.map((s) => s.src)];
       for (const p of paths) {
         expect(p.startsWith('/'), `${p} must be an absolute public path`).toBe(true);
         if (!existsSync(join(publicDir, p.replace(/^\//, '')))) missing.push(p);

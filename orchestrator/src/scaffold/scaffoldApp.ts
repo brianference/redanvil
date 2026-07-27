@@ -61,12 +61,17 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
   const designSystemDir = join(corpusDir, '..', 'design-system');
   const designRules = await readFile(join(designSystemDir, 'mobile-design-rules.md'), 'utf8');
   const screenPatterns = await readFile(join(designSystemDir, 'screen-patterns.md'), 'utf8');
+  // R25 tells the builder to brief a logo from a template rather than writing one
+  // from scratch. Shipping the rule without the template it names would repeat the
+  // exact mistake the rule documents: guidance cited and unavailable.
+  const logoBrief = await readFile(join(designSystemDir, 'logo-brief-template.md'), 'utf8');
 
   const files: Record<string, string> = {
     'CLAUDE.md': claudeMd,
     'conformance.json': JSON.stringify(conformance, null, 2) + '\n',
     'design-system/mobile-design-rules.md': designRules,
     'design-system/screen-patterns.md': screenPatterns,
+    'design-system/logo-brief-template.md': logoBrief,
     ...(input.prdMarkdown === undefined ? {} : { 'PRD.md': input.prdMarkdown }),
     ...appFiles(job)
   };

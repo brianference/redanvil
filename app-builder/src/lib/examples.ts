@@ -35,6 +35,8 @@ export interface Example {
   readonly answers: readonly { readonly label: string; readonly value: string }[];
   /** Screenshot of the builder's Review step for this prompt. */
   readonly reviewShot: string;
+  /** The generated brand mark for this app. */
+  readonly logo: string;
   /** Store-style screens of the deployed app. */
   readonly screens: readonly ExampleScreen[];
   /** Live URL of the deployed app. */
@@ -64,6 +66,7 @@ export const EXAMPLES: readonly Example[] = [
       { label: 'Data storage', value: 'Simple D1 tables' }
     ],
     reviewShot: '/examples/quickflight/prd-review.png',
+    logo: '/examples/quickflight/logo.png',
     screens: [
       {
         src: '/examples/quickflight/app-home.png',

@@ -172,9 +172,22 @@ ${SHARED_SHELL_CSS}
         }
         @media (min-width: 900px) {
           .ex-grid {
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             align-items: start;
           }
+        }
+        /* Three panels once there is room for them: prompt, brand, PRD. */
+        @media (min-width: 1280px) {
+          .ex-grid {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1.15fr);
+          }
+        }
+        .ex-logo {
+          display: block;
+          width: 100%;
+          max-width: 220px;
+          height: auto;
+          margin: 0 auto;
         }
         .ex-shot {
           display: block;

@@ -47,6 +47,10 @@ export const en = {
       intro:
         'Apps RedAnvil has shipped, and the prompts that produced them. Every screen below is a real screenshot of a real deployment -- nothing here is a mockup.',
       builtHeading: 'How it was built',
+      stepBrand: 'The brand it generated',
+      brandNote:
+        'Every app gets a real logo, not an emoji or a placeholder. RedAnvil briefs an image model for a set of marks, reviews each one, and prepares the winner as two assets -- a full-colour mark for the header and a flat companion that survives a favicon and recolours for a dark theme. The palette is then derived from the mark, so the app and its logo match.',
+      brandAlt: (name: string): string => `The generated ${name} logo mark`,
       stepPrompt: 'The prompt',
       stepPrd: 'The PRD it produced',
       stepApp: 'The app it shipped',
@@ -60,7 +64,7 @@ export const en = {
     home: {
       title: 'What app should we forge?',
       subtitle:
-        'Describe the product in plain language. RedAnvil asks a few questions, then generates a downloadable PRD.',
+        'Describe the product in plain language. RedAnvil asks a few questions, then generates a downloadable PRD -- and a real logo and palette to build it in.',
       bannerAlt: 'RedAnvil — forge apps from a prompt'
     },
     saved: {
