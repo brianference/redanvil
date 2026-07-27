@@ -45,10 +45,11 @@ export const en = {
     examples: {
       title: 'Examples',
       intro:
-        'One prompt, followed all the way to a deployed app. Every screen below is a real screenshot of a real deployment -- nothing here is a mockup.',
+        'Apps RedAnvil has shipped, and the prompts that produced them. Every screen below is a real screenshot of a real deployment -- nothing here is a mockup.',
+      builtHeading: 'How it was built',
       stepPrompt: 'The prompt',
       stepPrd: 'The PRD it produced',
-      stepApp: 'The app that shipped',
+      stepApp: 'The app it shipped',
       prdNote:
         'RedAnvil turns the answers into a full implementation spec: features, acceptance criteria, a data model, a test plan, and a vertical-slice build plan. This is the review step, exactly as the builder renders it.',
       prdAlt: (name: string): string =>

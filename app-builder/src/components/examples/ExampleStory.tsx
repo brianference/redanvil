@@ -9,8 +9,12 @@ export interface ExampleStoryProps {
 }
 
 /**
- * One example told in order: the prompt that was typed, the PRD the builder
- * produced from it, and the app that shipped.
+ * One example, leading with the result: the app that shipped, then how it was
+ * built — the prompt that was typed and the PRD the builder produced from it.
+ *
+ * The outcome goes first deliberately. A visitor deciding whether RedAnvil is
+ * any good wants to see the product, not the paperwork; the prompt only becomes
+ * interesting once they believe the output.
  *
  * The phone strip deliberately borrows the App Store's screenshot-gallery
  * shape — a caption above each device, scrolled horizontally — because that is
@@ -33,6 +37,23 @@ export function ExampleStory({ example }: ExampleStoryProps): JSX.Element {
           {copy.viewLive}
         </a>
       </header>
+
+      <section aria-labelledby={`app-${example.slug}`}>
+        <h3 id={`app-${example.slug}`} style={resultStyle}>
+          {copy.stepApp}
+        </h3>
+        <p style={noteStyle}>{example.gate}</p>
+        <ul className="ex-screens" aria-label={copy.screensLabel(example.name)}>
+          {example.screens.map((s) => (
+            <li key={s.src} className="ex-screen">
+              <p style={captionStyle}>{s.caption}</p>
+              <img src={s.src} alt={s.alt} loading="lazy" className="ex-phone" />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <h3 style={builtStyle}>{copy.builtHeading}</h3>
 
       <div className="ex-grid">
         <section aria-labelledby={`prompt-${example.slug}`} style={panelStyle}>
@@ -65,22 +86,6 @@ export function ExampleStory({ example }: ExampleStoryProps): JSX.Element {
           />
         </section>
       </div>
-
-      <section aria-labelledby={`app-${example.slug}`}>
-        <h3 id={`app-${example.slug}`} style={stepStyle}>
-          <span style={numStyle}>3</span>
-          {copy.stepApp}
-        </h3>
-        <p style={noteStyle}>{example.gate}</p>
-        <ul className="ex-screens" aria-label={copy.screensLabel(example.name)}>
-          {example.screens.map((s) => (
-            <li key={s.src} className="ex-screen">
-              <p style={captionStyle}>{s.caption}</p>
-              <img src={s.src} alt={s.alt} loading="lazy" className="ex-phone" />
-            </li>
-          ))}
-        </ul>
-      </section>
     </article>
   );
 }
@@ -116,6 +121,22 @@ const panelStyle: CSSProperties = {
   background: theme.color.surface,
   padding: theme.space.lg,
   minWidth: 0
+};
+
+const resultStyle: CSSProperties = {
+  margin: 0,
+  fontSize: theme.type.scale[3],
+  fontWeight: 650,
+  color: theme.color.text
+};
+
+const builtStyle: CSSProperties = {
+  margin: 0,
+  fontSize: theme.type.scale[2],
+  fontWeight: 650,
+  textTransform: 'uppercase',
+  letterSpacing: '0.07em',
+  color: theme.color.muted
 };
 
 const stepStyle: CSSProperties = {

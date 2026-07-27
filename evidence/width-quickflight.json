@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://quickflight.pages.dev",
-  "checkedAt": "2026-07-27T07:38:50.595Z",
+  "checkedAt": "2026-07-27T16:49:09.228Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -13,7 +13,7 @@
       "status": 200,
       "contentPct": 100,
       "contentBox": {
-        "left": 0,
+        "left": -1,
         "right": 1440
       },
       "ok": true
