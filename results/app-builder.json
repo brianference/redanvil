@@ -1,7 +1,7 @@
 {
   "kind": "results",
   "slug": "app-builder",
-  "finalScore": 94,
+  "finalScore": 100,
   "threshold": 90,
   "passed": true,
   "evaluated": 55,
@@ -113,7 +113,7 @@
     },
     {
       "ruleId": "u-conc-file-size",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "hyg-no-duplication",
@@ -235,23 +235,23 @@
   "iterations": [
     {
       "index": 1,
-      "score": 94,
+      "score": 100,
       "blockers": []
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-27T22:09:21.224Z",
+  "finishedAt": "2026-07-27T22:16:27.145Z",
   "provenance": {
-    "commit": "50796857b2938763d7cca62dfde180e3f5b7e497",
+    "commit": "cbff954e7fe9b3965d713eefd9d61e3b32b4c6ec",
     "dirty": false,
     "rubricHash": "2b13de524a9ab46fafe778dba9bed992fd8c29899543e5d3c9af034300ea2e09",
     "rubricRuleCount": 57,
     "node": "v22.19.0",
-    "verdictsHash": "37ac0ded14cd74dabcef3a7a079f03e36a3a86ddf818ef4aba8318bfafb66c14",
+    "verdictsHash": "6118655e5cb716afc60c7e7b29b1b51bebf72436ae8d5d573abff1f127577226",
     "notApplicable": [
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-07-27T22:09:21.270Z"
+    "generatedAt": "2026-07-27T22:16:27.193Z"
   }
 }
