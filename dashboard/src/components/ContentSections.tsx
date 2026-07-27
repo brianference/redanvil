@@ -6,6 +6,8 @@ import { theme } from '../theme';
 export interface ContentSection {
   heading: string;
   body: string;
+  /** Optional bullet list under the body. */
+  items?: readonly string[];
 }
 
 export interface ContentSectionsProps {
@@ -13,7 +15,7 @@ export interface ContentSectionsProps {
   intro: string;
   /** Optional line such as a last-updated date. */
   updated?: string;
-  /** Short sections, each rendered as h2 + p. */
+  /** Short sections, each rendered as h2 + p (+ optional list). */
   sections: readonly ContentSection[];
 }
 
@@ -26,7 +28,8 @@ const introStyle: CSSProperties = {
   color: theme.color.text,
   fontSize: theme.type.scale[2],
   lineHeight: 1.6,
-  margin: 0
+  margin: 0,
+  overflowWrap: 'anywhere'
 };
 
 const updatedStyle: CSSProperties = {
@@ -54,7 +57,17 @@ const bodyStyle: CSSProperties = {
   color: theme.color.muted,
   fontSize: theme.type.scale[2],
   lineHeight: 1.6,
-  margin: 0
+  margin: 0,
+  overflowWrap: 'anywhere'
+};
+
+const listStyle: CSSProperties = {
+  color: theme.color.muted,
+  fontSize: theme.type.scale[2],
+  lineHeight: 1.6,
+  margin: `${theme.space.sm}px 0 0`,
+  paddingLeft: theme.space.lg,
+  overflowWrap: 'anywhere'
 };
 
 /**
@@ -73,6 +86,15 @@ export function ContentSections({ intro, updated, sections }: ContentSectionsPro
           <section key={section.heading} style={sectionStyle}>
             <h2 style={headingStyle}>{section.heading}</h2>
             <p style={bodyStyle}>{linkifyText(section.body)}</p>
+            {section.items !== undefined && section.items.length > 0 && (
+              <ul style={listStyle}>
+                {section.items.map((item) => (
+                  <li key={item} style={{ marginBottom: theme.space.xs }}>
+                    {linkifyText(item)}
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         ))}
       </div>

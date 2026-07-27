@@ -13,7 +13,7 @@ export function About(): JSX.Element {
   });
   return (
     <Page title={page.title} breadcrumb={page.title}>
-      <ContentSections intro={page.intro} sections={page.sections} />
+      <ContentSections intro={page.intro} updated={page.updated} sections={page.sections} />
     </Page>
   );
 }

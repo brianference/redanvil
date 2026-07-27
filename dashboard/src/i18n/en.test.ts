@@ -3,6 +3,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { Breadcrumbs } from '../components/Breadcrumbs';
+import { ContentSections } from '../components/ContentSections';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { en, type Locale } from './en';
 
@@ -47,11 +48,23 @@ function pageCopyText(page: {
   title: string;
   intro: string;
   updated?: string;
-  sections: readonly { heading: string; body: string }[];
+  sections: readonly { heading: string; body: string; items?: readonly string[] }[];
 }): string {
-  const sectionText = page.sections.map((s) => `${s.heading} ${s.body}`).join(' ');
+  const sectionText = page.sections
+    .map((s) => `${s.heading} ${s.body} ${(s.items ?? []).join(' ')}`)
+    .join(' ');
   const updated = page.updated ?? '';
   return `${page.title} ${page.intro} ${updated} ${sectionText}`;
+}
+
+/** Count whitespace-separated words in legal page copy (R30 floor). */
+function pageWordCount(page: {
+  title: string;
+  intro: string;
+  updated?: string;
+  sections: readonly { heading: string; body: string; items?: readonly string[] }[];
+}): number {
+  return pageCopyText(page).trim().split(/\s+/).filter(Boolean).length;
 }
 
 /**
@@ -132,7 +145,7 @@ describe('en locale bundle', () => {
     expect(en.runDetail.laneHeading('fe')).toBe('fe lane');
   });
 
-  it('gives each content page a non-empty intro and at least one section', () => {
+  it('gives each content page a non-empty intro and multiple headed sections', () => {
     const contentPages = [
       en.pages.about,
       en.pages.contact,
@@ -141,11 +154,46 @@ describe('en locale bundle', () => {
     ] as const;
     for (const page of contentPages) {
       expect(page.intro.trim().length).toBeGreaterThan(0);
-      expect(page.sections.length).toBeGreaterThanOrEqual(1);
+      expect(page.updated.trim().length).toBeGreaterThan(0);
+      // R30: real headed sections, not a single stub paragraph.
+      expect(page.sections.length).toBeGreaterThanOrEqual(3);
       for (const section of page.sections) {
         expect(section.heading.trim().length).toBeGreaterThan(0);
         expect(section.body.trim().length).toBeGreaterThan(0);
       }
+    }
+  });
+
+  it('meets R30 substance floor on Terms and Privacy (>=150 words, >=3 sections)', () => {
+    for (const key of ['terms', 'privacy'] as const) {
+      const p = en.pages[key];
+      expect(p.sections.length, `${key} section count`).toBeGreaterThanOrEqual(3);
+      expect(pageWordCount(p), `${key} word count`).toBeGreaterThanOrEqual(150);
+    }
+  });
+
+  it('states the dashboard central disclaimer: scores are own gate results, not certification', () => {
+    const termsBodies = en.pages.terms.sections.map((s) => s.body).join(' ');
+    expect(termsBodies.toLowerCase()).toMatch(/certification|not a certification/);
+    expect(termsBodies.toLowerCase()).toMatch(/gate|score/);
+    const privacyBodies = en.pages.privacy.sections.map((s) => s.body).join(' ');
+    expect(privacyBodies.toLowerCase()).toMatch(/cloudflare/);
+    expect(privacyBodies.toLowerCase()).toMatch(/localstorage|theme/);
+  });
+
+  it('renders each content page with multiple h2 sections', () => {
+    for (const key of ['about', 'contact', 'privacy', 'terms'] as const) {
+      const p = en.pages[key];
+      const html = renderToStaticMarkup(
+        createElement(ContentSections, {
+          intro: p.intro,
+          updated: p.updated,
+          sections: p.sections
+        })
+      );
+      const h2Count = (html.match(/<h2\b/g) ?? []).length;
+      expect(h2Count, `${key} h2 count`).toBeGreaterThanOrEqual(3);
+      expect(html).toContain(p.updated);
     }
   });
 

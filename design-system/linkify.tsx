@@ -22,6 +22,8 @@ export function linkifyText(text: string, linkColor: string): ReactNode[] {
     color: linkColor,
     textDecoration: 'underline',
     textUnderlineOffset: 3,
+    // Bare URLs once pushed a 375 viewport past the width budget; break anywhere.
+    overflowWrap: 'anywhere',
     wordBreak: 'break-word'
   };
 

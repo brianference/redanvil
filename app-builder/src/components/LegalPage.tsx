@@ -7,6 +7,8 @@ export interface LegalSection {
   heading: string;
   /** Section body paragraph. */
   body: string;
+  /** Optional bullet list under the body. */
+  items?: readonly string[];
 }
 
 export interface LegalPageProps {
@@ -20,6 +22,24 @@ export interface LegalPageProps {
   sections: readonly LegalSection[];
 }
 
+const bodyStyle = {
+  color: theme.color.muted,
+  fontSize: theme.type.scale[2],
+  lineHeight: 1.7,
+  marginTop: theme.space.sm,
+  overflowWrap: 'anywhere' as const
+};
+
+const listStyle = {
+  color: theme.color.muted,
+  fontSize: theme.type.scale[2],
+  lineHeight: 1.7,
+  marginTop: theme.space.sm,
+  marginBottom: 0,
+  paddingLeft: theme.space.lg,
+  overflowWrap: 'anywhere' as const
+};
+
 /** Renders an informational/legal page: intro, updated date, and headed sections. */
 export function LegalPage({ title, updated, intro, sections }: LegalPageProps): JSX.Element {
   return (
@@ -32,7 +52,8 @@ export function LegalPage({ title, updated, intro, sections }: LegalPageProps): 
         style={{
           color: theme.color.text,
           fontSize: theme.type.scale[3],
-          marginTop: theme.space.sm
+          marginTop: theme.space.sm,
+          overflowWrap: 'anywhere'
         }}
       >
         {intro}
@@ -44,16 +65,16 @@ export function LegalPage({ title, updated, intro, sections }: LegalPageProps): 
         {sections.map((s) => (
           <section key={s.heading} style={{ marginTop: theme.space.xl }}>
             <h2 style={{ fontSize: theme.type.scale[3], margin: 0 }}>{s.heading}</h2>
-            <p
-              style={{
-                color: theme.color.muted,
-                fontSize: theme.type.scale[2],
-                lineHeight: 1.7,
-                marginTop: theme.space.sm
-              }}
-            >
-              {linkifyText(s.body)}
-            </p>
+            <p style={bodyStyle}>{linkifyText(s.body)}</p>
+            {s.items !== undefined && s.items.length > 0 && (
+              <ul style={listStyle}>
+                {s.items.map((item) => (
+                  <li key={item} style={{ marginBottom: theme.space.xs }}>
+                    {linkifyText(item)}
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         ))}
       </div>

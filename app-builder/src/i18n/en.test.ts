@@ -1,11 +1,30 @@
 import { describe, it, expect } from 'vitest';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router-dom';
+import { LegalPage } from '../components/LegalPage';
 import { en, type Locale } from './en';
+
+/** Count whitespace-separated words in legal page copy (R30 floor). */
+function pageWordCount(page: {
+  title: string;
+  intro: string;
+  updated: string;
+  sections: readonly { heading: string; body: string; items?: readonly string[] }[];
+}): number {
+  const parts = [
+    page.title,
+    page.updated,
+    page.intro,
+    ...page.sections.flatMap((s) => [s.heading, s.body, ...(s.items ?? [])])
+  ];
+  return parts.join(' ').trim().split(/\s+/).filter(Boolean).length;
+}
 
 describe('en locale bundle', () => {
   it('exposes typed app shell copy', () => {
     const locale: Locale = en;
     expect(locale.app.name).toBe('RedAnvil');
-    expect(locale.app.primaryNav).toBe('Primary');
     expect(locale.app.footerCopyright(2026)).toContain('RedAnvil');
     expect(locale.app.footerCopyright(2026)).toContain('2026');
     expect(locale.app.themeToLight.length).toBeGreaterThan(2);
@@ -60,11 +79,51 @@ describe('en locale bundle', () => {
       const p = en.pages[key];
       expect(p.title.length).toBeGreaterThan(2);
       expect(p.intro.length).toBeGreaterThan(20);
-      expect(p.sections.length).toBeGreaterThan(0);
+      expect(p.updated.length).toBeGreaterThan(2);
+      // R30: real headed sections, not a single stub paragraph.
+      expect(p.sections.length).toBeGreaterThanOrEqual(3);
       for (const s of p.sections) {
         expect(s.heading.length).toBeGreaterThan(2);
         expect(s.body.length).toBeGreaterThan(20);
       }
+    }
+  });
+
+  it('meets R30 substance floor on Terms and Privacy (>=150 words, >=3 sections)', () => {
+    for (const key of ['terms', 'privacy'] as const) {
+      const p = en.pages[key];
+      expect(p.sections.length, `${key} section count`).toBeGreaterThanOrEqual(3);
+      expect(pageWordCount(p), `${key} word count`).toBeGreaterThanOrEqual(150);
+    }
+  });
+
+  it('states the app-builder central disclaimer: PRD is a start, saves are public', () => {
+    const termsBodies = en.pages.terms.sections.map((s) => s.body).join(' ');
+    expect(termsBodies.toLowerCase()).toMatch(/public/);
+    expect(termsBodies.toLowerCase()).toMatch(/starting specification|not verified/);
+    const privacyBodies = en.pages.privacy.sections.map((s) => s.body).join(' ');
+    expect(privacyBodies.toLowerCase()).toMatch(/d1|cloudflare/);
+    expect(privacyBodies.toLowerCase()).toMatch(/public/);
+  });
+
+  it('renders each legal page with multiple h2 sections', () => {
+    for (const key of ['about', 'contact', 'privacy', 'terms'] as const) {
+      const p = en.pages[key];
+      const html = renderToStaticMarkup(
+        createElement(
+          MemoryRouter,
+          null,
+          createElement(LegalPage, {
+            title: p.title,
+            updated: p.updated,
+            intro: p.intro,
+            sections: p.sections
+          })
+        )
+      );
+      const h2Count = (html.match(/<h2\b/g) ?? []).length;
+      expect(h2Count, `${key} h2 count`).toBeGreaterThanOrEqual(3);
+      expect(html).toContain(p.updated);
     }
   });
 
