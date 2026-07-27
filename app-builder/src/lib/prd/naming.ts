@@ -14,6 +14,29 @@ const STOPWORDS = new Set([
   'and'
 ]);
 
+/**
+ * Words that cannot end a title. A length-bounded cut lands on whatever word
+ * the budget ran out on, and these leave the phrase visibly unfinished.
+ */
+const DANGLING_TAIL = new Set([
+  'a',
+  'an',
+  'the',
+  'for',
+  'with',
+  'to',
+  'of',
+  'and',
+  'or',
+  'in',
+  'on',
+  'at',
+  'by',
+  'from',
+  'that',
+  'which'
+]);
+
 /** Soft max character length for a title; cuts only on a word boundary (no ellipsis). */
 const TITLE_MAX_CHARS = 72;
 
@@ -38,7 +61,14 @@ export function titleFromPrompt(prompt: string): string {
     clause = lastSpace > 12 ? head.slice(0, lastSpace) : head;
   }
 
+  // Truncation lands wherever the character budget runs out, which is often on
+  // a word that cannot end a phrase: "…Lowest Cost Airline Flight with" was a
+  // real generated title. Drop trailing connectives so the cut reads as a title
+  // rather than an unfinished sentence.
   const words = clause.split(/\s+/).filter(Boolean);
+  while (words.length > 1 && DANGLING_TAIL.has(words[words.length - 1]!.toLowerCase())) {
+    words.pop();
+  }
   if (words.length === 0) return 'New App';
   return words
     .map((w, i) =>

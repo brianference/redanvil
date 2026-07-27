@@ -453,3 +453,56 @@ describe('default app type reaches the PRD', () => {
     expect(untouched.markdown).toContain('As a **mobile user**');
   });
 });
+
+describe('app name override', () => {
+  const named = generatePrd(
+    {
+      prompt:
+        'a mobile-first app that finds the lowest cost airline flight with nonstop only, maximum one layover',
+      appName: 'QuickFlight',
+      appType: 'Mobile app',
+      hasAuth: false,
+      entities: 'flight'
+    },
+    estimate({ features: 2, hasAuth: false, entities: 1 })
+  );
+
+  it('drives both the title and the slug', () => {
+    // The slug is the deployed hostname and every gate command in the document.
+    expect(named.title).toBe('QuickFlight');
+    expect(named.slug).toBe('quickflight');
+    expect(named.markdown).toContain('slug: "quickflight"');
+    expect(named.markdown).toContain('npm run gate -- quickflight');
+  });
+
+  it('keeps the derived name when no override is given', () => {
+    const derived = generatePrd(
+      {
+        prompt:
+          'a mobile-first app that finds the lowest cost airline flight with nonstop only, maximum one layover',
+        appType: 'Mobile app',
+        hasAuth: false,
+        entities: 'flight'
+      },
+      estimate({ features: 2, hasAuth: false, entities: 1 })
+    );
+    expect(derived.slug).not.toBe('quickflight');
+    expect(derived.title).not.toBe('QuickFlight');
+  });
+
+  it('does not end a truncated title on a dangling connective', () => {
+    // "…Lowest Cost Airline Flight with" was a real generated title: the cut
+    // landed on a preposition and read as an unfinished sentence.
+    const derived = generatePrd(
+      {
+        prompt:
+          'a mobile-first app that finds the lowest cost airline flight with nonstop only, maximum one layover',
+        appType: 'Mobile app',
+        hasAuth: false,
+        entities: 'flight'
+      },
+      estimate({ features: 2, hasAuth: false, entities: 1 })
+    );
+    expect(derived.title).not.toMatch(/\b(with|for|the|a|an|to|of|and|by|from|that|which)$/i);
+  });
+});

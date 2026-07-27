@@ -42,13 +42,23 @@ export function generatePrd(
   answers: Pick<WizardAnswers, 'prompt' | 'appType' | 'hasAuth' | 'entities'> &
     Partial<
       Pick<WizardAnswers, 'dataStorage' | 'hasRealtime' | 'integrations' | 'selectedFeatureIds'>
-    >,
+    > & {
+      /**
+       * Product name. Sets the title and the slug — and the slug is the
+       * deployed hostname and every gate command in the document, so deriving
+       * it from a description produced URLs like
+       * `a-mobile-first-app-that-finds-the-lowest-cost-air`. Omit to keep the
+       * derived name.
+       */
+      appName?: string;
+    },
   cost: TokenEstimate
 ): Prd {
   const full = withWizardDefaults(answers);
   const prompt = full.prompt.trim();
-  const slug = slugFromPrompt(prompt);
-  const title = titleFromPrompt(prompt);
+  const named = answers.appName?.trim() ?? '';
+  const slug = named.length > 0 ? slugFromPrompt(named) : slugFromPrompt(prompt);
+  const title = named.length > 0 ? named : titleFromPrompt(prompt);
   const entities = entityList(full.entities);
   const appType = full.appType.trim() || 'web application';
   const wizardHasAuth = full.hasAuth;
