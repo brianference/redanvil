@@ -276,8 +276,17 @@ try {
   // quickflight."), because nothing ever asked whether the document said
   // anything. A Terms or Privacy page that exists but is empty is worse than
   // missing -- it looks answered. Substance is now part of the rule (R30).
-  const THIN_WORDS = 150;
-  const THIN_SECTIONS = 3;
+  // Raised from 150/3. The original bar was set to catch the one-sentence legal
+  // pages that shipped, and it did -- but it then passed an 860-word Terms page
+  // that a reader immediately called thin, because 150 words is a paragraph and
+  // not a document. Real comparables: Kayak's privacy policy runs 11,708 words
+  // across 21 headings; airline terms run to several thousand.
+  //
+  // 1200/8 is deliberately below those and still forces a document that covers
+  // the obligations a product like this actually has: what a price includes,
+  // whose terms govern travel, liability, disputes, accessibility.
+  const THIN_WORDS = 1200;
+  const THIN_SECTIONS = 8;
   const legal = pages.filter((x) => /\/(terms|privacy)/.test(x.route));
   const thin = legal.filter((x) => x.words < THIN_WORDS || x.sections < THIN_SECTIONS);
   const badPages = pages.filter((x) => x.status !== 200 || x.h1 === null);
