@@ -1,4 +1,5 @@
 import type { Job } from '../schemas/job';
+import { legalDocs } from './legalCopy';
 
 const PAGES = ['Home', 'About', 'Terms', 'Privacy', 'Contact'] as const;
 
@@ -151,25 +152,33 @@ function sitemapXml(slug: string): string {
  * @param job - Job providing the app name for copy.
  * @returns TypeScript module source.
  */
-function i18nEnTs(job: Job): string {
-  const pages = PAGES.map((name) => {
-    const key = name.toLowerCase();
-    return (
-      // NOT a placeholder sentence. `body: '<Name> page for <slug>.'` is exactly
-      // what shipped four one-sentence legal pages, because fe-required-pages
-      // checked only for a 200 and an h1. The string now states the obligation,
-      // so a build that leaves it fails the substance check loudly (R30) instead
-      // of passing as a finished document.
-      `  ${key}: {\n` +
-      `    title: '${name}',\n` +
-      `    body:\n` +
-      `      'TODO(R30): replace with the real ${key} document for ${job.slug}. ' +\n` +
-      `      'Terms and Privacy need at least 150 words across at least 3 headed ' +\n` +
-      `      'sections, and every statement must be TRUE for this app rather than ' +\n` +
-      `      'boilerplate. The clause list is in design-system/mobile-design-rules.md R30.'\n` +
-      `  }`
-    );
-  }).join(',\n');
+function i18nEnTs(job: Job, builtAt: string): string {
+  // R32: emit a REAL document, never a plausible stub. The previous template
+  // produced `'<Name> page for <slug>.'`, and four one-sentence legal pages
+  // shipped and passed every check — a stub WAS its finished output. A marker
+  // would satisfy R32's letter and still leave a broken page on screen.
+  //
+  // `legalDocs` returns complete Terms, Privacy, About and Contact that are true
+  // of any app this scaffold builds, because the scaffold fixes the stack and
+  // can therefore describe it honestly. They ship correct and invite editing.
+  const docs = legalDocs(job, builtAt);
+  // Home is not a legal document but shares the shape, so every page component
+  // can render one structure instead of branching.
+  const home = {
+    title: job.slug,
+    intro: job.prompt,
+    sections: [
+      {
+        heading: 'What this app does',
+        body: job.prompt
+      }
+    ],
+    updated: builtAt.slice(0, 10)
+  };
+  const all = { home, ...docs };
+  const pages = (Object.keys(all) as (keyof typeof all)[])
+    .map((key) => `  ${key}: ${JSON.stringify(all[key], null, 2).split('\n').join('\n  ')}`)
+    .join(',\n');
   return (
     `/**\n` +
     ` * Central English locale bundle for all user-facing copy.\n` +
@@ -195,17 +204,114 @@ function i18nEnTs(job: Job): string {
 function pageComponent(name: string): string {
   const key = name.toLowerCase();
   return (
-    `import { Page } from '../components/Page';\n` +
-    `import { en } from '../i18n/en';\n\n` +
-    `/** ${name} page. Copy lives in the locale bundle (fe-i18n-central-copy). */\n` +
-    `export function ${name}(): JSX.Element {\n` +
-    `  const copy = en.pages.${key};\n` +
-    `  return (\n` +
-    `    <Page title={copy.title}>\n` +
-    `      <p>{copy.body}</p>\n` +
-    `    </Page>\n` +
-    `  );\n` +
-    `}\n`
+    `import { DocPage } from '../components/DocPage';
+` +
+    `import { en } from '../i18n/en';
+
+` +
+    `/** ${name} page. Copy lives in the locale bundle (fe-i18n-central-copy). */
+` +
+    `export function ${name}(): JSX.Element {
+` +
+    `  return <DocPage doc={en.pages.${key}} />;
+` +
+    `}
+`
+  );
+}
+
+/**
+ * One component renders every page, because they differ only in their copy.
+ *
+ * Five near-identical page files tripped the duplication rule the moment the
+ * bodies grew past one line — which is the rule doing its job, not a nuisance.
+ */
+function docPageComponent(): string {
+  return (
+    `import { Page } from './Page';
+
+` +
+    `/** A headed section of a document. */
+` +
+    `export interface DocSection {
+` +
+    `  readonly heading: string;
+` +
+    `  readonly body: string;
+` +
+    `  readonly items?: readonly string[];
+` +
+    `}
+
+` +
+    `/** A complete document: intro, sections, last-updated date. */
+` +
+    `export interface Doc {
+` +
+    `  readonly title: string;
+` +
+    `  readonly intro: string;
+` +
+    `  readonly sections: readonly DocSection[];
+` +
+    `  readonly updated: string;
+` +
+    `}
+
+` +
+    `export interface DocPageProps {
+` +
+    `  /** The document to render. */
+` +
+    `  doc: Doc;
+` +
+    `}
+
+` +
+    `/** Renders a document as real headed sections rather than one paragraph. */
+` +
+    `export function DocPage({ doc }: DocPageProps): JSX.Element {
+` +
+    `  return (
+` +
+    `    <Page title={doc.title}>
+` +
+    `      <p className="page-intro">{doc.intro}</p>
+` +
+    `      {doc.sections.map((section) => (
+` +
+    `        <section key={section.heading}>
+` +
+    `          <h2>{section.heading}</h2>
+` +
+    `          <p>{section.body}</p>
+` +
+    `          {section.items === undefined ? null : (
+` +
+    `            <ul>
+` +
+    `              {section.items.map((item) => (
+` +
+    `                <li key={item}>{item}</li>
+` +
+    `              ))}
+` +
+    `            </ul>
+` +
+    `          )}
+` +
+    `        </section>
+` +
+    `      ))}
+` +
+    `      <p className="page-updated">Last updated: {doc.updated}</p>
+` +
+    `    </Page>
+` +
+    `  );
+` +
+    `}
+`
   );
 }
 
@@ -512,7 +618,7 @@ function routesTestTs(): string {
  * @param job - Validated job (including optional entities for D1 DDL).
  * @returns Map of relative paths to file contents.
  */
-export function appFiles(job: Job): Record<string, string> {
+export function appFiles(job: Job, builtAt: string): Record<string, string> {
   const files: Record<string, string> = {
     'package.json':
       JSON.stringify(
@@ -624,12 +730,13 @@ export function appFiles(job: Job): Record<string, string> {
     'src/theme.css': themeCss(),
     'src/theme.ts': themeTs(),
     'src/components/ThemeToggle.tsx': themeToggleTsx(),
-    'src/i18n/en.ts': i18nEnTs(job),
+    'src/i18n/en.ts': i18nEnTs(job, builtAt),
     'src/lib/routes.ts': routesTs(),
     'src/lib/routes.test.ts': routesTestTs(),
     'tests/acceptance.spec.ts': acceptanceSpecTs(),
     'playwright.config.ts': playwrightConfigTs(),
     'vitest.config.ts': vitestConfigTs(),
+    'src/components/DocPage.tsx': docPageComponent(),
     'src/components/Page.tsx':
       `import type { ReactNode } from 'react';\n` +
       `import { en } from '../i18n/en';\n\n` +

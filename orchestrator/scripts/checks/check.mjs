@@ -13,6 +13,9 @@ import { join, extname } from 'node:path';
 import { runCiActionlint } from './ci-actionlint.mjs';
 import { runProcConventionalCommits } from './proc-conventional-commits.mjs';
 import { runTestAcceptance } from './u-test-acceptance.mjs';
+import { runNoPlaceholders } from './u-no-placeholders.mjs';
+import { runIntegrationScan } from './u-integration-scan.mjs';
+import { runCompetitorScan } from './u-competitor-scan.mjs';
 import { runProcPrTitleTicket } from './proc-pr-title-ticket.mjs';
 // The cross-app duplication pass already owns the definition of "the same code":
 // comments stripped, whitespace collapsed, identifiers normalised, keywords kept.
@@ -935,6 +938,18 @@ switch (ruleId) {
   }
   case 'u-test-acceptance': {
     runTestAcceptance(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'u-no-placeholders': {
+    runNoPlaceholders(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'u-integration-scan': {
+    runIntegrationScan(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'u-competitor-scan': {
+    runCompetitorScan(appDir, { pass, fail, notApplicable });
     break;
   }
   case 'proc-conventional-commits': {

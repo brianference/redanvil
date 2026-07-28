@@ -165,25 +165,28 @@ describe('scaffold migrations from job.entities', () => {
   });
 
   it('emits CREATE TABLE for each provided entity and its fields', () => {
-    const files = appFiles({
-      kind: 'job',
-      slug: 'market-app',
-      prompt: 'Build a marketplace for local makers',
-      targetType: 'fullstack-web',
-      threshold: 90,
-      answers: {},
-      createdAt: '2026-07-21T00:00:00.000Z',
-      entities: [
-        {
-          name: 'Listing',
-          fields: [
-            { name: 'title', type: 'text' },
-            { name: 'price_cents', type: 'integer' }
-          ]
-        },
-        { name: 'Seller', fields: [{ name: 'display_name', type: 'text' }] }
-      ]
-    });
+    const files = appFiles(
+      {
+        kind: 'job',
+        slug: 'market-app',
+        prompt: 'Build a marketplace for local makers',
+        targetType: 'fullstack-web',
+        threshold: 90,
+        answers: {},
+        createdAt: '2026-07-21T00:00:00.000Z',
+        entities: [
+          {
+            name: 'Listing',
+            fields: [
+              { name: 'title', type: 'text' },
+              { name: 'price_cents', type: 'integer' }
+            ]
+          },
+          { name: 'Seller', fields: [{ name: 'display_name', type: 'text' }] }
+        ]
+      },
+      '2026-07-21T00:00:00.000Z'
+    );
     const sql = files['migrations/0001_init.sql'];
     expect(sql).toBeDefined();
     expect(sql).toContain('CREATE TABLE IF NOT EXISTS listing');

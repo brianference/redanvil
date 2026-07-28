@@ -73,7 +73,7 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
     'design-system/screen-patterns.md': screenPatterns,
     'design-system/logo-brief-template.md': logoBrief,
     ...(input.prdMarkdown === undefined ? {} : { 'PRD.md': input.prdMarkdown }),
-    ...appFiles(job)
+    ...appFiles(job, builtAt)
   };
 
   for (const [rel, content] of Object.entries(files)) {

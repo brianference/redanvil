@@ -68,6 +68,23 @@ export const RULES: Rule[] = [
   // measured on the real page and recorded with evidence.
   rule('fe-a11y-contrast', 'frontend', 'blocker', 'visual'),
   rule('fe-i18n-central-copy', 'frontend', 'blocker', 'det'),
+  // R32. A template emitted `'<Name> page for <slug>.'` and four one-sentence
+  // legal pages shipped, passing every check, because a stub was that
+  // template's finished output. A placeholder that reads as a plausible
+  // sentence is indistinguishable from real copy to everyone except its author.
+  rule('u-no-placeholders', 'frontend', 'blocker', 'det'),
+  // R29/R33. Reuse-before-rebuild as prose produces nothing checkable, and a
+  // search nobody recorded is a search nobody can review. Also forces the
+  // session's own connectors to be enumerated first, and ages the evidence out
+  // at 90 days -- Amadeus was decommissioned while still topping every "best
+  // free flight API" guide.
+  rule('u-integration-scan', 'hygiene', 'major', 'det'),
+  // R31. COMPETITORS.md shipped with real scraped competitor structure and an
+  // Assessment reading "Fill this in." Every presence signal was green -- the
+  // file existed, was long, and held genuine data -- while the step that turns a
+  // scrape into a work list was never done. Cost: four filters every competitor
+  // ships. This scores the CONCLUSIONS, not the evidence.
+  rule('u-competitor-scan', 'hygiene', 'major', 'det'),
   rule('fe-no-unsanitized-html', 'frontend', 'blocker', 'det'),
   rule('fe-pages-compose', 'frontend', 'major', 'judge'),
   rule('fe-fail-closed-states', 'frontend', 'major', 'det+judge'),

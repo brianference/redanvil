@@ -57,13 +57,28 @@ const browser = await chromium.launch();
 const written = [];
 let failed = 0;
 
-/** Capture one phone-width screen of the generated app. */
-async function appShot(path, name, theme) {
+/**
+ * Capture one phone-width screen of the generated app.
+ *
+ * `scrollTo` brings a specific region into frame. Without it every frame showed
+ * the top of a route, so the shot captioned "every filter, as a real control"
+ * was the browse list with no filters in it — the caption and the evidence
+ * disagreed, which is worse than having neither.
+ */
+async function appShot(path, name, theme, scrollTo) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: theme });
   await page.addInitScript((t) => window.localStorage.setItem('theme', t), theme);
   try {
     await page.goto(new URL(path, appUrl).href, { waitUntil: 'networkidle', timeout: 45000 });
     await page.waitForTimeout(1500);
+    if (scrollTo) {
+      const target = page.locator(scrollTo).first();
+      // Fail loudly: a missing region means the caption is describing something
+      // the app no longer has.
+      await target.waitFor({ state: 'visible', timeout: 15000 });
+      await target.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(700);
+    }
     const file = join(outDir, `${name}.png`);
     await page.screenshot({ path: file });
     written.push(file);
@@ -114,8 +129,9 @@ async function appShot(path, name, theme) {
 
 // --- 2. the generated app ------------------------------------------------------
 await appShot('/', 'app-home', 'light');
-await appShot('/flights', 'app-results', 'light');
-await appShot('/flights', 'app-results-dark', 'dark');
+// The filters live on the search route, not the browse list.
+await appShot('/', 'app-results', 'light', '.qf-filters');
+await appShot('/', 'app-results-dark', 'dark', '.qf-filters');
 
 await browser.close();
 

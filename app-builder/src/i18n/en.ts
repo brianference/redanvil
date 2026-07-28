@@ -61,7 +61,9 @@ export const en = {
       prdAlt: (name: string): string =>
         `The RedAnvil wizard review step showing the answers that generated the ${name} spec`,
       screensLabel: (name: string): string => `${name} screens`,
-      viewLive: 'Open the live app'
+      viewLive: 'Open the live app',
+      viewSource: 'Read the source',
+      featuresHeading: 'What it does'
     },
     home: {
       title: 'What app should we forge?',

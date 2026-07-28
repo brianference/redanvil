@@ -36,7 +36,28 @@ export function ExampleStory({ example }: ExampleStoryProps): JSX.Element {
         <a href={example.liveUrl} rel="noopener noreferrer" style={liveStyle}>
           {copy.viewLive}
         </a>
+        <a href={example.repoUrl} rel="noopener noreferrer" style={liveStyle}>
+          {copy.viewSource}
+        </a>
       </header>
+
+      <section aria-labelledby={`feat-${example.slug}`}>
+        <h3 id={`feat-${example.slug}`} style={resultStyle}>
+          {copy.featuresHeading}
+        </h3>
+        <div className="ex-features">
+          {example.features.map((group) => (
+            <div key={group.area} className="ex-feature-group">
+              <h4 style={captionStyle}>{group.area}</h4>
+              <ul>
+                {group.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section aria-labelledby={`app-${example.slug}`}>
         <h3 id={`app-${example.slug}`} style={resultStyle}>

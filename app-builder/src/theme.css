@@ -108,3 +108,41 @@
     display: block;
   }
 }
+
+/* Examples: what each shipped app actually does.
+   Two columns from 760px so a long capability list stays scannable instead of
+   running as one tall stripe down the left third of a wide screen. Columns
+   follow the content; the container is never starved to protect the measure. */
+.ex-features {
+  display: grid;
+  gap: 1.5rem 2rem;
+  grid-template-columns: 1fr;
+  margin-block: 1rem 1.5rem;
+}
+
+@media (min-width: 760px) {
+  .ex-features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ex-feature-group ul {
+  margin: 0.35rem 0 0;
+  padding-inline-start: 1.15rem;
+  color: var(--muted);
+}
+
+.ex-feature-group li {
+  margin-block: 0.35rem;
+}
+
+/* The two header links sat flush against each other, reading as one run-on
+   phrase ("Open the live appRead the source"). Inline-block plus a gap, so the
+   pair still wraps cleanly at 375px. */
+.ex-head a + a {
+  margin-inline-start: 1.25rem;
+}
+
+.ex-head a {
+  display: inline-block;
+}
