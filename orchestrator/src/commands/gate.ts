@@ -45,6 +45,7 @@ export const APP_CHECKS: Check[] = [
   // Static rule checks (real greps/AST-lite over the app source).
   det('u-test-acceptance'),
   det('u-no-placeholders'),
+  det('fe-visible-response'),
   det('u-integration-scan'),
   det('u-competitor-scan'),
   det('u-typing-scoped-ignores'),

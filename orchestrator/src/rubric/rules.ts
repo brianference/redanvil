@@ -73,6 +73,12 @@ export const RULES: Rule[] = [
   // template's finished output. A placeholder that reads as a plausible
   // sentence is indistinguishable from real copy to everyone except its author.
   rule('u-no-placeholders', 'frontend', 'blocker', 'det'),
+  // R34. A control that changes state without changing anything visible is
+  // indistinguishable from a broken one. Search rendered its outcome at y=1341
+  // in a 1000px viewport and was reported as doing nothing; a footer link kept
+  // the scroll position and landed the reader 1044px into an unseen document.
+  // Both passed code review, unit tests and a green acceptance suite.
+  rule('fe-visible-response', 'frontend', 'blocker', 'det'),
   // R29/R33. Reuse-before-rebuild as prose produces nothing checkable, and a
   // search nobody recorded is a search nobody can review. Also forces the
   // session's own connectors to be enumerated first, and ages the evidence out

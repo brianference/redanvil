@@ -226,6 +226,44 @@ function pageComponent(name: string): string {
  * Five near-identical page files tripped the duplication rule the moment the
  * bodies grew past one line — which is the rule doing its job, not a nuisance.
  */
+/**
+ * Scroll reset on route change, shipped with every generated app.
+ *
+ * R34: a browser resets scroll on navigation; a client-side router does not. A
+ * generated app that follows a footer link from the bottom of a long page would
+ * otherwise land the reader mid-document in a page they have never seen, and
+ * `fe-visible-response` fails an app that does not do this.
+ */
+function scrollToTopComponent(): string {
+  return (
+    `import { useEffect } from 'react';
+` +
+    `import { useLocation } from 'react-router-dom';
+
+` +
+    `/** Reset scroll position on route change (R34). */
+` +
+    `export function ScrollToTop(): null {
+` +
+    `  const { pathname } = useLocation();
+
+` +
+    `  useEffect(() => {
+` +
+    `    // 'auto', not 'smooth': this is a navigation, not a gesture.
+` +
+    `    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+` +
+    `  }, [pathname]);
+
+` +
+    `  return null;
+` +
+    `}
+`
+  );
+}
+
 function docPageComponent(): string {
   return (
     `import { Page } from './Page';
@@ -453,6 +491,45 @@ function acceptanceSpecTs(): string {
     `    await expect(page.getByRole('heading').first()).toBeVisible();
 ` +
     `  }
+` +
+    `});
+
+` +
+    `test('an in-app navigation lands at the top of the new page', async ({ page }) => {
+` +
+    `  // R34. A browser resets scroll on navigation; a client-side router does
+` +
+    `  // not. Following a footer link from far down a page otherwise lands the
+` +
+    `  // reader mid-document in a page they have never seen.
+` +
+    `  //
+` +
+    `  // This must be a CLIENT-SIDE navigation: page.goto() resets scroll
+` +
+    `  // natively and would pass whether or not the app does anything.
+` +
+    `  await page.goto('/');
+` +
+    `  await page.evaluate(() => window.scrollTo(0, 1200));
+` +
+    `
+` +
+    `  await page.getByRole('link', { name: /privacy/i }).first().click();
+` +
+    `  const heading = page.getByRole('heading').first();
+` +
+    `  await expect(heading).toBeVisible();
+` +
+    `  // Assert the VIEWPORT, not just presence: toBeVisible() passes for an
+` +
+    `  // element far below the fold, which is how a working control gets
+` +
+    `  // reported as doing nothing.
+` +
+    `  await expect(heading).toBeInViewport();
+` +
+    `  expect(await page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(2);
 ` +
     `});
 
@@ -736,6 +813,7 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     'tests/acceptance.spec.ts': acceptanceSpecTs(),
     'playwright.config.ts': playwrightConfigTs(),
     'vitest.config.ts': vitestConfigTs(),
+    'src/components/ScrollToTop.tsx': scrollToTopComponent(),
     'src/components/DocPage.tsx': docPageComponent(),
     'src/components/Page.tsx':
       `import type { ReactNode } from 'react';\n` +
@@ -796,11 +874,14 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
   files['src/App.tsx'] =
     `import { BrowserRouter, Routes, Route } from 'react-router-dom';\n` +
     `import { pathForPage } from './lib/routes';\n` +
+    `import { ScrollToTop } from './components/ScrollToTop';\n` +
     `${routeImports}\n\n` +
     `/** App router: composes the required pages from the shared route table. */\n` +
     `export function App(): JSX.Element {\n` +
     `  return (\n` +
     `    <BrowserRouter>\n` +
+    `      {/* Inside the router: it reads the current location (R34). */}\n` +
+    `      <ScrollToTop />\n` +
     `      <Routes>\n` +
     `${routeElements}\n` +
     `      </Routes>\n` +

@@ -14,6 +14,7 @@ import { runCiActionlint } from './ci-actionlint.mjs';
 import { runProcConventionalCommits } from './proc-conventional-commits.mjs';
 import { runTestAcceptance } from './u-test-acceptance.mjs';
 import { runNoPlaceholders } from './u-no-placeholders.mjs';
+import { runVisibleResponse } from './fe-visible-response.mjs';
 import { runIntegrationScan } from './u-integration-scan.mjs';
 import { runCompetitorScan } from './u-competitor-scan.mjs';
 import { runProcPrTitleTicket } from './proc-pr-title-ticket.mjs';
@@ -942,6 +943,10 @@ switch (ruleId) {
   }
   case 'u-no-placeholders': {
     runNoPlaceholders(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'fe-visible-response': {
+    runVisibleResponse(appDir, { pass, fail, notApplicable });
     break;
   }
   case 'u-integration-scan': {
