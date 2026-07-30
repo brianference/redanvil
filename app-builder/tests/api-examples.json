@@ -4,33 +4,67 @@
     {
       "route": "/api/health",
       "method": "GET",
-      "expect": { "status": 200, "nonEmpty": true }
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
     },
     {
       "route": "/api/jobs",
       "method": "GET",
       "comment": "Lists build jobs. A local run starts with an empty D1, and an empty job list is the correct answer for a tool that has not been used yet -- unlike a catalog, where empty means broken. nonEmpty is opted out for that reason, and the reason is written down rather than left as an omission.",
-      "expect": { "status": 200, "nonEmpty": false }
+      "expect": {
+        "status": 200,
+        "nonEmpty": false
+      }
     },
     {
       "route": "/api/prds",
       "method": "GET",
       "comment": "Same reasoning as /api/jobs: a fresh database legitimately holds no PRDs.",
-      "expect": { "status": 200, "nonEmpty": false }
+      "expect": {
+        "status": 200,
+        "nonEmpty": false
+      }
     },
     {
       "route": "/api/prd/[id]",
       "method": "GET",
-      "params": { "id": "nonexistent-prd-id" },
-      "comment": "A PRD that is definitely absent. The route must answer 404 with a real error body rather than 500 or an empty 200 -- 'handles a missing record correctly' is a real behaviour, and the status is 2xx-exempt only because 404 is the ANSWER here, not a failure. Declared as 404 with nonEmpty so an empty or crashing response still fails.",
-      "expect": { "status": 404, "nonEmpty": true }
+      "params": {
+        "id": "prd-tesla-driving-stats"
+      },
+      "comment": "A real seeded PRD (migrations/0002_seed_prd.sql), copied verbatim from the generator characterization fixture. This is the success path the route previously had no data to demonstrate.",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
     },
     {
       "route": "/api/submit",
       "method": "POST",
-      "body": { "prompt": "Build a bird-watching log with sightings and photos" },
-      "comment": "The real entry point: a prompt in, a job out. This is the route that would have caught a submit endpoint that accepted work and did nothing with it.",
-      "expect": { "status": 200, "nonEmpty": true }
+      "body": {
+        "prompt": "Build a bird-watching log with sightings and photos",
+        "appType": "dashboard",
+        "hasAuth": true,
+        "entities": 2
+      },
+      "comment": "The real entry point: wizard answers in, a queued job out. Body matches submitBodySchema exactly - prompt (min 8 chars), appType, hasAuth, entities. My first attempt sent prompt alone and the route correctly answered 400 Required, which is the schema doing its job and the example being wrong.",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
+    },
+    {
+      "route": "/api/prd/[id]",
+      "method": "GET",
+      "params": {
+        "id": "definitely-not-a-real-prd"
+      },
+      "comment": "The error path is worth proving too: a missing record must answer 404 with a real body rather than 500 or an empty 200. Allowed because the route also carries a 2xx example above.",
+      "expect": {
+        "status": 404,
+        "nonEmpty": true
+      }
     }
   ]
 }
