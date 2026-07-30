@@ -13,6 +13,7 @@ import { parseFindings, buildJudgePrompt, findClaimFiles } from '../src/commands
 import {
   evaluateResponse,
   primaryCollection,
+  hasSuccessExample,
   withQuery
 } from '../scripts/checks/u-api-real-output.mjs';
 
@@ -416,14 +417,35 @@ describe('evasions an adversarial pass found, each now closed', () => {
   // These are the findings that survived checking them against the code. Each
   // one is here because it really worked before the fix.
 
-  it('a non-2xx expectation cannot license a permanently broken route', () => {
+  it('a 5xx expectation cannot license a permanently broken route', () => {
     // `expect.status` is written by whoever owns the handler, so declaring
     // {"status":500} made the check agree a 500 met expectations.
     const reason = evaluateResponse(
       { method: 'GET', expect: { status: 500 } },
       { status: 500, text: '{"error":"down"}', body: { error: 'down' }, error: null }
     );
-    expect(reason).toMatch(/non-2xx/);
+    expect(reason).toMatch(/declares the endpoint broken/);
+  });
+
+  it('allows a 4xx example, because rejecting bad input is real behaviour', () => {
+    // A 404 for an absent record is correct, not broken. Blanket-rejecting
+    // non-2xx conflated "the server failed" with "the server correctly said no"
+    // — caught while writing app-builder's examples, where /api/prd/[id]
+    // answering 404 for a missing id is exactly right.
+    const reason = evaluateResponse(
+      { method: 'GET', expect: { status: 404, nonEmpty: true } },
+      { status: 404, text: '{"error":"PRD not found"}', body: { error: 'PRD not found' }, error: null }
+    );
+    expect(reason).toBeNull();
+  });
+
+  it('but a 4xx example alone never proves a route returns real data', () => {
+    // The 2xx requirement moved to the ROUTE: error-path examples are welcome,
+    // and one of them still has to show the route working.
+    expect(hasSuccessExample([{ expect: { status: 404 } }])).toBe(false);
+    expect(hasSuccessExample([{ expect: { status: 404 } }, { expect: { status: 200 } }])).toBe(true);
+    // Status omitted means 200, the common case.
+    expect(hasSuccessExample([{ expect: { nonEmpty: true } }])).toBe(true);
   });
 
   it('an empty body fails even when the example never asked for nonEmpty', () => {

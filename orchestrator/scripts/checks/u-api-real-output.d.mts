@@ -45,6 +45,7 @@ export declare function withQuery(
   path: string,
   query?: Record<string, string | number>
 ): string;
+export declare function hasSuccessExample(examples: ApiExample[]): boolean;
 export declare function isEmptyBody(body: unknown): boolean;
 export declare function primaryCollection(body: unknown): unknown[] | null;
 export declare function evaluateResponse(

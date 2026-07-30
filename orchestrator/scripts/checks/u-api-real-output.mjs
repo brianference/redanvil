@@ -207,6 +207,20 @@ export function primaryCollection(body) {
 }
 
 /**
+ * Whether a route's examples include one that expects success.
+ *
+ * @param {object[]} examples - Examples declared for one route.
+ * @returns {boolean} True when at least one expects a 2xx.
+ */
+export function hasSuccessExample(examples) {
+  return examples.some((e) => {
+    const status = e?.expect?.status;
+    const wanted = typeof status === 'number' ? status : 200;
+    return wanted >= 200 && wanted < 300;
+  });
+}
+
+/**
  * Judge one captured response against its example.
  *
  * @param {object} example - The declared example.
@@ -217,15 +231,20 @@ export function evaluateResponse(example, got) {
   const want = example.expect ?? {};
   if (got.error !== null) return `request failed: ${got.error}`;
   const wantStatus = typeof want.status === 'number' ? want.status : 200;
-  // The expectation cannot license a broken endpoint. `expect.status` is written
-  // by the same person who owns the handler, so a permanently failing route
-  // could be waved through by declaring `{"status": 500}` and the check would
-  // agree it met expectations. This rule is about routes RETURNING REAL DATA;
-  // a 5xx never does, whoever declared it.
-  if (wantStatus < 200 || wantStatus >= 300) {
+  // A 5xx expectation is never legitimate. `expect.status` is written by the
+  // same person who owns the handler, so a permanently failing route could be
+  // waved through with `{"status": 500}` and the check would agree it met
+  // expectations. A server error is the endpoint failing, whoever declared it.
+  //
+  // A 4xx expectation IS legitimate and is checked elsewhere: answering 404 for
+  // an absent record, or 400 for a malformed body, is real behaviour worth
+  // proving. What that cannot do is stand in for the route working at all, so
+  // the 2xx requirement is enforced per ROUTE rather than per example — see
+  // `hasSuccessExample`.
+  if (wantStatus >= 500) {
     return (
-      `the example declares status ${wantStatus}. A route cannot satisfy this rule ` +
-      'with a non-2xx expectation — that declares the endpoint broken rather than proving it works.'
+      `the example declares status ${wantStatus}. A 5xx expectation declares the ` +
+      'endpoint broken rather than proving it works.'
     );
   }
   if (got.status !== wantStatus) {
@@ -320,10 +339,15 @@ export async function runApiRealOutput(appDir, io, deps = {}) {
     );
   }
 
+  // A route may carry SEVERAL examples: the success path plus whatever error
+  // behaviour is worth proving (404 for an absent record, 400 for a malformed
+  // body). Keying one example per route silently dropped all but the last.
   const byRoute = new Map();
   for (const example of declared.examples) {
     if (typeof example?.route !== 'string' || EMPTY_CLAIM.test(example.route)) continue;
-    byRoute.set(example.route, example);
+    const list = byRoute.get(example.route) ?? [];
+    list.push(example);
+    byRoute.set(example.route, list);
   }
 
   // Untested-by-default. Same rule as an unclaimed control.
@@ -337,14 +361,28 @@ export async function runApiRealOutput(appDir, io, deps = {}) {
     );
   }
 
+  // Every route needs at least one SUCCESS example. Error-path examples are
+  // worth having, but a route whose only demonstration is a 404 has proven it
+  // rejects things, not that it ever returns real data — which is the rule.
+  const noSuccess = routes.filter((r) => !hasSuccessExample(byRoute.get(r) ?? []));
+  if (noSuccess.length > 0) {
+    return fail(
+      `${noSuccess.length} route(s) have no successful (2xx) example:\n` +
+        noSuccess.map((r) => `  ${r}`).join('\n') +
+        '\n\nError-path examples are welcome, but one of them must show the route ' +
+        'actually returning real data, or nothing here proves it ever does.'
+    );
+  }
+
   // A claim that cannot be made concrete is not a claim.
   const unfillable = [];
   const plan = [];
   for (const route of routes) {
-    const example = byRoute.get(route);
-    const { path, missing } = fillParams(route, example.params);
-    if (missing.length > 0) unfillable.push(`${route} (no value for ${missing.join(', ')})`);
-    else plan.push({ route, path: withQuery(path, example.query), example });
+    for (const example of byRoute.get(route)) {
+      const { path, missing } = fillParams(route, example.params);
+      if (missing.length > 0) unfillable.push(`${route} (no value for ${missing.join(', ')})`);
+      else plan.push({ route, path: withQuery(path, example.query), example });
+    }
   }
   if (unfillable.length > 0) {
     return fail(
