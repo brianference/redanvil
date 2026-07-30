@@ -58,6 +58,32 @@ export const RULES: Rule[] = [
   // and simply unreachable. This requires acceptance tests that drive the real
   // UI and assert on what the user observes.
   rule('u-test-acceptance', 'testing', 'blocker', 'det'),
+  // u-test-acceptance proves the suite drives a browser and asserts on results.
+  // It cannot prove the suite covers the app: the tests and the coverage claim
+  // come from the same mental model, so the suite only ever checks what its
+  // author already had in mind. A control nobody thought of is a control nobody
+  // tested, and three shipped that way from a green repository — a Search button
+  // with no visible response, a public write endpoint, and an assistant that had
+  // answered 502 for two months. This requires a control inventory taken from
+  // the RUNNING app, with every control claimed by a test that resolves.
+  rule('u-test-feature-audit', 'testing', 'blocker', 'det'),
+  // The tested fraction of an app drifts down one uncovered file at a time, and
+  // no single change ever looks like the problem. u-test-presence catches a
+  // changed file with nothing exercising it; this catches the slow slide where
+  // nothing is individually untested and the whole is getting worse. `major`
+  // rather than `blocker` on purpose: a failed blocker zeroes the entire score,
+  // and a one-point dip is not equivalent to a security hole.
+  rule('u-test-coverage-ratchet', 'testing', 'major', 'det'),
+  // The control audit proved every button is clicked by a test. It says nothing
+  // about what comes back: QuickFlight passed contrast, touch targets, painted
+  // width, 49 unit tests, zero console errors AND the control audit, while its
+  // assistant endpoint had answered 502 for two months and its catalog held two
+  // route/date pairs, so any route a person typed returned nothing. `det+judge`
+  // because the two halves have different oracles — a machine decides status,
+  // emptiness and declared breadth; whether a well-formed answer actually
+  // delivers the product's claim is a judgment, scored from a recorded verdict
+  // over the live traffic the det half captures.
+  rule('u-api-real-output', 'testing', 'blocker', 'det+judge'),
   rule('u-test-adequacy', 'testing', 'major', 'det+judge'),
   rule('u-test-behavioral', 'testing', 'major', 'judge'),
 

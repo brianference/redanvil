@@ -261,6 +261,22 @@ async function main(): Promise<number> {
     return 1;
   }
 
+  if (command === 'api-judge') {
+    const dir = positionals[1];
+    if (!dir) {
+      console.error('usage: npm run api-judge -- <appDir>');
+      return 2;
+    }
+    if (!existsSync(dir) || !statSync(dir).isDirectory()) {
+      console.error(`api-judge: ${dir} is not a directory`);
+      return 2;
+    }
+    const { runApiJudge } = await import('./commands/apiJudge');
+    const result = await runApiJudge(dir);
+    console.log(result.message);
+    return result.exitCode;
+  }
+
   if (command === 'gate') {
     const dir = positionals[1];
     if (!dir) {

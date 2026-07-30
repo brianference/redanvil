@@ -1,5 +1,7 @@
 import type { Job } from '../schemas/job';
 import { legalDocs } from './legalCopy';
+import { featureAuditScript, featureManifestJson } from './featureAudit';
+import { apiExamplesJson, coverageStateJson } from './apiExamples';
 
 const PAGES = ['Home', 'About', 'Terms', 'Privacy', 'Contact'] as const;
 
@@ -484,13 +486,48 @@ function acceptanceSpecTs(): string {
 ` +
     `test('primary navigation reaches the required pages', async ({ page }) => {
 ` +
-    `  for (const path of ['/about', '/contact', '/terms', '/privacy']) {
+    `  // Operate the real links. page.goto() proves the routes exist and proves
 ` +
-    `    await page.goto(path);
+    `  // nothing about the nav -- and tests/features.manifest.json claims this
 ` +
-    `    await expect(page.getByRole('heading').first()).toBeVisible();
+    `  // test as the one covering the nav-link control.
+` +
+    `  const links = [
+` +
+    `    { label: 'About', path: '/about' },
+` +
+    `    { label: 'Terms', path: '/terms' },
+` +
+    `    { label: 'Privacy', path: '/privacy' },
+` +
+    `    { label: 'Contact', path: '/contact' }
+` +
+    `  ];
+` +
+    `  await page.goto('/');
+` +
+    `  for (const link of links) {
+` +
+    `    await page.getByTestId('nav-link').filter({ hasText: link.label }).click();
+` +
+    `    await expect.poll(() => new URL(page.url()).pathname).toBe(link.path);
+` +
+    `    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 ` +
     `  }
+` +
+    `});
+
+` +
+    `test('the brand link returns to the home page', async ({ page }) => {
+` +
+    `  await page.goto('/about');
+` +
+    `  await page.getByTestId('brand').click();
+` +
+    `  await expect.poll(() => new URL(page.url()).pathname).toBe('/');
+` +
+    `  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 ` +
     `});
 
@@ -655,13 +692,144 @@ function vitestConfigTs(): string {
 ` +
     `    exclude: ['tests/**', 'node_modules/**', 'dist/**'],
 ` +
-    `    environment: 'node'
+    `    environment: 'node',
+` +
+    `    coverage: {
+` +
+    `      provider: 'v8',
+` +
+    `      // json-summary is what writes coverage/coverage-summary.json, which is
+` +
+    `      // the file u-test-presence and u-test-coverage-ratchet read. Removing
+` +
+    `      // it leaves both rules with nothing to measure.
+` +
+    `      reporter: ['text', 'json-summary'],
+` +
+    `      reportsDirectory: 'coverage',
+` +
+    `      // Deliberately NOT 'src/**'. Components and pages are exercised by
+` +
+    `      // Playwright, and vitest's V8 provider cannot see a browser it did not
+` +
+    `      // launch -- including them reports 0% for files that are in fact tested
+` +
+    `      // and turns the gate into a false-positive machine. That surface is
+` +
+    `      // owned by u-test-acceptance and u-test-feature-audit instead. Widen
+` +
+    `      // this only alongside merged Playwright coverage.
+` +
+    `      include: ['src/lib/**', 'src/hooks/**', 'functions/**'],
+` +
+    `      exclude: ['**/*.test.ts']
+` +
+    `    }
 ` +
     `  }
 ` +
     `});
 `
   );
+}
+
+/**
+ * Shared page shell: sticky header, brand, primary nav, theme toggle, footer.
+ *
+ * The shell used to render the app name as bare text inside `<nav>` and never
+ * mounted `ThemeToggle` at all, so a generated app shipped with zero interactive
+ * controls — the starter acceptance spec tested a theme toggle and a Privacy
+ * link that nothing rendered, and `fe-premium-nav` and `fe-light-dark` (both
+ * blockers) could not be satisfied from the app's own starting point. Rendering
+ * them here is also what makes `tests/features.manifest.json` describe real
+ * controls rather than remembered ones.
+ *
+ * Each control carries a `data-testid`: it is the handle the feature audit keys
+ * on, and it groups a repeated component into one entry regardless of how the
+ * builder later names its CSS classes.
+ *
+ * @returns Contents of `src/components/Page.tsx`.
+ */
+function pageShellTsx(): string {
+  return [
+    "import type { ReactNode } from 'react';",
+    "import { Link, NavLink } from 'react-router-dom';",
+    "import { en } from '../i18n/en';",
+    "import { ROUTES } from '../lib/routes';",
+    "import { theme } from '../theme';",
+    "import { ThemeToggle } from './ThemeToggle';",
+    '',
+    'export interface PageProps {',
+    '  /** Page title, rendered as the single h1. */',
+    '  title: string;',
+    '  /** Page body. */',
+    '  children: ReactNode;',
+    '}',
+    '',
+    '/** Shared page shell: sticky header, primary nav, one h1, professional footer. */',
+    'export function Page({ title, children }: PageProps): JSX.Element {',
+    '  return (',
+    '    <div>',
+    '      <header',
+    '        style={{',
+    "          position: 'sticky',",
+    '          top: 0,',
+    "          display: 'flex',",
+    "          alignItems: 'center',",
+    '          gap: theme.space.md,',
+    '          padding: theme.space.md,',
+    '          background: theme.color.surface,',
+    "          borderBottom: '1px solid ' + theme.color.border",
+    '        }}',
+    '      >',
+    '        <Link',
+    '          data-testid="brand"',
+    '          to="/"',
+    "          style={{ color: theme.color.text, fontWeight: 700, textDecoration: 'none' }}",
+    '        >',
+    '          {en.app.name}',
+    '        </Link>',
+    '        <nav aria-label={en.app.primaryNav}>',
+    "          <ul style={{ display: 'flex', gap: theme.space.md, listStyle: 'none', margin: 0, padding: 0 }}>",
+    '            {ROUTES.map((route) => (',
+    '              <li key={route.path}>',
+    '                <NavLink',
+    '                  data-testid="nav-link"',
+    '                  to={route.path}',
+    '                  style={({ isActive }) => ({',
+    '                    color: isActive ? theme.color.text : theme.color.muted,',
+    '                    // fe-noncolor-state: the active page is underlined as',
+    '                    // well as recoloured, so the state survives a colour',
+    '                    // vision difference and a greyscale screenshot.',
+    "                    textDecoration: isActive ? 'underline' : 'none',",
+    '                    // R1.1: a 44px touch target, not a bare text link.',
+    '                    minHeight: 44,',
+    "                    display: 'inline-flex',",
+    "                    alignItems: 'center'",
+    '                  })}',
+    '                >',
+    '                  {route.name}',
+    '                </NavLink>',
+    '              </li>',
+    '            ))}',
+    '          </ul>',
+    '        </nav>',
+    "        <div style={{ marginLeft: 'auto' }}>",
+    '          <ThemeToggle />',
+    '        </div>',
+    '      </header>',
+    '      <main>',
+    '        <h1>{title}</h1>',
+    '        {children}',
+    '      </main>',
+    '      <footer>',
+    '        <small>{en.app.footerCopyright}</small>',
+    '      </footer>',
+    '    </div>',
+    '  );',
+    '}',
+    ''
+  ].join('\n');
 }
 
 function routesTestTs(): string {
@@ -710,7 +878,21 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
             typecheck: 'tsc -b',
             lint: 'eslint . --max-warnings 0',
             test: 'vitest run',
-            'test:e2e': 'playwright test'
+            'test:e2e': 'playwright test',
+            // The control inventory (u-test-feature-audit). It crawls the
+            // RUNNING app, so it needs the preview server up; `verify` is what
+            // guarantees it runs alongside everything else instead of only when
+            // someone remembers it.
+            'test:features': 'node scripts/feature-audit.mjs',
+            // Emits coverage/coverage-summary.json, which is what u-test-presence
+            // and u-test-coverage-ratchet read. A gate that is the only place a
+            // measurement runs is a measurement nobody can reproduce, so `verify`
+            // runs it too.
+            'test:coverage': 'vitest run --coverage',
+            verify:
+              'npm run typecheck && npm run lint && npm run test && ' +
+              'npm run test:coverage && npm run build && ' +
+              'npm run test:e2e && npm run test:features'
           },
           dependencies: {
             react: '^18.3.0',
@@ -731,7 +913,14 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
             tailwindcss: '^3.4.0',
             typescript: '^5.6.0',
             vite: '^5.4.0',
-            vitest: '^2.0.0',
+            // EXACT, and exactly equal, on purpose. @vitest/coverage-v8 declares
+            // an exact peer on vitest -- 2.1.9 requires "vitest": "2.1.9", not a
+            // range (verified against registry.npmjs.org on 2026-07-29). Two
+            // carets can resolve to different 2.x releases, and the peer conflict
+            // makes `npm install` the first thing a generated app fails at.
+            // Bump these two together or not at all; scaffold.test.ts asserts it.
+            vitest: '2.1.9',
+            '@vitest/coverage-v8': '2.1.9',
             wrangler: '^3.78.0'
           }
         },
@@ -758,7 +947,12 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
         null,
         2
       ) + '\n',
-    '.gitignore': ['node_modules/', 'dist/', '.env', '.dev.vars', '.wrangler/'].join('\n') + '\n',
+    // `coverage/` is a build artifact and is ignored. `.redanvil/` is NOT:
+    // u-test-coverage-ratchet reads every historical value of highWaterPct out
+    // of that file's git history to catch someone lowering the bar to go green,
+    // and an ignored file has no history to read.
+    '.gitignore':
+      ['node_modules/', 'dist/', '.env', '.dev.vars', '.wrangler/', 'coverage/'].join('\n') + '\n',
     'wrangler.toml':
       `name = "${job.slug}"\n` +
       `compatibility_date = "2026-07-01"\n` +
@@ -811,36 +1005,23 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     'src/lib/routes.ts': routesTs(),
     'src/lib/routes.test.ts': routesTestTs(),
     'tests/acceptance.spec.ts': acceptanceSpecTs(),
+    // The control inventory ships with the app, not with the reviewer's memory.
+    // Routes are discovered from public/sitemap.xml and src/lib/routes.ts, both
+    // of which this scaffold already emits, so the audit works on day one and
+    // keeps working as the builder adds pages to either.
+    'scripts/feature-audit.mjs': featureAuditScript(),
+    'tests/features.manifest.json': featureManifestJson(),
+    // The backend half of the same idea: the route inventory comes from
+    // functions/api/** on disk, and an endpoint with no example is unproven.
+    'tests/api-examples.json': apiExamplesJson(),
+    // Tracked, not ignored — the ratchet's tamper check reads this file's git
+    // history to catch the bar being lowered to go green.
+    '.redanvil/coverage-state.json': coverageStateJson(),
     'playwright.config.ts': playwrightConfigTs(),
     'vitest.config.ts': vitestConfigTs(),
     'src/components/ScrollToTop.tsx': scrollToTopComponent(),
     'src/components/DocPage.tsx': docPageComponent(),
-    'src/components/Page.tsx':
-      `import type { ReactNode } from 'react';\n` +
-      `import { en } from '../i18n/en';\n\n` +
-      `export interface PageProps {\n` +
-      `  /** Page title, rendered as the single h1. */\n` +
-      `  title: string;\n` +
-      `  /** Page body. */\n` +
-      `  children: ReactNode;\n` +
-      `}\n\n` +
-      `/** Shared page shell: sticky header, one h1, professional footer. */\n` +
-      `export function Page({ title, children }: PageProps): JSX.Element {\n` +
-      `  return (\n` +
-      `    <div>\n` +
-      `      <header style={{ position: 'sticky', top: 0 }}>\n` +
-      `        <nav aria-label={en.app.primaryNav}>{en.app.name}</nav>\n` +
-      `      </header>\n` +
-      `      <main>\n` +
-      `        <h1>{title}</h1>\n` +
-      `        {children}\n` +
-      `      </main>\n` +
-      `      <footer>\n` +
-      `        <small>{en.app.footerCopyright}</small>\n` +
-      `      </footer>\n` +
-      `    </div>\n` +
-      `  );\n` +
-      `}\n`,
+    'src/components/Page.tsx': pageShellTsx(),
     'functions/api/health.ts':
       `/** Health endpoint — proves the Worker runtime boots (lg-runtime-parity). */\n` +
       `export function onRequest(context: { request: Request }): Response {\n` +
@@ -1036,6 +1217,9 @@ function themeToggleTsx(): string {
     '  return (',
     '    <button',
     '      type="button"',
+    // The handle the feature audit keys this control on, so it stays one entry
+    // in tests/features.manifest.json however its styling is renamed later.
+    '      data-testid="theme-toggle"',
     '      onClick={toggle}',
     "      aria-label={mode === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}",
     '      style={{',

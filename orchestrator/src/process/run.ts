@@ -20,6 +20,36 @@ export interface RunOptions {
 const DEFAULT_TIMEOUT_MS = 120_000;
 
 /**
+ * Quote one argument for the Windows `shell: true` path.
+ *
+ * Node escapes arguments itself only when spawning WITHOUT a shell. With
+ * `shell: true` on Windows it joins argv with spaces and hands the string to
+ * `cmd.exe`, so any argument containing a space arrives as several arguments.
+ *
+ * That silently broke every multi-word argument this repo passes to a bare
+ * command — which is to say every Grok invocation, since a prompt is prose.
+ * `runGrok(dir, 'Reply with only {"ok":true}')` reached grok as the arguments
+ * `Reply`, `with`, `only`, ... and grok exited 2 with "unexpected argument
+ * 'only'". The loop command has always sent its coder prompt this way, so on
+ * Windows it could not have been delivering the prompt it composed. Nothing
+ * caught it because the failure looks like the model declining to answer rather
+ * than like a spawn bug.
+ *
+ * Inside double quotes cmd treats `&`, `|`, `<`, `>` and `^` literally, so the
+ * quoting only has to handle embedded double quotes and trailing backslashes
+ * (a `\` immediately before the closing quote would escape it).
+ *
+ * @param arg - One argument.
+ * @returns The argument, safe to concatenate into a cmd.exe command line.
+ */
+export function quoteForCmd(arg: string): string {
+  if (arg === '') return '""';
+  if (!/[\s"^&|<>()]/.test(arg)) return arg;
+  const escaped = arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, '$1$1');
+  return `"${escaped}"`;
+}
+
+/**
  * Runs a command with a hard wall-clock timeout, killing it if it overruns.
  * Always resolves — never rejects and never hangs — so the loop's critical path
  * cannot stall on a wedged subprocess (rules/loop-gate.md: lg-grok-timeout).
@@ -38,7 +68,11 @@ export function runCommand(
     process.platform === 'win32' && !command.includes('\\') && !command.includes('/');
 
   return new Promise<RunResult>((resolve) => {
-    const child = spawn(command, args, { cwd, env, shell: useShell });
+    const child = spawn(command, useShell ? args.map(quoteForCmd) : args, {
+      cwd,
+      env,
+      shell: useShell
+    });
     let stdout = '';
     let stderr = '';
     let timedOut = false;

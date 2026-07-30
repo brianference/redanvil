@@ -13,6 +13,10 @@ import { join, extname } from 'node:path';
 import { runCiActionlint } from './ci-actionlint.mjs';
 import { runProcConventionalCommits } from './proc-conventional-commits.mjs';
 import { runTestAcceptance } from './u-test-acceptance.mjs';
+import { runFeatureAudit } from './u-test-feature-audit.mjs';
+import { runTestPresence } from './u-test-presence.mjs';
+import { runCoverageRatchet } from './u-test-coverage-ratchet.mjs';
+import { runApiRealOutput } from './u-api-real-output.mjs';
 import { runNoPlaceholders } from './u-no-placeholders.mjs';
 import { runVisibleResponse } from './fe-visible-response.mjs';
 import { runIntegrationScan } from './u-integration-scan.mjs';
@@ -939,6 +943,22 @@ switch (ruleId) {
   }
   case 'u-test-acceptance': {
     runTestAcceptance(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'u-test-feature-audit': {
+    runFeatureAudit(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'u-test-presence': {
+    runTestPresence(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'u-test-coverage-ratchet': {
+    runCoverageRatchet(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'u-api-real-output': {
+    await runApiRealOutput(appDir, { pass, fail, notApplicable });
     break;
   }
   case 'u-no-placeholders': {

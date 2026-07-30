@@ -41,9 +41,18 @@ export const APP_CHECKS: Check[] = [
   det('u-typing-no-any'),
   { ruleId: 'u-conc-dead-code', command: 'npx', args: ['eslint', '.', '--max-warnings', '0'] },
   { ruleId: 'u-test-presence', command: 'npx', args: ['vitest', 'run'] },
+  // Second, independent half of u-test-presence, and the half that matches what
+  // the rule actually says. `vitest run` above proves the tests that exist pass;
+  // it never looks at the diff, so a file could be rewritten with nothing
+  // covering it and this blocker stayed green. The rubric has read "changed
+  // source files have tests" the whole time, which made the hole look closed.
+  // Both must pass — duplicate outcomes for one rule resolve fail-closed.
+  det('u-test-presence'),
+  det('u-test-coverage-ratchet'),
   { ruleId: 'hyg-env-ignored', command: 'git', args: ['check-ignore', '.env'] },
   // Static rule checks (real greps/AST-lite over the app source).
   det('u-test-acceptance'),
+  det('u-test-feature-audit'),
   det('u-no-placeholders'),
   det('fe-visible-response'),
   det('u-integration-scan'),
@@ -67,6 +76,16 @@ export const APP_CHECKS: Check[] = [
     ruleId: 'u-plat-runtime-parity',
     command: 'node',
     args: [RUNTIME_PARITY_SCRIPT, '.'],
+    timeoutMs: 300_000
+  },
+  // Also boots the real Workers runtime and calls every declared route, so it
+  // needs the same 5-minute budget rather than the 180s default. This is only
+  // the det half; the judgment half arrives as a recorded verdict and, being a
+  // fail-closed blocker, an absent verdict fails the gate rather than passing.
+  {
+    ruleId: 'u-api-real-output',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'u-api-real-output', '.'],
     timeoutMs: 300_000
   },
   det('u-data-no-placeholder'),
