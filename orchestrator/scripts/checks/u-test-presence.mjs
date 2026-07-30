@@ -63,6 +63,42 @@ const MEASURED_DIRS = [
 ];
 
 /**
+ * Acceptance-run coverage, written by the Playwright half of the pipeline.
+ *
+ * Its presence is what licenses measuring components and pages at all.
+ */
+const E2E_SUMMARY = join('coverage-e2e', 'coverage-summary.json');
+
+/**
+ * Directories that only become measurable once acceptance coverage exists.
+ *
+ * These are the browser's surface. vitest's V8 provider cannot see a browser it
+ * did not launch, so with unit coverage alone every one of these files reads 0%
+ * and including them would fail changes that are in fact well tested. Once the
+ * app collects V8 coverage over CDP during its Playwright run and merges it in,
+ * the numbers are real and the exclusion becomes a hole rather than a safeguard
+ * -- components and pages are the largest part of a generated app, and leaving
+ * them permanently unmeasured is most of the app measured by nothing.
+ *
+ * So the measured surface follows the evidence: an app that produces acceptance
+ * coverage is held to it, and one that does not is not failed for a number
+ * nothing could have produced.
+ */
+const BROWSER_DIRS = [`src${sep}components${sep}`, `src${sep}pages${sep}`];
+
+/**
+ * The directories this run can honestly measure.
+ *
+ * @param {string} appDir - App directory.
+ * @returns {string[]} Path prefixes.
+ */
+export function measuredDirs(appDir) {
+  return existsSync(join(appDir, E2E_SUMMARY))
+    ? [...MEASURED_DIRS, ...BROWSER_DIRS]
+    : MEASURED_DIRS;
+}
+
+/**
  * Run a git command inside the app, returning stdout or null when git cannot
  * answer (no repository, unknown commit, git absent).
  *
@@ -150,6 +186,7 @@ export function resolveBase(appDir) {
  * @returns {string[]|null} Repo-relative changed source paths, or null if git cannot answer.
  */
 export function changedSources(appDir, base) {
+  const measured = measuredDirs(appDir);
   const tracked = git(appDir, ['diff', '--name-only', base, '--']);
   const untracked = git(appDir, ['ls-files', '--others', '--exclude-standard', '--']);
   if (tracked === null && untracked === null) return null;
@@ -162,7 +199,7 @@ export function changedSources(appDir, base) {
     seen.add(f);
     if (!SOURCE_EXT.test(f) || TEST_FILE.test(f)) return false;
     const norm = f.split('/').join(sep);
-    return MEASURED_DIRS.some((p) => norm.startsWith(p));
+    return measured.some((p) => norm.startsWith(p));
   });
 }
 

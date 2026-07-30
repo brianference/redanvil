@@ -544,6 +544,47 @@ describe('evasions an adversarial pass found, each now closed', () => {
   });
 });
 
+describe('the measured surface follows the evidence', () => {
+  // Components and pages are the largest part of a generated app and vitest
+  // cannot see them, so they were excluded outright. That is right only while
+  // nothing measures them: once the app collects V8 coverage over CDP during
+  // its Playwright run, the numbers are real and the exclusion becomes a hole.
+  // Widening unconditionally would be worse than either -- it would fail
+  // well-tested components for a number nothing could have produced.
+
+  it('IGNORES a changed component when only vitest coverage exists', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'redanvil-surface-'));
+    await scaffoldApp({ job, outDir: dir, corpusDir, builtAt: '2026-07-29T00:00:00.000Z' });
+    commitAll(dir, 'baseline');
+    await stubCoverageRun(dir);
+    await writeFile(join(dir, 'src', 'components', 'Widget.tsx'), 'export const Widget = 1;' + String.fromCharCode(10));
+    await writeSummary(dir, { 'src/lib/routes.ts': 100 }, 70);
+    const { status, output } = runCheck('u-test-presence', dir);
+    expect(status, output).toBe(0);
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('FAILS the same changed component once acceptance coverage exists', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'redanvil-surface-e2e-'));
+    await scaffoldApp({ job, outDir: dir, corpusDir, builtAt: '2026-07-29T00:00:00.000Z' });
+    commitAll(dir, 'baseline');
+    await stubCoverageRun(dir);
+    await writeFile(join(dir, 'src', 'components', 'Widget.tsx'), 'export const Widget = 1;' + String.fromCharCode(10));
+    await writeSummary(dir, { 'src/lib/routes.ts': 100 }, 70);
+    // The browser half exists now, so the component surface is measurable and
+    // an untouched component is a real gap rather than an unmeasurable one.
+    await mkdir(join(dir, 'coverage-e2e'), { recursive: true });
+    await writeFile(
+      join(dir, 'coverage-e2e', 'coverage-summary.json'),
+      JSON.stringify({ total: { lines: { pct: 80 } } })
+    );
+    const { status, output } = runCheck('u-test-presence', dir);
+    expect(status, output).toBe(1);
+    expect(output).toContain('Widget.tsx');
+    await rm(dir, { recursive: true, force: true });
+  });
+});
+
 describe('both new rules are bound to their implementations', () => {
   for (const id of ['u-test-coverage-ratchet', 'u-api-real-output']) {
     it(`${id} is encoded in the testing lane and run by the gate`, async () => {
