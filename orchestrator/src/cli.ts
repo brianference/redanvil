@@ -151,6 +151,7 @@ const KNOWN_FLAGS = new Set([
   'spec',
   'max-iters',
   'no-isolate',
+  'promote',
   'min-coverage'
 ]);
 
@@ -173,6 +174,7 @@ async function main(): Promise<number> {
       spec: { type: 'string' },
       'max-iters': { type: 'string' },
       'no-isolate': { type: 'boolean' },
+      promote: { type: 'boolean' },
       'min-coverage': { type: 'string' }
     }
   });
@@ -351,7 +353,7 @@ async function main(): Promise<number> {
     const dir = positionals[1];
     if (!dir || typeof values.spec !== 'string') {
       console.error(
-        'usage: npm run loop -- <appDir> --spec <spec.md> [--threshold N] [--max-iters N] [--no-isolate] [--judge f.json] [--na lanes] [--slug s --out r.json --deploy url]'
+        'usage: npm run loop -- <appDir> --spec <spec.md> [--threshold N] [--max-iters N] [--no-isolate] [--promote] [--judge f.json] [--na lanes] [--slug s --out r.json --deploy url]'
       );
       return 2;
     }
@@ -377,7 +379,10 @@ async function main(): Promise<number> {
       notApplicable,
       // Isolated by default; --no-isolate runs the coder in the working tree,
       // which is what a human debugging the loop usually wants.
-      isolate: values['no-isolate'] !== true
+      isolate: values['no-isolate'] !== true,
+      // Off unless asked for. The run is merged only when the gate is green,
+      // and only after the COMMIT (not the tree) builds in isolation.
+      promote: values.promote === true
     });
 
     console.log(

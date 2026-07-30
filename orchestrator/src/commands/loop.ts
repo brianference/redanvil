@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { basename, join, relative, resolve } from 'node:path';
 import { withWorktree } from '../worktree/isolate';
+import { promoteWorktree, type PromoteResult } from '../worktree/promote';
 import { runLoop, type GateOutcome, type LoopResult } from '../loop/ralph';
 import { gateApp, type GateReport } from './gate';
 import { runGrok, parseGrokJson, newSessionId } from '../grok/harness';
@@ -18,6 +19,14 @@ export interface LoopRun {
    * reported the same clean result as one that did none of those things.
    */
   runRules: Outcome[];
+  /**
+   * What happened to the work when --promote was asked for.
+   *
+   * Absent when promotion was not requested. Present and `promoted: false`
+   * when it was requested and refused, because "the gate was green and nothing
+   * landed" is a state someone has to be able to see.
+   */
+  promotion?: PromoteResult;
 }
 
 export interface LoopCommandOptions {
@@ -42,6 +51,15 @@ export interface LoopCommandOptions {
   isolate?: boolean;
   /** Repo the worktree branches from. Defaults to the current directory. */
   repoDir?: string;
+  /**
+   * Merge the run into the base branch when it passes.
+   *
+   * Off by default and deliberately so: automatically merging agent output is
+   * the exact failure the teamwork protocol exists to prevent, so the caller
+   * has to ask for it. Even then the commit is built in isolation before the
+   * merge, and a dirty base is refused outright.
+   */
+  promote?: boolean;
   /** Pre-flight iteration estimate, scored by lg-budget-ceiling. */
   estimatedIterations?: number;
 }
@@ -93,9 +111,41 @@ export async function runLoopCommand(opts: LoopCommandOptions): Promise<LoopRun>
   // Branch name is derived from the target so concurrent loops do not collide.
   const branch = `redanvil-loop-${basename(opts.dir)}-${Date.now().toString(36)}`;
   const repoDir = opts.repoDir ?? process.cwd();
-  return withWorktree(repoDir, branch, async (worktreeDir) =>
-    runLoopIn(join(worktreeDir, relative(repoDir, resolve(opts.dir))), opts)
-  );
+  return withWorktree(repoDir, branch, async (worktreeDir) => {
+    const result = await runLoopIn(join(worktreeDir, relative(repoDir, resolve(opts.dir))), opts);
+
+    // Promotion happens HERE, inside the callback, because withWorktree
+    // destroys the worktree and the branch on the way out. Without this the
+    // loop could evaluate work and never keep it: a run that passed the gate
+    // was discarded exactly like one that failed, and every green result had
+    // to be reproduced by hand — which is the moment a verified result
+    // quietly becomes an unverified one.
+    if (opts.promote === true) {
+      const green = result.final.blockersFailed.length === 0 && result.final.score >= opts.threshold;
+      if (!green) {
+        result.promotion = {
+          promoted: false,
+          commit: null,
+          reason:
+            `not promoted: score ${result.final.score} against a threshold of ${opts.threshold}` +
+            (result.final.blockersFailed.length > 0
+              ? `, blockers failed: ${result.final.blockersFailed.join(', ')}`
+              : '')
+        };
+      } else {
+        result.promotion = await promoteWorktree({
+          repoDir,
+          worktreeDir,
+          message:
+            `RA-loop: promote ${basename(opts.dir)} at score ${result.final.score}\n\n` +
+            `Gated run, ${result.final.evaluated}/${result.final.total} rules evaluated, ` +
+            `coverage ${result.final.coverage}%. Threshold ${opts.threshold}, zero failed blockers.`
+        });
+      }
+    }
+
+    return result;
+  });
 }
 
 /**
