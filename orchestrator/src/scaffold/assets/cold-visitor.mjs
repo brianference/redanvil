@@ -173,14 +173,28 @@ export async function runColdVisitor(baseUrl, probe, deps) {
     if (probe !== null) {
       const ctx = await browser.newContext();
       const page = await ctx.newPage();
-      await page.goto(baseUrl, { waitUntil: 'networkidle' });
+      // A probe may either drive controls, or open a URL directly. The second
+      // is not a shortcut: a shared or bookmarked link is a real first-visit
+      // journey, and it is the only way to express a flow whose inputs are not
+      // all text fields -- a date picked from a calendar has no selector to
+      // fill. Both start from a cold profile.
+      // No path means "the app's own entry point", which is baseUrl exactly as
+      // given -- resolving '/' against it would discard any path the caller
+      // already included.
+      const entry =
+        typeof probe.path === 'string' && probe.path !== ''
+          ? new URL(probe.path, baseUrl).href
+          : baseUrl;
+      await page.goto(entry, { waitUntil: 'networkidle' });
       let detail = '';
       let ok = false;
       try {
         for (const [selector, value] of Object.entries(probe.fill ?? {})) {
           await page.locator(selector).first().fill(value);
         }
-        await page.getByRole('button', { name: new RegExp(probe.control, 'i') }).first().click();
+        if (typeof probe.control === 'string' && probe.control !== '') {
+          await page.getByRole('button', { name: new RegExp(probe.control, 'i') }).first().click();
+        }
         const results = page.locator(probe.expectSelector);
         // Auto-retrying: the flow may go to the network, and a live provider
         // is slower than a database read.
@@ -188,9 +202,9 @@ export async function runColdVisitor(baseUrl, probe, deps) {
         const count = await results.count();
         const want = probe.minCount ?? 1;
         ok = count >= want;
-        detail = `"${probe.control}" with ${JSON.stringify(probe.fill)} produced ${count} result(s), needed ${want}`;
+        detail = `${probe.path ?? probe.control} produced ${count} result(s), needed ${want}`;
       } catch (err) {
-        detail = `"${probe.control}" produced nothing usable within ${FLOW_TIMEOUT_MS}ms: ${String(err).slice(0, 140)}`;
+        detail = `${probe.path ?? probe.control} produced nothing usable within ${FLOW_TIMEOUT_MS}ms: ${String(err).slice(0, 140)}`;
       }
       // This is the "search returns an empty list for anything unseeded" case.
       // A correct, empty answer is still a product that does not work.

@@ -87,11 +87,25 @@ try {
         // over-strict measurement is as wrong as a lenient one.
         const inlineInText = (el) =>
           el.tagName === 'A' && getComputedStyle(el).display === 'inline';
+        // A checkbox or radio inside a label IS the label as far as a thumb is
+        // concerned: clicking anywhere in the label toggles it. Measuring the
+        // 18px box reported a FAIL for a control whose real target was the
+        // 44px row around it -- the same over-strictness the inline-link
+        // exemption above already corrects. Exempt only when the enclosing
+        // label genuinely clears the minimum, so shrinking the row still fails.
+        const enclosedByBigLabel = (el) => {
+          if (el.tagName !== 'INPUT') return false;
+          const t = el.getAttribute('type');
+          if (t !== 'checkbox' && t !== 'radio') return false;
+          const label = el.closest('label');
+          return label !== null && label.getBoundingClientRect().height >= touchMin;
+        };
         const targets = [
           ...document.querySelectorAll('a,button,input,select,textarea,[role=button]')
         ]
           .filter(visible)
-          .filter((el) => !inlineInText(el));
+          .filter((el) => !inlineInText(el))
+          .filter((el) => !enclosedByBigLabel(el));
         const small = targets
           .filter((el) => el.getBoundingClientRect().height < touchMin)
           .map((el) => (el.textContent || '').trim().slice(0, 30));
