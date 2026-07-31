@@ -1,6 +1,6 @@
 {
   "url": "https://redanvil.pages.dev",
-  "checkedAt": "2026-07-31T07:37:58.143Z",
+  "checkedAt": "2026-07-31T17:16:51.327Z",
   "submitStatus": 200,
   "prdRendered": true,
   "routes": [
@@ -30,5 +30,11 @@
       "h1": "Contact"
     }
   ],
+  "findings": {
+    "fe-product-completeness": {
+      "ok": true,
+      "detail": "chat → wizard → Forge PRD completed against https://redanvil.pages.dev: /api/submit returned 200 and the PRD rendered, with 5 further route(s) verified. The core feature produces real output end to end."
+    }
+  },
   "ok": true
 }
