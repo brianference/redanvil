@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findStaleVerdicts, verdictScope } from '../src/gate/freshness';
+import { findStaleVerdicts, verdictScope, isGateOutput } from '../src/gate/freshness';
 import type { Verdict } from '../src/schemas/verdicts';
 
 /**
@@ -77,5 +77,28 @@ describe('verdict freshness', () => {
 
   it('defaults an unscoped verdict to the whole app directory', () => {
     expect(verdictScope(verdict(), 'app-builder')).toEqual(['app-builder']);
+  });
+});
+
+describe('the gate does not invalidate its own verdicts by running', () => {
+  // Scoring an app WRITES to it: the ratchet records a new high-water mark and
+  // u-api-real-output saves the traffic it captured. Those writes were counted
+  // as "the subject changed since review", so every verdict dropped as stale the
+  // moment the gate ran — measure, stamp, gate, and the gate undoes the stamp.
+  // No ordering fixes that; the loop cannot converge.
+
+  it('ignores artifacts the gate emitted while scoring', () => {
+    expect(isGateOutput('app-builder/.redanvil/coverage-state.json')).toBe(true);
+    expect(isGateOutput('app-builder/evidence/api-live-app-builder.json')).toBe(true);
+    expect(isGateOutput('evidence/design-app-builder.json')).toBe(true);
+  });
+
+  it('still counts real source edits, which is the whole point of the rule', () => {
+    // The exclusion has to be narrow. Widened to all of .redanvil/ or any .json,
+    // it would silently stop noticing the edits it exists to notice.
+    expect(isGateOutput('app-builder/src/i18n/legalPages.ts')).toBe(false);
+    expect(isGateOutput('app-builder/.redanvil/claims.json')).toBe(false);
+    expect(isGateOutput('app-builder/src/components/ThemeToggle.tsx')).toBe(false);
+    expect(isGateOutput('app-builder/package.json')).toBe(false);
   });
 });

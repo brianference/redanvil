@@ -113,6 +113,32 @@ function git(args: string[], repoRoot: string): string | null {
 }
 
 /**
+ * Artifacts the gate itself writes into the app it is reviewing.
+ *
+ * Running the gate mutated `.redanvil/coverage-state.json` (the ratchet records
+ * a new high-water mark) and `evidence/api-live-*.json` (u-api-real-output saves
+ * the traffic it captured). The freshness probe then counted those writes as
+ * "the subject changed since review" and dropped every verdict — so the gate
+ * invalidated its own verdicts by running, and no sequence of measure-then-stamp
+ * could ever converge. reverify hit this on both apps.
+ *
+ * A verdict speaks for the app's SOURCE. An output the gate emitted while
+ * scoring is not evidence that the reviewed surface moved. Excluding these does
+ * not weaken the ratchet's tamper check, which reads the state file's git
+ * history directly and does not consult freshness at all.
+ *
+ * @param file Repo-relative path.
+ * @returns True when the gate produced this file rather than a person editing it.
+ */
+export function isGateOutput(file: string): boolean {
+  return (
+    file.endsWith('/.redanvil/coverage-state.json') ||
+    file.startsWith('.redanvil/coverage-state.json') ||
+    /(^|\/)evidence\//.test(file)
+  );
+}
+
+/**
  * A change probe backed by real git history.
  *
  * `git diff --name-only <commit> -- <scope>` compares the commit against the
@@ -154,6 +180,8 @@ export function gitChangeProbe(repoRoot: string): ChangeProbe {
         .map((line) => line.trim())
         .filter((line) => line.length > 0);
 
-    return [...new Set([...lines(changed), ...lines(untracked ?? '')])];
+    return [...new Set([...lines(changed), ...lines(untracked ?? '')])].filter(
+      (file) => !isGateOutput(file)
+    );
   };
 }
