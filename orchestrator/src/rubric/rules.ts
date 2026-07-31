@@ -141,6 +141,9 @@ export const RULES: Rule[] = [
   // Every other check forces the state it measures, so none of them observe
   // what a first-time visitor actually gets. That hole shipped a default theme
   // that ignored the OS and a search that returned nothing for unseeded routes.
+  // §7.3a calls itself binding and nothing could read it: the archetype was
+  // computed as structure and thrown away. Measures the fallback the spec names.
+  rule('fe-design-archetype', 'frontend', 'major', 'visual'),
   rule('fe-cold-visitor', 'frontend', 'blocker', 'visual'),
   rule('fe-seo-og', 'frontend', 'major', 'visual'),
   rule('fe-cross-link', 'frontend', 'major', 'visual'),

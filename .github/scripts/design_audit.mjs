@@ -14,11 +14,12 @@
  *
  * Usage:
  *   node design_audit.mjs <baseUrl> [--routes /about,/contact] [--out report.json]
+ *                          [--claims .redanvil/claims.json]
  *
  * Exit 0 when every measured rule passes, 1 when any fails, 2 on infra failure.
  */
 import { createRequire } from 'node:module';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const args = process.argv.slice(2);
@@ -279,6 +280,69 @@ try {
       `${defaultFollowsSystem ? '' : ' (EXPECTED dark — the default does not follow the system)'}; ` +
       `toggle ${before} -> ${after.theme}, stored "${after.stored}", survived reload as ${persisted}`
   );
+
+  // --- Design archetype: did it build the shell it was told to build? ---
+  //
+  // §7.3a names a layout archetype for THIS app, calls itself binding, and
+  // lists shells the app must not fall back to. Nothing has ever read it: the
+  // structure was computed, rendered to prose and discarded, so "binding" was
+  // enforced by hope. .redanvil/claims.json now carries it.
+  //
+  // What is measured is the ANTI-PATTERN the spec names in its own words: "an
+  // implementation that satisfies every constraint while looking like a generic
+  // centred column under a sticky header has not built this spec." A centred
+  // single column is detectable -- one main child, capped width, roughly equal
+  // gutters -- whereas "is this a Split workbench" is not, and a check that
+  // guessed at that would be worse than none.
+  const claimsPath = flag('claims');
+  if (claimsPath !== null && existsSync(claimsPath)) {
+    let claims = null;
+    try {
+      claims = JSON.parse(readFileSync(claimsPath, 'utf8'));
+    } catch {
+      claims = null;
+    }
+    const archetype = claims?.design?.archetype ?? null;
+    if (archetype !== null) {
+      const a = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+      await a.goto(baseUrl, { waitUntil: 'networkidle' });
+      const shape = await a.evaluate(() => {
+        const main = document.querySelector('main') ?? document.body;
+        const kids = [...main.children].filter((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0;
+        });
+        const widest = kids
+          .map((el) => el.getBoundingClientRect())
+          .sort((x, y) => y.width - x.width)[0];
+        const vw = window.innerWidth;
+        if (widest === undefined) return { centredColumn: false, detail: 'no visible content' };
+        const left = widest.left;
+        const right = vw - widest.right;
+        // A centred column: meaningfully narrower than the viewport with
+        // near-equal gutters. Generous tolerance -- this must not fire on a
+        // layout that merely has padding.
+        const centred =
+          widest.width < vw * 0.72 && Math.abs(left - right) < 24 && left > 24;
+        return {
+          centredColumn: centred,
+          detail: `widest block ${Math.round(widest.width)}px of ${vw}px, gutters ${Math.round(left)}/${Math.round(right)}`
+        };
+      });
+      await a.close();
+      // Archetypes that ARE a centred column are exempt; the rest must not be one.
+      const columnArchetypes = new Set(['Focus hero', 'Guided flow', 'Editorial']);
+      const mustNotBeColumn = !columnArchetypes.has(archetype);
+      record(
+        'fe-design-archetype',
+        !(mustNotBeColumn && shape.centredColumn),
+        `claimed "${archetype}"; ${shape.detail}` +
+          (mustNotBeColumn && shape.centredColumn
+            ? ' — rendered as a generic centred column, which §7.3a names as the fallback that means the spec was NOT built'
+            : '')
+      );
+    }
+  }
 
   // --- Required pages ---
   const p = await browser.newPage({ viewport: { width: 1280, height: 900 } });
