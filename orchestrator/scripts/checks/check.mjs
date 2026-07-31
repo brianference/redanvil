@@ -18,6 +18,7 @@ import { runTestPresence } from './u-test-presence.mjs';
 import { runCoverageRatchet } from './u-test-coverage-ratchet.mjs';
 import { runApiRealOutput } from './u-api-real-output.mjs';
 import { runClaimsCovered } from './u-claims-covered.mjs';
+import { runExitCodeIntegrity } from './ci-exit-code-integrity.mjs';
 import { runNoPlaceholders } from './u-no-placeholders.mjs';
 import { runVisibleResponse } from './fe-visible-response.mjs';
 import { runIntegrationScan } from './u-integration-scan.mjs';
@@ -956,6 +957,10 @@ switch (ruleId) {
   }
   case 'u-test-coverage-ratchet': {
     runCoverageRatchet(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'ci-exit-code-integrity': {
+    runExitCodeIntegrity(appDir, { pass, fail, notApplicable });
     break;
   }
   case 'u-claims-covered': {

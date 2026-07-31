@@ -108,6 +108,7 @@ export const APP_CHECKS: Check[] = [
   det('ci-sha-pinned'),
   det('ci-least-privilege'),
   det('ci-no-injection'),
+  det('ci-exit-code-integrity'),
   // Process lane: formerly printed "unknown rule" when invoked; only "passed"
   // because real gate runs excluded them with --na process.
   det('proc-conventional-commits'),

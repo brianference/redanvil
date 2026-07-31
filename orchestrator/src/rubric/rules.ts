@@ -163,6 +163,9 @@ export const RULES: Rule[] = [
   rule('ci-sha-pinned', 'ci', 'blocker', 'det'),
   rule('ci-least-privilege', 'ci', 'blocker', 'det'),
   rule('ci-no-injection', 'ci', 'blocker', 'det'),
+  // `cmd | tail` exits with tail's status. This masked a failing Playwright run
+  // and an aborted merge in a single session, both read as green.
+  rule('ci-exit-code-integrity', 'ci', 'major', 'det'),
 
   rule('hyg-secret-scan', 'hygiene', 'blocker', 'det'),
   rule('hyg-no-binaries', 'hygiene', 'blocker', 'det'),
