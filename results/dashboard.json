@@ -1,11 +1,11 @@
 {
   "kind": "results",
   "slug": "dashboard",
-  "finalScore": 95,
+  "finalScore": 0,
   "threshold": 90,
-  "passed": true,
-  "evaluated": 56,
-  "total": 56,
+  "passed": false,
+  "evaluated": 61,
+  "total": 63,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -21,7 +21,11 @@
     },
     {
       "ruleId": "u-test-presence",
-      "passed": true
+      "passed": false
+    },
+    {
+      "ruleId": "u-test-coverage-ratchet",
+      "passed": false
     },
     {
       "ruleId": "hyg-env-ignored",
@@ -32,8 +36,16 @@
       "passed": true
     },
     {
+      "ruleId": "u-test-feature-audit",
+      "passed": false
+    },
+    {
       "ruleId": "u-no-placeholders",
       "passed": true
+    },
+    {
+      "ruleId": "fe-visible-response",
+      "passed": false
     },
     {
       "ruleId": "u-integration-scan",
@@ -96,6 +108,10 @@
       "passed": true
     },
     {
+      "ruleId": "u-api-real-output",
+      "passed": false
+    },
+    {
       "ruleId": "u-data-no-placeholder",
       "passed": true
     },
@@ -137,6 +153,10 @@
     },
     {
       "ruleId": "ci-no-injection",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-exit-code-integrity",
       "passed": true
     },
     {
@@ -239,23 +259,29 @@
   "iterations": [
     {
       "index": 1,
-      "score": 95,
-      "blockers": []
+      "score": 0,
+      "blockers": [
+        "u-test-presence",
+        "u-test-feature-audit",
+        "u-api-real-output",
+        "fe-visible-response",
+        "fe-cold-visitor"
+      ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-28T00:42:51.121Z",
+  "finishedAt": "2026-07-31T06:59:27.620Z",
   "provenance": {
-    "commit": "ee9386aabadc89007505655a5ef534b91521fd36",
+    "commit": "9eae44f3d657dd78c0b9fda953c9f8873295ff5b",
     "dirty": false,
-    "rubricHash": "e2de4a9e95bfa15ea74b1eb9cc26d4d232066b8568d3d6921e08787cc9250642",
-    "rubricRuleCount": 60,
+    "rubricHash": "e64fba891e2da5c4317c82c62dc5d4615123a70949cfe9135b78748938b5da7c",
+    "rubricRuleCount": 68,
     "node": "v22.19.0",
     "verdictsHash": "8e79bb633eee52d021b83473fd9f725e6916f63efadda90bcd035b4b055896f5",
     "notApplicable": [
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-07-28T00:42:51.172Z"
+    "generatedAt": "2026-07-31T06:59:27.668Z"
   }
 }
