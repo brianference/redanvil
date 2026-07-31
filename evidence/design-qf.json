@@ -1,0 +1,60 @@
+{
+  "baseUrl": "https://quickflight.pages.dev",
+  "checkedAt": "2026-07-31T05:09:52.107Z",
+  "findings": {
+    "fe-touch-targets": {
+      "ok": true,
+      "detail": "5 route(s) at 375; every interactive element >= 44px"
+    },
+    "fe-type-floor": {
+      "ok": true,
+      "detail": "5 route(s) at 375, smallest body font 16px; nothing under 16px"
+    },
+    "fe-responsive-375": {
+      "ok": true,
+      "detail": "no horizontal overflow at 375 on 5 route(s)"
+    },
+    "fe-safe-areas": {
+      "ok": true,
+      "detail": "header sticky on all 5 route(s), padding-top 8px"
+    },
+    "fe-premium-nav": {
+      "ok": true,
+      "detail": "6 header link(s) [QuickFlight, Search, Browse, About, Contact, Ask], aria-current on \"Search\""
+    },
+    "fe-noncolor-state": {
+      "ok": true,
+      "detail": "active nav item: weight 650, gradient background false, aria-current present true"
+    },
+    "fe-no-attribution": {
+      "ok": true,
+      "detail": "no attribution text"
+    },
+    "fe-cross-link": {
+      "ok": true,
+      "detail": "cross-site link present"
+    },
+    "fe-seo-og": {
+      "ok": true,
+      "detail": "title \"QuickFlight — search lowest-cost flights\", description present, og:image present"
+    },
+    "fe-light-dark": {
+      "ok": true,
+      "detail": "default under prefers-color-scheme:dark resolved to \"dark\"; toggle dark -> light, stored \"light\", survived reload as light"
+    },
+    "fe-design-archetype": {
+      "ok": true,
+      "detail": "claimed \"Split workbench\"; widest block 1440px of 1440px, gutters 0/0"
+    },
+    "fe-required-pages": {
+      "ok": true,
+      "detail": "/about 200 \"About\" 300w/4§; /contact 200 \"Contact\" 301w/5§; /terms 200 \"Terms and conditions\" 1700w/25§; /privacy 200 \"Privacy policy\" 1534w/20§"
+    },
+    "fe-visual-review-recorded": {
+      "ok": true,
+      "detail": "0 console/page error(s) across the measured loads"
+    }
+  },
+  "consoleErrors": [],
+  "ok": true
+}

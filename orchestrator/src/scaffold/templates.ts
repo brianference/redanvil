@@ -1,6 +1,6 @@
 import type { Job } from '../schemas/job';
 import { legalDocs } from './legalCopy';
-import { featureAuditScript, featureManifestJson } from './featureAudit';
+import { featureAuditScript, featureManifestJson, coldVisitorScript } from './featureAudit';
 import { apiExamplesJson, coverageStateJson } from './apiExamples';
 
 const PAGES = ['Home', 'About', 'Terms', 'Privacy', 'Contact'] as const;
@@ -1010,6 +1010,10 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     // of which this scaffold already emits, so the audit works on day one and
     // keeps working as the builder adds pages to either.
     'scripts/feature-audit.mjs': featureAuditScript(),
+    // Observes the app with nothing forced. The control audit above proves every
+    // control is claimed by a test; this proves a stranger arriving at the site
+    // gets a working one.
+    'scripts/cold-visitor.mjs': coldVisitorScript(),
     'tests/features.manifest.json': featureManifestJson(),
     // The backend half of the same idea: the route inventory comes from
     // functions/api/** on disk, and an endpoint with no example is unproven.

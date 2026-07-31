@@ -179,7 +179,7 @@ for (const app of apps) {
   ];
   if (app.e2e) {
     jobs.push([
-      'e2e_smoke.mjs',
+      'e2e_smoke_app_builder.mjs',
       [app.url, '--out', `evidence/e2e-${app.slug}.json`, '--trace', `evidence/e2e-${app.slug}.zip`]
     ]);
   }

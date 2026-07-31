@@ -68,7 +68,9 @@ const DESIGN_AUDIT_RULE_IDS: ReadonlySet<string> = new Set([
   'fe-seo-og',
   'fe-light-dark',
   'fe-required-pages',
-  'fe-visual-review-recorded'
+  'fe-visual-review-recorded',
+  'fe-cold-visitor',
+  'fe-design-archetype'
 ]);
 
 /** Shape `design_audit.mjs` writes. */

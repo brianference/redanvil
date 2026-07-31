@@ -84,6 +84,11 @@ export const RULES: Rule[] = [
   // delivers the product's claim is a judgment, scored from a recorded verdict
   // over the live traffic the det half captures.
   rule('u-api-real-output', 'testing', 'blocker', 'det+judge'),
+  // A feature the builder skipped is invisible to every other check: it renders
+  // no control for the audit to find and serves no route for the API check to
+  // call. The PRD promised it and nothing compared what was built against what
+  // was promised, because the promise only existed as prose.
+  rule('u-claims-covered', 'testing', 'blocker', 'det'),
   rule('u-test-adequacy', 'testing', 'major', 'det+judge'),
   rule('u-test-behavioral', 'testing', 'major', 'judge'),
 
@@ -133,6 +138,13 @@ export const RULES: Rule[] = [
   rule('fe-responsive-375', 'frontend', 'blocker', 'visual'),
   rule('fe-product-completeness', 'frontend', 'blocker', 'visual'),
   rule('fe-visual-review-recorded', 'frontend', 'blocker', 'visual'),
+  // Every other check forces the state it measures, so none of them observe
+  // what a first-time visitor actually gets. That hole shipped a default theme
+  // that ignored the OS and a search that returned nothing for unseeded routes.
+  // §7.3a calls itself binding and nothing could read it: the archetype was
+  // computed as structure and thrown away. Measures the fallback the spec names.
+  rule('fe-design-archetype', 'frontend', 'major', 'visual'),
+  rule('fe-cold-visitor', 'frontend', 'blocker', 'visual'),
   rule('fe-seo-og', 'frontend', 'major', 'visual'),
   rule('fe-cross-link', 'frontend', 'major', 'visual'),
 
@@ -154,6 +166,9 @@ export const RULES: Rule[] = [
   rule('ci-sha-pinned', 'ci', 'blocker', 'det'),
   rule('ci-least-privilege', 'ci', 'blocker', 'det'),
   rule('ci-no-injection', 'ci', 'blocker', 'det'),
+  // `cmd | tail` exits with tail's status. This masked a failing Playwright run
+  // and an aborted merge in a single session, both read as green.
+  rule('ci-exit-code-integrity', 'ci', 'major', 'det'),
 
   rule('hyg-secret-scan', 'hygiene', 'blocker', 'det'),
   rule('hyg-no-binaries', 'hygiene', 'blocker', 'det'),

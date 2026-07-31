@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import { basename, join, relative, resolve } from 'node:path';
 import { withWorktree } from '../worktree/isolate';
 import { promoteWorktree, type PromoteResult } from '../worktree/promote';
@@ -152,6 +153,24 @@ export async function runLoopCommand(opts: LoopCommandOptions): Promise<LoopRun>
  * Run the loop against an already-chosen directory. Split out so the isolated
  * and non-isolated paths share one implementation.
  */
+/**
+ * The branch a directory is checked out on, or null when git cannot say.
+ *
+ * @param dir - Directory to inspect.
+ * @returns Branch name, or null.
+ */
+function currentBranch(dir: string): string | null {
+  try {
+    const name = execFileSync('git', ['-C', dir, 'rev-parse', '--abbrev-ref', 'HEAD'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+    return name === '' ? null : name;
+  } catch {
+    return null;
+  }
+}
+
 async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun> {
   const spec = await readFile(opts.specPath, 'utf8');
   /** Iterations that produced a real gate score, for lg-score-is-inline. */
@@ -225,6 +244,12 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
   }
   const runRules = scoreRun({
     isolated: opts.isolate !== false,
+    // The directory and branch the coder ACTUALLY ran in, so isolation is
+    // observed rather than taken on this function's own word. `isolated` above
+    // is the caller describing its own intent; `coderDir` is the filesystem
+    // being asked whether that intent was carried out.
+    coderDir: dir,
+    coderBranch: currentBranch(dir),
     coderTimeoutMs: opts.timeoutMs ?? DEFAULT_CODER_TIMEOUT_MS,
     coderEnv: coderEnv(),
     maxIters: opts.maxIters,

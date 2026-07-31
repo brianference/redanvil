@@ -49,6 +49,7 @@ export const APP_CHECKS: Check[] = [
   // Both must pass — duplicate outcomes for one rule resolve fail-closed.
   det('u-test-presence'),
   det('u-test-coverage-ratchet'),
+  det('u-claims-covered'),
   { ruleId: 'hyg-env-ignored', command: 'git', args: ['check-ignore', '.env'] },
   // Static rule checks (real greps/AST-lite over the app source).
   det('u-test-acceptance'),
@@ -107,6 +108,7 @@ export const APP_CHECKS: Check[] = [
   det('ci-sha-pinned'),
   det('ci-least-privilege'),
   det('ci-no-injection'),
+  det('ci-exit-code-integrity'),
   // Process lane: formerly printed "unknown rule" when invoked; only "passed"
   // because real gate runs excluded them with --na process.
   det('proc-conventional-commits'),

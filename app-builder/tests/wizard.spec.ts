@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
  *
  * These exist for the same reason as QuickFlight's (R27): every static check
  * this repo runs can pass on a product whose controls do nothing. The repo-level
- * `e2e_smoke.mjs` covers the happy path against production; this covers the
+ * `e2e_smoke_app_builder.mjs` covers the happy path against production; this covers the
  * behaviour of the individual controls, and lives in the app so the app's own
  * gate can require it.
  *

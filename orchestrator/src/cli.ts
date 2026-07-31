@@ -152,7 +152,8 @@ const KNOWN_FLAGS = new Set([
   'max-iters',
   'no-isolate',
   'promote',
-  'min-coverage'
+  'min-coverage',
+  'claims'
 ]);
 
 async function main(): Promise<number> {
@@ -175,7 +176,8 @@ async function main(): Promise<number> {
       'max-iters': { type: 'string' },
       'no-isolate': { type: 'boolean' },
       promote: { type: 'boolean' },
-      'min-coverage': { type: 'string' }
+      'min-coverage': { type: 'string' },
+      claims: { type: 'string' }
     }
   });
 

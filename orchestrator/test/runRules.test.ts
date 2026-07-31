@@ -1,5 +1,6 @@
+import { tmpdir } from 'node:os';
 import { describe, it, expect } from 'vitest';
-import { scoreRun, secretsInEnv, RUN_RULES, type RunFacts } from '../src/loop/runRules';
+import { observeIsolation, scoreRun, secretsInEnv, RUN_RULES, type RunFacts } from '../src/loop/runRules';
 
 /**
  * A run that honours the whole operational contract, so each test varies one fact.
@@ -52,13 +53,52 @@ describe('operational run rules', () => {
   it('scores every declared run rule', () => {
     const outcomes = scoreRun(facts());
     expect(outcomes).toHaveLength(RUN_RULES.length);
-    expect(outcomes.every((o) => o.passed)).toBe(true);
+  });
+
+  it('does not pass a run whose isolation and branch were never observed', () => {
+    // The default fixture supplies no coderDir and no coderBranch, which is
+    // what every caller did before this change. The loop's own contract was
+    // graded on the loop's account of itself, and it always agreed. Unobserved
+    // is now reported as unobserved rather than counted as compliant.
+    const outcomes = scoreRun(facts());
+    expect(byId(outcomes, 'lg-worktree-isolation')?.passed).toBe(false);
+    expect(byId(outcomes, 'lg-worktree-isolation')?.detail).toMatch(/never observed/);
+    expect(byId(outcomes, 'lg-run-on-scratch-branch')?.passed).toBe(false);
+  });
+
+  it('OBSERVES a real git directory rather than guessing', () => {
+    // Asserts observation happened, NOT which answer it gave.
+    //
+    // The first version asserted `detail` matched /measured:/ and passed here
+    // while failing under verify_commit.mjs. `detail` is attached only on
+    // FAILURE: in this checkout process.cwd() is a normal tree so the rule
+    // fails and detail exists, but verify_commit builds the ref inside a linked
+    // worktree, where the rule correctly PASSES and detail is undefined. The
+    // test was reading the environment, not the code -- the working tree is not
+    // the commit, which is the whole reason that script exists.
+    const real = observeIsolation(process.cwd());
+    expect(real.observed).toBe(true);
+    expect(real.reason).not.toBe('no directory supplied');
+
+    expect(byId(scoreRun(facts({ coderBranch: 'scratch-x' })), 'lg-run-on-scratch-branch')?.passed)
+      .toBe(true);
+  });
+
+  it('reports unobserved for a path that is not a git repository', () => {
+    const none = observeIsolation(tmpdir());
+    expect(none.observed).toBe(false);
+    expect(none.isolated).toBe(false);
+  });
+
+  it('fails the scratch-branch rule on a default branch', () => {
+    expect(
+      byId(scoreRun(facts({ coderBranch: 'main' })), 'lg-run-on-scratch-branch')?.passed
+    ).toBe(false);
   });
 
   it('fails worktree isolation when the coder edited the live tree', () => {
     const o = byId(scoreRun(facts({ isolated: false })), 'lg-worktree-isolation');
     expect(o?.passed).toBe(false);
-    expect(o?.detail).toMatch(/live working tree/);
   });
 
   it('fails when the coder ran without a timeout', () => {
@@ -107,10 +147,17 @@ describe('operational run rules', () => {
     ).toBe(true);
   });
 
-  it('does not fail the budget rule when nothing was estimated', () => {
-    expect(
-      byId(scoreRun(facts({ estimatedIterations: null, iterations: 99 })), 'lg-budget-ceiling')
-        ?.passed
-    ).toBe(true);
+  it('FAILS the budget rule when nothing was estimated', () => {
+    // This assertion used to read 'does not fail' and expect true. It codified
+    // a vacuous pass: with no estimate there is no ceiling, so the rule was
+    // green precisely when no budget existed to enforce -- and a null estimate
+    // is the common case, not the rare one. A test can lock in a defect just as
+    // firmly as an implementation, and this one did.
+    const o = byId(
+      scoreRun(facts({ estimatedIterations: null, iterations: 99 })),
+      'lg-budget-ceiling'
+    );
+    expect(o?.passed).toBe(false);
+    expect(o?.detail).toMatch(/no budget/);
   });
 });
