@@ -271,28 +271,28 @@
       }
     ],
     "deployUrl": null,
-    "finishedAt": "2026-07-31T07:58:41.534Z",
+    "finishedAt": "2026-07-31T17:18:49.849Z",
     "provenance": {
-      "commit": "0aa10cdfb28ee1017faf41880b2e696ab148535b",
+      "commit": "3b8f9313d7c79a9a4f742d4760dfb8890fe372a6",
       "dirty": false,
       "rubricHash": "e64fba891e2da5c4317c82c62dc5d4615123a70949cfe9135b78748938b5da7c",
       "rubricRuleCount": 68,
       "node": "v22.19.0",
-      "verdictsHash": "7a202d4db4272b43c25e765393072e6d7af9224cdd53bb0033dea4641b544570",
+      "verdictsHash": "4bf66f0f3671735dfbade8e81ff81b23741f084460db8daa599c28227ab207c5",
       "notApplicable": [
         "process"
       ],
       "staleVerdicts": [],
-      "generatedAt": "2026-07-31T07:58:41.584Z"
+      "generatedAt": "2026-07-31T17:18:49.908Z"
     }
   },
   {
     "kind": "results",
     "slug": "app-builder",
-    "finalScore": 0,
+    "finalScore": 95,
     "threshold": 90,
-    "passed": false,
-    "evaluated": 61,
+    "passed": true,
+    "evaluated": 62,
     "total": 63,
     "rules": [
       {
@@ -325,7 +325,7 @@
       },
       {
         "ruleId": "u-test-feature-audit",
-        "passed": false
+        "passed": true
       },
       {
         "ruleId": "u-no-placeholders",
@@ -333,7 +333,7 @@
       },
       {
         "ruleId": "fe-visible-response",
-        "passed": false
+        "passed": true
       },
       {
         "ruleId": "u-typing-scoped-ignores",
@@ -425,7 +425,7 @@
       },
       {
         "ruleId": "hyg-no-duplication",
-        "passed": false
+        "passed": true
       },
       {
         "ruleId": "ci-actionlint",
@@ -493,7 +493,7 @@
       },
       {
         "ruleId": "fe-required-pages",
-        "passed": false
+        "passed": true
       },
       {
         "ruleId": "fe-visual-review-recorded",
@@ -542,35 +542,33 @@
       {
         "ruleId": "fe-desktop-width",
         "passed": true
+      },
+      {
+        "ruleId": "fe-product-completeness",
+        "passed": true
       }
     ],
     "iterations": [
       {
         "index": 1,
-        "score": 0,
-        "blockers": [
-          "u-test-feature-audit",
-          "fe-visible-response",
-          "fe-required-pages",
-          "fe-product-completeness",
-          "hyg-no-duplication"
-        ]
+        "score": 95,
+        "blockers": []
       }
     ],
     "deployUrl": null,
-    "finishedAt": "2026-07-31T07:58:10.075Z",
+    "finishedAt": "2026-07-31T17:17:55.099Z",
     "provenance": {
-      "commit": "0aa10cdfb28ee1017faf41880b2e696ab148535b",
+      "commit": "c3552a0ad8ff2cacee63fe877860c2cdd6bcc0f6",
       "dirty": false,
       "rubricHash": "e64fba891e2da5c4317c82c62dc5d4615123a70949cfe9135b78748938b5da7c",
       "rubricRuleCount": 68,
       "node": "v22.19.0",
-      "verdictsHash": "70d3eeaa36831a7cee28eb84a262d48fcff7729e931fa11a09117dc7ffda7ddb",
+      "verdictsHash": "ab9bbd50354279de34ecc8c483b8a370b28c396cdaab1b169d502e4ea56e6b0d",
       "notApplicable": [
         "process"
       ],
       "staleVerdicts": [],
-      "generatedAt": "2026-07-31T07:58:10.123Z"
+      "generatedAt": "2026-07-31T17:17:55.149Z"
     }
   }
 ]
