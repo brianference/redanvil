@@ -84,6 +84,11 @@ export const RULES: Rule[] = [
   // delivers the product's claim is a judgment, scored from a recorded verdict
   // over the live traffic the det half captures.
   rule('u-api-real-output', 'testing', 'blocker', 'det+judge'),
+  // A feature the builder skipped is invisible to every other check: it renders
+  // no control for the audit to find and serves no route for the API check to
+  // call. The PRD promised it and nothing compared what was built against what
+  // was promised, because the promise only existed as prose.
+  rule('u-claims-covered', 'testing', 'blocker', 'det'),
   rule('u-test-adequacy', 'testing', 'major', 'det+judge'),
   rule('u-test-behavioral', 'testing', 'major', 'judge'),
 

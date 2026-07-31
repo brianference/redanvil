@@ -49,6 +49,7 @@ export const APP_CHECKS: Check[] = [
   // Both must pass — duplicate outcomes for one rule resolve fail-closed.
   det('u-test-presence'),
   det('u-test-coverage-ratchet'),
+  det('u-claims-covered'),
   { ruleId: 'hyg-env-ignored', command: 'git', args: ['check-ignore', '.env'] },
   // Static rule checks (real greps/AST-lite over the app source).
   det('u-test-acceptance'),
