@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil-dashboard.pages.dev",
-  "checkedAt": "2026-07-28T00:39:54.806Z",
+  "checkedAt": "2026-07-31T07:29:40.517Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -40,11 +40,11 @@
     },
     "fe-light-dark": {
       "ok": true,
-      "detail": "dark -> light, stored \"light\", survived reload as light"
+      "detail": "default under prefers-color-scheme:dark resolved to \"dark\"; toggle dark -> light, stored \"light\", survived reload as light"
     },
     "fe-required-pages": {
       "ok": true,
-      "detail": "/about 200 \"About\" 337w/6§; /contact 200 \"Contact\" 213w/5§; /terms 200 \"Terms\" 604w/13§; /privacy 200 \"Privacy\" 633w/12§; /no-such-page 200 \"Page not found\" 32w/0§"
+      "detail": "/about 200 \"About\" 337w/6§; /contact 200 \"Contact\" 213w/5§; /terms 200 \"Terms\" 1494w/16§; /privacy 200 \"Privacy\" 1543w/16§; /no-such-page 200 \"Page not found\" 32w/0§"
     },
     "fe-visual-review-recorded": {
       "ok": true,
