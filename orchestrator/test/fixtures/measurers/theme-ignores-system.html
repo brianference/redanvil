@@ -1,0 +1,37 @@
+<!doctype html>
+<!--
+  The case a11y_audit.mjs structurally cannot see.
+
+  This page has a real dark theme and a working toggle, and it NEVER consults
+  prefers-color-scheme: data-theme is hard-set to light on load, exactly as
+  quickflight's resolveTheme() did. a11y_audit assigns data-theme itself before
+  measuring, so it grades whichever theme it just set and reports both clean.
+  cold_visitor must FAIL this page.
+-->
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Theme ignores the system</title>
+    <meta name="description" content="Fixture: default theme does not follow the OS." />
+    <style>
+      :root[data-theme='light'] { --bg: #ffffff; --fg: #111418; }
+      :root[data-theme='dark']  { --bg: #070b14; --fg: #e8eef8; }
+      body { background: var(--bg); color: var(--fg); font-size: 16px; margin: 0; padding: 24px; }
+    </style>
+  </head>
+  <body>
+    <h1>Fixture</h1>
+    <p>The default is hard-coded to light and never reads the system preference.</p>
+    <button id="t" type="button" aria-label="Toggle theme">Toggle theme</button>
+    <script>
+      // Deliberately no matchMedia. This is the bug, reproduced.
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.getElementById('t').addEventListener('click', () => {
+        const next =
+          document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+      });
+    </script>
+  </body>
+</html>
