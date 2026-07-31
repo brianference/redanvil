@@ -107,10 +107,13 @@ try {
     process.exit(2);
   }
   let na = 0;
+  /** Rules that reported "no subject here", named rather than only counted. */
+  const naRules = [];
   for (const rule of ruleIds) {
     const r = run('node', [CHECK, rule, appDir], REPO);
     if (r.code === 3) {
       na += 1;
+      naRules.push(rule);
       continue;
     }
     const ok = r.code === 0;
@@ -119,6 +122,14 @@ try {
     if (!ok) console.log(`        ${r.out.trim().split('\n')[0]}`);
   }
   console.log(`\n${ruleIds.length} static rule(s) run, ${na} not applicable to a fresh scaffold`);
+  if (naRules.length > 0) {
+    // Named, not just counted. An n/a rule is invisible by construction -- it
+    // leaves the denominator and prints nothing -- so a rule that quietly stops
+    // applying looks identical to one that never could. Most n/a verdicts turn
+    // out to be a too-narrow scope or a missing tool rather than an absent
+    // subject, and you cannot re-check a list you cannot see.
+    console.log(`not applicable: ${naRules.join(', ')}`);
+  }
   console.log('visual and judge rules are NOT covered here: they need a rendered review.');
 } finally {
   if (!KEEP) rmSync(root, { recursive: true, force: true });

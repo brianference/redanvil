@@ -72,3 +72,18 @@ export function featureManifestJson(): string {
   };
   return JSON.stringify(manifest, null, 2) + '\n';
 }
+
+/**
+ * Source of the cold-start check, read from the scaffold asset.
+ *
+ * Every other check a generated app ships sets up the state it then measures --
+ * the acceptance suite seeds a route, the control audit crawls a page that is
+ * already populated. None of them observe what a first-time visitor gets, which
+ * is how an app shipped a default theme that ignored the operating system and a
+ * search that answered an empty list for anything unseeded.
+ *
+ * @returns Contents of the app's `scripts/cold-visitor.mjs`.
+ */
+export function coldVisitorScript(): string {
+  return readFileSync(join(ASSET_DIR, 'cold-visitor.mjs'), 'utf8');
+}

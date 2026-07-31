@@ -53,7 +53,7 @@ jobs:
         run: node .github/scripts/cold_visitor.mjs https://redanvil.pages.dev/ --claims app-builder/.redanvil/claims.json --out evidence/cold-app-builder.json
 
       - name: E2E smoke — core flow
-        run: node .github/scripts/e2e_smoke.mjs https://redanvil.pages.dev/ --trace e2e-drift.zip
+        run: node .github/scripts/e2e_smoke_app_builder.mjs https://redanvil.pages.dev/ --trace e2e-drift.zip
 
       # The twelve design rules that used to rest on a prose note. Measuring
       # them daily is what stops the number and the claim drifting apart again.
