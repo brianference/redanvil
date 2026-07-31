@@ -27,6 +27,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
@@ -172,6 +173,25 @@ for (const app of apps) {
       [app.url, '--theme', 'light', '--out', `evidence/axe/${app.slug}-light.json`]
     ],
     ['runtime_parity.mjs', [app.dir, '--out', `evidence/runtime-${app.slug}.json`]],
+    // cold_visitor was measured by drift.yml and by hand, but never here, so its
+    // evidence aged out on the first commit after it was taken and the gate
+    // blocked on "produced BEFORE the commit it vouches for". A re-verification
+    // that re-runs six measurers and silently skips the seventh is not a
+    // re-verification; it is six measurements and one stamp.
+    ...(existsSync(join(app.dir, '.redanvil', 'claims.json'))
+      ? [
+          [
+            'cold_visitor.mjs',
+            [
+              app.url,
+              '--claims',
+              `${app.dir}/.redanvil/claims.json`,
+              '--out',
+              `evidence/cold-${app.slug}.json`
+            ]
+          ]
+        ]
+      : []),
     [
       'screenshots.mjs',
       [app.url, app.slug, '--routes', '/,/about', '--out', 'evidence/screenshots']
