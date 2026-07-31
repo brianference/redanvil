@@ -1,19 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { onRequestPost } from './submit';
-import type { D1PreparedStatement, Env } from '../lib/env';
-
-/** Minimal in-memory D1 mock that always succeeds. */
-function mockEnv(): Env {
-  const stmt: D1PreparedStatement = {
-    bind: () => stmt,
-    run: () => Promise.resolve({}),
-    all: () => Promise.resolve({ results: [] })
-  };
-  return { DB: { prepare: () => stmt } };
-}
+import { mockEnv, expectSecureHeaders } from '../../tests/helpers/d1';
 
 /**
  * Build a Request targeting /api/submit with an optional JSON body.
+ *
+ * @param body - JSON-serialisable request body.
+ * @returns POST Request for /api/submit.
  */
 function submitRequest(body: unknown): Request {
   return new Request('https://example.com/api/submit', {
@@ -23,17 +16,12 @@ function submitRequest(body: unknown): Request {
   });
 }
 
-/**
- * Assert secure headers present on both success and error paths.
- */
-function expectSecureHeaders(response: Response, requestUrl: string): void {
-  const origin = new URL(requestUrl).origin;
-  expect(response.headers.get('content-type')).toBe('application/json');
-  expect(response.headers.get('x-content-type-options')).toBe('nosniff');
-  expect(response.headers.get('access-control-allow-origin')).toBe(origin);
-  expect(response.headers.get('access-control-allow-origin')).not.toBe('*');
-  expect(response.headers.get('access-control-allow-methods')).toBe('POST');
-  expect(response.headers.get('access-control-allow-headers')).toBe('content-type');
+/** Assert submit-route secure headers (POST methods + content-type allow-headers). */
+function expectSubmitSecureHeaders(response: Response, requestUrl: string): void {
+  expectSecureHeaders(response, requestUrl, {
+    methods: 'POST',
+    allowHeaders: 'content-type'
+  });
 }
 
 describe('POST /api/submit headers', () => {
@@ -46,14 +34,14 @@ describe('POST /api/submit headers', () => {
     });
     const response = await onRequestPost({ request, env: mockEnv() });
     expect(response.status).toBe(200);
-    expectSecureHeaders(response, request.url);
+    expectSubmitSecureHeaders(response, request.url);
   });
 
   it('includes nosniff and same-origin CORS on validation error', async () => {
     const request = submitRequest({ prompt: 'short' });
     const response = await onRequestPost({ request, env: mockEnv() });
     expect(response.status).toBe(400);
-    expectSecureHeaders(response, request.url);
+    expectSubmitSecureHeaders(response, request.url);
   });
 
   it('includes nosniff and same-origin CORS on invalid JSON', async () => {
@@ -64,7 +52,7 @@ describe('POST /api/submit headers', () => {
     });
     const response = await onRequestPost({ request, env: mockEnv() });
     expect(response.status).toBe(400);
-    expectSecureHeaders(response, request.url);
+    expectSubmitSecureHeaders(response, request.url);
   });
 });
 
@@ -81,7 +69,7 @@ describe('POST /api/submit body bounds', () => {
     const body = (await response.json()) as { error: string };
     expect(typeof body.error).toBe('string');
     expect(body.error.length).toBeGreaterThan(0);
-    expectSecureHeaders(response, request.url);
+    expectSubmitSecureHeaders(response, request.url);
   });
 
   it('rejects an over-limit appType with 400', async () => {

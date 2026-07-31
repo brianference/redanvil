@@ -1,49 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { onRequestGet } from './[id]';
-import type { D1PreparedStatement, Env } from '../../lib/env';
-
-/**
- * Minimal D1 mock for GET /api/prd/:id.
- *
- * @param mode - Result shape or failure mode for the prepared statement.
- */
-function mockEnv(
-  mode: 'found' | 'missing' | 'fail',
-  row?: Record<string, unknown>
-): Env {
-  const stmt: D1PreparedStatement = {
-    bind: () => stmt,
-    run: () => Promise.resolve({}),
-    all: () => {
-      if (mode === 'fail') {
-        return Promise.reject(new Error('D1 unavailable'));
-      }
-      if (mode === 'missing') {
-        return Promise.resolve({ results: [] });
-      }
-      return Promise.resolve({ results: [row ?? {}] });
-    }
-  };
-  return { DB: { prepare: () => stmt } };
-}
-
-/**
- * Assert secure headers from the shared jsonResponse helper.
- */
-function expectSecureHeaders(response: Response, requestUrl: string): void {
-  const origin = new URL(requestUrl).origin;
-  expect(response.headers.get('content-type')).toBe('application/json');
-  expect(response.headers.get('x-content-type-options')).toBe('nosniff');
-  expect(response.headers.get('access-control-allow-origin')).toBe(origin);
-  expect(response.headers.get('access-control-allow-methods')).toBe('GET');
-}
+import { mockEnv, expectSecureHeaders } from '../../../tests/helpers/d1';
 
 describe('GET /api/prd/:id', () => {
   it('returns 400 when the path id is missing or blank', async () => {
     const request = new Request('https://example.com/api/prd/');
     const response = await onRequestGet({
       request,
-      env: mockEnv('missing'),
+      env: mockEnv(),
       params: {}
     });
     expect(response.status).toBe(400);
@@ -53,7 +17,7 @@ describe('GET /api/prd/:id', () => {
 
     const blank = await onRequestGet({
       request,
-      env: mockEnv('missing'),
+      env: mockEnv(),
       params: { id: '   ' }
     });
     expect(blank.status).toBe(400);
@@ -64,7 +28,7 @@ describe('GET /api/prd/:id', () => {
     const request = new Request('https://example.com/api/prd/does-not-exist');
     const response = await onRequestGet({
       request,
-      env: mockEnv('missing'),
+      env: mockEnv(),
       params: { id: 'does-not-exist' }
     });
     expect(response.status).toBe(404);
@@ -85,7 +49,7 @@ describe('GET /api/prd/:id', () => {
     const request = new Request('https://example.com/api/prd/abc-123');
     const response = await onRequestGet({
       request,
-      env: mockEnv('found', row),
+      env: mockEnv({ results: [row] }),
       params: { id: 'abc-123' }
     });
     expect(response.status).toBe(200);
@@ -97,7 +61,7 @@ describe('GET /api/prd/:id', () => {
     const request = new Request('https://example.com/api/prd/abc-123');
     const response = await onRequestGet({
       request,
-      env: mockEnv('fail'),
+      env: mockEnv({ fail: true }),
       params: { id: 'abc-123' }
     });
     expect(response.status).toBe(500);

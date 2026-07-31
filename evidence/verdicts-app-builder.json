@@ -320,5 +320,16 @@
     "note": "desktop_width re-measured against production at 1440 and 1920; every route >= 80% painted width.",
     "reviewedAt": "2026-07-31T06:34:16.325Z",
     "reviewedCommit": "90661dad61b55b37ffc912c40b049c8e334c5b19"
+  },
+  {
+    "ruleId": "fe-product-completeness",
+    "passed": false,
+    "method": "visual",
+    "evidence": [
+      "evidence/e2e-app-builder.json"
+    ],
+    "note": "awaiting a real e2e_smoke run; outcome is derived from the report, not recorded by hand",
+    "reviewedCommit": "0ff4f8db0fd60a1eb8809b4d31d4ff513f12b35a",
+    "reviewedAt": "2026-07-31T06:31:26.066Z"
   }
 ]

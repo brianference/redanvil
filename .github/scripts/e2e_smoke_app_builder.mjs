@@ -200,6 +200,19 @@ try {
     submitStatus: submit.status(),
     prdRendered: true,
     routes,
+    // Keyed by rule id, the same shape design_audit and cold_visitor emit, so a
+    // verdict citing this report can have its outcome READ BACK from it instead
+    // of preserved across re-stamps. Without this the report proved the flow and
+    // nothing could bind that proof to the rule it settles.
+    findings: {
+      'fe-product-completeness': {
+        ok: true,
+        detail:
+          `chat → wizard → Forge PRD completed against ${baseUrl}: /api/submit ` +
+          `returned ${submit.status()} and the PRD rendered, with ${routes.length} ` +
+          `further route(s) verified. The core feature produces real output end to end.`
+      }
+    },
     ok: true
   };
   process.exitCode = 0;
@@ -210,6 +223,16 @@ try {
     checkedAt: new Date().toISOString(),
     submitStatus: null,
     prdRendered: false,
+    // Emitted on the failure path too. A findings map that appears only when the
+    // flow passed lets a verdict keep its last good answer through a regression.
+    findings: {
+      'fe-product-completeness': {
+        ok: false,
+        detail: `chat → wizard → Forge PRD did not complete against ${baseUrl}: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      }
+    },
     ok: false,
     error: err instanceof Error ? err.message : String(err)
   };

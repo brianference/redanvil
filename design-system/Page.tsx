@@ -111,6 +111,10 @@ export function Page({
 
   useEffect(() => {
     setMenuOpen(false);
+    // Client-side navigations keep the previous scroll offset (unlike a full
+    // document load). Reset so a footer link never lands the reader mid-page
+    // in a document they have not opened (R34).
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [location.pathname]);
 
   useEffect(() => {

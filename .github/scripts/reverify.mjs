@@ -217,6 +217,37 @@ for (const app of apps) {
   }
 }
 
+/**
+ * Read a verdict's outcome back out of the report that vouches for it.
+ *
+ * Only reports that NAME the rule can decide it. A design audit keys its
+ * findings by rule id, so it answers for exactly the rules it measured and
+ * stays silent about the rest — which is what makes this safe to apply blindly
+ * across the file.
+ *
+ * @param {{ruleId: string, evidence?: string[]}} verdict The recorded verdict.
+ * @returns {{ok: boolean, note: string}|null} The measured outcome, or null when
+ *   no evidence file decides this rule.
+ */
+function outcomeFromEvidence(verdict) {
+  for (const rel of verdict.evidence ?? []) {
+    if (!existsSync(rel)) continue;
+    let report;
+    try {
+      report = JSON.parse(readFileSync(rel, 'utf8'));
+    } catch {
+      continue;
+    }
+    const finding = report?.findings?.[verdict.ruleId];
+    if (finding === undefined || typeof finding.ok !== 'boolean') continue;
+    return {
+      ok: finding.ok,
+      note: `${rel} against ${report.baseUrl ?? 'the measured build'}: ${finding.detail ?? ''}`.trim()
+    };
+  }
+  return null;
+}
+
 // --- 4. stamp verdicts to HEAD ----------------------------------------------
 // Only now: a report produced BEFORE the commit it vouches for is rejected, and
 // rightly — re-stamping is not re-measuring.
@@ -224,9 +255,31 @@ step(4, 'stamp verdicts to HEAD');
 for (const app of apps) {
   const p = `evidence/verdicts-${app.slug}.json`;
   const list = JSON.parse(readFileSync(p, 'utf8'));
-  for (const v of list) v.reviewedCommit = head;
+  let rederived = 0;
+  for (const v of list) {
+    v.reviewedCommit = head;
+    // Advancing reviewedCommit while preserving the recorded outcome is exactly
+    // the "re-stamping is not re-measuring" failure this step warns about, just
+    // in the other field. fe-required-pages kept a `passed: false` recorded when
+    // /terms was 706 words, long after the rewrite took it past the floor and
+    // the freshly-measured report said ok — a verdict that looked newly reviewed
+    // and carried a stale answer.
+    //
+    // Where the evidence is a machine-produced report that names the rule, the
+    // report is the answer. Verdicts whose evidence cannot decide the rule (a
+    // screenshot, a human review) keep what was recorded.
+    const decided = outcomeFromEvidence(v);
+    if (decided !== null && decided.ok !== v.passed) {
+      v.passed = decided.ok;
+      v.note = decided.note;
+      rederived += 1;
+    }
+  }
   writeFileSync(p, `${JSON.stringify(list, null, 2)}\n`);
-  console.log(`    ${app.slug}: ${list.length} verdicts at ${head.slice(0, 12)}`);
+  console.log(
+    `    ${app.slug}: ${list.length} verdicts at ${head.slice(0, 12)}` +
+      (rederived > 0 ? ` (${rederived} re-derived from freshly measured evidence)` : '')
+  );
 }
 
 if (flag('no-gate')) {

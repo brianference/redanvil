@@ -1,0 +1,187 @@
+{
+  "_why": "Every interactive control on the site and the test that proves it works. scripts/feature-audit.mjs crawls the RUNNING app and fails when a control is not listed here, so a new button is untested-by-default instead of silently unverified. This inventory comes from the app, not from a list someone remembered to update.",
+  "controls": [
+    {
+      "role": "button",
+      "name": "theme-toggle",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > theme toggle flips and persists"
+    },
+    {
+      "role": "button",
+      "name": "Or start from a template",
+      "routes": ["/"],
+      "test": "feature-coverage.spec.ts > start from a template opens the template gallery"
+    },
+    {
+      "role": "button",
+      "name": "Send description",
+      "routes": ["/"],
+      "test": "wizard.spec.ts > a real description enables the send action"
+    },
+    {
+      "role": "link",
+      "name": "RedAnvil — forge apps from a prompt",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > the brand logo is an operable home link"
+    },
+    {
+      "role": "link",
+      "name": "ra-nav-link",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "App Builder",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "Dashboard",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    },
+    {
+      "role": "link",
+      "name": "Saved",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "GitHub",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    },
+    {
+      "role": "link",
+      "name": "About",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "Contact",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "Terms",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "Privacy",
+      "routes": ["/", "/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "textbox",
+      "name": "(unnamed)",
+      "routes": ["/"],
+      "test": "wizard.spec.ts > a real description enables the send action"
+    },
+    {
+      "role": "link",
+      "name": "Home",
+      "routes": ["/examples", "/about", "/terms", "/privacy", "/contact", "/saved"],
+      "test": "feature-coverage.spec.ts > breadcrumb Home returns to the builder"
+    },
+    {
+      "role": "link",
+      "name": "Open the live app",
+      "routes": ["/examples"],
+      "test": "feature-coverage.spec.ts > examples page exposes live app and source links"
+    },
+    {
+      "role": "link",
+      "name": "Read the source",
+      "routes": ["/examples"],
+      "test": "feature-coverage.spec.ts > examples page exposes live app and source links"
+    },
+    {
+      "role": "link",
+      "name": "https://redanvil-dashboard.pages.dev",
+      "routes": ["/about"],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    },
+    {
+      "role": "link",
+      "name": "https://github.com/brianference/redanvil",
+      "routes": ["/about", "/terms"],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    },
+    {
+      "role": "link",
+      "name": "https://github.com/brianference/redanvil/issues",
+      "routes": ["/terms", "/privacy", "/contact"],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    },
+    {
+      "role": "button",
+      "name": "Retry",
+      "routes": ["/saved"],
+      "test": "feature-coverage.spec.ts > saved Retry is present when the list fails to load",
+      "whyNotCrawled": "only rendered when GET /api/prds fails; the crawler sees it under vite preview (no Pages Functions) but not against a live backend. The claiming test drives the error state and asserts the control is in the viewport."
+    },
+    {
+      "role": "link",
+      "name": "+ New build",
+      "routes": ["/saved"],
+      "test": "feature-coverage.spec.ts > saved New build returns to the composer"
+    },
+    {
+      "role": "button",
+      "name": "Next",
+      "routes": ["/"],
+      "test": "wizard.spec.ts > Scope opens with the default app type already chosen",
+      "whyNotCrawled": "only rendered after the composer sends a description and the wizard mounts. The claiming test drives that flow and asserts Next is enabled."
+    },
+    {
+      "role": "button",
+      "name": "Back",
+      "routes": ["/"],
+      "test": "wizard.spec.ts > Back returns to the previous step with answers intact",
+      "whyNotCrawled": "only rendered on wizard steps after the first. The claiming test advances, presses Back, and checks answers persist."
+    },
+    {
+      "role": "button",
+      "name": "Forge PRD",
+      "routes": ["/"],
+      "test": "wizard.spec.ts > Forge PRD produces a document containing the prompt",
+      "whyNotCrawled": "only rendered on the Review step after Scope and Features. The claiming test completes the wizard, waits on POST /api/submit, and asserts the PRD text is on screen."
+    },
+    {
+      "role": "button",
+      "name": "Mobile app",
+      "routes": ["/"],
+      "test": "wizard.spec.ts > Scope opens with the default app type already chosen",
+      "whyNotCrawled": "only rendered on the Scope step of the wizard after a description is sent."
+    },
+    {
+      "role": "button",
+      "name": "SaaS",
+      "routes": ["/"],
+      "test": "wizard.spec.ts > choosing an app-type chip writes it into the field",
+      "whyNotCrawled": "only rendered on the Scope step of the wizard after a description is sent."
+    },
+    {
+      "role": "textbox",
+      "name": "App type",
+      "routes": ["/"],
+      "test": "wizard.spec.ts > clearing the app type blocks progress, and re-picking restores it",
+      "whyNotCrawled": "only rendered on the Scope step of the wizard after a description is sent."
+    },
+    {
+      "role": "checkbox",
+      "name": "(unnamed)",
+      "routes": ["/"],
+      "test": "wizard.spec.ts > the Features step blocks when nothing is selected",
+      "whyNotCrawled": "only rendered on the Features step after Scope. The claiming test unchecks and re-checks the boxes and asserts Next enables."
+    }
+  ]
+}

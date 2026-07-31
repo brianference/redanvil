@@ -132,7 +132,14 @@ export function ThemeToggle({ tokens, copy }: ThemeToggleProps): JSX.Element {
   };
 
   return (
-    <button type="button" onClick={toggle} aria-label={label} title={label} style={buttonStyle}>
+    <button
+      type="button"
+      data-testid="theme-toggle"
+      onClick={toggle}
+      aria-label={label}
+      title={label}
+      style={buttonStyle}
+    >
       <span aria-hidden="true">{isDark ? '☀' : '☾'}</span>
     </button>
   );
