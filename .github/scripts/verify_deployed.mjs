@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
+import { isGateOutput } from '../../orchestrator/scripts/lib/gate-outputs.mjs';
 
 const [appDir, resultFile, prodUrl] = process.argv.slice(2);
 if (!appDir || !resultFile || !prodUrl) {
@@ -92,7 +93,12 @@ const changedSinceScored = (
 )
   .split('\n')
   .map((line) => line.trim())
-  .filter((line) => line.length > 0);
+  .filter((line) => line.length > 0)
+  // Committing the run's own artifacts — the coverage high-water mark and the
+  // captured API traffic — moved files UNDER the app dir, so this refused every
+  // result the gate produced. The bundle is unaffected by either: neither is
+  // bundled, and both are written by the scoring run itself.
+  .filter((file) => !isGateOutput(file));
 
 if (changedSinceScored.length > 0) {
   console.error(

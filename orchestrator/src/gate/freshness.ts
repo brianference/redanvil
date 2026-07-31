@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import type { Verdict } from '../schemas/verdicts';
+import { isGateOutput } from '../../scripts/lib/gate-outputs.mjs';
 
 /**
  * A verdict that can no longer be trusted, and why.
@@ -112,32 +113,10 @@ function git(args: string[], repoRoot: string): string | null {
   }
 }
 
-/**
- * Artifacts the gate itself writes into the app it is reviewing.
- *
- * Running the gate mutated `.redanvil/coverage-state.json` (the ratchet records
- * a new high-water mark) and `evidence/api-live-*.json` (u-api-real-output saves
- * the traffic it captured). The freshness probe then counted those writes as
- * "the subject changed since review" and dropped every verdict — so the gate
- * invalidated its own verdicts by running, and no sequence of measure-then-stamp
- * could ever converge. reverify hit this on both apps.
- *
- * A verdict speaks for the app's SOURCE. An output the gate emitted while
- * scoring is not evidence that the reviewed surface moved. Excluding these does
- * not weaken the ratchet's tamper check, which reads the state file's git
- * history directly and does not consult freshness at all.
- *
- * @param file Repo-relative path.
- * @returns True when the gate produced this file rather than a person editing it.
- */
-export function isGateOutput(file: string): boolean {
-  return (
-    file.endsWith('/.redanvil/coverage-state.json') ||
-    file.startsWith('.redanvil/coverage-state.json') ||
-    /(^|\/)evidence\//.test(file) ||
-    /^results\/[^/]+\.json$/.test(file)
-  );
-}
+// A verdict speaks for the app's SOURCE, so an artifact the gate emitted while
+// scoring is not evidence that the reviewed surface moved. Shared with
+// provenance and verify_deployed, which each hit the same defect independently.
+export { isGateOutput };
 
 /**
  * A change probe backed by real git history.
