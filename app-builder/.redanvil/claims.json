@@ -1,0 +1,17 @@
+{
+  "_why": "PROBE ONLY, and deliberately so. app-builder was hand-built and has no generated PRD, so there is nothing to transcribe feature claims from -- and hand-authoring them would be inventing claims rather than recording them. `features` is empty, so u-claims-covered correctly returns n/a here rather than grading this app against a list I made up. What IS recorded is how to exercise the primary flow, which is a test instruction, not a claim about capability.",
+  "kind": "claims",
+  "slug": "app-builder",
+  "title": "RedAnvil",
+  "appType": "dashboard",
+  "hasAuth": false,
+  "entities": [],
+  "threshold": 90,
+  "features": [],
+  "coldVisitorProbe": {
+    "control": "send description",
+    "fill": { "#composer-prompt": "an app to track bird sightings with photos and dates" },
+    "expectSelector": "button:has-text('Next')",
+    "minCount": 1
+  }
+}

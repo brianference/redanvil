@@ -1,255 +1,158 @@
 [
   {
-    "ruleId": "fe-a11y-contrast",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/axe/app-builder-dark.json",
-      "evidence/axe/app-builder-light.json",
-      "evidence/screenshots/ab-1280-dark.png",
-      "evidence/screenshots/ab-1280-light.png"
-    ],
-    "note": "axe-core 4.12.1 against https://redanvil.pages.dev on this build: 0 colour-contrast violation nodes and 0 other violation types in BOTH themes. Resolved backgrounds confirm the audit really switched theme (dark rgb(11,11,15), light rgb(244,244,246)), so it is not measuring one theme twice.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
-  },
-  {
-    "ruleId": "fe-light-dark",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-1280-dark.png",
-      "evidence/screenshots/ab-1280-light.png"
-    ],
-    "note": "Measured by design_audit.mjs on production: dark -> light, stored \"light\", survived reload as light",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
-  },
-  {
-    "ruleId": "fe-premium-nav",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-1280-dark.png",
-      "evidence/screenshots/ab-1280-light.png",
-      "evidence/screenshots/ab-page-about.png"
-    ],
-    "note": "Measured by design_audit.mjs on production: 5 header link(s) [App Builder, Dashboard, Saved, About, Contact], aria-current on \"App Builder\"",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
-  },
-  {
-    "ruleId": "fe-required-pages",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-page-about.png",
-      "evidence/screenshots/ab-page-terms.png",
-      "evidence/screenshots/ab-page-privacy.png",
-      "evidence/screenshots/ab-page-contact.png"
-    ],
-    "note": "Measured by design_audit.mjs on production: /about 200 \"About RedAnvil\"; /contact 200 \"Contact\"; /terms 200 \"Terms and Conditions\"; /privacy 200 \"Privacy Policy\"",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
-  },
-  {
-    "ruleId": "fe-no-attribution",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-1280-light.png"
-    ],
-    "note": "Measured by design_audit.mjs on production: no attribution text",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
-  },
-  {
-    "ruleId": "fe-responsive-375",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-375-dark.png",
-      "evidence/screenshots/ab-375-light.png"
-    ],
-    "note": "Measured by design_audit.mjs on production: no horizontal overflow at 375",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
-  },
-  {
-    "ruleId": "fe-product-completeness",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/e2e-app-builder.json"
-    ],
-    "note": "e2e_smoke.mjs drove chat to wizard to Forge PRD on production by role with web-first assertions, waiting on the real /api/submit response: submit returned 200 and the PRD rendered, exit 0. /api/health also returns 200, so the Worker runtime boots rather than only static assets serving.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
-  },
-  {
-    "ruleId": "fe-visual-review-recorded",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-375-dark.png",
-      "evidence/screenshots/ab-375-light.png",
-      "evidence/screenshots/ab-768-dark.png",
-      "evidence/screenshots/ab-768-light.png",
-      "evidence/screenshots/ab-1280-dark.png",
-      "evidence/screenshots/ab-1280-light.png"
-    ],
-    "note": "Measured by design_audit.mjs on production: 0 console/page error(s) across the measured loads",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
-  },
-  {
-    "ruleId": "fe-seo-og",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-1280-dark.png"
-    ],
-    "note": "Measured by design_audit.mjs on production: title \"RedAnvil — Forge apps from a prompt\", description present, og:image present",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
-  },
-  {
-    "ruleId": "fe-cross-link",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-1280-dark.png"
-    ],
-    "note": "Measured by design_audit.mjs on production: cross-site link present",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
-  },
-  {
     "ruleId": "fe-touch-targets",
     "passed": true,
     "method": "visual",
     "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-375-dark.png"
+      "evidence/design-app-builder.json"
     ],
-    "note": "Measured by design_audit.mjs on production: 18 interactive elements at 375, 0 under 44px",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
+    "note": "design_audit against https://redanvil.pages.dev: 6 route(s) at 375; every interactive element >= 44px",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
   },
   {
     "ruleId": "fe-type-floor",
     "passed": true,
     "method": "visual",
     "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-375-dark.png"
+      "evidence/design-app-builder.json"
     ],
-    "note": "Measured by design_audit.mjs on production: minimum body font 16px at 375, 0 node(s) under 16px",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
+    "note": "design_audit against https://redanvil.pages.dev: 6 route(s) at 375, smallest body font 16px; nothing under 16px",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
   },
   {
-    "ruleId": "fe-noncolor-state",
+    "ruleId": "fe-responsive-375",
     "passed": true,
     "method": "visual",
     "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-1280-dark.png",
-      "evidence/screenshots/ab-375-dark.png"
+      "evidence/design-app-builder.json"
     ],
-    "note": "Measured by design_audit.mjs on production: active nav item: weight 650, gradient background true, aria-current present true",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
+    "note": "design_audit against https://redanvil.pages.dev: no horizontal overflow at 375 on 6 route(s)",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
   },
   {
     "ruleId": "fe-safe-areas",
     "passed": true,
     "method": "visual",
     "evidence": [
-      "evidence/design-app-builder.json",
-      "evidence/screenshots/ab-375-dark.png"
+      "evidence/design-app-builder.json"
     ],
-    "note": "Measured by design_audit.mjs on production: header position sticky, padding-top 0px",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
+    "note": "design_audit against https://redanvil.pages.dev: header sticky on all 6 route(s), padding-top 0px",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
+  },
+  {
+    "ruleId": "fe-premium-nav",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-app-builder.json"
+    ],
+    "note": "design_audit against https://redanvil.pages.dev: 6 header link(s) [App Builder, Dashboard, Examples, Saved, About, Contact], aria-current on \"App Builder\"",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
+  },
+  {
+    "ruleId": "fe-noncolor-state",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-app-builder.json"
+    ],
+    "note": "design_audit against https://redanvil.pages.dev: active nav item: weight 650, gradient background true, aria-current present true",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
+  },
+  {
+    "ruleId": "fe-no-attribution",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-app-builder.json"
+    ],
+    "note": "design_audit against https://redanvil.pages.dev: no attribution text",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
+  },
+  {
+    "ruleId": "fe-cross-link",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-app-builder.json"
+    ],
+    "note": "design_audit against https://redanvil.pages.dev: cross-site link present",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
+  },
+  {
+    "ruleId": "fe-seo-og",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-app-builder.json"
+    ],
+    "note": "design_audit against https://redanvil.pages.dev: title \"RedAnvil — Forge apps from a prompt\", description present, og:image present",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
+  },
+  {
+    "ruleId": "fe-light-dark",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-app-builder.json"
+    ],
+    "note": "design_audit against https://redanvil.pages.dev: default under prefers-color-scheme:dark resolved to \"dark\"; toggle dark -> light, stored \"light\", survived reload as light",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
+  },
+  {
+    "ruleId": "fe-required-pages",
+    "passed": false,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-app-builder.json"
+    ],
+    "note": "design_audit against https://redanvil.pages.dev: /about 200 \"About RedAnvil\" 362w/7§; /contact 200 \"Contact\" 265w/5§; /terms 200 \"Terms and Conditions\" 706w/13§; /privacy 200 \"Privacy Policy\" 814w/12§; /saved 200 \"Saved builds\" 34w/0§ -- THIN: /terms has 706 words in 13 section(s), needs >=1200 and >=8; /privacy has 814 words in 12 section(s), nee",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
+  },
+  {
+    "ruleId": "fe-visual-review-recorded",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-app-builder.json"
+    ],
+    "note": "design_audit against https://redanvil.pages.dev: 0 console/page error(s) across the measured loads",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
+  },
+  {
+    "ruleId": "fe-cold-visitor",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/cold-app-builder.json"
+    ],
+    "note": "cold_visitor against production: a first-time visitor gets a working app: 5 cold-start check(s) held",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
+  },
+  {
+    "ruleId": "fe-a11y-contrast",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/axe/app-builder-dark.json",
+      "evidence/axe/app-builder-light.json"
+    ],
+    "note": "axe-core 4.12.1 against production: 0 colour-contrast violations in dark and light.",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3"
   },
   {
     "ruleId": "u-conc-idiomatic",
@@ -261,8 +164,8 @@
       "app-builder/src/components/shell/Header.tsx"
     ],
     "note": "Helpers stay short and plain after the prd split: generate.ts composes section builders instead of inlining them, job.ts keeps slug and entity helpers as small pure functions, and the extracted Header reads as straightforward JSX with no dense one-liners.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/src/lib",
       "app-builder/src/components/shell"
@@ -277,8 +180,8 @@
       "app-builder/src/components/shell"
     ],
     "note": "The prd and shell splits were driven by a measured size cap and a real second consumer, not by anticipated reuse. No interface was introduced with a single implementation for future flexibility.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/src/lib",
       "app-builder/src/components/shell"
@@ -293,8 +196,8 @@
       "app-builder/src/components/Breadcrumbs.tsx"
     ],
     "note": "The header split reuses the existing Breadcrumbs component, i18n bundle and theme tokens rather than adding copies, and the nav work introduced no new dependency.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/src/components"
     ]
@@ -308,8 +211,8 @@
       "app-builder/src/components/Page.tsx"
     ],
     "note": "The prd and shell refactors are pure structural moves. generatePrd output was verified byte-identical across five varied inputs by running the pre-split and post-split modules side by side, so the diff adds no behaviour of its own.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/src/lib",
       "app-builder/src/components"
@@ -324,8 +227,8 @@
       "app-builder/functions/api/jobs.ts"
     ],
     "note": "Handlers that read a request body run it through a schema before use; JSON.parse alone is not treated as validation anywhere under functions/.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/functions"
     ]
@@ -340,8 +243,8 @@
       "app-builder/functions/lib/env.ts"
     ],
     "note": "This app ships no authentication surface, so there is no guard to stub: functions/lib holds only http and env helpers. Confirmed no auth-named function anywhere under functions/ returns an unconditional truthy value and no TODO-auth marker exists.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/functions"
     ]
@@ -355,8 +258,8 @@
       "app-builder/src/components/Page.test.ts"
     ],
     "note": "The refactor is covered by a characterization test snapshotting real generatePrd output for varied inputs, and the shell by a test querying header links by role. Both assert behaviour that breaks on regression rather than mere presence.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/src"
     ]
@@ -370,8 +273,8 @@
       "app-builder/src/lib/prd.test.ts"
     ],
     "note": "Tests assert rendered behaviour (header exposes named links by role, active route marked) and real output content, not implementation details or call counts.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/src"
     ]
@@ -386,8 +289,8 @@
       "app-builder/src/components/shell/Footer.tsx"
     ],
     "note": "Page.tsx is a composition of named components (Header, MobileDrawer, Footer, Breadcrumbs) rather than a monolithic shell, and pages supply title, subtitle and children into that shell.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/src/components"
     ]
@@ -401,8 +304,8 @@
       "app-builder/src/lib/apiError.ts"
     ],
     "note": "The composer renders explicit loading, empty and error states. A failed submit surfaces an error rather than an empty success, and the empty thread says so in words instead of rendering blank.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/src"
     ]
@@ -415,8 +318,8 @@
       "evidence/width-app-builder.json"
     ],
     "note": "Measured on production by desktop_width.mjs at 1440 AND 1920: every route's main content occupies 93% of the viewport, against an 80% minimum. Two widths on purpose — a rem cap reads as 90% at 1600 and 75% at 1920, which is how this shipped narrow four times before the rule existed.",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "f9408bbe26397c97303776b6ac70d07f42f59b40",
+    "reviewedAt": "2026-07-31T06:31:26.066Z",
+    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
     "scope": [
       "app-builder/src",
       "app-builder/public",

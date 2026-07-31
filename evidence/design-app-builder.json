@@ -1,22 +1,22 @@
 {
   "baseUrl": "https://redanvil.pages.dev",
-  "checkedAt": "2026-07-28T00:39:05.092Z",
+  "checkedAt": "2026-07-31T06:30:54.415Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
-      "detail": "8 route(s) at 375; every interactive element >= 44px"
+      "detail": "6 route(s) at 375; every interactive element >= 44px"
     },
     "fe-type-floor": {
       "ok": true,
-      "detail": "8 route(s) at 375, smallest body font 16px; nothing under 16px"
+      "detail": "6 route(s) at 375, smallest body font 16px; nothing under 16px"
     },
     "fe-responsive-375": {
       "ok": true,
-      "detail": "no horizontal overflow at 375 on 8 route(s)"
+      "detail": "no horizontal overflow at 375 on 6 route(s)"
     },
     "fe-safe-areas": {
       "ok": true,
-      "detail": "header sticky on all 8 route(s), padding-top 0px"
+      "detail": "header sticky on all 6 route(s), padding-top 0px"
     },
     "fe-premium-nav": {
       "ok": true,
@@ -40,11 +40,11 @@
     },
     "fe-light-dark": {
       "ok": true,
-      "detail": "dark -> light, stored \"light\", survived reload as light"
+      "detail": "default under prefers-color-scheme:dark resolved to \"dark\"; toggle dark -> light, stored \"light\", survived reload as light"
     },
     "fe-required-pages": {
-      "ok": true,
-      "detail": "/about 200 \"About RedAnvil\" 362w/7§; /contact 200 \"Contact\" 265w/5§; /terms 200 \"Terms and Conditions\" 706w/13§; /privacy 200 \"Privacy Policy\" 814w/12§; /saved 200 \"Saved builds\" 34w/0§; /examples 200 \"Examples\" 503w/7§; /no-such-page 200 \"Page not found\" 30w/0§"
+      "ok": false,
+      "detail": "/about 200 \"About RedAnvil\" 362w/7§; /contact 200 \"Contact\" 265w/5§; /terms 200 \"Terms and Conditions\" 706w/13§; /privacy 200 \"Privacy Policy\" 814w/12§; /saved 200 \"Saved builds\" 34w/0§ -- THIN: /terms has 706 words in 13 section(s), needs >=1200 and >=8; /privacy has 814 words in 12 section(s), needs >=1200 and >=8"
     },
     "fe-visual-review-recorded": {
       "ok": true,
@@ -52,5 +52,5 @@
     }
   },
   "consoleErrors": [],
-  "ok": true
+  "ok": false
 }

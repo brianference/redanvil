@@ -58,9 +58,20 @@ export interface ThemeToggleProps {
  * @param stored - Value from localStorage, or null.
  * @returns Effective light or dark choice.
  */
-function resolveTheme(stored: string | null): ThemeChoice {
+function resolveTheme(stored: string | null, prefersLight: boolean): ThemeChoice {
   if (stored === 'light' || stored === 'dark') return stored;
-  return 'dark';
+  // The system preference, not a hard-coded default.
+  //
+  // This returned 'dark' unconditionally while the docstring above and the
+  // component's own JSDoc both promised "saved-or-system preference on load".
+  // The prose was right and the code was wrong -- the same defect this branch
+  // fixed in fe-light-dark and u-test-presence, here in the component every app
+  // shares. A visitor whose OS asks for light was served dark, and every check
+  // agreed: the accessibility audit assigns data-theme before measuring, and
+  // the design audit only exercised the toggle.
+  //
+  // Caught by cold_visitor against production, which forces nothing.
+  return prefersLight ? 'light' : 'dark';
 }
 
 /**
@@ -81,7 +92,11 @@ export function ThemeToggle({ tokens, copy }: ThemeToggleProps): JSX.Element {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    const resolved = resolveTheme(stored);
+    // Guarded: this component also renders where matchMedia is absent.
+    const prefersLight =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-color-scheme: light)').matches;
+    const resolved = resolveTheme(stored, prefersLight);
     applyTheme(resolved);
     setMode(resolved);
   }, []);
