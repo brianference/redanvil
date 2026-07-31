@@ -271,19 +271,19 @@
       }
     ],
     "deployUrl": null,
-    "finishedAt": "2026-07-31T06:59:27.620Z",
+    "finishedAt": "2026-07-31T07:45:22.612Z",
     "provenance": {
-      "commit": "9eae44f3d657dd78c0b9fda953c9f8873295ff5b",
-      "dirty": false,
+      "commit": "93fd9bc932b8810ee1be7b22f38a2e00fab4750d",
+      "dirty": true,
       "rubricHash": "e64fba891e2da5c4317c82c62dc5d4615123a70949cfe9135b78748938b5da7c",
       "rubricRuleCount": 68,
       "node": "v22.19.0",
-      "verdictsHash": "8e79bb633eee52d021b83473fd9f725e6916f63efadda90bcd035b4b055896f5",
+      "verdictsHash": "7a202d4db4272b43c25e765393072e6d7af9224cdd53bb0033dea4641b544570",
       "notApplicable": [
         "process"
       ],
       "staleVerdicts": [],
-      "generatedAt": "2026-07-31T06:59:27.668Z"
+      "generatedAt": "2026-07-31T07:45:22.661Z"
     }
   },
   {
@@ -292,7 +292,7 @@
     "finalScore": 0,
     "threshold": 90,
     "passed": false,
-    "evaluated": 46,
+    "evaluated": 61,
     "total": 63,
     "rules": [
       {
@@ -425,7 +425,7 @@
       },
       {
         "ruleId": "hyg-no-duplication",
-        "passed": true
+        "passed": false
       },
       {
         "ruleId": "ci-actionlint",
@@ -449,6 +449,62 @@
       },
       {
         "ruleId": "proc-conventional-commits",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-touch-targets",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-type-floor",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-responsive-375",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-safe-areas",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-premium-nav",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-noncolor-state",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-no-attribution",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-cross-link",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-seo-og",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-light-dark",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-required-pages",
+        "passed": false
+      },
+      {
+        "ruleId": "fe-visual-review-recorded",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-cold-visitor",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-a11y-contrast",
         "passed": true
       },
       {
@@ -482,6 +538,10 @@
       {
         "ruleId": "fe-fail-closed-states",
         "passed": true
+      },
+      {
+        "ruleId": "fe-desktop-width",
+        "passed": true
       }
     ],
     "iterations": [
@@ -490,52 +550,27 @@
         "score": 0,
         "blockers": [
           "u-test-feature-audit",
-          "fe-a11y-contrast",
           "fe-visible-response",
-          "fe-light-dark",
-          "fe-premium-nav",
           "fe-required-pages",
-          "fe-no-attribution",
-          "fe-responsive-375",
           "fe-product-completeness",
-          "fe-visual-review-recorded",
-          "fe-cold-visitor",
-          "fe-touch-targets",
-          "fe-type-floor",
-          "fe-desktop-width"
+          "hyg-no-duplication"
         ]
       }
     ],
     "deployUrl": null,
-    "finishedAt": "2026-07-31T06:42:28.241Z",
+    "finishedAt": "2026-07-31T07:39:44.235Z",
     "provenance": {
-      "commit": "0b60e1b3218c044359995f6ad1bc6bb587c4d1ce",
+      "commit": "93fd9bc932b8810ee1be7b22f38a2e00fab4750d",
       "dirty": true,
       "rubricHash": "e64fba891e2da5c4317c82c62dc5d4615123a70949cfe9135b78748938b5da7c",
       "rubricRuleCount": 68,
       "node": "v22.19.0",
-      "verdictsHash": "9a0b5948d68789c9d94be063ff3523aa42d72e6e4d4ae9aa2cf9509c44778345",
+      "verdictsHash": "70d3eeaa36831a7cee28eb84a262d48fcff7729e931fa11a09117dc7ffda7ddb",
       "notApplicable": [
         "process"
       ],
-      "staleVerdicts": [
-        "fe-a11y-contrast",
-        "fe-cold-visitor",
-        "fe-cross-link",
-        "fe-desktop-width",
-        "fe-light-dark",
-        "fe-no-attribution",
-        "fe-noncolor-state",
-        "fe-premium-nav",
-        "fe-required-pages",
-        "fe-responsive-375",
-        "fe-safe-areas",
-        "fe-seo-og",
-        "fe-touch-targets",
-        "fe-type-floor",
-        "fe-visual-review-recorded"
-      ],
-      "generatedAt": "2026-07-31T06:42:28.288Z"
+      "staleVerdicts": [],
+      "generatedAt": "2026-07-31T07:39:44.289Z"
     }
   }
 ]
