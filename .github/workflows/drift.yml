@@ -45,6 +45,13 @@ jobs:
         run: node .github/scripts/a11y_audit.mjs https://redanvil-dashboard.pages.dev/ --theme light
 
       # The core flow must still work end to end (chat -> wizard -> Forge PRD).
+      # Observes the app with NOTHING forced. Every other job here sets up the
+      # state it measures, so none of them can see what a first-time visitor
+      # gets -- which is how a default theme that ignored the OS survived a
+      # daily audit reporting zero violations.
+      - name: Cold visitor — app-builder
+        run: node .github/scripts/cold_visitor.mjs https://redanvil.pages.dev/ --claims app-builder/.redanvil/claims.json --out evidence/cold-app-builder.json
+
       - name: E2E smoke — core flow
         run: node .github/scripts/e2e_smoke.mjs https://redanvil.pages.dev/ --trace e2e-drift.zip
 

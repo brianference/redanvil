@@ -133,6 +133,10 @@ export const RULES: Rule[] = [
   rule('fe-responsive-375', 'frontend', 'blocker', 'visual'),
   rule('fe-product-completeness', 'frontend', 'blocker', 'visual'),
   rule('fe-visual-review-recorded', 'frontend', 'blocker', 'visual'),
+  // Every other check forces the state it measures, so none of them observe
+  // what a first-time visitor actually gets. That hole shipped a default theme
+  // that ignored the OS and a search that returned nothing for unseeded routes.
+  rule('fe-cold-visitor', 'frontend', 'blocker', 'visual'),
   rule('fe-seo-og', 'frontend', 'major', 'visual'),
   rule('fe-cross-link', 'frontend', 'major', 'visual'),
 

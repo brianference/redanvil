@@ -226,10 +226,19 @@ try {
     desk.crossLink,
     desk.crossLink ? 'cross-site link present' : 'no cross-site link'
   );
+  /*
+    og:image is asserted, not merely reported.
+
+    The same defect as fe-light-dark, in the rule whose NAME is "og": the
+    detail string has always printed "og:image absent" and the predicate only
+    ever checked title and description. An app with no Open Graph image passed
+    a rule called fe-seo-og while the evidence line said the image was missing.
+    The per-app pack asks for "a real OG image"; now the check does too.
+  */
   record(
     'fe-seo-og',
-    desk.title.length > 0 && desk.description !== null,
-    `title "${desk.title}", description ${desk.description === null ? 'MISSING' : 'present'}, og:image ${desk.ogImage === null ? 'absent' : 'present'}`
+    desk.title.length > 0 && desk.description !== null && desk.ogImage !== null,
+    `title "${desk.title}", description ${desk.description === null ? 'MISSING' : 'present'}, og:image ${desk.ogImage === null ? 'MISSING' : 'present'}`
   );
 
   // --- Theme swap and persistence ---
@@ -245,10 +254,30 @@ try {
   const persisted = await d.evaluate(() => document.documentElement.getAttribute('data-theme'));
   await d.close();
 
+  /*
+    Three claims, and the first one used to be missing.
+
+    The rule says light AND dark mode with the default following the system.
+    This block already opened the page with `colorScheme: 'dark'` and already
+    read the app's own resolved theme into `before` — and then asserted only
+    that the TOGGLE changes it, stores it, and survives a reload. `before` was
+    captured and never checked, so an app that resolves to LIGHT under a dark OS
+    passed cleanly. That is exactly what shipped: quickflight served the light
+    theme to every visitor whose system asked for dark, and this check, the axe
+    audit and the daily drift job all reported it green, because every one of
+    them either forced the theme or only exercised the toggle.
+
+    A default is what a first-time visitor gets. It is the half that matters
+    most and it was the half nobody measured.
+  */
+  const defaultFollowsSystem = before === 'dark';
+  const toggleWorks = before !== after.theme && after.stored !== null && persisted === after.theme;
   record(
     'fe-light-dark',
-    before !== after.theme && after.stored !== null && persisted === after.theme,
-    `${before} -> ${after.theme}, stored "${after.stored}", survived reload as ${persisted}`
+    defaultFollowsSystem && toggleWorks,
+    `default under prefers-color-scheme:dark resolved to "${before}"` +
+      `${defaultFollowsSystem ? '' : ' (EXPECTED dark — the default does not follow the system)'}; ` +
+      `toggle ${before} -> ${after.theme}, stored "${after.stored}", survived reload as ${persisted}`
   );
 
   // --- Required pages ---
