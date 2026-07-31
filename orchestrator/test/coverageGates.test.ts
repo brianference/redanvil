@@ -293,6 +293,26 @@ describe('u-test-coverage-ratchet only moves one way', () => {
     await rm(dir, { recursive: true, force: true });
   });
 
+  it('does NOT waive itself when coverage/ is simply missing', async () => {
+    // The bug this closes: `coverage/` is gitignored, so waiving the rule on its
+    // absence made the rule's applicability a property of the working directory
+    // rather than of the commit. app-builder scored 46/63 locally (a stale
+    // coverage/ from an older build, sitting at a number the current code no
+    // longer earns) and 45/62 in CI on the same sha, and the mismatch is what
+    // verify_results reported. Worse than the mismatch: the local artifact was
+    // reading as a PASS for coverage the code had already lost.
+    //
+    // Now the rule either measures or reports infra — it never silently leaves
+    // the denominator. The scaffold ships a test:coverage script, so this app
+    // produces the number on demand.
+    const dir = await broken(async (d) => {
+      await rm(join(d, 'coverage'), { recursive: true, force: true });
+    });
+    const { status, output } = runCheck('u-test-coverage-ratchet', dir);
+    expect(status, output).not.toBe(3);
+    await rm(dir, { recursive: true, force: true });
+  });
+
   it('FAILS when the bar itself was edited down and committed', async () => {
     // The tamper case, and the reason the state file is tracked rather than
     // ignored. Lowering the bar to go green looks exactly like an ordinary

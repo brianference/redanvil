@@ -69,4 +69,74 @@ describe('savePrd', () => {
       return true;
     });
   });
+
+  it('throws SavePrdError when the response body is not JSON', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response('not-json', {
+          status: 200,
+          headers: { 'content-type': 'text/plain' }
+        })
+      )
+    );
+
+    await expect(savePrd(samplePrd)).rejects.toSatisfy((err: unknown) => {
+      expect(err).toBeInstanceOf(SavePrdError);
+      expect((err as SavePrdError).message).toBe('Invalid response from server');
+      expect((err as SavePrdError).status).toBe(200);
+      return true;
+    });
+  });
+
+  it('throws SavePrdError when 200 JSON lacks id and url', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' }
+        })
+      )
+    );
+
+    await expect(savePrd(samplePrd)).rejects.toSatisfy((err: unknown) => {
+      expect(err).toBeInstanceOf(SavePrdError);
+      expect((err as SavePrdError).message).toBe('Invalid save payload from server');
+      expect((err as SavePrdError).status).toBe(200);
+      return true;
+    });
+  });
+
+  it('throws SavePrdError with timeout message on AbortError', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(Object.assign(new Error('Aborted'), { name: 'AbortError' }))
+    );
+
+    await expect(savePrd(samplePrd)).rejects.toSatisfy((err: unknown) => {
+      expect(err).toBeInstanceOf(SavePrdError);
+      expect((err as SavePrdError).message).toBe('Request timed out');
+      return true;
+    });
+  });
+
+  it('uses a generic status message when error payload has no string error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ detail: 'nope' }), {
+          status: 503,
+          headers: { 'content-type': 'application/json' }
+        })
+      )
+    );
+
+    await expect(savePrd(samplePrd)).rejects.toSatisfy((err: unknown) => {
+      expect(err).toBeInstanceOf(SavePrdError);
+      expect((err as SavePrdError).message).toBe('Save failed (503)');
+      expect((err as SavePrdError).status).toBe(503);
+      return true;
+    });
+  });
 });

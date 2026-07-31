@@ -119,128 +119,181 @@ export const en = {
     },
     terms: {
       title: 'Terms',
-      updated: 'Last updated 27 July 2026',
+      updated: 'Last updated 31 July 2026',
       intro:
-        'These terms cover the RedAnvil dashboard at https://redanvil-dashboard.pages.dev, a free read-only site that lists public build run results. By using this site, you agree to them. If you do not agree, do not use it.',
+        'These terms cover the RedAnvil dashboard at https://redanvil-dashboard.pages.dev. The dashboard is a free, read-only site that lists public quality-gate results for RedAnvil\'s own builds. By loading or using the site you agree to these terms. If you do not agree, do not use it. There are no paid plans and no user accounts on this product.',
       sections: [
         {
           heading: 'Acceptance and eligibility',
-          body: 'You must be able to form a binding agreement under the laws that apply to you. There are no accounts on this dashboard; loading and using the site is acceptance of these terms.'
+          body: 'You must be able to form a binding agreement under the laws that apply to you. If you use the dashboard for an organization, you confirm you are allowed to accept these terms for it. There is no registration step and no sign-in. Loading the site, browsing the run list, opening a run detail page, or following a deploy link from this UI is acceptance of these terms for that use. If you cannot accept them, leave the site.'
         },
         {
           heading: 'What the service is',
-          body: 'The dashboard is informational. It displays published gate results for RedAnvil\'s own builds: scores, coverage, iterations, and deploy links. It does not offer accounts, paid features, write access to builds, or control of the orchestrator.'
+          body: 'The dashboard is an informational, read-only view of published build-run results that RedAnvil records when it gates its own projects. The home page lists runs; each run detail page shows summary fields and a per-rule breakdown. The browser loads a public JSON feed from the project repository on GitHub (results/all.json served via raw.githubusercontent.com). The only Pages Function shipped with this dashboard is a health endpoint at /api/health that returns a small JSON status payload. This site does not offer accounts, billing, write access to builds, job submission, PRD generation, or control of the orchestrator. The sibling app builder that turns a prompt into a PRD is a separate product at https://redanvil.pages.dev and is covered by its own pages.'
+        },
+        {
+          heading: 'No accounts',
+          body: 'This dashboard does not offer registration, login, passwords, session cookies for identity, OAuth, or social sign-in. There is no user profile table and no visitor database bound to this Pages project. Because there are no accounts, there is nothing to close when you stop visiting; residual state is limited to what your browser keeps (for example a theme preference) and whatever public run data remains published by the project.'
         },
         {
           heading: 'Central disclaimer',
-          body: 'Scores shown here are RedAnvil\'s own automated gate results for its own builds. They are not a certification of security, quality, accessibility, or fitness for any purpose. Do not treat a pass badge as a warranty, audit report, or legal compliance statement. Content may be incomplete, delayed, or wrong relative to a live deploy.'
+          body: 'Scores, pass/fail flags, coverage counts, iteration histories, and rule results shown here are RedAnvil\'s own automated gate outcomes for its own builds. They are not a third-party certification of security, quality, accessibility, fitness for purpose, uptime, or legal compliance. Do not treat a pass badge, numeric score, or green status as a warranty, audit report, penetration-test result, or guarantee that a linked deploy is free of bugs. Feed content can lag a live deploy, omit runs that never published a result, reflect an older rubric version, or be temporarily wrong while maintainers correct the repository. Deploy links may point at apps that later go offline or change.'
+        },
+        {
+          heading: 'How run data is presented',
+          body: 'Each feed row the UI accepts is validated in the browser before display. Fields the site is built to show include: slug, finalScore, threshold, passed, evaluated rule count, total rule count, per-rule ruleId and passed flags, iteration index/score/blockers, deployUrl (only when it is an http or https URL), and finishedAt. Invalid or non-http(s) deploy URLs are treated as absent rather than rendered as live links. A malformed feed fails closed: the UI shows an error state instead of inventing empty success. The dashboard never lets a visitor create, edit, restart, or delete a run through this UI.'
         },
         {
           heading: 'Acceptable use',
-          body: 'Use the dashboard only in lawful ways. You agree not to probe, disrupt, scrape in a way that harms the service, or misrepresent listed scores as third-party certification. Do not attempt to inject or alter run data through this UI; it is read-only by design.'
+          body: 'Use the dashboard only for lawful purposes. You agree not to:',
+          items: [
+            'Probe, disrupt, overload, or abuse the hosted site or the public results feed in a way that harms availability for others',
+            'Scrape or automate access in a volume or manner that degrades the service or violates the terms of hosts that serve the feed or the site',
+            'Misrepresent listed scores as independent certification, a security audit, or a guarantee of third-party product quality',
+            'Attempt to inject, forge, or alter run data through this UI (it is read-only by design)',
+            'Use the site to break the law, harass others, or distribute malware via linked or pasted content you control elsewhere'
+          ]
         },
         {
-          heading: 'Intellectual property and source',
-          body: 'RedAnvil branding, site design, and project code remain with their owners. Project source is public at https://github.com/brianference/redanvil; third-party packages keep their own licences. Run metadata displayed here is published project data, not a grant of rights in third-party apps linked from deploy URLs.'
+          heading: 'Intellectual property and displayed output',
+          body: 'RedAnvil branding, site design, and project source remain with their owners. Project source is public at https://github.com/brianference/redanvil under whatever licence files the repository states; third-party packages keep their own licences. Run metadata shown on this dashboard is published project data so people can inspect gate history. Display of that metadata is not a transfer of ownership in third-party applications linked from deploy URLs, and it is not a licence to rebrand those apps as RedAnvil products. You may link to public run pages and quote public scores with accurate context; you may not strip notices from repository code when a licence requires them, or present the gate UI as a paid certification service you operate.'
         },
         {
-          heading: 'Third-party services',
-          body: 'Run rows may link to deployed apps and external hosts such as GitHub or Cloudflare. Those sites have their own terms and privacy policies. We are not responsible for third-party content, availability, or practices.'
+          heading: 'Third-party services and links',
+          body: 'The site is hosted on Cloudflare Pages. The run feed is fetched from GitHub\'s raw content host for the public repository. Run rows may link to deployed apps and other external hosts. Those services have their own terms and privacy policies. We are not responsible for third-party content, uptime, security, or practices. Following a deploy link or opening the GitHub repository leaves this site and is governed by that destination\'s rules.'
         },
         {
           heading: 'Disclaimer of warranties',
-          body: 'The site is provided "as is" and "as available," without warranties of any kind, express or implied, including merchantability, fitness for a particular purpose, and non-infringement. We do not promise uptime, completeness of the run history, or accuracy of every listed score.'
+          body: 'The site is provided "as is" and "as available," without warranties of any kind, express or implied, including merchantability, fitness for a particular purpose, title, and non-infringement. We do not warrant that the run history is complete, that every listed score matches a live production binary, that deploy links work, that the feed will remain reachable, or that the health endpoint will always answer. Some jurisdictions do not allow certain warranty exclusions; in those places, exclusions apply only to the extent permitted.'
         },
         {
           heading: 'Limitation of liability',
-          body: 'To the maximum extent permitted by law, RedAnvil and its maintainers are not liable for any indirect, incidental, special, consequential, or punitive damages, or for lost profits, data, or goodwill, arising from your use of the dashboard or reliance on listed scores. Total liability for any claim relating to this free site is limited to zero dollars.'
+          body: 'To the maximum extent permitted by law, RedAnvil and its maintainers are not liable for any indirect, incidental, special, consequential, exemplary, or punitive damages, or for lost profits, lost data, lost goodwill, business interruption, or substitute services, arising from your use of the dashboard or reliance on listed scores, deploy links, or feed content, whether based on contract, tort, or any other theory. Total liability for any claim relating to this free site is limited to zero US dollars, because the service is free and provided without paid consideration. Mandatory rights that cannot be waived in your jurisdiction remain intact.'
         },
         {
           heading: 'Indemnity',
-          body: 'You agree to defend and hold harmless RedAnvil and its maintainers from claims, damages, and expenses (including reasonable legal fees) arising from your misuse of the site or your breach of these terms.'
+          body: 'You agree to defend and hold harmless RedAnvil and its maintainers from claims, damages, losses, and expenses (including reasonable legal fees) arising from your misuse of the site, your misrepresentation of listed scores, or your breach of these terms, to the extent permitted by applicable law.'
         },
         {
-          heading: 'Availability',
-          body: 'We may change, suspend, or discontinue the dashboard or any part of the feed without notice. Published runs may be corrected, removed, or temporarily unavailable. There is no uptime SLA.'
+          heading: 'Availability and changes to the service',
+          body: 'We may change, suspend, or discontinue the dashboard, the health endpoint, the public feed path, or any part of the UI without notice and without liability. Published runs may be corrected, removed, re-scored under a new rubric, or temporarily unavailable when the repository or host has a problem. There is no uptime SLA and no paid support commitment. The project is maintained on a best-effort basis.'
+        },
+        {
+          heading: 'Termination',
+          body: 'You may stop using the dashboard at any time by leaving the site. Because there are no accounts, there is no account termination step. We may refuse further automated access, remove misleading mirrors we control, or shut down endpoints if you violate these terms, if continued operation is unlawful, or if we discontinue the project. Provisions that by their nature should survive (including disclaimers, liability limits, indemnity, and intellectual-property notices) continue after your use ends.'
         },
         {
           heading: 'Changes to these terms',
-          body: 'We may update these terms. The date at the top of this page changes when we do. Continued use after an update means you accept the new terms.'
+          body: 'We may update these terms when the product or legal needs change. The "Last updated" line at the top of this page is how notice is given; we do not operate an email list for term notices. Continued use after the date changes means you accept the new terms for subsequent use. If you do not accept a change, stop using the site.'
         },
         {
           heading: 'Governing law and disputes',
-          body: 'These terms are governed by the laws of the United States and the state in which the maintainer resides, without regard to conflict-of-law rules that would choose another forum. Before filing a claim, open a GitHub issue describing the dispute and allow a reasonable time to respond. Courts of competent jurisdiction there may hear disputes that cannot be resolved that way, except where mandatory consumer law says otherwise.'
+          body: 'These terms are conditions of use for a free personal open project; they are not a substitute for advice from a lawyer in your jurisdiction. Before filing a formal claim, open a GitHub issue at https://github.com/brianference/redanvil/issues describing the dispute and allow a reasonable time to respond. Where the law requires a governing jurisdiction to be stated and permits the parties to choose, the laws of the United States apply to the extent they govern a personal project of this kind, without creating a fictional company domicile. Mandatory consumer protections in your place of residence that cannot be waived still apply. Nothing here requires you to waive rights you are legally forbidden to waive.'
         },
         {
           heading: 'Contact',
-          body: 'Questions about these terms: open an issue at https://github.com/brianference/redanvil/issues. For privacy-specific requests, title the issue "Privacy request". For security concerns, title it "Security report".'
+          body: 'Questions about these terms: open an issue at https://github.com/brianference/redanvil/issues. For privacy-specific requests (access, correction, deletion of anything you believe we hold about you), title the issue "Privacy request". For security concerns, title it "Security report" and describe impact without pasting secrets into a public thread when you can avoid it. The Contact page on this site lists the same routes and what to include in a useful report.'
         }
       ]
     },
     privacy: {
       title: 'Privacy',
-      updated: 'Last updated 27 July 2026',
+      updated: 'Last updated 31 July 2026',
       intro:
-        'This privacy notice applies to the RedAnvil dashboard at https://redanvil-dashboard.pages.dev. The short version: the dashboard is read-only for visitors, collects no account data, and shows public build run results. We run no ads or product analytics on this UI.',
+        'This privacy notice applies to the RedAnvil dashboard at https://redanvil-dashboard.pages.dev. The dashboard is a free, read-only site. There are no user accounts and no sign-in. Visitors do not submit forms that create a profile. The UI shows public build-run results that RedAnvil publishes for its own projects. We do not run ads or product analytics on this UI.',
       sections: [
         {
-          heading: 'What we collect',
-          body: 'From visitors, this dashboard does not collect names, emails, passwords, or form submissions that create a user profile. The only intentional client-side preference we store is your theme choice (light or dark) in browser localStorage. The run list and run detail pages display published project data that RedAnvil already recorded for its own builds (slug, scores, rule results, iterations, deploy links).'
+          heading: 'Who we are and how to reach us',
+          body: 'RedAnvil is a personal open project. There is no company registration page, postal address, data-protection officer listing, or phone line published with this dashboard. The contact route is the public GitHub repository: open an issue at https://github.com/brianference/redanvil/issues. For privacy access, correction, or deletion questions, title the issue "Privacy request" and include enough detail to investigate (for example a run slug, approximate time, and what you saw). The Contact page on this site describes what to include in a useful report.'
         },
         {
-          heading: 'What we do not collect',
-          body: 'We do not offer accounts on this site. We do not run advertising pixels, third-party analytics SDKs, or tracking scripts on the dashboard UI. We do not sell personal data.',
+          heading: 'No accounts',
+          body: 'This dashboard does not offer registration, login, passwords, session cookies for identity, OAuth, or social sign-in. There is no users table and no Cloudflare D1 database bound to this dashboard project. Server-side code for this site is limited to static Pages assets plus a /api/health function that returns a fixed status JSON object. Nothing in that path stores visitor identity.'
+        },
+        {
+          heading: 'What this site shows and where it comes from',
+          body: 'The run list and run detail pages display published project data that RedAnvil records when it gates its own builds. The browser fetches a public JSON array from the repository feed at https://raw.githubusercontent.com/brianference/redanvil/master/results/all.json (with a short client-side timeout). Each accepted row can include: slug; finalScore; threshold; passed; evaluated and total rule counts; an array of ruleId and passed pairs; iterations with index, score, and blockers; deployUrl when it is a valid http or https URL; and finishedAt. That feed is world-readable project output, not a private per-visitor dataset. Visitors do not write to the feed through this UI.'
+        },
+        {
+          heading: 'What we collect from visitors',
+          body: 'From visitors, this dashboard does not collect names, email addresses, passwords, payment details, phone numbers, or form fields that create a user profile. There are no newsletter, checkout, or registration forms on this site. The only intentional client-side preference RedAnvil application code stores is your theme choice.',
           items: [
-            'No sign-in, newsletter, or payment forms',
-            'No product analytics on click paths or heatmaps',
-            'No third-party ad or retargeting cookies set by RedAnvil'
+            'Theme preference on your device only: localStorage key theme with value light or dark, set when you use the theme toggle',
+            'Request metadata that Cloudflare may log while serving Pages and the health function (for example IP address, user agent, path, and timestamps under Cloudflare\'s own practices)',
+            'Ordinary browser behaviour such as HTTP cache entries for static assets you load'
           ]
         },
         {
-          heading: 'Why we process it',
-          body: 'Theme preference exists so the site stays light or dark on your next visit on the same browser. Published run data is shown so anyone can inspect how RedAnvil\'s own builds scored against the gate. Host logging exists so Cloudflare can serve and protect the site.'
+          heading: 'What we do not collect',
+          body: 'We do not run advertising pixels, third-party product-analytics SDKs, heatmaps, or retargeting scripts in this UI. We do not sell personal data. There is no mailing list and no marketing profile built from your use of this dashboard.',
+          items: [
+            'No identity or billing fields collected by this app',
+            'No RedAnvil-set tracking or advertising cookies',
+            'No social login or OAuth identity from this app',
+            'No server-side store of visitor browsing history in a RedAnvil database (this project has none)'
+          ]
         },
         {
-          heading: 'Who else receives it',
-          body: 'The site is hosted on Cloudflare Pages. Cloudflare may process standard request metadata under its own privacy policy. Public pages are visible to anyone on the internet. We do not send visitor data to advertising partners.'
+          heading: 'Why information is processed',
+          body: 'We process the limited data above only to run the features the site actually provides:',
+          items: [
+            'Render public run history so anyone can inspect how RedAnvil\'s own builds scored against the gate',
+            'Remember light or dark theme on the same browser after you toggle it',
+            'Answer a simple health check so operators can confirm the Pages Function runtime is up',
+            'Operate hosting and edge delivery on Cloudflare infrastructure'
+          ]
+        },
+        {
+          heading: 'Third-party processors and subprocessors',
+          body: 'Infrastructure this dashboard is built on:',
+          items: [
+            'Cloudflare Pages hosts static assets and runs the /api/health Pages Function. Cloudflare receives the request metadata needed to serve those resources under Cloudflare\'s terms and privacy policy.',
+            'GitHub hosts the public source repository and serves the results/all.json feed via raw.githubusercontent.com. When your browser loads the run list, it requests that URL directly; GitHub processes that request under GitHub\'s policies.',
+            'Optional outbound links (repository issues, deploy URLs on other hosts, the sibling app builder) send you to those destinations under their own policies when you choose to follow them.'
+          ]
+        },
+        {
+          heading: 'What is not a processor of visitor content on this path',
+          body: 'This dashboard does not integrate advertising networks, payment processors, email delivery vendors, or external AI completion APIs into the request path that loads runs or health. It does not bind Cloudflare D1, KV, or R2 for visitor or run storage in the dashboard wrangler configuration. Run rows live in the public git repository as published JSON, not in a private dashboard database.'
         },
         {
           heading: 'Cookies and local storage',
-          body: 'This site does not set tracking cookies. Theme preference is stored in localStorage under the `theme` key. Clear site data in your browser to remove it. Your browser may keep ordinary cache entries for static assets.'
+          body: 'RedAnvil application code does not set tracking cookies and does not use session cookies for accounts (there are no accounts). The only intentional client persistence this app implements is localStorage for theme preference under the key theme (values light or dark). Your browser may still keep ordinary HTTP cache entries for CSS, JavaScript, and images. Clear site data in the browser to remove the theme key and cached assets. We do not use localStorage or sessionStorage to store run feed copies as a durable product feature; the list is re-fetched when the page loads the feed again.'
         },
         {
-          heading: 'Where data lives and transfers',
-          body: 'Static assets and Pages Functions for this dashboard run on Cloudflare\'s network. Run feed data is published project output, not a private per-visitor database. Cloudflare operates globally, so request handling may involve transfers outside your country.'
+          heading: 'Where data lives and international transfers',
+          body: 'Static assets and the health function for this dashboard run on Cloudflare\'s network. The run feed is stored in the public GitHub repository and delivered from GitHub\'s content infrastructure. Cloudflare and GitHub operate globally, so request handling may involve processing outside your country. We do not maintain a separate RedAnvil user database for dashboard visitors.'
         },
         {
-          heading: 'Retention',
-          body: 'Theme preference remains on your device until you clear it. Published run results remain until maintainers update or remove the feed. Host access logs follow Cloudflare\'s retention practices. We do not keep a separate RedAnvil profile store for dashboard visitors.'
+          heading: 'Retention and deletion',
+          body: 'Theme preference remains on your device until you clear site data or remove the theme key. Published run results remain in the public repository until maintainers update, rewrite, or remove the feed files; there is no automatic per-visitor expiry job in the dashboard app because there is no per-visitor store. Cloudflare edge or access logs, if any, follow Cloudflare\'s retention practices, which this repository does not control. GitHub retains repository history and access logs under GitHub\'s policies. If you want a specific public run row corrected or removed from the project feed, open a GitHub issue titled "Privacy request" or a normal bug report with the slug; maintainers may edit the public feed for accuracy or abuse. Clearing your own browser storage is how you delete the theme preference.'
         },
         {
-          heading: 'Your rights',
-          body: 'Depending on where you live, you may have rights to access, correct, delete, port, or object to certain processing of personal data. For this dashboard, visitor personal data is minimal (theme on device; host logs controlled by Cloudflare). To make a request, open a GitHub issue titled "Privacy request" at https://github.com/brianference/redanvil/issues.',
+          heading: 'What you can request and how',
+          body: 'Depending on where you live, you may have rights to access, correct, delete, port, or object to certain processing of personal data. For this dashboard those rights mainly concern the minimal data described above, not an account profile we never created. Exercise them by opening https://github.com/brianference/redanvil/issues with "Privacy request" in the title. There is no SLA; response depends on maintainer availability.',
           items: [
-            'Access and portability: you can read public run pages; theme data lives only in your browser',
-            'Deletion: clear localStorage for theme; host-log deletion is subject to Cloudflare practices',
-            'Correction: report wrong public run display via a GitHub issue with the slug',
+            'Access: public run pages and the public JSON feed are already world-readable; theme data lives only in your browser',
+            'Correction: report a wrong public run display with the slug so maintainers can fix the published feed if the error is real',
+            'Deletion: clear localStorage for theme; request feed-row edits via GitHub when the concern is published project data; host-log deletion is subject to Cloudflare or GitHub practices',
+            'Portability: copy public run URLs or download the public JSON feed yourself from GitHub',
             'Objection: stop using the site; there is no marketing list to opt out of'
           ]
         },
         {
           heading: 'Children',
-          body: 'This dashboard is not directed at children under 13, and we do not knowingly collect personal information from children under 13. Contact us via a privacy-titled GitHub issue if you believe that has occurred.'
+          body: 'This dashboard is not directed at children under 13, and we do not knowingly collect personal information from children under 13. If you believe a child has been identified in something published here beyond ordinary public project metadata, open a GitHub issue titled "Privacy request" with enough detail to find the material. We will address what we can identify from the details you provide.'
         },
         {
-          heading: 'Security',
-          body: 'We rely on Cloudflare\'s platform controls for transport and edge protection. The run feed is intentionally public. No method of transmission or storage is perfectly secure. Do not post secrets into GitHub issues when reporting problems.'
+          heading: 'Security practices in this codebase',
+          body: 'What this dashboard actually implements: HTTPS is provided by Cloudflare for the hosted site; the client validates the untrusted run feed with Zod and fails closed on malformed rows; deploy links are accepted only when they parse as http or https URLs; the health function sets x-content-type-options: nosniff, a same-origin referrer policy, and CORS limited to the production dashboard origin with GET only. What this notice does not claim: we do not assert application-layer encryption at rest for a visitor database we do not operate, a formal SOC 2 report, or that public run scores are confidential. The run feed is intentionally public. No method of transmission or storage is perfectly secure. Do not post secrets into GitHub issues when reporting problems.'
         },
         {
           heading: 'Changes to this policy',
-          body: 'We may update this notice when the product or hosting setup changes. The date at the top of this page is the signal. Continued use after a change means you accept the updated notice. We have no email list for change announcements.'
+          body: 'We may update this notice when the product, feed path, or hosting setup changes. The "Last updated" line at the top of this page is the notice mechanism. We do not operate an email list for policy notices. Continued use of the site after the date changes means you accept the revised notice for subsequent use. For material changes, the updated text on this page is the record; check the date when you care about the current rules.'
         },
         {
           heading: 'Contact for privacy',
-          body: 'Privacy questions and requests: open an issue at https://github.com/brianference/redanvil/issues with "Privacy request" in the title. Source code is in the same repository.'
+          body: 'Privacy questions and requests: open an issue at https://github.com/brianference/redanvil/issues with "Privacy request" in the title. Source for this dashboard, including this notice text, the health function, and the client feed loader, is in the same repository. General product contact details are also summarized on the Contact page of this site.'
         }
       ]
     }

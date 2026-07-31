@@ -88,14 +88,41 @@ export function highWaterHistory(appDir) {
 }
 
 /**
+ * Generate `coverage/coverage-summary.json` for an app that lacks one.
+ *
+ * @param {string} appDir - App directory.
+ * @returns {string|null} An infra reason when coverage could not be produced, else null.
+ */
+function produceCoverage(appDir) {
+  const pkg = readJson(join(appDir, 'package.json'));
+  if (typeof pkg?.scripts?.['test:coverage'] !== 'string') {
+    // No tooling to run. u-test-presence already fails an app that committed a
+    // ratchet state file without the script to feed it, so this stays quiet.
+    return `no test:coverage script in ${appDir}`;
+  }
+  try {
+    execFileSync('npm', ['run', 'test:coverage'], {
+      cwd: appDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: process.platform === 'win32'
+    });
+    return null;
+  } catch (err) {
+    const tail = String(err?.stdout ?? '').slice(-600);
+    return `npm run test:coverage failed in ${appDir}:\n${tail}`;
+  }
+}
+
+/**
  * Decide u-test-coverage-ratchet for one app.
  *
  * @param {string} appDir - App directory.
- * @param {{pass: Function, fail: Function, notApplicable: Function}} io - Outcome callbacks.
+ * @param {{pass: Function, fail: Function, notApplicable: Function, infra: Function}} io - Outcome callbacks.
  * @returns {void}
  */
 export function runCoverageRatchet(appDir, io) {
-  const { pass, fail, notApplicable } = io;
+  const { pass, fail, notApplicable, infra } = io;
   const state = readJson(join(appDir, STATE_FILE));
   if (state === null) {
     return isGeneratedApp(appDir)
@@ -119,11 +146,25 @@ export function runCoverageRatchet(appDir, io) {
     );
   }
 
-  const summary = readJson(join(appDir, SUMMARY_FILE));
+  let summary = readJson(join(appDir, SUMMARY_FILE));
   if (summary === null) {
-    // u-test-presence owns "the summary should exist and does not". Reporting
-    // the same defect twice would double-count one problem across two rules.
-    return notApplicable(`no ${SUMMARY_FILE} in this run`);
+    // Do NOT waive the rule here. `coverage/` is a gitignored build artifact, so
+    // waiving on its absence makes the rule's applicability depend on whether
+    // someone happened to run coverage in this directory before. That is not a
+    // property of the commit, and it is not reproducible: this app scored 46/63
+    // locally (leftover coverage/) and 45/62 in CI (clean checkout) at the same
+    // sha, which is precisely the mismatch verify_results is built to catch.
+    //
+    // The app opted into the ratchet by committing the state file, so produce
+    // the number instead of shrugging at its absence. u-test-presence owns "the
+    // summary should exist and does not"; this owns "the app promised a floor,
+    // so measure against it".
+    const produced = produceCoverage(appDir);
+    if (produced !== null) return infra(produced);
+    summary = readJson(join(appDir, SUMMARY_FILE));
+    if (summary === null) {
+      return infra(`ran coverage in ${appDir} and ${SUMMARY_FILE} still does not exist`);
+    }
   }
   const current = summary.total?.lines?.pct;
   if (typeof current !== 'number') return notApplicable('coverage summary has no total.lines.pct');
@@ -153,6 +194,10 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     notApplicable: (w) => {
       if (w) console.error(`n/a: ${w}`);
       process.exit(3);
+    },
+    infra: (m) => {
+      if (m) console.error(`infra: ${m}`);
+      process.exit(2);
     }
   });
 }
