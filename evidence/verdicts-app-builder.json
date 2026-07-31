@@ -317,13 +317,8 @@
     "evidence": [
       "evidence/width-app-builder.json"
     ],
-    "note": "Measured on production by desktop_width.mjs at 1440 AND 1920: every route's main content occupies 93% of the viewport, against an 80% minimum. Two widths on purpose — a rem cap reads as 90% at 1600 and 75% at 1920, which is how this shipped narrow four times before the rule existed.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "96ac5984116ae221e6addddb31050513b1bdede3",
-    "scope": [
-      "app-builder/src",
-      "app-builder/public",
-      "app-builder/index.html"
-    ]
+    "note": "desktop_width re-measured against production at 1440 and 1920; every route >= 80% painted width.",
+    "reviewedAt": "2026-07-31T06:34:16.325Z",
+    "reviewedCommit": "0b60e1b3218c044359995f6ad1bc6bb587c4d1ce"
   }
 ]
