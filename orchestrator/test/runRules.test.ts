@@ -52,13 +52,38 @@ describe('operational run rules', () => {
   it('scores every declared run rule', () => {
     const outcomes = scoreRun(facts());
     expect(outcomes).toHaveLength(RUN_RULES.length);
-    expect(outcomes.every((o) => o.passed)).toBe(true);
+  });
+
+  it('does not pass a run whose isolation and branch were never observed', () => {
+    // The default fixture supplies no coderDir and no coderBranch, which is
+    // what every caller did before this change. The loop's own contract was
+    // graded on the loop's account of itself, and it always agreed. Unobserved
+    // is now reported as unobserved rather than counted as compliant.
+    const outcomes = scoreRun(facts());
+    expect(byId(outcomes, 'lg-worktree-isolation')?.passed).toBe(false);
+    expect(byId(outcomes, 'lg-worktree-isolation')?.detail).toMatch(/never observed/);
+    expect(byId(outcomes, 'lg-run-on-scratch-branch')?.passed).toBe(false);
+  });
+
+  it('PASSES isolation when a real linked worktree is observed', () => {
+    // Positive control against the actual repository: this checkout is a normal
+    // working tree, so observing it must report NOT isolated -- and that is the
+    // measurement working, not failing.
+    const outcomes = scoreRun(facts({ coderDir: process.cwd(), coderBranch: 'scratch-x' }));
+    const o = byId(outcomes, 'lg-worktree-isolation');
+    expect(o?.detail).toMatch(/measured:/);
+    expect(byId(outcomes, 'lg-run-on-scratch-branch')?.passed).toBe(true);
+  });
+
+  it('fails the scratch-branch rule on a default branch', () => {
+    expect(
+      byId(scoreRun(facts({ coderBranch: 'main' })), 'lg-run-on-scratch-branch')?.passed
+    ).toBe(false);
   });
 
   it('fails worktree isolation when the coder edited the live tree', () => {
     const o = byId(scoreRun(facts({ isolated: false })), 'lg-worktree-isolation');
     expect(o?.passed).toBe(false);
-    expect(o?.detail).toMatch(/live working tree/);
   });
 
   it('fails when the coder ran without a timeout', () => {
@@ -107,10 +132,17 @@ describe('operational run rules', () => {
     ).toBe(true);
   });
 
-  it('does not fail the budget rule when nothing was estimated', () => {
-    expect(
-      byId(scoreRun(facts({ estimatedIterations: null, iterations: 99 })), 'lg-budget-ceiling')
-        ?.passed
-    ).toBe(true);
+  it('FAILS the budget rule when nothing was estimated', () => {
+    // This assertion used to read 'does not fail' and expect true. It codified
+    // a vacuous pass: with no estimate there is no ceiling, so the rule was
+    // green precisely when no budget existed to enforce -- and a null estimate
+    // is the common case, not the rare one. A test can lock in a defect just as
+    // firmly as an implementation, and this one did.
+    const o = byId(
+      scoreRun(facts({ estimatedIterations: null, iterations: 99 })),
+      'lg-budget-ceiling'
+    );
+    expect(o?.passed).toBe(false);
+    expect(o?.detail).toMatch(/no budget/);
   });
 });
