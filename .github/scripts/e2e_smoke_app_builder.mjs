@@ -9,10 +9,17 @@
  *   - assert with WEB-FIRST auto-retrying expectations (toBeDisabled/toBeVisible);
  *   - record a TRACE (screenshots+snapshots) so a failure is opened, not re-driven.
  *
+ * NAMED FOR THE APP IT TESTS, because it was called `e2e_smoke.mjs` and read as
+ * a generic guarantee while driving exactly one product's flow: this app's chat
+ * composer, its wizard steps, its Forge PRD button, its /saved route. Nothing
+ * generic ever verified a generated app's core flow, and the name implied
+ * otherwise. `cold_visitor.mjs` is the generic one -- it takes its probe from
+ * each app's own claims file rather than hardcoding a domain prompt.
+ *
  * This is the flow a real user hit a 400 on: chat composer -> wizard -> Forge PRD.
  * That regression would have been caught here long before production.
  *
- * Usage: node .github/scripts/e2e_smoke.mjs <baseUrl> [--trace out.zip]
+ * Usage: node .github/scripts/e2e_smoke_app_builder.mjs <baseUrl> [--trace out.zip]
  * Exit 0 = flow works end to end, 1 = a step failed, 2 = harness/usage error.
  */
 import { createRequire } from 'node:module';
@@ -22,7 +29,7 @@ const require = createRequire(import.meta.url);
 const args = process.argv.slice(2);
 const baseUrl = args[0];
 if (!baseUrl) {
-  console.error('usage: node e2e_smoke.mjs <baseUrl> [--trace out.zip]');
+  console.error('usage: node e2e_smoke_app_builder.mjs <baseUrl> [--trace out.zip]');
   process.exit(2);
 }
 const traceIdx = args.indexOf('--trace');

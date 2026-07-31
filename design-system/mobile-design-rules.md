@@ -1,6 +1,6 @@
 # Mobile design rules (living)
 
-Version: 1.6 · Last improved: 2026-07-22  
+Version: 1.17 · Last improved: 2026-07-28  
 Source of truth for Grok Build mobile UX. Update via continuous improvement protocol after each design run.
 
 ---
@@ -780,3 +780,178 @@ Record, per competitor:
 
 Missing table stakes is a defect even when nothing in the spec named it. The spec
 is not the standard; the category is.
+
+## R32 — Never ship a placeholder by design (blocker)
+
+A generator that emits `body: '<Name> page for <slug>.'` has decided, in advance,
+that the product will ship a stub. That exact line produced four one-sentence
+legal pages that passed every check. The template was not a shortcut that someone
+failed to finish — **it was the finished output of the template**.
+
+The same shape appears everywhere: lorem text, `Item`/`Example`/`Sample` names, a
+`0` where a real count belongs, `#` as an href, a grey box where an image goes.
+Each one renders, satisfies a presence check, and reads as complete.
+
+### The rule
+
+**Whatever a generator emits must be either real or impossible to miss.**
+
+There is no third option, and "obviously temporary to whoever reads the code" is
+not one of them — nobody reads the code, they look at the page.
+
+- **Prefer real.** A starter document that is genuinely correct for any app —
+  a real privacy skeleton, a real empty state, a real 404 — is better than a
+  marker, because it can ship.
+- **When real is impossible**, emit something that FAILS a check and says what is
+  required. Not `Lorem ipsum`; a sentence naming the obligation and the rule that
+  will reject it.
+- **Never emit prose that looks like a finished sentence** about the product. A
+  reader cannot distinguish "this is the copy" from "this is a stand-in".
+
+### Enforcement
+
+`u-no-placeholders` scans source and rendered pages for the known shapes: lorem,
+`TBD`, `FIXME`, `Coming soon`, `<Name> page for`, `href="#"`, `Example`/`Sample`/
+`Placeholder` as a user-visible noun, and copy under a sentence in a document
+region. It runs on the scaffold too, so a generator cannot introduce one.
+
+### The deeper habit
+
+When you write a template, ask what it looks like **if nobody touches it**. If
+the answer is "a plausible finished page", you have written a bug that ships
+silently. If the answer is "obviously unfinished, and the gate says so", the
+template is correct.
+
+The same applies to seed data, example rows, default config and fixture names.
+A plausible-looking value nobody computed is the fabrication problem in another
+costume.
+
+---
+
+## R33 — Prove the integration exists TODAY, and check Claude's connectors first (blocker)
+
+R29 says search for an existing API before building one. It is not enough. A
+search that returns a remembered answer, or that never looks at what this
+session can already call, produces a confident plan built on nothing.
+
+Two failures, both real, both from the same week.
+
+**The API that no longer exists.** QuickFlight needed real fares. The obvious
+answer — the one every guide names, the one I would have written straight into a
+spec — is the Amadeus Self-Service API with its free 2,000-call tier. Amadeus
+decommissioned that portal on **2026-07-17**, ten days before I looked, and had
+already paused new registrations, so it could not even be signed up for. Nothing
+about the API being dead was discoverable from memory; it was discoverable in one
+search. Had I not run it, a delegated agent would have received a spec naming a
+dead provider and would have built against it until the first 404.
+
+**The capability already in the room.** The same app's 18 real seed fares came
+from the **Expedia MCP connector**, which was attached to the session the entire
+time. It was used only because the user asked whether Claude had one. A
+connector that is already authenticated, already free, and already callable
+outranks every third-party key on the internet, and it was never on the list
+because nothing made me enumerate the tools I already had.
+
+### The rule
+
+Before specifying, adopting, or naming any external capability:
+
+1. **Enumerate the connectors and MCP tools already available in the session**
+   first, before searching the open web. If one covers the capability, that is
+   the answer — no key, no signup, no quota. Record it in `INTEGRATIONS.md` as a
+   candidate even when it loses.
+2. **Verify every candidate is alive** against a primary source dated within the
+   last 90 days: the vendor's own pricing or status page, a current API response,
+   or the signup form itself. "I know this API" is not evidence. A tutorial or a
+   listicle is not evidence — the listicle that ranked Amadeus first was
+   published for 2026 and was already wrong.
+3. **Verify it can still be signed up for**, not merely that it exists. Paused
+   registration and a live docs site look identical from the outside.
+4. **Record the check date and the URL** next to each candidate. An unlinked
+   claim in `INTEGRATIONS.md` is the spec-assumption failure in another costume.
+5. **Confirm the capability, not the category.** Three flight APIs advertise
+   generous free tiers and return schedules, not fares. Read what the endpoint
+   actually returns before it enters the design.
+
+### Enforcement
+
+`u-integration-scan` fails when `INTEGRATIONS.md` lacks a **Connectors
+considered** section, when any candidate row has no source URL and check date, or
+when a check date is more than 90 days old at gate time. Stale evidence fails
+closed, because an integration verified a year ago is a memory again.
+
+### The deeper habit
+
+The asymmetry is the tell. I verified the Travelpayouts response shape obsessively
+because it felt unknown, and would have asserted Amadeus from memory because it
+felt familiar. Familiarity is not evidence. The integrations most likely to be
+wrong are the ones too well-known to check.
+
+---
+
+## R34 — An action must produce a visible response (blocker)
+
+A control that changes state without changing anything the user can see is
+indistinguishable from a broken one. This is not a polish issue: it is the most
+common way a working feature gets reported as completely non-functional.
+
+Three real instances, all in one product, all found by a user and not by a test
+suite that was otherwise green:
+
+**Search looked dead.** Pressing Search ran the query, got a 200, and rendered
+the outcome at **y=1341 in a 1000px viewport**. Nothing above the fold changed.
+The "no flights match" notice was correct, specific, helpful, and 341px below
+where anyone could see it. Reported as "when I hit search nothing happens, how
+can even the most basic functionality not work".
+
+**Navigation kept the scroll position.** Following a footer link to the Privacy
+policy from 1,044px down the page left the reader 1,044px into a document they
+had never opened. A browser resets scroll on navigation; a client-side router
+does not, and nothing in the app did it either.
+
+**Tab abandoned the field.** Tabbing out of an airport typeahead left the raw
+fragment "phoe" in the input and the suggestion list open, so the field held a
+value matching nothing.
+
+### The rule
+
+- **Every action that changes the primary content must move the viewport or
+  focus to the change**, or produce a visible change within the current view.
+- **Route changes reset scroll to the top.** In a client-side router this needs
+  explicit code; there is no default.
+- **Scroll to the change AFTER it has rendered.** Scrolling in a promise
+  callback runs against the previous layout: a result set going from ten rows to
+  none shrank the page mid-scroll and left the empty state at **y=-128**, above
+  the viewport. Use an effect keyed on the rendered data.
+- **Reserve the sticky header.** `scrollIntoView({block:'start'})` aligns to the
+  viewport top, which puts the target *under* a sticky header — measured at
+  y=-51 on mobile. Set `scroll-margin-top`.
+- **Keyboard commits.** Tab selects the highlighted option and moves on; Enter
+  selects or submits; Escape closes. Leaving an unresolved fragment behind is a
+  defect.
+- **Announce it.** The region that receives the outcome carries `role="status"`
+  and `aria-live="polite"`, so the result reaches someone who cannot see the
+  scroll happen.
+
+### How to test it
+
+**Assert the viewport, not the markup.** Rendering the right thing where the
+user cannot see it is the failure being tested for, and `toBeVisible()` passes
+for an element 341px below the fold. Use `toBeInViewport()`, or compare the
+element's box against `window.innerHeight`.
+
+Test **client-side** navigation specifically. A full `page.goto()` resets scroll
+natively and passes whether or not the app does anything, so a `goto` test
+proves nothing about the router.
+
+### Enforcement
+
+`fe-visible-response` fails an app whose router has no scroll reset, and the
+acceptance suite must contain a test asserting a control's effect is on screen.
+
+### The deeper habit
+
+Ask "what does the user SEE change?" for every control, and answer it by looking
+at the deployed page, not the diff. Every one of these passed code review, unit
+tests and an acceptance suite. The suite asserted the right rows came back; it
+never asked whether anyone could see them.

@@ -14,11 +14,12 @@
  *
  * Usage:
  *   node design_audit.mjs <baseUrl> [--routes /about,/contact] [--out report.json]
+ *                          [--claims .redanvil/claims.json]
  *
  * Exit 0 when every measured rule passes, 1 when any fails, 2 on infra failure.
  */
 import { createRequire } from 'node:module';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const args = process.argv.slice(2);
@@ -86,11 +87,25 @@ try {
         // over-strict measurement is as wrong as a lenient one.
         const inlineInText = (el) =>
           el.tagName === 'A' && getComputedStyle(el).display === 'inline';
+        // A checkbox or radio inside a label IS the label as far as a thumb is
+        // concerned: clicking anywhere in the label toggles it. Measuring the
+        // 18px box reported a FAIL for a control whose real target was the
+        // 44px row around it -- the same over-strictness the inline-link
+        // exemption above already corrects. Exempt only when the enclosing
+        // label genuinely clears the minimum, so shrinking the row still fails.
+        const enclosedByBigLabel = (el) => {
+          if (el.tagName !== 'INPUT') return false;
+          const t = el.getAttribute('type');
+          if (t !== 'checkbox' && t !== 'radio') return false;
+          const label = el.closest('label');
+          return label !== null && label.getBoundingClientRect().height >= touchMin;
+        };
         const targets = [
           ...document.querySelectorAll('a,button,input,select,textarea,[role=button]')
         ]
           .filter(visible)
-          .filter((el) => !inlineInText(el));
+          .filter((el) => !inlineInText(el))
+          .filter((el) => !enclosedByBigLabel(el));
         const small = targets
           .filter((el) => el.getBoundingClientRect().height < touchMin)
           .map((el) => (el.textContent || '').trim().slice(0, 30));
@@ -226,10 +241,19 @@ try {
     desk.crossLink,
     desk.crossLink ? 'cross-site link present' : 'no cross-site link'
   );
+  /*
+    og:image is asserted, not merely reported.
+
+    The same defect as fe-light-dark, in the rule whose NAME is "og": the
+    detail string has always printed "og:image absent" and the predicate only
+    ever checked title and description. An app with no Open Graph image passed
+    a rule called fe-seo-og while the evidence line said the image was missing.
+    The per-app pack asks for "a real OG image"; now the check does too.
+  */
   record(
     'fe-seo-og',
-    desk.title.length > 0 && desk.description !== null,
-    `title "${desk.title}", description ${desk.description === null ? 'MISSING' : 'present'}, og:image ${desk.ogImage === null ? 'absent' : 'present'}`
+    desk.title.length > 0 && desk.description !== null && desk.ogImage !== null,
+    `title "${desk.title}", description ${desk.description === null ? 'MISSING' : 'present'}, og:image ${desk.ogImage === null ? 'MISSING' : 'present'}`
   );
 
   // --- Theme swap and persistence ---
@@ -245,11 +269,94 @@ try {
   const persisted = await d.evaluate(() => document.documentElement.getAttribute('data-theme'));
   await d.close();
 
+  /*
+    Three claims, and the first one used to be missing.
+
+    The rule says light AND dark mode with the default following the system.
+    This block already opened the page with `colorScheme: 'dark'` and already
+    read the app's own resolved theme into `before` — and then asserted only
+    that the TOGGLE changes it, stores it, and survives a reload. `before` was
+    captured and never checked, so an app that resolves to LIGHT under a dark OS
+    passed cleanly. That is exactly what shipped: quickflight served the light
+    theme to every visitor whose system asked for dark, and this check, the axe
+    audit and the daily drift job all reported it green, because every one of
+    them either forced the theme or only exercised the toggle.
+
+    A default is what a first-time visitor gets. It is the half that matters
+    most and it was the half nobody measured.
+  */
+  const defaultFollowsSystem = before === 'dark';
+  const toggleWorks = before !== after.theme && after.stored !== null && persisted === after.theme;
   record(
     'fe-light-dark',
-    before !== after.theme && after.stored !== null && persisted === after.theme,
-    `${before} -> ${after.theme}, stored "${after.stored}", survived reload as ${persisted}`
+    defaultFollowsSystem && toggleWorks,
+    `default under prefers-color-scheme:dark resolved to "${before}"` +
+      `${defaultFollowsSystem ? '' : ' (EXPECTED dark — the default does not follow the system)'}; ` +
+      `toggle ${before} -> ${after.theme}, stored "${after.stored}", survived reload as ${persisted}`
   );
+
+  // --- Design archetype: did it build the shell it was told to build? ---
+  //
+  // §7.3a names a layout archetype for THIS app, calls itself binding, and
+  // lists shells the app must not fall back to. Nothing has ever read it: the
+  // structure was computed, rendered to prose and discarded, so "binding" was
+  // enforced by hope. .redanvil/claims.json now carries it.
+  //
+  // What is measured is the ANTI-PATTERN the spec names in its own words: "an
+  // implementation that satisfies every constraint while looking like a generic
+  // centred column under a sticky header has not built this spec." A centred
+  // single column is detectable -- one main child, capped width, roughly equal
+  // gutters -- whereas "is this a Split workbench" is not, and a check that
+  // guessed at that would be worse than none.
+  const claimsPath = flag('claims');
+  if (claimsPath !== null && existsSync(claimsPath)) {
+    let claims = null;
+    try {
+      claims = JSON.parse(readFileSync(claimsPath, 'utf8'));
+    } catch {
+      claims = null;
+    }
+    const archetype = claims?.design?.archetype ?? null;
+    if (archetype !== null) {
+      const a = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+      await a.goto(baseUrl, { waitUntil: 'networkidle' });
+      const shape = await a.evaluate(() => {
+        const main = document.querySelector('main') ?? document.body;
+        const kids = [...main.children].filter((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.height > 0;
+        });
+        const widest = kids
+          .map((el) => el.getBoundingClientRect())
+          .sort((x, y) => y.width - x.width)[0];
+        const vw = window.innerWidth;
+        if (widest === undefined) return { centredColumn: false, detail: 'no visible content' };
+        const left = widest.left;
+        const right = vw - widest.right;
+        // A centred column: meaningfully narrower than the viewport with
+        // near-equal gutters. Generous tolerance -- this must not fire on a
+        // layout that merely has padding.
+        const centred =
+          widest.width < vw * 0.72 && Math.abs(left - right) < 24 && left > 24;
+        return {
+          centredColumn: centred,
+          detail: `widest block ${Math.round(widest.width)}px of ${vw}px, gutters ${Math.round(left)}/${Math.round(right)}`
+        };
+      });
+      await a.close();
+      // Archetypes that ARE a centred column are exempt; the rest must not be one.
+      const columnArchetypes = new Set(['Focus hero', 'Guided flow', 'Editorial']);
+      const mustNotBeColumn = !columnArchetypes.has(archetype);
+      record(
+        'fe-design-archetype',
+        !(mustNotBeColumn && shape.centredColumn),
+        `claimed "${archetype}"; ${shape.detail}` +
+          (mustNotBeColumn && shape.centredColumn
+            ? ' — rendered as a generic centred column, which §7.3a names as the fallback that means the spec was NOT built'
+            : '')
+      );
+    }
+  }
 
   // --- Required pages ---
   const p = await browser.newPage({ viewport: { width: 1280, height: 900 } });

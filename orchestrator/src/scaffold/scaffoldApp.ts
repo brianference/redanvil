@@ -22,6 +22,17 @@ export interface ScaffoldInput {
    * chosen for this specific product) never reaches whoever builds it.
    */
   prdMarkdown?: string;
+  /**
+   * The app's own claims, as data.
+   *
+   * The PRD carries them as prose: §7.3a names a layout archetype and calls
+   * itself binding, the YAML fence lists appType and entities, and the feature
+   * table pairs each capability with its acceptance criteria. All of it was
+   * computed as structure and rendered away, so nothing downstream could ask
+   * whether the app does what it said. Passing the structure alongside the
+   * markdown is what lets u-claims-covered exist at all.
+   */
+  claimsJson?: string;
 }
 
 export interface ScaffoldResult {
@@ -73,6 +84,9 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
     'design-system/screen-patterns.md': screenPatterns,
     'design-system/logo-brief-template.md': logoBrief,
     ...(input.prdMarkdown === undefined ? {} : { 'PRD.md': input.prdMarkdown }),
+    ...(input.claimsJson === undefined
+      ? {}
+      : { '.redanvil/claims.json': input.claimsJson }),
     ...appFiles(job, builtAt)
   };
 

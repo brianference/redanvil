@@ -81,7 +81,7 @@ jobs:
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
       - name: E2E smoke against production
-        run: node .github/scripts/e2e_smoke.mjs https://redanvil.pages.dev/
+        run: node .github/scripts/e2e_smoke_app_builder.mjs https://redanvil.pages.dev/
 
   # Note: linting is NOT repeated here. The root `npm run lint` in the
   # orchestrator job runs `eslint .` over the whole repo, which already covers

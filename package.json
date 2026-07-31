@@ -16,6 +16,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "gate": "tsx orchestrator/src/cli.ts gate",
+    "api-judge": "tsx orchestrator/src/cli.ts api-judge",
     "loop": "tsx orchestrator/src/cli.ts loop",
     "rubric": "tsx orchestrator/src/cli.ts rubric",
     "reverify": "node .github/scripts/reverify.mjs"

@@ -7,3 +7,4 @@ dist/
 logos/
 playwright-report/
 test-results/
+coverage/

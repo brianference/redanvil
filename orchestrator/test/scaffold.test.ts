@@ -75,6 +75,61 @@ describe('scaffoldApp', () => {
     expect(pkg.devDependencies['@types/react-dom']).toBeTruthy();
   });
 
+  it('pins vitest and its coverage provider to the same exact version', async () => {
+    const pkg = JSON.parse(await readFile(join(out, 'package.json'), 'utf8'));
+    const vitest = pkg.devDependencies.vitest;
+    const provider = pkg.devDependencies['@vitest/coverage-v8'];
+    expect(provider, 'the coverage provider must ship with the scaffold').toBeTruthy();
+    // @vitest/coverage-v8 declares an EXACT peer on vitest (2.1.9 requires
+    // "vitest": "2.1.9"), so a caret on either side lets npm resolve them to
+    // different 2.x releases and `npm install` fails on the peer conflict before
+    // a generated app runs anything. Ranges are rejected outright, not just
+    // mismatches: `^2.1.9` on both happens to work today only because 2.1.9 is
+    // the newest 2.x, and that stops being true the moment 2.1.10 ships.
+    expect(vitest, 'vitest must be an exact version, not a range').toMatch(/^\d+\.\d+\.\d+$/);
+    expect(provider, 'the provider must be an exact version, not a range').toMatch(
+      /^\d+\.\d+\.\d+$/
+    );
+    expect(provider, 'provider and vitest must be the same version').toBe(vitest);
+  });
+
+  it('emits coverage config that writes the summary the gate reads', async () => {
+    const config = await readFile(join(out, 'vitest.config.ts'), 'utf8');
+    // json-summary is what produces coverage/coverage-summary.json. Without it
+    // u-test-presence and u-test-coverage-ratchet have nothing to read.
+    expect(config).toContain('json-summary');
+    expect(config).toContain("provider: 'v8'");
+    // Components and pages are Playwright's surface; vitest's V8 provider cannot
+    // see a browser it did not launch, so including them would report 0% for
+    // files that are in fact tested.
+    expect(config).toContain("include: ['src/lib/**', 'src/hooks/**', 'functions/**']");
+    expect(config).not.toContain("include: ['src/**'");
+
+    const pkg = JSON.parse(await readFile(join(out, 'package.json'), 'utf8'));
+    expect(pkg.scripts['test:coverage']).toBe('vitest run --coverage');
+    // An audit nobody runs is a file, not a gate.
+    expect(pkg.scripts.verify).toContain('test:coverage');
+  });
+
+  it('ships an API example set and a tracked coverage-ratchet state file', async () => {
+    const examples = JSON.parse(await readFile(join(out, 'tests', 'api-examples.json'), 'utf8'));
+    // The scaffold really generates functions/api/health.ts, so the starter
+    // example describes a route that exists rather than one someone remembered.
+    expect(examples.examples.map((e: { route: string }) => e.route)).toContain('/api/health');
+
+    const state = JSON.parse(
+      await readFile(join(out, '.redanvil', 'coverage-state.json'), 'utf8')
+    );
+    expect(state.baseCommit, 'no baseline until a run records one').toBeNull();
+    expect(state.highWaterPct).toBe(0);
+
+    // The ratchet reads this file's git history to catch the bar being lowered.
+    // An ignored file has no history, so ignoring it silently disables the check.
+    const ignore = await readFile(join(out, '.gitignore'), 'utf8');
+    expect(ignore).toContain('coverage/');
+    expect(ignore).not.toContain('.redanvil');
+  });
+
   it('generates the required pages and Web Crypto auth', async () => {
     for (const p of ['Home', 'About', 'Terms', 'Privacy', 'Contact']) {
       const page = await readFile(join(out, 'src', 'pages', `${p}.tsx`), 'utf8');

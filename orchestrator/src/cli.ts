@@ -151,7 +151,9 @@ const KNOWN_FLAGS = new Set([
   'spec',
   'max-iters',
   'no-isolate',
-  'min-coverage'
+  'promote',
+  'min-coverage',
+  'claims'
 ]);
 
 async function main(): Promise<number> {
@@ -173,7 +175,9 @@ async function main(): Promise<number> {
       spec: { type: 'string' },
       'max-iters': { type: 'string' },
       'no-isolate': { type: 'boolean' },
-      'min-coverage': { type: 'string' }
+      promote: { type: 'boolean' },
+      'min-coverage': { type: 'string' },
+      claims: { type: 'string' }
     }
   });
 
@@ -261,6 +265,22 @@ async function main(): Promise<number> {
     return 1;
   }
 
+  if (command === 'api-judge') {
+    const dir = positionals[1];
+    if (!dir) {
+      console.error('usage: npm run api-judge -- <appDir>');
+      return 2;
+    }
+    if (!existsSync(dir) || !statSync(dir).isDirectory()) {
+      console.error(`api-judge: ${dir} is not a directory`);
+      return 2;
+    }
+    const { runApiJudge } = await import('./commands/apiJudge');
+    const result = await runApiJudge(dir);
+    console.log(result.message);
+    return result.exitCode;
+  }
+
   if (command === 'gate') {
     const dir = positionals[1];
     if (!dir) {
@@ -335,7 +355,7 @@ async function main(): Promise<number> {
     const dir = positionals[1];
     if (!dir || typeof values.spec !== 'string') {
       console.error(
-        'usage: npm run loop -- <appDir> --spec <spec.md> [--threshold N] [--max-iters N] [--no-isolate] [--judge f.json] [--na lanes] [--slug s --out r.json --deploy url]'
+        'usage: npm run loop -- <appDir> --spec <spec.md> [--threshold N] [--max-iters N] [--no-isolate] [--promote] [--judge f.json] [--na lanes] [--slug s --out r.json --deploy url]'
       );
       return 2;
     }
@@ -361,7 +381,10 @@ async function main(): Promise<number> {
       notApplicable,
       // Isolated by default; --no-isolate runs the coder in the working tree,
       // which is what a human debugging the loop usually wants.
-      isolate: values['no-isolate'] !== true
+      isolate: values['no-isolate'] !== true,
+      // Off unless asked for. The run is merged only when the gate is green,
+      // and only after the COMMIT (not the tree) builds in isolation.
+      promote: values.promote === true
     });
 
     console.log(

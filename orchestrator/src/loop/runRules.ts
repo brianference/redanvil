@@ -1,4 +1,5 @@
 import { scrubbedEnv } from '../process/run';
+import { execFileSync } from 'node:child_process';
 import type { Outcome } from '../gate/score';
 
 /**
@@ -28,6 +29,11 @@ export const RUN_RULES: RunRule[] = [
     id: 'lg-worktree-isolation',
     severity: 'blocker',
     requirement: 'the coder ran in a disposable git worktree, not the live tree'
+  },
+  {
+    id: 'lg-run-on-scratch-branch',
+    severity: 'blocker',
+    requirement: 'the coder ran on a disposable branch, never a default one'
   },
   {
     id: 'lg-grok-timeout',
@@ -63,8 +69,33 @@ export const RUN_RULES: RunRule[] = [
 
 /** Everything the run-rule scorer needs to know about a completed loop. */
 export interface RunFacts {
-  /** True when the coder edited a disposable worktree. */
+  /**
+   * True when the coder edited a disposable worktree.
+   *
+   * SELF-REPORTED, and that is the weakness. `secretsInEnv` exists because a
+   * previous audit learned that `scrubbedEnv` being called somewhere is not
+   * evidence a call site used its result — it inspects the environment actually
+   * delivered. Every other fact here is still testimony from the caller, which
+   * means the loop's own contract is graded on what the loop says it did.
+   *
+   * Prefer `coderDir`: when it is supplied, isolation is MEASURED and this
+   * boolean is ignored.
+   */
   isolated: boolean;
+  /**
+   * Directory the coder actually ran in, when known.
+   *
+   * Supplying it turns lg-worktree-isolation from a claim into an observation:
+   * a linked worktree's `--git-dir` differs from its `--git-common-dir`, which
+   * a live working tree's does not. Optional so existing callers keep working,
+   * but a run that cannot be observed is reported as such rather than trusted.
+   */
+  coderDir?: string | null;
+  /**
+   * Branch the coder's tree was on, when known. `lg-run-on-scratch-branch`
+   * requires a disposable branch, never the default one.
+   */
+  coderBranch?: string | null;
   /** Per-iteration coder timeout in ms, or null when none was set. */
   coderTimeoutMs: number | null;
   /** Environment actually handed to the coder. */
@@ -79,6 +110,54 @@ export interface RunFacts {
   estimatedIterations: number | null;
   /** True when the score cleared the threshold and later fell back below it. */
   flipFlopped: boolean;
+}
+
+/** Branches a scratch run must never be on. */
+const DEFAULT_BRANCHES: ReadonlySet<string> = new Set(['main', 'master', 'develop', 'HEAD']);
+
+/**
+ * Whether the coder's directory is genuinely a linked git worktree.
+ *
+ * A linked worktree's `--git-dir` points at `.git/worktrees/<name>` while its
+ * `--git-common-dir` points at the original `.git`; in a normal working tree
+ * the two are the same path. That difference is observable, which is the whole
+ * point: it replaces the caller asserting `isolated: true` with the filesystem
+ * being asked.
+ *
+ * @param dir - Directory the coder ran in, or null/undefined when unknown.
+ * @returns Whether isolation could be observed, and what was seen.
+ */
+export function observeIsolation(dir: string | null | undefined): {
+  observed: boolean;
+  isolated: boolean;
+  reason: string;
+} {
+  if (typeof dir !== 'string' || dir === '') {
+    return { observed: false, isolated: false, reason: 'no directory supplied' };
+  }
+  const read = (args: string[]): string | null => {
+    try {
+      return execFileSync('git', ['-C', dir, ...args], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore']
+      }).trim();
+    } catch {
+      return null;
+    }
+  };
+  const gitDir = read(['rev-parse', '--absolute-git-dir']);
+  const commonDir = read(['rev-parse', '--path-format=absolute', '--git-common-dir']);
+  if (gitDir === null || commonDir === null) {
+    return { observed: false, isolated: false, reason: `${dir} is not a git repository` };
+  }
+  const isolated = gitDir !== commonDir;
+  return {
+    observed: true,
+    isolated,
+    reason: isolated
+      ? `${dir} is a linked worktree (git-dir differs from git-common-dir)`
+      : `${dir} is the live working tree; a bad run cannot be discarded cleanly`
+  };
 }
 
 /** Variable-name shapes that must never reach the coder's environment. */
@@ -112,6 +191,7 @@ export function secretsInEnv(env: NodeJS.ProcessEnv): string[] {
  */
 export function scoreRun(facts: RunFacts): Outcome[] {
   const leaked = secretsInEnv(facts.coderEnv);
+  const isolation = observeIsolation(facts.coderDir);
   const budgetCeiling =
     facts.estimatedIterations === null
       ? null
@@ -120,8 +200,35 @@ export function scoreRun(facts: RunFacts): Outcome[] {
   const results: Array<{ id: string; passed: boolean; detail?: string }> = [
     {
       id: 'lg-worktree-isolation',
-      passed: facts.isolated,
-      detail: 'the coder edited the live working tree; a bad run cannot be discarded cleanly'
+      // Observed when we can observe it, and only then falling back to the
+      // caller's word. A rule graded on the subject's own account of itself is
+      // the same defect as a rule whose text promises more than its check
+      // measures, one level up.
+      // Fail-closed, and deliberately not 'trust the caller when we cannot
+      // look'. An unobserved run is an unverified one, and the repo already
+      // treats unknown state as an explicit failure everywhere else. The first
+      // draft of this rule passed on facts.isolated when no directory was
+      // supplied, which is the same defect one level up: the subject grading
+      // itself. loop.ts now always supplies coderDir, so the only way to land
+      // here is a caller that declined to be observed.
+      passed: isolation.observed && isolation.isolated,
+      detail: isolation.observed
+        ? `measured: ${isolation.reason}`
+        : `isolation was never observed (${isolation.reason}); caller asserted ` +
+          `isolated=${facts.isolated}, which is testimony, not measurement`
+    },
+    {
+      id: 'lg-run-on-scratch-branch',
+      // A disposable branch is what makes a bad run discardable. Unknown is a
+      // failure, not an exemption.
+      passed:
+        typeof facts.coderBranch === 'string' &&
+        facts.coderBranch !== '' &&
+        !DEFAULT_BRANCHES.has(facts.coderBranch),
+      detail:
+        facts.coderBranch === undefined || facts.coderBranch === null
+          ? 'the branch the coder ran on was never recorded, so it cannot be shown to be disposable'
+          : `the coder ran on "${facts.coderBranch}", which is a default branch, not a scratch one`
     },
     {
       id: 'lg-grok-timeout',
@@ -152,8 +259,15 @@ export function scoreRun(facts: RunFacts): Outcome[] {
     },
     {
       id: 'lg-budget-ceiling',
-      passed: budgetCeiling === null || facts.iterations <= budgetCeiling,
-      detail: `ran ${facts.iterations} iterations against a ceiling of ${budgetCeiling ?? 'none'}`
+      // An UNESTIMATED run is an unbudgeted run. This used to pass whenever
+      // estimatedIterations was null -- the single most common case -- so the
+      // rule was green precisely when no budget existed to enforce. A vacuous
+      // pass is indistinguishable from a real one on the scoreboard.
+      passed: budgetCeiling !== null && facts.iterations <= budgetCeiling,
+      detail:
+        budgetCeiling === null
+          ? 'no pre-flight iteration estimate, so the run had no budget to stay inside'
+          : `ran ${facts.iterations} iterations against a ceiling of ${budgetCeiling}`
     }
   ];
 

@@ -20,6 +20,45 @@ export interface RunOptions {
 const DEFAULT_TIMEOUT_MS = 120_000;
 
 /**
+ * Largest argv this will hand to a shell, in bytes.
+ *
+ * Well under the ~32KB Windows command-line limit, because the shell adds
+ * quoting on top of what we measure. Anything approaching this size is a
+ * payload, and a payload belongs in a file.
+ */
+const MAX_ARGV_BYTES = 8192;
+
+/**
+ * Quote one argument for the Windows `shell: true` path.
+ *
+ * Node escapes arguments itself only when spawning WITHOUT a shell. With
+ * `shell: true` on Windows it joins argv with spaces and hands the string to
+ * `cmd.exe`, so any argument containing a space arrives as several arguments.
+ *
+ * That silently broke every multi-word argument this repo passes to a bare
+ * command — which is to say every Grok invocation, since a prompt is prose.
+ * `runGrok(dir, 'Reply with only {"ok":true}')` reached grok as the arguments
+ * `Reply`, `with`, `only`, ... and grok exited 2 with "unexpected argument
+ * 'only'". The loop command has always sent its coder prompt this way, so on
+ * Windows it could not have been delivering the prompt it composed. Nothing
+ * caught it because the failure looks like the model declining to answer rather
+ * than like a spawn bug.
+ *
+ * Inside double quotes cmd treats `&`, `|`, `<`, `>` and `^` literally, so the
+ * quoting only has to handle embedded double quotes and trailing backslashes
+ * (a `\` immediately before the closing quote would escape it).
+ *
+ * @param arg - One argument.
+ * @returns The argument, safe to concatenate into a cmd.exe command line.
+ */
+export function quoteForCmd(arg: string): string {
+  if (arg === '') return '""';
+  if (!/[\s"^&|<>()]/.test(arg)) return arg;
+  const escaped = arg.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, '$1$1');
+  return `"${escaped}"`;
+}
+
+/**
  * Runs a command with a hard wall-clock timeout, killing it if it overruns.
  * Always resolves — never rejects and never hangs — so the loop's critical path
  * cannot stall on a wedged subprocess (rules/loop-gate.md: lg-grok-timeout).
@@ -32,13 +71,39 @@ export function runCommand(
   const { cwd, timeoutMs = DEFAULT_TIMEOUT_MS, env } = opts;
   const start = Date.now();
 
+  // Refuse an argv the platform cannot carry, rather than letting the OS decide.
+  //
+  // Windows caps a command line near 32KB. Inlining a 60KB evidence file into a
+  // Grok prompt hit that ceiling and the spawn died with ENAMETOOLONG -- before
+  // the model saw anything, and with an error naming neither the argument nor
+  // the caller. The fix is always the same (write the payload to a file and
+  // pass the path), so the failure should say so instead of surfacing an errno.
+  const argvBytes = args.reduce((n, a) => n + Buffer.byteLength(a, 'utf8') + 1, 0);
+  if (argvBytes > MAX_ARGV_BYTES) {
+    return Promise.resolve({
+      code: null,
+      stdout: '',
+      stderr:
+        `refusing to spawn ${command}: arguments total ${argvBytes} bytes, over the ` +
+        `${MAX_ARGV_BYTES}-byte ceiling. Write the payload to a file and pass its path; ` +
+        'a large argv fails as ENAMETOOLONG on Windows with no indication of which ' +
+        'argument was too big.',
+      timedOut: false,
+      durationMs: 0
+    });
+  }
+
   // On Windows, bare command names like `npx`/`npm`/`grok` resolve to `.cmd`
   // shims that cannot be spawned without a shell; absolute paths (node.exe) can.
   const useShell =
     process.platform === 'win32' && !command.includes('\\') && !command.includes('/');
 
   return new Promise<RunResult>((resolve) => {
-    const child = spawn(command, args, { cwd, env, shell: useShell });
+    const child = spawn(command, useShell ? args.map(quoteForCmd) : args, {
+      cwd,
+      env,
+      shell: useShell
+    });
     let stdout = '';
     let stderr = '';
     let timedOut = false;

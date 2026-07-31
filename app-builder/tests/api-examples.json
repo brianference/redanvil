@@ -1,0 +1,70 @@
+{
+  "_why": "One realistic call per API route, and what its live answer must satisfy. u-api-real-output enumerates functions/api/** on disk and fails on any route with no example here, so a new endpoint is unproven-by-default. It boots the app on the real Workers runtime and calls each example: a non-2xx, an empty body, an empty collection under nonEmpty, fewer results than a declared minItems, or placeholder content in the response all fail.",
+  "examples": [
+    {
+      "route": "/api/health",
+      "method": "GET",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
+    },
+    {
+      "route": "/api/jobs",
+      "method": "GET",
+      "comment": "Lists build jobs. A local run starts with an empty D1, and an empty job list is the correct answer for a tool that has not been used yet -- unlike a catalog, where empty means broken. nonEmpty is opted out for that reason, and the reason is written down rather than left as an omission.",
+      "expect": {
+        "status": 200,
+        "nonEmpty": false
+      }
+    },
+    {
+      "route": "/api/prds",
+      "method": "GET",
+      "comment": "Same reasoning as /api/jobs: a fresh database legitimately holds no PRDs.",
+      "expect": {
+        "status": 200,
+        "nonEmpty": false
+      }
+    },
+    {
+      "route": "/api/prd/[id]",
+      "method": "GET",
+      "params": {
+        "id": "prd-tesla-driving-stats"
+      },
+      "comment": "A real seeded PRD (migrations/0002_seed_prd.sql), copied verbatim from the generator characterization fixture. This is the success path the route previously had no data to demonstrate.",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
+    },
+    {
+      "route": "/api/submit",
+      "method": "POST",
+      "body": {
+        "prompt": "Build a bird-watching log with sightings and photos",
+        "appType": "dashboard",
+        "hasAuth": true,
+        "entities": 2
+      },
+      "comment": "The real entry point: wizard answers in, a queued job out. Body matches submitBodySchema exactly - prompt (min 8 chars), appType, hasAuth, entities. My first attempt sent prompt alone and the route correctly answered 400 Required, which is the schema doing its job and the example being wrong.",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
+    },
+    {
+      "route": "/api/prd/[id]",
+      "method": "GET",
+      "params": {
+        "id": "definitely-not-a-real-prd"
+      },
+      "comment": "The error path is worth proving too: a missing record must answer 404 with a real body rather than 500 or an empty 200. Allowed because the route also carries a 2xx example above.",
+      "expect": {
+        "status": 404,
+        "nonEmpty": true
+      }
+    }
+  ]
+}

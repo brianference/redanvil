@@ -58,6 +58,37 @@ export const RULES: Rule[] = [
   // and simply unreachable. This requires acceptance tests that drive the real
   // UI and assert on what the user observes.
   rule('u-test-acceptance', 'testing', 'blocker', 'det'),
+  // u-test-acceptance proves the suite drives a browser and asserts on results.
+  // It cannot prove the suite covers the app: the tests and the coverage claim
+  // come from the same mental model, so the suite only ever checks what its
+  // author already had in mind. A control nobody thought of is a control nobody
+  // tested, and three shipped that way from a green repository — a Search button
+  // with no visible response, a public write endpoint, and an assistant that had
+  // answered 502 for two months. This requires a control inventory taken from
+  // the RUNNING app, with every control claimed by a test that resolves.
+  rule('u-test-feature-audit', 'testing', 'blocker', 'det'),
+  // The tested fraction of an app drifts down one uncovered file at a time, and
+  // no single change ever looks like the problem. u-test-presence catches a
+  // changed file with nothing exercising it; this catches the slow slide where
+  // nothing is individually untested and the whole is getting worse. `major`
+  // rather than `blocker` on purpose: a failed blocker zeroes the entire score,
+  // and a one-point dip is not equivalent to a security hole.
+  rule('u-test-coverage-ratchet', 'testing', 'major', 'det'),
+  // The control audit proved every button is clicked by a test. It says nothing
+  // about what comes back: QuickFlight passed contrast, touch targets, painted
+  // width, 49 unit tests, zero console errors AND the control audit, while its
+  // assistant endpoint had answered 502 for two months and its catalog held two
+  // route/date pairs, so any route a person typed returned nothing. `det+judge`
+  // because the two halves have different oracles — a machine decides status,
+  // emptiness and declared breadth; whether a well-formed answer actually
+  // delivers the product's claim is a judgment, scored from a recorded verdict
+  // over the live traffic the det half captures.
+  rule('u-api-real-output', 'testing', 'blocker', 'det+judge'),
+  // A feature the builder skipped is invisible to every other check: it renders
+  // no control for the audit to find and serves no route for the API check to
+  // call. The PRD promised it and nothing compared what was built against what
+  // was promised, because the promise only existed as prose.
+  rule('u-claims-covered', 'testing', 'blocker', 'det'),
   rule('u-test-adequacy', 'testing', 'major', 'det+judge'),
   rule('u-test-behavioral', 'testing', 'major', 'judge'),
 
@@ -107,6 +138,13 @@ export const RULES: Rule[] = [
   rule('fe-responsive-375', 'frontend', 'blocker', 'visual'),
   rule('fe-product-completeness', 'frontend', 'blocker', 'visual'),
   rule('fe-visual-review-recorded', 'frontend', 'blocker', 'visual'),
+  // Every other check forces the state it measures, so none of them observe
+  // what a first-time visitor actually gets. That hole shipped a default theme
+  // that ignored the OS and a search that returned nothing for unseeded routes.
+  // §7.3a calls itself binding and nothing could read it: the archetype was
+  // computed as structure and thrown away. Measures the fallback the spec names.
+  rule('fe-design-archetype', 'frontend', 'major', 'visual'),
+  rule('fe-cold-visitor', 'frontend', 'blocker', 'visual'),
   rule('fe-seo-og', 'frontend', 'major', 'visual'),
   rule('fe-cross-link', 'frontend', 'major', 'visual'),
 
@@ -128,6 +166,9 @@ export const RULES: Rule[] = [
   rule('ci-sha-pinned', 'ci', 'blocker', 'det'),
   rule('ci-least-privilege', 'ci', 'blocker', 'det'),
   rule('ci-no-injection', 'ci', 'blocker', 'det'),
+  // `cmd | tail` exits with tail's status. This masked a failing Playwright run
+  // and an aborted merge in a single session, both read as green.
+  rule('ci-exit-code-integrity', 'ci', 'major', 'det'),
 
   rule('hyg-secret-scan', 'hygiene', 'blocker', 'det'),
   rule('hyg-no-binaries', 'hygiene', 'blocker', 'det'),

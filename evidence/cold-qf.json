@@ -1,0 +1,31 @@
+{
+  "ok": true,
+  "findings": {
+    "cold-theme-dark": {
+      "ok": true,
+      "detail": "prefers-color-scheme:dark on a fresh profile resolved to \"dark\""
+    },
+    "cold-console-dark": {
+      "ok": true,
+      "detail": "no console errors on arrival"
+    },
+    "cold-theme-light": {
+      "ok": true,
+      "detail": "prefers-color-scheme:light on a fresh profile resolved to \"light\""
+    },
+    "cold-console-light": {
+      "ok": true,
+      "detail": "no console errors on arrival"
+    },
+    "cold-primary-flow": {
+      "ok": true,
+      "detail": "/search?from=SEA&to=DEN&date=2026-10-05 produced 19 result(s), needed 1"
+    },
+    "fe-cold-visitor": {
+      "ok": true,
+      "detail": "a first-time visitor gets a working app: 5 cold-start check(s) held"
+    }
+  },
+  "checkedAt": "2026-07-31T05:04:32.299Z",
+  "baseUrl": "https://quickflight.pages.dev"
+}
