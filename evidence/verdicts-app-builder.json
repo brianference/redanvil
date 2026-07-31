@@ -8,7 +8,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: 6 route(s) at 375; every interactive element >= 44px",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-type-floor",
@@ -19,7 +19,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: 6 route(s) at 375, smallest body font 16px; nothing under 16px",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-responsive-375",
@@ -30,7 +30,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: no horizontal overflow at 375 on 6 route(s)",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-safe-areas",
@@ -41,7 +41,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: header sticky on all 6 route(s), padding-top 0px",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-premium-nav",
@@ -52,7 +52,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: 6 header link(s) [App Builder, Dashboard, Examples, Saved, About, Contact], aria-current on \"App Builder\"",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-noncolor-state",
@@ -63,7 +63,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: active nav item: weight 650, gradient background true, aria-current present true",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-no-attribution",
@@ -74,7 +74,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: no attribution text",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-cross-link",
@@ -85,7 +85,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: cross-site link present",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-seo-og",
@@ -96,7 +96,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: title \"RedAnvil — Forge apps from a prompt\", description present, og:image present",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-light-dark",
@@ -107,7 +107,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: default under prefers-color-scheme:dark resolved to \"dark\"; toggle dark -> light, stored \"light\", survived reload as light",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-required-pages",
@@ -118,7 +118,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: /about 200 \"About RedAnvil\" 362w/7§; /contact 200 \"Contact\" 265w/5§; /terms 200 \"Terms and Conditions\" 706w/13§; /privacy 200 \"Privacy Policy\" 814w/12§; /saved 200 \"Saved builds\" 34w/0§ -- THIN: /terms has 706 words in 13 section(s), needs >=1200 and >=8; /privacy has 814 words in 12 section(s), nee",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -129,7 +129,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: 0 console/page error(s) across the measured loads",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-cold-visitor",
@@ -140,7 +140,7 @@
     ],
     "note": "cold_visitor against production: a first-time visitor gets a working app: 5 cold-start check(s) held",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "fe-a11y-contrast",
@@ -152,7 +152,7 @@
     ],
     "note": "axe-core 4.12.1 against production: 0 colour-contrast violations in dark and light.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   },
   {
     "ruleId": "u-conc-idiomatic",
@@ -165,7 +165,7 @@
     ],
     "note": "Helpers stay short and plain after the prd split: generate.ts composes section builders instead of inlining them, job.ts keeps slug and entity helpers as small pure functions, and the extracted Header reads as straightforward JSX with no dense one-liners.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4",
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e",
     "scope": [
       "app-builder/src/lib",
       "app-builder/src/components/shell"
@@ -181,7 +181,7 @@
     ],
     "note": "The prd and shell splits were driven by a measured size cap and a real second consumer, not by anticipated reuse. No interface was introduced with a single implementation for future flexibility.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4",
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e",
     "scope": [
       "app-builder/src/lib",
       "app-builder/src/components/shell"
@@ -197,7 +197,7 @@
     ],
     "note": "The header split reuses the existing Breadcrumbs component, i18n bundle and theme tokens rather than adding copies, and the nav work introduced no new dependency.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4",
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e",
     "scope": [
       "app-builder/src/components"
     ]
@@ -212,7 +212,7 @@
     ],
     "note": "The prd and shell refactors are pure structural moves. generatePrd output was verified byte-identical across five varied inputs by running the pre-split and post-split modules side by side, so the diff adds no behaviour of its own.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4",
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e",
     "scope": [
       "app-builder/src/lib",
       "app-builder/src/components"
@@ -228,7 +228,7 @@
     ],
     "note": "Handlers that read a request body run it through a schema before use; JSON.parse alone is not treated as validation anywhere under functions/.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4",
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e",
     "scope": [
       "app-builder/functions"
     ]
@@ -244,7 +244,7 @@
     ],
     "note": "This app ships no authentication surface, so there is no guard to stub: functions/lib holds only http and env helpers. Confirmed no auth-named function anywhere under functions/ returns an unconditional truthy value and no TODO-auth marker exists.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4",
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e",
     "scope": [
       "app-builder/functions"
     ]
@@ -259,7 +259,7 @@
     ],
     "note": "The refactor is covered by a characterization test snapshotting real generatePrd output for varied inputs, and the shell by a test querying header links by role. Both assert behaviour that breaks on regression rather than mere presence.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4",
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e",
     "scope": [
       "app-builder/src"
     ]
@@ -274,7 +274,7 @@
     ],
     "note": "Tests assert rendered behaviour (header exposes named links by role, active route marked) and real output content, not implementation details or call counts.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4",
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e",
     "scope": [
       "app-builder/src"
     ]
@@ -290,7 +290,7 @@
     ],
     "note": "Page.tsx is a composition of named components (Header, MobileDrawer, Footer, Breadcrumbs) rather than a monolithic shell, and pages supply title, subtitle and children into that shell.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4",
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e",
     "scope": [
       "app-builder/src/components"
     ]
@@ -305,7 +305,7 @@
     ],
     "note": "The composer renders explicit loading, empty and error states. A failed submit surfaces an error rather than an empty success, and the empty thread says so in words instead of rendering blank.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4",
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e",
     "scope": [
       "app-builder/src"
     ]
@@ -319,6 +319,6 @@
     ],
     "note": "desktop_width re-measured against production at 1440 and 1920; every route >= 80% painted width.",
     "reviewedAt": "2026-07-31T06:34:16.325Z",
-    "reviewedCommit": "e3ee37d6ae21397345719b1ee7c69141fc68bfb4"
+    "reviewedCommit": "83fc2fe5c8e77748db6261c9eaa7a9155319521e"
   }
 ]
