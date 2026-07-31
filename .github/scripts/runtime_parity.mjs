@@ -22,7 +22,7 @@
  */
 import { spawn, spawnSync } from 'node:child_process';
 import { createServer } from 'node:net';
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -336,6 +336,38 @@ export async function requestPath(port, path, requireJson) {
 }
 
 /**
+ * Apply committed D1 migrations to the LOCAL database before booting.
+ *
+ * Without this, the local D1 lives only in `.wrangler/`, which is gitignored —
+ * so a machine that ran the migrations once answered every probe from seeded
+ * rows while a fresh checkout answered 404. u-api-real-output passed here and
+ * failed in CI on the identical commit, and the per-rule mismatch was the only
+ * symptom. Same defect as a stale coverage/ directory: the result described the
+ * working directory rather than the commit.
+ *
+ * Migrations are committed, so applying them makes the database a function of
+ * the commit. Failure is deliberately not fatal — an app with no D1 binding has
+ * nothing to apply, and a real migration failure surfaces as the 404 or 500 the
+ * probe was going to catch anyway, with the endpoint's own error attached.
+ *
+ * @param {string} appDir App directory (cwd).
+ * @returns {void}
+ */
+export function applyLocalMigrations(appDir) {
+  const config = join(appDir, 'wrangler.toml');
+  if (!existsSync(config)) return;
+  const binding = /^\s*binding\s*=\s*"([^"]+)"/m.exec(readFileSync(config, 'utf8'))?.[1];
+  if (binding === undefined) return;
+  spawnSync('npx', ['wrangler', 'd1', 'migrations', 'apply', binding, '--local'], {
+    cwd: appDir,
+    shell: process.platform === 'win32',
+    encoding: 'utf8',
+    stdio: 'ignore',
+    env: { ...process.env, CI: process.env.CI ?? 'true', WRANGLER_SEND_METRICS: 'false' }
+  });
+}
+
+/**
  * Spawn `npx wrangler pages dev dist` on a free port (local Workers runtime).
  * On Windows, `shell: true` is required for `.cmd` shims. On Unix, `detached`
  * puts the child in its own process group so killProcessTree can reap it.
@@ -345,6 +377,7 @@ export async function requestPath(port, path, requireJson) {
  */
 export function spawnWranglerPagesDev(appDir, port) {
   const useShell = process.platform === 'win32';
+  applyLocalMigrations(appDir);
   const args = ['wrangler', 'pages', 'dev', 'dist', '--port', String(port), '--ip', '127.0.0.1'];
   /** Mutable buffer shared with callers that read live output. */
   const output = { text: '' };
