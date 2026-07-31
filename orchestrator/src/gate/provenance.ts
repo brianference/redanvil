@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { loadRubric } from '../rubric/index';
+import { isGateOutput } from './freshness';
 
 /**
  * Machine-generated proof of where a result file came from. Hand-authoring a
@@ -79,6 +80,35 @@ function sha256(text: string): string {
 }
 
 /**
+ * Working-tree changes that are not artifacts of this gate run.
+ *
+ * Running the gate WRITES: the coverage ratchet records a new high-water mark,
+ * u-api-real-output saves captured traffic, and the run's own result file lands
+ * in results/. Counting those made `dirty` true on every run, so no result could
+ * ever be tied to a deploy and verify_deployed rejected them all — the gate
+ * disqualified its own output by producing it.
+ *
+ * A real source edit still marks the result dirty, which is the guarantee worth
+ * keeping: a score describes a commit only when the tree matches that commit.
+ *
+ * @param status Output of `git status --porcelain`.
+ * @returns Paths that represent genuine uncommitted work.
+ */
+export function dirtyFiles(status: string): string[] {
+  return status
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      const path = line.slice(2).trim();
+      // Renames read "old -> new"; the destination is the file that exists now.
+      const arrow = path.indexOf(' -> ');
+      return arrow === -1 ? path : path.slice(arrow + 4);
+    })
+    .filter((path) => !isGateOutput(path));
+}
+
+/**
  * Collect provenance for a gate run rooted at `cwd`.
  */
 export function collectProvenance(
@@ -93,7 +123,7 @@ export function collectProvenance(
   const status = git(['status', '--porcelain'], cwd);
   return {
     commit,
-    dirty: status !== null && status.length > 0,
+    dirty: status !== null && dirtyFiles(status).length > 0,
     rubricHash: rubricHash(),
     rubricRuleCount: loadRubric().length,
     node: process.version,

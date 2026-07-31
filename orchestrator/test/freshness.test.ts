@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { findStaleVerdicts, verdictScope, isGateOutput } from '../src/gate/freshness';
 import type { Verdict } from '../src/schemas/verdicts';
+import { dirtyFiles } from '../src/gate/provenance';
 
 /**
  * Build a verdict with sane defaults so each test states only what it varies.
@@ -100,5 +101,27 @@ describe('the gate does not invalidate its own verdicts by running', () => {
     expect(isGateOutput('app-builder/.redanvil/claims.json')).toBe(false);
     expect(isGateOutput('app-builder/src/components/ThemeToggle.tsx')).toBe(false);
     expect(isGateOutput('app-builder/package.json')).toBe(false);
+  });
+});
+
+describe('a gate run does not report its own writes as uncommitted work', () => {
+  it('ignores the artifacts the run produced', () => {
+    const status = [
+      ' M app-builder/.redanvil/coverage-state.json',
+      ' M app-builder/evidence/api-live-app-builder.json',
+      ' M results/app-builder.json'
+    ].join('\n');
+    expect(dirtyFiles(status)).toEqual([]);
+  });
+
+  it('still reports a real uncommitted source edit', () => {
+    // Without this the exclusion would quietly retire the guarantee: a score
+    // describes a commit only when the tree matches that commit.
+    const status = ' M app-builder/src/i18n/legalPages.ts\n M results/app-builder.json';
+    expect(dirtyFiles(status)).toEqual(['app-builder/src/i18n/legalPages.ts']);
+  });
+
+  it('follows a rename to the path that exists now', () => {
+    expect(dirtyFiles('R  a/old.ts -> a/new.ts')).toEqual(['a/new.ts']);
   });
 });

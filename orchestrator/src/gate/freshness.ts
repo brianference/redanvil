@@ -134,7 +134,8 @@ export function isGateOutput(file: string): boolean {
   return (
     file.endsWith('/.redanvil/coverage-state.json') ||
     file.startsWith('.redanvil/coverage-state.json') ||
-    /(^|\/)evidence\//.test(file)
+    /(^|\/)evidence\//.test(file) ||
+    /^results\/[^/]+\.json$/.test(file)
   );
 }
 
