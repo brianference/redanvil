@@ -1,0 +1,16 @@
+{
+  "_why": "PROBE ONLY. The dashboard was hand-built and has no generated PRD, so there is nothing to transcribe feature claims from, and hand-authoring them would be inventing claims rather than recording them. features is empty so u-claims-covered returns n/a here instead of grading the app against a list I made up. What IS recorded is how a stranger exercises the primary flow: arrive at / with nothing forced and see at least one real run card. That is a test instruction, not a claim about capability.",
+  "kind": "claims",
+  "slug": "dashboard",
+  "title": "RedAnvil Dashboard",
+  "appType": "dashboard",
+  "hasAuth": false,
+  "entities": [],
+  "threshold": 90,
+  "features": [],
+  "coldVisitorProbe": {
+    "path": "/",
+    "expectSelector": ".ra-run-card",
+    "minCount": 1
+  }
+}

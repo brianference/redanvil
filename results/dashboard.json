@@ -49,7 +49,7 @@
     },
     {
       "ruleId": "u-integration-scan",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-typing-scoped-ignores",
@@ -266,18 +266,18 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-01T01:17:40.320Z",
+  "finishedAt": "2026-08-01T01:23:56.584Z",
   "provenance": {
-    "commit": "5aa0cc0be4cc24e8344a6b9301ce7da66d539061",
+    "commit": "9fa79253eb1cdfdc4de950622e019eb4725cb314",
     "dirty": false,
     "rubricHash": "e64fba891e2da5c4317c82c62dc5d4615123a70949cfe9135b78748938b5da7c",
     "rubricRuleCount": 68,
     "node": "v22.19.0",
-    "verdictsHash": "77b09830437c7e088968d8ef7a3a3a29507c3792451d13ab2b31ecd201087eaa",
+    "verdictsHash": "268e6dd22c354d042b2e470b19651e5f8397d10c030afd168c92fb7aa823c465",
     "notApplicable": [
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-01T01:17:40.370Z"
+    "generatedAt": "2026-08-01T01:23:56.635Z"
   }
 }
