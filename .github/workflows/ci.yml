@@ -147,6 +147,20 @@ jobs:
       - name: Install app deps
         run: npm ci
         working-directory: quickflight
+      # The browser coverage pass has to run BEFORE verification, and this is not
+      # optional here. QuickFlight's components and pages are measured only by
+      # Playwright, so u-test-coverage-ratchet compares a number that includes
+      # them. coverage-e2e/ is gitignored, so on a clean checkout it does not
+      # exist -- and the merge step now refuses to publish a unit-only figure
+      # under the same name rather than silently reporting a regression that did
+      # not happen. Without this step CI reproduced 88 against a committed 92,
+      # and the single differing rule was exactly that ratchet.
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+        working-directory: quickflight
+      - name: Produce browser coverage
+        run: npm run build:coverage && npx playwright test
+        working-directory: quickflight
       - name: Verify QuickFlight results were produced by the gate
         run: node ../redanvil/.github/scripts/verify_results.mjs . results/quickflight.json evidence/verdicts-quickflight.json process
         working-directory: quickflight
