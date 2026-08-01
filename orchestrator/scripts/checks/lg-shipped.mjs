@@ -11,12 +11,15 @@
  * done means. A build that never ships is indistinguishable from one that was
  * never built.
  *
- * All four must hold (fail closed on any):
+ * All five must hold (fail closed on any):
  * 1. Git repo with `origin` pointing at a real GitHub URL.
  * 2. HEAD is pushed (`git rev-list origin/<branch>..HEAD` empty).
  * 3. Production URL (claims.json deployUrl or wrangler project → pages.dev)
  *    returns HTTP 200.
  * 4. Deployed `assets/index-<hash>.js` matches newest local dist asset.
+ * 5. The app's own gate result meets the finish line (score >= threshold and
+ *    zero failing rules). Repo+push+URL+hash alone let an unmeasured app be
+ *    called "shipped" while the design audit never ran — that must FAIL.
  *
  * N/A is narrow: only when there is no wrangler.toml AND no deployUrl.
  * An app with wrangler.toml and no remote is a FAIL, not n/a.
@@ -25,8 +28,14 @@
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { join } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import {
+  DEFAULT_THRESHOLD,
+  parseResultShape,
+  resolveResultPath,
+  scoreBarReasons
+} from '../../../.github/scripts/meets_the_bar.mjs';
 
 /** How long a production fetch may take before it is treated as infra failure. */
 const FETCH_TIMEOUT_MS = 20_000;
@@ -144,6 +153,77 @@ export function isGitHubRemote(url) {
   if (typeof url !== 'string' || url.length === 0) return false;
   // github.com/org/repo, git@github.com:org/repo, user@github.com/org/repo, etc.
   return /(?:^|[@/])github\.com[:/]/i.test(url);
+}
+
+/**
+ * Resolve the repository root that contains the app (monorepo or standalone).
+ *
+ * @param {string} appDir App directory.
+ * @returns {string}
+ */
+export function resolveRepoRoot(appDir) {
+  const top = gitOut(appDir, ['rev-parse', '--show-toplevel']);
+  return top && top.length > 0 ? top : resolve(appDir);
+}
+
+/**
+ * Infer the results slug from the app directory basename.
+ *
+ * @param {string} appDir App directory.
+ * @returns {string}
+ */
+export function slugFromAppDir(appDir) {
+  return basename(resolve(appDir));
+}
+
+/**
+ * Require a recorded gate result at or above threshold with zero failed rules.
+ * Shipping an unmeasured app must FAIL, not pass on URL+hash alone.
+ *
+ * @param {string} appDir App directory.
+ * @param {LgShippedIo} io Exit helpers.
+ * @returns {void}
+ */
+export function requireGateResultMeetsBar(appDir, io) {
+  const repoRoot = resolveRepoRoot(appDir);
+  const slug = slugFromAppDir(appDir);
+  // App dir relative to repo root when nested; basename alone when standalone.
+  let appDirRel = slug;
+  try {
+    const rel = resolve(appDir).replace(/\\/g, '/');
+    const root = repoRoot.replace(/\\/g, '/');
+    if (rel.startsWith(root + '/')) {
+      appDirRel = rel.slice(root.length + 1);
+    }
+  } catch {
+    // keep slug
+  }
+
+  const resultPath = resolveResultPath(repoRoot, slug, appDirRel);
+  if (!resultPath) {
+    io.fail(
+      `no gate result for ${slug} (looked for results/${slug}.json) — ` +
+        `shipping an unmeasured app is not done. Run: node .github/scripts/reverify.mjs --app ${slug}`
+    );
+  }
+
+  let raw;
+  try {
+    raw = JSON.parse(readFileSync(resultPath, 'utf8'));
+  } catch {
+    io.fail(`gate result at ${resultPath} is not parseable JSON`);
+  }
+
+  const result = parseResultShape(raw);
+  const reasons = scoreBarReasons(result, {
+    threshold: result?.threshold ?? DEFAULT_THRESHOLD
+  });
+  if (reasons.length > 0) {
+    io.fail(
+      `gate result for ${slug} is below the finish line: ${reasons.join('; ')}. ` +
+        `Fix: node .github/scripts/reverify.mjs --app ${slug}`
+    );
+  }
 }
 
 /**
@@ -315,6 +395,12 @@ export async function runLgShipped(appDir, io) {
       `deployed bundle does not match local dist: serving ${deployedAsset}, local has ${localAsset} (a wrangler success message is not proof)`
     );
   }
+
+  // --- 5. Gate result meets the finish line --------------------------------
+  // Repo + push + URL + hash alone was treated as "done" while the design audit
+  // never ran and required routes still rendered the home page. A shipped
+  // verdict without a measured score is the hole this step closes.
+  requireGateResultMeetsBar(appDir, io);
 
   io.pass();
 }

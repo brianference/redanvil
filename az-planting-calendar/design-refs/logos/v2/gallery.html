@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AZ Planting Calendar — logo v2 (calendar behind cactus)</title>
+  <style>
+    body {
+      background: #0e1419;
+      color: #e6edf3;
+      font: 16px/1.5 system-ui, sans-serif;
+      margin: 0;
+      padding: 32px;
+    }
+    h1 { font-size: 24px; margin: 0 0 8px; }
+    p { color: #9fb0bd; margin: 0 0 28px; max-width: 72ch; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 28px;
+    }
+    figure {
+      margin: 0;
+      background: #151c23;
+      border: 1px solid #26313a;
+      border-radius: 4px;
+      padding: 16px;
+    }
+    .full {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 2px;
+      background: #fff;
+    }
+    .sizes {
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .size-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+    }
+    .size-block span {
+      font-size: 11px;
+      color: #9fb0bd;
+      font-family: ui-monospace, monospace;
+    }
+    .on-light, .on-dark {
+      display: grid;
+      place-items: center;
+      border-radius: 2px;
+      border: 1px solid #26313a;
+    }
+    .on-light { background: #ffffff; }
+    .on-dark { background: #0a0e12; }
+    .px32 { width: 32px; height: 32px; padding: 8px; }
+    .px32 img { width: 32px; height: 32px; display: block; image-rendering: auto; }
+    figcaption { margin-top: 14px; font-size: 14px; }
+    .n { font-family: ui-monospace, monospace; color: #4ade80; }
+    .v { color: #c8d2da; font-size: 13px; margin-top: 6px; line-height: 1.45; }
+    .tag {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 2px 8px;
+      border-radius: 2px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .tag-ok { background: #0f2a1c; color: #4ade80; border: 1px solid #166534; }
+    .tag-best { background: #0c2a4a; color: #60a5fa; border: 1px solid #1d4ed8; }
+    .tag-no { background: #2a1214; color: #f87171; border: 1px solid #7f1d1d; }
+  </style>
+</head>
+<body>
+  <h1>AZ Planting Calendar — logo v2</h1>
+  <p>
+    Direction locked from option 01: saguaro + leafy seedling in desert sand.
+    Change: geometric calendar grid sits <strong>behind</strong> the plants.
+    Each option shown full-size on white, then at 32px on light and dark swatches
+    (favicon read test). Not wired into the app — user picks.
+  </p>
+  <div class="grid">
+
+    <figure>
+      <img class="full" src="01-calendar-behind-edit.jpg" alt="Option 01 full size" />
+      <div class="sizes">
+        <div class="size-block">
+          <span>32px / light</span>
+          <div class="on-light px32"><img src="01-calendar-behind-edit-32.png" alt="01 at 32px light" /></div>
+        </div>
+        <div class="size-block">
+          <span>32px / dark</span>
+          <div class="on-dark px32"><img src="01-calendar-behind-edit-32.png" alt="01 at 32px dark" /></div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="n">01</span> calendar-behind edit (from chosen 01)
+        <div class="v">
+          Closest to the picked mark: same warm cactus + intertwined seedling, with a clean empty-grid calendar plate behind.
+          At 32px the plants still read as green cactus+leaf; the calendar lines nearly vanish (soft gray on white).
+          Usable as a brand mark at medium size; weak as a strict favicon if the calendar must stay visible.
+        </div>
+        <span class="tag tag-ok">usable · pick if warmth &gt; tiny-grid</span>
+      </figcaption>
+    </figure>
+
+    <figure>
+      <img class="full" src="02-calendar-warm-gen.jpg" alt="Option 02 full size" />
+      <div class="sizes">
+        <div class="size-block">
+          <span>32px / light</span>
+          <div class="on-light px32"><img src="02-calendar-warm-gen-32.png" alt="02 at 32px light" /></div>
+        </div>
+        <div class="size-block">
+          <span>32px / dark</span>
+          <div class="on-dark px32"><img src="02-calendar-warm-gen-32.png" alt="02 at 32px dark" /></div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="n">02</span> flat warm gen
+        <div class="v">
+          Flat illustration, solid sand mound, lavender-gray calendar square with a clear grid.
+          At 32px: cactus and seedling stay distinct; calendar collapses to a gray square (grid lines mostly lost).
+          Works on light and dark page backgrounds because of the white field and sand contrast.
+          Honest tradeoff: clearer plants than 03, weaker calendar-at-favicon than 03.
+        </div>
+        <span class="tag tag-ok">usable</span>
+      </figcaption>
+    </figure>
+
+    <figure>
+      <img class="full" src="03-calendar-minimal-gen.jpg" alt="Option 03 full size" />
+      <div class="sizes">
+        <div class="size-block">
+          <span>32px / light</span>
+          <div class="on-light px32"><img src="03-calendar-minimal-gen-32.png" alt="03 at 32px light" /></div>
+        </div>
+        <div class="size-block">
+          <span>32px / dark</span>
+          <div class="on-dark px32"><img src="03-calendar-minimal-gen-32.png" alt="03 at 32px dark" /></div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="n">03</span> high-contrast grid
+        <div class="v">
+          Bold slate calendar with thick white gutters — the only option where the grid still reads at 32px.
+          Plants silhouette cleanly; sand mound anchors the bottom. Roots detail is decorative noise at favicon size (harmless).
+          Strongest small-size read of the “planting calendar” concept. Slightly heavier/inkier than the soft warmth of 01.
+        </div>
+        <span class="tag tag-best">strongest at 32px</span>
+      </figcaption>
+    </figure>
+
+    <figure>
+      <img class="full" src="04-calendar-friendly-gen.jpg" alt="Option 04 full size" />
+      <div class="sizes">
+        <div class="size-block">
+          <span>32px / light</span>
+          <div class="on-light px32"><img src="04-calendar-friendly-gen-32.png" alt="04 at 32px light" /></div>
+        </div>
+        <div class="size-block">
+          <span>32px / dark</span>
+          <div class="on-dark px32"><img src="04-calendar-friendly-gen-32.png" alt="04 at 32px dark" /></div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="n">04</span> flat technical
+        <div class="v">
+          Flattest of the set: hard edges, simple sand strip, calendar as a pale card with light grid.
+          Matches the app’s technical UI language best. At 32px cactus + seedling remain readable; grid softens but the card shape holds.
+          Best balance of brand warmth vs product UI if you want flat, not glossy.
+        </div>
+        <span class="tag tag-best">best flat / UI match</span>
+      </figcaption>
+    </figure>
+
+    <figure>
+      <img class="full" src="05-calendar-bold-gen.jpg" alt="Option 05 full size" />
+      <div class="sizes">
+        <div class="size-block">
+          <span>32px / light</span>
+          <div class="on-light px32"><img src="05-calendar-bold-gen-32.png" alt="05 at 32px light" /></div>
+        </div>
+        <div class="size-block">
+          <span>32px / dark</span>
+          <div class="on-dark px32"><img src="05-calendar-bold-gen-32.png" alt="05 at 32px dark" /></div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="n">05</span> weekday calendar
+        <div class="v">
+          Full-size is charming but off-brief: weekday letters (S M T W…), glossy tile faces, and a detailed wall-calendar look.
+          At 32px the letters disappear, tiles turn to mud, and the seedling is a vague green blob.
+          <strong>Unusable as favicon</strong> and too busy for the “simple geometric grid” brief.
+        </div>
+        <span class="tag tag-no">unusable at 32px · reject</span>
+      </figcaption>
+    </figure>
+
+  </div>
+</body>
+</html>

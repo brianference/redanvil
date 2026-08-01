@@ -78,9 +78,13 @@ export async function fetchGrid(query: FilterQuery = {}): Promise<GridResponse> 
   );
 }
 
-/** GET /api/crops */
-export async function fetchCrops() {
-  return getJson('/api/crops', CropsResponseSchema);
+/**
+ * GET /api/crops — optional name search via `q`.
+ *
+ * @param q - Crop name fragment; omitted lists all crops.
+ */
+export async function fetchCrops(q?: string) {
+  return getJson(`/api/crops${qs({ q })}`, CropsResponseSchema);
 }
 
 /** GET /api/crops/:id */

@@ -8,7 +8,8 @@
 
 .year-grid__intro p {
   color: var(--text-muted);
-  max-width: 70ch;
+  /* Full-width intro band; do not starve the painted container. */
+  max-width: none;
 }
 
 .year-grid__legend {
@@ -55,7 +56,7 @@
   border-spacing: 0;
   width: max-content;
   min-width: 100%;
-  font-size: 12px;
+  font-size: var(--type-sm);
 }
 
 .year-grid__table th,

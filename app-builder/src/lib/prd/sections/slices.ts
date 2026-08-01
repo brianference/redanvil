@@ -52,6 +52,8 @@ export function buildSlices(opts: {
     const isAccess = feature.name === 'Accounts' || feature.name === 'Public access';
     const isPrimaryManage = feature.name === `Manage ${primary}`;
     const isPages = feature.name.startsWith('Required pages');
+    const isSearchFilter = feature.name.startsWith('Search and filter ');
+    const isAssistant = feature.name.startsWith('Ask the assistant about ');
     const isSecondaryManage = /^Manage .+$/.test(feature.name) && !isPrimaryManage;
     // Capability features come from the prompt, not from an entity. They must
     // never mint a table: "Compute airline flight totals" is a calculation over
@@ -62,6 +64,8 @@ export function buildSlices(opts: {
       !isAccess &&
       !isPrimaryManage &&
       !isPages &&
+      !isSearchFilter &&
+      !isAssistant &&
       !isSecondaryManage;
 
     let db = 'No new migration (tables from Slice 0)';
@@ -96,6 +100,22 @@ export function buildSlices(opts: {
       db = 'No domain change';
       api = 'Static routes only';
       ui = `${REQUIRED_PAGES.join(', ')} pages + sitemap.xml + robots.txt + per-route SEO`;
+    } else if (isSearchFilter) {
+      db = primaryTable
+        ? `Indexes on \`${primaryTable}\` columns used by search/filter; seed rows that prove narrowing`
+        : 'Seed or fixture rows that prove search narrows the collection';
+      api = primaryTable
+        ? `GET /api/${primaryTable}?q= (and any filter params); contract returns a narrower set for a matching query`
+        : 'Collection list endpoint (or client-side filter over loaded rows) honours q/filter';
+      ui = `Search/filter control on the collection view with accessible name matching /search|find|filter/i; results narrow; empty-match and error states`;
+    } else if (isAssistant) {
+      db = primaryTable
+        ? `Read-only queries over \`${primaryTable}\` (and related tables) to ground answers — never invent rows`
+        : 'Read domain data the assistant needs to ground answers (or structured filters over the catalog)';
+      api =
+        'POST /api/assistant — Zod body `{ message }`; calls Workers AI via `env.AI.run` in the Worker; grounds in app data; 502/503 on model/binding failure (not empty 200); 400 on empty message';
+      ui =
+        'Chat affordance reachable from the shell (sheet/panel/route); loading + error states; never render a failed model call as empty success';
     } else if (isCapability) {
       // Reads and computes over the entity tables that already exist.
       db = `Query \`${primaryTable}\`; add indexes for the fields this feature filters or sorts on`;
@@ -113,19 +133,23 @@ export function buildSlices(opts: {
 
     const verifyCmd = isPages
       ? 'test -f public/sitemap.xml && test -f public/robots.txt && npx playwright test tests/required-pages.spec.ts'
-      : isAccess && hasAuth
-        ? 'npx vitest run functions/api/auth.test.ts && npx playwright test tests/auth.spec.ts'
-        : isAccess && !hasAuth
-          ? 'npx playwright test tests/smoke-public.spec.ts'
-          : isPrimaryBrowse
-            ? `npx vitest run functions/api/${primaryTable}.test.ts && npx playwright test tests/${primaryTable}-list.spec.ts`
-            : isPrimaryDetail
-              ? `npx playwright test tests/${primaryTable}-detail.spec.ts`
-              : isCapability
-                ? `npx vitest run && npx playwright test tests/search.spec.ts`
-                : isPrimaryManage
-                  ? `npx vitest run src/lib/schemas.test.ts && npx playwright test tests/${primaryTable}-crud.spec.ts`
-                  : `npx vitest run && npx playwright test tests/${entityTable(feature.name.replace(/^Manage /, ''))}-crud.spec.ts`;
+      : isSearchFilter
+        ? `npx vitest run && npx playwright test tests/${primaryTable || 'collection'}-search.spec.ts`
+        : isAssistant
+          ? 'npx vitest run functions/api/assistant.test.ts && npx playwright test tests/assistant.spec.ts'
+          : isAccess && hasAuth
+            ? 'npx vitest run functions/api/auth.test.ts && npx playwright test tests/auth.spec.ts'
+            : isAccess && !hasAuth
+              ? 'npx playwright test tests/smoke-public.spec.ts'
+              : isPrimaryBrowse
+                ? `npx vitest run functions/api/${primaryTable}.test.ts && npx playwright test tests/${primaryTable}-list.spec.ts`
+                : isPrimaryDetail
+                  ? `npx playwright test tests/${primaryTable}-detail.spec.ts`
+                  : isCapability
+                    ? `npx vitest run && npx playwright test tests/search.spec.ts`
+                    : isPrimaryManage
+                      ? `npx vitest run src/lib/schemas.test.ts && npx playwright test tests/${primaryTable}-crud.spec.ts`
+                      : `npx vitest run && npx playwright test tests/${entityTable(feature.name.replace(/^Manage /, ''))}-crud.spec.ts`;
 
     slices.push({
       index: next,

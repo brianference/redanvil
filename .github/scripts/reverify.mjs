@@ -28,6 +28,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { APPS } from './apps.mjs';
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
@@ -36,32 +37,10 @@ const value = (name) => {
   return i === -1 ? null : args[i + 1];
 };
 
-/** The apps this repo gates, with everything each one needs measured. */
-const APPS = [
-  {
-    slug: 'app-builder',
-    dir: 'app-builder',
-    url: 'https://redanvil.pages.dev',
-    designRoutes: '/about,/contact,/terms,/privacy,/saved,/examples,/no-such-page',
-    widthRoutes: null,
-    e2e: true,
-    wizard: true,
-    na: 'process'
-  },
-  {
-    slug: 'dashboard',
-    dir: 'dashboard',
-    url: 'https://redanvil-dashboard.pages.dev',
-    designRoutes: '/about,/contact,/terms,/privacy,/no-such-page',
-    widthRoutes: '/,/about,/contact,/terms,/privacy',
-    e2e: false,
-    wizard: false,
-    na: 'process'
-  }
-];
+// APPS lives in apps.mjs so pre-push, meets_the_bar, and CI all read the same list.
 
 const only = value('app');
-const apps = only === null ? APPS : APPS.filter((a) => a.slug === only);
+const apps = only === null ? [...APPS] : APPS.filter((a) => a.slug === only);
 if (apps.length === 0) {
   console.error(`unknown app "${only}" — known: ${APPS.map((a) => a.slug).join(', ')}`);
   process.exit(2);

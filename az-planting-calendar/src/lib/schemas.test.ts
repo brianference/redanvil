@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CropSchema,
+  CropsQuerySchema,
   FilterQuerySchema,
   HealthResponseSchema,
   MethodSchema,
@@ -101,5 +102,13 @@ describe('query schemas', () => {
   it('validates health payload', () => {
     expect(HealthResponseSchema.parse({ status: 'ok' }).status).toBe('ok');
     expect(() => HealthResponseSchema.parse({ status: 'down' })).toThrow();
+  });
+
+  it('parses crops search q and treats blank as absent', () => {
+    expect(CropsQuerySchema.parse({ q: 'tomato' }).q).toBe('tomato');
+    expect(CropsQuerySchema.parse({ q: '  bean  ' }).q).toBe('bean');
+    expect(CropsQuerySchema.parse({ q: '   ' }).q).toBeUndefined();
+    expect(CropsQuerySchema.parse({}).q).toBeUndefined();
+    expect(() => CropsQuerySchema.parse({ q: 'x'.repeat(101) })).toThrow();
   });
 });

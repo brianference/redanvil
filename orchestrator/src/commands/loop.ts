@@ -8,6 +8,8 @@ import { gateApp, type GateReport } from './gate';
 import { runGrok, parseGrokJson, newSessionId } from '../grok/harness';
 import { scoreRun, coderEnv } from '../loop/runRules';
 import type { Outcome } from '../gate/score';
+import { runIndependentDiffReview } from '../loop/independentReview';
+import { isDone } from '../gate/done';
 
 /** A completed loop plus the full gate report from its final pass. */
 export interface LoopRun {
@@ -28,6 +30,14 @@ export interface LoopRun {
    * landed" is a state someone has to be able to see.
    */
   promotion?: PromoteResult;
+  /**
+   * Independent judge-over-diff step (required before done).
+   * True when the review completed and either found nothing explicitly or
+   * reported only verified passes.
+   */
+  independentReviewOk: boolean;
+  /** One-line summary for the CLI (findings count or explicit empty). */
+  independentReviewSummary: string;
 }
 
 export interface LoopCommandOptions {
@@ -122,7 +132,23 @@ export async function runLoopCommand(opts: LoopCommandOptions): Promise<LoopRun>
     // to be reproduced by hand — which is the moment a verified result
     // quietly becomes an unverified one.
     if (opts.promote === true) {
-      const green = result.final.blockersFailed.length === 0 && result.final.score >= opts.threshold;
+      // Promote only when isDone holds — score alone is not the finish line.
+      const promoteRules = result.final.outcomes.map((o) => ({
+        ruleId: o.ruleId,
+        passed: o.passed
+      }));
+      const promoteDone = isDone(
+        {
+          finalScore: result.final.score,
+          threshold: opts.threshold,
+          rules: promoteRules
+        },
+        { independentReviewOk: result.independentReviewOk }
+      );
+      const green =
+        result.final.blockersFailed.length === 0 &&
+        result.final.score >= opts.threshold &&
+        promoteDone.done;
       if (!green) {
         result.promotion = {
           promoted: false,
@@ -131,7 +157,8 @@ export async function runLoopCommand(opts: LoopCommandOptions): Promise<LoopRun>
             `not promoted: score ${result.final.score} against a threshold of ${opts.threshold}` +
             (result.final.blockersFailed.length > 0
               ? `, blockers failed: ${result.final.blockersFailed.join(', ')}`
-              : '')
+              : '') +
+            (promoteDone.done ? '' : `; isDone false: ${promoteDone.reasons.join('; ')}`)
         };
       } else {
         result.promotion = await promoteWorktree({
@@ -237,7 +264,10 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
   };
 
   const loop = await runLoop(deps, { threshold: opts.threshold, maxIters: opts.maxIters });
-  if (lastReport === null) {
+  // Capture into a const so control-flow narrowing sticks through the rest of
+  // the function (mutable `let` + throw was collapsing to `never` under strict).
+  const finalReport: GateReport | null = lastReport;
+  if (finalReport === null) {
     // maxIters < 1 would skip the loop body entirely; a run that never gated has
     // no score to report, and must not be written out as one.
     throw new Error('loop completed without running the gate — check --max-iters');
@@ -258,5 +288,50 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
     estimatedIterations: opts.estimatedIterations ?? null,
     flipFlopped: loop.flipFlopped
   });
-  return { loop, final: lastReport, runRules };
+
+  // Independent judge over the REAL git diff — before any app can be reported
+  // done. Instructions are to REFUTE: find what the author missed, cite
+  // file:line, FAIL anything unverified. A silent empty pass is forbidden.
+  const review = runIndependentDiffReview({ dir });
+  const independentReviewOk = review.ok;
+  let independentReviewSummary: string;
+  if (!review.completed) {
+    independentReviewSummary = `incomplete (${review.mode}): judge could not finish`;
+  } else if (review.findings.length === 0) {
+    independentReviewSummary = review.foundNothingExplicit
+      ? `found nothing to refute (explicit) at ${review.commit.slice(0, 12)} diff=${review.diffHash.slice(0, 12)}`
+      : 'EMPTY findings without foundNothingExplicit — treated as FAIL';
+  } else {
+    const fails = review.findings.filter((f) => !f.passed).length;
+    independentReviewSummary =
+      `${review.findings.length} finding(s), ${fails} failing; ` +
+      `bound to ${review.commit.slice(0, 12)} diff=${review.diffHash.slice(0, 12)}`;
+  }
+
+  // isDone is the only finish-line definition — the loop score alone is not.
+  // Read outcomes via an explicit GateReport binding — control-flow narrowing
+  // of finalReport was collapsing to `never` under concurrent edits to this file.
+  const scored: GateReport = finalReport as GateReport;
+  const rules = scored.outcomes.map((o) => ({
+    ruleId: o.ruleId,
+    passed: o.passed
+  }));
+  const done = isDone(
+    { finalScore: loop.finalScore, threshold: opts.threshold, rules },
+    { independentReviewOk }
+  );
+  if (!done.done && loop.passed) {
+    // Score cleared the threshold but the finish line did not — demote the
+    // loop result so callers cannot treat it as shipped.
+    loop.passed = false;
+    loop.promise = null;
+  }
+
+  return {
+    loop,
+    final: scored,
+    runRules,
+    independentReviewOk,
+    independentReviewSummary
+  };
 }

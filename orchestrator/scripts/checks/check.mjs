@@ -25,6 +25,12 @@ import { runIntegrationScan } from './u-integration-scan.mjs';
 import { runCompetitorScan } from './u-competitor-scan.mjs';
 import { runProcPrTitleTicket } from './proc-pr-title-ticket.mjs';
 import { runLgShipped } from './lg-shipped.mjs';
+import { runSearchPresent } from './fe-search-present.mjs';
+import { runAssistantPresent } from './fe-assistant-present.mjs';
+import { runLightDark } from './fe-light-dark.mjs';
+import { runBrandMark } from './fe-brand-mark.mjs';
+import { runPriorArt } from './fe-prior-art.mjs';
+import { runArtifactVerified } from './proc-artifact-verified.mjs';
 // The cross-app duplication pass already owns the definition of "the same code":
 // comments stripped, whitespace collapsed, identifiers normalised, keywords kept.
 // This check used to compare raw trimmed lines instead, so the two passes
@@ -1006,6 +1012,56 @@ switch (ruleId) {
     // Exit 2 = infra (network / no dist) — map through so the gate does not
     // treat "cannot reach the network" as a rule violation with no detail.
     await runLgShipped(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
+    break;
+  }
+  case 'fe-search-present': {
+    // Collection views need real TEXT search that narrows — Playwright proof.
+    await runSearchPresent(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
+    break;
+  }
+  case 'proc-artifact-verified': {
+    // Verdict evidence must be real OUTPUT, not a plan/spec/empty file.
+    runArtifactVerified(appDir, { pass, fail, notApplicable, infra: (m) => {
+      if (m) console.error(`infra: ${m}`);
+      process.exit(2);
+    } });
+    break;
+  }
+  case 'fe-assistant-present': {
+    // Apps with domain data ship a model-backed assistant grounded in that data.
+    runAssistantPresent(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'fe-brand-mark': {
+    // Real brand mark + substantive favicon/OG; text-span and emoji marks fail.
+    runBrandMark(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'fe-prior-art': {
+    // SOURCES / INTEGRATIONS / COMPETITORS present without unwritten markers.
+    runPriorArt(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'fe-light-dark': {
+    // Paint-based: landmark backgrounds must change between themes. Exit 2 =
+    // infra (no playwright / no dist) — map through like lg-shipped.
+    await runLightDark(appDir, {
       pass,
       fail,
       notApplicable,

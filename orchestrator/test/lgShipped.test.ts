@@ -286,6 +286,84 @@ describe('lg-shipped known-answer failures', () => {
     expect(output).toMatch(/does not match|REMOTEHASH|LOCALHASH/i);
   }, 60_000);
 
+  it('FAILS when repo+push+URL+hash hold but the gate result is missing', async () => {
+    // The hole this step closes: an app looked "shipped" on deploy proof alone
+    // while it was never measured. Shipping an unmeasured app must FAIL.
+    const app = makeAppDir();
+    initRepo(app);
+    writeWrangler(app);
+    writeLocalDist(app, 'index-SHIPPED.js');
+    commitFile(app, 'wrangler.toml', 'name = "example-app"\n', 'chore: init');
+    commitFile(app, 'dist/assets/index-SHIPPED.js', '/* shipped */\n', 'chore: build');
+    markHeadPushedToGitHub(app);
+
+    const server = await serveHtml(
+      '<!doctype html><html><head>' +
+        '<script type="module" src="/assets/index-SHIPPED.js"></script>' +
+        '</head><body></body></html>'
+    );
+    servers.push(server);
+    writeClaims(app, server.base + '/');
+    // No results/<slug>.json anywhere.
+
+    const { status, output } = await runCheckAsync(app);
+    expect(status, output).toBe(1);
+    expect(output).toMatch(/unmeasured|no gate result|finish line|reverify/i);
+  }, 60_000);
+
+  it('FAILS when the gate result records finalScore below threshold', async () => {
+    const app = makeAppDir();
+    initRepo(app);
+    writeWrangler(app);
+    writeLocalDist(app, 'index-SHIPPED.js');
+    commitFile(app, 'wrangler.toml', 'name = "example-app"\n', 'chore: init');
+    commitFile(app, 'dist/assets/index-SHIPPED.js', '/* shipped */\n', 'chore: build');
+    markHeadPushedToGitHub(app);
+
+    const server = await serveHtml(
+      '<!doctype html><html><head>' +
+        '<script type="module" src="/assets/index-SHIPPED.js"></script>' +
+        '</head><body></body></html>'
+    );
+    servers.push(server);
+    writeClaims(app, server.base + '/');
+
+    // Results next to the app root (standalone-app layout).
+    const slug = app.split(/[/\\]/).pop() ?? 'example';
+    mkdirSync(join(app, 'results'), { recursive: true });
+    writeFileSync(
+      join(app, 'results', `${slug}.json`),
+      JSON.stringify({
+        kind: 'results',
+        slug,
+        finalScore: 89,
+        threshold: 90,
+        passed: false,
+        evaluated: 1,
+        total: 1,
+        rules: [{ ruleId: 'u-typing-strict', passed: true }],
+        iterations: [{ index: 1, score: 89, blockers: [] }],
+        deployUrl: null,
+        finishedAt: '2026-08-01T00:00:00.000Z',
+        provenance: {
+          commit: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+          dirty: false,
+          rubricHash: '0'.repeat(64),
+          rubricRuleCount: 68,
+          node: 'v22.0.0',
+          verdictsHash: null,
+          notApplicable: [],
+          generatedAt: '2026-08-01T00:00:00.000Z'
+        }
+      }),
+      'utf8'
+    );
+
+    const { status, output } = await runCheckAsync(app);
+    expect(status, output).toBe(1);
+    expect(output).toMatch(/89|finish line|below|threshold|reverify/i);
+  }, 60_000);
+
   it('FAILS origin that is not a GitHub URL', () => {
     const app = makeAppDir();
     initRepo(app);

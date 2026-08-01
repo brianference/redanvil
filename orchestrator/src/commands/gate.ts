@@ -56,6 +56,22 @@ export const APP_CHECKS: Check[] = [
   det('u-test-feature-audit'),
   det('u-no-placeholders'),
   det('fe-visible-response'),
+  // Every browsable collection must offer real TEXT search that narrows —
+  // proven in Playwright (row counts before/after a known-subset query), not
+  // by grepping for <select> filters. A dead search box is worse than none.
+  {
+    ruleId: 'fe-search-present',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'fe-search-present', '.'],
+    timeoutMs: 300_000
+  },
+  // Every app with queryable domain data ships a Worker-side AI assistant
+  // grounded in that data (not a canned stub, not browser-only inference).
+  det('fe-assistant-present'),
+  // Real brand mark asset + substantive favicon/OG — not a text span or emoji.
+  det('fe-brand-mark'),
+  // SOURCES.md / INTEGRATIONS.md / COMPETITORS.md present and written (not markers).
+  det('fe-prior-art'),
   det('u-integration-scan'),
   det('u-competitor-scan'),
   det('u-typing-scoped-ignores'),
@@ -113,9 +129,20 @@ export const APP_CHECKS: Check[] = [
   // because real gate runs excluded them with --na process.
   det('proc-conventional-commits'),
   det('proc-pr-title-ticket'),
+  // Specs/plans are not deliverables — every verdict must cite real output.
+  det('proc-artifact-verified'),
   // Shipping: GitHub remote, pushed HEAD, live URL, deployed hash matches dist.
   // A green gate on a build that never left the machine is not "done".
-  det('lg-shipped')
+  det('lg-shipped'),
+  // Theme paint: landmark backgrounds must actually change between light and
+  // dark. Attribute-only checks shipped a black hero on a light page.
+  // Needs Playwright + dist; give it a multi-minute budget like runtime parity.
+  {
+    ruleId: 'fe-light-dark',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'fe-light-dark', '.'],
+    timeoutMs: 300_000
+  }
 ];
 export interface GateReport {
   outcomes: Outcome[];

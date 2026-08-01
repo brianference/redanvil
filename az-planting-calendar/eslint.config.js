@@ -10,6 +10,7 @@ export default [
       '**/*.config.*',
       'scripts/**',
       'migrations/**',
+      'design-refs/**',
       'playwright-report/**',
       'test-results/**'
     ]

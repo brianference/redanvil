@@ -1,3 +1,4 @@
+import { LegalPage } from '../components/LegalPage';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { en } from '../i18n/en';
 import './ProsePage.css';
@@ -6,11 +7,11 @@ import './ProsePage.css';
 export function ContactPage() {
   useDocumentMeta(en.meta.contactTitle, en.meta.contactDescription);
   return (
-    <article className="prose shell">
-      <h1>{en.contact.title}</h1>
-      {en.contact.body.map((p) => (
-        <p key={p.slice(0, 48)}>{p}</p>
-      ))}
-    </article>
+    <LegalPage
+      title={en.contact.title}
+      intro={en.contact.intro}
+      updated={en.contact.updated}
+      sections={en.contact.sections}
+    />
   );
 }

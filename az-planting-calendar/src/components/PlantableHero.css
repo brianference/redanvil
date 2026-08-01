@@ -27,14 +27,15 @@
   margin: 0;
   color: var(--hero-text);
   font-size: clamp(1.35rem, 3.2vw, 2rem);
-  max-width: 22ch;
+  /* Reading measure via line length preference only on narrow titles — shell stays full width. */
+  max-width: min(28ch, 100%);
   line-height: 1.15;
 }
 
 .hero__subtitle {
   margin: 0;
   color: var(--hero-muted);
-  max-width: 62ch;
+  max-width: min(70ch, 100%);
   font-size: var(--type-sm);
   line-height: 1.4;
 }
@@ -56,10 +57,17 @@
 .hero__date-input {
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid var(--hero-input-border);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--hero-input-bg);
   color: var(--hero-text);
+}
+
+:root[data-theme='light'] .hero__date-input {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] .hero__date-input {
   color-scheme: dark;
 }
 
@@ -70,8 +78,8 @@
   font-size: var(--type-sm);
   color: var(--hero-muted);
   padding: var(--space-2) 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--hero-border);
+  border-bottom: 1px solid var(--hero-border);
 }
 
 .hero__meta strong {
@@ -130,9 +138,9 @@
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-3);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--hero-card-border);
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--hero-card-bg);
   min-height: 0;
 }
 
@@ -175,7 +183,7 @@
   color: var(--hero-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 12px;
+  font-size: var(--type-sm);
   font-weight: 600;
   margin-right: var(--space-1);
 }
@@ -193,7 +201,7 @@
   font-weight: 600;
   color: var(--hero-text);
   text-decoration: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--hero-border);
   padding-top: var(--space-2);
 }
 
@@ -201,15 +209,15 @@
   color: var(--accent);
 }
 
-/* Method chips on dark hero: light greens/ambers for AA on hero-bg */
+/* Method chips track hero tokens so light/dark both stay readable */
 .hero .method-chip--seed {
   color: var(--hero-seed);
-  background: rgba(94, 233, 168, 0.12);
+  background: var(--hero-chip-seed-bg);
   border-color: var(--hero-seed);
 }
 
 .hero .method-chip--transplant {
   color: var(--hero-transplant);
-  background: rgba(245, 192, 122, 0.12);
+  background: var(--hero-chip-transplant-bg);
   border-color: var(--hero-transplant);
 }

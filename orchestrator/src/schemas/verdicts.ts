@@ -66,7 +66,7 @@ const DESIGN_AUDIT_RULE_IDS: ReadonlySet<string> = new Set([
   'fe-no-attribution',
   'fe-cross-link',
   'fe-seo-og',
-  'fe-light-dark',
+  // fe-light-dark is det (paint-measured) and no longer design-audit-backed.
   'fe-required-pages',
   'fe-visual-review-recorded',
   'fe-cold-visitor',

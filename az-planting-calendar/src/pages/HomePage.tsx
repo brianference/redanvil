@@ -20,7 +20,8 @@ export function HomePage() {
   const [filters, setFilters] = useState<FiltersState>(() => ({
     method: parseMethod(searchParams.get('method')),
     month: parseMonth(searchParams.get('month')),
-    date: parseDateParam(searchParams.get('date')) ?? todayIso()
+    date: parseDateParam(searchParams.get('date')) ?? todayIso(),
+    q: searchParams.get('q') ?? ''
   }));
 
   const [plantable, setPlantable] = useState<PlantableResponse | null>(null);
@@ -106,12 +107,24 @@ export function HomePage() {
     if (filters.date) next.set('date', filters.date);
     if (filters.method) next.set('method', filters.method);
     if (filters.month !== '') next.set('month', String(filters.month));
+    if (filters.q.trim()) next.set('q', filters.q.trim());
     const current = searchParams.toString();
     const upcoming = next.toString();
     if (current !== upcoming) {
       setSearchParams(next, { replace: true });
     }
   }, [filters, searchParams, setSearchParams]);
+
+  /** Narrow grid rows by crop name when the search box has text. */
+  const filteredGrid = useMemo(() => {
+    if (!grid) return null;
+    const needle = filters.q.trim().toLowerCase();
+    if (!needle) return grid;
+    return {
+      ...grid,
+      crops: grid.crops.filter((row) => row.crop.name.toLowerCase().includes(needle))
+    };
+  }, [grid, filters.q]);
 
   return (
     <div className="home">
@@ -126,7 +139,7 @@ export function HomePage() {
       <div className="home__below shell">
         <Filters value={filters} onChange={setFilters} showDate={false} />
       </div>
-      <YearGrid data={grid} loading={gridLoading} error={gridError} />
+      <YearGrid data={filteredGrid} loading={gridLoading} error={gridError} />
     </div>
   );
 }

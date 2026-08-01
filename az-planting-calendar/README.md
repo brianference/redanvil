@@ -54,6 +54,6 @@ npx wrangler pages dev dist --port 8788 --ip 127.0.0.1
 | GET | `/api/health` | `{ "status": "ok" }` |
 | GET | `/api/plantable?date=YYYY-MM-DD&method=S\|T` | Crops plantable in that half-month |
 | GET | `/api/grid?method=&month=` | Full-year S/T grid |
-| GET | `/api/crops` | Crop list |
+| GET | `/api/crops?q=` | Crop list (optional name search) |
 | GET | `/api/crops/:id` | Crop detail + citations |
 | GET | `/api/zone` | Default zone metadata |

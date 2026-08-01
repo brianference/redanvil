@@ -27,6 +27,35 @@ describe('buildFeatureSuggestions', () => {
   });
 });
 
+describe('buildFeatures standard features', () => {
+  it('always emits Search and filter + Ask the assistant as MVP', () => {
+    const features = buildFeatures(['Crop'], false, 'planting calendar for low desert');
+    const search = features.find((f) => f.name.startsWith('Search and filter '));
+    const assistant = features.find((f) => f.name.startsWith('Ask the assistant about '));
+    expect(search, 'missing Search and filter feature').toBeDefined();
+    expect(assistant, 'missing Ask the assistant feature').toBeDefined();
+    expect(search!.mvp).toBe(true);
+    expect(assistant!.mvp).toBe(true);
+    expect(search!.acceptance.some((a) => /GIVEN/.test(a) && /WHEN/.test(a) && /THEN/.test(a))).toBe(
+      true
+    );
+    expect(
+      assistant!.acceptance.some((a) => /grounded in app data|app data/i.test(a))
+    ).toBe(true);
+    expect(
+      assistant!.acceptance.some((a) => /error state|502|model call fails/i.test(a))
+    ).toBe(true);
+    expect(search!.tests.e2e.length).toBeGreaterThan(0);
+    expect(assistant!.tests.integration.some((t) => /\/api\/assistant/.test(t))).toBe(true);
+  });
+
+  it('emits standard features even when entities are empty', () => {
+    const features = buildFeatures([], false, 'a simple utility');
+    expect(features.some((f) => f.name.startsWith('Search and filter '))).toBe(true);
+    expect(features.some((f) => f.name.startsWith('Ask the assistant about '))).toBe(true);
+  });
+});
+
 describe('filterFeaturesBySelection', () => {
   it('returns all features when selection is null (legacy)', () => {
     const all = buildFeatures(['Trip'], true);

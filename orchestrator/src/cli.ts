@@ -15,6 +15,7 @@ import { gitChangeProbe } from './gate/freshness';
 import type { StaleVerdict } from './gate/freshness';
 import { indexOutcomes } from './gate/score';
 import { runLoopCommand } from './commands/loop';
+import { isDone } from './gate/done';
 
 /** Shared CLI flags used by both `gate` and `loop`. */
 interface SharedRunFlags {
@@ -316,12 +317,30 @@ async function main(): Promise<number> {
           `the score is measured against too little of the rubric to mean anything`
       );
     }
-    const verdict = report.score >= threshold && !coverageShort ? 'PASS' : 'FAIL';
+    const rules = [...indexOutcomes(report.outcomes)].map(([ruleId, passed]) => ({
+      ruleId,
+      passed
+    }));
+    // One definition of done — score alone is not finished.
+    const done = isDone(
+      { finalScore: report.score, threshold, rules },
+      { evidenceStale: staleVerdicts.length > 0 }
+    );
+    const scoreOk = report.score >= threshold && !coverageShort;
+    const finishOk = done.done && !coverageShort;
+    const verdict = finishOk ? 'PASS' : 'FAIL';
+    // Surface isDone separately so a green score with a missing ship proof is obvious.
     console.log(
       `gate: ${verdict} — score ${report.score}/100 (threshold ${threshold}), ` +
         `evaluated ${report.evaluated}/${report.total} rules, ` +
         `coverage ${report.coverage}% of the full rubric` +
-        (report.notApplicable.length > 0 ? ` (n/a: ${report.notApplicable.join(', ')})` : '')
+        (report.notApplicable.length > 0 ? ` (n/a: ${report.notApplicable.join(', ')})` : '') +
+        (scoreOk && !done.done ? ' [score cleared but isDone did not]' : '')
+    );
+    console.log(
+      done.done
+        ? 'gate: isDone = true (score, zero failures, tests, coverage, lg-shipped)'
+        : `gate: isDone = false — ${done.reasons.join('; ')}`
     );
     for (const o of report.outcomes) console.log(`  ${o.passed ? 'PASS' : 'FAIL'}  ${o.ruleId}`);
     if (report.blockersFailed.length > 0) {
@@ -337,10 +356,12 @@ async function main(): Promise<number> {
         slug: values.slug,
         finalScore: report.score,
         threshold,
+        // Result `passed` stays score-based for schema compatibility; isDone is
+        // the finish line and is printed above / enforced by meets_the_bar.
         passed: report.score >= threshold,
         evaluated: report.evaluated,
         total: report.total,
-        rules: [...indexOutcomes(report.outcomes)].map(([ruleId, passed]) => ({ ruleId, passed })),
+        rules,
         iterations: [{ index: 1, score: report.score, blockers: report.blockersFailed }],
         deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
         verdictsRaw,
@@ -348,7 +369,11 @@ async function main(): Promise<number> {
         notApplicable
       });
     }
-    return report.score >= threshold ? 0 : 1;
+    // Exit non-zero when score fails OR when the finish line (isDone) fails.
+    if (coverageShort) return 1;
+    if (report.score < threshold) return 1;
+    if (!done.done) return 1;
+    return 0;
   }
 
   if (command === 'loop') {
@@ -372,7 +397,7 @@ async function main(): Promise<number> {
     reportStaleVerdicts(staleVerdicts);
     const maxIters = typeof values['max-iters'] === 'string' ? Number(values['max-iters']) : 5;
 
-    const { loop: result, final } = await runLoopCommand({
+    const run = await runLoopCommand({
       dir,
       specPath: values.spec,
       threshold,
@@ -386,15 +411,33 @@ async function main(): Promise<number> {
       // and only after the COMMIT (not the tree) builds in isolation.
       promote: values.promote === true
     });
+    const { loop: result, final } = run;
 
+    const loopRules = [...indexOutcomes(final.outcomes)].map(([ruleId, passed]) => ({
+      ruleId,
+      passed
+    }));
+    const loopDone = isDone(
+      { finalScore: result.finalScore, threshold, rules: loopRules },
+      {
+        evidenceStale: staleVerdicts.length > 0,
+        independentReviewOk: run.independentReviewOk
+      }
+    );
     console.log(
-      `loop: ${result.passed ? 'PASS' : 'FAIL'} — ${result.finalScore}/100 after ${result.iterations} iteration(s)`
+      `loop: ${result.passed && loopDone.done ? 'PASS' : 'FAIL'} — ${result.finalScore}/100 after ${result.iterations} iteration(s)`
+    );
+    console.log(
+      loopDone.done
+        ? 'loop: isDone = true'
+        : `loop: isDone = false — ${loopDone.reasons.join('; ')}`
     );
     for (const r of result.records) {
       const blockers = r.blockers.length > 0 ? ` blockers: ${r.blockers.join(', ')}` : '';
       console.log(`  iteration ${r.index}: ${r.score}/100${blockers}`);
     }
     if (result.promise !== null) console.log(result.promise);
+    console.log(`loop: independent review — ${run.independentReviewSummary}`);
 
     if (typeof values.out === 'string' && typeof values.slug === 'string') {
       // `records` is the loop's own measurement of every pass, which is what
@@ -403,10 +446,10 @@ async function main(): Promise<number> {
         slug: values.slug,
         finalScore: result.finalScore,
         threshold,
-        passed: result.passed,
+        passed: result.passed && loopDone.done,
         evaluated: final.evaluated,
         total: final.total,
-        rules: [...indexOutcomes(final.outcomes)].map(([ruleId, passed]) => ({ ruleId, passed })),
+        rules: loopRules,
         iterations: result.records,
         deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
         verdictsRaw,
@@ -414,7 +457,7 @@ async function main(): Promise<number> {
         notApplicable
       });
     }
-    return result.passed ? 0 : 1;
+    return result.passed && loopDone.done ? 0 : 1;
   }
 
   console.error('usage: redanvil <validate|rubric|scaffold|gate|loop> [args]');

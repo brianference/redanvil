@@ -1,6 +1,16 @@
+/* Full-width shell; reading measure comes from column count, never a starved container. */
 .prose {
+  width: 100%;
   padding-block: var(--space-6);
-  max-width: 72ch;
+}
+
+.prose__header {
+  width: 100%;
+  margin-bottom: var(--space-5);
+  padding: var(--space-5);
+  border: var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 
 .prose h1 {
@@ -8,12 +18,74 @@
 }
 
 .prose h2 {
-  margin-top: var(--space-5);
+  margin-top: 0;
   margin-bottom: var(--space-3);
+  font-size: var(--type-xl);
 }
 
-.prose p {
+.prose p,
+.prose li {
   color: var(--text);
+  font-size: var(--type-md);
+  overflow-wrap: anywhere;
+}
+
+.prose__intro {
+  margin-bottom: var(--space-3);
+  max-width: 72ch;
+}
+
+.prose__updated {
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+/* Multi-column section cards: fills desktop width while each card stays readable. */
+.prose__sections {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+.prose__section {
+  margin: 0;
+  padding: var(--space-4);
+  border: var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  min-width: 0;
+}
+
+.prose__section p:last-child {
+  margin-bottom: 0;
+}
+
+.prose ul {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+}
+
+.prose__after {
+  width: 100%;
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  border: var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+@media (min-width: 900px) {
+  .prose__sections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+}
+
+@media (min-width: 1400px) {
+  .prose__sections {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .prose__back {
@@ -43,7 +115,7 @@
 }
 
 .detail-meta dt {
-  font-size: 11px;
+  font-size: var(--type-sm);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-faint);
@@ -91,7 +163,7 @@
 .window-card__cite-label {
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 11px;
+  font-size: var(--type-sm);
   color: var(--text-faint);
 }
 

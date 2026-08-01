@@ -6,6 +6,8 @@ export interface FiltersState {
   method: Method | '';
   month: number | '';
   date: string;
+  /** Crop name search fragment for the year grid. */
+  q: string;
 }
 
 interface FiltersProps {
@@ -15,7 +17,7 @@ interface FiltersProps {
 }
 
 /**
- * Method + month (+ optional date) filters for plantable list and grid.
+ * Method + month + crop search (+ optional date) filters for plantable list and grid.
  */
 export function Filters({ value, onChange, showDate = true }: FiltersProps) {
   return (
@@ -34,6 +36,20 @@ export function Filters({ value, onChange, showDate = true }: FiltersProps) {
             />
           </label>
         ) : null}
+        <label className="filters__field filters__field--search">
+          <span className="filters__label">{en.filters.search}</span>
+          <input
+            id="crop-search"
+            type="search"
+            name="search"
+            className="filters__control"
+            value={value.q}
+            onChange={(e) => onChange({ ...value, q: e.target.value })}
+            placeholder={en.filters.searchPlaceholder}
+            autoComplete="off"
+            data-testid="filter-search"
+          />
+        </label>
         <label className="filters__field">
           <span className="filters__label">{en.filters.method}</span>
           <select
@@ -77,7 +93,7 @@ export function Filters({ value, onChange, showDate = true }: FiltersProps) {
         <button
           type="button"
           className="filters__clear"
-          onClick={() => onChange({ method: '', month: '', date: value.date })}
+          onClick={() => onChange({ method: '', month: '', date: value.date, q: '' })}
           data-testid="filter-clear"
         >
           {en.filters.clear}

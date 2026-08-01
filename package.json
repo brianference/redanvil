@@ -12,6 +12,7 @@
     "az-planting-calendar"
   ],
   "scripts": {
+    "prepare": "node scripts/install-hooks.mjs",
     "typecheck": "tsc -p orchestrator/tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "format:check": "prettier --check .",
@@ -20,7 +21,8 @@
     "api-judge": "tsx orchestrator/src/cli.ts api-judge",
     "loop": "tsx orchestrator/src/cli.ts loop",
     "rubric": "tsx orchestrator/src/cli.ts rubric",
-    "reverify": "node .github/scripts/reverify.mjs"
+    "reverify": "node .github/scripts/reverify.mjs",
+    "meets-the-bar": "node .github/scripts/meets_the_bar.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

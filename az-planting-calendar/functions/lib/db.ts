@@ -102,23 +102,47 @@ export async function getWindowsForHalf(
 
 /**
  * All crops ordered by name, with window counts.
+ * When `q` is provided, filters to crop names that contain the query
+ * (case-insensitive), using a parameterized LIKE bind.
  *
  * @param db - D1 binding.
+ * @param q - Optional name search fragment (already trimmed by the caller).
  */
 export async function listCrops(
-  db: D1Database
+  db: D1Database,
+  q?: string
 ): Promise<Array<CropRow & { window_count: number }>> {
-  const result = await db
-    .prepare(
-      `SELECT c.id, c.name, c.days_to_harvest_min, c.days_to_harvest_max, c.notes,
+  const nameFilter = q !== undefined && q.length > 0;
+  // SQLite LIKE is case-insensitive for ASCII; ESCAPE keeps user %/_ literal.
+  const sql = nameFilter
+    ? `SELECT c.id, c.name, c.days_to_harvest_min, c.days_to_harvest_max, c.notes,
+              COUNT(pw.id) AS window_count
+       FROM crops c
+       LEFT JOIN planting_windows pw ON pw.crop_id = c.id
+       WHERE c.name LIKE ? ESCAPE '\\'
+       GROUP BY c.id
+       ORDER BY c.name COLLATE NOCASE`
+    : `SELECT c.id, c.name, c.days_to_harvest_min, c.days_to_harvest_max, c.notes,
               COUNT(pw.id) AS window_count
        FROM crops c
        LEFT JOIN planting_windows pw ON pw.crop_id = c.id
        GROUP BY c.id
-       ORDER BY c.name COLLATE NOCASE`
-    )
-    .all<CropRow & { window_count: number }>();
+       ORDER BY c.name COLLATE NOCASE`;
+
+  const stmt = db.prepare(sql);
+  const result = nameFilter
+    ? await stmt.bind(`%${escapeLike(q)}%`).all<CropRow & { window_count: number }>()
+    : await stmt.all<CropRow & { window_count: number }>();
   return result.results ?? [];
+}
+
+/**
+ * Escape LIKE wildcards in a user search fragment so % and _ are literal.
+ *
+ * @param value - Raw search text (not including surrounding %).
+ */
+export function escapeLike(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
 }
 
 /**

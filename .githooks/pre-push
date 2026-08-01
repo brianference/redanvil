@@ -1,0 +1,117 @@
+#!/bin/sh
+# pre-push — refuse a push when any app in the push range is below the finish line.
+#
+# The finish line (defined once in .github/scripts/meets_the_bar.mjs):
+#   gate score >= 90 AND zero failing rules
+#   AND results fresher than the app's newest source commit
+#   AND fail-closed visual verdicts present with evidence not older than the
+#       commit they claim to review
+#
+# Advisory text after deploy was ignored eight times. This hook is the local
+# signal; CI apps-meet-the-bar is the one that cannot be bypassed with --no-verify.
+#
+# Works under Git Bash on Windows (POSIX sh). stdin: <local_ref> <local_sha>
+# <remote_ref> <remote_sha> per line. Empty stdin (manual dry-run) checks ALL apps.
+set -eu
+
+# Resolve the repo root via git — more reliable than parsing $0 under Git Bash
+# on Windows, where $0 may be a Windows path that dirname/cd mishandle.
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {
+  echo "pre-push: not inside a git work tree" >&2
+  exit 1
+}
+cd "$REPO_ROOT" || exit 1
+
+NODE=${NODE:-node}
+CHECKER=".github/scripts/meets_the_bar.mjs"
+if [ ! -f "$CHECKER" ]; then
+  echo "pre-push: missing $CHECKER — cannot enforce the finish line" >&2
+  exit 1
+fi
+
+# Collect changed files across every ref being pushed.
+CHANGED=$(mktemp 2>/dev/null || mktemp -t redanvil-pre-push)
+trap 'rm -f "$CHANGED"' EXIT
+
+HAD_REF=0
+while read -r local_ref local_sha remote_ref remote_sha
+do
+  # Skip branch deletions (local sha all zeros).
+  case "$local_sha" in
+    0*|0000000000000000000000000000000000000000) continue ;;
+  esac
+  HAD_REF=1
+  if [ -z "${remote_sha:-}" ] || [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    git ls-tree -r --name-only "$local_sha" >>"$CHANGED" 2>/dev/null || true
+  else
+    git diff --name-only "$remote_sha" "$local_sha" >>"$CHANGED" 2>/dev/null || true
+  fi
+done
+
+# Fixture override for known-answer demos (tests set this; never set in prod).
+if [ -n "${REDANVIL_MEETS_THE_BAR_RESULT:-}" ] && [ -n "${REDANVIL_MEETS_THE_BAR_SLUG:-}" ]; then
+  echo "pre-push: finish-line fixture check for ${REDANVIL_MEETS_THE_BAR_SLUG}" >&2
+  EXTRA=""
+  if [ -n "${REDANVIL_MEETS_THE_BAR_VERDICTS:-}" ]; then
+    EXTRA="--verdicts ${REDANVIL_MEETS_THE_BAR_VERDICTS}"
+  fi
+  # shellcheck disable=SC2086
+  if ! "$NODE" "$CHECKER" --result "$REDANVIL_MEETS_THE_BAR_RESULT" \
+      --slug "$REDANVIL_MEETS_THE_BAR_SLUG" \
+      --dir "${REDANVIL_MEETS_THE_BAR_DIR:-$REDANVIL_MEETS_THE_BAR_SLUG}" \
+      ${REDANVIL_MEETS_THE_BAR_SKIP_GIT:+--skip-git} \
+      ${REDANVIL_MEETS_THE_BAR_SKIP_VISUAL:+--skip-visual} \
+      ${REDANVIL_MEETS_THE_BAR_SKIP_SCREENSHOTS:+--skip-screenshots} \
+      $EXTRA
+  then
+    echo "pre-push: REFUSED — fixture is below the finish line" >&2
+    exit 1
+  fi
+  exit 0
+fi
+
+# Empty stdin (manual dry-run): check every gated app at HEAD.
+if [ "$HAD_REF" -eq 0 ]; then
+  echo "pre-push: no refs on stdin — checking every gated app against the finish line" >&2
+  if ! "$NODE" "$CHECKER"
+  then
+    echo "pre-push: REFUSED — one or more apps are below the finish line" >&2
+    exit 1
+  fi
+  exit 0
+fi
+
+# Map changed files → affected app slugs via the same APPS list the checker uses.
+AFFECTED=$(
+  REDANVIL_CHANGED_FILE="$CHANGED" "$NODE" --input-type=module -e "
+import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
+import { resolve } from 'node:path';
+const mod = pathToFileURL(resolve('.github/scripts/meets_the_bar.mjs')).href;
+const { appsAffectedByFiles } = await import(mod);
+const files = readFileSync(process.env.REDANVIL_CHANGED_FILE, 'utf8').split(/\r?\n/).filter(Boolean);
+for (const a of appsAffectedByFiles(files)) console.log(a.slug);
+" 2>/dev/null || true
+)
+
+if [ -z "${AFFECTED:-}" ]; then
+  echo "pre-push: no gated app paths in push range — finish-line check skipped for apps" >&2
+  exit 0
+fi
+
+FAILED=0
+for slug in $AFFECTED
+do
+  echo "pre-push: finish-line check for $slug" >&2
+  if ! "$NODE" "$CHECKER" --app "$slug"
+  then
+    FAILED=1
+  fi
+done
+
+if [ "$FAILED" -ne 0 ]; then
+  echo "pre-push: REFUSED — fix with: node .github/scripts/reverify.mjs --app <slug>" >&2
+  exit 1
+fi
+
+exit 0

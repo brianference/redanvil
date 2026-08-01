@@ -148,9 +148,10 @@ describe('RunResultSchema coherence', () => {
 describe('parseVerdicts method-match (F4)', () => {
   it('rejects a visual rule supplied as a judge verdict', async () => {
     const { parseVerdicts } = await import('../src/schemas/verdicts');
+    // fe-premium-nav is still method:visual; fe-light-dark became det (paint check).
     const v = JSON.stringify([
       {
-        ruleId: 'fe-light-dark',
+        ruleId: 'fe-premium-nav',
         passed: true,
         method: 'judge',
         evidence: ['README.md'],

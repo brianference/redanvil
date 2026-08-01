@@ -131,12 +131,48 @@ try {
     console.log(`not applicable: ${naRules.join(', ')}`);
   }
   console.log('visual and judge rules are NOT covered here: they need a rendered review.');
+
+  // A scaffold that produces a passing empty app is the whole problem.
+  // Prior-art docs ship with unwritten markers on purpose — these rules MUST
+  // fail until they are filled in. Run before the temp dir is deleted.
+  const EXPECTED_FAIL = ['fe-prior-art', 'u-integration-scan', 'u-competitor-scan'];
+  let expectedFailMissing = 0;
+  for (const rule of EXPECTED_FAIL) {
+    const r = run('node', [CHECK, rule, appDir], REPO);
+    if (r.code === 0 || r.code === 3) {
+      expectedFailMissing += 1;
+      console.error(
+        `  FAIL expected ${rule} to fail on a fresh scaffold (unwritten markers), got exit ${r.code}`
+      );
+    } else {
+      console.log(`  ok   ${rule} fails as required on unwritten scaffold docs`);
+    }
+  }
+  if (expectedFailMissing > 0) {
+    console.error(
+      `\nscaffold gate FAIL: ${expectedFailMissing} rule(s) did not fail on unwritten scaffold docs — ` +
+        'an empty app must not clear the gate'
+    );
+    process.exit(1);
+  }
+
+  // Tooling (tsc/eslint/vitest/build) must clear. Expected prior-art fails are fine.
+  let toolingFailed = 0;
+  for (const [rule, cmd, args] of TOOLS) {
+    const r = run(cmd, args, appDir);
+    if (r.code !== 0) {
+      toolingFailed += 1;
+      console.error(`  tooling still FAIL: ${rule}`);
+    }
+  }
+  if (toolingFailed > 0) {
+    console.error(`\nscaffold gate FAIL: ${toolingFailed} tooling check(s) failed`);
+    process.exit(1);
+  }
+
+  console.log(
+    '\nscaffold gate PASS: tooling works, and unwritten prior-art docs correctly fail the gate'
+  );
 } finally {
   if (!KEEP) rmSync(root, { recursive: true, force: true });
 }
-
-if (failed > 0) {
-  console.error(`\nscaffold gate FAIL: ${failed} check(s) failed on a freshly generated app`);
-  process.exit(1);
-}
-console.log('\nscaffold gate PASS: a freshly generated app clears every deterministic rule');

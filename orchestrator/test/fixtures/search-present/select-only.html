@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Select-only filters (not text search)</title>
+  </head>
+  <body>
+    <main>
+      <h1>Planting calendar</h1>
+      <section aria-label="Filters">
+        <label>
+          Method
+          <select aria-label="Method">
+            <option value="">All methods</option>
+            <option value="S">Seed</option>
+            <option value="T">Transplant</option>
+          </select>
+        </label>
+        <label>
+          Month
+          <select aria-label="Month">
+            <option value="">All months</option>
+            <option value="1">January</option>
+            <option value="2">February</option>
+          </select>
+        </label>
+      </section>
+      <ul data-testid="results-list">
+        <li>Tomato</li>
+        <li>Basil</li>
+        <li>Carrot</li>
+        <li>Cabbage</li>
+        <li>Pepper</li>
+        <li>Pumpkin</li>
+        <li>Spinach</li>
+        <li>Onion</li>
+      </ul>
+    </main>
+  </body>
+</html>

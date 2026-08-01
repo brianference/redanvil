@@ -391,6 +391,30 @@ describe('evaluatePrdSelfCheck', () => {
     expect(placeholder?.pass).toBe(false);
     expect(result.passed).toBeLessThan(result.total);
   });
+
+  it('cannot score 100% when Search or Assistant standard features are missing', () => {
+    const full = evaluatePrdSelfCheck(prd.markdown, {
+      entities: ['trips', 'drivers'],
+      hasDomainTables: true,
+      prompt: prd.prompt
+    });
+    expect(full.percent).toBe(100);
+    expect(full.items.find((i) => i.id === 'search-feature')?.pass).toBe(true);
+    expect(full.items.find((i) => i.id === 'assistant-feature')?.pass).toBe(true);
+
+    const stripped = prd.markdown
+      .replace(/### F\d+ — Search and filter[\s\S]*?(?=### F\d+ —|## \d+\.)/g, '')
+      .replace(/### F\d+ — Ask the assistant about[\s\S]*?(?=### F\d+ —|## \d+\.)/g, '');
+    const without14 = stripped.split('## 14. PRD Self-Check')[0] + '## 14. PRD Self-Check\n';
+    const result = evaluatePrdSelfCheck(without14, {
+      entities: ['trips', 'drivers'],
+      hasDomainTables: true,
+      prompt: prd.prompt
+    });
+    expect(result.items.find((i) => i.id === 'search-feature')?.pass).toBe(false);
+    expect(result.items.find((i) => i.id === 'assistant-feature')?.pass).toBe(false);
+    expect(result.percent).toBeLessThan(100);
+  });
 });
 
 describe('generatePrd sample: dog care reminders', () => {

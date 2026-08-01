@@ -1,6 +1,14 @@
 /**
  * All user-facing copy for AZ Planting Calendar (English).
+ * Legal pages are structured sections so Terms/Privacy stay real documents.
  */
+
+export interface LegalSectionCopy {
+  heading: string;
+  body: string;
+  items?: readonly string[];
+}
+
 export const en = {
   appName: 'AZ Planting Calendar',
   appTagline: 'Low desert · Cave Creek 85331',
@@ -15,6 +23,8 @@ export const en = {
     themeSystem: 'System',
     themeLight: 'Light',
     themeDark: 'Dark',
+    /** Accessible name for the header theme control (includes current mode). */
+    themeToggleAria: (modeLabel: string) => `Theme: ${modeLabel}. Click to switch light, dark, or system.`,
     skipToContent: 'Skip to content'
   },
 
@@ -46,6 +56,8 @@ export const en = {
     month: 'Month',
     monthAll: 'All months',
     date: 'Date (for plantable now)',
+    search: 'Search crops',
+    searchPlaceholder: 'Find a crop by name',
     clear: 'Clear filters',
     months: [
       'January',
@@ -104,50 +116,279 @@ export const en = {
   about: {
     title: 'About this calendar',
     description:
-      'Why this app exists, which zone it covers, and how planting windows are sourced.',
-    body: [
-      'AZ Planting Calendar answers one question for Arizona low-desert home gardeners: what can I plant right now, and as seed or transplant?',
-      'The default zone is Cave Creek, Arizona 85331 (Maricopa County low desert). Planting windows come from the University of Arizona Cooperative Extension publication “Vegetable Planting Calendar for Maricopa County” (az1005, Kai Umeda), read from the HTML table that labels each half-month in text (Jan. 1 through Dec. 15).',
-      'We never invent or estimate a planting date. If a crop is not on a citable source for this zone, it is omitted. A missing crop is better than a wrong one.',
-      'Half-months are the 24 periods used by the Extension calendar: early and late halves of each month (days 1–14 and 15–end).',
-      'Frost dates shown for Cave Creek are approximate planning aids from public frost-date references and are not a substitute for local weather.'
-    ]
+      'Why this app exists, which zone it covers, and how planting windows are sourced from University of Arizona Extension.',
+    updated: 'Last updated 1 August 2026',
+    intro:
+      'AZ Planting Calendar is a free, public web tool for Arizona low-desert home gardeners. It answers one practical question: what can I plant right now in the Cave Creek area, as seed or as transplant, using half-month windows from a published University of Arizona Cooperative Extension calendar—not invented dates.',
+    sections: [
+      {
+        heading: 'What the app does',
+        body: 'The home page opens on a “plantable now” view for a chosen calendar date. That date maps to one of twenty-four half-months used by the Extension table (early and late halves of each month). Crops with an active seed or transplant window for that half-month appear first, with method chips and a path into crop detail. Below the fold, a full-year grid lists crops down the side and the twenty-four half-months across, so you can scan an entire season without guessing from a monthly list alone.'
+      },
+      {
+        heading: 'Default zone: Cave Creek, Arizona 85331',
+        body: 'The default planning zone is Cave Creek in Maricopa County (ZIP 85331), on the northern edge of the Phoenix low desert. The planting windows themselves come from county-level Maricopa guidance, not a custom microclimate model for every hillside. Cave Creek sits higher than central Phoenix, so the same published county windows can run early or late relative to your yard. Frost date fields shown with the zone are approximate planning aids from public frost-date references; they are not a substitute for local weather, soil, or water rules.'
+      },
+      {
+        heading: 'Where the planting data comes from',
+        body: 'Crop names, seed versus transplant methods, and half-month windows are transcribed from the University of Arizona Cooperative Extension publication “Vegetable Planting Calendar for Maricopa County” (publication az1005, Kai Umeda). The seed dataset ships forty-five crops whose marker sequences were verified character-for-character against the az1005 PDF text stream. The app does not invent or interpolate a planting date when the source is silent. Each window carries source metadata so you can open the publisher page and verify the table yourself. This project is not affiliated with, endorsed by, or sponsored by the University of Arizona or Maricopa County.'
+      },
+      {
+        heading: 'Crops deliberately excluded',
+        body: 'Eight crops that appear in some draft or partial parses of the calendar were deliberately left out of the shipped database because their planting-marker sequences could not be verified against the published az1005 text (or the crop name was not found in the source PDF). A missing crop is better than a wrong one. Gardeners should not assume those crops are unsuitable for the low desert—only that this app will not invent windows for them until a character-verified sequence is available. The excluded names are:',
+        items: [
+          'Basil',
+          'Broccoli',
+          'Brussel Sprouts',
+          'Cabbage',
+          'Cabbage, Chinese',
+          'Kohlrabi',
+          'Melons, Cantaloupe/Honeydews, etc.',
+          'Onions, Green'
+        ]
+      },
+      {
+        heading: 'How half-months work',
+        body: 'The Extension calendar labels columns as early and late halves of each month (for example Jan. 1 and Jan. 15 through Dec. 15). This app uses the same twenty-four indices: days 1–14 of a month map to the early half; day 15 through the end of the month map to the late half. Optional filters let you view seed only, transplant only, or narrow the year grid to a calendar month. A search field on the crop grid narrows visible rows by crop name. An optional date query in the URL sets the “as of” day for plantable-now results so a shared link opens the same half-month view.'
+      },
+      {
+        heading: 'What this is not',
+        body: 'This is not professional agricultural consulting, not a soil lab, not irrigation design, and not a pest or disease diagnosis tool. It is not affiliated with the University of Arizona, the Cooperative Extension system, or Maricopa County. University branding appears only as citation of a public educational publication. Garden outcomes still depend on weather, soil, water quality and quantity, seed quality, and care. Always check the original publication and your microclimate before planting.'
+      },
+      {
+        heading: 'How the site is built',
+        body: 'The interface is a static single-page application hosted on Cloudflare Pages. Planting data for the app is served from Cloudflare Pages Functions backed by a Cloudflare D1 database that holds crops, planting windows, sources, and the default zone record. There are no user accounts and no visitor profiles in that database. The public JSON APIs expose plantable crops, the year grid, crop detail, crop list with optional name search, zone metadata, and a health check for operators.'
+      },
+      {
+        heading: 'Honesty about limits',
+        body: 'County tables cannot encode every microclimate, shade pattern, or HOA water rule. Cave Creek sits higher than central Phoenix, so local timing for a given half-month can run early relative to the county table—treat windows as planning ranges, not guarantees for your yard. Heat is the hard bound for much of the low desert, not only frost. When the source table is coarse, the app stays coarse rather than fabricating precision. If you find a wrong window or a broken citation link, use the Contact page and include the crop name, the half-month you expected, and a URL to the publication you are citing.'
+      }
+    ] as const satisfies readonly LegalSectionCopy[]
   },
 
   terms: {
     title: 'Terms of use',
-    description: 'Terms for using the AZ Planting Calendar web app.',
-    body: [
-      'This app is a free planning tool for personal home gardening. It is not professional agricultural advice, and it is not a substitute for local conditions, soil tests, water rules, or pest pressure.',
-      'Planting windows are reproduced from cited public Extension materials for informational purposes. Always verify against the original publication and your microclimate before planting.',
-      'You may use the app for personal, non-commercial garden planning. Do not scrape the API for bulk redistribution of third-party content without checking the source publisher’s terms.',
-      'The service is provided as-is, without warranty of fitness for a particular crop or season. Garden outcomes depend on weather, soil, water, and care.',
-      'We may change or discontinue the app at any time. Continued use after changes means you accept the updated terms.'
-    ]
+    description:
+      'Terms for using the AZ Planting Calendar web app: planning tool only, sourced Extension data, no accounts, no warranties for garden outcomes.',
+    updated: 'Last updated 1 August 2026',
+    intro:
+      'These terms govern use of the AZ Planting Calendar website and its public JSON API (the “Service”), a free planning tool for Arizona low-desert home gardening focused on Cave Creek, Arizona 85331. By loading the site, following its routes, or calling its API, you agree to these terms. If you do not agree, do not use the Service. There are no paid plans and no user accounts on this product.',
+    sections: [
+      {
+        heading: 'Acceptance and eligibility',
+        body: 'You must be able to form a binding agreement under the laws that apply to you. If you use the Service on behalf of an organization, you confirm you are allowed to accept these terms for that organization. There is no registration step, no sign-in, and no age-gated account flow because the product does not create accounts. Loading pages, changing filters, opening crop detail, or requesting /api routes is acceptance of these terms for that use. If you cannot accept them, leave the site and stop calling the API.'
+      },
+      {
+        heading: 'What the service is',
+        body: 'AZ Planting Calendar is an informational web application that shows which vegetable crops are listed as plantable (by seed or by transplant) in a given half-month for the default Maricopa County low-desert zone represented in the dataset, with Cave Creek 85331 as the default planning context. The home page presents a plantable-now list driven by a calendar date, a full-year half-month grid, filters for method and month, and crop detail pages that include days-to-harvest ranges when present in the seed data and citations to the source publication. The Service also exposes read-only JSON endpoints under /api for plantable crops, grid data, crop detail, zone metadata, and health. The Service does not sell seeds, take orders, book landscaping labor, manage irrigation hardware, or provide live weather forecasts.'
+      },
+      {
+        heading: 'No accounts and no paid product',
+        body: 'The Service does not offer registration, login, passwords, session cookies for identity, OAuth, social sign-in, billing, or subscription tiers. There is no user profile table for visitors and no authenticated write path for planting data through this UI. Because there are no accounts, there is nothing to close when you stop visiting; residual state is limited to what your browser keeps (for example a theme preference in localStorage) and optional filter or date parameters you place in a URL you share.'
+      },
+      {
+        heading: 'Central disclaimer — garden planning, not professional advice',
+        body: 'Planting windows, method labels (seed versus transplant), days-to-harvest ranges, frost date fields, and zone labels are planning aids derived from published public materials and approximate frost references. They are not a warranty that a crop will germinate, survive summer heat, avoid frost, meet HOA rules, or produce a harvest on any schedule. They are not a substitute for local Extension agents, licensed professionals, soil tests, water-quality tests, or on-site observation. The windows are county-level Maricopa low-desert guidance, not a site-specific prescription for every elevation or microclimate. Cave Creek sits higher than central Phoenix, so local timing often runs early relative to the published county table; heat and frost can arrive on different schedules than the half-month labels imply. County tables cannot encode every microclimate in Cave Creek, Phoenix, or surrounding communities. You remain solely responsible for what you plant, when you plant it, and how you irrigate and care for it.'
+      },
+      {
+        heading: 'Source data, verification limits, and third-party rights',
+        body: 'Crop calendars displayed by the Service are transcribed from the University of Arizona Cooperative Extension publication “Vegetable Planting Calendar for Maricopa County” (az1005, Kai Umeda). The shipped dataset contains forty-five crops with marker sequences verified against the az1005 PDF text stream. Eight crops were deliberately excluded because their sequences could not be verified (Basil; Broccoli; Brussel Sprouts; Cabbage; Cabbage, Chinese; Kohlrabi; Melons, Cantaloupe/Honeydews, etc.; and Onions, Green)—they are not listed as plantable here, and that absence is a known limitation, not proof those crops cannot grow in the low desert. The University of Arizona and Cooperative Extension retain their rights in those publications. This project is not affiliated with, endorsed by, or sponsored by the University of Arizona or Maricopa County. Display of sourced windows for personal planning is not a transfer of ownership in the underlying publication, and it is not permission to scrape, bulk-redistribute, or rebrand third-party content as your own commercial dataset without checking the publisher’s terms and applicable law. App branding, layout, and original code remain with their owners under the repository licence that applies to this project.'
+      },
+      {
+        heading: 'Acceptable use',
+        body: 'Use the Service only for lawful purposes. You agree not to:',
+        items: [
+          'Probe, disrupt, overload, or abuse the hosted site or API in a way that harms availability for others',
+          'Scrape or automate access at a volume or manner that degrades the Service or violates the terms of the host or of the original data publishers',
+          'Misrepresent listed planting windows as a certified agricultural prescription, a government order, or a guarantee of yield',
+          'Attempt to inject, forge, or alter crop or window data through this UI or API (the public surface is read-only by design)',
+          'Use the Service to break the law, harass others, or distribute malware'
+        ]
+      },
+      {
+        heading: 'API and bulk use',
+        body: 'The public JSON API is provided so the same plantable, grid, crop, and zone data that power the UI can be inspected programmatically for personal garden planning and for honest interoperability. Rate limits or edge protections applied by the host (Cloudflare) may block abusive traffic. Bulk redistribution of third-party Extension content, or presentation of API output as an official University of Arizona product, is not authorized by these terms. If you need rights beyond personal planning use, contact the original publisher of the calendar table and respect its licensing and citation requirements.'
+      },
+      {
+        heading: 'Third-party services and outbound links',
+        body: 'The site is hosted on Cloudflare Pages. Data for crops and windows is stored in Cloudflare D1 and read by Pages Functions. Citation links may send you to extension.arizona.edu or other publisher hosts. Those services have their own terms and privacy policies. We are not responsible for third-party content, uptime, security, or practices. Following a citation link leaves this site and is governed by that destination’s rules.'
+      },
+      {
+        heading: 'Disclaimer of warranties',
+        body: 'The Service is provided “as is” and “as available,” without warranties of any kind, express or implied, including merchantability, fitness for a particular purpose, title, and non-infringement. We do not warrant that the transcribed windows match every revision of the publisher’s PDF or HTML table at every moment, that frost dates are exact for your yard, that the API will remain reachable, that filters will always match your mental model of a season, or that any crop will succeed. Some jurisdictions do not allow certain warranty exclusions; in those places, exclusions apply only to the extent permitted.'
+      },
+      {
+        heading: 'Limitation of liability',
+        body: 'To the maximum extent permitted by law, the maintainers of AZ Planting Calendar are not liable for any indirect, incidental, special, consequential, exemplary, or punitive damages, or for lost profits, lost crops, lost data, lost goodwill, business interruption, or substitute services, arising from your use of the Service or reliance on listed windows, frost fields, or citations, whether based on contract, tort, or any other theory. Total liability for any claim relating to this free Service is limited to zero US dollars, because the Service is free and provided without paid consideration. Mandatory rights that cannot be waived in your jurisdiction remain intact.'
+      },
+      {
+        heading: 'Indemnity',
+        body: 'You agree to defend and hold harmless the maintainers from claims, damages, losses, and expenses (including reasonable legal fees) arising from your misuse of the Service, your misrepresentation of listed planting data, damage to plants or property after you plant, or your breach of these terms, to the extent permitted by applicable law.'
+      },
+      {
+        heading: 'Availability and changes to the service',
+        body: 'We may change, suspend, or discontinue the website, the API, the default zone, the seed dataset, or any part of the UI without notice and without liability. Windows may be corrected when a transcription error is found, re-seeded when a source revision is incorporated, or temporarily unavailable when the host or database has a problem. There is no uptime SLA and no paid support commitment. The project is maintained on a best-effort basis for home gardeners.'
+      },
+      {
+        heading: 'Termination',
+        body: 'You may stop using the Service at any time by leaving the site and stopping API calls. Because there are no accounts, there is no account termination step. We may refuse further automated access or shut down endpoints if you violate these terms, if continued operation is unlawful, or if we discontinue the project. Provisions that by their nature should survive (including disclaimers, liability limits, indemnity, and intellectual-property notices) continue after your use ends.'
+      },
+      {
+        heading: 'Changes to these terms',
+        body: 'We may update these terms when the product or legal needs change. The “Last updated” line at the top of this page is how notice is given; we do not operate an email list for term notices. Continued use after the date changes means you accept the new terms for subsequent use. If you do not accept a change, stop using the Service.'
+      },
+      {
+        heading: 'Governing law and disputes',
+        body: 'These terms are conditions of use for a free personal garden-planning project; they are not a substitute for advice from a lawyer in your jurisdiction. Before filing a formal claim, contact the maintainer using the route on the Contact page and allow a reasonable time to respond. Where the law requires a governing jurisdiction to be stated and permits the parties to choose, the laws of the State of Arizona and the United States apply to the extent they govern a personal project of this kind, without creating a fictional company domicile. Mandatory consumer protections in your place of residence that cannot be waived still apply. Nothing here requires you to waive rights you are legally forbidden to waive.'
+      },
+      {
+        heading: 'Contact about these terms',
+        body: 'Questions about these terms: use the Contact page on this site and open a GitHub issue as described there. For privacy-specific requests, say so in the issue title. For security concerns, describe impact without pasting secrets into a public channel when you can avoid it. Data-error reports about a crop window should include the crop name, half-month, and a citation URL as described on Contact.'
+      }
+    ] as const satisfies readonly LegalSectionCopy[]
   },
 
   privacy: {
     title: 'Privacy',
-    description: 'What this app collects and what it does not.',
-    body: [
-      'AZ Planting Calendar does not create user accounts and does not ask for your name, email, or address on the public pages.',
-      'Theme preference (light, dark, or system) is stored in your browser’s localStorage on this device only. We do not sync it to a server.',
-      'Optional date and filter choices may appear in the page URL so you can share a view. They are not stored as a profile.',
-      'This app does not set advertising cookies and does not include third-party ad trackers. Standard web server or edge logs (IP, user agent, path) may be recorded by the host for security and reliability.',
-      'Contact messages you send by email go through your own mail client to the address on the Contact page; we do not operate an in-app message store.',
-      'If this policy changes in a way that affects how data is handled, we will update this page.'
-    ]
+    description:
+      'Privacy practices for AZ Planting Calendar: no accounts, no tracking cookies set by the app, theme preference on your device only, planting data from public Extension sources.',
+    updated: 'Last updated 1 August 2026',
+    intro:
+      'This privacy notice applies to the AZ Planting Calendar website and its public JSON API. The product is a free garden-planning tool. There are no user accounts and no sign-in. Visitors do not submit forms that create a profile. Planting windows come from public University of Arizona Cooperative Extension materials stored as application data, not from private profiles about you. We do not run ads or third-party product-analytics trackers in this UI.',
+    sections: [
+      {
+        heading: 'Who we are and how to reach us',
+        body: 'AZ Planting Calendar is a small personal open project for low-desert home gardeners, with a default planning context of Cave Creek, Arizona 85331. There is no company registration page, postal address, data-protection officer listing, or phone line published with this app. Contact is via a public GitHub issue on the RedAnvil repository that hosts the app, as described on the Contact page. For privacy access, correction, or deletion questions, start the issue title with “AZ Planting Calendar: privacy request” and include enough detail to investigate (for example a path you visited, approximate time, and what you saw).'
+      },
+      {
+        heading: 'No accounts',
+        body: 'This app does not offer registration, login, passwords, session cookies for identity, OAuth, or social sign-in. There is no users table for visitors. Cloudflare D1 in this project stores crops, planting windows, sources, and zone metadata used to answer planting questions—not visitor identities. Server-side code for visitor-facing traffic is limited to static Pages assets plus read-only Pages Functions under /api that return planting data or a health status. Nothing in that path creates a login session for you.'
+      },
+      {
+        heading: 'What application data the site shows',
+        body: 'The UI and API show public educational planting information: crop names, seed or transplant methods, half-month window indices, optional days-to-harvest ranges, notes when present, citation fields (title, author, publisher, URL, retrieved date), and default zone fields (name, ZIP, approximate last and first frost). That content is application data derived from University of Arizona Cooperative Extension publication az1005 (Vegetable Planting Calendar for Maricopa County). Forty-five crops are included; eight crops were deliberately excluded as unverifiable against the az1005 text stream (Basil; Broccoli; Brussel Sprouts; Cabbage; Cabbage, Chinese; Kohlrabi; Melons, Cantaloupe/Honeydews, etc.; Onions, Green). The dataset is not a private dossier about any visitor. Visitors do not write planting rows through this UI. The project is not affiliated with the University of Arizona.'
+      },
+      {
+        heading: 'What we collect from visitors',
+        body: 'From visitors, this app does not collect names, email addresses, passwords, payment details, phone numbers, or form fields that create a user profile. There is no newsletter signup, checkout, or registration form on the site. Optional contact happens when you open a public GitHub issue; that traffic is handled by GitHub under GitHub’s terms, not by an in-app message store in this product.',
+        items: [
+          'Theme preference on your device only: localStorage key theme with value light, dark, or system, set when you use the theme control—nothing else is written to localStorage by this app',
+          'Optional view state you put in the page URL (for example date, method, month, or search query parameters) so a shared link opens the same plantable or filter view—these are not stored as a server-side profile',
+          'Request metadata that Cloudflare may log while serving Pages and Functions (for example IP address, user agent, path, and timestamps under Cloudflare’s own practices)',
+          'Ordinary browser behaviour such as HTTP cache entries for static assets you load'
+        ]
+      },
+      {
+        heading: 'What we do not collect',
+        body: 'We do not run advertising pixels, third-party product-analytics SDKs, heatmaps, or retargeting scripts in this UI. We do not sell personal data. There is no mailing list and no marketing profile built from your use of this calendar.',
+        items: [
+          'No identity or billing fields collected by this app',
+          'No RedAnvil- or app-set tracking or advertising cookies',
+          'No social login or OAuth identity from this app',
+          'No server-side store of visitor browsing history in a visitor profile table (the project does not have one)'
+        ]
+      },
+      {
+        heading: 'Cookies and local storage — only what this app actually uses',
+        body: 'Application code for AZ Planting Calendar does not set advertising cookies and does not use session cookies for accounts (there are no accounts). The only intentional client persistence this app implements is localStorage for theme preference under the key theme (values light, dark, or system). Your browser may still keep ordinary HTTP cache entries for CSS, JavaScript, images, and API responses. Clear site data in the browser to remove the theme key and cached assets. We do not claim cookie banners for cookies we do not set. If the hosting platform or your browser stores technical cookies for security or load balancing, those follow the host’s or browser’s practices, not a first-party analytics product in this codebase.'
+      },
+      {
+        heading: 'Why information is processed',
+        body: 'We process the limited data above only to run the features the site actually provides:',
+        items: [
+          'Render plantable-now lists, year grids, and crop detail from the sourced window database',
+          'Remember light, dark, or system theme on the same browser after you change it',
+          'Allow optional date and filter query parameters so you can bookmark or share a view',
+          'Answer health and data API requests so the UI and operators can confirm the runtime is up',
+          'Operate hosting and edge delivery on Cloudflare infrastructure'
+        ]
+      },
+      {
+        heading: 'Third-party processors and outbound destinations',
+        body: 'Infrastructure and outbound destinations this product actually uses:',
+        items: [
+          'Cloudflare Pages hosts static assets and runs Pages Functions for /api routes; Cloudflare D1 stores crop, window, source, and zone rows for the app. Cloudflare receives the request metadata needed to serve those resources under Cloudflare’s terms and privacy policy.',
+          'Citation links may open University of Arizona Cooperative Extension pages (for example extension.arizona.edu) when you choose to follow them; those hosts process that request under their own policies.',
+          'Contact via public GitHub issues is handled by GitHub under GitHub’s terms and privacy policy; this app does not operate an in-app ticket database.'
+        ]
+      },
+      {
+        heading: 'Where data lives and international transfers',
+        body: 'Static assets, Pages Functions, and D1 for this app run on Cloudflare’s network. Cloudflare operates globally, so request handling and database access may involve processing outside your country. Planting content in D1 is application data for the calendar, not a private profile about you. We do not maintain a separate visitor identity database for this product.'
+      },
+      {
+        heading: 'Retention and deletion',
+        body: 'Theme preference remains on your device until you clear site data or remove the theme key. URL query parameters last only as long as the link or history entry that contains them. Crop and window rows remain in the application database until maintainers update the seed data; there is no automatic per-visitor expiry job because there is no per-visitor store. Cloudflare edge or access logs, if any, follow Cloudflare’s retention practices, which this repository does not control. Clearing your own browser storage is how you delete the theme preference. GitHub issues you open follow GitHub’s retention rules for that account and repository.'
+      },
+      {
+        heading: 'What you can request and how',
+        body: 'Depending on where you live, you may have rights to access, correct, delete, port, or object to certain processing of personal data. For this app those rights mainly concern the minimal data described above, not an account profile we never created. Exercise them by opening a GitHub issue titled with “privacy request” as described on the Contact page. There is no SLA; response depends on maintainer availability.',
+        items: [
+          'Access: planting pages and public API responses are already world-readable application data; theme data lives only in your browser',
+          'Correction: report a wrong crop window with the crop name, half-month, and source URL so maintainers can fix the seed data if the error is real',
+          'Deletion: clear localStorage for theme; host-log deletion is subject to Cloudflare practices; GitHub issue deletion is subject to GitHub’s tools and policies',
+          'Portability: copy public pages or call the public JSON API yourself',
+          'Objection: stop using the site; there is no marketing list to opt out of'
+        ]
+      },
+      {
+        heading: 'Children',
+        body: 'This app is not directed at children under 13, and we do not knowingly collect personal information from children under 13. If you believe a child has submitted personal information through a GitHub issue about this app, open a privacy request with enough detail to find the message. We will address what we can identify from the details you provide.'
+      },
+      {
+        heading: 'Security practices in this codebase',
+        body: 'What this app actually implements: HTTPS is provided by Cloudflare for the hosted site; API helpers set content-type nosniff, a same-origin referrer policy, and frame denial headers; database access for crops and windows uses parameterized queries rather than string-concatenated SQL; the public surface does not accept visitor writes to planting tables. What this notice does not claim: we do not assert a formal SOC 2 report, application-layer encryption at rest for a visitor database we do not operate, or that public planting tables are confidential. No method of transmission or storage is perfectly secure. Do not email secrets when reporting problems.'
+      },
+      {
+        heading: 'Changes to this policy',
+        body: 'We may update this notice when the product, API surface, or hosting setup changes. The “Last updated” line at the top of this page is the notice mechanism. We do not operate an email list for policy notices. Continued use of the site after the date changes means you accept the revised notice for subsequent use. For material changes, the updated text on this page is the record; check the date when you care about the current rules.'
+      },
+      {
+        heading: 'Contact for privacy',
+        body: 'Privacy questions and requests: open a GitHub issue as described on the Contact page, with “privacy request” in the title. Source for this app, including this notice text, the Pages Functions, and the client theme storage key, lives in the project repository that ships this site. General product and data-error contact details are summarized on the Contact page.'
+      }
+    ] as const satisfies readonly LegalSectionCopy[]
   },
 
   contact: {
     title: 'Contact',
-    description: 'How to reach the maintainer about data errors or the app.',
-    body: [
-      'Found a wrong window, a broken citation link, or a crop that should be added from a citable Maricopa County source? Please write.',
-      'Email: planting@redanvil.example (replace with your real inbox before production use).',
-      'Include the crop name, the half-month you expected, and a URL to the Extension page or publication you are citing. We only add windows that can be traced to a source.',
-      'This is a small home-garden tool, not a commercial support desk. Replies may take time.'
-    ]
+    description:
+      'How to report a wrong planting window, broken citation, or privacy question for AZ Planting Calendar.',
+    updated: 'Last updated 1 August 2026',
+    intro:
+      'This page explains how to reach the maintainer of AZ Planting Calendar. The product is a small free tool, not a commercial support desk. There is no in-app ticket system, no chat widget, and no user accounts through which to send messages. Contact is open via the project’s public GitHub repository.',
+    sections: [
+      {
+        heading: 'How to reach the maintainer',
+        body: 'Open an issue on the public RedAnvil GitHub repository that hosts this app (github.com/brianference/redanvil). Use a clear title so the report can be sorted: start with “AZ Planting Calendar: data error”, “AZ Planting Calendar: privacy request”, or “AZ Planting Calendar: security report” as appropriate. Do not put secrets in a public issue; for sensitive security notes, describe impact without credentials and ask for a private channel in the first message.'
+      },
+      {
+        heading: 'Reporting a wrong planting window',
+        body: 'If a crop shows the wrong half-month, the wrong seed versus transplant method, or a broken citation link, include enough detail to fix the seed data without guessing:',
+        items: [
+          'Crop name exactly as shown in the app',
+          'The half-month or calendar date you checked',
+          'What you expected to see and what the app showed',
+          'A URL to the University of Arizona Cooperative Extension page or publication you are citing (az1005 PDF or the Maricopa vegetable planting calendar page)'
+        ]
+      },
+      {
+        heading: 'What we will and will not add',
+        body: 'We only add or change windows that can be traced to a character-verified public source for this zone. We do not invent dates from experience, social media, or frost calculators alone. The shipped set is forty-five verified crops from az1005. Eight crops were deliberately excluded as unverifiable (Basil; Broccoli; Brussel Sprouts; Cabbage; Cabbage, Chinese; Kohlrabi; Melons, Cantaloupe/Honeydews, etc.; Onions, Green). A request to add one of those—or any other crop—needs a citable, verifiable sequence from the published table before it will ship.'
+      },
+      {
+        heading: 'Accuracy context for Cave Creek',
+        body: 'The default zone is Cave Creek, Arizona 85331, using Maricopa County low-desert half-month windows. Cave Creek sits higher than central Phoenix, so local timing can run early relative to the county table. When you report a timing mismatch, say whether you are comparing to central Phoenix, a higher elevation site, or the az1005 table itself—that context matters for whether the bug is transcription or microclimate.'
+      },
+      {
+        heading: 'Privacy and security messages',
+        body: 'For privacy access, correction, or deletion questions, put “privacy request” in the issue title and describe what you believe is stored and where you saw it. This app has no user accounts; theme preference lives only in your browser localStorage under the key theme (values light, dark, or system). Clearing site data removes it without contacting anyone. For security concerns, describe impact and steps to reproduce without pasting live secrets into a public thread.'
+      },
+      {
+        heading: 'Response expectations',
+        body: 'This is a best-effort home-garden project. Replies may take time. There is no uptime or support SLA. A transcription error with a solid citation is more likely to be acted on than a general request for a crop with no verifiable source. The project is not affiliated with the University of Arizona; cite Extension publications directly when you need official guidance.'
+      }
+    ] as const satisfies readonly LegalSectionCopy[]
   },
 
   notFound: {
@@ -162,13 +403,16 @@ export const en = {
       'Arizona low-desert planting calendar for Cave Creek AZ 85331. Seed and transplant windows from UA Cooperative Extension.',
     aboutTitle: 'About — AZ Planting Calendar',
     aboutDescription:
-      'How planting windows are sourced for the Arizona low desert and Cave Creek 85331.',
+      'How planting windows are sourced for the Arizona low desert and Cave Creek 85331 from University of Arizona Extension.',
     termsTitle: 'Terms — AZ Planting Calendar',
-    termsDescription: 'Terms of use for the AZ Planting Calendar planning tool.',
+    termsDescription:
+      'Terms of use for the free AZ Planting Calendar planning tool: no accounts, sourced Extension data, garden planning only.',
     privacyTitle: 'Privacy — AZ Planting Calendar',
-    privacyDescription: 'Privacy practices for AZ Planting Calendar: no accounts, local theme only.',
+    privacyDescription:
+      'Privacy practices for AZ Planting Calendar: no accounts, no tracking cookies set by the app, theme on device only.',
     contactTitle: 'Contact — AZ Planting Calendar',
-    contactDescription: 'Report data errors or suggest citable crops for the Maricopa low desert.'
+    contactDescription:
+      'Report data errors or privacy questions for the Maricopa low-desert planting calendar.'
   }
 } as const;
 

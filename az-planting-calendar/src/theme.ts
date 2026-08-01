@@ -1,7 +1,8 @@
 /** Theme mode stored in localStorage. */
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-const STORAGE_KEY = 'az-planting-theme';
+/** Design-audit and shared RedAnvil convention: localStorage key `theme`. */
+const STORAGE_KEY = 'theme';
 
 /**
  * Resolve stored preference against system preference.

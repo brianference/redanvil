@@ -110,6 +110,24 @@ export const RULES: Rule[] = [
   // the scroll position and landed the reader 1044px into an unseen document.
   // Both passed code review, unit tests and a green acceptance suite.
   rule('fe-visible-response', 'frontend', 'blocker', 'det'),
+  // A collection nobody can search is a list, not a product. Apps cleared 90+
+  // with bare browse lists and a search box that rendered and did nothing —
+  // both worse than requiring a real filter affordance on every collection.
+  rule('fe-search-present', 'frontend', 'blocker', 'det'),
+  // Proven by Playwright row counts + optional API probe — not by grepping
+  // for <select> filters or a decorative .filter( call.
+  // An app that cannot answer a question about its own data makes the user do
+  // the reading. Stubbed/canned assistants fail; the call runs in the Worker
+  // (Workers AI by default) and must ground in the app's database or domain
+  // query, not general knowledge.
+  rule('fe-assistant-present', 'frontend', 'blocker', 'det'),
+  // Per-app pack and §7.3a require a real brand mark. Prose only, so a literal
+  // "AZ" span and a 361-byte rect+text favicon cleared the scored gate.
+  rule('fe-brand-mark', 'frontend', 'blocker', 'det'),
+  // Prior-art artifacts (SOURCES / INTEGRATIONS / COMPETITORS) were §7.3a
+  // blockers in prose only. Missing files or unwritten markers mean the step
+  // never finished (R23/R29/R31).
+  rule('fe-prior-art', 'frontend', 'blocker', 'det'),
   // R29/R33. Reuse-before-rebuild as prose produces nothing checkable, and a
   // search nobody recorded is a search nobody can review. Also forces the
   // session's own connectors to be enumerated first, and ages the evidence out
@@ -131,7 +149,11 @@ export const RULES: Rule[] = [
   // so a run cannot score above zero without an actual visual review. These
   // close the exact holes that shipped a barebones site (no light mode, bare
   // nav, missing pages, dead-end flow) despite a code-clean diff.
-  rule('fe-light-dark', 'frontend', 'blocker', 'visual'),
+  //
+  // fe-light-dark is det (paint-measured): asserting data-theme alone shipped a
+  // light page whose hero stayed black on hardcoded dark tokens. The check
+  // samples computed landmark backgrounds in both themes.
+  rule('fe-light-dark', 'frontend', 'blocker', 'det'),
   rule('fe-premium-nav', 'frontend', 'blocker', 'visual'),
   rule('fe-required-pages', 'frontend', 'blocker', 'visual'),
   rule('fe-no-attribution', 'frontend', 'blocker', 'visual'),
@@ -184,6 +206,9 @@ export const RULES: Rule[] = [
   // runs typecheck, lint and the full suite on every push, and
   // verify_commit.mjs builds the commit in an isolated worktree before one.
   rule('proc-conventional-commits', 'process', 'minor', 'det'),
+  // A requirement written into a prompt/rule is not done. Verdict evidence must
+  // be a real OUTPUT (report, screenshot, capture), not a plan or empty file.
+  rule('proc-artifact-verified', 'process', 'blocker', 'det'),
 
   // An app that clears 90+ and never leaves the disk is not done. Shipping is
   // part of the gate: GitHub remote, pushed HEAD, live production URL, and a

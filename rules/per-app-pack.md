@@ -20,6 +20,13 @@ Injected into every app RedAnvil generates, on top of the base-15 and the rubric
 - Every app ships: Home, About, Terms and Conditions, Privacy Policy, Contact.
 - Full SEO: title/description per route, Open Graph tags, a real OG image, sitemap, robots.txt, semantic headings.
 
+## Standard features (every app)
+
+These ship with every generated app. The gate scores them as blockers (`fe-search-present`, `fe-assistant-present`); a 90+ score without both is a hole, not a pass.
+
+- **Search and filter on every browsable collection.** A collection nobody can search is a list, not a product. The collection view must expose an input with an accessible name matching `/search|find|filter/i`, wired so a query actually narrows results. A search box that renders and does nothing is worse than none. n/a only when the app has no collection route at all.
+- **AI assistant grounded in the app's own data.** An app that cannot answer a question about its own data makes the user do the reading. Ship a chat affordance reachable from the shell and a Worker endpoint (`functions/api/assistant.ts` or similar) that calls a model and grounds the answer in the app's database — not general knowledge, not a canned stub. **Cloudflare Workers AI is the default binding** (`env.AI.run` in the Worker, never in the browser). QuickFlight's `functions/api/assistant.ts` is a working reference — read it before writing a new one. The assistant reads its binding from env; no secrets in code. A failed model call must surface an error state, not an empty success. n/a only when the app genuinely has no queryable domain data.
+
 ## UI baseline
 
 - Follow the mobile-ux design rules in `/design-system/mobile-design-rules.md` (leveled must/should/prefer: touch targets, safe areas, 16px body floor, non-color state, loading/empty/error, sticky-CTA safe-area padding, anti-patterns) and the layout recipes in `/design-system/screen-patterns.md`. When delegating UI to Grok Build, inject those rules and build 2-3 variants before polishing. Also available as the `mobile-ux` skill.

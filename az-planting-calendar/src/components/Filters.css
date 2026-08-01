@@ -29,6 +29,11 @@
   flex: 1 1 140px;
 }
 
+.filters__field--search {
+  flex: 2 1 220px;
+  min-width: 200px;
+}
+
 .filters__label {
   font-size: var(--type-sm);
   font-weight: 600;

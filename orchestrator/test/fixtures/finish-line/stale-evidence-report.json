@@ -1,0 +1,8 @@
+{
+  "baseUrl": "https://example.pages.dev",
+  "checkedAt": "2020-01-01T00:00:00.000Z",
+  "findings": {
+    "fe-touch-targets": { "ok": true, "detail": "ok" }
+  },
+  "ok": true
+}

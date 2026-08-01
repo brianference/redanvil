@@ -18,11 +18,19 @@
   --transplant: #8a4b00;
   --transplant-bg: #fde8c8;
   --transplant-border: #8a4b00;
-  --hero-bg: #0e1419;
-  --hero-text: #f2f5f7;
-  --hero-muted: #b8c2cc;
-  --hero-seed: #5ee9a8;
-  --hero-transplant: #f5c07a;
+  /* Hero follows page theme so light mode stays light. */
+  --hero-bg: #f4f6f8;
+  --hero-text: #0e1419;
+  --hero-muted: #4a5560;
+  --hero-seed: #0a6b42;
+  --hero-transplant: #8a4b00;
+  --hero-border: #c5cdd6;
+  --hero-card-bg: #ffffff;
+  --hero-card-border: #c5cdd6;
+  --hero-input-bg: #ffffff;
+  --hero-input-border: #c5cdd6;
+  --hero-chip-seed-bg: #d8f3e6;
+  --hero-chip-transplant-bg: #fde8c8;
   --focus: #0b5fff;
   --danger: #b42318;
   --radius: 4px;
@@ -35,7 +43,8 @@
   --space-7: 48px;
   --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
-  --type-sm: 14px;
+  /* Body floor is 16px (fe-type-floor). Small step stays body-scale, not caption. */
+  --type-sm: 16px;
   --type-md: 16px;
   --type-lg: 20px;
   --type-xl: 28px;
@@ -66,6 +75,13 @@
   --hero-muted: #b0bbc6;
   --hero-seed: #5ee9a8;
   --hero-transplant: #f5c07a;
+  --hero-border: #2c3844;
+  --hero-card-bg: #141a21;
+  --hero-card-border: #2c3844;
+  --hero-input-bg: #141a21;
+  --hero-input-border: #2c3844;
+  --hero-chip-seed-bg: #0f2a1c;
+  --hero-chip-transplant-bg: #2a1c08;
   --focus: #4d8dff;
   --danger: #f07178;
 }
@@ -194,7 +210,7 @@ input {
   width: 16px;
   height: 16px;
   border: 1px solid currentColor;
-  font-size: 11px;
+  font-size: var(--type-sm);
   line-height: 1;
 }
 

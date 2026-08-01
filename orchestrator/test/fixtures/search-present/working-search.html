@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Working search fixture</title>
+  </head>
+  <body>
+    <main>
+      <h1>Crop catalog</h1>
+      <label for="search-box">Search crops</label>
+      <input id="search-box" type="search" aria-label="Search crops" />
+      <ul id="results" data-testid="results-list"></ul>
+    </main>
+    <script>
+      const ALL = [
+        'Tomato',
+        'Tomatillo',
+        'Basil',
+        'Carrot',
+        'Cabbage',
+        'Pepper',
+        'Pumpkin',
+        'Spinach'
+      ];
+      const list = document.getElementById('results');
+      const input = document.getElementById('search-box');
+
+      function render(items) {
+        list.innerHTML = items.map((name) => '<li>' + name + '</li>').join('');
+      }
+
+      function apply() {
+        const q = input.value.trim().toLowerCase();
+        if (!q) {
+          render(ALL);
+          return;
+        }
+        render(ALL.filter((name) => name.toLowerCase().includes(q)));
+      }
+
+      input.addEventListener('input', apply);
+      input.addEventListener('change', apply);
+      render(ALL);
+    </script>
+  </body>
+</html>

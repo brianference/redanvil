@@ -202,6 +202,42 @@ describe('scaffoldApp', () => {
     expect(home).toContain('en.pages.home');
     expect(home).not.toMatch(/<p>Home content\.<\/p>/);
   });
+
+  it('ships SOURCES/INTEGRATIONS/COMPETITORS with the unwritten-document marker', async () => {
+    for (const name of ['SOURCES.md', 'INTEGRATIONS.md', 'COMPETITORS.md']) {
+      const doc = await readFile(join(out, name), 'utf8');
+      expect(doc, name).toMatch(/Fill this in/i);
+      expect(doc, name).toMatch(/\[UNWRITTEN/i);
+    }
+  });
+
+  it('ships design-refs/logos/README requiring a real generated mark', async () => {
+    const readme = await readFile(join(out, 'design-refs', 'logos', 'README.md'), 'utf8');
+    expect(readme).toMatch(/real generated brand mark/i);
+    expect(readme).toMatch(/fe-brand-mark/);
+  });
+
+  it('ships a failing placeholder acceptance spec per required page', async () => {
+    for (const page of ['about', 'terms', 'privacy', 'contact']) {
+      const spec = await readFile(
+        join(out, 'tests', 'pages', `${page}.placeholder.spec.ts`),
+        'utf8'
+      );
+      expect(spec).toContain('REDANVIL_ACCEPTANCE_PLACEHOLDER_');
+      expect(spec).toContain("from '@playwright/test'");
+      expect(spec).toMatch(/must be replaced/i);
+    }
+  });
+
+  it('fails fe-prior-art on a fresh scaffold (empty app must not clear the gate)', async () => {
+    // A scaffold that produces a passing empty app is the whole problem.
+    // fe-prior-art must FAIL while the unwritten markers remain.
+    const { spawnSync } = await import('node:child_process');
+    const check = join(repoRoot, 'orchestrator', 'scripts', 'checks', 'check.mjs');
+    const r = spawnSync(process.execPath, [check, 'fe-prior-art', out], { encoding: 'utf8' });
+    expect(r.status, r.stdout + r.stderr).toBe(1);
+    expect(`${r.stdout}${r.stderr}`).toMatch(/UNWRITTEN|Fill this in|unwritten/i);
+  });
 });
 
 describe('scaffold migrations from job.entities', () => {

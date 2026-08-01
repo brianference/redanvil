@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fully tokenised fixture — must PASS fe-light-dark</title>
+    <style>
+      :root,
+      :root[data-theme='light'] {
+        --bg: #f5f5f7;
+        --surface: #ffffff;
+        --text: #111118;
+        --hero-bg: #e8eef8;
+        --hero-text: #111118;
+      }
+      :root[data-theme='dark'] {
+        --bg: #0b0b0f;
+        --surface: #15151d;
+        --text: #f5f5f7;
+        --hero-bg: #1a2230;
+        --hero-text: #f5f5f7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      /* Paint must land on html too — the check samples documentElement as a
+         baseline, and a transparent html root reads as "unchanged" even when
+         body/sections flip correctly. */
+      html,
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        background: var(--surface);
+        padding: 16px 24px;
+      }
+      .hero {
+        background: var(--hero-bg);
+        color: var(--hero-text);
+        min-height: 280px;
+        padding: 48px 24px;
+      }
+      main section.content {
+        background: var(--surface);
+        padding: 24px;
+        min-height: 120px;
+      }
+      footer {
+        background: var(--surface);
+        padding: 16px 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>Brand</header>
+    <main>
+      <section class="hero">
+        <h1>Fully tokenised hero</h1>
+        <p>Every landmark flips paint between themes.</p>
+      </section>
+      <section class="content">
+        <p>Content region.</p>
+      </section>
+    </main>
+    <footer>Footer</footer>
+    <script>
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('theme') || 'light'
+      );
+    </script>
+  </body>
+</html>

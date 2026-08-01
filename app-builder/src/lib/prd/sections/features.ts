@@ -194,6 +194,77 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
     });
   });
 
+  // Standard features every app ships. Scored by fe-search-present and
+  // fe-assistant-present; omitting them from a PRD is how a planting calendar
+  // shipped with no search and no way to ask it a question.
+  const collectionLabel = primary
+    ? primaryTable || primary.toLowerCase()
+    : entities[0]
+      ? entityTable(entities[0]) || entities[0]
+      : 'records';
+  const collectionTitle = primary ?? (entities[0] ? entityPascal(entities[0]) : 'records');
+  const assistantSubject =
+    primary ?? (entities[0] ? entityPascal(entities[0]) : undefined) ?? 'app data';
+  const filterStem =
+    typeof collectionTitle === 'string' && collectionTitle.length > 0
+      ? collectionTitle.replace(/[^A-Za-z0-9]/g, '') || 'Records'
+      : 'Records';
+
+  features.push({
+    id: `F${features.length + 1}`,
+    name: `Search and filter ${collectionTitle}`,
+    behavior: `Users can search or filter the ${collectionLabel} collection with a control whose accessible name matches /search|find|filter/i; the query must narrow the visible results (a decorative box fails).`,
+    mvp: true,
+    acceptance: [
+      `GIVEN seeded ${collectionLabel} exist WHEN the user opens the collection view THEN a search or filter control with an accessible name matching /search|find|filter/i is present`,
+      `GIVEN seeded ${collectionLabel} exist WHEN the user enters a query that matches one item THEN only matching rows render`,
+      `GIVEN seeded ${collectionLabel} exist WHEN the user enters a query that matches nothing THEN an empty or no-match state is shown (not the full unfiltered list)`,
+      `GIVEN the collection API fails WHEN the user is on the collection view THEN an error state with recovery is shown rather than a silent full list`
+    ],
+    tests: {
+      unit: [
+        `filter${filterStem}_byQuery_matches`,
+        `filter${filterStem}_byQuery_noMatchReturnsEmpty`
+      ],
+      integration: [
+        `GET or client filter on ${collectionLabel} honours q/filter and returns a narrower set`
+      ],
+      e2e: [
+        `${collectionLabel}-search narrows results`,
+        `${collectionLabel}-search empty match state`
+      ]
+    }
+  });
+
+  features.push({
+    id: `F${features.length + 1}`,
+    name: `Ask the assistant about ${assistantSubject}`,
+    behavior: `A chat affordance reachable from the shell posts to functions/api/assistant.ts (or equivalent). The Worker calls Cloudflare Workers AI (env.AI) and grounds the answer in this app's own data -- not general knowledge. A failed model call surfaces an error state, never an empty success. No secrets in code; the binding comes from env.`,
+    mvp: true,
+    acceptance: [
+      `GIVEN the shell is open WHEN the user opens the assistant THEN a chat input is reachable without leaving the product chrome`,
+      `GIVEN the assistant endpoint and Workers AI binding are healthy WHEN the user asks a question about ${assistantSubject} THEN the answer is grounded in app data (DB rows, catalog filters, or structured domain query) rather than generic model knowledge alone`,
+      `GIVEN the model call fails (502 / binding missing / empty model output) WHEN the user submits a message THEN an error state is shown -- never an empty success or a silent no-op`,
+      `GIVEN invalid input (empty message) WHEN the user submits THEN a 400 validation response is shown and no model call is required`
+    ],
+    tests: {
+      unit: [
+        'assistantBodySchema_rejectsEmptyMessage',
+        'assistant_groundsInAppData_notGeneralKnowledge'
+      ],
+      integration: [
+        'POST /api/assistant returns 200 with grounded payload when AI + data are available',
+        'POST /api/assistant returns 502/503 error body when the model or binding fails (not 200 empty)',
+        'POST /api/assistant returns 400 on empty message'
+      ],
+      e2e: [
+        'assistant open from shell',
+        'assistant shows error state on failed model call',
+        'assistant answer references app data for a known seed question'
+      ]
+    }
+  });
+
   features.push({
     id: `F${features.length + 1}`,
     name: 'Required pages & SEO',
@@ -402,6 +473,12 @@ function rationaleForFeature(
   }
   if (feature.name === `Manage ${primary}`) {
     return `From entity ${primary} (create, edit, and delete)`;
+  }
+  if (feature.name.startsWith('Search and filter ')) {
+    return 'Standard feature: every collection must be searchable (fe-search-present)';
+  }
+  if (feature.name.startsWith('Ask the assistant about ')) {
+    return 'Standard feature: AI assistant grounded in app data (fe-assistant-present)';
   }
   if (feature.name.startsWith('Required pages')) {
     return 'Required product pages for every app (About, Terms, Privacy, Contact)';

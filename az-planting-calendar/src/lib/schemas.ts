@@ -130,3 +130,20 @@ export const FilterQuerySchema = z.object({
   month: z.coerce.number().int().min(0).max(11).optional()
 });
 export type FilterQuery = z.infer<typeof FilterQuerySchema>;
+
+/**
+ * Query for GET /api/crops — optional case-insensitive name search.
+ * Empty or whitespace-only q is treated as absent (list all).
+ */
+export const CropsQuerySchema = z.object({
+  q: z
+    .string()
+    .max(100)
+    .optional()
+    .transform((value) => {
+      if (value === undefined) return undefined;
+      const trimmed = value.trim();
+      return trimmed.length === 0 ? undefined : trimmed;
+    })
+});
+export type CropsQuery = z.infer<typeof CropsQuerySchema>;

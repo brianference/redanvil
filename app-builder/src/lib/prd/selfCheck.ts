@@ -211,11 +211,30 @@ export function evaluatePrdSelfCheck(
           .map((line) => line.replace(/\s+/g, ' ').slice(0, 60))
           .join('; ')}`;
 
+  // Standard features every generated PRD must name. Missing either means the
+  // document is not gradeable at 100% -- same hole that shipped a collection
+  // with no search and no assistant. Grade against §8 only so §14's own labels
+  // and slice names cannot satisfy the check.
+  const coreFeaturesSection =
+    markdown.match(/## 8\. Core Features[\s\S]*?(?=\n## \d+\.)/)?.[0] ?? '';
+  const hasSearchFeature = /### F\d+ — Search and filter /i.test(coreFeaturesSection);
+  const hasAssistantFeature = /### F\d+ — Ask the assistant about /i.test(coreFeaturesSection);
+
   const items: PrdSelfCheckItem[] = [
     { id: 'frontmatter', label: 'Machine frontmatter present', pass: hasFrontmatter },
     { id: 'problem', label: 'Problem statement present', pass: problemText.length > 0 },
     { id: 'user-stories', label: 'At least one user story', pass: userStoryCount >= 1 },
     { id: 'mvp-features', label: 'At least one MVP feature marked', pass: mvpFeatureCount >= 1 },
+    {
+      id: 'search-feature',
+      label: 'Search and filter feature present (standard)',
+      pass: hasSearchFeature
+    },
+    {
+      id: 'assistant-feature',
+      label: 'Ask the assistant feature present (standard)',
+      pass: hasAssistantFeature
+    },
     {
       id: 'acceptance-bullets',
       label: 'Every feature has ≥1 acceptance bullet',

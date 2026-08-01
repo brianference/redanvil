@@ -256,7 +256,66 @@ try {
     `title "${desk.title}", description ${desk.description === null ? 'MISSING' : 'present'}, og:image ${desk.ogImage === null ? 'MISSING' : 'present'}`
   );
 
-  // --- Theme swap and persistence ---
+  // --- Theme paint (not just attribute flip) ---
+  //
+  // fe-light-dark is now a det rule measured by fe-light-dark.mjs (canvas-
+  // converted landmark backgrounds). design_audit still records a paint
+  // signal so reverify evidence stays useful, but attribute-only checks are
+  // no longer enough: a hero with hardcoded dark tokens used to pass while
+  // painting black on a light page.
+  const samplePaint = async (page, theme) => {
+    await page.evaluate((t) => {
+      try {
+        localStorage.setItem('theme', t);
+      } catch {
+        /* ignore */
+      }
+      document.documentElement.setAttribute('data-theme', t);
+    }, theme);
+    await page.waitForTimeout(200);
+    return page.evaluate(() => {
+      const toRgba = (css) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return { r: 0, g: 0, b: 0 };
+        ctx.fillStyle = css;
+        ctx.fillRect(0, 0, 1, 1);
+        const d = ctx.getImageData(0, 0, 1, 1).data;
+        return { r: d[0], g: d[1], b: d[2] };
+      };
+      const sample = (el, name) => {
+        if (!el) return null;
+        const s = getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        if (r.width < 2 || r.height < 2) return null;
+        const rgba = toRgba(s.backgroundColor);
+        return { name, ...rgba };
+      };
+      const out = [];
+      const h = sample(document.querySelector('header'), 'header');
+      if (h) out.push(h);
+      const f = sample(document.querySelector('footer'), 'footer');
+      if (f) out.push(f);
+      let i = 0;
+      for (const el of document.querySelectorAll('main > section, body > section')) {
+        const s = sample(el, `section-${i++}`);
+        if (s) out.push(s);
+      }
+      const root = sample(document.documentElement, 'html');
+      if (root) out.push(root);
+      return out;
+    });
+  };
+  const samePaint = (a, b) => {
+    const dr = Math.abs(a.r - b.r);
+    const dg = Math.abs(a.g - b.g);
+    const db = Math.abs(a.b - b.b);
+    return Math.max(dr, dg, db) <= 18;
+  };
+  const lightPaint = await samplePaint(d, 'light');
+  const darkPaint = await samplePaint(d, 'dark');
   const before = await d.evaluate(() => document.documentElement.getAttribute('data-theme'));
   const toggle = d.getByRole('button', { name: /theme|dark|light/i }).first();
   await toggle.click();
@@ -269,30 +328,20 @@ try {
   const persisted = await d.evaluate(() => document.documentElement.getAttribute('data-theme'));
   await d.close();
 
-  /*
-    Three claims, and the first one used to be missing.
-
-    The rule says light AND dark mode with the default following the system.
-    This block already opened the page with `colorScheme: 'dark'` and already
-    read the app's own resolved theme into `before` — and then asserted only
-    that the TOGGLE changes it, stores it, and survives a reload. `before` was
-    captured and never checked, so an app that resolves to LIGHT under a dark OS
-    passed cleanly. That is exactly what shipped: quickflight served the light
-    theme to every visitor whose system asked for dark, and this check, the axe
-    audit and the daily drift job all reported it green, because every one of
-    them either forced the theme or only exercised the toggle.
-
-    A default is what a first-time visitor gets. It is the half that matters
-    most and it was the half nobody measured.
-  */
-  const defaultFollowsSystem = before === 'dark';
+  const darkByName = new Map(darkPaint.map((r) => [r.name, r]));
+  const stuck = lightPaint.filter((L) => {
+    const D = darkByName.get(L.name);
+    return D && samePaint(L, D);
+  });
+  const paintOk = stuck.length === 0 && lightPaint.length > 0;
   const toggleWorks = before !== after.theme && after.stored !== null && persisted === after.theme;
   record(
     'fe-light-dark',
-    defaultFollowsSystem && toggleWorks,
-    `default under prefers-color-scheme:dark resolved to "${before}"` +
-      `${defaultFollowsSystem ? '' : ' (EXPECTED dark — the default does not follow the system)'}; ` +
-      `toggle ${before} -> ${after.theme}, stored "${after.stored}", survived reload as ${persisted}`
+    paintOk && toggleWorks,
+    paintOk
+      ? `landmark paint changes between themes (${lightPaint.length} regions); toggle ok`
+      : `paint stuck on: ${stuck.map((s) => s.name).join(', ') || 'none sampled'} — ` +
+          'attribute flip is not enough; measure computed backgrounds'
   );
 
   // --- Design archetype: did it build the shell it was told to build? ---

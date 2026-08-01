@@ -13,7 +13,17 @@ import tsparser from '@typescript-eslint/parser';
  * survived a 100/100 gate.
  */
 export default [
-  { ignores: ['**/dist/**', '**/node_modules/**', '**/*.config.*'] },
+  {
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/*.config.*',
+      // Design scratch / logo variants (each app that uses them already ignores
+      // this path in its own eslint config; root lint must match or --max-warnings 0
+      // fails on unused disable comments in one-off .mjs helper scripts).
+      '**/design-refs/**'
+    ]
+  },
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {

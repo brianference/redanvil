@@ -155,10 +155,64 @@ test.describe('Legal pages', () => {
       await page.goto(path);
       const h1 = page.getByRole('heading', { level: 1 });
       await expect(h1).toBeVisible();
+      // Must not fall through to the home hero title.
+      await expect(h1).not.toHaveText(/What can I plant right now/i);
+      await expect(page.getByTestId('legal-page')).toBeVisible();
       const body = await page.locator('main').innerText();
       expect(body.length).toBeGreaterThan(120);
       expect(body.toLowerCase()).not.toContain('lorem ipsum');
+      const sections = await page.locator('main h2').count();
+      expect(sections).toBeGreaterThanOrEqual(3);
     }
+  });
+
+  test('terms and privacy are substantial documents', async ({ page }) => {
+    for (const path of ['/terms', '/privacy']) {
+      await page.goto(path);
+      const text = await page.locator('main').innerText();
+      const words = text.trim().split(/\s+/).length;
+      expect(words).toBeGreaterThanOrEqual(1200);
+      expect(await page.locator('main h2').count()).toBeGreaterThanOrEqual(8);
+    }
+  });
+});
+
+test.describe('Crop search', () => {
+  test('API /api/crops?q=tomato returns a narrowed set', async ({ request }) => {
+    const all = await request.get('/api/crops');
+    expect(all.ok()).toBeTruthy();
+    const allBody = (await all.json()) as { crops: Array<{ name: string }> };
+    expect(allBody.crops.length).toBe(45);
+
+    const filtered = await request.get('/api/crops?q=tomato');
+    expect(filtered.ok()).toBeTruthy();
+    const body = (await filtered.json()) as { crops: Array<{ name: string }> };
+    expect(body.crops.length).toBeGreaterThan(0);
+    expect(body.crops.length).toBeLessThan(allBody.crops.length);
+    for (const crop of body.crops) {
+      expect(crop.name.toLowerCase()).toContain('tomato');
+    }
+  });
+
+  test('search input narrows the year grid rows', async ({ page }) => {
+    const gridWait = page.waitForResponse((r) => r.url().includes('/api/grid') && r.ok());
+    await page.goto('/');
+    await gridWait;
+
+    await page.getByTestId('year-grid').scrollIntoViewIfNeeded();
+    const rowsBefore = await page.locator('.year-grid__table tbody tr').count();
+    expect(rowsBefore).toBeGreaterThan(10);
+
+    const search = page.getByRole('searchbox', { name: /search/i });
+    await expect(search).toBeVisible();
+    await search.fill('tomato');
+
+    const rowsAfter = page.locator('.year-grid__table tbody tr');
+    await expect(rowsAfter).not.toHaveCount(rowsBefore);
+    const countAfter = await rowsAfter.count();
+    expect(countAfter).toBeGreaterThan(0);
+    expect(countAfter).toBeLessThan(rowsBefore);
+    await expect(rowsAfter.first()).toContainText(/tomato/i);
   });
 });
 

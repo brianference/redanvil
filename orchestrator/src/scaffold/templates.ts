@@ -435,6 +435,136 @@ function routesTs(): string {
  * @returns Vitest module source.
  */
 /**
+ * Scaffold unwritten-document marker. Matched by fe-prior-art UNWRITTEN_MARKERS
+ * so leaving these files blank fails the gate rather than passing by absence.
+ */
+const UNWRITTEN_DOC_MARKER =
+  'Fill this in.\n\n' +
+  '[UNWRITTEN — this scaffold unwritten-document marker fails the gate until the real document is written.]\n';
+
+/**
+ * SOURCES.md starter (R23). Carries the unwritten marker on purpose.
+ *
+ * @param job - Scaffold job.
+ * @returns Markdown body.
+ */
+function sourcesMd(job: Job): string {
+  return (
+    `# Sources — ${job.slug}\n\n` +
+    `Prior-art / design-source record (R23 / R11.3). Record App Store apps, ` +
+    `design refs, and store URLs before building UI.\n\n` +
+    UNWRITTEN_DOC_MARKER +
+    `\n## App Store / design references\n\n` +
+    `| app | genre | rating count | store URL | checked |\n` +
+    `|---|---|---:|---|---|\n` +
+    `| … | … | … | … | … |\n`
+  );
+}
+
+/**
+ * INTEGRATIONS.md starter (R29). Carries the unwritten marker on purpose.
+ *
+ * @param job - Scaffold job.
+ * @returns Markdown body.
+ */
+function integrationsMd(job: Job): string {
+  return (
+    `# Integrations — ${job.slug}\n\n` +
+    `What already existed before anything was built (R29 / R33).\n\n` +
+    `## Connectors considered\n\n` +
+    UNWRITTEN_DOC_MARKER +
+    `\n## Candidates\n\n` +
+    `| repo | stars | language | licence | last push | flags |\n` +
+    `|---|---:|---|---|---|---|\n` +
+    `\n## Decision\n\n` +
+    `**Build / integrate / hybrid:** …\n\n` +
+    `**Why:** …\n\n` +
+    `**Revisit when:** …\n`
+  );
+}
+
+/**
+ * COMPETITORS.md starter (R31). Carries the unwritten marker on purpose.
+ *
+ * @param job - Scaffold job.
+ * @returns Markdown body.
+ */
+function competitorsMd(job: Job): string {
+  return (
+    `# Competitors — ${job.slug}\n\n` +
+    `Competitor study. The Assessment is the work list, not the scrape (R31).\n\n` +
+    `## Assessment\n\n` +
+    UNWRITTEN_DOC_MARKER +
+    `\n### Features and controls we are missing\n\n` +
+    `Fill this in.\n\n` +
+    `### Components worth borrowing\n\n` +
+    `Fill this in.\n\n` +
+    `### What we deliberately will not do\n\n` +
+    `Fill this in.\n`
+  );
+}
+
+/**
+ * design-refs/logos/README — a real generated mark is required.
+ *
+ * @param job - Scaffold job.
+ * @returns Markdown body.
+ */
+function logosReadme(job: Job): string {
+  return (
+    `# Brand mark — ${job.slug}\n\n` +
+    `A **real generated brand mark** is required before this app can pass the gate.\n\n` +
+    `- Use Grok Imagine / the brand-logo skill (not an emoji, not text initials in a span).\n` +
+    `- Put production assets under \`public/\` (logo-mark, favicon, OG) and reference them from the shell.\n` +
+    `- Text-only marks (e.g. a span with "AZ") fail \`fe-brand-mark\`.\n` +
+    `- Favicon/OG stubs under a few KB fail \`fe-brand-mark\`.\n\n` +
+    `Store candidate marks in this directory during design; ship the chosen mark to \`public/\`.\n`
+  );
+}
+
+/**
+ * Failing placeholder acceptance specs for each required page.
+ *
+ * Each test drives the real page then asserts a marker that does not exist,
+ * so the suite FAILS until the builder replaces the placeholder with a real
+ * acceptance assertion. A scaffold that ships only green smoke is the problem.
+ *
+ * @returns Relative path → file contents map.
+ */
+function requiredPagePlaceholderSpecs(): Record<string, string> {
+  const pages = [
+    { name: 'About', path: '/about' },
+    { name: 'Terms', path: '/terms' },
+    { name: 'Privacy', path: '/privacy' },
+    { name: 'Contact', path: '/contact' }
+  ] as const;
+  /** @type {Record<string, string>} */
+  const out: Record<string, string> = {};
+  for (const p of pages) {
+    const file = `tests/pages/${p.name.toLowerCase()}.placeholder.spec.ts`;
+    out[file] =
+      `import { test, expect } from '@playwright/test';\n\n` +
+      `/**\n` +
+      ` * Scaffold placeholder for the ${p.name} page.\n` +
+      ` *\n` +
+      ` * Intentionally FAILS until replaced with a real acceptance assertion.\n` +
+      ` * Do not delete this file to go green — rewrite it to prove the page works.\n` +
+      ` */\n` +
+      `test('${p.name} page — scaffold placeholder (must be replaced)', async ({ page }) => {\n` +
+      `  await page.goto('${p.path}');\n` +
+      `  await expect(page.getByRole('heading').first()).toBeVisible();\n` +
+      `  // REDANVIL_ACCEPTANCE_PLACEHOLDER: this marker is not on the page. The\n` +
+      `  // test fails on purpose so an empty scaffold cannot claim acceptance.\n` +
+      `  await expect(\n` +
+      `    page.getByText('REDANVIL_ACCEPTANCE_PLACEHOLDER_${p.name.toUpperCase()}'),\n` +
+      `    'Replace this placeholder: write a real acceptance assertion for ${p.name}'\n` +
+      `  ).toBeVisible();\n` +
+      `});\n`;
+  }
+  return out;
+}
+
+/**
  * Starter acceptance spec (R27).
  *
  * A generated app must be able to prove its controls do something from the day
@@ -1005,6 +1135,18 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     'src/lib/routes.ts': routesTs(),
     'src/lib/routes.test.ts': routesTestTs(),
     'tests/acceptance.spec.ts': acceptanceSpecTs(),
+    // Per-page acceptance placeholders: intentionally FAIL until the builder
+    // replaces them with real assertions. A scaffold that ships a green empty
+    // suite is the whole problem — leaving these markers fails the suite.
+    ...requiredPagePlaceholderSpecs(),
+    // Prior-art artifacts (R23/R29/R31). Each carries the unwritten-document
+    // marker so fe-prior-art FAILS until they are filled in. Omitting the files
+    // used to make the check n/a or pass by absence.
+    'SOURCES.md': sourcesMd(job),
+    'INTEGRATIONS.md': integrationsMd(job),
+    'COMPETITORS.md': competitorsMd(job),
+    // Real brand mark required — text initials / emoji fail fe-brand-mark.
+    'design-refs/logos/README.md': logosReadme(job),
     // The control inventory ships with the app, not with the reviewer's memory.
     // Routes are discovered from public/sitemap.xml and src/lib/routes.ts, both
     // of which this scaffold already emits, so the audit works on day one and

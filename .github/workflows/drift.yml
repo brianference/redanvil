@@ -5,6 +5,10 @@ name: Drift re-gate
 # real audits against the LIVE site on a cadence and fails (surfacing an alert) on
 # any regression — the contrast regression and the wizard 400 this project shipped
 # would each have been caught here the next day instead of by a user.
+#
+# Also re-runs the full finish-line bar (isDone / meets_the_bar) for every app in
+# reverify's APPS list and opens an issue when any app drifts below the bar, so a
+# green result cannot rot silently.
 
 on:
   schedule:
@@ -14,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   drift:
@@ -91,6 +96,29 @@ jobs:
       # an independent reviewer, not a threshold that forces a fake rejection.
       - name: Judge dissent rate
         run: node .github/scripts/judge_dissent.mjs --out evidence/judge-dissent.json
+
+      # Full finish-line bar for every app in reverify's APPS list. isDone is the
+      # single definition: score, zero failures, fresh evidence, screenshots.
+      # A green result that rots is opened as an issue rather than ignored.
+      - name: Finish line — every gated app still meets the bar
+        id: meets_bar
+        continue-on-error: true
+        run: node .github/scripts/meets_the_bar.mjs
+
+      - name: Open issue when any app drifts below the finish line
+        if: steps.meets_bar.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node .github/scripts/open_drift_issue.mjs \
+            --title "Drift: gated app(s) below the finish line" \
+            --body "Scheduled reverify found one or more apps in .github/scripts/apps.mjs below the finish line (isDone / meets_the_bar). See the Drift re-gate workflow run for the refusal reasons. A green result cannot rot silently."
+
+      - name: Fail the workflow when the finish line drifted
+        if: steps.meets_bar.outcome == 'failure'
+        run: |
+          echo "meets_the_bar failed — at least one app is below isDone()"
+          exit 1
 
       # Keep the trace when something fails, so a drift is opened, not re-driven.
       - name: Upload e2e trace on failure

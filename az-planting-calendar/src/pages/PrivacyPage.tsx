@@ -1,3 +1,4 @@
+import { LegalPage } from '../components/LegalPage';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { en } from '../i18n/en';
 import './ProsePage.css';
@@ -6,11 +7,11 @@ import './ProsePage.css';
 export function PrivacyPage() {
   useDocumentMeta(en.meta.privacyTitle, en.meta.privacyDescription);
   return (
-    <article className="prose shell">
-      <h1>{en.privacy.title}</h1>
-      {en.privacy.body.map((p) => (
-        <p key={p.slice(0, 48)}>{p}</p>
-      ))}
-    </article>
+    <LegalPage
+      title={en.privacy.title}
+      intro={en.privacy.intro}
+      updated={en.privacy.updated}
+      sections={en.privacy.sections}
+    />
   );
 }

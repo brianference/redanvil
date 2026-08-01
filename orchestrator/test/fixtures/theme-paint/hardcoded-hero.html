@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hardcoded hero fixture — must FAIL fe-light-dark</title>
+    <style>
+      :root,
+      :root[data-theme='light'] {
+        --bg: #eef1f4;
+        --surface: #ffffff;
+        --text: #0e1419;
+        /* Intentionally dark in BOTH themes — the production defect. */
+        --hero-bg: #0e1419;
+        --hero-text: #f2f5f7;
+      }
+      :root[data-theme='dark'] {
+        --bg: #0a0e12;
+        --surface: #141a21;
+        --text: #eef2f5;
+        --hero-bg: #06090c;
+        --hero-text: #f2f5f7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        background: var(--surface);
+        padding: 16px 24px;
+        border-bottom: 1px solid #ccc;
+      }
+      .hero {
+        background: var(--hero-bg);
+        color: var(--hero-text);
+        min-height: 280px;
+        padding: 48px 24px;
+      }
+      main section.content {
+        background: var(--surface);
+        padding: 24px;
+        min-height: 120px;
+      }
+      footer {
+        background: var(--surface);
+        padding: 16px 24px;
+        border-top: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <header>Brand</header>
+    <main>
+      <section class="hero">
+        <h1>Plantable now</h1>
+        <p>Hero stays dark in light mode — attribute flip is green, paint is not.</p>
+      </section>
+      <section class="content">
+        <p>Body content uses real tokens and does flip.</p>
+      </section>
+    </main>
+    <footer>Footer</footer>
+    <script>
+      // Minimal toggle so attribute-only checks would pass.
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('theme') || 'light'
+      );
+    </script>
+  </body>
+</html>
