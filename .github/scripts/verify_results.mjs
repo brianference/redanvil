@@ -11,6 +11,16 @@
  */
 import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+
+// Resolve the gate against THIS script's location, not the working directory.
+// Verifying an app that lives in its own repository runs with cwd set to that
+// app, where `orchestrator/src/cli.ts` does not exist -- the reproduction died
+// with ERR_MODULE_NOT_FOUND before it compared anything. The gate is always a
+// sibling of this file; the app under review is not.
+const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
+const gateCli = join(repoRoot, 'orchestrator', 'src', 'cli.ts');
 
 const [appDir, resultFile, verdictFile, naLanes = ''] = process.argv.slice(2);
 
@@ -35,7 +45,7 @@ if (!committed.provenance) {
 const tmp = `${resultFile}.verify.json`;
 const args = [
   'tsx',
-  'orchestrator/src/cli.ts',
+  gateCli,
   'gate',
   appDir,
   '--threshold',
