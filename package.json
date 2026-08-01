@@ -8,7 +8,8 @@
   "workspaces": [
     "orchestrator",
     "app-builder",
-    "dashboard"
+    "dashboard",
+    "az-planting-calendar"
   ],
   "scripts": {
     "typecheck": "tsc -p orchestrator/tsconfig.json",
