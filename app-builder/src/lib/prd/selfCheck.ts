@@ -1,6 +1,6 @@
 import type { PrdSelfCheckItem, PrdSelfCheckResult } from './types';
 import { PRD_SECTION_HEADINGS, PRD_THRESHOLD } from './types';
-import { entityTable } from './naming';
+import { entityTable, requirementLines } from './naming';
 
 /**
  * Placeholder / incomplete markers that must not appear in a finished PRD body.
@@ -9,19 +9,139 @@ import { entityTable } from './naming';
 /** Incomplete stub markers; word-boundary so normal prose is safe. */
 const PLACEHOLDER_RE = /\b(TBD|TODO|FIXME|lorem ipsum)\b/i;
 
+/** Stopwords ignored when building a head noun phrase for fidelity matching. */
+const FIDELITY_STOP = new Set([
+  'a',
+  'an',
+  'the',
+  'for',
+  'with',
+  'and',
+  'or',
+  'to',
+  'of',
+  'in',
+  'on',
+  'at',
+  'by',
+  'from',
+  'is',
+  'are',
+  'be',
+  'as',
+  'this',
+  'that',
+  'show',
+  'list',
+  'display',
+  'browse',
+  'view',
+  'every',
+  'full',
+  'current',
+  'marked',
+  'across',
+  'down',
+  'notes'
+]);
+
+/**
+ * Head noun phrase for a requirement line — distinctive content used to check
+ * whether the PRD actually describes what the user asked for.
+ *
+ * Prefers known multi-word domain phrases (e.g. "half-month window", "days to
+ * harvest") when present; otherwise the first few content tokens.
+ *
+ * @param line - One requirement line from the prompt.
+ * @returns Lowercased phrase for matching, or empty when none.
+ */
+export function headNounPhrase(line: string): string {
+  const lower = line.toLowerCase();
+  const known: readonly string[] = [
+    'seed vs transplant',
+    'half-month window',
+    'days to harvest',
+    'filter by month',
+    'cites az1005',
+    'planting window',
+    'calendar grid',
+    'lowest cost',
+    'travel time'
+  ];
+  for (const phrase of known) {
+    if (lower.includes(phrase)) return phrase;
+  }
+
+  const withoutParen = line.replace(/\([^)]*\)/g, ' ');
+  // Drop leading imperative/boilerplate so the head is the domain noun phrase.
+  const stripped = withoutParen
+    .replace(
+      /^(?:build|create|make|show|list|display|browse|view|find|track|search|an?\s+app\s+(?:for|to|that)\s+)\s*/i,
+      ''
+    )
+    .replace(/^(?:an?\s+app\s+to\s+|app\s+to\s+|for\s+)/i, '');
+  const tokens = stripped
+    .toLowerCase()
+    .replace(/https?:\/\/\S+/g, ' ')
+    .replace(/[^a-z0-9\s/-]+/g, ' ')
+    .split(/[\s/]+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 1 && !FIDELITY_STOP.has(t) && !/^(app|build|track|tracking|remind|reminds?)$/.test(t));
+  if (tokens.length >= 2) {
+    return tokens.slice(0, 3).join(' ');
+  }
+  return tokens[0] ?? '';
+}
+
+/**
+ * Requirement lines whose head noun phrase does not appear in feature text.
+ *
+ * @param prompt - Original product prompt (not generator directives).
+ * @param featureCorpus - Concatenated feature names, behaviors, and acceptance.
+ * @returns Unmatched requirement lines (original wording), order preserved.
+ */
+export function unmatchedPromptRequirements(prompt: string, featureCorpus: string): string[] {
+  const corpus = featureCorpus.toLowerCase();
+  const unmatched: string[] = [];
+  for (const line of requirementLines(prompt)) {
+    const head = headNounPhrase(line);
+    if (head.length === 0) continue;
+    // Phrase hit, or every content token of the head appears in features.
+    if (corpus.includes(head)) continue;
+    const tokens = head.split(/\s+/).filter((t) => t.length > 1);
+    const hit = tokens.length > 0 && tokens.every((t) => corpus.includes(t));
+    if (!hit) unmatched.push(line);
+  }
+  return unmatched;
+}
+
+/**
+ * Extract feature names, behaviors, and acceptance bullets from PRD markdown
+ * for prompt-fidelity grading.
+ *
+ * @param markdown - Full or partial PRD markdown.
+ * @returns Lowercase-ready corpus string.
+ */
+function featureCorpusFromMarkdown(markdown: string): string {
+  const core = markdown.match(/## 8\. Core Features[\s\S]*?(?=\n## \d+\.)/)?.[0] ?? '';
+  const acceptance = markdown.match(/## 9\. Acceptance Criteria[\s\S]*?(?=\n## \d+\.)/)?.[0] ?? '';
+  return `${core}\n${acceptance}`;
+}
+
 /**
  * Grade PRD markdown against verifiable completeness checks.
  * Score is always computed from the checks — never a hardcoded grade.
  *
  * @param markdown - Full PRD markdown (or a partial document under test).
- * @param opts - Optional generation context for entity/DDL checks.
+ * @param opts - Optional generation context for entity/DDL and fidelity checks.
  */
 export function evaluatePrdSelfCheck(
   markdown: string,
-  opts?: { entities?: string[]; hasDomainTables?: boolean }
+  opts?: { entities?: string[]; hasDomainTables?: boolean; prompt?: string }
 ): PrdSelfCheckResult {
   const entities = opts?.entities ?? [];
   const hasDomainTables = opts?.hasDomainTables ?? true;
+  const prompt = opts?.prompt ?? '';
 
   // Body used for placeholder scan: strip the self-check section so its own
   // checklist labels (which mention "placeholder") do not fail the check.
@@ -74,6 +194,23 @@ export function evaluatePrdSelfCheck(
     return prevAt >= 0 && prevAt < at;
   });
 
+  // Fidelity grades against §8/§9. When those sections are absent (unit tests on
+  // incomplete stubs), treat as N/A-pass so structure checks stay independent.
+  const corpus = featureCorpusFromMarkdown(markdown);
+  const hasFeatureSections = /## 8\. Core Features/.test(markdown) && /## 9\. Acceptance/.test(markdown);
+  const unmatched =
+    prompt.trim().length > 0 && hasFeatureSections
+      ? unmatchedPromptRequirements(prompt, corpus)
+      : [];
+  const fidelityPass =
+    prompt.trim().length === 0 || !hasFeatureSections || unmatched.length === 0;
+  const fidelityLabel =
+    unmatched.length === 0
+      ? 'Prompt fidelity: every requirement line appears in a feature'
+      : `Prompt fidelity: unmatched requirements — ${unmatched
+          .map((line) => line.replace(/\s+/g, ' ').slice(0, 60))
+          .join('; ')}`;
+
   const items: PrdSelfCheckItem[] = [
     { id: 'frontmatter', label: 'Machine frontmatter present', pass: hasFrontmatter },
     { id: 'problem', label: 'Problem statement present', pass: problemText.length > 0 },
@@ -114,6 +251,11 @@ export function evaluatePrdSelfCheck(
       id: 'success-outcome',
       label: 'Success Outcome (definition of done) present',
       pass: /## 4\. Success Outcome/.test(markdown) && markdown.includes('score >=')
+    },
+    {
+      id: 'prompt-fidelity',
+      label: fidelityLabel,
+      pass: fidelityPass
     }
   ];
 

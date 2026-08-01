@@ -6,4 +6,4 @@
 export type { Prd, TokenEstimate, PrdSelfCheckItem, PrdSelfCheckResult } from './types';
 export { PRD_SECTION_HEADINGS } from './types';
 export { evaluatePrdSelfCheck } from './selfCheck';
-export { generatePrd } from './generate';
+export { generatePrd, UnresolvedPrdError } from './generate';

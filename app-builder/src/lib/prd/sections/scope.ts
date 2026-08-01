@@ -12,7 +12,9 @@ export function buildNonGoals(
   integrations: string
 ): string {
   const entityScope =
-    entities.length > 0 ? entities.map((e) => entityPascal(e)).join(', ') : 'Item (default)';
+    entities.length > 0
+      ? entities.map((e) => entityPascal(e)).filter(Boolean).join(', ')
+      : 'none named';
   const namedIntegrations = integrations.trim();
   const paymentsLine =
     namedIntegrations.length > 0
@@ -36,16 +38,45 @@ export function buildNonGoals(
 }
 
 /**
+ * Derive the user-story role from auth flag, app type, and optional subject.
+ * Never hardcodes a leftover domain role (e.g. "pet owner").
+ *
+ * @param hasAuth - Whether auth is in scope.
+ * @param appType - Wizard app type string.
+ * @param subject - Optional domain subject (e.g. "crop", "flight").
+ * @returns Role label for "As a **…**" stories.
+ */
+export function storyRole(hasAuth: boolean, appType: string, subject = ''): string {
+  if (appType.toLowerCase().includes('mobile')) return 'mobile user';
+  if (hasAuth) return 'registered user';
+  const cleaned = subject
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, ' ');
+  if (cleaned.length > 2 && cleaned.length < 40) {
+    return `${cleaned} user`;
+  }
+  return 'end user';
+}
+
+/**
  * User stories derived from features and the product framing.
+ *
+ * @param prompt - Product prompt (for the builder story summary).
+ * @param appType - Wizard app type.
+ * @param features - Feature specs (MVP stories only).
+ * @param hasAuth - Auth flag.
+ * @param subject - Optional domain subject for the role label.
  */
 export function buildUserStories(
   prompt: string,
   appType: string,
   features: FeatureSpec[],
-  hasAuth: boolean
+  hasAuth: boolean,
+  subject = ''
 ): string {
-  const role = hasAuth ? 'registered user' : 'pet owner or end user';
-  const appRole = appType.toLowerCase().includes('mobile') ? 'mobile user' : role;
+  const appRole = storyRole(hasAuth, appType, subject);
   const stories = features
     .filter((f) => f.mvp)
     .map((f) => {

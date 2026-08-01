@@ -1,6 +1,7 @@
 import type { DataStorage } from '../../job';
+import { DEFAULT_DATA_STORAGE } from '../../job';
 import { PRD_THRESHOLD, REQUIRED_PAGES } from '../types';
-import { DEFAULT_DATA_STORAGE, storageLabel } from '../naming';
+import { storageLabel } from '../naming';
 
 /**
  * Architecture subsection: concrete Cloudflare stack, request flow, layer bounds.

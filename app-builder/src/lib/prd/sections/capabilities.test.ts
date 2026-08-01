@@ -119,13 +119,22 @@ describe('a calendar is not a booking system', () => {
   // users assign Item to a time and a person, and the app refuses assignments
   // that conflict", with detectConflict tests attached. Building §11 literally
   // gives an item tracker and the planting calendar never appears.
-  const planting =
-    'Show what is plantable in the current half-month window, seed vs transplant marked. ' +
-    'Full year calendar grid: crops down, 24 half-month columns across.';
+  const planting = [
+    'Show what is plantable in the current half-month window, seed vs transplant marked.',
+    'Full year calendar grid: crops down, 24 half-month columns across.',
+    'Crop detail: days to harvest, notes, every planting window.',
+    'Filter by month and by seed/transplant.',
+    'Every planting window cites AZ1005 (Vegetable Planting Calendar for Maricopa County).'
+  ].join('\n');
 
   it('does not read a planting calendar as scheduling', () => {
     const kinds = detectCapabilities(planting, ['Crop', 'PlantingWindow']).map((c) => c.kind);
     expect(kinds).not.toContain('schedule');
+  });
+
+  it('detects a reference capability for a planting calendar (A2)', () => {
+    const kinds = detectCapabilities(planting, ['Crop', 'PlantingWindow']).map((c) => c.kind);
+    expect(kinds).toContain('reference');
   });
 
   it('still detects scheduling when something is actually assigned', () => {
@@ -138,5 +147,42 @@ describe('a calendar is not a booking system', () => {
     ]) {
       expect(detectCapabilities(prompt, ['Booking']).map((c) => c.kind)).toContain('schedule');
     }
+  });
+
+  it('lets a genuine search prompt win over reference (search-rank first)', () => {
+    const kinds = detectCapabilities(
+      'find the lowest cost airline flight with nonstop only',
+      ['flight']
+    ).map((c) => c.kind);
+    expect(kinds[0]).toBe('search-rank');
+  });
+});
+
+describe('multi-line criteria (A3)', () => {
+  it('keeps requirement lines after the first, not only a with|by tail', () => {
+    const planting = [
+      'Show what is plantable in the current half-month window, seed vs transplant marked.',
+      'Full year calendar grid: crops down, 24 half-month columns across.',
+      'Crop detail: days to harvest, notes, every planting window.',
+      'Filter by month and by seed/transplant.',
+      'Every planting window cites AZ1005.'
+    ].join('\n');
+    const criteria = extractCriteria(planting).join(' | ').toLowerCase();
+    expect(criteria).toMatch(/seed|transplant/);
+    expect(criteria).toMatch(/harvest|month|az1005|half-month|grid|window/);
+  });
+});
+
+describe('reference features', () => {
+  it('emits grid, filter, and detail with GIVEN/WHEN/THEN acceptance', () => {
+    const planting =
+      'Show what is plantable in the current half-month window, seed vs transplant marked.\n' +
+      'Filter by month and by seed/transplant.\n' +
+      'Crop detail: days to harvest.';
+    const titles = buildFeatureSuggestions(['Crop'], false, planting).map((s) => s.title);
+    expect(titles.some((t) => /grid/i.test(t))).toBe(true);
+    expect(titles.some((t) => /^Filter /i.test(t))).toBe(true);
+    expect(titles.some((t) => /detail/i.test(t))).toBe(true);
+    expect(titles.some((t) => /Schedule /i.test(t))).toBe(false);
   });
 });

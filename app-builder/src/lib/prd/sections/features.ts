@@ -1,5 +1,5 @@
 import type { FeatureSpec } from '../types';
-import { entityPascal, entityTable } from '../naming';
+import { entityPascal, entityTable, primaryEntity } from '../naming';
 import { capabilityFeatures, detectCapabilities } from './capabilities';
 
 /**
@@ -21,8 +21,12 @@ export interface FeatureSuggestion {
  * Template core features from entities + auth flag (F1, F2, …).
  * MVP features come first (browse, detail, access, manage primary); rest are beyond MVP.
  *
+ * Never invents a default "Item" entity when `entities` is empty — capability
+ * features and access/pages still emit; entity CRUD templates are omitted.
+ *
  * @param entities - Domain entity names (primary first).
  * @param hasAuth - Whether the wizard auth flag is on.
+ * @param prompt - Raw prompt (drives capability features).
  * @returns Ordered feature specs for the PRD sections.
  */
 export function buildFeatures(entities: string[], hasAuth: boolean, prompt = ''): FeatureSpec[] {
@@ -32,58 +36,61 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
   // layover duration, arrival time and total travel time" produced a CRUD app
   // over a table with `title` and `description`, containing no flight search.
   const capabilities = capabilityFeatures(detectCapabilities(prompt, entities), 1);
-  const primary = entities[0] ? entityPascal(entities[0]) : 'Item';
-  const primaryTable = entities[0] ? entityTable(entities[0]) : 'items';
+  const primary = primaryEntity(entities);
+  const primaryTable = entities[0] ? entityTable(entities[0]) : '';
   const secondary = entities.slice(1);
+  const features: FeatureSpec[] = [];
 
-  const features: FeatureSpec[] = [
-    {
-      id: 'F1',
-      name: `Browse & search ${primary}`,
-      behavior: `Users can open the ${primaryTable} list, search by title, and see matching rows or an empty state.`,
-      mvp: true,
-      acceptance: [
-        `GIVEN seeded ${primaryTable} exist WHEN the user opens the list THEN each row shows title and a link to detail`,
-        `GIVEN seeded ${primaryTable} exist WHEN the user enters a query that matches one title THEN only matching rows render`,
-        `GIVEN no ${primaryTable} exist WHEN the list loads THEN an empty state explains how to add one`,
-        `GIVEN the API returns 500 WHEN the list loads THEN an error message with a retry action is shown`
-      ],
-      tests: {
-        unit: [
-          `filter${primary}s_byQuery_matchesTitle`,
-          `filter${primary}s_byQuery_emptyReturnsEmpty`
+  if (primary && primaryTable) {
+    features.push(
+      {
+        id: 'F1',
+        name: `Browse & search ${primary}`,
+        behavior: `Users can open the ${primaryTable} list, search by title, and see matching rows or an empty state.`,
+        mvp: true,
+        acceptance: [
+          `GIVEN seeded ${primaryTable} exist WHEN the user opens the list THEN each row shows title and a link to detail`,
+          `GIVEN seeded ${primaryTable} exist WHEN the user enters a query that matches one title THEN only matching rows render`,
+          `GIVEN no ${primaryTable} exist WHEN the list loads THEN an empty state explains how to add one`,
+          `GIVEN the API returns 500 WHEN the list loads THEN an error message with a retry action is shown`
         ],
-        integration: [
-          `GET /api/${primaryTable} returns 200 with items array`,
-          `GET /api/${primaryTable}?q= matches title`
+        tests: {
+          unit: [
+            `filter${primary}s_byQuery_matchesTitle`,
+            `filter${primary}s_byQuery_emptyReturnsEmpty`
+          ],
+          integration: [
+            `GET /api/${primaryTable} returns 200 with items array`,
+            `GET /api/${primaryTable}?q= matches title`
+          ],
+          e2e: [
+            `${primaryTable}-list shows rows`,
+            `${primaryTable}-list empty state`,
+            `${primaryTable}-list error + retry`
+          ]
+        }
+      },
+      {
+        id: 'F2',
+        name: `${primary} detail`,
+        behavior: `Clicking a list row opens the full ${primary} record with title, description, and a back link.`,
+        mvp: true,
+        acceptance: [
+          `GIVEN a ${primary} id that exists in D1 WHEN the user opens /${primaryTable}/:id THEN the page shows title, description, and a back link to the list`,
+          `GIVEN an unknown id WHEN the user opens /${primaryTable}/:id THEN a not-found state with a path back to the list is shown`,
+          `GIVEN the API returns 500 WHEN detail loads THEN an error message with a retry action is shown`
         ],
-        e2e: [
-          `${primaryTable}-list shows rows`,
-          `${primaryTable}-list empty state`,
-          `${primaryTable}-list error + retry`
-        ]
+        tests: {
+          unit: [`${primary}RowSchema_acceptsValidRow`, `${primary}RowSchema_rejectsMissingId`],
+          integration: [
+            `GET /api/${primaryTable}/:id returns 200 for existing`,
+            `GET /api/${primaryTable}/:id returns 404 for missing`
+          ],
+          e2e: [`${primaryTable}-detail shows fields`, `${primaryTable}-detail not-found state`]
+        }
       }
-    },
-    {
-      id: 'F2',
-      name: `${primary} detail`,
-      behavior: `Clicking a list row opens the full ${primary} record with title, description, and a back link.`,
-      mvp: true,
-      acceptance: [
-        `GIVEN a ${primary} id that exists in D1 WHEN the user opens /${primaryTable}/:id THEN the page shows title, description, and a back link to the list`,
-        `GIVEN an unknown id WHEN the user opens /${primaryTable}/:id THEN a not-found state with a path back to the list is shown`,
-        `GIVEN the API returns 500 WHEN detail loads THEN an error message with a retry action is shown`
-      ],
-      tests: {
-        unit: [`${primary}RowSchema_acceptsValidRow`, `${primary}RowSchema_rejectsMissingId`],
-        integration: [
-          `GET /api/${primaryTable}/:id returns 200 for existing`,
-          `GET /api/${primaryTable}/:id returns 404 for missing`
-        ],
-        e2e: [`${primaryTable}-detail shows fields`, `${primaryTable}-detail not-found state`]
-      }
-    }
-  ];
+    );
+  }
 
   if (hasAuth) {
     features.push({
@@ -120,43 +127,51 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
       ],
       tests: {
         unit: ['routeConfig_hasNoAuthGuard'],
-        integration: ['GET /api/health is public', `GET /api/${primaryTable} is public`],
+        integration: [
+          'GET /api/health is public',
+          primaryTable.length > 0
+            ? `GET /api/${primaryTable} is public`
+            : 'GET /api/health remains public without auth headers'
+        ],
         e2e: ['smoke Home + list + detail without login']
       }
     });
   }
 
   // Primary entity manage is MVP; additional entities are beyond MVP.
-  features.push({
-    id: 'F4',
-    name: `Manage ${primary}`,
-    behavior: `Create, edit, and delete ${primaryTable} with confirmation before delete.`,
-    mvp: true,
-    acceptance: [
-      `GIVEN the manage form is open WHEN the user creates a ${primary} with a valid title THEN the list includes the new row`,
-      `GIVEN an existing ${primary} WHEN the user edits its title and saves THEN the list and detail show the new title`,
-      `GIVEN an existing ${primary} WHEN the user confirms delete THEN the row is gone from the list`,
-      `GIVEN an existing ${primary} WHEN the user cancels delete THEN the row remains`,
-      `GIVEN invalid input (empty title) WHEN the user submits create THEN a 400 validation message is shown and no row is created`
-    ],
-    tests: {
-      unit: [`${primary}CreateSchema_requiresTitle`, `${primary}CreateSchema_acceptsValid`],
-      integration: [
-        `POST /api/${primaryTable} returns 201`,
-        `POST /api/${primaryTable} returns 400 on empty title`,
-        `DELETE or update path removes/updates row`
+  if (primary && primaryTable) {
+    features.push({
+      id: 'F4',
+      name: `Manage ${primary}`,
+      behavior: `Create, edit, and delete ${primaryTable} with confirmation before delete.`,
+      mvp: true,
+      acceptance: [
+        `GIVEN the manage form is open WHEN the user creates a ${primary} with a valid title THEN the list includes the new row`,
+        `GIVEN an existing ${primary} WHEN the user edits its title and saves THEN the list and detail show the new title`,
+        `GIVEN an existing ${primary} WHEN the user confirms delete THEN the row is gone from the list`,
+        `GIVEN an existing ${primary} WHEN the user cancels delete THEN the row remains`,
+        `GIVEN invalid input (empty title) WHEN the user submits create THEN a 400 validation message is shown and no row is created`
       ],
-      e2e: [
-        `${primaryTable}-crud create`,
-        `${primaryTable}-crud edit`,
-        `${primaryTable}-crud delete confirm/cancel`
-      ]
-    }
-  });
+      tests: {
+        unit: [`${primary}CreateSchema_requiresTitle`, `${primary}CreateSchema_acceptsValid`],
+        integration: [
+          `POST /api/${primaryTable} returns 201`,
+          `POST /api/${primaryTable} returns 400 on empty title`,
+          `DELETE or update path removes/updates row`
+        ],
+        e2e: [
+          `${primaryTable}-crud create`,
+          `${primaryTable}-crud edit`,
+          `${primaryTable}-crud delete confirm/cancel`
+        ]
+      }
+    });
+  }
 
   secondary.forEach((entity, index) => {
     const pascal = entityPascal(entity);
     const table = entityTable(entity);
+    if (!pascal || !table) return;
     const id = `F${5 + index}`;
     features.push({
       id,
@@ -179,9 +194,8 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
     });
   });
 
-  const pagesId = `F${features.length + 1}`;
   features.push({
-    id: pagesId,
+    id: `F${features.length + 1}`,
     name: 'Required pages & SEO',
     behavior:
       'Ship Home, About, Terms, Privacy, Contact with per-route SEO, sitemap, and robots.txt.',
@@ -230,7 +244,7 @@ export function buildFeatureSuggestions(
   prompt = ''
 ): FeatureSuggestion[] {
   const features = buildFeatures(entities, hasAuth, prompt);
-  const primary = entities[0] ? entityPascal(entities[0]) : 'Item';
+  const primary = primaryEntity(entities) ?? 'record';
   return features.map((feature) => ({
     id: feature.id,
     title: feature.name,
@@ -287,22 +301,28 @@ export function entitiesRequiredByFeatures(
   allEntities: string[],
   selectedFeatures: FeatureSpec[]
 ): string[] {
-  if (selectedFeatures.length === 0) {
+  if (selectedFeatures.length === 0 || allEntities.length === 0) {
     return [];
   }
-  const primaryLabel = allEntities[0] ? entityPascal(allEntities[0]) : 'Item';
+  const primaryLabel = primaryEntity(allEntities);
+  const primaryRaw = allEntities[0];
   const needed = new Set<string>();
 
   for (const feature of selectedFeatures) {
-    if (feature.id === 'F1' || feature.id === 'F2' || feature.id === 'F4') {
-      needed.add(allEntities[0] ?? 'Item');
+    // Match by feature shape, not hard-coded F-ids — capability features renumber the list.
+    if (
+      feature.name.startsWith('Browse & search ') ||
+      feature.name.endsWith(' detail') ||
+      (primaryLabel !== null && feature.name === `Manage ${primaryLabel}`)
+    ) {
+      if (primaryRaw) needed.add(primaryRaw);
       continue;
     }
     const manageMatch = /^Manage (.+)$/.exec(feature.name);
     if (manageMatch) {
       const pascal = manageMatch[1] ?? '';
-      if (pascal === primaryLabel) {
-        needed.add(allEntities[0] ?? 'Item');
+      if (primaryLabel !== null && pascal === primaryLabel && primaryRaw) {
+        needed.add(primaryRaw);
       } else {
         const match = allEntities.find((entity) => entityPascal(entity) === pascal);
         if (match) {
@@ -312,9 +332,6 @@ export function entitiesRequiredByFeatures(
     }
   }
 
-  if (allEntities.length === 0 && needed.has('Item')) {
-    return ['Item'];
-  }
   return allEntities.filter((entity) => needed.has(entity));
 }
 
@@ -355,7 +372,12 @@ function rationaleForFeature(
   // which silently became wrong the moment ids were assigned dynamically: with
   // two capability features leading, "Search airline flight" was captioned
   // "browse and search the list" and every rationale was off by two.
-  if (feature.name.startsWith('Search ') || feature.name.startsWith('Filter and sort ')) {
+  if (
+    feature.name.startsWith('Search ') ||
+    feature.name.startsWith('Filter and sort ') ||
+    feature.name.startsWith('Filter ') ||
+    feature.name.endsWith(' grid')
+  ) {
     return 'From your description (the core job the app does)';
   }
   if (feature.name.startsWith('Schedule ') || feature.name.startsWith('Alerts for ')) {

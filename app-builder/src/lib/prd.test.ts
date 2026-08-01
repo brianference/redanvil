@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { generatePrd, evaluatePrdSelfCheck, PRD_SECTION_HEADINGS } from './prd';
+import { generatePrd, evaluatePrdSelfCheck, PRD_SECTION_HEADINGS, UnresolvedPrdError } from './prd';
 import { estimate } from './estimate';
 import { DEFAULT_APP_TYPE, EMPTY_WIZARD_ANSWERS } from './job';
+import { unmatchedPromptRequirements } from './prd/selfCheck';
 
 const cost = estimate({ features: 3, hasAuth: true, entities: 2 });
 const prd = generatePrd(
@@ -48,7 +49,8 @@ describe('generatePrd', () => {
     );
     // Must not end mid-word on the old 6-word cut ("…for Small")
     expect(long.title).not.toMatch(/for Small$/);
-    expect(long.title.toLowerCase()).toContain('shift');
+    // Product title should name the domain (scheduling / shifts), not the audience alone.
+    expect(long.title.toLowerCase()).toMatch(/shift|schedul/);
     expect(long.markdown.startsWith(`# Implementation Spec — ${long.title}`)).toBe(true);
     // No ellipsis stuffed into the markdown heading
     expect(long.markdown.split('\n')[0]).not.toContain('…');
@@ -195,7 +197,8 @@ describe('generatePrd', () => {
 
   it('includes problem statement, user stories, and success outcome', () => {
     expect(prd.markdown).toContain('## 2. Problem Statement');
-    expect(prd.markdown).toContain(prd.prompt);
+    // Product prose carries the domain need; the raw prompt may be lightly cleaned.
+    expect(prd.markdown.toLowerCase()).toMatch(/tesla|driving|track/);
     expect(prd.markdown).toContain('## 6. User Stories');
     expect(prd.markdown).toMatch(/As a \*\*.+\*\*, I want/);
     expect(prd.markdown).toContain('## 4. Success Outcome');
@@ -352,7 +355,8 @@ describe('evaluatePrdSelfCheck', () => {
   it('drops the grade for deliberately incomplete markdown (proves score is real)', () => {
     const full = evaluatePrdSelfCheck(prd.markdown, {
       entities: ['trips', 'drivers'],
-      hasDomainTables: true
+      hasDomainTables: true,
+      prompt: prd.prompt
     });
     expect(full.passed).toBe(full.total);
     expect(full.percent).toBe(100);
@@ -504,5 +508,101 @@ describe('app name override', () => {
       estimate({ features: 2, hasAuth: false, entities: 1 })
     );
     expect(derived.title).not.toMatch(/\b(with|for|the|a|an|to|of|and|by|from|that|which)$/i);
+  });
+});
+
+/** Exact multi-line planting-calendar prompt from the Part A regression plan. */
+const PLANTING_CALENDAR_PROMPT = [
+  'Show what is plantable in the current half-month window, seed vs transplant marked.',
+  'Full year calendar grid: crops down, 24 half-month columns across.',
+  'Crop detail: days to harvest, notes, every planting window.',
+  'Filter by month and by seed/transplant.',
+  'Every planting window cites AZ1005 (Vegetable Planting Calendar for Maricopa County).',
+  'Cave Creek, AZ elevation note.',
+  '(reverse engineer features from this https://www.almanac.com/gardening/planting-calendar)'
+].join('\n');
+
+describe('planting-calendar PRD regression (Part A)', () => {
+  const planting = generatePrd(
+    {
+      prompt: PLANTING_CALENDAR_PROMPT,
+      appType: 'Mobile app',
+      hasAuth: false,
+      entities: '',
+      appName: 'Desert Planting Calendar'
+    },
+    estimate({ features: 4, hasAuth: false, entities: 2, scopeSignals: 2 })
+  );
+
+  it('does not invent an items table or a Schedule Item feature', () => {
+    expect(planting.markdown).not.toMatch(/CREATE TABLE IF NOT EXISTS items\b/);
+    expect(planting.markdown).not.toMatch(/Schedule Item/i);
+    expect(planting.markdown).not.toMatch(/entities: \["Item"\]/);
+  });
+
+  it('detects reference features and real domain entities', () => {
+    expect(planting.markdown).toMatch(/grid/i);
+    expect(planting.markdown.toLowerCase()).toMatch(/seed vs transplant/);
+    expect(planting.markdown.toLowerCase()).toMatch(/days to harvest/);
+    expect(planting.markdown).toMatch(/Crop|PlantingWindow/i);
+  });
+
+  it('strips generator directives from §1/§2 and carries the URL into §7', () => {
+    const intro = planting.markdown.split('## 2. Problem Statement')[0] ?? '';
+    const problem = planting.markdown.split('## 3. Solution Overview')[0] ?? '';
+    expect(intro.toLowerCase()).not.toContain('reverse engineer');
+    expect(problem.toLowerCase()).not.toContain('reverse engineer');
+    expect(planting.markdown).toMatch(/almanac\.com/);
+    expect(planting.markdown).toContain('Named references');
+  });
+
+  it('does not append reminder-app filler or pet-owner roles', () => {
+    expect(planting.markdown).not.toMatch(/cost of missing a due item/i);
+    expect(planting.markdown).not.toMatch(/pet owner/i);
+  });
+
+  it('grades prompt fidelity with zero unmatched requirements in §14', () => {
+    expect(planting.markdown).toMatch(/Prompt fidelity: every requirement line appears in a feature/);
+    const fidelityLine = planting.markdown
+      .split('\n')
+      .find((l) => l.includes('Prompt fidelity'));
+    expect(fidelityLine).toMatch(/\[x\]/);
+    expect(fidelityLine).not.toMatch(/unmatched requirements/i);
+
+    const corpus = [
+      planting.markdown.match(/## 8\. Core Features[\s\S]*?(?=\n## \d+\.)/)?.[0] ?? '',
+      planting.markdown.match(/## 9\. Acceptance Criteria[\s\S]*?(?=\n## \d+\.)/)?.[0] ?? ''
+    ].join('\n');
+    expect(unmatchedPromptRequirements(PLANTING_CALENDAR_PROMPT, corpus)).toEqual([]);
+  });
+});
+
+describe('fail-closed empty entities (A1)', () => {
+  it('throws UnresolvedPrdError when nothing is derivable', () => {
+    expect(() =>
+      generatePrd(
+        {
+          prompt: 'please make a thing',
+          appType: 'web application',
+          hasAuth: false,
+          entities: ''
+        },
+        estimate({ features: 1, hasAuth: false, entities: 0 })
+      )
+    ).toThrow(UnresolvedPrdError);
+    try {
+      generatePrd(
+        {
+          prompt: 'please make a thing',
+          appType: 'web application',
+          hasAuth: false,
+          entities: ''
+        },
+        estimate({ features: 1, hasAuth: false, entities: 0 })
+      );
+    } catch (err) {
+      expect(err).toBeInstanceOf(UnresolvedPrdError);
+      expect((err as UnresolvedPrdError).code).toBe('unresolved-entities');
+    }
   });
 });

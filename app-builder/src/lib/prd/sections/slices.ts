@@ -14,10 +14,12 @@ export function buildSlices(opts: {
   dataStorage: DataStorage;
 }): SliceSpec[] {
   const { slug, entities, hasAuth, features, dataStorage } = opts;
-  const primary = entities[0] ? entityPascal(entities[0]) : 'Item';
-  const primaryTable = entities[0] ? entityTable(entities[0]) : 'items';
+  const primary = entities[0] ? entityPascal(entities[0]) : '';
+  const primaryTable = entities[0] ? entityTable(entities[0]) : '';
   const entityLabel =
-    entities.length > 0 ? entities.map((e) => entityPascal(e)).join(', ') : 'Item';
+    entities.length > 0
+      ? entities.map((e) => entityPascal(e)).filter(Boolean).join(', ')
+      : 'none';
 
   const slices: SliceSpec[] = [
     {

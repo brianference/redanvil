@@ -1,3 +1,5 @@
+import { isTitleFragment, titleFromPrompt } from './prd/naming';
+
 /** How the app should persist domain data (wizard scope). */
 export type DataStorage = 'none' | 'simple' | 'relational';
 
@@ -93,8 +95,9 @@ export function isFeatureSelectionReady(answers: WizardAnswers): boolean {
 }
 
 /**
- * Whether Forge PRD may run: prompt, app type, and a non-empty feature pick
- * when the user has already made an explicit selection.
+ * Whether Forge PRD may run: prompt, app type, a non-empty feature pick when
+ * the user has already made an explicit selection, and a non-fragment derived
+ * product title (A6).
  *
  * @param answers - Wizard form values.
  * @returns True when the submit action may fire.
@@ -104,6 +107,10 @@ export function canForgePrd(answers: WizardAnswers): boolean {
     return false;
   }
   if (answers.selectedFeatureIds !== null && answers.selectedFeatureIds.length === 0) {
+    return false;
+  }
+  // Gate when the derived title is still a sentence fragment (A6).
+  if (isTitleFragment(titleFromPrompt(answers.prompt))) {
     return false;
   }
   return true;

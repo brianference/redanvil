@@ -14,7 +14,7 @@ export function buildFrontmatter(opts: {
   const entityYaml =
     opts.entities.length > 0
       ? `[${opts.entities.map((e) => yamlString(e)).join(', ')}]`
-      : '["Item"]';
+      : '[]';
   return [
     '```yaml',
     `appType: ${yamlString(opts.appType)}`,

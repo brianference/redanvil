@@ -1,4 +1,5 @@
 import type { FeatureSpec } from '../types';
+import { requirementLines } from '../naming';
 
 /**
  * What the app actually DOES, extracted from the prompt.
@@ -15,7 +16,14 @@ import type { FeatureSpec } from '../types';
  */
 export interface Capability {
   /** The shape of work the app does. */
-  kind: 'search-rank' | 'schedule' | 'track' | 'notify' | 'calculate' | 'import-export';
+  kind:
+    | 'search-rank'
+    | 'reference'
+    | 'schedule'
+    | 'track'
+    | 'notify'
+    | 'calculate'
+    | 'import-export';
   /** What the user is optimising for, e.g. "lowest cost". Null when unstated. */
   objective: string | null;
   /** Constraints and preferences the user named, in their own words. */
@@ -29,6 +37,15 @@ const KIND_PATTERNS: readonly { kind: Capability['kind']; re: RegExp }[] = [
   {
     kind: 'search-rank',
     re: /\b(find|finds|search|searches|compare|compares|rank|ranks|cheapest|lowest|best|fastest|shortest|optimi[sz]e[sd]?)\b/i
+  },
+  {
+    // Reference views over a fixed, cited dataset: planting calendars, tide
+    // tables, hardiness charts. Placed AFTER search-rank so a genuine search
+    // prompt still wins. "calendar" alone is intentionally here (not under
+    // schedule) — RA-163 removed it from schedule; without this kind the
+    // planting-calendar prompt matches nothing and §8 collapses to CRUD.
+    kind: 'reference',
+    re: /\b(show|shows|list|lists|display|displays|browse|browses|view|views|chart|charts|grid|grids|calendar|calendars|window|windows|what\s+is\s+\w+)\b/i
   },
   {
     // "calendar" alone is NOT a scheduling signal and used to be one. A planting
@@ -59,30 +76,63 @@ const OBJECTIVE_RE =
   /\b((?:lowest|highest|cheapest|best|fastest|shortest|earliest|latest|most|least)(?:\s+(?:cost|price|total|priced?|value|time|duration|fare))?)\b/i;
 
 /**
+ * Clean one criterion phrase: strip filler words and bound length.
+ *
+ * @param part - Raw fragment.
+ * @returns Cleaned phrase, or empty when too short/long.
+ */
+function cleanCriterion(part: string): string {
+  return part
+    .replace(/\b(specific|optimi[sz]ations?|preferences?|options?|filters?|marked)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s.-]+|[\s.-]+$/g, '')
+    .trim();
+}
+
+/**
  * Split the constraint tail of a prompt into individual criteria.
  *
- * Users write constraints as a comma list after "with" or "by": "with specific
- * nonstop, limit to one layover, duration of layover, arrival time, total
- * travel time optimizations". Each item is a real filter or sort control, and
- * every one of them was being discarded.
+ * Users write constraints as a comma list after "with" or "by", and also as a
+ * multi-line requirement list. Every non-empty requirement line is a candidate;
+ * the classic with|by tail parse still runs on the full text.
  *
  * @param prompt - Raw prompt text.
  * @returns Criteria phrases in the user's own words, de-duplicated.
  */
 export function extractCriteria(prompt: string): string[] {
-  const tail = /\b(?:with|by|including|based on|optimi[sz]ing for)\b([\s\S]+)/i.exec(prompt);
-  if (tail === null) return [];
-  const parts = (tail[1] ?? '')
-    .split(/,| and (?=\w)|;/)
-    .map((part) =>
-      part
-        .replace(/\b(specific|optimi[sz]ations?|preferences?|options?|filters?)\b/gi, '')
-        .replace(/\s+/g, ' ')
-        .replace(/^[\s.-]+|[\s.-]+$/g, '')
-        .trim()
-    )
-    .filter((part) => part.length > 2 && part.length < 60);
-  return [...new Set(parts)];
+  const parts: string[] = [];
+
+  // A3: multi-line / bullet requirement list first.
+  for (const line of requirementLines(prompt)) {
+    const tail = /\b(?:with|by|including|based on|optimi[sz]ing for)\b([\s\S]+)/i.exec(line);
+    if (tail !== null) {
+      for (const piece of (tail[1] ?? '').split(/,| and (?=\w)|;/)) {
+        parts.push(piece);
+      }
+    } else if (line.length > 2 && line.length < 120) {
+      // Whole short requirement lines are criteria ("seed vs transplant marked",
+      // "Crop detail: days to harvest", "Every planting window cites AZ1005").
+      const stripped = line
+        .replace(/^(?:show|list|display|browse|view|filter|find|track|build)\b[:\s]*/i, '')
+        .replace(/^[^:]+:\s*/, '')
+        .trim();
+      if (stripped.length > 2) parts.push(stripped);
+      else parts.push(line);
+    }
+  }
+
+  // Full-prompt with|by tail (covers single-line comma lists).
+  const fullTail = /\b(?:with|by|including|based on|optimi[sz]ing for)\b([\s\S]+)/i.exec(prompt);
+  if (fullTail !== null) {
+    for (const piece of (fullTail[1] ?? '').split(/,| and (?=\w)|;/)) {
+      parts.push(piece);
+    }
+  }
+
+  const cleaned = parts
+    .map(cleanCriterion)
+    .filter((part) => part.length > 2 && part.length < 80);
+  return [...new Set(cleaned)];
 }
 
 /**
@@ -106,11 +156,11 @@ const GENERIC_SUBJECTS =
  */
 export function extractSubject(prompt: string, entities: readonly string[] = []): string {
   const m =
-    /\b(?:find|finds|search(?:es)? for|searches|compare[s]?|track[s]?|schedul\w*|book[s]?)\s+(?:the\s+)?(?:[a-z]+\s+){0,3}?([a-z][a-z ]{2,40}?)(?:\s+(?:with|by|that|which|for|based)\b|[.,]|$)/i.exec(
+    /\b(?:find|finds|search(?:es)? for|searches|compare[s]?|track(?:s|ing)?|schedul\w*|book[s]?|show[s]?|list[s]?|display[s]?|browse[s]?|view[s]?|remind(?:s|ers?)?(?:\s+you)?(?:\s+when)?)\s+(?:the\s+|what\s+is\s+|you\s+when\s+(?:your\s+)?)?(?:[a-z]+\s+){0,3}?([a-z][a-z0-9 ]{2,40}?)(?:\s+(?:with|by|that|which|for|based|in|marked|needs)\b|[.,]|$)/i.exec(
       prompt
     );
   const raw = (m?.[1] ?? '')
-    .replace(/\b(lowest|highest|cheapest|best|fastest|cost|price)\b/gi, '')
+    .replace(/\b(lowest|highest|cheapest|best|fastest|cost|price|current)\b/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
   const fromPrompt = raw.length > 2 && !GENERIC_SUBJECTS.test(raw) ? raw : '';
@@ -126,6 +176,7 @@ export function extractSubject(prompt: string, entities: readonly string[] = [])
  * regenerate it is not a spec.
  *
  * @param prompt - Raw prompt text.
+ * @param entities - Domain entity names (helps subject extraction).
  * @returns Capabilities in priority order; empty when the prompt names none.
  */
 export function detectCapabilities(prompt: string, entities: readonly string[] = []): Capability[] {
@@ -237,6 +288,85 @@ export function capabilityFeatures(
         });
         n += 1;
       }
+    }
+
+    if (cap.kind === 'reference') {
+      // Grid / window view of the fixed dataset — the hero for planting calendars,
+      // tide tables, and similar reference UIs. Criteria phrases are quoted into
+      // behavior/acceptance so prompt-fidelity can find them by name.
+      const criteriaBlurb =
+        cap.criteria.length > 0 ? ` Criteria: ${cap.criteria.join('; ')}.` : '';
+      out.push({
+        id: `F${n}`,
+        name: `${Subject} grid`,
+        behavior: `Users open a calendar grid or half-month window view of ${subject}.${criteriaBlurb} Seed vs transplant (or equivalent method markers) are visible when the dataset carries them.`,
+        mvp: true,
+        acceptance: [
+          `GIVEN a loaded ${subject} dataset WHEN the user opens the calendar grid THEN rows and half-month window columns render without inventing missing data`,
+          `GIVEN method markers exist (seed vs transplant) WHEN the grid renders THEN each applicable cell shows the marker`,
+          `GIVEN the dataset is empty or not loaded WHEN the grid opens THEN an explicit empty state is shown, never sample rows`,
+          `GIVEN the API returns 500 WHEN the grid loads THEN an error with a retry action is shown`
+        ],
+        tests: {
+          unit: [`build${id}Grid_knownRows_returnsCells`, `build${id}Grid_emptyDataset_returnsEmpty`],
+          integration: [`GET /api/${id.toLowerCase()}/grid returns 200 with cells`],
+          e2e: [
+            `${subject.replace(/\s+/g, '-')}-grid shows windows`,
+            `${subject.replace(/\s+/g, '-')}-grid empty state`
+          ]
+        }
+      });
+      n += 1;
+
+      if (cap.criteria.length > 0) {
+        out.push({
+          id: `F${n}`,
+          name: `Filter ${subject}`,
+          behavior: `The criteria named in the request are real filter controls, including filter by month when month is named: ${cap.criteria.join('; ')}.`,
+          mvp: true,
+          acceptance: [
+            ...cap.criteria
+              .slice(0, 6)
+              .map(
+                (c) =>
+                  `GIVEN the grid is showing WHEN the user applies "${c}" THEN only matching ${subject} remain and the active filter is visible`
+              ),
+            `GIVEN active filters WHEN the user clears them THEN the full dataset returns`,
+            `GIVEN a filter combination that excludes everything WHEN applied THEN an empty state names the filters responsible`
+          ],
+          tests: {
+            unit: cap.criteria.slice(0, 4).map((c) => `filter${id}_by${ident(c)}`),
+            integration: [`GET /api/${id.toLowerCase()} honours every filter query param`],
+            e2e: [`filters narrow the ${subject} grid`, `clearing filters restores the grid`]
+          }
+        });
+        n += 1;
+      }
+
+      out.push({
+        id: `F${n}`,
+        name: `${Subject} detail`,
+        behavior: `Opening a ${subject} shows its detail: every related planting window, days to harvest (or equivalent metrics), notes, and source citations when present.`,
+        mvp: true,
+        acceptance: [
+          `GIVEN a ${subject} id that exists WHEN the user opens detail THEN windows, days to harvest, and notes render`,
+          `GIVEN a citation (e.g. AZ1005) WHEN detail loads THEN every planting window cites az1005 (or the named source) and links to it`,
+          `GIVEN a window with no source WHEN detail loads THEN that window does not render`,
+          `GIVEN an unknown id WHEN detail opens THEN a not-found state with a path back is shown`
+        ],
+        tests: {
+          unit: [`${id}Detail_includesWindowsAndHarvest`, `${id}Detail_omitsUncitedWindows`],
+          integration: [
+            `GET /api/${id.toLowerCase()}/:id returns 200 for existing`,
+            `GET /api/${id.toLowerCase()}/:id returns 404 for missing`
+          ],
+          e2e: [
+            `${subject.replace(/\s+/g, '-')}-detail shows fields`,
+            `${subject.replace(/\s+/g, '-')}-detail not-found`
+          ]
+        }
+      });
+      n += 1;
     }
 
     if (cap.kind === 'schedule') {

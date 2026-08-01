@@ -89,13 +89,13 @@ export function entityApiContract(entity: string): string {
  * File tree with key function signatures.
  */
 export function buildFileTree(entities: string[], hasAuth: boolean): string {
-  const primaryPascal = entities[0] ? entityPascal(entities[0]) : 'Item';
+  const primaryPascal = entities[0] ? entityPascal(entities[0]) : '';
   const entityFiles =
     entities.length > 0
       ? entities
           .map((e) => `  api/          ${entityTable(e)}.ts   // list/create/get handlers`)
           .join('\n')
-      : '  api/          items.ts          // list/create/get handlers';
+      : '  api/          (no domain handlers — entities unresolved or storage none)';
   const authLine = hasAuth
     ? '  api/          auth.ts           // register, sign-in, sign-out\n'
     : '';
@@ -104,14 +104,22 @@ export function buildFileTree(entities: string[], hasAuth: boolean): string {
       ? entities
           .map((e) => `${entityPascal(e)}CreateSchema, ${entityPascal(e)}RowSchema`)
           .join('; ')
-      : 'ItemCreateSchema, ItemRowSchema';
+      : '(none)';
+  const componentLine =
+    primaryPascal.length > 0
+      ? `  components/   Layout, ${primaryPascal}List, ${primaryPascal}Detail, states/`
+      : '  components/   Layout, states/';
+  const pagesLine =
+    primaryPascal.length > 0
+      ? `  pages/        Home, About, Terms, Privacy, Contact, ${primaryPascal}ListPage, ${primaryPascal}DetailPage`
+      : '  pages/        Home, About, Terms, Privacy, Contact';
 
   return [
     '```',
     'src/',
     '  main.tsx, App.tsx, theme.ts',
-    `  components/   Layout, ${primaryPascal}List, ${primaryPascal}Detail, states/`,
-    `  pages/        Home, About, Terms, Privacy, Contact, ${primaryPascal}ListPage, ${primaryPascal}DetailPage`,
+    componentLine,
+    pagesLine,
     '  lib/',
     '    api.ts      // typed fetch helpers',
     `    schemas.ts  // ${schemaNames}`,
