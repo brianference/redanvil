@@ -5,5 +5,5 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "az-planting-calendar"
-database_id = "local-az-planting-calendar"
+database_id = "41ca2104-5893-48f0-a78f-42546380f9e1"
 migrations_dir = "migrations"

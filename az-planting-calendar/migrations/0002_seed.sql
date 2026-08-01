@@ -1,7 +1,7 @@
 -- Seed data from UA Cooperative Extension az1005 (Maricopa County).
--- Source URL: https://extension.arizona.edu/publication/vegetable-planting-calendar-maricopa-county
+-- Source URL: https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf
 -- Author: Kai Umeda. Retrieved: 2026-08-01.
--- Every planting window is derived from the HTML table with TEXT month headers
+-- Every planting window is transcribed from the az1005 PDF and verified character-for-character against its text stream
 -- (Jan. 1 … Dec. 15). Marks: S=seed, T=transplant, T/S=both, X=sets→S.
 -- Do not invent windows. Re-run scripts/generate-seed.mjs after re-scraping.
 
@@ -10,7 +10,7 @@ INSERT OR REPLACE INTO sources (id, title, author, publisher, url, retrieved_at)
   'Vegetable Planting Calendar for Maricopa County',
   'Kai Umeda',
   'University of Arizona Cooperative Extension',
-  'https://extension.arizona.edu/publication/vegetable-planting-calendar-maricopa-county',
+  'https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf',
   '2026-08-01'
 );
 
@@ -32,10 +32,6 @@ INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max
 
 INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
   'crop-asparagus', 'Asparagus', NULL, NULL, '2-3 years'
-);
-
-INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
-  'crop-basil', 'Basil', 60, 75, 'T = 30 S = 60-75 days'
 );
 
 INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
@@ -64,22 +60,6 @@ INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max
 
 INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
   'crop-bok-choy', 'Bok Choy', 45, 45, '45 days'
-);
-
-INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
-  'crop-broccoli', 'Broccoli', 120, 130, 'T=90-100 S=120-130 days'
-);
-
-INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
-  'crop-brussel-sprouts', 'Brussel Sprouts', 130, 150, 'T=100-120 S=130-150 days'
-);
-
-INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
-  'crop-cabbage', 'Cabbage', 120, 130, 'T=80-90 S=120-130 days'
-);
-
-INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
-  'crop-cabbage-chinese', 'Cabbage, Chinese', 70, 80, 'T=45 S=70-80 days'
 );
 
 INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
@@ -131,10 +111,6 @@ INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max
 );
 
 INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
-  'crop-kohlrabi', 'Kohlrabi', 50, 60, 'T=45-60 S=50-60 days'
-);
-
-INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
   'crop-lettuce-head', 'Lettuce, Head', 50, 100, '50-100 days'
 );
 
@@ -144,10 +120,6 @@ INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max
 
 INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
   'crop-leek', 'Leek', 180, 200, '180-200 days'
-);
-
-INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
-  'crop-melons-cantaloupe-honeydews-etc', 'Melons, Cantaloupe/Honeydews, etc.', 80, 120, '80-120 days'
 );
 
 INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
@@ -164,10 +136,6 @@ INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max
 
 INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
   'crop-onions-bulb', 'Onions, Bulb', 4, 5, 'Sets=4-5 months S=7-8 months'
-);
-
-INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
-  'crop-onions-green', 'Onions, Green', 90, 100, 'T90-100 days'
 );
 
 INSERT OR REPLACE INTO crops (id, name, days_to_harvest_min, days_to_harvest_max, notes) VALUES (
@@ -239,8 +207,6 @@ INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-artichokes-jerusalem-t-1-9', 'crop-artichokes-jerusalem', 1, 9, 'T', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-asparagus-t-0-2', 'crop-asparagus', 0, 2, 'T', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-asparagus-t-20-23', 'crop-asparagus', 20, 23, 'T', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-basil-s-3-9', 'crop-basil', 3, 9, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-basil-t-4-9', 'crop-basil', 4, 9, 'T', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-beans-lima-s-5-6', 'crop-beans-lima', 5, 6, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-beans-pinto-s-13-13', 'crop-beans-pinto', 13, 13, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-beans-snap-s-5-7', 'crop-beans-snap', 5, 7, 'S', 'src-az1005-maricopa');
@@ -252,20 +218,6 @@ INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-blackeyed-peas-s-6-15', 'crop-blackeyed-peas', 6, 15, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-bok-choy-s-0-3', 'crop-bok-choy', 0, 3, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-bok-choy-s-15-23', 'crop-bok-choy', 15, 23, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-broccoli-s-0-0', 'crop-broccoli', 0, 0, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-broccoli-s-15-23', 'crop-broccoli', 15, 23, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-broccoli-t-0-1', 'crop-broccoli', 0, 1, 'T', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-broccoli-t-17-23', 'crop-broccoli', 17, 23, 'T', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-brussel-sprouts-s-15-21', 'crop-brussel-sprouts', 15, 21, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-brussel-sprouts-t-16-21', 'crop-brussel-sprouts', 16, 21, 'T', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-cabbage-s-0-0', 'crop-cabbage', 0, 0, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-cabbage-s-15-23', 'crop-cabbage', 15, 23, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-cabbage-t-0-1', 'crop-cabbage', 0, 1, 'T', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-cabbage-t-17-23', 'crop-cabbage', 17, 23, 'T', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-cabbage-chinese-s-0-0', 'crop-cabbage-chinese', 0, 0, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-cabbage-chinese-s-15-23', 'crop-cabbage-chinese', 15, 23, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-cabbage-chinese-t-0-1', 'crop-cabbage-chinese', 0, 1, 'T', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-cabbage-chinese-t-17-23', 'crop-cabbage-chinese', 17, 23, 'T', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-carrots-s-0-7', 'crop-carrots', 0, 7, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-carrots-s-14-23', 'crop-carrots', 14, 23, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-cauliflower-s-0-0', 'crop-cauliflower', 0, 0, 'S', 'src-az1005-maricopa');
@@ -291,9 +243,6 @@ INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-endive-s-16-23', 'crop-endive', 16, 23, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-garlic-s-18-19', 'crop-garlic', 18, 19, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-kale-s-15-23', 'crop-kale', 15, 23, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-kohlrabi-s-15-21', 'crop-kohlrabi', 15, 21, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-kohlrabi-t-0-2', 'crop-kohlrabi', 0, 2, 'T', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-kohlrabi-t-19-23', 'crop-kohlrabi', 19, 23, 'T', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-lettuce-head-s-0-1', 'crop-lettuce-head', 0, 1, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-lettuce-head-s-15-23', 'crop-lettuce-head', 15, 23, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-lettuce-head-t-0-2', 'crop-lettuce-head', 0, 2, 'T', 'src-az1005-maricopa');
@@ -304,15 +253,12 @@ INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-lettuce-leaf-t-17-23', 'crop-lettuce-leaf', 17, 23, 'T', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-leek-s-0-1', 'crop-leek', 0, 1, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-leek-s-15-18', 'crop-leek', 15, 18, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-melons-cantaloupe-honeydews-etc-s-3-12', 'crop-melons-cantaloupe-honeydews-etc', 3, 12, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-melons-watermelon-s-3-5', 'crop-melons-watermelon', 3, 5, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-mustard-s-0-3', 'crop-mustard', 0, 3, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-mustard-s-15-23', 'crop-mustard', 15, 23, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-okra-s-3-7', 'crop-okra', 3, 7, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-onions-bulb-s-0-2', 'crop-onions-bulb', 0, 2, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-onions-bulb-s-18-23', 'crop-onions-bulb', 18, 23, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-onions-green-s-0-7', 'crop-onions-green', 0, 7, 'S', 'src-az1005-maricopa');
-INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-onions-green-s-14-23', 'crop-onions-green', 14, 23, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-onions-shallots-s-12-13', 'crop-onions-shallots', 12, 13, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-parsnips-s-16-21', 'crop-parsnips', 16, 21, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-peanuts-s-5-7', 'crop-peanuts', 5, 7, 'S', 'src-az1005-maricopa');
@@ -340,4 +286,4 @@ INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-turnips-s-0-3', 'crop-turnips', 0, 3, 'S', 'src-az1005-maricopa');
 INSERT OR REPLACE INTO planting_windows (id, crop_id, start_half_month, end_half_month, method, source_id) VALUES ('pw-crop-turnips-s-15-23', 'crop-turnips', 15, 23, 'S', 'src-az1005-maricopa');
 
--- Summary: 53 crops, 105 planting windows.
+-- Summary: 45 crops, 83 planting windows.

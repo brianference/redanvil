@@ -1,7 +1,7 @@
 /**
  * Generate migrations/0002_seed.sql from the parsed az1005 HTML table.
  * Source: Vegetable Planting Calendar for Maricopa County (UA Extension),
- * https://extension.arizona.edu/publication/vegetable-planting-calendar-maricopa-county
+ * https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf
  * Author: Kai Umeda. Retrieved 2026-08-01.
  *
  * Half-months: 0=Jan.1 … 23=Dec.15 (24 columns matching the publication header).
@@ -13,13 +13,22 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const crops = JSON.parse(readFileSync(join(__dirname, 'az1005-crops.json'), 'utf8'));
+// The dataset carries provenance alongside the rows: which crops were verified
+// against the az1005 text stream, and which were DROPPED because their marker
+// sequence did not match. Only verified rows are seeded — an unverifiable
+// planting window is worse than a missing crop, because a gardener cannot tell
+// the difference between a date that is right and one that merely looks right.
+const dataset = JSON.parse(readFileSync(join(__dirname, 'az1005-crops.json'), 'utf8'));
+const crops = Array.isArray(dataset) ? dataset : (dataset.crops ?? []);
+if (crops.length === 0) {
+  throw new Error('az1005-crops.json has no verified crops — refusing to write an empty seed');
+}
 
 const SOURCE_ID = 'src-az1005-maricopa';
 const ZONE_ID = 'zone-cave-creek-85331';
 const RETRIEVED_AT = '2026-08-01';
 const SOURCE_URL =
-  'https://extension.arizona.edu/publication/vegetable-planting-calendar-maricopa-county';
+  'https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf';
 
 /**
  * Parse harvest text into min/max days when numeric ranges exist.
@@ -108,7 +117,7 @@ const lines = [];
 lines.push('-- Seed data from UA Cooperative Extension az1005 (Maricopa County).');
 lines.push(`-- Source URL: ${SOURCE_URL}`);
 lines.push(`-- Author: Kai Umeda. Retrieved: ${RETRIEVED_AT}.`);
-lines.push('-- Every planting window is derived from the HTML table with TEXT month headers');
+lines.push('-- Every planting window is transcribed from the az1005 PDF and verified character-for-character against its text stream');
 lines.push('-- (Jan. 1 … Dec. 15). Marks: S=seed, T=transplant, T/S=both, X=sets→S.');
 lines.push('-- Do not invent windows. Re-run scripts/generate-seed.mjs after re-scraping.');
 lines.push('');
