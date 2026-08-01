@@ -10,8 +10,11 @@
   "features": [],
   "coldVisitorProbe": {
     "control": "send description",
-    "fill": { "#composer-prompt": "an app to track bird sightings with photos and dates" },
+    "fill": {
+      "#composer-prompt": "an app to track bird sightings with photos and dates"
+    },
     "expectSelector": "button:has-text('Next')",
     "minCount": 1
-  }
+  },
+  "deployUrl": "https://redanvil.pages.dev"
 }

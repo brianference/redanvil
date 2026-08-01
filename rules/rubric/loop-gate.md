@@ -1,0 +1,5 @@
+# Loop-gate lane (shipping)
+
+Operational shipping requirements scored against the app under gate. A clean score without a ship is not done.
+
+- lg-shipped (blocker, det): an app is not finished until it is SHIPPED — in a GitHub repo, pushed, deployed to a production URL, and proven to be serving the scored commit. Why: builds cleared 90+ and then sat on a local disk with no remote and no URL, so "done" meant "the gate passed" rather than "a user can reach this build." A build that never ships is indistinguishable from one that was never built. All four must hold, fail closed: (1) git repo with `origin` pointing at a real GitHub URL; (2) HEAD is pushed (`git rev-list origin/<branch>..HEAD` empty); (3) production URL from `.redanvil/claims.json` `deployUrl` or wrangler.toml project name as `https://<project>.pages.dev` returns HTTP 200; (4) deployed `assets/index-<hash>.js` matches the newest local `dist/assets/index-*.js`. A wrangler success message is not proof. N/A only with no wrangler.toml AND no deployUrl; wrangler present without a remote is FAIL, not n/a.

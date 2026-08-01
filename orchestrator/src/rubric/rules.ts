@@ -183,5 +183,10 @@ export const RULES: Rule[] = [
   // the rubric count. What it reached for is enforced structurally instead: CI
   // runs typecheck, lint and the full suite on every push, and
   // verify_commit.mjs builds the commit in an isolated worktree before one.
-  rule('proc-conventional-commits', 'process', 'minor', 'det')
+  rule('proc-conventional-commits', 'process', 'minor', 'det'),
+
+  // An app that clears 90+ and never leaves the disk is not done. Shipping is
+  // part of the gate: GitHub remote, pushed HEAD, live production URL, and a
+  // deployed bundle hash that matches local dist. See rules/loop-gate.md.
+  rule('lg-shipped', 'loop-gate', 'blocker', 'det')
 ];

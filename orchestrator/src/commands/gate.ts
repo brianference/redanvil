@@ -112,7 +112,10 @@ export const APP_CHECKS: Check[] = [
   // Process lane: formerly printed "unknown rule" when invoked; only "passed"
   // because real gate runs excluded them with --na process.
   det('proc-conventional-commits'),
-  det('proc-pr-title-ticket')
+  det('proc-pr-title-ticket'),
+  // Shipping: GitHub remote, pushed HEAD, live URL, deployed hash matches dist.
+  // A green gate on a build that never left the machine is not "done".
+  det('lg-shipped')
 ];
 export interface GateReport {
   outcomes: Outcome[];

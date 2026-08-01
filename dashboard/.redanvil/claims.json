@@ -12,5 +12,6 @@
     "path": "/",
     "expectSelector": ".ra-run-card",
     "minCount": 1
-  }
+  },
+  "deployUrl": "https://redanvil-dashboard.pages.dev"
 }

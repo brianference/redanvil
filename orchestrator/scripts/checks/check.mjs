@@ -24,6 +24,7 @@ import { runVisibleResponse } from './fe-visible-response.mjs';
 import { runIntegrationScan } from './u-integration-scan.mjs';
 import { runCompetitorScan } from './u-competitor-scan.mjs';
 import { runProcPrTitleTicket } from './proc-pr-title-ticket.mjs';
+import { runLgShipped } from './lg-shipped.mjs';
 // The cross-app duplication pass already owns the definition of "the same code":
 // comments stripped, whitespace collapsed, identifiers normalised, keywords kept.
 // This check used to compare raw trimmed lines instead, so the two passes
@@ -998,6 +999,21 @@ switch (ruleId) {
     // agree there is no PR; on a repo that pushes straight to master there is
     // nothing to measure and inventing a pass would be fabrication.
     await runProcPrTitleTicket(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'lg-shipped': {
+    // Shipping proof: GitHub remote, pushed HEAD, live URL 200, hash match.
+    // Exit 2 = infra (network / no dist) — map through so the gate does not
+    // treat "cannot reach the network" as a rule violation with no detail.
+    await runLgShipped(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
     break;
   }
   default:
