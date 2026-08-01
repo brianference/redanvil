@@ -21,11 +21,11 @@
     },
     {
       "ruleId": "u-test-presence",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-test-coverage-ratchet",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "hyg-env-ignored",
@@ -37,7 +37,7 @@
     },
     {
       "ruleId": "u-test-feature-audit",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-no-placeholders",
@@ -45,7 +45,7 @@
     },
     {
       "ruleId": "fe-visible-response",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-integration-scan",
@@ -109,7 +109,7 @@
     },
     {
       "ruleId": "u-api-real-output",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-data-no-placeholder",
@@ -261,27 +261,23 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "u-test-presence",
-        "u-test-feature-audit",
-        "u-api-real-output",
-        "fe-visible-response",
         "fe-cold-visitor"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-07-31T17:18:49.849Z",
+  "finishedAt": "2026-08-01T01:17:40.320Z",
   "provenance": {
-    "commit": "3b8f9313d7c79a9a4f742d4760dfb8890fe372a6",
+    "commit": "5aa0cc0be4cc24e8344a6b9301ce7da66d539061",
     "dirty": false,
     "rubricHash": "e64fba891e2da5c4317c82c62dc5d4615123a70949cfe9135b78748938b5da7c",
     "rubricRuleCount": 68,
     "node": "v22.19.0",
-    "verdictsHash": "4bf66f0f3671735dfbade8e81ff81b23741f084460db8daa599c28227ab207c5",
+    "verdictsHash": "77b09830437c7e088968d8ef7a3a3a29507c3792451d13ab2b31ecd201087eaa",
     "notApplicable": [
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-07-31T17:18:49.908Z"
+    "generatedAt": "2026-08-01T01:17:40.370Z"
   }
 }
