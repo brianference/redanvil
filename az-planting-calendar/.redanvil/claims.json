@@ -1,0 +1,22 @@
+{
+  "_why": "Probe and deploy record for the gate. features is empty on purpose: this app was built from a supplied PRD rather than a generated one, so hand-authoring feature claims would be inventing them and u-claims-covered correctly returns n/a. What IS recorded is how a stranger exercises the primary flow.",
+  "kind": "claims",
+  "slug": "az-planting-calendar",
+  "title": "AZ Planting Calendar",
+  "appType": "reference tool",
+  "hasAuth": false,
+  "entities": [
+    "Crop",
+    "PlantingWindow",
+    "Zone",
+    "Source"
+  ],
+  "threshold": 90,
+  "features": [],
+  "deployUrl": "https://az-planting-calendar.pages.dev",
+  "coldVisitorProbe": {
+    "path": "/",
+    "expectSelector": "main",
+    "minCount": 1
+  }
+}
