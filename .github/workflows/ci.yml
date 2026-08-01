@@ -155,8 +155,13 @@ jobs:
       # under the same name rather than silently reporting a regression that did
       # not happen. Without this step CI reproduced 88 against a committed 92,
       # and the single differing rule was exactly that ratchet.
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+      # chromium AND webkit. The [mobile] project is built on
+      # devices['iPhone 13'], whose defaultBrowserType is 'webkit', so a
+      # chromium-only install fails 112 tests with "Executable doesn't exist"
+      # rather than anything about the app. A project labelled "mobile" is not
+      # necessarily the same engine as the desktop one.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
         working-directory: quickflight
       - name: Produce browser coverage
         run: npm run build:coverage && npx playwright test
