@@ -1,0 +1,14 @@
+{
+  "_why": "One realistic call per API route, and what its live answer must satisfy. u-api-real-output enumerates functions/api/** on disk and fails on any route with no example here, so a new endpoint is unproven-by-default. It boots the app on the real Workers runtime and calls each example: a non-2xx, an empty body, or placeholder content in the response all fail.",
+  "examples": [
+    {
+      "route": "/api/health",
+      "method": "GET",
+      "comment": "The only Pages Function this dashboard ships: a fixed ok payload that proves the Worker runtime boots.",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
+    }
+  ]
+}

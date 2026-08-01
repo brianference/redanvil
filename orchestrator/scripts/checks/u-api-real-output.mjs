@@ -284,7 +284,7 @@ export function evaluateResponse(example, got) {
  * @param {object} example - The declared example.
  * @returns {Promise<{status: number|null, text: string, body: unknown, error: string|null}>} Captured response.
  */
-async function callExample(port, path, example) {
+async function callExample(port, path, example, origin = null) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_MS);
   try {
@@ -300,7 +300,9 @@ async function callExample(port, path, example) {
       init.headers['content-type'] = 'application/json';
       init.body = JSON.stringify(example.body);
     }
-    const res = await fetch(`http://127.0.0.1:${port}${path}`, init);
+    // `origin` lets one route be probed somewhere the local runtime cannot
+    // reach. Everything else still runs against the locally booted Worker.
+    const res = await fetch(`${origin ?? `http://127.0.0.1:${port}`}${path}`, init);
     const text = await res.text();
     let body = null;
     try {
@@ -485,8 +487,16 @@ async function defaultBoot(appDir, plan) {
     }
     const results = [];
     for (const entry of plan) {
-      const got = await callExample(port, entry.path, entry.example);
-      results.push({ ...entry, got });
+      // A route bound to a service the local runtime cannot authenticate to
+      // (Workers AI answers "10000: Authentication error" under `wrangler pages
+      // dev`) is not a route that returns bad data — it is a route this
+      // environment cannot reach. Failing it would report a defect that does not
+      // exist; passing it would credit a measurement that never happened. So it
+      // is measured where the binding actually runs, and the example must name
+      // that origin explicitly. There is no path here that skips a route.
+      const origin = entry.example.remoteOrigin ?? null;
+      const got = await callExample(port, entry.path, entry.example, origin);
+      results.push({ ...entry, got, measuredAt: origin ?? 'local' });
     }
     return { results, error: null };
   } finally {

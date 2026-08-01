@@ -27,7 +27,15 @@ export default defineConfig({
   webServer: process.env.BASE_URL
     ? undefined
     : {
-        command: 'npx vite preview --port 4326 --strictPort',
+        // `wrangler pages dev`, not `vite preview`. vite serves the static build
+        // and nothing under functions/, so /api/health 404s. That failure was
+        // invisible while the suite died on startup (vite bound ::1 while `url`
+        // below polls 127.0.0.1, so readiness never arrived and every run ended
+        // in a 120s webServer timeout with zero tests executed).
+        //
+        // This is lg-runtime-parity applied to the acceptance suite: a passing
+        // run against static assets does not prove the Worker runs.
+        command: 'npx wrangler pages dev dist --port 4326 --ip 127.0.0.1',
         url: 'http://127.0.0.1:4326/',
         reuseExistingServer: true,
         timeout: 120_000

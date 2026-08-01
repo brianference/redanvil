@@ -14,6 +14,11 @@ describe('formatRelativeTime', () => {
     expect(formatRelativeTime('2026-07-19T12:00:00.000Z', now)).toBe('2d ago');
   });
 
+  it('formats months and years', () => {
+    expect(formatRelativeTime('2026-05-21T12:00:00.000Z', now)).toBe('2mo ago');
+    expect(formatRelativeTime('2024-07-21T12:00:00.000Z', now)).toBe('2y ago');
+  });
+
   it('returns the raw string when the timestamp is invalid', () => {
     expect(formatRelativeTime('not-a-date', now)).toBe('not-a-date');
   });

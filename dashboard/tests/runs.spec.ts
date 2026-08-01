@@ -21,6 +21,7 @@ test.beforeEach(async ({ page }) => {
 test('the run list renders real runs, not an empty shell', async ({ page }) => {
   const cards = page.locator('.ra-run-card');
   await expect(cards.first()).toBeVisible();
+  await expect(cards.first()).toBeInViewport();
   expect(await cards.count()).toBeGreaterThan(0);
 });
 
@@ -39,7 +40,9 @@ test('opening a run shows that run, not a generic page', async ({ page }) => {
   const first = page.locator('.ra-run-card').first();
   const title = (await first.locator('.ra-run-title').innerText()).trim();
   await first.getByRole('link').first().click();
-  await expect(page.getByText(title, { exact: false }).first()).toBeVisible();
+  const match = page.getByText(title, { exact: false }).first();
+  await expect(match).toBeVisible();
+  await expect(match).toBeInViewport();
 });
 
 test('a run detail lists rule outcomes', async ({ page }) => {

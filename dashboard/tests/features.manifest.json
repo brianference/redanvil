@@ -1,0 +1,180 @@
+{
+  "_why": "Every interactive control on the site and the test that proves it works. scripts/feature-audit.mjs crawls the RUNNING app and fails when a control is not listed here, so a new button is untested-by-default instead of silently unverified. This inventory comes from the app, not from a list someone remembered to update.",
+  "controls": [
+    {
+      "role": "button",
+      "name": "theme-toggle",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > theme toggle flips and persists"
+    },
+    {
+      "role": "link",
+      "name": "RedAnvil — forge apps from a prompt",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > the brand logo is an operable home-or-builder link"
+    },
+    {
+      "role": "link",
+      "name": "ra-nav-link",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "ra-run-title",
+      "routes": [
+        "/"
+      ],
+      "test": "runs.spec.ts > opening a run shows that run, not a generic page"
+    },
+    {
+      "role": "link",
+      "name": "App Builder",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "runs.spec.ts > the cross-site link leaves for the app builder"
+    },
+    {
+      "role": "link",
+      "name": "Dashboard",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    },
+    {
+      "role": "link",
+      "name": "GitHub",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    },
+    {
+      "role": "link",
+      "name": "About",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "Contact",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "Terms",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "Privacy",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > every header and footer link navigates"
+    },
+    {
+      "role": "link",
+      "name": "Home",
+      "routes": [
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > breadcrumb Home returns to runs"
+    },
+    {
+      "role": "link",
+      "name": "https://redanvil.pages.dev",
+      "routes": [
+        "/about",
+        "/terms"
+      ],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    },
+    {
+      "role": "link",
+      "name": "https://github.com/brianference/redanvil",
+      "routes": [
+        "/about",
+        "/terms"
+      ],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    },
+    {
+      "role": "link",
+      "name": "https://github.com/brianference/redanvil/issues",
+      "routes": [
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    },
+    {
+      "role": "link",
+      "name": "https://raw.githubusercontent.com/brianference/redanvil/master/results/all.json",
+      "routes": [
+        "/privacy"
+      ],
+      "test": "feature-coverage.spec.ts > outbound links carry rel=noopener or noreferrer"
+    }
+  ]
+}
