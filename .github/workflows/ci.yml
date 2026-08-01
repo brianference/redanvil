@@ -110,3 +110,38 @@ jobs:
       - name: Build
         working-directory: ${{ matrix.app }}
         run: npm run build
+
+  # QuickFlight ships to production from its own repository, so its score has to
+  # be re-verified the same way the other two are. Its artifacts live in that
+  # repo rather than here, because provenance names quickflight commits and
+  # freshness diffs quickflight paths -- a result stored here would claim a
+  # commit from the wrong repository. So CI checks out both and verifies there.
+  quickflight-provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out RedAnvil (the gate)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          path: redanvil
+      - name: Check out QuickFlight (the app under review)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: brianference/quickflight
+          persist-credentials: false
+          # Full history, for the same reason as above: a shallow clone makes
+          # every reviewedCommit unresolvable and drops every verdict as stale.
+          fetch-depth: 0
+          path: quickflight
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20
+      - name: Install gate deps
+        run: npm ci
+        working-directory: redanvil
+      - name: Install app deps
+        run: npm ci
+        working-directory: quickflight
+      - name: Verify QuickFlight results were produced by the gate
+        run: node ../redanvil/.github/scripts/verify_results.mjs . results/quickflight.json evidence/verdicts-quickflight.json process
+        working-directory: quickflight
