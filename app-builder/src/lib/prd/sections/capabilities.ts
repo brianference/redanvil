@@ -31,8 +31,19 @@ const KIND_PATTERNS: readonly { kind: Capability['kind']; re: RegExp }[] = [
     re: /\b(find|finds|search|searches|compare|compares|rank|ranks|cheapest|lowest|best|fastest|shortest|optimi[sz]e[sd]?)\b/i
   },
   {
+    // "calendar" alone is NOT a scheduling signal and used to be one. A planting
+    // calendar, a content calendar and an academic calendar are all REFERENCE
+    // views: they answer "what belongs in this window", and nobody assigns
+    // anything to anybody. Matching the bare word emitted "Schedule Item — users
+    // assign Item to a time and a person, and the app refuses assignments that
+    // conflict" for an Arizona planting calendar, with conflict-detection tests
+    // attached, and building that spec literally produces an item tracker while
+    // the actual product never appears.
+    //
+    // Scheduling needs a signal that something is ASSIGNED or RESERVED, so the
+    // remaining verbs all carry that meaning on their own.
     kind: 'schedule',
-    re: /\b(schedul\w*|shift\w*|roster\w*|book\w*|appointment\w*|calendar|availability|coverage)\b/i
+    re: /\b(schedul\w*|shift\w*|roster\w*|book\w*|appointment\w*|availability|coverage)\b/i
   },
   { kind: 'notify', re: /\b(alert\w*|notif\w*|remind\w*|warn\w*|escalat\w*)\b/i },
   { kind: 'track', re: /\b(track\w*|log\w*|monitor\w*|record\w*|history|audit)\b/i },

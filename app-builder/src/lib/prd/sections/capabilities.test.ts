@@ -112,3 +112,31 @@ describe('rationales describe the feature they sit under', () => {
     }
   });
 });
+
+describe('a calendar is not a booking system', () => {
+  // The real prompt that produced the wrong spec. "calendar" was a scheduling
+  // keyword, so an Arizona planting calendar came back as "Schedule Item --
+  // users assign Item to a time and a person, and the app refuses assignments
+  // that conflict", with detectConflict tests attached. Building §11 literally
+  // gives an item tracker and the planting calendar never appears.
+  const planting =
+    'Show what is plantable in the current half-month window, seed vs transplant marked. ' +
+    'Full year calendar grid: crops down, 24 half-month columns across.';
+
+  it('does not read a planting calendar as scheduling', () => {
+    const kinds = detectCapabilities(planting, ['Crop', 'PlantingWindow']).map((c) => c.kind);
+    expect(kinds).not.toContain('schedule');
+  });
+
+  it('still detects scheduling when something is actually assigned', () => {
+    // The positive control. A rule that answered "not scheduling" for every
+    // input would pass the test above and carry no information.
+    for (const prompt of [
+      'staff can book an appointment with a stylist',
+      'assign shifts to nurses across a weekly roster',
+      'check room availability before reserving it'
+    ]) {
+      expect(detectCapabilities(prompt, ['Booking']).map((c) => c.kind)).toContain('schedule');
+    }
+  });
+});
