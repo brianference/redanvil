@@ -396,5 +396,16 @@
       "dashboard/public",
       "dashboard/index.html"
     ]
+  },
+  {
+    "ruleId": "fe-cold-visitor",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/cold-dashboard.json"
+    ],
+    "note": "cold_visitor against https://redanvil-dashboard.pages.dev: a first-time visitor gets a working app: 5 cold-start check(s) held",
+    "reviewedAt": "2026-08-01T01:29:32.535Z",
+    "reviewedCommit": "baceea901776b4fbe06ebee3df754d0d4298aa8e"
   }
 ]
