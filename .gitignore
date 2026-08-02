@@ -33,3 +33,7 @@ evidence/traces/
 # lives in evidence/ and stays tracked.
 playwright-report/
 test-results/
+
+# Scratch source dumps from transcription runs. The sourced rows live in
+# migrations/ and SOURCES.md; the raw dumps are reproducible and not evidence.
+tmp-sources/
