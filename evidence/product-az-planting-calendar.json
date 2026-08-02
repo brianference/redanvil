@@ -1,26 +1,22 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-02T21:29:53.450Z",
+  "checkedAt": "2026-08-02T21:32:14.694Z",
   "probes": {
     "search-narrows": {
       "ok": true,
-      "detail": "/api/crops 45 -> ?q=tomato 1"
+      "detail": "45 -> 1"
     },
     "assistant-grounded": {
       "ok": true,
-      "detail": "HTTP 200; 7 crops from D1"
+      "detail": "HTTP 200"
     },
     "no-spa-mask": {
       "ok": true,
-      "detail": "unmatched /api/* -> 404"
-    },
-    "zone-lookup": {
-      "ok": true,
-      "detail": "85251 -> Scottsdale AZ (low desert, Maricopa County)"
+      "detail": "unmatched -> 404"
     },
     "crop-guidance": {
       "ok": true,
-      "detail": "crop detail carries sourced guidance: true"
+      "detail": "sourced guidance present"
     }
   },
   "ok": true
