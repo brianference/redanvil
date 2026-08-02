@@ -1,22 +1,22 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-02T21:33:47.360Z",
+  "checkedAt": "2026-08-02T22:23:26.884Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
-      "detail": "6 route(s) at 375; every interactive element >= 44px"
+      "detail": "5 route(s) at 375; every interactive element >= 44px"
     },
     "fe-type-floor": {
       "ok": true,
-      "detail": "6 route(s) at 375, smallest body font 16px; nothing under 16px"
+      "detail": "5 route(s) at 375, smallest body font 16px; nothing under 16px"
     },
     "fe-responsive-375": {
       "ok": true,
-      "detail": "no page or element overflow/clip at 375 on 6 route(s) (H>1px V>2px)"
+      "detail": "no page or element overflow/clip at 375 on 5 route(s) (H>1px V>2px)"
     },
     "fe-safe-areas": {
       "ok": true,
-      "detail": "header sticky on all 6 route(s), padding-top 0px"
+      "detail": "header sticky on all 5 route(s), padding-top 0px"
     },
     "fe-premium-nav": {
       "ok": true,
@@ -44,7 +44,7 @@
     },
     "fe-required-pages": {
       "ok": true,
-      "detail": "/about 200 \"About this calendar\" 1049w/9§; /contact 200 \"Contact\" 514w/6§; /terms 200 \"Terms of use\" 1687w/16§; /privacy 200 \"Privacy\" 1702w/15§; /no-such-page 200 \"Page not found\" 18w/0§"
+      "detail": "/about 200 \"About this calendar\" 1049w/9§; /contact 200 \"Contact\" 514w/6§; /terms 200 \"Terms of use\" 1705w/16§; /privacy 200 \"Privacy\" 1751w/15§"
     },
     "fe-visual-review-recorded": {
       "ok": true,

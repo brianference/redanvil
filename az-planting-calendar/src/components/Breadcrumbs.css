@@ -24,6 +24,16 @@
   color: var(--color-seed);
   text-decoration: underline;
   text-underline-offset: 2px;
+  /* A one-word crumb ("Home") is a ~40px target at 375 and failed
+     fe-touch-targets on every inner route the moment breadcrumbs were added.
+     Grow the hit area rather than the text: inline-flex with a min box keeps
+     the visual size while making the tap target 44px. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  justify-content: center;
+  padding-inline: 0.25rem;
 }
 
 .breadcrumbs__link:hover {
