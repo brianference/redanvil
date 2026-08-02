@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-02T22:20:03.577Z",
+  "checkedAt": "2026-08-02T22:23:55.952Z",
   "probes": {
     "q-narrows-crops": {
       "ok": true,
@@ -17,10 +17,6 @@
     "assistant-grounded": {
       "ok": true,
       "detail": "HTTP 200"
-    },
-    "no-spa-mask": {
-      "ok": true,
-      "detail": "unmatched -> 404"
     },
     "crop-guidance": {
       "ok": true,
