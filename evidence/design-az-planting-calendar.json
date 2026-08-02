@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-02T20:00:32.967Z",
+  "checkedAt": "2026-08-02T21:28:48.145Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -16,11 +16,11 @@
     },
     "fe-safe-areas": {
       "ok": true,
-      "detail": "header sticky on all 6 route(s), padding-top 8px"
+      "detail": "header sticky on all 6 route(s), padding-top 0px"
     },
     "fe-premium-nav": {
       "ok": true,
-      "detail": "5 header link(s) [AZ Planting Calendar, Home, Year grid, About, Contact], aria-current on \"Home\""
+      "detail": "9 header link(s) [AZ Planting Calendar, Home, Year grid, About, Contact, Home, Year grid, About, Contact], aria-current on \"Home\""
     },
     "fe-noncolor-state": {
       "ok": true,
@@ -44,7 +44,7 @@
     },
     "fe-required-pages": {
       "ok": true,
-      "detail": "/about 200 \"About this calendar\" 887w/8§; /contact 200 \"Contact\" 514w/6§; /terms 200 \"Terms of use\" 1687w/16§; /privacy 200 \"Privacy\" 1702w/15§; /no-such-page 200 \"Page not found\" 18w/0§"
+      "detail": "/about 200 \"About this calendar\" 1049w/9§; /contact 200 \"Contact\" 514w/6§; /terms 200 \"Terms of use\" 1687w/16§; /privacy 200 \"Privacy\" 1702w/15§; /no-such-page 200 \"Page not found\" 18w/0§"
     },
     "fe-visual-review-recorded": {
       "ok": true,

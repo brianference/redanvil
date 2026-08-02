@@ -9,7 +9,7 @@
     ],
     "note": "axe-core 4.12.1 on the deployed build: 0 colour-contrast violations and 0 other violations in both themes; dark resolved --bg rgb(10,14,18) and light rgb(238,241,244), so the run was not inverted.",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-desktop-width",
@@ -20,7 +20,7 @@
     ],
     "note": "Painted content 100% of viewport at / and 95% on inner routes at 1440 and 1920; floor is 80%.",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-cold-visitor",
@@ -31,7 +31,7 @@
     ],
     "note": "Five cold-start checks held on a fresh profile: theme follows the OS in both directions, no console errors on arrival, primary flow returned a real result unseeded.",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-product-completeness",
@@ -48,7 +48,7 @@
     ],
     "note": "On production: search narrows 45 rows to 1 for tomato, the assistant returns 7 D1-grounded crops for early August with filters {half_month:14}, unmatched /api/* 404s and a bogus detail id 404s.",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -65,7 +65,7 @@
     ],
     "note": "Screenshots captured and opened at 375/768/1280 in both themes against the deployed build; 0 console errors across all six loads.",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-premium-nav",
@@ -76,7 +76,7 @@
     ],
     "note": "4 header link(s) [AZ Planting Calendar, Home, About, Contact], aria-current on \"Home\"",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-required-pages",
@@ -87,7 +87,7 @@
     ],
     "note": "/about 200 \"About this calendar\" 887w/8§; /contact 200 \"Contact\" 514w/6§; /terms 200 \"Terms of use\" 1687w/16§; /privacy 200 \"Privacy\" 1702w/15§; /no-such-page 200 \"Page not found\" 18w/0§",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-no-attribution",
@@ -98,7 +98,7 @@
     ],
     "note": "no attribution text",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-responsive-375",
@@ -109,7 +109,7 @@
     ],
     "note": "no horizontal overflow at 375 on 6 route(s)",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-touch-targets",
@@ -120,7 +120,7 @@
     ],
     "note": "6 route(s) at 375; every interactive element >= 44px",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-type-floor",
@@ -131,7 +131,7 @@
     ],
     "note": "6 route(s) at 375, smallest body font 16px; nothing under 16px",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-noncolor-state",
@@ -142,7 +142,7 @@
     ],
     "note": "active nav item: weight 600, gradient background false, aria-current present true",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-safe-areas",
@@ -153,7 +153,7 @@
     ],
     "note": "header sticky on all 6 route(s), padding-top 8px",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-cross-link",
@@ -164,7 +164,7 @@
     ],
     "note": "cross-site link present",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   },
   {
     "ruleId": "fe-seo-og",
@@ -175,6 +175,6 @@
     ],
     "note": "title \"AZ Planting Calendar — what to plant now in Cave Creek\", description present, og:image present",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
-    "reviewedCommit": "4179b53c4d678427ee999f6eeb77fb0d2151a8c2"
+    "reviewedCommit": "d8d8e50bac899ff410713a10dd2c8253c22b693c"
   }
 ]
