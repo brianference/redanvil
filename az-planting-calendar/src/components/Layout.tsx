@@ -1,17 +1,24 @@
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { en } from '../i18n/en';
 import { useTheme } from '../hooks/useTheme';
+import { useZone } from '../hooks/useZone';
 import type { ThemeMode } from '../theme';
 import { AssistantPanel } from './AssistantPanel';
+import { ZoneSelector } from './ZoneSelector';
 import './Layout.css';
 
 /**
- * Site chrome: compact top bar + full-bleed content + multi-column footer.
+ * Site chrome: sticky top bar + full-bleed content + multi-column footer.
  * Brand mark is the finalized cactus/seedling/calendar artwork (public/brand-mark.png).
  */
 export function Layout() {
   const { mode, cycle } = useTheme();
   const themeLabel = themeModeLabel(mode);
+  const { zone } = useZone();
+  const location = useLocation();
+  const isHome = location.pathname === '/' || location.pathname === '';
+  const [navOpen, setNavOpen] = useState(false);
 
   return (
     <div className="layout">
@@ -25,23 +32,45 @@ export function Layout() {
               className="topbar__mark"
               src="/brand-mark.png"
               alt=""
-              width={32}
-              height={32}
+              width={96}
+              height={96}
               aria-hidden="true"
               decoding="async"
             />
             <span className="topbar__name">{en.appName}</span>
           </Link>
-          <span className="topbar__zone mono">{en.appTagline}</span>
         </div>
-        <nav className="topbar__nav" aria-label="Primary">
-          <NavLink to="/" end className={navClass}>
+        <div className="topbar__zone-block">
+          <span className="topbar__zone mono" data-testid="topbar-zone">
+            {zone ? en.zone.contextLine(zone) : en.appTagline}
+          </span>
+          <ZoneSelector />
+        </div>
+        <button
+          type="button"
+          className="topbar__menu-btn"
+          aria-expanded={navOpen}
+          aria-controls="primary-nav"
+          onClick={() => setNavOpen((v) => !v)}
+          data-testid="nav-menu-toggle"
+        >
+          {navOpen ? en.nav.menuClose : en.nav.menuOpen}
+        </button>
+        <nav
+          id="primary-nav"
+          className={navOpen ? 'topbar__nav topbar__nav--open' : 'topbar__nav'}
+          aria-label="Primary"
+        >
+          <NavLink to="/" end className={navClass} onClick={() => setNavOpen(false)}>
             {en.nav.home}
           </NavLink>
-          <NavLink to="/about" className={navClass}>
+          <NavLink to="/grid" className={navClass} onClick={() => setNavOpen(false)}>
+            {en.nav.grid}
+          </NavLink>
+          <NavLink to="/about" className={navClass} onClick={() => setNavOpen(false)}>
             {en.nav.about}
           </NavLink>
-          <NavLink to="/contact" className={navClass}>
+          <NavLink to="/contact" className={navClass} onClick={() => setNavOpen(false)}>
             {en.nav.contact}
           </NavLink>
         </nav>
@@ -75,7 +104,7 @@ export function Layout() {
                   <Link to="/">{en.footer.home}</Link>
                 </li>
                 <li>
-                  <a href="/#year-grid">{en.footer.yearGrid}</a>
+                  <Link to="/grid">{en.footer.yearGrid}</Link>
                 </li>
                 <li>
                   <a href="/#plantable-now">{en.footer.plantable}</a>
@@ -121,7 +150,8 @@ export function Layout() {
           <p className="site-footer__note">{en.footer.rights}</p>
         </div>
       </footer>
-      <AssistantPanel />
+      {/* Floating assistant only off home; home mounts an inline open-by-default panel. */}
+      {!isHome ? <AssistantPanel defaultOpen={false} placement="floating" /> : null}
     </div>
   );
 }

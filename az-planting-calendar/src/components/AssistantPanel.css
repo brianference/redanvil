@@ -1,13 +1,37 @@
 .assistant {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Fixed dock for non-home routes -- does not cover hero on home (inline there). */
+.assistant--floating {
   position: fixed;
   right: max(var(--space-4), env(safe-area-inset-right, 0px));
   bottom: max(var(--space-4), env(safe-area-inset-bottom, 0px));
   z-index: 60;
-  display: flex;
-  flex-direction: column;
   align-items: flex-end;
-  gap: var(--space-2);
   max-width: min(100vw - 2 * var(--space-4), 420px);
+}
+
+/* Document-flow panel under the hero on home -- never overlays plantable content. */
+.assistant--inline {
+  position: relative;
+  width: 100%;
+  max-width: none;
+  align-items: stretch;
+  margin: var(--space-4) 0 0;
+  z-index: 1;
+}
+
+.assistant--inline .assistant__panel {
+  width: 100%;
+  max-width: none;
+  max-height: none;
+}
+
+.assistant--inline .assistant__fab {
+  align-self: flex-start;
 }
 
 .assistant__fab {
@@ -46,6 +70,10 @@
   background: var(--surface);
   color: var(--text);
   overflow: hidden;
+}
+
+.assistant--floating .assistant__panel {
+  width: min(100vw - 2 * var(--space-4), 420px);
 }
 
 .assistant__header {

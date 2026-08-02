@@ -32,7 +32,9 @@ describe('getDefaultZone', () => {
       name: 'Cave Creek low desert',
       zip: '85331',
       last_frost: 'Feb 15',
-      first_frost: 'Nov 25'
+      first_frost: 'Nov 25',
+      county: 'Maricopa',
+      elevation_ft: 2529
     };
     const db = mockDb({ first: zone });
     const got = await getDefaultZone(db);
@@ -108,6 +110,7 @@ describe('getWindowsForCrop', () => {
         end_half_month: 5,
         method: 'T',
         source_id: 'src-az1005',
+      source_granularity: 'half-month',
         source_title: 'Vegetable Planting Calendar for Maricopa County',
         source_author: 'Kai Umeda',
         source_publisher: 'University of Arizona Cooperative Extension',
@@ -209,6 +212,7 @@ describe('windowToApi', () => {
       end_half_month: 6,
       method: 'S',
       source_id: 'src-az1005',
+      source_granularity: 'half-month',
       source_title: 'Vegetable Planting Calendar for Maricopa County',
       source_author: 'Kai Umeda',
       source_publisher: 'University of Arizona Cooperative Extension',
@@ -222,6 +226,7 @@ describe('windowToApi', () => {
       end_half_month: 6,
       method: 'S',
       source_id: 'src-az1005',
+      source_granularity: 'half-month',
       source: {
         id: 'src-az1005',
         title: 'Vegetable Planting Calendar for Maricopa County',

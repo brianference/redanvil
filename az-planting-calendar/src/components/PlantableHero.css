@@ -1,17 +1,51 @@
 .hero {
+  position: relative;
   background: var(--hero-bg);
   color: var(--hero-text);
-  /* Own the first viewport; results must appear in the first screen */
-  min-height: 100dvh;
-  min-height: 100svh;
-  padding: var(--space-3) 0 var(--space-5);
+  /* No full-viewport min-height on small screens: the taller brand mark (item 2)
+     + zone chrome leave less room; packing content at the top keeps list on-screen. */
+  padding: var(--space-2) 0 var(--space-4);
   border-bottom: 1px solid var(--border);
+  /* overflow:hidden clipped title descenders; banner is positioned absolutely. */
+  overflow: visible;
+}
+
+/* Decorative desert banner -- must not push search below the fold */
+.hero__banner {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 56px;
+  pointer-events: none;
+  opacity: 0.18;
+  z-index: 0;
+}
+
+.hero__banner-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
 }
 
 .hero__inner {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .hero {
+    min-height: min(100dvh, 100svh);
+    padding: var(--space-3) 0 var(--space-5);
+  }
+
+  .hero__banner {
+    height: 96px;
+    opacity: 0.28;
+  }
 }
 
 .hero__kicker {
@@ -26,10 +60,12 @@
 .hero__title {
   margin: 0;
   color: var(--hero-text);
-  font-size: clamp(1.35rem, 3.2vw, 2rem);
-  /* Reading measure via line length preference only on narrow titles — shell stays full width. */
+  font-size: clamp(1.2rem, 3.2vw, 2rem);
+  /* Reading measure via line length preference only on narrow titles -- shell stays full width. */
   max-width: min(28ch, 100%);
-  line-height: 1.15;
+  line-height: 1.25;
+  /* Room for descenders (g/y) that 1.15 + parent clip used to shave. */
+  padding-bottom: 0.05em;
 }
 
 .hero__subtitle {
@@ -38,29 +74,126 @@
   max-width: min(70ch, 100%);
   font-size: var(--type-sm);
   line-height: 1.4;
+  /* Wrap -- never line-clamp / ellipsis (that was the measured 43px clip). */
+  white-space: normal;
+  overflow: visible;
 }
 
-.hero__date {
+@media (max-width: 639px) {
+  .hero__zone-context {
+    display: none;
+  }
+
+  .hero__source-note {
+    display: none;
+  }
+
+  .hero__kicker {
+    margin: 0;
+  }
+
+  .hero__controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .hero__date {
+    flex: 0 1 auto;
+  }
+
+  .hero__search {
+    flex: 1 1 140px;
+  }
+}
+
+.hero__zone-context {
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--hero-muted);
+}
+
+.hero__controls {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-3);
+  flex-direction: column;
+  gap: var(--space-2);
   margin-top: var(--space-1);
 }
 
-.hero__date-label {
+@media (min-width: 640px) {
+  .hero__controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+  }
+}
+
+.hero__date,
+.hero__search {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.hero__search {
+  flex: 1 1 220px;
+}
+
+.hero__date-label,
+.hero__search-label {
   font-size: var(--type-sm);
   font-weight: 600;
   color: var(--hero-muted);
 }
 
-.hero__date-input {
+.hero__date-input,
+.hero__search-input {
   min-height: var(--touch);
   padding: 0 var(--space-3);
   border: 1px solid var(--hero-input-border);
   border-radius: var(--radius);
   background: var(--hero-input-bg);
   color: var(--hero-text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Side-by-side date + search on narrow screens to free vertical room for plant cards */
+@media (max-width: 639px) {
+  .hero__controls {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: var(--space-2);
+  }
+
+  .hero__date {
+    flex: 0 0 auto;
+    width: 10.5rem;
+  }
+
+  .hero__search {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* Keep labels at the 16px body floor (fe-type-floor); never 0.875rem. */
+  .hero__date-label,
+  .hero__search-label {
+    font-size: var(--type-sm);
+  }
+
+  .hero__meta {
+    padding: var(--space-1) 0;
+  }
+}
+
+.hero__source-note {
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--hero-muted);
 }
 
 :root[data-theme='light'] .hero__date-input {
@@ -85,6 +218,24 @@
 .hero__meta strong {
   color: var(--hero-text);
   font-weight: 600;
+}
+
+.hero__meta-sep {
+  margin-inline: 0;
+}
+
+.hero__meta-zone {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+
+/* Under 640 the zone name was display:none while a free-standing · stayed. */
+@media (max-width: 639px) {
+  .hero__meta-zone {
+    display: none;
+  }
 }
 
 .hero__status {

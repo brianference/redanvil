@@ -1,0 +1,180 @@
+[
+  {
+    "ruleId": "fe-a11y-contrast",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/axe/azcal-dark.json",
+      "evidence/axe/azcal-light.json"
+    ],
+    "note": "axe-core 4.12.1 on the deployed build: 0 colour-contrast violations and 0 other violations in both themes; dark resolved --bg rgb(10,14,18) and light rgb(238,241,244), so the run was not inverted.",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-desktop-width",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/width-az-planting-calendar.json"
+    ],
+    "note": "Painted content 100% of viewport at / and 95% on inner routes at 1440 and 1920; floor is 80%.",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-cold-visitor",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/cold-az-planting-calendar.json"
+    ],
+    "note": "Five cold-start checks held on a fresh profile: theme follows the OS in both directions, no console errors on arrival, primary flow returned a real result unseeded.",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-product-completeness",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/product-az-planting-calendar.json",
+      "evidence/screenshots/prod-375-light.png",
+      "evidence/screenshots/prod-375-dark.png",
+      "evidence/screenshots/prod-768-light.png",
+      "evidence/screenshots/prod-768-dark.png",
+      "evidence/screenshots/prod-1280-light.png",
+      "evidence/screenshots/prod-1280-dark.png"
+    ],
+    "note": "On production: search narrows 45 rows to 1 for tomato, the assistant returns 7 D1-grounded crops for early August with filters {half_month:14}, unmatched /api/* 404s and a bogus detail id 404s.",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-visual-review-recorded",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/screenshots/prod-375-light.png",
+      "evidence/screenshots/prod-375-dark.png",
+      "evidence/screenshots/prod-768-light.png",
+      "evidence/screenshots/prod-768-dark.png",
+      "evidence/screenshots/prod-1280-light.png",
+      "evidence/screenshots/prod-1280-dark.png",
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "Screenshots captured and opened at 375/768/1280 in both themes against the deployed build; 0 console errors across all six loads.",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-premium-nav",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "4 header link(s) [AZ Planting Calendar, Home, About, Contact], aria-current on \"Home\"",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-required-pages",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "/about 200 \"About this calendar\" 887w/8§; /contact 200 \"Contact\" 514w/6§; /terms 200 \"Terms of use\" 1687w/16§; /privacy 200 \"Privacy\" 1702w/15§; /no-such-page 200 \"Page not found\" 18w/0§",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-no-attribution",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "no attribution text",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-responsive-375",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "no horizontal overflow at 375 on 6 route(s)",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-touch-targets",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "6 route(s) at 375; every interactive element >= 44px",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-type-floor",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "6 route(s) at 375, smallest body font 16px; nothing under 16px",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-noncolor-state",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "active nav item: weight 600, gradient background false, aria-current present true",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-safe-areas",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "header sticky on all 6 route(s), padding-top 8px",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-cross-link",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "cross-site link present",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  },
+  {
+    "ruleId": "fe-seo-og",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-az-planting-calendar.json"
+    ],
+    "note": "title \"AZ Planting Calendar — what to plant now in Cave Creek\", description present, og:image present",
+    "reviewedAt": "2026-08-02T06:56:06.572Z",
+    "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad"
+  }
+]

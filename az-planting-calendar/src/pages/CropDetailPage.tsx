@@ -96,6 +96,15 @@ export function CropDetailPage() {
                         : ''}
                     </span>
                   </div>
+                  {w.source_granularity === 'month' ? (
+                    <p className="window-card__granularity mono" data-testid="source-granularity">
+                      {en.detail.granularityMonth}
+                    </p>
+                  ) : (
+                    <p className="window-card__granularity mono" data-testid="source-granularity">
+                      {en.detail.granularityHalf}
+                    </p>
+                  )}
                   <p className="window-card__cite">
                     <span className="window-card__cite-label">{en.detail.citation}</span>{' '}
                     <a

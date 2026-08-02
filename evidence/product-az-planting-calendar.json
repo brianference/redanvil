@@ -1,0 +1,23 @@
+{
+  "baseUrl": "https://az-planting-calendar.pages.dev",
+  "checkedAt": "2026-08-02T06:55:23.096Z",
+  "probes": {
+    "search-narrows": {
+      "ok": true,
+      "detail": "/api/crops 45 rows -> ?q=tomato 1 row(s)"
+    },
+    "assistant-grounded": {
+      "ok": true,
+      "detail": "HTTP 200; 7 crop(s) from D1; filters {\"half_month\":14}; answer: 7 crops can go in during the first half (Aug 1). Listed: Beans, Snap, Blackeyed Peas, Carrots, Corn, Sweet, Pumpkin, Squ"
+    },
+    "no-spa-mask": {
+      "ok": true,
+      "detail": "unmatched /api/* -> HTTP 404, body {\"error\":\"no such endpoint: /api/__absent_wejyvc\"}"
+    },
+    "detail-404": {
+      "ok": true,
+      "detail": "bogus detail id -> HTTP 404"
+    }
+  },
+  "ok": true
+}

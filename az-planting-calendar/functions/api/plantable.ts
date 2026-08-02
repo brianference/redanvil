@@ -1,37 +1,52 @@
+import { PlantableQuerySchema } from '../../src/lib/schemas';
 import type { AppContext } from '../lib/env';
 import { dateToHalfMonth, formatIsoDate, halfMonthLabel, parseIsoDate } from '../lib/dates';
 import {
   getCropsByIds,
-  getDefaultZone,
   getWindowsForHalf,
+  resolveZoneParam,
   windowToApi
 } from '../lib/db';
 import { errorJson, json, optionsResponse } from '../lib/http';
 
 /**
- * GET /api/plantable?date=YYYY-MM-DD&method=S|T
+ * GET /api/plantable?date=YYYY-MM-DD&method=S|T&zone=
  * Lists crops whose planting window covers the current (or given) half-month.
+ * Query is validated with PlantableQuerySchema (Zod) -- fail closed on bad input.
+ * Zone selects frost/elevation context; planting windows are az1005 (Maricopa).
  */
 export async function onRequestGet(context: AppContext): Promise<Response> {
   const { request, env } = context;
   const url = new URL(request.url);
 
-  const dateParam = url.searchParams.get('date');
-  const methodParam = url.searchParams.get('method');
-
-  let method: 'S' | 'T' | undefined;
-  if (methodParam !== null) {
-    if (methodParam !== 'S' && methodParam !== 'T') {
+  const parsedQuery = PlantableQuerySchema.safeParse({
+    date: url.searchParams.get('date') ?? undefined,
+    method: url.searchParams.get('method') ?? undefined,
+    month: url.searchParams.get('month') ?? undefined,
+    zone: url.searchParams.get('zone') ?? undefined
+  });
+  if (!parsedQuery.success) {
+    const issue = parsedQuery.error.issues[0];
+    const field = issue?.path[0];
+    if (field === 'method') {
       return errorJson(request, 'method must be S or T', 400);
     }
-    method = methodParam;
+    if (field === 'date') {
+      return errorJson(request, 'date must be YYYY-MM-DD', 400);
+    }
+    if (field === 'month') {
+      return errorJson(request, 'month must be integer 0..11', 400);
+    }
+    if (field === 'zone') {
+      return errorJson(request, 'zone must be a non-empty id, city, or ZIP', 400);
+    }
+    return errorJson(request, 'invalid query', 400);
   }
+
+  const { method, date: dateParam, zone: zoneParam } = parsedQuery.data;
 
   let date: Date;
   if (dateParam) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-      return errorJson(request, 'date must be YYYY-MM-DD', 400);
-    }
     const parsed = parseIsoDate(dateParam);
     if (!parsed) {
       return errorJson(request, 'invalid date', 400);
@@ -41,12 +56,16 @@ export async function onRequestGet(context: AppContext): Promise<Response> {
     date = new Date();
   }
 
-  const half = dateToHalfMonth(date);
-  const zone = await getDefaultZone(env.DB);
-  if (!zone) {
+  const zoneResult = await resolveZoneParam(env.DB, zoneParam);
+  if ('error' in zoneResult) {
+    if (zoneResult.error === 'not_found') {
+      return errorJson(request, 'zone not found', 404);
+    }
     return errorJson(request, 'default zone not configured', 500);
   }
+  const zone = zoneResult.zone;
 
+  const half = dateToHalfMonth(date);
   const windows = await getWindowsForHalf(env.DB, half, method);
   const cropIds = [...new Set(windows.map((w) => w.crop_id))];
   const crops = await getCropsByIds(env.DB, cropIds);

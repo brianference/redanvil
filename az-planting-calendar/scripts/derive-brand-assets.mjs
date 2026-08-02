@@ -2,11 +2,11 @@
  * Derive production brand assets from the finalized artwork
  * (design-refs/logos/v2/01-calendar-behind-edit.jpg).
  *
- * Does NOT redraw the mark. Keys:
+ * Does NOT redraw the mark. Keys (SPEC-azcal-375-and-plate A2 option 1):
  *   - outer near-white background
  *   - calendar card flat light fill
+ *   - calendar grid rule lines and outer border (plate at 96px)
  * Keeps:
- *   - calendar grid rule lines and outer border
  *   - cactus, seedling, sand
  *
  * Outputs:
@@ -73,9 +73,9 @@ function isSand(r, g, b) {
 }
 
 /**
- * Key outer near-white plate AND calendar flat fill to true alpha.
- * Grid lines (mid-grey, lower brightness), border, plant, and sand stay.
- * Optionally darkens mid-grey grid lines slightly so they read on light surfaces.
+ * Key outer near-white plate, calendar flat fill, grid lines, and outer border
+ * to true alpha. Plant (cactus/seedling) and sand stay opaque.
+ * At 96px the old grid+border closed into a visible light plate on dark headers.
  *
  * @returns {Promise<{ buffer: Buffer, width: number, height: number, transparentPct: number }>}
  */
@@ -88,8 +88,8 @@ async function transparentMark() {
   const pixels = width * height;
 
   /**
-   * Classify keyable plate pixels (outer white or calendar cell fill).
-   * Not plant, not sand, low saturation, high brightness.
+   * Classify keyable plate/grid pixels (outer white, cell fill, grid, border).
+   * Not plant, not sand, low saturation greys across the full calendar range.
    *
    * @param {number} r
    * @param {number} g
@@ -102,13 +102,13 @@ async function transparentMark() {
     const maxc = Math.max(r, g, b);
     const sat = maxc - minc;
     const br = (r + g + b) / 3;
-    // Outer white ~245 and cell fills ~210-235; grid lines ~175-195 stay
-    if (sat >= 28) return false;
-    if (br >= 205) return true;
+    // Outer white ~245, cell fills ~210-235, grid/border ~140-200, header bar ~150-180
+    if (sat >= 32) return false;
+    if (br >= 130) return true;
     return false;
   }
 
-  // Pass 1: hard-key plate pixels; soft-edge for near-threshold greys
+  // Pass 1: hard-key plate + grid + border; soft-edge near plant/sand
   for (let i = 0; i < pixels; i++) {
     const o = i * 4;
     const r = out[o];
@@ -121,26 +121,17 @@ async function transparentMark() {
     const sat = maxc - minc;
     const br = (r + g + b) / 3;
 
-    if (sat < 28 && br >= 205) {
-      // Full key for plate / outer white
+    if (sat < 32 && br >= 130) {
+      // Full key for plate, grid lines, border, calendar header bar
       out[o + 3] = 0;
       continue;
     }
 
-    // Soft fringe between plate and content (br 198-205, low sat)
-    if (sat < 28 && br >= 198 && br < 205) {
-      const t = (br - 198) / 7;
+    // Soft fringe between plate and content (slightly greyer residual)
+    if (sat < 32 && br >= 110 && br < 130) {
+      const t = (br - 110) / 20;
       out[o + 3] = Math.round(255 * (1 - t));
       continue;
-    }
-
-    // Darken mid-grey grid / border so they read on light surfaces
-    // Grid ~176-195. Push slightly darker without recoloring plants/sand.
-    if (sat < 30 && br >= 160 && br < 205 && !isPlant(r, g, b) && !isSand(r, g, b)) {
-      const factor = 0.72; // ~190 -> ~137, still mid-grey
-      out[o] = Math.round(r * factor);
-      out[o + 1] = Math.round(g * factor);
-      out[o + 2] = Math.round(b * factor);
     }
   }
 
@@ -356,9 +347,13 @@ async function main() {
     statSync(join(publicDir, 'brand-mark.png')).size
   );
 
+  // Spec A2: composite on the exact surfaces the header uses.
   await composeOn(brandBuf, BG_DARK, 'brand-on-dark.png');
   await composeOn(brandBuf, BG_LIGHT, 'brand-on-light.png');
   await composeOn(brandBuf, { r: 255, g: 255, b: 255, alpha: 1 }, 'brand-on-page-light.png');
+  // Also write the hex-named verify pair the plate check asks for (#0a0e12 / #eef1f4).
+  await composeOn(brandBuf, BG_DARK, 'mark-on-0a0e12.png');
+  await composeOn(brandBuf, BG_LIGHT, 'mark-on-eef1f4.png');
 
   // brand-full: transparent full art, min 240px rendered -- export larger with alpha
   await sharp(keyed.buffer)

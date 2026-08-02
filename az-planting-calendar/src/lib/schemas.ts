@@ -18,15 +18,21 @@ export const SourceSchema = z.object({
 });
 export type Source = z.infer<typeof SourceSchema>;
 
-/** Climate zone (default Cave Creek 85331). */
+/** Climate zone (default Cave Creek 85331). County + elevation from plan of record. */
 export const ZoneSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   zip: z.string().min(1),
   last_frost: z.string().min(1),
-  first_frost: z.string().min(1)
+  first_frost: z.string().min(1),
+  county: z.string().nullable().optional(),
+  elevation_ft: z.number().int().nullable().optional()
 });
 export type Zone = z.infer<typeof ZoneSchema>;
+
+/** Source column precision: what the publication actually supports. */
+export const SourceGranularitySchema = z.enum(['month', 'half-month']);
+export type SourceGranularity = z.infer<typeof SourceGranularitySchema>;
 
 /** Crop row. */
 export const CropSchema = z.object({
@@ -46,6 +52,7 @@ export const PlantingWindowSchema = z.object({
   end_half_month: HalfMonthSchema,
   method: MethodSchema,
   source_id: z.string().min(1),
+  source_granularity: SourceGranularitySchema.optional().default('half-month'),
   source: SourceSchema.optional()
 });
 export type PlantingWindow = z.infer<typeof PlantingWindowSchema>;
@@ -113,23 +120,74 @@ export const HealthResponseSchema = z.object({
   status: z.literal('ok')
 });
 
+/**
+ * True when `value` is a real calendar YYYY-MM-DD (rejects 2026-02-31).
+ *
+ * @param value - Candidate date string already matching the ISO shape.
+ */
+function isValidCalendarIsoDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const date = new Date(year, month - 1, day, 12, 0, 0, 0);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
+
+/** Optional zone lookup: id, city fragment, or ZIP. */
+export const ZoneParamSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(80)
+  .optional();
+
 /** Query: optional ISO date YYYY-MM-DD for plantable-now. */
 export const PlantableQuerySchema = z.object({
   date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(isValidCalendarIsoDate, { message: 'invalid date' })
     .optional(),
   method: MethodSchema.optional(),
-  month: z.coerce.number().int().min(0).max(11).optional()
+  month: z.coerce.number().int().min(0).max(11).optional(),
+  zone: ZoneParamSchema
 });
 export type PlantableQuery = z.infer<typeof PlantableQuerySchema>;
 
 /** Query filters for list/grid endpoints. */
 export const FilterQuerySchema = z.object({
   method: MethodSchema.optional(),
-  month: z.coerce.number().int().min(0).max(11).optional()
+  month: z.coerce.number().int().min(0).max(11).optional(),
+  zone: ZoneParamSchema
 });
 export type FilterQuery = z.infer<typeof FilterQuerySchema>;
+
+/** GET /api/zones?q= search query. */
+export const ZonesQuerySchema = z.object({
+  q: z
+    .string()
+    .max(80)
+    .optional()
+    .transform((value) => {
+      if (value === undefined) return undefined;
+      const trimmed = value.trim();
+      return trimmed.length === 0 ? undefined : trimmed;
+    })
+});
+export type ZonesQuery = z.infer<typeof ZonesQuerySchema>;
+
+/** GET /api/zones response. */
+export const ZonesResponseSchema = z.object({
+  zones: z.array(ZoneSchema)
+});
+export type ZonesResponse = z.infer<typeof ZonesResponseSchema>;
 
 /**
  * Query for GET /api/crops — optional case-insensitive name search.
@@ -150,7 +208,8 @@ export type CropsQuery = z.infer<typeof CropsQuerySchema>;
 
 /** POST /api/assistant request body. */
 export const AssistantRequestSchema = z.object({
-  message: z.string().trim().min(1).max(500)
+  message: z.string().trim().min(1).max(500),
+  zone: ZoneParamSchema
 });
 export type AssistantRequest = z.infer<typeof AssistantRequestSchema>;
 

@@ -5,12 +5,14 @@ import {
   GridResponseSchema,
   HealthResponseSchema,
   PlantableResponseSchema,
+  ZonesResponseSchema,
   type AssistantResponse,
   type CropDetailResponse,
   type FilterQuery,
   type GridResponse,
   type PlantableQuery,
-  type PlantableResponse
+  type PlantableResponse,
+  type ZonesResponse
 } from './schemas';
 
 /**
@@ -66,7 +68,8 @@ export async function fetchPlantable(query: PlantableQuery = {}): Promise<Planta
     `/api/plantable${qs({
       date: query.date,
       method: query.method,
-      month: query.month
+      month: query.month,
+      zone: query.zone
     })}`,
     PlantableResponseSchema
   );
@@ -75,9 +78,18 @@ export async function fetchPlantable(query: PlantableQuery = {}): Promise<Planta
 /** GET /api/grid */
 export async function fetchGrid(query: FilterQuery = {}): Promise<GridResponse> {
   return getJson(
-    `/api/grid${qs({ method: query.method, month: query.month })}`,
+    `/api/grid${qs({ method: query.method, month: query.month, zone: query.zone })}`,
     GridResponseSchema
   );
+}
+
+/**
+ * GET /api/zones — list or search planning zones by city/ZIP/id.
+ *
+ * @param q - Optional city, ZIP, or zone id fragment.
+ */
+export async function fetchZones(q?: string): Promise<ZonesResponse> {
+  return getJson(`/api/zones${qs({ q })}`, ZonesResponseSchema);
 }
 
 /**
@@ -98,15 +110,19 @@ export async function fetchCropDetail(id: string): Promise<CropDetailResponse> {
  * POST /api/assistant — grounded answer from D1 crop data via Workers AI.
  *
  * @param message - User question (1–500 chars after trim).
+ * @param zone - Optional zone id / city / ZIP for context labeling.
  */
-export async function askAssistant(message: string): Promise<AssistantResponse> {
+export async function askAssistant(
+  message: string,
+  zone?: string
+): Promise<AssistantResponse> {
   const res = await fetch('/api/assistant', {
     method: 'POST',
     headers: {
       accept: 'application/json',
       'content-type': 'application/json'
     },
-    body: JSON.stringify({ message })
+    body: JSON.stringify({ message, zone })
   });
   if (!res.ok) {
     let errMessage = `Request failed (${res.status})`;

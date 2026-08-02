@@ -207,11 +207,15 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border: 1px solid currentColor;
   font-size: var(--type-sm);
+  /* Avoid 2px vertical scrollHeight overflow from line-box rounding on "S"/"T". */
   line-height: 1;
+  overflow: visible;
+  box-sizing: border-box;
+  padding: 0;
 }
 
 .method-chip--seed .method-chip__mark {

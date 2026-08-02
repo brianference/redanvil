@@ -11,10 +11,11 @@ export interface LegalSectionCopy {
 
 export const en = {
   appName: 'AZ Planting Calendar',
-  appTagline: 'Low desert · Cave Creek 85331',
+  appTagline: 'Low desert · Maricopa County',
 
   nav: {
     home: 'Home',
+    grid: 'Year grid',
     about: 'About',
     terms: 'Terms',
     privacy: 'Privacy',
@@ -23,6 +24,8 @@ export const en = {
     themeSystem: 'System',
     themeLight: 'Light',
     themeDark: 'Dark',
+    menuOpen: 'Menu',
+    menuClose: 'Close menu',
     /** Accessible name for the header theme control (includes current mode). */
     themeToggleAria: (modeLabel: string) => `Theme: ${modeLabel}. Click to switch light, dark, or system.`,
     skipToContent: 'Skip to content'
@@ -32,7 +35,7 @@ export const en = {
     kicker: 'Plantable now',
     title: 'What can I plant right now?',
     subtitle:
-      'Arizona low desert for Cave Creek (Maricopa County). Seed or transplant windows from University of Arizona Cooperative Extension.',
+      'Arizona low desert, Maricopa County. Seed and transplant windows from UA Cooperative Extension az1005.',
     asOf: 'As of',
     halfMonth: 'Half-month',
     empty: 'Nothing in the calendar for this half-month with the current filters.',
@@ -43,6 +46,8 @@ export const en = {
     transplant: 'Transplant',
     daysHarvest: 'Days to harvest',
     source: 'Source',
+    sourceNote:
+      'Planting windows: UA Cooperative Extension az1005 (Maricopa County low desert). Frost dates: NOAA 1991-2020 normals (30% probability).',
     viewCrop: 'Crop detail',
     count: (n: number) => (n === 1 ? '1 crop' : `${n} crops`)
   },
@@ -77,6 +82,9 @@ export const en = {
 
   grid: {
     title: 'Full-year grid',
+    pageTitle: 'Full-year planting grid',
+    pageLede:
+      'Crops down the side, 24 half-months across. Windows from UA Cooperative Extension az1005 for Maricopa County.',
     subtitle: 'Crops down the side, 24 half-months across. S = seed, T = transplant.',
     loading: 'Loading grid…',
     error: 'Could not load the planting grid.',
@@ -84,7 +92,9 @@ export const en = {
     legendS: 'S seed',
     legendT: 'T transplant',
     legendBoth: 'Both',
-    empty: 'No crops match these filters.'
+    empty: 'No crops match these filters.',
+    searchError: 'Could not search crops.',
+    searchRetry: 'Retry search'
   },
 
   detail: {
@@ -98,14 +108,35 @@ export const en = {
     window: 'Window',
     loading: 'Loading crop…',
     error: 'Crop not found or failed to load.',
-    retrieved: 'Retrieved'
+    retrieved: 'Retrieved',
+    granularityMonth:
+      'Source lists this window by whole month; half-month cells are both halves of that month, not finer precision.',
+    granularityHalf: 'Source supports half-month columns (az1005 chart headers).'
   },
 
   zone: {
     label: 'Zone',
+    switchLabel: 'Planning zone',
+    searchPlaceholder: 'City, ZIP, or zone id',
+    noMatch: 'No zones match that search.',
     lastFrost: 'Avg. last spring frost (32°F)',
     firstFrost: 'Approx. first fall frost',
-    zip: 'ZIP'
+    zip: 'ZIP',
+    /**
+     * Header / context line for the active zone.
+     *
+     * @param zone - Selected zone row.
+     */
+    contextLine: (zone: { name: string; zip: string }) => {
+      const short = zone.name.replace(/\s*\(.*?\)\s*/g, '').trim();
+      return `Low desert · ${short} ${zone.zip}`;
+    },
+    /**
+     * Elevation display for planning context.
+     *
+     * @param ft - Feet above sea level (station or town).
+     */
+    elevation: (ft: number) => `${ft.toLocaleString('en-US')} ft elev.`
   },
 
   footer: {
@@ -444,6 +475,9 @@ export const en = {
     homeTitle: 'AZ Planting Calendar — what to plant now in Cave Creek',
     homeDescription:
       'Arizona low-desert planting calendar for Cave Creek AZ 85331. Seed and transplant windows from UA Cooperative Extension.',
+    gridTitle: 'Year grid — AZ Planting Calendar',
+    gridDescription:
+      'Full-year half-month planting grid for Maricopa County low desert: crops × 24 columns from UA Cooperative Extension az1005.',
     aboutTitle: 'About — AZ Planting Calendar',
     aboutDescription:
       'How planting windows are sourced for the Arizona low desert and Cave Creek 85331 from University of Arizona Extension.',

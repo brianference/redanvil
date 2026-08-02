@@ -47,6 +47,26 @@ try {
 const TOUCH_MIN = 44;
 /** Minimum body font size, px (R3.1). */
 const TYPE_MIN = 16;
+/**
+ * Horizontal element overflow tolerance (px). Flag when
+ * scrollWidth - clientWidth > H_OVERFLOW_TOLERANCE.
+ * +1 absorbs sub-pixel layout rounding without hiding real truncation.
+ */
+const H_OVERFLOW_TOLERANCE = 1;
+/**
+ * Vertical element overflow tolerance (px). Flag when
+ * scrollHeight - clientHeight > V_OVERFLOW_TOLERANCE.
+ *
+ * Why 2, not 1: single-character boxes (e.g. method-chip marks "S"/"T") report
+ * exactly 2px of vertical overflow from line-height rounding. That is not a
+ * clipped label. Real clips in the az-planting-calendar measurement were 43px
+ * (hero subtitle) and 47px (zone label) -- well above this floor. A 2px title
+ * descender clip is deliberately below the bar; raising the bar to catch it
+ * reintroduces the method-chip false positives that would get the check turned
+ * off. Prefer fixing tiny descender clip via layout padding, not via a check
+ * that fires on every rounded line box.
+ */
+const V_OVERFLOW_TOLERANCE = 2;
 
 const browser = await chromium.launch();
 const consoleErrors = [];
@@ -75,7 +95,7 @@ try {
     await m.goto(new URL(route, baseUrl).href, { waitUntil: 'networkidle' });
 
     const mobile = await m.evaluate(
-      ([touchMin, typeMin]) => {
+      ([touchMin, typeMin, hTol, vTol]) => {
         const visible = (el) => {
           const s = getComputedStyle(el);
           const r = el.getBoundingClientRect();
@@ -100,6 +120,68 @@ try {
           const label = el.closest('label');
           return label !== null && label.getBoundingClientRect().height >= touchMin;
         };
+        /**
+         * Screen-reader-only / visually-hidden pattern -- clips on purpose.
+         * Detect structurally (not by class name): 1px box, absolute + clip,
+         * or overflow:hidden on a 1px box. Class names vary per app.
+         *
+         * @param {Element} el
+         * @returns {boolean}
+         */
+        const isVisuallyHidden = (el) => {
+          const s = getComputedStyle(el);
+          const r = el.getBoundingClientRect();
+          const w = r.width;
+          const h = r.height;
+          const onePxBox = w <= 1 && h <= 1;
+          const clip =
+            (s.clip !== 'auto' && s.clip !== '' && s.clip !== 'rect(auto, auto, auto, auto)') ||
+            (s.clipPath !== 'none' && s.clipPath !== '');
+          if (s.position === 'absolute' && (onePxBox || clip)) return true;
+          if (onePxBox && (s.overflow === 'hidden' || s.overflowX === 'hidden' || s.overflowY === 'hidden')) {
+            return true;
+          }
+          // Classic sr-only: margin -1px, 1px box, overflow hidden (rect may be 0)
+          if (onePxBox && parseFloat(s.marginTop) < 0) return true;
+          return false;
+        };
+        /**
+         * Deliberate scroll container -- overflow auto/scroll is legal.
+         *
+         * @param {Element} el
+         * @returns {boolean}
+         */
+        const isScrollContainer = (el) => {
+          const s = getComputedStyle(el);
+          const ox = s.overflowX;
+          const oy = s.overflowY;
+          const o = s.overflow;
+          return (
+            ox === 'auto' ||
+            ox === 'scroll' ||
+            oy === 'auto' ||
+            oy === 'scroll' ||
+            o === 'auto' ||
+            o === 'scroll'
+          );
+        };
+        /**
+         * Prefer a stable CSS selector for reporting.
+         *
+         * @param {Element} el
+         * @returns {string}
+         */
+        const describeSelector = (el) => {
+          if (el.id) return `#${el.id}`;
+          const cls = typeof el.className === 'string' ? el.className.trim() : '';
+          if (cls) {
+            const first = cls.split(/\s+/).filter(Boolean).slice(0, 3).join('.');
+            if (first) return `${el.tagName.toLowerCase()}.${first}`;
+          }
+          const testId = el.getAttribute('data-testid');
+          if (testId) return `${el.tagName.toLowerCase()}[data-testid="${testId}"]`;
+          return el.tagName.toLowerCase();
+        };
         const targets = [
           ...document.querySelectorAll('a,button,input,select,textarea,[role=button]')
         ]
@@ -117,6 +199,34 @@ try {
         const tiny = texts
           .filter((el) => parseFloat(getComputedStyle(el).fontSize) < typeMin)
           .map((el) => (el.textContent || '').trim().slice(0, 30));
+        // Element-level truncation: page-level scrollWidth misses ellipsised
+        // and clipped text that never grows the body. Walk every element.
+        const clipped = [];
+        for (const el of document.querySelectorAll('body *')) {
+          if (!visible(el)) continue;
+          if (isVisuallyHidden(el)) continue;
+          if (isScrollContainer(el)) continue;
+          const sw = el.scrollWidth;
+          const cw = el.clientWidth;
+          const sh = el.scrollHeight;
+          const ch = el.clientHeight;
+          const overW = sw - cw;
+          const overH = sh - ch;
+          if (overW <= hTol && overH <= vTol) continue;
+          const text = (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+          clipped.push({
+            selector: describeSelector(el),
+            overW: overW > hTol ? Math.round(overW) : 0,
+            overH: overH > vTol ? Math.round(overH) : 0,
+            text
+          });
+        }
+        // Prefer deepest elements: drop ancestors that only overflow because a
+        // reported descendant does (same overflow direction, contains child).
+        const clippedDedup = clipped.filter((c, i) => {
+          // Keep all; reporting every hit is clearer for fixes. Cap count later.
+          return i < 40;
+        });
         const header = document.querySelector('header');
         const hs = header === null ? null : getComputedStyle(header);
         return {
@@ -125,11 +235,12 @@ try {
           minFontPx: sizes.length > 0 ? Math.min(...sizes) : null,
           tinyText: tiny,
           overflow: document.body.scrollWidth > window.innerWidth,
+          clipped: clippedDedup,
           headerPosition: hs === null ? null : hs.position,
           headerPaddingTop: hs === null ? null : hs.paddingTop
         };
       },
-      [TOUCH_MIN, TYPE_MIN]
+      [TOUCH_MIN, TYPE_MIN, H_OVERFLOW_TOLERANCE, V_OVERFLOW_TOLERANCE]
     );
     await m.close();
     perRoute.push({ route, ...mobile });
@@ -154,14 +265,46 @@ try {
         ? `nothing under ${TYPE_MIN}px`
         : badType.map((r) => `${r.route}: ${r.tinyText.join(' | ')}`).join('; '))
   );
-  const overflowing = perRoute.filter((r) => r.overflow);
-  record(
-    'fe-responsive-375',
-    overflowing.length === 0,
-    overflowing.length === 0
-      ? `no horizontal overflow at 375 on ${perRoute.length} route(s)`
-      : `overflow at 375 on: ${overflowing.map((r) => r.route).join(', ')}`
+  // Page-level body scrollWidth is necessary but not sufficient: ellipsis and
+  // line-clamp clip text without growing the document. Element-level
+  // scrollWidth/scrollHeight catches those (and must still exclude sr-only
+  // clips and deliberate scroll containers).
+  const pageOverflow = perRoute.filter((r) => r.overflow);
+  const elementClips = perRoute.flatMap((r) =>
+    (r.clipped ?? []).map((c) => ({ route: r.route, ...c }))
   );
+  const responsiveOk = pageOverflow.length === 0 && elementClips.length === 0;
+  let responsiveDetail;
+  if (responsiveOk) {
+    responsiveDetail = `no page or element overflow/clip at 375 on ${perRoute.length} route(s) (H>${H_OVERFLOW_TOLERANCE}px V>${V_OVERFLOW_TOLERANCE}px)`;
+  } else {
+    const parts = [];
+    if (pageOverflow.length > 0) {
+      parts.push(`page overflow on: ${pageOverflow.map((r) => r.route).join(', ')}`);
+    }
+    if (elementClips.length > 0) {
+      parts.push(
+        elementClips
+          .slice(0, 20)
+          .map((c) => {
+            const dim = [
+              c.overW > 0 ? `${c.overW}px wide` : null,
+              c.overH > 0 ? `${c.overH}px tall` : null
+            ]
+              .filter(Boolean)
+              .join(', ');
+            const t = c.text ? ` "${c.text}"` : '';
+            return `${c.route} ${c.selector} (+${dim})${t}`;
+          })
+          .join('; ')
+      );
+      if (elementClips.length > 20) {
+        parts.push(`…+${elementClips.length - 20} more`);
+      }
+    }
+    responsiveDetail = parts.join(' | ');
+  }
+  record('fe-responsive-375', responsiveOk, responsiveDetail);
   const unstuck = perRoute.filter(
     (r) => r.headerPosition !== 'sticky' && r.headerPosition !== 'fixed'
   );

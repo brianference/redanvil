@@ -24,8 +24,11 @@ favicon by resizing this image will ship an unreadable icon.
 - [x] simplified favicon: `public/favicon.svg` (cactus silhouette only, green on
       dark; verified by opening `v2/verify/favicon-32.png` and
       `v2/verify/favicon-32-4x.png` — cactus arms read at 32px, no pale grid square)
-- [x] transparent header mark: `public/brand-mark.png` (outer light plate keyed
-      out; calendar panel is part of the approved artwork)
+- [x] transparent header mark: `public/brand-mark.png` (outer light plate, calendar
+      fill, grid lines, and border keyed out -- SPEC-azcal-375-and-plate A2; at 96px
+      the grid closed into a visible plate on dark. Composites:
+      `v2/verify/brand-on-dark.png` / `brand-on-light.png` and
+      `mark-on-0a0e12.png` / `mark-on-eef1f4.png` -- no plate remains)
 - [x] OG image: `public/og.png` (1200×630 from full-size mark + title)
 - [x] wired into shell: Layout uses `<img src="/brand-mark.png">`, not the
       literal text `AZ`

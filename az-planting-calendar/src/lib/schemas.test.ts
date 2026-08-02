@@ -94,6 +94,8 @@ describe('query schemas', () => {
   it('parses plantable date and filters', () => {
     expect(PlantableQuerySchema.parse({ date: '2026-03-01' }).date).toBe('2026-03-01');
     expect(() => PlantableQuerySchema.parse({ date: '03-01-2026' })).toThrow();
+    // Calendar-invalid days fail closed (schema matches plantable handler behaviour).
+    expect(() => PlantableQuerySchema.parse({ date: '2026-02-31' })).toThrow();
     expect(FilterQuerySchema.parse({ method: 'S', month: 2 })).toEqual({
       method: 'S',
       month: 2

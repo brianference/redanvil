@@ -6,7 +6,7 @@ export interface FiltersState {
   method: Method | '';
   month: number | '';
   date: string;
-  /** Crop name search fragment for the year grid. */
+  /** Crop name search fragment for the year grid (owned by hero input). */
   q: string;
 }
 
@@ -14,12 +14,20 @@ interface FiltersProps {
   value: FiltersState;
   onChange: (next: FiltersState) => void;
   showDate?: boolean;
+  /** When false, omit crop search (search lives in the hero). Default false. */
+  showSearch?: boolean;
 }
 
 /**
- * Method + month + crop search (+ optional date) filters for plantable list and grid.
+ * Method + month (+ optional date/search) filters for plantable list and grid.
+ * Crop search lives in the hero by default so it stays above the fold.
  */
-export function Filters({ value, onChange, showDate = true }: FiltersProps) {
+export function Filters({
+  value,
+  onChange,
+  showDate = true,
+  showSearch = false
+}: FiltersProps) {
   return (
     <section className="filters" aria-label={en.filters.title} data-testid="filters">
       <h2 className="filters__title">{en.filters.title}</h2>
@@ -36,20 +44,22 @@ export function Filters({ value, onChange, showDate = true }: FiltersProps) {
             />
           </label>
         ) : null}
-        <label className="filters__field filters__field--search">
-          <span className="filters__label">{en.filters.search}</span>
-          <input
-            id="crop-search"
-            type="search"
-            name="search"
-            className="filters__control"
-            value={value.q}
-            onChange={(e) => onChange({ ...value, q: e.target.value })}
-            placeholder={en.filters.searchPlaceholder}
-            autoComplete="off"
-            data-testid="filter-search"
-          />
-        </label>
+        {showSearch ? (
+          <label className="filters__field filters__field--search">
+            <span className="filters__label">{en.filters.search}</span>
+            <input
+              id="crop-search"
+              type="search"
+              name="search"
+              className="filters__control"
+              value={value.q}
+              onChange={(e) => onChange({ ...value, q: e.target.value })}
+              placeholder={en.filters.searchPlaceholder}
+              autoComplete="off"
+              data-testid="filter-search"
+            />
+          </label>
+        ) : null}
         <label className="filters__field">
           <span className="filters__label">{en.filters.method}</span>
           <select

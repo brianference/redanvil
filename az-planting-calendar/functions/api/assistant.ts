@@ -50,7 +50,8 @@ export function modelText(result: ModelResult): string {
 }
 
 const AssistantBodySchema = z.object({
-  message: z.string().trim().min(1).max(500)
+  message: z.string().trim().min(1).max(500),
+  zone: z.string().trim().min(1).max(80).optional()
 });
 
 /** Filters the model is allowed to emit (never used as SQL text). */

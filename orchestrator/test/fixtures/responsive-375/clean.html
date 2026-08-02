@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clean layout at 375</title>
+    <meta name="description" content="Fixture: no element-level truncation" />
+    <meta property="og:image" content="/og.png" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        font-size: 16px;
+        background: #eef1f4;
+        color: #0a0e12;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #fff;
+        border-bottom: 1px solid #ccd3da;
+      }
+      header a {
+        color: inherit;
+        text-decoration: none;
+        font-weight: 600;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 12px;
+      }
+      header a[aria-current='page'] {
+        font-weight: 700;
+        border-bottom: 2px solid #0a7a4b;
+      }
+      main {
+        padding: 16px;
+      }
+      .zone-selector__label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .hero__subtitle {
+        max-width: 100%;
+        line-height: 1.4;
+        white-space: normal;
+      }
+      .theme-toggle__sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      .year-grid-scroll {
+        overflow-x: auto;
+        white-space: nowrap;
+        max-width: 100%;
+        border: 1px solid #ccd3da;
+        padding: 8px;
+      }
+      .year-grid-scroll span {
+        display: inline-block;
+        min-width: 80px;
+        padding: 8px;
+      }
+      button {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      footer a {
+        color: #0a7a4b;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/" aria-current="page">Home</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <button type="button" aria-label="Theme">
+        <span class="theme-toggle__sr-only">Theme: Light. Click to switch light, dark, or system.</span>
+        ☀
+      </button>
+    </header>
+    <main>
+      <label class="zone-selector__label" for="z">Planning zone</label>
+      <input id="z" type="search" value="Cave Creek AZ 85331" style="min-height: 44px; width: 100%; font-size: 16px" />
+      <h1>What can I plant right now?</h1>
+      <p class="hero__subtitle">
+        Arizona low desert, Maricopa County. Seed and transplant windows from UA Cooperative Extension az1005.
+      </p>
+      <div class="year-grid-scroll" data-testid="year-scroll">
+        <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+        <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+      </div>
+    </main>
+    <footer>
+      <a href="https://example.com">Sibling site</a>
+    </footer>
+  </body>
+</html>

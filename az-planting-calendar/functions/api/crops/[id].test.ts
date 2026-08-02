@@ -70,6 +70,7 @@ describe('GET /api/crops/[id]', () => {
         end_half_month: 4,
         method: 'T',
         source_id: 'src-az1005',
+        source_granularity: 'half-month',
         source_title: 'Vegetable Planting Calendar for Maricopa County',
         source_author: 'Kai Umeda',
         source_publisher: 'University of Arizona Cooperative Extension',

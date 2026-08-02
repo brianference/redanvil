@@ -1,8 +1,9 @@
-import { useId, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useId, useState, type FormEvent } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { en } from '../i18n/en';
 import { askAssistant } from '../lib/api';
 import type { AssistantResponse } from '../lib/schemas';
+import { useZone } from '../hooks/useZone';
 import './AssistantPanel.css';
 
 interface ChatTurn {
@@ -11,18 +12,78 @@ interface ChatTurn {
   crops?: AssistantResponse['crops'];
 }
 
+const SESSION_CLOSED_KEY = 'az-assistant-closed';
+
+interface AssistantPanelProps {
+  /** Open on mount when true (home only), unless the visitor closed it this session. */
+  defaultOpen?: boolean;
+  /** inline = document flow (mobile-safe); floating = fixed dock. */
+  placement?: 'inline' | 'floating';
+}
+
 /**
- * Shell chat affordance: floating control + panel that POSTs to /api/assistant.
+ * Shell chat affordance: panel that POSTs to /api/assistant.
  * Fail-closed: model or network errors show a visible error state, never empty success.
+ * Does not auto-send on load.
  */
-export function AssistantPanel() {
+export function AssistantPanel({
+  defaultOpen = false,
+  placement = 'floating'
+}: AssistantPanelProps) {
   const titleId = useId();
   const inputId = useId();
-  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const { zone } = useZone();
+  const [open, setOpen] = useState(() => {
+    if (!defaultOpen) return false;
+    try {
+      return sessionStorage.getItem(SESSION_CLOSED_KEY) !== '1';
+    } catch {
+      return defaultOpen;
+    }
+  });
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [turns, setTurns] = useState<ChatTurn[]>([]);
+
+  // On home, open by default once per session unless the visitor closed it.
+  useEffect(() => {
+    if (!defaultOpen) return;
+    try {
+      if (sessionStorage.getItem(SESSION_CLOSED_KEY) === '1') {
+        setOpen(false);
+      } else {
+        setOpen(true);
+      }
+    } catch {
+      setOpen(true);
+    }
+  }, [defaultOpen, location.pathname]);
+
+  /**
+   * Close and remember for this browser session.
+   */
+  function handleClose(): void {
+    setOpen(false);
+    try {
+      sessionStorage.setItem(SESSION_CLOSED_KEY, '1');
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /**
+   * Open (does not clear the session closed flag until explicit open).
+   */
+  function handleOpen(): void {
+    setOpen(true);
+    try {
+      sessionStorage.removeItem(SESSION_CLOSED_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
 
   /**
    * Submit the current message to the grounded assistant endpoint.
@@ -40,7 +101,7 @@ export function AssistantPanel() {
     setText('');
 
     try {
-      const result = await askAssistant(message);
+      const result = await askAssistant(message, zone?.id);
       if (!result.answer.trim()) {
         setError(en.assistant.error);
         return;
@@ -61,8 +122,13 @@ export function AssistantPanel() {
     }
   }
 
+  const rootClass =
+    placement === 'inline'
+      ? 'assistant assistant--inline'
+      : 'assistant assistant--floating';
+
   return (
-    <div className="assistant" data-testid="assistant-root">
+    <div className={rootClass} data-testid="assistant-root" data-placement={placement}>
       {open ? (
         <div
           className="assistant__panel"
@@ -81,7 +147,7 @@ export function AssistantPanel() {
             <button
               type="button"
               className="assistant__close"
-              onClick={() => setOpen(false)}
+              onClick={handleClose}
               aria-label={en.assistant.close}
               data-testid="assistant-close"
             >
@@ -169,7 +235,7 @@ export function AssistantPanel() {
       <button
         type="button"
         className="assistant__fab"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => (open ? handleClose() : handleOpen())}
         aria-expanded={open}
         aria-label={open ? en.assistant.close : en.assistant.openAria}
         data-testid="assistant-open"

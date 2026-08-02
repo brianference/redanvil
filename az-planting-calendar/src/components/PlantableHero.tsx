@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { en } from '../i18n/en';
-import type { PlantableItem, PlantableResponse } from '../lib/schemas';
+import type { PlantableItem, PlantableResponse, Zone } from '../lib/schemas';
 import { MethodChip } from './MethodChip';
 import './PlantableHero.css';
 
@@ -11,11 +11,18 @@ interface PlantableHeroProps {
   onRetry: () => void;
   date: string;
   onDateChange: (date: string) => void;
+  /** Crop name search (single control; narrows year grid). */
+  searchQ: string;
+  onSearchChange: (q: string) => void;
+  /** Active planning zone for citation context. */
+  zone: Zone | null;
 }
 
 /**
  * Focus-hero: first viewport answers "what can I plant now?"
- * Date control lives here so plantable results stay in the first screen.
+ * Date + crop search live here so plantable results and search stay above the fold.
+ * Order: title → controls → meta → list so the first plantable card clears a 375×844 fold
+ * after the taller brand mark (item 2).
  */
 export function PlantableHero({
   data,
@@ -23,7 +30,10 @@ export function PlantableHero({
   error,
   onRetry,
   date,
-  onDateChange
+  onDateChange,
+  searchQ,
+  onSearchChange,
+  zone
 }: PlantableHeroProps) {
   return (
     <section
@@ -32,6 +42,16 @@ export function PlantableHero({
       data-testid="plantable-hero"
       aria-labelledby="hero-title"
     >
+      <div className="hero__banner" aria-hidden="true">
+        <img
+          className="hero__banner-img"
+          src="/hero-desert.jpg"
+          alt=""
+          width={1280}
+          height={320}
+          decoding="async"
+        />
+      </div>
       <div className="hero__inner shell">
         <p className="hero__kicker mono">{en.hero.kicker}</p>
         <h1 id="hero-title" className="hero__title">
@@ -39,30 +59,76 @@ export function PlantableHero({
         </h1>
         <p className="hero__subtitle">{en.hero.subtitle}</p>
 
-        <label className="hero__date">
-          <span className="hero__date-label">{en.filters.date}</span>
-          <input
-            type="date"
-            className="hero__date-input mono"
-            value={date}
-            onChange={(e) => onDateChange(e.target.value)}
-            data-testid="filter-date"
-          />
-        </label>
+        {zone ? (
+          <p className="hero__zone-context mono" data-testid="hero-zone-context">
+            {en.zone.contextLine(zone)}
+            {zone.elevation_ft != null
+              ? ` · ${en.zone.elevation(zone.elevation_ft)}`
+              : ''}
+            {zone.county ? ` · ${zone.county} County` : ''}
+          </p>
+        ) : null}
+
+        <div className="hero__controls">
+          <label className="hero__date">
+            <span className="hero__date-label">{en.filters.date}</span>
+            <input
+              type="date"
+              className="hero__date-input mono"
+              value={date}
+              onChange={(e) => onDateChange(e.target.value)}
+              data-testid="filter-date"
+            />
+          </label>
+
+          <label className="hero__search">
+            <span className="hero__search-label">{en.filters.search}</span>
+            <input
+              id="crop-search"
+              type="search"
+              name="search"
+              className="hero__search-input"
+              value={searchQ}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder={en.filters.searchPlaceholder}
+              autoComplete="off"
+              data-testid="filter-search"
+              aria-label={en.filters.search}
+            />
+          </label>
+        </div>
 
         {data ? (
           <div className="hero__meta mono" data-testid="hero-meta">
             <span>
               {en.hero.asOf} <strong>{data.date}</strong>
             </span>
-            <span aria-hidden="true">·</span>
+            <span className="hero__meta-sep" aria-hidden="true">
+              ·
+            </span>
             <span>
               {en.hero.halfMonth} <strong>{data.half_month_label}</strong>
             </span>
-            <span aria-hidden="true">·</span>
+            <span className="hero__meta-sep" aria-hidden="true">
+              ·
+            </span>
             <span data-testid="hero-count">{en.hero.count(data.items.length)}</span>
+            {/* Zone name is display:none under 640px; omit trailing separator so we
+                never paint a dangling "7 crops ·" with nothing after it. */}
+            {data.zone ? (
+              <span className="hero__meta-zone" data-testid="hero-zone-name">
+                <span className="hero__meta-sep" aria-hidden="true">
+                  ·
+                </span>
+                {data.zone.name}
+              </span>
+            ) : null}
           </div>
         ) : null}
+
+        <p className="hero__source-note mono" data-testid="hero-source-note">
+          {en.hero.sourceNote}
+        </p>
 
         {loading ? (
           <p className="hero__status" role="status">
@@ -110,6 +176,7 @@ function PlantableCard({ item }: { item: PlantableItem }) {
       : item.crop.notes;
 
   const primarySource = item.windows[0]?.source;
+  const granularity = item.windows[0]?.source_granularity;
 
   return (
     <article className="plant-card" data-testid="plant-card">
@@ -139,6 +206,11 @@ function PlantableCard({ item }: { item: PlantableItem }) {
           >
             {primarySource.title}
           </a>
+        </p>
+      ) : null}
+      {granularity === 'month' ? (
+        <p className="plant-card__granularity mono" data-testid="source-granularity">
+          {en.detail.granularityMonth}
         </p>
       ) : null}
       <Link className="plant-card__detail" to={`/crop/${item.crop.id}`}>

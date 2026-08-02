@@ -1,0 +1,18 @@
+{
+  "appDir": "C:\\Users\\brian\\RedAnvil\\az-planting-calendar",
+  "checkedAt": "2026-08-02T06:51:48.805Z",
+  "port": 58722,
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "ok": true
+}

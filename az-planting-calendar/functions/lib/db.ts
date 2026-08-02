@@ -17,7 +17,12 @@ export interface ZoneRow {
   zip: string;
   last_frost: string;
   first_frost: string;
+  county: string | null;
+  elevation_ft: number | null;
 }
+
+/** Source column precision for a planting window (from the cited publication). */
+export type SourceGranularity = 'month' | 'half-month';
 
 export interface CropRow {
   id: string;
@@ -34,6 +39,7 @@ export interface WindowRow {
   end_half_month: number;
   method: 'S' | 'T';
   source_id: string;
+  source_granularity: SourceGranularity;
 }
 
 export interface WindowWithSource extends WindowRow {
@@ -44,7 +50,10 @@ export interface WindowWithSource extends WindowRow {
   source_retrieved_at: string;
 }
 
-const DEFAULT_ZONE_ID = 'zone-cave-creek-85331';
+export const DEFAULT_ZONE_ID = 'zone-cave-creek-85331';
+
+const ZONE_SELECT =
+  'id, name, zip, last_frost, first_frost, county, elevation_ft';
 
 /**
  * Load the default Cave Creek zone.
@@ -53,12 +62,109 @@ const DEFAULT_ZONE_ID = 'zone-cave-creek-85331';
  */
 export async function getDefaultZone(db: D1Database): Promise<ZoneRow | null> {
   return db
-    .prepare(
-      `SELECT id, name, zip, last_frost, first_frost
-       FROM zones WHERE id = ?`
-    )
+    .prepare(`SELECT ${ZONE_SELECT} FROM zones WHERE id = ?`)
     .bind(DEFAULT_ZONE_ID)
     .first<ZoneRow>();
+}
+
+/**
+ * Load a zone by primary id.
+ *
+ * @param db - D1 binding.
+ * @param id - Zone id (e.g. zone-cave-creek-85331).
+ */
+export async function getZoneById(
+  db: D1Database,
+  id: string
+): Promise<ZoneRow | null> {
+  return db
+    .prepare(`SELECT ${ZONE_SELECT} FROM zones WHERE id = ?`)
+    .bind(id)
+    .first<ZoneRow>();
+}
+
+/**
+ * Resolve a zone from id, ZIP, or city name fragment.
+ * Prefer exact id, then exact ZIP, then case-insensitive name contains.
+ *
+ * @param db - D1 binding.
+ * @param q - Zone id, ZIP, or city name (trimmed by caller).
+ */
+export async function resolveZone(
+  db: D1Database,
+  q: string
+): Promise<ZoneRow | null> {
+  const byId = await getZoneById(db, q);
+  if (byId) return byId;
+
+  const byZip = await db
+    .prepare(`SELECT ${ZONE_SELECT} FROM zones WHERE zip = ?`)
+    .bind(q)
+    .first<ZoneRow>();
+  if (byZip) return byZip;
+
+  const byName = await db
+    .prepare(
+      `SELECT ${ZONE_SELECT}
+       FROM zones
+       WHERE name LIKE ? ESCAPE '\\'
+       ORDER BY name COLLATE NOCASE
+       LIMIT 1`
+    )
+    .bind(`%${escapeLike(q)}%`)
+    .first<ZoneRow>();
+  return byName;
+}
+
+/**
+ * List zones, optionally filtered by city name or ZIP fragment.
+ *
+ * @param db - D1 binding.
+ * @param q - Optional search fragment (city or ZIP).
+ */
+export async function listZones(
+  db: D1Database,
+  q?: string
+): Promise<ZoneRow[]> {
+  const nameFilter = q !== undefined && q.length > 0;
+  if (nameFilter) {
+    const result = await db
+      .prepare(
+        `SELECT ${ZONE_SELECT}
+         FROM zones
+         WHERE name LIKE ? ESCAPE '\\' OR zip LIKE ? ESCAPE '\\' OR id LIKE ? ESCAPE '\\'
+         ORDER BY name COLLATE NOCASE`
+      )
+      .bind(`%${escapeLike(q)}%`, `%${escapeLike(q)}%`, `%${escapeLike(q)}%`)
+      .all<ZoneRow>();
+    return result.results ?? [];
+  }
+  const result = await db
+    .prepare(`SELECT ${ZONE_SELECT} FROM zones ORDER BY name COLLATE NOCASE`)
+    .all<ZoneRow>();
+  return result.results ?? [];
+}
+
+/**
+ * Resolve optional zone query param to a zone row, defaulting to Cave Creek.
+ * Returns null only when the default zone is missing from D1.
+ *
+ * @param db - D1 binding.
+ * @param zoneParam - Optional zone id, city, or ZIP.
+ * @returns Zone or an error code for a bad explicit lookup.
+ */
+export async function resolveZoneParam(
+  db: D1Database,
+  zoneParam?: string
+): Promise<{ zone: ZoneRow } | { error: 'not_found' } | { error: 'default_missing' }> {
+  if (zoneParam && zoneParam.trim().length > 0) {
+    const found = await resolveZone(db, zoneParam.trim());
+    if (!found) return { error: 'not_found' };
+    return { zone: found };
+  }
+  const def = await getDefaultZone(db);
+  if (!def) return { error: 'default_missing' };
+  return { zone: def };
 }
 
 /**
@@ -79,6 +185,7 @@ export async function getWindowsForHalf(
   const sql = `
     SELECT
       pw.id, pw.crop_id, pw.start_half_month, pw.end_half_month, pw.method, pw.source_id,
+      pw.source_granularity,
       s.title AS source_title, s.author AS source_author, s.publisher AS source_publisher,
       s.url AS source_url, s.retrieved_at AS source_retrieved_at
     FROM planting_windows pw
@@ -175,6 +282,7 @@ export async function getWindowsForCrop(
     .prepare(
       `SELECT
          pw.id, pw.crop_id, pw.start_half_month, pw.end_half_month, pw.method, pw.source_id,
+         pw.source_granularity,
          s.title AS source_title, s.author AS source_author, s.publisher AS source_publisher,
          s.url AS source_url, s.retrieved_at AS source_retrieved_at
        FROM planting_windows pw
@@ -227,6 +335,7 @@ export async function getAllWindows(
   const sql = `
     SELECT
       pw.id, pw.crop_id, pw.start_half_month, pw.end_half_month, pw.method, pw.source_id,
+      pw.source_granularity,
       s.title AS source_title, s.author AS source_author, s.publisher AS source_publisher,
       s.url AS source_url, s.retrieved_at AS source_retrieved_at
     FROM planting_windows pw
@@ -254,6 +363,7 @@ export function windowToApi(row: WindowWithSource) {
     end_half_month: row.end_half_month,
     method: row.method,
     source_id: row.source_id,
+    source_granularity: row.source_granularity ?? 'half-month',
     source: {
       id: row.source_id,
       title: row.source_title,
@@ -304,50 +414,4 @@ export async function getAllCrops(db: D1Database): Promise<CropRow[]> {
     )
     .all<CropRow>();
   return result.results ?? [];
-}
-
-/** One crop row with its planting windows for assistant grounding. */
-export interface CropWindowSummary {
-  crop: CropRow;
-  windows: Array<{
-    method: 'S' | 'T';
-    start_half_month: number;
-    end_half_month: number;
-  }>;
-}
-
-/**
- * Load every crop and its planting windows for the assistant knowledge base.
- * Parameterized SELECT only — no user input in SQL.
- *
- * @param db - D1 binding.
- */
-export async function getAssistantCropData(db: D1Database): Promise<CropWindowSummary[]> {
-  const crops = await getAllCrops(db);
-  const winResult = await db
-    .prepare(
-      `SELECT crop_id, method, start_half_month, end_half_month
-       FROM planting_windows
-       ORDER BY crop_id, start_half_month, method`
-    )
-    .all<{
-      crop_id: string;
-      method: 'S' | 'T';
-      start_half_month: number;
-      end_half_month: number;
-    }>();
-  const byCrop = new Map<string, CropWindowSummary['windows']>();
-  for (const row of winResult.results ?? []) {
-    const list = byCrop.get(row.crop_id) ?? [];
-    list.push({
-      method: row.method,
-      start_half_month: row.start_half_month,
-      end_half_month: row.end_half_month
-    });
-    byCrop.set(row.crop_id, list);
-  }
-  return crops.map((crop) => ({
-    crop,
-    windows: byCrop.get(crop.id) ?? []
-  }));
 }

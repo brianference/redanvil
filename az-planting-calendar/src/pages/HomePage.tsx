@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { AssistantPanel } from '../components/AssistantPanel';
 import { Filters, type FiltersState } from '../components/Filters';
 import { PlantableHero } from '../components/PlantableHero';
 import { YearGrid } from '../components/YearGrid';
+import { useZone } from '../hooks/useZone';
 import { en } from '../i18n/en';
 import { fetchCrops, fetchGrid, fetchPlantable } from '../lib/api';
+import { halfMonthInWindow } from '../lib/halfMonth';
 import type { GridResponse, Method, PlantableResponse } from '../lib/schemas';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import './HomePage.css';
@@ -17,6 +20,7 @@ import './HomePage.css';
 export function HomePage() {
   useDocumentMeta(en.meta.homeTitle, en.meta.homeDescription);
   const [searchParams, setSearchParams] = useSearchParams();
+  const { zone } = useZone();
 
   const [filters, setFilters] = useState<FiltersState>(() => ({
     method: parseMethod(searchParams.get('method')),
@@ -33,6 +37,8 @@ export function HomePage() {
   const [gridLoading, setGridLoading] = useState(true);
   const [plantableError, setPlantableError] = useState<string | null>(null);
   const [gridError, setGridError] = useState<string | null>(null);
+  /** Fail-closed: name search failure must not look like zero matches. */
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
   const methodFilter = useMemo(
@@ -44,6 +50,7 @@ export function HomePage() {
     [filters.month]
   );
   const searchQ = filters.q.trim();
+  const zoneId = zone?.id;
 
   useEffect(() => {
     let cancelled = false;
@@ -51,16 +58,18 @@ export function HomePage() {
     setPlantableError(null);
     void fetchPlantable({
       date: filters.date || undefined,
-      method: methodFilter
+      method: methodFilter,
+      zone: zoneId
     })
       .then((data) => {
         if (cancelled) return;
         if (monthFilter !== undefined) {
-          const h0 = monthFilter * 2;
-          const h1 = monthFilter * 2 + 1;
+          const [h0, h1] = [monthFilter * 2, monthFilter * 2 + 1];
           const items = data.items.filter((item) =>
-            item.windows.some((w) =>
-              windowOverlapsHalves(w.start_half_month, w.end_half_month, h0, h1)
+            item.windows.some(
+              (w) =>
+                halfMonthInWindow(w.start_half_month, w.end_half_month, h0) ||
+                halfMonthInWindow(w.start_half_month, w.end_half_month, h1)
             )
           );
           setPlantable({ ...data, items });
@@ -79,7 +88,7 @@ export function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [filters.date, methodFilter, monthFilter, reloadKey]);
+  }, [filters.date, methodFilter, monthFilter, zoneId, reloadKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,7 +96,8 @@ export function HomePage() {
     setGridError(null);
     void fetchGrid({
       method: methodFilter,
-      month: monthFilter
+      month: monthFilter,
+      zone: zoneId
     })
       .then((data) => {
         if (!cancelled) setGrid(data);
@@ -103,27 +113,33 @@ export function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [methodFilter, monthFilter, reloadKey]);
+  }, [methodFilter, monthFilter, zoneId, reloadKey]);
 
   /**
    * Server-side name search: every keystroke with a non-empty q hits /api/crops?q=.
    * Empty q clears the id filter so the full grid shows.
+   * Failure sets searchError -- never an empty id set (that would paint as "no matches").
    */
   useEffect(() => {
     let cancelled = false;
     if (!searchQ) {
       setSearchIds(null);
+      setSearchError(null);
       return () => {
         cancelled = true;
       };
     }
+    setSearchError(null);
     void fetchCrops(searchQ)
       .then((data) => {
         if (cancelled) return;
         setSearchIds(new Set(data.crops.map((c) => c.id)));
+        setSearchError(null);
       })
-      .catch(() => {
-        if (!cancelled) setSearchIds(new Set());
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setSearchIds(null);
+        setSearchError(err instanceof Error ? err.message : 'error');
       });
     return () => {
       cancelled = true;
@@ -144,15 +160,16 @@ export function HomePage() {
     }
   }, [filters.date, filters.method, filters.month, searchQ, searchParams, setSearchParams]);
 
-  /** Apply server search ids to the year grid. */
+  /** Apply server search ids to the year grid only after a successful search. */
   const filteredGrid = useMemo(() => {
     if (!grid) return null;
+    if (searchError) return grid;
     if (!searchIds) return grid;
     return {
       ...grid,
       crops: grid.crops.filter((row) => searchIds.has(row.crop.id))
     };
-  }, [grid, searchIds]);
+  }, [grid, searchIds, searchError]);
 
   return (
     <div className="home">
@@ -163,11 +180,24 @@ export function HomePage() {
         onRetry={() => setReloadKey((k) => k + 1)}
         date={filters.date}
         onDateChange={(date) => setFilters((f) => ({ ...f, date }))}
+        searchQ={filters.q}
+        onSearchChange={(q) => setFilters((f) => ({ ...f, q }))}
+        zone={zone}
       />
-      <div className="home__below shell">
-        <Filters value={filters} onChange={setFilters} showDate={false} />
+      {/* Inline assistant on home: open by default, does not cover hero on mobile */}
+      <div className="home__assistant shell">
+        <AssistantPanel defaultOpen placement="inline" />
       </div>
-      <YearGrid data={filteredGrid} loading={gridLoading} error={gridError} />
+      <div className="home__below shell">
+        <Filters value={filters} onChange={setFilters} showDate={false} showSearch={false} />
+      </div>
+      <YearGrid
+        data={filteredGrid}
+        loading={gridLoading}
+        error={gridError}
+        searchError={searchError}
+        onSearchRetry={() => setReloadKey((k) => k + 1)}
+      />
     </div>
   );
 }
@@ -207,18 +237,4 @@ function parseMonth(raw: string | null): number | '' {
   const n = Number(raw);
   if (!Number.isInteger(n) || n < 0 || n > 11) return '';
   return n;
-}
-
-/**
- * Whether a half-month window overlaps either of two half indices.
- */
-function windowOverlapsHalves(
-  start: number,
-  end: number,
-  h0: number,
-  h1: number
-): boolean {
-  const covers = (h: number) =>
-    start <= end ? h >= start && h <= end : h >= start || h <= end;
-  return covers(h0) || covers(h1);
 }

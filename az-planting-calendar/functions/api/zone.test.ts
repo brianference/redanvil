@@ -34,7 +34,9 @@ describe('GET /api/zone', () => {
       name: 'Cave Creek low desert',
       zip: '85331',
       last_frost: 'Feb 15',
-      first_frost: 'Nov 25'
+      first_frost: 'Nov 25',
+      county: 'Maricopa',
+      elevation_ft: 2529
     };
     getDefaultZoneMock.mockResolvedValueOnce(zone);
 

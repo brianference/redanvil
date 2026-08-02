@@ -1,44 +1,52 @@
+import { FilterQuerySchema } from '../../src/lib/schemas';
 import type { AppContext } from '../lib/env';
-import { getAllCrops, getAllWindows, getDefaultZone } from '../lib/db';
+import { getAllCrops, getAllWindows, resolveZoneParam } from '../lib/db';
 import { errorJson, json, optionsResponse } from '../lib/http';
 import { expandHalfMonthRange } from '../lib/gridMath';
 
 /**
- * GET /api/grid?method=S|T&month=0..11
+ * GET /api/grid?method=S|T&month=0..11&zone=
  * Full-year grid: crops × 24 half-months with S/T marks.
+ * Query is validated with FilterQuerySchema (Zod) -- fail closed on bad input.
  */
 export async function onRequestGet(context: AppContext): Promise<Response> {
   const { request, env } = context;
   const url = new URL(request.url);
 
-  const methodParam = url.searchParams.get('method');
-  let method: 'S' | 'T' | undefined;
-  if (methodParam !== null) {
-    if (methodParam !== 'S' && methodParam !== 'T') {
+  const parsedQuery = FilterQuerySchema.safeParse({
+    method: url.searchParams.get('method') ?? undefined,
+    month: url.searchParams.get('month') ?? undefined,
+    zone: url.searchParams.get('zone') ?? undefined
+  });
+  if (!parsedQuery.success) {
+    const issue = parsedQuery.error.issues[0];
+    const field = issue?.path[0];
+    if (field === 'method') {
       return errorJson(request, 'method must be S or T', 400);
     }
-    method = methodParam;
-  }
-
-  const monthParam = url.searchParams.get('month');
-  let month: number | undefined;
-  if (monthParam !== null) {
-    const n = Number(monthParam);
-    if (!Number.isInteger(n) || n < 0 || n > 11) {
+    if (field === 'month') {
       return errorJson(request, 'month must be integer 0..11', 400);
     }
-    month = n;
+    if (field === 'zone') {
+      return errorJson(request, 'zone must be a non-empty id, city, or ZIP', 400);
+    }
+    return errorJson(request, 'invalid query', 400);
   }
 
-  const zone = await getDefaultZone(env.DB);
-  if (!zone) {
+  const { method, month, zone: zoneParam } = parsedQuery.data;
+
+  const zoneResult = await resolveZoneParam(env.DB, zoneParam);
+  if ('error' in zoneResult) {
+    if (zoneResult.error === 'not_found') {
+      return errorJson(request, 'zone not found', 404);
+    }
     return errorJson(request, 'default zone not configured', 500);
   }
+  const zone = zoneResult.zone;
 
   const allCrops = await getAllCrops(env.DB);
   const windows = await getAllWindows(env.DB, method, month);
 
-  // Build method sets per crop × half
   const marks = new Map<string, Map<number, Set<'S' | 'T'>>>();
   for (const w of windows) {
     let cropMap = marks.get(w.crop_id);
@@ -56,7 +64,6 @@ export async function onRequestGet(context: AppContext): Promise<Response> {
     }
   }
 
-  // When filters are active, only show crops that have at least one mark
   const crops = allCrops
     .filter((c) => {
       if (method === undefined && month === undefined) return true;

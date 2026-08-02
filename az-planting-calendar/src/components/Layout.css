@@ -33,28 +33,50 @@
   top: max(var(--space-2), env(safe-area-inset-top, 0px));
 }
 
+/*
+ * Mobile (default): two chrome rows
+ *   [mark+name]  [menu] [theme]
+ *   [zone search................]
+ * Desktop (>=900): one row with nav
+ */
 .topbar {
   position: sticky;
   top: 0;
   z-index: 50;
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--space-2) var(--space-4);
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'brand menu theme'
+    'zone zone zone'
+    'nav nav nav';
+  gap: var(--space-1) var(--space-2);
   align-items: center;
   padding-top: max(var(--space-2), env(safe-area-inset-top, 0px));
   padding-bottom: var(--space-2);
-  padding-left: max(var(--space-4), env(safe-area-inset-left, 0px));
-  padding-right: max(var(--space-4), env(safe-area-inset-right, 0px));
+  padding-left: max(var(--space-3), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--space-3), env(safe-area-inset-right, 0px));
   border-bottom: var(--hairline);
   background: var(--surface);
+  /* Never clip the 56–96px mark or wrapped brand name. */
+  overflow: visible;
 }
 
 .topbar__brand {
+  grid-area: brand;
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-2) var(--space-3);
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-2);
   min-width: 0;
+}
+
+.topbar__zone-block {
+  grid-area: zone;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .topbar__logo {
@@ -65,18 +87,43 @@
   color: var(--text);
   font-weight: 700;
   min-height: var(--touch);
+  min-width: 0;
 }
 
+/* Spec item 2: 96px at >=768; large but layout-safe at 375 (never 32). */
 .topbar__mark {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
   object-fit: contain;
+  object-position: center;
+  /* Prevent top-edge clip of the mark against sticky chrome. */
+  overflow: visible;
+}
+
+@media (min-width: 768px) {
+  .topbar__mark {
+    width: 96px;
+    height: 96px;
+  }
 }
 
 .topbar__name {
-  font-size: var(--type-md);
+  font-size: var(--type-sm);
+  line-height: 1.2;
+  /* Wrap at 375 -- ellipsis was the defect (fe-responsive-375). */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .topbar__name {
+    font-size: var(--type-md);
+    white-space: nowrap;
+  }
 }
 
 .topbar__zone {
@@ -84,9 +131,52 @@
   color: var(--text-muted);
 }
 
+/* Context line hides on narrow so zone search row stays one line tall */
+@media (max-width: 899px) {
+  .topbar__zone {
+    display: none;
+  }
+
+  .topbar__zone-block .zone-selector__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+}
+
+.topbar__menu-btn {
+  grid-area: menu;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
+  font-size: var(--type-sm);
+  cursor: pointer;
+}
+
+.topbar__menu-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .topbar__nav {
+  grid-area: nav;
   display: none;
+  flex-wrap: wrap;
   gap: var(--space-1);
+}
+
+.topbar__nav--open {
+  display: flex;
 }
 
 .topbar__link {
@@ -114,8 +204,8 @@
 }
 
 .theme-toggle {
+  grid-area: theme;
   position: relative;
-  justify-self: end;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -242,12 +332,39 @@
   }
 }
 
-@media (min-width: 720px) {
+@media (min-width: 900px) {
   .topbar {
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto auto;
+    grid-template-areas: 'brand zone nav theme';
+    gap: var(--space-2) var(--space-3);
+    padding-top: max(var(--space-2), env(safe-area-inset-top, 0px));
+    padding-bottom: var(--space-2);
+  }
+
+  .topbar__zone {
+    display: block;
+  }
+
+  .topbar__zone-block .zone-selector__label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+
+  .topbar__menu-btn {
+    display: none;
   }
 
   .topbar__nav {
     display: flex;
+  }
+
+  .topbar__name {
+    max-width: none;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
   }
 }

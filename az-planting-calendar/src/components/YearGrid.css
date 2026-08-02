@@ -142,6 +142,26 @@
   box-shadow: inset 0 0 0 1px var(--border);
 }
 
+.year-grid__search-error {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  color: var(--text);
+}
+
+.year-grid__search-retry {
+  min-height: var(--touch);
+  margin-top: var(--space-2);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 600;
+}
+
 @media (min-width: 900px) {
   .year-grid__table {
     font-size: var(--type-sm);

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Truncated labels</title>
+    <meta name="description" content="Fixture: element-level truncation at 375" />
+    <meta property="og:image" content="/og.png" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        font-size: 16px;
+        background: #0a0e12;
+        color: #eef1f4;
+      }
+      header {
+        position: sticky;
+        top: 0;
+        display: flex;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #12181f;
+        border-bottom: 1px solid #2c3844;
+      }
+      header a {
+        color: inherit;
+        text-decoration: none;
+        font-weight: 600;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 12px;
+      }
+      header a[aria-current='page'] {
+        font-weight: 700;
+        border-bottom: 2px solid #3dd68c;
+      }
+      main {
+        padding: 16px;
+      }
+      /* Real defect shape: line-clamp / ellipsis without growing body scrollWidth */
+      .zone-selector__label {
+        display: block;
+        width: 80px;
+        height: 20px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-weight: 600;
+      }
+      .hero__subtitle {
+        width: 200px;
+        max-height: 22px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        line-height: 1.35;
+      }
+      /* Visually-hidden -- must NOT be flagged */
+      .theme-toggle__sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      /* Deliberate horizontal scroll -- must NOT be flagged */
+      .year-grid-scroll {
+        overflow-x: auto;
+        white-space: nowrap;
+        max-width: 100%;
+        border: 1px solid #2c3844;
+        padding: 8px;
+      }
+      .year-grid-scroll span {
+        display: inline-block;
+        min-width: 80px;
+        padding: 8px;
+      }
+      button {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      footer a {
+        color: #3dd68c;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/" aria-current="page">Home</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <button type="button" aria-label="Theme">
+        <span class="theme-toggle__sr-only">Theme: Dark. Click to switch light, dark, or system.</span>
+        ☾
+      </button>
+    </header>
+    <main>
+      <label class="zone-selector__label" for="z">Planning zone</label>
+      <input id="z" type="search" value="Cave Creek" style="min-height: 44px; width: 100%; font-size: 16px" />
+      <h1>What can I plant right now?</h1>
+      <p class="hero__subtitle">
+        Arizona low desert (Maricopa County). Seed or transplant windows from University of Arizona Cooperative
+        Extension az1005.
+      </p>
+      <div class="year-grid-scroll" data-testid="year-scroll">
+        <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+        <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+      </div>
+    </main>
+    <footer>
+      <a href="https://example.com">Sibling site</a>
+    </footer>
+  </body>
+</html>

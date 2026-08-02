@@ -1,0 +1,61 @@
+{
+  "baseUrl": "http://127.0.0.1:8790",
+  "checkedAt": "2026-08-02T08:19:01.971Z",
+  "findings": {
+    "fe-touch-targets": {
+      "ok": true,
+      "detail": "5 route(s) at 375; every interactive element >= 44px"
+    },
+    "fe-type-floor": {
+      "ok": false,
+      "detail": "5 route(s) at 375, smallest body font 14px; /about: The requested path could not b; /contact: The requested path could not b; /terms: The requested path could not b; /privacy: The requested path could not b"
+    },
+    "fe-responsive-375": {
+      "ok": true,
+      "detail": "no page or element overflow/clip at 375 on 5 route(s) (H>1px V>2px)"
+    },
+    "fe-safe-areas": {
+      "ok": false,
+      "detail": "header not sticky on: /about, /contact, /terms, /privacy"
+    },
+    "fe-premium-nav": {
+      "ok": true,
+      "detail": "4 header link(s) [App Builder, Runs, About, Contact], aria-current on \"Runs\""
+    },
+    "fe-noncolor-state": {
+      "ok": true,
+      "detail": "active nav item: weight 650, gradient background true, aria-current present true"
+    },
+    "fe-no-attribution": {
+      "ok": true,
+      "detail": "no attribution text"
+    },
+    "fe-cross-link": {
+      "ok": true,
+      "detail": "cross-site link present"
+    },
+    "fe-seo-og": {
+      "ok": true,
+      "detail": "title \"RedAnvil Dashboard — build runs\", description present, og:image present"
+    },
+    "fe-light-dark": {
+      "ok": false,
+      "detail": "paint stuck on: html — attribute flip is not enough; measure computed backgrounds"
+    },
+    "fe-required-pages": {
+      "ok": false,
+      "detail": "/about 404 \"NO H1\" 8w/0§; /contact 404 \"NO H1\" 8w/0§; /terms 404 \"NO H1\" 8w/0§; /privacy 404 \"NO H1\" 8w/0§ -- THIN: /terms has 8 words in 0 section(s), needs >=1200 and >=8; /privacy has 8 words in 0 section(s), needs >=1200 and >=8"
+    },
+    "fe-visual-review-recorded": {
+      "ok": false,
+      "detail": "4 console/page error(s) across the measured loads: 375/dark /about: Failed to load resource: the server responded with a status of 404 (Not Found) | 375/dark /contact: Failed to load resource: the server responded with a status of 404 (Not Found) | 375/dark /terms: Failed to load resource: the server responded with a status of 404 (Not Found)"
+    }
+  },
+  "consoleErrors": [
+    "375/dark /about: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "375/dark /contact: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "375/dark /terms: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "375/dark /privacy: Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "ok": false
+}

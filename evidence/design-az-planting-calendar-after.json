@@ -1,0 +1,56 @@
+{
+  "baseUrl": "http://127.0.0.1:8788",
+  "checkedAt": "2026-08-02T08:18:29.479Z",
+  "findings": {
+    "fe-touch-targets": {
+      "ok": true,
+      "detail": "5 route(s) at 375; every interactive element >= 44px"
+    },
+    "fe-type-floor": {
+      "ok": true,
+      "detail": "5 route(s) at 375, smallest body font 16px; nothing under 16px"
+    },
+    "fe-responsive-375": {
+      "ok": true,
+      "detail": "no page or element overflow/clip at 375 on 5 route(s) (H>1px V>2px)"
+    },
+    "fe-safe-areas": {
+      "ok": true,
+      "detail": "header sticky on all 5 route(s), padding-top 8px"
+    },
+    "fe-premium-nav": {
+      "ok": true,
+      "detail": "5 header link(s) [AZ Planting Calendar, Home, Year grid, About, Contact], aria-current on \"Home\""
+    },
+    "fe-noncolor-state": {
+      "ok": true,
+      "detail": "active nav item: weight 600, gradient background false, aria-current present true"
+    },
+    "fe-no-attribution": {
+      "ok": true,
+      "detail": "no attribution text"
+    },
+    "fe-cross-link": {
+      "ok": true,
+      "detail": "cross-site link present"
+    },
+    "fe-seo-og": {
+      "ok": true,
+      "detail": "title \"AZ Planting Calendar — what to plant now in Cave Creek\", description present, og:image present"
+    },
+    "fe-light-dark": {
+      "ok": true,
+      "detail": "landmark paint changes between themes (3 regions); toggle ok"
+    },
+    "fe-required-pages": {
+      "ok": true,
+      "detail": "/about 200 \"About this calendar\" 887w/8§; /contact 200 \"Contact\" 514w/6§; /terms 200 \"Terms of use\" 1687w/16§; /privacy 200 \"Privacy\" 1702w/15§"
+    },
+    "fe-visual-review-recorded": {
+      "ok": true,
+      "detail": "0 console/page error(s) across the measured loads"
+    }
+  },
+  "consoleErrors": [],
+  "ok": true
+}

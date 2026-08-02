@@ -3,7 +3,8 @@ import { getDefaultZone } from '../lib/db';
 import { errorJson, json, optionsResponse } from '../lib/http';
 
 /**
- * GET /api/zone — default Cave Creek zone metadata.
+ * GET /api/zone — default Cave Creek zone metadata (backward compatible).
+ * Prefer GET /api/zones for listing and search.
  */
 export async function onRequestGet(context: AppContext): Promise<Response> {
   const zone = await getDefaultZone(context.env.DB);

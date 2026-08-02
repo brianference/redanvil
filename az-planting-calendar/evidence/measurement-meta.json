@@ -1,81 +1,42 @@
 {
-  "fe-favicon-legible": {
-    "tool": "playwright-canvas",
-    "engine": "chromium",
-    "runs": [
-      {
-        "ok": true,
-        "at": "2026-08-02T06:43:56.801Z",
-        "metrics": {
-          "inkCoverage": 0.375,
-          "detailEnergy": 188.80813895337675,
-          "contrastOnWhite": 0.7927865220792812,
-          "contrastOnDark": 0.20116464489786168,
-          "inkCount": 384,
-          "pixelCount": 1024
-        }
-      },
-      {
-        "ok": true,
-        "at": "2026-08-02T06:43:56.801Z",
-        "metrics": {
-          "inkCoverage": 0.375,
-          "detailEnergy": 188.80813895337675,
-          "contrastOnWhite": 0.7927865220792812,
-          "contrastOnDark": 0.20116464489786168,
-          "inkCount": 384,
-          "pixelCount": 1024
-        }
-      },
-      {
-        "ok": false,
-        "at": "2026-08-02T06:43:57.128Z",
-        "metrics": {
-          "inkCoverage": 0,
-          "detailEnergy": 0,
-          "contrastOnWhite": 0,
-          "contrastOnDark": 0,
-          "inkCount": 0,
-          "pixelCount": 1024
-        }
-      },
-      {
-        "ok": false,
-        "at": "2026-08-02T06:43:57.128Z",
-        "metrics": {
-          "inkCoverage": 0,
-          "detailEnergy": 0,
-          "contrastOnWhite": 0,
-          "contrastOnDark": 0,
-          "inkCount": 0,
-          "pixelCount": 1024
-        }
-      },
-      {
-        "ok": true,
-        "at": "2026-08-02T06:43:57.453Z",
-        "metrics": {
-          "inkCoverage": 0.3701171875,
-          "detailEnergy": 160.98443392176873,
-          "contrastOnWhite": 0.8054025318949765,
-          "contrastOnDark": 0.18854863508216643,
-          "inkCount": 379,
-          "pixelCount": 1024
-        }
-      },
-      {
-        "ok": true,
-        "at": "2026-08-02T06:43:57.453Z",
-        "metrics": {
-          "inkCoverage": 0.3701171875,
-          "detailEnergy": 160.98443392176873,
-          "contrastOnWhite": 0.8054025318949765,
-          "contrastOnDark": 0.18854863508216643,
-          "inkCount": 379,
-          "pixelCount": 1024
-        }
-      }
-    ],
-    "source": "public\\favicon.svg, public\\favicon-32.png, public\\apple-touch-icon.png"
+  "375-light": {
+    "searchTopY": 246,
+    "markWidth": 56,
+    "markHeight": 56
+  },
+  "assistantOpen375": {
+    "assistantVisible": true,
+    "heroVisible": true,
+    "searchTop": 246,
+    "assistantTop": 4539,
+    "heroTop": 117,
+    "heroHeight": 4406
+  },
+  "375-dark": {
+    "searchTopY": 246,
+    "markWidth": 56,
+    "markHeight": 56
+  },
+  "1280-light": {
+    "searchTopY": 321,
+    "markWidth": 96,
+    "markHeight": 96
+  },
+  "1280-dark": {
+    "searchTopY": 321,
+    "markWidth": 96,
+    "markHeight": 96
+  },
+  "summary": {
+    "searchY_375x900": 246,
+    "searchY_1280x900": 321,
+    "mark_375": {
+      "w": 56,
+      "h": 56
+    },
+    "mark_1280": {
+      "w": 96,
+      "h": 96
+    }
   }
 }
