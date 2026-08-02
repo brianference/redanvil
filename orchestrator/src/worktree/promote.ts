@@ -1,6 +1,7 @@
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runCommand } from '../process/run';
+import { evaluatePromoteGuards, readAssignment } from '../team/worktreeEnforcement';
 
 /**
  * Promote a green worktree run into the repository.
@@ -16,8 +17,7 @@ import { runCommand } from '../process/run';
  * throwaway branch stays throwaway; the merge commit on the base branch is the
  * artifact that survives.
  *
- * Three refusals, and they are the whole value of doing this in code rather
- * than by hand:
+ * Refusals (the whole value of doing this in code rather than by hand):
  *
  *  1. It verifies the COMMIT, not the tree. `verify_commit.mjs` checks the ref
  *     out into its own worktree and builds THAT. A green run in the worktree
@@ -30,6 +30,9 @@ import { runCommand } from '../process/run';
  *  3. It is opt-in and never force-pushes. Automatically merging agent output
  *     is precisely the failure the teamwork protocol exists to prevent, so the
  *     caller has to ask.
+ *  4. When a role assignment is present, it re-checks artifacts, stale evidence
+ *     mtimes, and the QA-visual verdict server-side so `--no-verify` cannot
+ *     skip the finish line (SPEC §5b).
  */
 
 /** Absolute path to the commit verifier, which builds a ref in isolation. */
@@ -56,6 +59,12 @@ export interface PromoteOptions {
    * something nobody built.
    */
   skipVerify?: boolean;
+  /**
+   * Skip role-assignment promote guards (artifacts, QA-visual, stale mtimes).
+   * Only for legacy tests that never wrote an assignment. Production promotes
+   * of role worktrees must leave this false.
+   */
+  skipAssignmentGuards?: boolean;
   /** Injected runner, for tests. */
   run?: typeof runCommand;
 }
@@ -82,6 +91,33 @@ async function isDirty(dir: string, run: typeof runCommand): Promise<boolean> {
 }
 
 /**
+ * Unix ms of the newest commit that touches source (not evidence) in the worktree.
+ *
+ * @param worktreeDir - Worktree root.
+ * @param run - Command runner.
+ * @returns Committer timestamp in ms, or null when unavailable.
+ */
+async function newestSourceCommitMs(
+  worktreeDir: string,
+  run: typeof runCommand
+): Promise<number | null> {
+  const log = await run('git', [
+    '-C',
+    worktreeDir,
+    'log',
+    '-1',
+    '--format=%ct',
+    '--',
+    'src',
+    'functions',
+    'package.json'
+  ]);
+  const sec = Number.parseInt(log.stdout.trim(), 10);
+  if (!Number.isFinite(sec) || sec <= 0) return null;
+  return sec * 1000;
+}
+
+/**
  * Commit the worktree's work, verify that commit in isolation, and merge it.
  *
  * @param opts - Promotion inputs.
@@ -105,6 +141,23 @@ export async function promoteWorktree(opts: PromoteOptions): Promise<PromoteResu
 
   if (!(await isDirty(worktreeDir, run))) {
     return { promoted: false, commit: null, reason: 'the run changed nothing, so there is nothing to promote' };
+  }
+
+  // Server-side re-check of assignment artifacts / QA-visual / stale evidence.
+  // Hooks can be skipped with --no-verify; this path cannot.
+  if (opts.skipAssignmentGuards !== true && readAssignment(worktreeDir) !== null) {
+    const newest = await newestSourceCommitMs(worktreeDir, run);
+    const guards = evaluatePromoteGuards(worktreeDir, {
+      newestSourceCommitMs: newest,
+      requireQaVisual: true
+    });
+    if (!guards.ok) {
+      return {
+        promoted: false,
+        commit: null,
+        reason: guards.reasons.join('; ')
+      };
+    }
   }
 
   const add = await run('git', ['-C', worktreeDir, 'add', '-A']);

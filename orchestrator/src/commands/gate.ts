@@ -48,6 +48,8 @@ export const APP_CHECKS: Check[] = [
   // source files have tests" the whole time, which made the hole look closed.
   // Both must pass — duplicate outcomes for one rule resolve fail-closed.
   det('u-test-presence'),
+  // Per-runner gate: vitest green must not mask pytest red (SPEC §4).
+  det('u-test-runners'),
   det('u-test-coverage-ratchet'),
   det('u-claims-covered'),
   { ruleId: 'hyg-env-ignored', command: 'git', args: ['check-ignore', '.env'] },

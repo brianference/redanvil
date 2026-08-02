@@ -95,7 +95,9 @@ function checklistFailures(result, opts) {
           : opts.coveragePct >= opts.coverageHighWater,
       screenshotsPresent: opts.screenshotsPresent,
       evidenceStale: opts.evidenceStale,
-      independentReviewOk: opts.independentReviewOk
+      independentReviewOk: opts.independentReviewOk,
+      qaVisualOk: opts.qaVisualOk,
+      userRefuseOk: opts.userRefuseOk
     },
     scoreMet: Number.isFinite(result.finalScore) ? result.finalScore >= threshold : undefined,
     noFailedRules: result.rules.every((r) => r.passed !== false)
@@ -120,7 +122,9 @@ function checklistFailures(result, opts) {
  *   lgShippedPass?: boolean,
  *   evidenceStale?: boolean,
  *   screenshotsPresent?: boolean,
- *   independentReviewOk?: boolean
+ *   independentReviewOk?: boolean,
+ *   qaVisualOk?: boolean,
+ *   userRefuseOk?: boolean
  * }} [opts]
  * @returns {{ done: boolean, reasons: string[] }}
  */
@@ -205,6 +209,26 @@ export function isDone(result, opts = {}) {
   if (opts.independentReviewOk === false) {
     reasons.push(
       'independent judge-over-diff review is missing or reported unverified findings'
+    );
+  }
+
+  // QA-visual is a gate input, not advice. Fail or missing blocks at any score
+  // (SPEC §3 / §6). Only an explicit pass clears this bar.
+  if (opts.qaVisualOk !== true) {
+    reasons.push(
+      opts.qaVisualOk === false
+        ? 'QA-visual verdict is fail -- product judgement blocks isDone at any score'
+        : 'QA-visual verdict is missing -- isDone requires evidence/qa-visual-<slug>.json with pass'
+    );
+  }
+
+  // user-refuse runs last; a refusal (or missing accept) blocks at any score
+  // (SPEC §3b). Only accept or a recorded human override sets userRefuseOk.
+  if (opts.userRefuseOk !== true) {
+    reasons.push(
+      opts.userRefuseOk === false
+        ? 'user-refuse verdict is refuse -- a stranger refusal blocks isDone at any score'
+        : 'user-refuse verdict is missing -- isDone requires evidence/refusal-<slug>.json accept'
     );
   }
 

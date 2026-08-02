@@ -25,6 +25,10 @@ export interface DoneOpts {
   evidenceStale?: boolean;
   screenshotsPresent?: boolean;
   independentReviewOk?: boolean;
+  /** QA-visual pass; fail or missing blocks isDone at any score. */
+  qaVisualOk?: boolean;
+  /** user-refuse accept (or human override); refuse blocks isDone at any score. */
+  userRefuseOk?: boolean;
   /** Override the definition-of-done document; unreadable is a failure, never a pass. */
   checklistPath?: string;
   /** Pre-parsed rows, when the caller already read the document. */

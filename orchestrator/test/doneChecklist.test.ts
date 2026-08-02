@@ -143,7 +143,9 @@ describe('coverage evaluation is fail-closed', () => {
         coveragePct: 100,
         screenshotsPresent: true,
         evidenceStale: false,
-        independentReviewOk: true
+        independentReviewOk: true,
+        qaVisualOk: true,
+        userRefuseOk: true
       },
       scoreMet: true,
       noFailedRules: true

@@ -80,7 +80,8 @@ describe('promoting a worktree run', () => {
       repoDir,
       worktreeDir,
       message: 'promote: add a module',
-      skipVerify: true
+      skipVerify: true,
+      skipAssignmentGuards: true
     });
 
     expect(result.promoted, result.reason).toBe(true);
@@ -107,7 +108,8 @@ describe('promoting a worktree run', () => {
       repoDir,
       worktreeDir,
       message: 'promote',
-      skipVerify: true
+      skipVerify: true,
+      skipAssignmentGuards: true
     });
 
     expect(result.promoted).toBe(false);
@@ -122,7 +124,8 @@ describe('promoting a worktree run', () => {
       repoDir,
       worktreeDir,
       message: 'promote',
-      skipVerify: true
+      skipVerify: true,
+      skipAssignmentGuards: true
     });
     expect(result.promoted).toBe(false);
     expect(result.reason).toMatch(/nothing to promote/i);
@@ -142,6 +145,7 @@ describe('promoting a worktree run', () => {
       repoDir,
       worktreeDir,
       message: 'promote',
+      skipAssignmentGuards: true,
       // Stand in for verify_commit.mjs reporting a broken build.
       run: async (command, args, opts) => {
         if (command === 'node') {

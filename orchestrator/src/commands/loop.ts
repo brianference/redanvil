@@ -10,6 +10,7 @@ import { scoreRun, coderEnv } from '../loop/runRules';
 import type { Outcome } from '../gate/score';
 import { runIndependentDiffReview } from '../loop/independentReview';
 import { isDone } from '../gate/done';
+import { loadProductJudgementOpts } from '../team/finishOpts';
 
 /** A completed loop plus the full gate report from its final pass. */
 export interface LoopRun {
@@ -137,13 +138,17 @@ export async function runLoopCommand(opts: LoopCommandOptions): Promise<LoopRun>
         ruleId: o.ruleId,
         passed: o.passed
       }));
+      const promoteSlug = basename(resolve(opts.dir));
       const promoteDone = isDone(
         {
           finalScore: result.final.score,
           threshold: opts.threshold,
           rules: promoteRules
         },
-        { independentReviewOk: result.independentReviewOk }
+        {
+          independentReviewOk: result.independentReviewOk,
+          ...loadProductJudgementOpts(worktreeDir, promoteSlug)
+        }
       );
       const green =
         result.final.blockersFailed.length === 0 &&
@@ -249,11 +254,14 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
       // optimises the score and discovers the finish line one iteration at a
       // time — the loop would report "threshold cleared" while isDone still says
       // no, and the reason would never reach the thing that could fix it.
-      const doneNow = isDone({
-        finalScore: report.score,
-        threshold: opts.threshold,
-        rules: report.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed }))
-      });
+      const doneNow = isDone(
+        {
+          finalScore: report.score,
+          threshold: opts.threshold,
+          rules: report.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed }))
+        },
+        loadProductJudgementOpts(opts.dir, basename(resolve(opts.dir)))
+      );
       const checklistUnmet = doneNow.reasons.filter((r) => r.startsWith('done-checklist'));
       const feedback = [
         `score ${report.score}/100 (threshold ${opts.threshold}), evaluated ${report.evaluated}/${report.total}`,
@@ -333,7 +341,10 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
   }));
   const done = isDone(
     { finalScore: loop.finalScore, threshold: opts.threshold, rules },
-    { independentReviewOk }
+    {
+      independentReviewOk,
+      ...loadProductJudgementOpts(opts.dir, basename(resolve(opts.dir)))
+    }
   );
   if (!done.done && loop.passed) {
     // Score cleared the threshold but the finish line did not — demote the

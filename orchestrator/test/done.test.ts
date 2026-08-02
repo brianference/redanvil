@@ -44,7 +44,15 @@ function almostDone(overrides: Partial<DoneResult> = {}): DoneResult {
  * production call site passes it, because a waiver nobody can see is how
  * `proc-full-local-suite` stayed permanently waived.
  */
-const NO_CHECKLIST = { skipChecklist: true } as const;
+/**
+ * Isolate score/rule predicates from the checklist AND supply product-judgement
+ * opts that isDone now requires at any score (qaVisualOk, userRefuseOk).
+ */
+const NO_CHECKLIST = {
+  skipChecklist: true,
+  qaVisualOk: true,
+  userRefuseOk: true
+} as const;
 
 describe('isDone', () => {
   it('returns done for a green result with every required rule', () => {
@@ -70,7 +78,7 @@ describe('isDone', () => {
   });
 
   it('is NOT done at score 89', () => {
-    const v = isDone(almostDone({ finalScore: 89 }));
+    const v = isDone(almostDone({ finalScore: 89 }), NO_CHECKLIST);
     expect(v.done).toBe(false);
     expect(v.reasons.some((r) => /below the finish-line threshold/.test(r))).toBe(true);
   });
@@ -80,23 +88,26 @@ describe('isDone', () => {
     const rules = base.rules.map((r) =>
       r.ruleId === 'fe-light-dark' ? { ...r, passed: false } : r
     );
-    const v = isDone({ ...base, finalScore: 0, rules });
+    const v = isDone({ ...base, finalScore: 0, rules }, NO_CHECKLIST);
     expect(v.done).toBe(false);
     expect(v.reasons.some((r) => /passed === false/.test(r))).toBe(true);
   });
 
   it('is NOT done with stale evidence', () => {
-    const v = isDone(almostDone(), { evidenceStale: true });
+    const v = isDone(almostDone(), { ...NO_CHECKLIST, evidenceStale: true });
     expect(v.done).toBe(false);
     expect(v.reasons.some((r) => /stale/.test(r))).toBe(true);
   });
 
   it('is NOT done when a required rule is simply missing from the result', () => {
-    const v = isDone({
-      finalScore: 100,
-      threshold: 90,
-      rules: [{ ruleId: 'u-typing-strict', passed: true }]
-    });
+    const v = isDone(
+      {
+        finalScore: 100,
+        threshold: 90,
+        rules: [{ ruleId: 'u-typing-strict', passed: true }]
+      },
+      NO_CHECKLIST
+    );
     expect(v.done).toBe(false);
     for (const id of REQUIRED_DONE_RULES) {
       expect(v.reasons.some((r) => r.includes(id))).toBe(true);
@@ -104,19 +115,23 @@ describe('isDone', () => {
   });
 
   it('is NOT done when coverage is below the high-water', () => {
-    const v = isDone(almostDone(), { coveragePct: 40, coverageHighWater: 72 });
+    const v = isDone(almostDone(), {
+      ...NO_CHECKLIST,
+      coveragePct: 40,
+      coverageHighWater: 72
+    });
     expect(v.done).toBe(false);
     expect(v.reasons.some((r) => /high-water/.test(r))).toBe(true);
   });
 
   it('is NOT done when screenshots are missing', () => {
-    const v = isDone(almostDone(), { screenshotsPresent: false });
+    const v = isDone(almostDone(), { ...NO_CHECKLIST, screenshotsPresent: false });
     expect(v.done).toBe(false);
     expect(v.reasons.some((r) => /screenshot/i.test(r))).toBe(true);
   });
 
   it('is NOT done when the independent review step failed', () => {
-    const v = isDone(almostDone(), { independentReviewOk: false });
+    const v = isDone(almostDone(), { ...NO_CHECKLIST, independentReviewOk: false });
     expect(v.done).toBe(false);
     expect(v.reasons.some((r) => /independent judge/i.test(r))).toBe(true);
   });
@@ -126,8 +141,36 @@ describe('isDone', () => {
     const rules = base.rules.map((r) =>
       r.ruleId === 'lg-shipped' ? { ...r, passed: false } : r
     );
-    const v = isDone({ ...base, finalScore: 0, rules });
+    const v = isDone({ ...base, finalScore: 0, rules }, NO_CHECKLIST);
     expect(v.done).toBe(false);
     expect(v.reasons.some((r) => /lg-shipped|shipped/i.test(r))).toBe(true);
+  });
+
+  it('is NOT done at score 100 when QA-visual verdict is fail', () => {
+    const v = isDone(almostDone({ finalScore: 100 }), {
+      ...NO_CHECKLIST,
+      qaVisualOk: false
+    });
+    expect(v.done).toBe(false);
+    expect(v.reasons.some((r) => /QA-visual verdict is fail/i.test(r))).toBe(true);
+  });
+
+  it('is NOT done at score 100 when QA-visual is missing', () => {
+    const v = isDone(almostDone({ finalScore: 100 }), {
+      skipChecklist: true,
+      userRefuseOk: true
+      // qaVisualOk omitted
+    });
+    expect(v.done).toBe(false);
+    expect(v.reasons.some((r) => /QA-visual verdict is missing/i.test(r))).toBe(true);
+  });
+
+  it('is NOT done at score 100 when user-refuse verdict is refuse', () => {
+    const v = isDone(almostDone({ finalScore: 100 }), {
+      ...NO_CHECKLIST,
+      userRefuseOk: false
+    });
+    expect(v.done).toBe(false);
+    expect(v.reasons.some((r) => /user-refuse verdict is refuse/i.test(r))).toBe(true);
   });
 });

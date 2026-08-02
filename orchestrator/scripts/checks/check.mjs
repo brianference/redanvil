@@ -50,6 +50,7 @@ import { runBindingsBound } from './lg-bindings-bound.mjs';
 import { runBrandMarkSize } from './fe-brand-mark-size.mjs';
 import { runResourceLinks } from './fe-resource-links.mjs';
 import { runResultInViewport } from './fe-result-in-viewport.mjs';
+import { runTestRunners } from './u-test-runners.mjs';
 // The cross-app duplication pass already owns the definition of "the same code":
 // comments stripped, whitespace collapsed, identifiers normalised, keywords kept.
 // This check used to compare raw trimmed lines instead, so the two passes
@@ -1221,6 +1222,18 @@ switch (ruleId) {
   }
   case 'fe-result-in-viewport': {
     await runResultInViewport(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
+    break;
+  }
+  case 'u-test-runners': {
+    runTestRunners(appDir, {
       pass,
       fail,
       notApplicable,

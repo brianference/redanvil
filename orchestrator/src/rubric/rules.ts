@@ -51,6 +51,9 @@ export const RULES: Rule[] = [
   rule('fe-icon-button-labels', 'frontend', 'blocker', 'det'),
 
   rule('u-test-presence', 'testing', 'blocker', 'det'),
+  // Each configured runner (vitest, pytest, …) must pass independently so a
+  // green vitest cannot hide a red pytest (SPEC-agent-team §4).
+  rule('u-test-runners', 'testing', 'blocker', 'det'),
   // R27. Unit tests over pure functions say nothing about whether a control is
   // wired to anything. A build passed 12/12 design rules, zero axe violations
   // and 49 unit tests while shipping a calendar that could not select a range

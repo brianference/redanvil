@@ -54,7 +54,11 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
     rules: ['u-typing-no-any', 'u-conc-dead-code'],
     note: 'Both are wired to `npx eslint . --max-warnings 0`.'
   },
-  A3: { rules: ['u-test-presence'], opts: ['unitTestsPass'] },
+  A3: {
+    rules: ['u-test-presence', 'u-test-runners'],
+    opts: ['unitTestsPass'],
+    note: 'Suite green plus every configured runner (vitest/pytest) independently.'
+  },
   A4: { rules: ['u-test-acceptance'], opts: ['acceptanceTestsPass'] },
   A5: {
     rules: ['u-build-succeeds'],
@@ -77,7 +81,12 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
 
   // C. The page, seen
   C1: { opts: ['screenshotsPresent'] },
-  C2: { rules: ['fe-visual-review-recorded', 'proc-artifact-verified'] },
+  // Product judgement: screenshots opened by QA-visual, not merely captured.
+  C2: {
+    rules: ['fe-visual-review-recorded', 'proc-artifact-verified'],
+    opts: ['qaVisualOk'],
+    note: 'QA-visual must pass -- product judgement is a gate input, not advice.'
+  },
   C3: { rules: ['fe-light-dark'], note: 'Paint-measured, not attribute-flipped.' },
   C4: { rules: ['fe-premium-nav'] },
   C5: { rules: ['fe-desktop-width'] },
@@ -93,7 +102,10 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
   },
   C10: {
     rules: ['fe-result-in-viewport'],
-    note: 'After a narrowing search, a changed element must sit inside the first viewport at 375 and 1280.'
+    opts: ['qaVisualOk'],
+    note:
+      'After a narrowing search, a changed element must sit inside the first viewport at 375 and 1280; ' +
+      'QA-visual product judgement must also pass (blocks isDone at any score).'
   },
 
   // D. Content is real
@@ -139,7 +151,7 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
   },
 
   // F. Scored
-  F1: { builtin: 'score' },
+  F1: { builtin: 'score', opts: ['userRefuseOk'], note: 'Score bar plus stranger accept (user-refuse).' },
   F2: { builtin: 'noFailedRules' },
   F3: { opts: ['evidenceStale'] },
   F4: {

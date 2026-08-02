@@ -2,7 +2,7 @@
 import { parseArgs } from 'node:util';
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync, statSync } from 'node:fs';
-import { dirname, join, relative, resolve, sep } from 'node:path';
+import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateFile } from './commands/validate';
 import { rubricSummary } from './commands/rubric';
@@ -16,6 +16,7 @@ import type { StaleVerdict } from './gate/freshness';
 import { indexOutcomes } from './gate/score';
 import { runLoopCommand } from './commands/loop';
 import { isDone } from './gate/done';
+import { loadProductJudgementOpts } from './team/finishOpts';
 
 /** Shared CLI flags used by both `gate` and `loop`. */
 interface SharedRunFlags {
@@ -322,9 +323,16 @@ async function main(): Promise<number> {
       passed
     }));
     // One definition of done — score alone is not finished.
+    const gateSlug =
+      typeof values.slug === 'string' && values.slug !== ''
+        ? values.slug
+        : basename(resolve(dir));
     const done = isDone(
       { finalScore: report.score, threshold, rules },
-      { evidenceStale: staleVerdicts.length > 0 }
+      {
+        evidenceStale: staleVerdicts.length > 0,
+        ...loadProductJudgementOpts(dir, gateSlug)
+      }
     );
     const scoreOk = report.score >= threshold && !coverageShort;
     const finishOk = done.done && !coverageShort;
@@ -417,11 +425,13 @@ async function main(): Promise<number> {
       ruleId,
       passed
     }));
+    const loopSlug = basename(resolve(dir));
     const loopDone = isDone(
       { finalScore: result.finalScore, threshold, rules: loopRules },
       {
         evidenceStale: staleVerdicts.length > 0,
-        independentReviewOk: run.independentReviewOk
+        independentReviewOk: run.independentReviewOk,
+        ...loadProductJudgementOpts(dir, loopSlug)
       }
     );
     console.log(

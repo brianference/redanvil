@@ -59,6 +59,16 @@ export interface DoneOpts {
   /** Independent judge-over-diff step is acceptable for isDone. */
   independentReviewOk?: boolean;
   /**
+   * QA-visual product judgement. Must be true (pass). Fail or missing blocks
+   * isDone regardless of score (SPEC §3 / §6).
+   */
+  qaVisualOk?: boolean;
+  /**
+   * user-refuse stranger verdict. Must be true (accept or human override).
+   * A refusal blocks isDone at any score (SPEC §3b).
+   */
+  userRefuseOk?: boolean;
+  /**
    * Override the definition-of-done document. Defaults to
    * `DEFAULT_CHECKLIST_PATH`; a path that cannot be read is a failure reason,
    * never a pass.
