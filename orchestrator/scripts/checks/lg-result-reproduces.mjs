@@ -151,14 +151,54 @@ export function allRubricRuleIds() {
 }
 
 /**
+ * Paths whose change cannot invalidate a measurement: they ARE the measurement.
+ *
+ * Regenerating evidence is what reverify does between stamping a result and
+ * gating it, so these commits must not read as "the app moved on".
+ */
+const EVIDENCE_ONLY = [
+  /(^|[/\\])evidence[/\\]/,
+  /(^|[/\\])results[/\\]/,
+  /(^|[/\\])verdicts[/\\]/,
+  /(^|[/\\])measurement-meta\.json$/
+];
+
+/**
+ * Source files (not evidence) that changed between two commits.
+ *
+ * Returns null when git cannot answer -- the caller then falls back to strict
+ * equality rather than silently passing.
+ *
+ * @param {string} appDir Directory to run git in.
+ * @param {string} from Recorded provenance commit.
+ * @param {string} to HEAD.
+ * @returns {string[] | null} Changed non-evidence paths, or null if unknown.
+ */
+export function sourceChangesBetween(appDir, from, to) {
+  const r = spawnSync('git', ['diff', '--name-only', `${from}..${to}`], {
+    cwd: appDir,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  if (r.status !== 0) return null;
+  return (r.stdout ?? '')
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((p) => !EVIDENCE_ONLY.some((re) => re.test(p)));
+}
+
+/**
  * Pure structural checks that do not need score.ts (unit-testable).
  *
  * @param {object} result Parsed results JSON.
  * @param {{ score: number, rubricIds: string[] }} recomputed
  * @param {string | null} head
+ * @param {(from: string, to: string) => (string[] | null)} [sourceDiff]
+ *   Non-evidence paths changed between two commits. Injected for tests.
  * @returns {string[]} Failure reasons.
  */
-export function evaluateReproduction(result, recomputed, head) {
+export function evaluateReproduction(result, recomputed, head, sourceDiff) {
   /** @type {string[]} */
   const failures = [];
 
@@ -174,9 +214,29 @@ export function evaluateReproduction(result, recomputed, head) {
   if (typeof recordedCommit !== 'string' || recordedCommit.length < 7) {
     failures.push('result provenance.commit is missing');
   } else if (head !== null && recordedCommit !== head) {
-    failures.push(
-      `provenance.commit ${recordedCommit.slice(0, 12)} does not match HEAD ${head.slice(0, 12)}`
-    );
+    // Strict equality is unsatisfiable inside reverify, and the failure was
+    // silent rather than loud: reverify stamps provenance, THEN commits the
+    // regenerated evidence, so by the time the gate runs HEAD is one commit
+    // ahead of every result it reads. It fails, rewrites the file with the new
+    // provenance, and passes when re-run by hand -- an oscillation that never
+    // converges and looks like a flaky check.
+    //
+    // What the rule is actually for is that the result describes the code being
+    // gated. An evidence-only commit does not change the code, so require that
+    // NOTHING BUT evidence moved in between. If git cannot answer, fall back to
+    // strict equality rather than assuming the gap was harmless.
+    const diff = sourceDiff ? sourceDiff(recordedCommit, head) : null;
+    if (diff === null) {
+      failures.push(
+        `provenance.commit ${recordedCommit.slice(0, 12)} does not match HEAD ${head.slice(0, 12)}`
+      );
+    } else if (diff.length > 0) {
+      failures.push(
+        `provenance.commit ${recordedCommit.slice(0, 12)} predates HEAD ${head.slice(0, 12)} ` +
+          `and ${diff.length} source file(s) changed since it was measured ` +
+          `(${diff.slice(0, 3).join(', ')}${diff.length > 3 ? ', …' : ''}) — re-measure`
+      );
+    }
   }
 
   const rules = Array.isArray(result.rules) ? result.rules : [];
@@ -269,7 +329,9 @@ export function runResultReproduces(appDir, io, deps = {}) {
   }
 
   const head = deps.head !== undefined ? deps.head : headCommit(appDir);
-  const failures = evaluateReproduction(result, recomputed, head);
+  const failures = evaluateReproduction(result, recomputed, head, (from, to) =>
+    sourceChangesBetween(appDir, from, to)
+  );
 
   // Invented ids are always fatal; also fail when recomputed score mismatches.
   // Missing-set: require every result rule id ∈ rubric (done) and that

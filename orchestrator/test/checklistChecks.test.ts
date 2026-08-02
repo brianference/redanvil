@@ -537,6 +537,35 @@ describe('F4 lg-result-reproduces', () => {
     );
     expect(failures.some((f) => /invented/i.test(f))).toBe(true);
   });
+
+  // The strict provenance === HEAD form could never pass inside reverify:
+  // stamping the verdicts and committing the regenerated evidence are two
+  // different commits, so the gate always read a result one commit stale.
+  const OLD = 'a'.repeat(40);
+  const HEAD = 'b'.repeat(40);
+  const goodResult = {
+    finalScore: 100,
+    rules: [{ ruleId: 'u-test-presence', passed: true }],
+    provenance: { commit: OLD }
+  };
+  const recomputed = { score: 100, rubricIds: ['u-test-presence'] };
+
+  it('accepts a provenance commit behind HEAD when only evidence moved', () => {
+    const failures = evaluateReproduction(goodResult, recomputed, HEAD, () => [] as string[]);
+    expect(failures).toEqual([]);
+  });
+
+  it('still fails when real source changed after the measurement', () => {
+    const failures = evaluateReproduction(goodResult, recomputed, HEAD, () => [
+      'src/components/Home.tsx'
+    ]);
+    expect(failures.some((f) => /source file\(s\) changed/.test(f))).toBe(true);
+  });
+
+  it('falls back to strict equality when git cannot answer', () => {
+    const failures = evaluateReproduction(goodResult, recomputed, HEAD, () => null);
+    expect(failures.some((f) => /does not match HEAD/.test(f))).toBe(true);
+  });
 });
 
 describe('G1–G5 measurement provenance', () => {

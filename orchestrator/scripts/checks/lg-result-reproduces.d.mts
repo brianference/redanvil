@@ -1,7 +1,13 @@
+export declare function sourceChangesBetween(
+  appDir: string,
+  from: string,
+  to: string
+): string[] | null;
 export declare function evaluateReproduction(
   result: object,
   recomputed: { score: number; rubricIds: string[] },
-  head: string | null
+  head: string | null,
+  sourceDiff?: (from: string, to: string) => string[] | null
 ): string[];
 export declare function runResultReproduces(
   appDir: string,
