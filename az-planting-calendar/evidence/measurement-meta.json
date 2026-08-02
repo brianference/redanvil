@@ -45,11 +45,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:25.605Z"
+        "at": "2026-08-02T22:43:02.764Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:25.605Z"
+        "at": "2026-08-02T22:43:02.764Z"
       }
     ],
     "knownBad": {
@@ -64,11 +64,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:27.068Z"
+        "at": "2026-08-02T22:43:04.286Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:27.068Z"
+        "at": "2026-08-02T22:43:04.286Z"
       }
     ],
     "heights": {
@@ -79,7 +79,7 @@
     "knownBad": {
       "input": "fixtures/brand-mark-size/small.html",
       "failed": true,
-      "recordedAt": "2026-08-02T22:27:27.068Z"
+      "recordedAt": "2026-08-02T22:43:04.286Z"
     }
   },
   "fe-breadcrumbs": {
@@ -88,17 +88,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:29.081Z"
+        "at": "2026-08-02T22:43:06.314Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:29.081Z"
+        "at": "2026-08-02T22:43:06.314Z"
       }
     ],
     "knownBad": {
       "input": "fixtures/breadcrumbs/bad-about.html",
       "failed": true,
-      "recordedAt": "2026-08-02T22:27:29.081Z"
+      "recordedAt": "2026-08-02T22:43:06.314Z"
     }
   },
   "fe-result-in-viewport": {
@@ -107,17 +107,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:37.814Z"
+        "at": "2026-08-02T22:43:14.992Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:37.815Z"
+        "at": "2026-08-02T22:43:14.992Z"
       }
     ],
     "knownBad": {
       "input": "fixture with result list far below the fold",
       "failed": true,
-      "recordedAt": "2026-08-02T22:27:37.815Z"
+      "recordedAt": "2026-08-02T22:43:14.992Z"
     }
   },
   "fe-resource-links": {
@@ -126,17 +126,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:39.599Z"
+        "at": "2026-08-02T22:43:16.795Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:39.599Z"
+        "at": "2026-08-02T22:43:16.795Z"
       }
     ],
     "knownBad": {
       "input": "fixture with dead external URL (real 404)",
       "failed": true,
-      "recordedAt": "2026-08-02T22:27:39.599Z"
+      "recordedAt": "2026-08-02T22:43:16.795Z"
     }
   },
   "fe-light-dark": {
@@ -145,12 +145,12 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:57.803Z",
+        "at": "2026-08-02T22:43:35.196Z",
         "landmarks": 10
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:57.804Z",
+        "at": "2026-08-02T22:43:35.196Z",
         "landmarks": 10
       }
     ],
@@ -166,19 +166,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:28:01.615Z",
+        "at": "2026-08-02T22:43:39.100Z",
         "status": 0
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:01.616Z",
+        "at": "2026-08-02T22:43:39.100Z",
         "status": 0
       }
     ],
     "knownBad": {
       "input": "package.json build script that exits 1",
       "failed": true,
-      "recordedAt": "2026-08-02T22:28:01.616Z"
+      "recordedAt": "2026-08-02T22:43:39.100Z"
     }
   },
   "u-api-not-found": {
@@ -187,17 +187,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:28:05.002Z"
+        "at": "2026-08-02T22:43:42.573Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:05.002Z"
+        "at": "2026-08-02T22:43:42.574Z"
       }
     ],
     "knownBad": {
       "input": "detail route that returns 200 for a bogus id",
       "failed": true,
-      "recordedAt": "2026-08-02T22:28:05.002Z"
+      "recordedAt": "2026-08-02T22:43:42.574Z"
     }
   },
   "u-api-no-spa-mask": {
@@ -206,21 +206,21 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:28:08.410Z",
-        "path": "/api/__definitely_absent_82b654ca94f07fb1",
+        "at": "2026-08-02T22:43:46.041Z",
+        "path": "/api/__definitely_absent_1cb94fdd1ecbbe4e",
         "status": 404
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:08.410Z",
-        "path": "/api/__definitely_absent_82b654ca94f07fb1",
+        "at": "2026-08-02T22:43:46.042Z",
+        "path": "/api/__definitely_absent_1cb94fdd1ecbbe4e",
         "status": 404
       }
     ],
     "knownBad": {
       "input": "API path that returns SPA index.html at 200",
       "failed": true,
-      "recordedAt": "2026-08-02T22:28:08.410Z"
+      "recordedAt": "2026-08-02T22:43:46.042Z"
     }
   },
   "u-legal-claims-true": {
@@ -229,17 +229,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:28:08.522Z"
+        "at": "2026-08-02T22:43:46.154Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:08.522Z"
+        "at": "2026-08-02T22:43:46.154Z"
       }
     ],
     "knownBad": {
       "input": "privacy page that denies cookies while code sets document.cookie",
       "failed": true,
-      "recordedAt": "2026-08-02T22:28:08.522Z"
+      "recordedAt": "2026-08-02T22:43:46.154Z"
     }
   },
   "fe-favicon-legible": {
@@ -248,7 +248,7 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:28:09.142Z",
+        "at": "2026-08-02T22:43:46.775Z",
         "metrics": {
           "inkCoverage": 0.458984375,
           "detailEnergy": 188.8609034439758,
@@ -260,7 +260,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:09.142Z",
+        "at": "2026-08-02T22:43:46.775Z",
         "metrics": {
           "inkCoverage": 0.458984375,
           "detailEnergy": 188.8609034439758,
@@ -272,7 +272,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:09.481Z",
+        "at": "2026-08-02T22:43:47.114Z",
         "metrics": {
           "inkCoverage": 0.375,
           "detailEnergy": 188.80813895337675,
@@ -284,7 +284,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:09.481Z",
+        "at": "2026-08-02T22:43:47.114Z",
         "metrics": {
           "inkCoverage": 0.375,
           "detailEnergy": 188.80813895337675,
@@ -296,7 +296,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:09.842Z",
+        "at": "2026-08-02T22:43:47.449Z",
         "metrics": {
           "inkCoverage": 0.3701171875,
           "detailEnergy": 160.98443392176873,
@@ -308,7 +308,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:09.842Z",
+        "at": "2026-08-02T22:43:47.449Z",
         "metrics": {
           "inkCoverage": 0.3701171875,
           "detailEnergy": 160.98443392176873,
@@ -323,7 +323,7 @@
     "knownBad": {
       "input": "solid-square or empty favicon failing ink/detail floors",
       "failed": true,
-      "recordedAt": "2026-08-02T22:28:09.842Z"
+      "recordedAt": "2026-08-02T22:43:47.449Z"
     }
   },
   "meas-known-bad": {
@@ -332,11 +332,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:28:11.063Z"
+        "at": "2026-08-02T22:43:49.688Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:11.063Z"
+        "at": "2026-08-02T22:43:49.688Z"
       }
     ],
     "knownBad": {
@@ -351,11 +351,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:28:11.155Z"
+        "at": "2026-08-02T22:43:49.782Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:11.155Z"
+        "at": "2026-08-02T22:43:49.782Z"
       }
     ],
     "knownBad": {
@@ -370,11 +370,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:28:11.247Z"
+        "at": "2026-08-02T22:43:49.876Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:11.247Z"
+        "at": "2026-08-02T22:43:49.877Z"
       }
     ],
     "knownBad": {
@@ -389,11 +389,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:28:11.339Z"
+        "at": "2026-08-02T22:43:49.970Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:11.340Z"
+        "at": "2026-08-02T22:43:49.970Z"
       }
     ],
     "knownBad": {
@@ -408,11 +408,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:28:11.431Z"
+        "at": "2026-08-02T22:43:50.063Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:28:11.432Z"
+        "at": "2026-08-02T22:43:50.064Z"
       }
     ],
     "knownBad": {
@@ -427,19 +427,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:41.072Z",
+        "at": "2026-08-02T22:43:18.301Z",
         "summary": "terms 1746w/16h2; privacy 1804w/15h2"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:41.072Z",
+        "at": "2026-08-02T22:43:18.301Z",
         "summary": "terms 1746w/16h2; privacy 1804w/15h2"
       }
     ],
     "knownBad": {
       "input": "fixture short legal stub missing floors and topics",
       "failed": true,
-      "recordedAt": "2026-08-02T22:27:41.072Z"
+      "recordedAt": "2026-08-02T22:43:18.301Z"
     }
   },
   "fe-a11y-contrast": {
@@ -469,19 +469,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:41.392Z",
+        "at": "2026-08-02T22:43:18.627Z",
         "type": "WebApplication"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:41.393Z",
+        "at": "2026-08-02T22:43:18.628Z",
         "type": "WebApplication"
       }
     ],
     "knownBad": {
       "input": "fixtures/structured-data/bad.html",
       "failed": true,
-      "recordedAt": "2026-08-02T22:27:41.393Z"
+      "recordedAt": "2026-08-02T22:43:18.628Z"
     }
   },
   "proc-design-options": {
@@ -490,17 +490,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:41.495Z"
+        "at": "2026-08-02T22:43:18.722Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:41.495Z"
+        "at": "2026-08-02T22:43:18.723Z"
       }
     ],
     "knownBad": {
       "input": "app with no design-refs/design-options or empty DECISION.md",
       "failed": true,
-      "recordedAt": "2026-08-02T22:27:41.495Z"
+      "recordedAt": "2026-08-02T22:43:18.723Z"
     }
   },
   "lg-result-reproduces": {
@@ -509,13 +509,13 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:35:15.208Z",
+        "at": "2026-08-02T22:44:10.355Z",
         "recomputed": 0,
         "recorded": 0
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:35:15.209Z",
+        "at": "2026-08-02T22:44:10.356Z",
         "recomputed": 0,
         "recorded": 0
       }
@@ -523,7 +523,7 @@
     "knownBad": {
       "input": "results JSON whose finalScore does not match recompute",
       "failed": true,
-      "recordedAt": "2026-08-02T22:35:15.209Z"
+      "recordedAt": "2026-08-02T22:44:10.356Z"
     }
   },
   "lg-bindings-bound": {
@@ -532,19 +532,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:55.770Z",
+        "at": "2026-08-02T22:43:33.203Z",
         "base": "https://az-planting-calendar.pages.dev"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:55.771Z",
+        "at": "2026-08-02T22:43:33.204Z",
         "base": "https://az-planting-calendar.pages.dev"
       }
     ],
     "knownBad": {
       "input": "deployed endpoint returning binding unavailable / 503 missing AI",
       "failed": true,
-      "recordedAt": "2026-08-02T22:27:55.771Z"
+      "recordedAt": "2026-08-02T22:43:33.204Z"
     }
   },
   "u-api-real-output": {
@@ -553,17 +553,17 @@
     "knownBad": {
       "input": "API route with no example or empty placeholder response",
       "failed": true,
-      "recordedAt": "2026-08-02T22:27:51.230Z"
+      "recordedAt": "2026-08-02T22:43:28.537Z"
     },
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:27:51.229Z",
+        "at": "2026-08-02T22:43:28.537Z",
         "routes": 9
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:27:51.230Z",
+        "at": "2026-08-02T22:43:28.537Z",
         "routes": 9
       }
     ]
