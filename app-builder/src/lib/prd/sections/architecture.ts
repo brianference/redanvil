@@ -2,6 +2,7 @@ import type { DataStorage } from '../../job';
 import { DEFAULT_DATA_STORAGE } from '../../job';
 import { PRD_THRESHOLD, REQUIRED_PAGES } from '../types';
 import { storageLabel } from '../naming';
+import { buildDefinitionOfDone } from './doneChecklist';
 
 /**
  * Architecture subsection: concrete Cloudflare stack, request flow, layer bounds.
@@ -175,6 +176,13 @@ export function buildVerificationSection(slug: string): string {
     `npm run gate -- ${slug} --threshold ${PRD_THRESHOLD}`,
     '```',
     '',
-    'Optional excludes when a check is not applicable: `--na ci,process` (only with documented reason).'
+    'Optional excludes when a check is not applicable: `--na ci,process` (only with documented reason).',
+    '',
+    // The gate score was never the finish line, but the PRD only ever named the
+    // gate -- so a builder could clear the threshold and reasonably believe it
+    // was finished. Emitting the full definition of done here hands over all
+    // forty conditions up front rather than revealing them one gate failure at a
+    // time. `selfCheck` fails any PRD that does not carry it.
+    buildDefinitionOfDone()
   ].join('\n');
 }

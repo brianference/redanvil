@@ -1,6 +1,10 @@
 import type { PrdSelfCheckItem, PrdSelfCheckResult } from './types';
 import { PRD_SECTION_HEADINGS, PRD_THRESHOLD } from './types';
 import { entityTable, requirementLines } from './naming';
+import {
+  DEFINITION_OF_DONE_HEADING,
+  DONE_CHECKLIST_SECTIONS
+} from './sections/doneChecklist';
 
 /**
  * Placeholder / incomplete markers that must not appear in a finished PRD body.
@@ -183,6 +187,15 @@ export function evaluatePrdSelfCheck(
   const gateNamed =
     /npm run gate -- /.test(markdown) && markdown.includes(`--threshold ${PRD_THRESHOLD}`);
 
+  // Presence of the heading alone would pass on an empty stub, so require the
+  // rows too. Section letters A-G each carry requirements; a document with the
+  // heading and no rows has emitted nothing a builder can act on.
+  const hasDefinitionOfDone =
+    markdown.includes(DEFINITION_OF_DONE_HEADING) &&
+    DONE_CHECKLIST_SECTIONS.every((section) =>
+      section.rows.every((row) => markdown.includes(`**${row.id}**`))
+    );
+
   const hasApiExample =
     /Request:\s*\{[\s\S]*?\}/.test(markdown) && /Response:\s*\d{3}\s*\{/.test(markdown);
 
@@ -256,6 +269,14 @@ export function evaluatePrdSelfCheck(
       pass: noPlaceholders
     },
     { id: 'gate', label: 'Gate command named with threshold', pass: gateNamed },
+    // The gate score was never the finish line. A PRD that names the gate but not
+    // the definition of done lets a builder clear the threshold and reasonably
+    // believe it is finished, which is exactly how apps shipped 'green' and broken.
+    {
+      id: 'definition-of-done',
+      label: 'Definition of Done checklist embedded (non-optional)',
+      pass: hasDefinitionOfDone
+    },
     {
       id: 'api-examples',
       label: 'API example includes request and response bodies',

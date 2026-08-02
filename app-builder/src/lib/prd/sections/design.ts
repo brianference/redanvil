@@ -330,12 +330,29 @@ export function buildDesignDirection(seed: string): string {
     '      `COMPETITORS.md`. **A missing file means the step did not run.** Missing table',
     '      stakes is a defect even when this spec never named it — the spec is not the',
     '      standard, the category is.',
+    // The floor was 150 words / 3 sections until 2026-08-02. That certified stubs:
+    // 81-word legal pages shipped through it. Raised to match what a real page
+    // actually measures -- redanvil.pages.dev/terms is 1462 words / 16 h2 and
+    // /privacy is 1605 / 16, measured 2026-08-02. The required-topic lists matter
+    // more than the word count: a padded page can clear any length while omitting
+    // liability entirely, so `fe-legal-substance` scores topics too.
     '- [ ] **Write real Terms, Privacy, About and Contact (R30)** with the `legal-pages`',
-    '      skill. Terms and Privacy need at least 150 words across at least 3 headed',
-    '      sections, and every statement must be TRUE for this app — boilerplate about',
-    '      cookies you do not set is as wrong as omitting a disclosure. The scaffold ships',
-    '      an explicit unwritten-document marker instead of copy, precisely so that',
-    '      leaving it in place fails the gate rather than passing as a finished page.',
+    '      skill. Terms and Privacy each need **at least 1400 words across at least 14',
+    '      headed sections**, and length alone is not enough — every required topic below',
+    '      must be covered.',
+    '      Terms must cover: acceptance and eligibility, what the service is, the central',
+    '      disclaimer, acceptable use, intellectual property, third-party services,',
+    '      disclaimer of warranties, limitation of liability, indemnity, availability and',
+    '      changes, termination, changes to the terms, governing law, and contact.',
+    '      Privacy must cover: who we are and how to reach us, accounts (or their absence),',
+    '      what is collected, what is NOT collected, why it is processed, third-party',
+    '      processors, cookies and local storage, where data lives and transfers, retention',
+    '      and deletion, what a visitor can request, children, security practices, changes,',
+    '      and a privacy contact.',
+    '      Every statement must be TRUE for this app — boilerplate about cookies you do not',
+    '      set is as wrong as omitting a disclosure. The scaffold ships an explicit',
+    '      unwritten-document marker instead of copy, precisely so that leaving it in place',
+    '      fails the gate rather than passing as a finished page.',
     '- [ ] **Generate the brand mark with the `brand-logo` skill.** Ban only what is',
     '      disqualifying, never your taste: a brief that forbade gradients and the',
     "      category's own convention produced flat line art from a tool that had better.",
