@@ -171,5 +171,17 @@
     "note": "title \"AZ Planting Calendar — what to plant now in Cave Creek\", description present, og:image present",
     "reviewedAt": "2026-08-02T06:56:06.572Z",
     "reviewedCommit": "600958b221a3e3ef1b91a1eb1f7a554a616b48fa"
+  },
+  {
+    "ruleId": "fe-design-archetype",
+    "passed": true,
+    "method": "visual",
+    "reviewedCommit": "f802aa0a524485136c087e5bae220cc41144348a",
+    "evidence": [
+      "evidence/screenshots/az-planting-calendar-1280-dark.png",
+      "evidence/screenshots/az-planting-calendar-375-light.png",
+      "az-planting-calendar/design-refs/home-options/DECISION.md"
+    ],
+    "note": "Archetype: Timeline + rail (chosen from three structurally distinct home options; see DECISION.md). Confirmed by opening both screenshots, not inferred from source. 1280 dark shows the horizontal half-month rail with the current half-month chip marked \"now\", a Plantable list keyed to it, and the full-year grid as a separate scan surface below -- a timeline spine with a rail, not a tile grid. 375 light collapses the header to Filters / theme / Menu, keeps the rail horizontally scrollable and the year grid in its own overflow container; page body does not scroll sideways. Light theme renders light throughout (no dark hero inside a light page)."
   }
 ]
