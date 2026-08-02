@@ -55,6 +55,8 @@ an unrun check got filled in with the intent of the spec.
 | C5 | Painted content ≥ 80% of viewport at 1440/1920 | `desktop_width` report | measuring a container reports ~93% for a page using a third of the screen |
 | C6 | No overlap or clipping at 375px | the screenshot | an ellipsis is not overflow — a truncated label still fails |
 | C7 | Zero console errors | console log from the real load | — |
+| C8 | Inner and detail pages show breadcrumbs | live `nav` named breadcrumb + parent link | a sticky top nav alone looks premium while deep pages have no way back |
+| C9 | The chosen design was picked from three distinct options | `design-refs/design-options/` (≥3) + `DECISION.md` | one mockup shipped because the three-option step was never measured |
 
 ## D. Content is real
 
@@ -67,6 +69,9 @@ an unrun check got filled in with the intent of the spec.
 | D5 | Data rows trace to a cited source | per-row citation + a verification run | a correctly-shaped dataset is indistinguishable from an invented one |
 | D6 | Brand mark is a real generated asset | the image, opened | the text `AZ` in a span satisfies "a mark exists" |
 | D7 | The mark reads at 32px | the **downscaled** image, opened | a good full-size logo becomes a smudge as a favicon |
+| D8 | Terms and Privacy meet the reference standard | word/h2 floors + required topic coverage | a padded page clears a word count while omitting liability |
+| D9 | Structured data and canonical URL | valid JSON-LD + absolute `rel=canonical` on home | SEO prose required JSON-LD while nothing measured it |
+| D10 | The brand mark renders at a real size | measured header mark height at 1280 and 375 | a real asset still ships at 32px and looks like a smudge |
 
 ## E. Shipped
 
@@ -77,6 +82,7 @@ an unrun check got filled in with the intent of the spec.
 | E3 | Production URL returns 200 | captured response | a per-deploy hash URL is not the site |
 | E4 | Served asset hash == local `dist` | both hashes, compared | a wrangler success message is not proof |
 | E5 | The server measured is **this app** | the served `<title>` | a stale process on the port serves a different app and every number is authoritative and wrong |
+| E6 | Every binding declared in config exists in the deployed environment | live 503 / "binding unavailable" probe | `wrangler.toml` declares AI while production has `ai: {}` and the endpoint only fails closed |
 
 ## F. Scored
 

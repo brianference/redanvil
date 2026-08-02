@@ -564,7 +564,13 @@ describe('G1–G5 measurement provenance', () => {
       'meas-engine-named',
       'fe-light-dark',
       'fe-search-present',
-      'u-api-real-output'
+      'u-api-real-output',
+      'fe-breadcrumbs',
+      'proc-design-options',
+      'fe-legal-substance',
+      'fe-structured-data',
+      'lg-bindings-bound',
+      'fe-brand-mark-size'
     ]) {
       meta[id] = {
         knownBad: { input: 'fixture', failed: true, recordedAt: future }
@@ -598,7 +604,9 @@ describe('G1–G5 measurement provenance', () => {
       JSON.stringify({
         'fe-light-dark': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
         'fe-search-present': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
-        'fe-favicon-legible': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
+        'fe-favicon-legible': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
+        'fe-breadcrumbs': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
+        'fe-brand-mark-size': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
       })
     );
     const r = await runCaptured((io) => runMeasTwoRun(app, io));
@@ -676,7 +684,9 @@ describe('G1–G5 measurement provenance', () => {
       JSON.stringify({
         'fe-light-dark': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
         'fe-search-present': { engine: 'webkit', runs: [{ ok: true }, { ok: true }] },
-        'fe-favicon-legible': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
+        'fe-favicon-legible': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
+        'fe-breadcrumbs': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
+        'fe-brand-mark-size': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
       })
     );
     const r = await runCaptured((io) => runMeasEngineNamed(app, io));

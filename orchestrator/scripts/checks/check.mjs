@@ -42,6 +42,12 @@ import { runMeasTwoRun } from './meas-two-run.mjs';
 import { runMeasRecheckFlattering } from './meas-recheck-flattering.mjs';
 import { runMeasStandardTool } from './meas-standard-tool.mjs';
 import { runMeasEngineNamed } from './meas-engine-named.mjs';
+import { runBreadcrumbs } from './fe-breadcrumbs.mjs';
+import { runDesignOptions } from './proc-design-options.mjs';
+import { runLegalSubstance } from './fe-legal-substance.mjs';
+import { runStructuredData } from './fe-structured-data.mjs';
+import { runBindingsBound } from './lg-bindings-bound.mjs';
+import { runBrandMarkSize } from './fe-brand-mark-size.mjs';
 // The cross-app duplication pass already owns the definition of "the same code":
 // comments stripped, whitespace collapsed, identifiers normalised, keywords kept.
 // This check used to compare raw trimmed lines instead, so the two passes
@@ -1149,6 +1155,54 @@ switch (ruleId) {
   }
   case 'meas-engine-named': {
     runMeasEngineNamed(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'fe-breadcrumbs': {
+    await runBreadcrumbs(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
+    break;
+  }
+  case 'proc-design-options': {
+    runDesignOptions(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'fe-legal-substance': {
+    runLegalSubstance(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'fe-structured-data': {
+    runStructuredData(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'lg-bindings-bound': {
+    await runBindingsBound(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
+    break;
+  }
+  case 'fe-brand-mark-size': {
+    await runBrandMarkSize(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
     break;
   }
   default:

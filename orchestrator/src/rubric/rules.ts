@@ -133,6 +133,14 @@ export const RULES: Rule[] = [
   rule('fe-brand-mark', 'frontend', 'blocker', 'det'),
   // D7: fe-brand-mark checks bytes/shape; this measures 32x32 ink, detail, contrast.
   rule('fe-favicon-legible', 'frontend', 'blocker', 'det'),
+  // D10: rendered header mark height ≥48px@1280 and ≥32px@375 (bytes alone miss a tiny mark).
+  rule('fe-brand-mark-size', 'frontend', 'blocker', 'det'),
+  // C8: inner/detail pages need a breadcrumb nav with a parent link.
+  rule('fe-breadcrumbs', 'frontend', 'blocker', 'det'),
+  // D8: Terms/Privacy word+h2 floors and required topic coverage (reference standard).
+  rule('fe-legal-substance', 'frontend', 'blocker', 'det'),
+  // D9: valid JSON-LD (@context+@type) and absolute rel=canonical on home.
+  rule('fe-structured-data', 'frontend', 'blocker', 'det'),
   // D4: legal/privacy claims must be true of this app (bidirectional code↔copy).
   rule('u-legal-claims-true', 'frontend', 'blocker', 'det'),
   // Prior-art artifacts (SOURCES / INTEGRATIONS / COMPETITORS) were §7.3a
@@ -220,6 +228,8 @@ export const RULES: Rule[] = [
   // A requirement written into a prompt/rule is not done. Verdict evidence must
   // be a real OUTPUT (report, screenshot, capture), not a plan or empty file.
   rule('proc-artifact-verified', 'process', 'blocker', 'det'),
+  // C9 / §7.3a: three distinct design options + DECISION.md (not optional prose).
+  rule('proc-design-options', 'process', 'blocker', 'det'),
 
   // An app that clears 90+ and never leaves the disk is not done. Shipping is
   // part of the gate: GitHub remote, pushed HEAD, live production URL, and a
@@ -227,6 +237,8 @@ export const RULES: Rule[] = [
   rule('lg-shipped', 'loop-gate', 'blocker', 'det'),
   // F4: a hand-authored results JSON is indistinguishable by shape — recompute.
   rule('lg-result-reproduces', 'loop-gate', 'blocker', 'det'),
+  // E6: wrangler-declared bindings must not 503 as "binding unavailable" in deploy.
+  rule('lg-bindings-bound', 'loop-gate', 'blocker', 'det'),
 
   // G1–G5: the measurement itself (provenance of how rules were decided).
   rule('meas-known-bad', 'process', 'blocker', 'det'),

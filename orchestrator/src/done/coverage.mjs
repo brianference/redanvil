@@ -83,6 +83,14 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
   C5: { rules: ['fe-desktop-width'] },
   C6: { rules: ['fe-responsive-375'] },
   C7: { rules: ['fe-cold-visitor'], note: 'Console cleanliness on a real first load.' },
+  C8: {
+    rules: ['fe-breadcrumbs'],
+    note: 'Inner/detail routes need a nav named breadcrumb with a parent link; n/a only for single-route apps.'
+  },
+  C9: {
+    rules: ['proc-design-options'],
+    note: 'design-refs/design-options/ ≥3 artifacts + DECISION.md with choice, why, and structural distinctness.'
+  },
 
   // D. Content is real
   D1: { rules: ['fe-required-pages'] },
@@ -98,6 +106,18 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
     rules: ['fe-favicon-legible'],
     note: '32x32 ink coverage, Sobel detail energy, and tab contrast — not file size alone.'
   },
+  D8: {
+    rules: ['fe-legal-substance'],
+    note: '≥1400 words, ≥14 h2, and required topic coverage on both Terms and Privacy.'
+  },
+  D9: {
+    rules: ['fe-structured-data'],
+    note: 'Valid application/ld+json with @context+@type and absolute rel=canonical on home.'
+  },
+  D10: {
+    rules: ['fe-brand-mark-size'],
+    note: 'Rendered header mark height ≥48px at 1280 and ≥32px at 375.'
+  },
 
   // E. Shipped — one check decides all five conditions.
   E1: { rules: ['lg-shipped'] },
@@ -105,6 +125,10 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
   E3: { rules: ['lg-shipped'] },
   E4: { rules: ['lg-shipped'] },
   E5: { rules: ['lg-shipped'], note: 'Served <title> assertion lives in the same check.' },
+  E6: {
+    rules: ['lg-bindings-bound'],
+    note: 'Deployed endpoints must not 503 as binding-unavailable for wrangler-declared bindings.'
+  },
 
   // F. Scored
   F1: { builtin: 'score' },

@@ -29,7 +29,9 @@ export const META_REL = join('evidence', 'measurement-meta.json');
 export const BROWSER_DRIVEN_RULES = Object.freeze([
   'fe-light-dark',
   'fe-search-present',
-  'fe-favicon-legible'
+  'fe-favicon-legible',
+  'fe-breadcrumbs',
+  'fe-brand-mark-size'
 ]);
 
 /**
@@ -50,7 +52,13 @@ export const RULES_REQUIRING_KNOWN_BAD = Object.freeze([
   'meas-engine-named',
   'fe-light-dark',
   'fe-search-present',
-  'u-api-real-output'
+  'u-api-real-output',
+  'fe-breadcrumbs',
+  'proc-design-options',
+  'fe-legal-substance',
+  'fe-structured-data',
+  'lg-bindings-bound',
+  'fe-brand-mark-size'
 ]);
 
 /** Contrast / a11y rules that must record tool: "axe-core". */

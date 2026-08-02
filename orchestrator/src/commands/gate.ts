@@ -70,6 +70,26 @@ export const APP_CHECKS: Check[] = [
   det('fe-assistant-present'),
   // Real brand mark asset + substantive favicon/OG — not a text span or emoji.
   det('fe-brand-mark'),
+  // Rendered header mark size (48px@1280 / 32px@375) — bytes alone miss a tiny mark.
+  {
+    ruleId: 'fe-brand-mark-size',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'fe-brand-mark-size', '.'],
+    timeoutMs: 300_000
+  },
+  // Inner/detail pages show a breadcrumb nav with a parent link.
+  {
+    ruleId: 'fe-breadcrumbs',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'fe-breadcrumbs', '.'],
+    timeoutMs: 300_000
+  },
+  // Terms/Privacy substance: word/h2 floors + required topics.
+  det('fe-legal-substance'),
+  // JSON-LD + absolute canonical on home.
+  det('fe-structured-data'),
+  // §7.3a three design options + DECISION.md.
+  det('proc-design-options'),
   // SOURCES.md / INTEGRATIONS.md / COMPETITORS.md present and written (not markers).
   det('fe-prior-art'),
   det('u-integration-scan'),
@@ -134,6 +154,13 @@ export const APP_CHECKS: Check[] = [
   // Shipping: GitHub remote, pushed HEAD, live URL, deployed hash matches dist.
   // A green gate on a build that never left the machine is not "done".
   det('lg-shipped'),
+  // Declared wrangler bindings must not symptom as missing on the live deploy.
+  {
+    ruleId: 'lg-bindings-bound',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'lg-bindings-bound', '.'],
+    timeoutMs: 180_000
+  },
   // Theme paint: landmark backgrounds must actually change between light and
   // dark. Attribute-only checks shipped a black hero on a light page.
   // Needs Playwright + dist; give it a multi-minute budget like runtime parity.
