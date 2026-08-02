@@ -13,8 +13,13 @@ import {
   isErrorResponse,
   json,
   optionsResponse,
+  rateLimitJson,
   readJsonBody
 } from '../lib/http';
+import {
+  checkAndConsumeRateLimit,
+  clientKeyFromRequest
+} from '../lib/rateLimit';
 
 /**
  * Workers AI model for turning a gardening sentence into filter values only.
@@ -318,15 +323,36 @@ async function getWindowsForCropMethod(
 /**
  * POST /api/assistant — map natural language to filters, ground in D1, return answer.
  * Model output is Zod-validated only; never used as SQL text or horticultural prose.
+ * Rate-limited per client IP (or a shared fail-closed bucket when IP is absent)
+ * before any paid inference runs.
  */
 export async function onRequestPost(context: AppContext): Promise<Response> {
   const { request, env } = context;
 
-  if (!env.AI) {
-    return errorJson(request, 'Assistant binding unavailable (AI missing)', 503);
-  }
   if (!env.DB) {
     return errorJson(request, 'Database binding unavailable', 503);
+  }
+
+  // Rate limit first -- refuse abusive volume before body parse or AI cost.
+  try {
+    const clientKey = clientKeyFromRequest(request);
+    const limitResult = await checkAndConsumeRateLimit(env.DB, clientKey);
+    if (!limitResult.allowed) {
+      const retryAfter = limitResult.retryAfterSeconds ?? 60;
+      return rateLimitJson(request, retryAfter, 'POST, OPTIONS');
+    }
+  } catch (cause) {
+    // Fail closed: cannot verify quota => do not call paid AI.
+    const detail = String(cause).slice(0, 200);
+    return errorJson(
+      request,
+      `Rate limit check failed: ${detail}`,
+      503
+    );
+  }
+
+  if (!env.AI) {
+    return errorJson(request, 'Assistant binding unavailable (AI missing)', 503);
   }
 
   const parsedBody = await readJsonBody(request, AssistantBodySchema, 'Invalid message');

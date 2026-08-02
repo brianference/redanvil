@@ -465,8 +465,10 @@ test.describe('Assistant', () => {
   });
 
   test('POST /api/assistant rejects empty body with 400', async ({ request }) => {
+    // Unique IP so parallel suite work does not share the fail-closed bucket.
     const res = await request.post('/api/assistant', {
-      data: { message: '' }
+      data: { message: '' },
+      headers: { 'CF-Connecting-IP': `203.0.113.${10 + Math.floor(Math.random() * 40)}` }
     });
     expect(res.status()).toBe(400);
     const body = (await res.json()) as { error?: string };
@@ -478,8 +480,10 @@ test.describe('Assistant', () => {
   }) => {
     // Local wrangler may not authenticate Workers AI; production does.
     // Fail-closed: never 200 with an empty answer. 400 is wrong for a valid body.
+    // Dedicated IP so this check is not poisoned by the rate-limit stress test.
     const res = await request.post('/api/assistant', {
-      data: { message: 'What can I plant in early August?' }
+      data: { message: 'What can I plant in early August?' },
+      headers: { 'CF-Connecting-IP': '198.51.100.50' }
     });
     expect([200, 422, 502, 503]).toContain(res.status());
     const body = (await res.json()) as {
@@ -497,6 +501,34 @@ test.describe('Assistant', () => {
       expect(body.error).toBeTruthy();
       expect(typeof body.error).toBe('string');
     }
+  });
+
+  test('POST /api/assistant returns 429 with Retry-After when over the limit', async ({
+    request
+  }) => {
+    // Fixed client key so this test alone burns the minute quota.
+    const headers = { 'CF-Connecting-IP': '203.0.113.200' };
+    const payload = { message: 'What can I plant in early August?' };
+
+    let saw429 = false;
+    // Limit is 10/min; send 12 to guarantee overflow without depending on prior state.
+    for (let i = 0; i < 12; i += 1) {
+      const res = await request.post('/api/assistant', { data: payload, headers });
+      if (res.status() === 429) {
+        saw429 = true;
+        const retryAfter = res.headers()['retry-after'];
+        const errBody = (await res.json()) as { error?: string };
+        expect(errBody.error).toMatch(/rate limit/i);
+        expect(retryAfter).toBeTruthy();
+        const seconds = Number(retryAfter);
+        expect(Number.isFinite(seconds)).toBe(true);
+        expect(seconds).toBeGreaterThan(0);
+        break;
+      }
+      // Under the limit: must not be a silent empty success; AI may still 5xx locally.
+      expect([200, 422, 502, 503]).toContain(res.status());
+    }
+    expect(saw429).toBe(true);
   });
 
   test('opens assistant, submits a question, asserts a visible response', async ({

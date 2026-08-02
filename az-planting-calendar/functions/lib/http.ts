@@ -1,15 +1,28 @@
 /**
  * Shared HTTP helpers for Pages Functions.
  * Security headers and JSON responses for every API route.
+ *
+ * Values match public/_headers so static and Function responses do not conflict
+ * when both paths set the same header names.
  */
 
 import type { z, ZodTypeAny } from 'zod';
 
+/**
+ * Baseline security headers on every API JSON response.
+ * CSP for HTML is owned by public/_headers; API responses still get framing,
+ * transport, and feature-policy controls here because Functions set their own
+ * Response headers and must not omit the pack.
+ */
 const SECURITY_HEADERS: Record<string, string> = {
   'content-type': 'application/json; charset=utf-8',
   'x-content-type-options': 'nosniff',
-  'referrer-policy': 'same-origin',
-  'x-frame-options': 'DENY'
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'x-frame-options': 'DENY',
+  'strict-transport-security': 'max-age=31536000; includeSubDomains',
+  'permissions-policy': 'geolocation=(), camera=(), microphone=(), payment=(), usb=()',
+  'content-security-policy':
+    "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 };
 
 /**
@@ -55,9 +68,45 @@ export function json(
  * @param request - Incoming request.
  * @param message - Error message for the client.
  * @param status - HTTP status.
+ * @param extraHeaders - Optional headers (e.g. Retry-After on 429).
  */
-export function errorJson(request: Request, message: string, status: number): Response {
-  return json(request, { error: message }, status);
+export function errorJson(
+  request: Request,
+  message: string,
+  status: number,
+  extraHeaders?: Record<string, string>
+): Response {
+  if (!extraHeaders || Object.keys(extraHeaders).length === 0) {
+    return json(request, { error: message }, status);
+  }
+  const headers = new Headers(apiHeaders(request));
+  for (const [key, value] of Object.entries(extraHeaders)) {
+    headers.set(key, value);
+  }
+  return new Response(JSON.stringify({ error: message }), { status, headers });
+}
+
+/**
+ * 429 response with a real message and Retry-After (seconds).
+ *
+ * @param request - Incoming request.
+ * @param retryAfterSeconds - Seconds until the client may retry.
+ * @param methods - Allowed CORS methods.
+ */
+export function rateLimitJson(
+  request: Request,
+  retryAfterSeconds: number,
+  methods = 'POST, OPTIONS'
+): Response {
+  const seconds = Math.max(1, Math.floor(retryAfterSeconds));
+  const headers = new Headers(apiHeaders(request, methods));
+  headers.set('Retry-After', String(seconds));
+  return new Response(
+    JSON.stringify({
+      error: `Rate limit exceeded. Try again in ${seconds} seconds.`
+    }),
+    { status: 429, headers }
+  );
 }
 
 /**
