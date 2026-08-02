@@ -45,11 +45,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:46:40.718Z"
+        "at": "2026-08-02T22:54:42.845Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:46:40.718Z"
+        "at": "2026-08-02T22:54:42.846Z"
       }
     ],
     "knownBad": {
@@ -64,11 +64,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:46:42.279Z"
+        "at": "2026-08-02T22:54:44.326Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:46:42.279Z"
+        "at": "2026-08-02T22:54:44.326Z"
       }
     ],
     "heights": {
@@ -79,7 +79,7 @@
     "knownBad": {
       "input": "fixtures/brand-mark-size/small.html",
       "failed": true,
-      "recordedAt": "2026-08-02T22:46:42.279Z"
+      "recordedAt": "2026-08-02T22:54:44.326Z"
     }
   },
   "fe-breadcrumbs": {
@@ -88,17 +88,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:46:44.304Z"
+        "at": "2026-08-02T22:54:46.338Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:46:44.304Z"
+        "at": "2026-08-02T22:54:46.338Z"
       }
     ],
     "knownBad": {
       "input": "fixtures/breadcrumbs/bad-about.html",
       "failed": true,
-      "recordedAt": "2026-08-02T22:46:44.304Z"
+      "recordedAt": "2026-08-02T22:54:46.338Z"
     }
   },
   "fe-result-in-viewport": {
@@ -107,17 +107,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:46:52.991Z"
+        "at": "2026-08-02T22:54:54.950Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:46:52.991Z"
+        "at": "2026-08-02T22:54:54.950Z"
       }
     ],
     "knownBad": {
       "input": "fixture with result list far below the fold",
       "failed": true,
-      "recordedAt": "2026-08-02T22:46:52.991Z"
+      "recordedAt": "2026-08-02T22:54:54.950Z"
     }
   },
   "fe-resource-links": {
@@ -126,17 +126,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:46:54.768Z"
+        "at": "2026-08-02T22:54:56.771Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:46:54.768Z"
+        "at": "2026-08-02T22:54:56.772Z"
       }
     ],
     "knownBad": {
       "input": "fixture with dead external URL (real 404)",
       "failed": true,
-      "recordedAt": "2026-08-02T22:46:54.768Z"
+      "recordedAt": "2026-08-02T22:54:56.772Z"
     }
   },
   "fe-light-dark": {
@@ -145,12 +145,12 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:13.053Z",
+        "at": "2026-08-02T22:55:14.919Z",
         "landmarks": 10
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:13.053Z",
+        "at": "2026-08-02T22:55:14.919Z",
         "landmarks": 10
       }
     ],
@@ -166,19 +166,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:16.884Z",
+        "at": "2026-08-02T22:55:18.808Z",
         "status": 0
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:16.885Z",
+        "at": "2026-08-02T22:55:18.809Z",
         "status": 0
       }
     ],
     "knownBad": {
       "input": "package.json build script that exits 1",
       "failed": true,
-      "recordedAt": "2026-08-02T22:47:16.885Z"
+      "recordedAt": "2026-08-02T22:55:18.809Z"
     }
   },
   "u-api-not-found": {
@@ -187,17 +187,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:20.316Z"
+        "at": "2026-08-02T22:55:22.233Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:20.316Z"
+        "at": "2026-08-02T22:55:22.234Z"
       }
     ],
     "knownBad": {
       "input": "detail route that returns 200 for a bogus id",
       "failed": true,
-      "recordedAt": "2026-08-02T22:47:20.316Z"
+      "recordedAt": "2026-08-02T22:55:22.234Z"
     }
   },
   "u-api-no-spa-mask": {
@@ -206,21 +206,21 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:23.773Z",
-        "path": "/api/__definitely_absent_7e87b4efdcb0aca5",
+        "at": "2026-08-02T22:55:25.693Z",
+        "path": "/api/__definitely_absent_ca4e300840de8ed2",
         "status": 404
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:23.773Z",
-        "path": "/api/__definitely_absent_7e87b4efdcb0aca5",
+        "at": "2026-08-02T22:55:25.694Z",
+        "path": "/api/__definitely_absent_ca4e300840de8ed2",
         "status": 404
       }
     ],
     "knownBad": {
       "input": "API path that returns SPA index.html at 200",
       "failed": true,
-      "recordedAt": "2026-08-02T22:47:23.773Z"
+      "recordedAt": "2026-08-02T22:55:25.694Z"
     }
   },
   "u-legal-claims-true": {
@@ -229,17 +229,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:23.896Z"
+        "at": "2026-08-02T22:55:25.809Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:23.896Z"
+        "at": "2026-08-02T22:55:25.810Z"
       }
     ],
     "knownBad": {
       "input": "privacy page that denies cookies while code sets document.cookie",
       "failed": true,
-      "recordedAt": "2026-08-02T22:47:23.896Z"
+      "recordedAt": "2026-08-02T22:55:25.810Z"
     }
   },
   "fe-favicon-legible": {
@@ -248,7 +248,7 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:24.513Z",
+        "at": "2026-08-02T22:55:26.423Z",
         "metrics": {
           "inkCoverage": 0.458984375,
           "detailEnergy": 188.8609034439758,
@@ -260,7 +260,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:24.513Z",
+        "at": "2026-08-02T22:55:26.423Z",
         "metrics": {
           "inkCoverage": 0.458984375,
           "detailEnergy": 188.8609034439758,
@@ -272,7 +272,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:24.849Z",
+        "at": "2026-08-02T22:55:26.768Z",
         "metrics": {
           "inkCoverage": 0.375,
           "detailEnergy": 188.80813895337675,
@@ -284,7 +284,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:24.849Z",
+        "at": "2026-08-02T22:55:26.768Z",
         "metrics": {
           "inkCoverage": 0.375,
           "detailEnergy": 188.80813895337675,
@@ -296,7 +296,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:25.184Z",
+        "at": "2026-08-02T22:55:27.118Z",
         "metrics": {
           "inkCoverage": 0.3701171875,
           "detailEnergy": 160.98443392176873,
@@ -308,7 +308,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:25.184Z",
+        "at": "2026-08-02T22:55:27.118Z",
         "metrics": {
           "inkCoverage": 0.3701171875,
           "detailEnergy": 160.98443392176873,
@@ -323,7 +323,7 @@
     "knownBad": {
       "input": "solid-square or empty favicon failing ink/detail floors",
       "failed": true,
-      "recordedAt": "2026-08-02T22:47:25.184Z"
+      "recordedAt": "2026-08-02T22:55:27.118Z"
     }
   },
   "meas-known-bad": {
@@ -332,11 +332,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:27.413Z"
+        "at": "2026-08-02T22:55:29.334Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:27.413Z"
+        "at": "2026-08-02T22:55:29.334Z"
       }
     ],
     "knownBad": {
@@ -351,11 +351,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:27.506Z"
+        "at": "2026-08-02T22:55:29.426Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:27.506Z"
+        "at": "2026-08-02T22:55:29.426Z"
       }
     ],
     "knownBad": {
@@ -370,11 +370,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:27.600Z"
+        "at": "2026-08-02T22:55:29.519Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:27.600Z"
+        "at": "2026-08-02T22:55:29.519Z"
       }
     ],
     "knownBad": {
@@ -389,11 +389,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:27.693Z"
+        "at": "2026-08-02T22:55:29.614Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:27.694Z"
+        "at": "2026-08-02T22:55:29.615Z"
       }
     ],
     "knownBad": {
@@ -408,11 +408,11 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:27.788Z"
+        "at": "2026-08-02T22:55:29.706Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:27.789Z"
+        "at": "2026-08-02T22:55:29.707Z"
       }
     ],
     "knownBad": {
@@ -427,19 +427,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:46:56.273Z",
+        "at": "2026-08-02T22:54:58.251Z",
         "summary": "terms 1746w/16h2; privacy 1804w/15h2"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:46:56.273Z",
+        "at": "2026-08-02T22:54:58.251Z",
         "summary": "terms 1746w/16h2; privacy 1804w/15h2"
       }
     ],
     "knownBad": {
       "input": "fixture short legal stub missing floors and topics",
       "failed": true,
-      "recordedAt": "2026-08-02T22:46:56.273Z"
+      "recordedAt": "2026-08-02T22:54:58.251Z"
     }
   },
   "fe-a11y-contrast": {
@@ -469,19 +469,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:46:56.610Z",
+        "at": "2026-08-02T22:54:58.587Z",
         "type": "WebApplication"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:46:56.611Z",
+        "at": "2026-08-02T22:54:58.588Z",
         "type": "WebApplication"
       }
     ],
     "knownBad": {
       "input": "fixtures/structured-data/bad.html",
       "failed": true,
-      "recordedAt": "2026-08-02T22:46:56.611Z"
+      "recordedAt": "2026-08-02T22:54:58.588Z"
     }
   },
   "proc-design-options": {
@@ -490,17 +490,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:46:56.707Z"
+        "at": "2026-08-02T22:54:58.681Z"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:46:56.707Z"
+        "at": "2026-08-02T22:54:58.681Z"
       }
     ],
     "knownBad": {
       "input": "app with no design-refs/design-options or empty DECISION.md",
       "failed": true,
-      "recordedAt": "2026-08-02T22:46:56.707Z"
+      "recordedAt": "2026-08-02T22:54:58.681Z"
     }
   },
   "lg-result-reproduces": {
@@ -508,14 +508,14 @@
     "engine": null,
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-02T22:47:27.313Z",
+        "ok": true,
+        "at": "2026-08-02T22:55:51.679Z",
         "recomputed": 0,
         "recorded": 0
       },
       {
-        "ok": false,
-        "at": "2026-08-02T22:47:27.313Z",
+        "ok": true,
+        "at": "2026-08-02T22:55:51.680Z",
         "recomputed": 0,
         "recorded": 0
       }
@@ -523,7 +523,7 @@
     "knownBad": {
       "input": "results JSON whose finalScore does not match recompute",
       "failed": true,
-      "recordedAt": "2026-08-02T22:47:27.313Z"
+      "recordedAt": "2026-08-02T22:55:51.680Z"
     }
   },
   "lg-bindings-bound": {
@@ -532,19 +532,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:11.046Z",
+        "at": "2026-08-02T22:55:12.922Z",
         "base": "https://az-planting-calendar.pages.dev"
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:11.047Z",
+        "at": "2026-08-02T22:55:12.923Z",
         "base": "https://az-planting-calendar.pages.dev"
       }
     ],
     "knownBad": {
       "input": "deployed endpoint returning binding unavailable / 503 missing AI",
       "failed": true,
-      "recordedAt": "2026-08-02T22:47:11.047Z"
+      "recordedAt": "2026-08-02T22:55:12.923Z"
     }
   },
   "u-api-real-output": {
@@ -553,17 +553,17 @@
     "knownBad": {
       "input": "API route with no example or empty placeholder response",
       "failed": true,
-      "recordedAt": "2026-08-02T22:47:06.418Z"
+      "recordedAt": "2026-08-02T22:55:08.520Z"
     },
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-02T22:47:06.417Z",
+        "at": "2026-08-02T22:55:08.519Z",
         "routes": 9
       },
       {
         "ok": true,
-        "at": "2026-08-02T22:47:06.418Z",
+        "at": "2026-08-02T22:55:08.520Z",
         "routes": 9
       }
     ]
