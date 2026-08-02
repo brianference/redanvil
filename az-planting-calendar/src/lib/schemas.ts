@@ -86,6 +86,21 @@ export const CropsResponseSchema = z.object({
   crops: z.array(CropListItemSchema)
 });
 
+/**
+ * Optional growing guidance on crop detail (how to plant).
+ * Null fields were not stated in the cited source; never invented client-side.
+ */
+export const CropGuideSchema = z.object({
+  depth: z.string().nullable(),
+  spacing_in_row: z.string().nullable(),
+  spacing_between_rows: z.string().nullable(),
+  sun: z.string().nullable(),
+  water: z.string().nullable(),
+  harvest_note: z.string().nullable(),
+  source: SourceSchema
+});
+export type CropGuide = z.infer<typeof CropGuideSchema>;
+
 /** GET /api/crops/:id response. */
 export const CropDetailResponseSchema = z.object({
   crop: CropSchema,
@@ -93,7 +108,9 @@ export const CropDetailResponseSchema = z.object({
     PlantingWindowSchema.extend({
       source: SourceSchema
     })
-  )
+  ),
+  /** Null when no sourced guide exists for this crop. */
+  guide: CropGuideSchema.nullable().optional()
 });
 export type CropDetailResponse = z.infer<typeof CropDetailResponseSchema>;
 

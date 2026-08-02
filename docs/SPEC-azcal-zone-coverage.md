@@ -123,3 +123,44 @@ Report each with real output:
 
 Do not widen coverage by loosening the citation requirement. The INNER JOIN on
 `sources` that makes an uncited window unrenderable stays exactly as it is.
+
+---
+
+# Part 3 — Per-crop growing guidance (closes the user-refuse complaint)
+
+`user-refuse` refused the deployed app on 2026-08-02 with two complaints. This
+part closes the first:
+
+> "Crop detail tells me WHEN to plant but never HOW -- no growing guide, no
+> spacing, no depth. Only 2 external links on a crop page, both the same az1005
+> citation."
+
+Mechanically the app already satisfies `fe-resource-links` -- az1005 resolves.
+The gap is a product gap: a planting calendar that never says how to plant.
+
+For each crop, add sourced growing guidance:
+
+- **Find the real UA Cooperative Extension publication** for that crop or crop
+  family. `extension.arizona.edu` returns 200 (verified 2026-08-02). Record
+  title, publication id, URL and retrieval date per crop.
+- Surface, where the source supports it: planting depth, in-row and between-row
+  spacing, sun, water, and a harvest note. Every field carries its citation the
+  way planting windows already do.
+- **A crop with no sourced guide gets no invented guidance.** Show what you have
+  and say the rest is not yet sourced. List those crops in your report.
+- Every added link must resolve -- follow it with a browser user-agent and
+  record the status. `fe-resource-links` follows links and fails on a dead one,
+  and an invented guide URL is the anti-hallucination failure in its most
+  damaging form because it looks exactly like a citation.
+
+Do not scrape or reproduce Almanac content. Their pages carry a 2026 copyright
+and Terms of Use, and the plan of record treats them as an information-
+architecture reference only. Link out; never copy their compiled dates.
+
+## Definition of done for Part 3
+
+- Per-crop guide coverage: how many of the 45 crops got a sourced guide, and the
+  named list of those that did not.
+- Every new external link followed, with its HTTP status, in the report.
+- A crop detail screenshot at 375 and 1280 showing the guidance, described from
+  looking at it.

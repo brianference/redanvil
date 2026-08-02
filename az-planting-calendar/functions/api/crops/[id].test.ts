@@ -8,14 +8,16 @@ vi.mock('../../lib/db', async () => {
   return {
     ...actual,
     getCrop: vi.fn(),
-    getWindowsForCrop: vi.fn()
+    getWindowsForCrop: vi.fn(),
+    getCropGuide: vi.fn()
   };
 });
 
-import { getCrop, getWindowsForCrop } from '../../lib/db';
+import { getCrop, getCropGuide, getWindowsForCrop } from '../../lib/db';
 
 const getCropMock = vi.mocked(getCrop);
 const getWindowsMock = vi.mocked(getWindowsForCrop);
+const getGuideMock = vi.mocked(getCropGuide);
 
 /**
  * Build a minimal Pages Function context for GET /api/crops/:id.
@@ -80,12 +82,29 @@ describe('GET /api/crops/[id]', () => {
     ];
     getCropMock.mockResolvedValueOnce(crop);
     getWindowsMock.mockResolvedValueOnce(windows);
+    getGuideMock.mockResolvedValueOnce({
+      crop_id: 'crop-tomatoes',
+      depth: 'Plant slightly deeper than the container',
+      spacing_in_row: 'At least 24 in between plants',
+      spacing_between_rows: null,
+      sun: null,
+      water: 'Water slowly and deeply',
+      harvest_note: null,
+      source_id: 'src-tomato-ua',
+      source_title: 'Tomato Planting, Growing and Harvest',
+      source_author: 'UA Cooperative Extension',
+      source_publisher: 'University of Arizona Cooperative Extension',
+      source_url:
+        'https://extension.arizona.edu/publication/tomato-planting-growing-and-harvest',
+      source_retrieved_at: '2026-08-02'
+    });
 
     const res = await onRequestGet(ctx('crop-tomatoes'));
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
       crop: CropRow;
       windows: Array<{ method: string; source: { title: string } }>;
+      guide: { spacing_in_row: string | null; source: { title: string } } | null;
     };
     expect(body.crop).toEqual(crop);
     expect(body.windows).toHaveLength(1);
@@ -93,7 +112,27 @@ describe('GET /api/crops/[id]', () => {
     expect(firstWindow).toBeDefined();
     expect(firstWindow?.method).toBe('T');
     expect(firstWindow?.source.title).toMatch(/Maricopa/i);
+    expect(body.guide?.spacing_in_row).toMatch(/24/);
+    expect(body.guide?.source.title).toMatch(/Tomato/i);
     expect(getCropMock).toHaveBeenCalledWith(expect.anything(), 'crop-tomatoes');
     expect(getWindowsMock).toHaveBeenCalledWith(expect.anything(), 'crop-tomatoes');
+    expect(getGuideMock).toHaveBeenCalledWith(expect.anything(), 'crop-tomatoes');
+  });
+
+  it('returns guide null when no sourced guide exists', async () => {
+    getCropMock.mockResolvedValueOnce({
+      id: 'crop-sunflower',
+      name: 'Sunflower',
+      days_to_harvest_min: 90,
+      days_to_harvest_max: 110,
+      notes: null
+    });
+    getWindowsMock.mockResolvedValueOnce([]);
+    getGuideMock.mockResolvedValueOnce(null);
+
+    const res = await onRequestGet(ctx('crop-sunflower'));
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { guide: null };
+    expect(body.guide).toBeNull();
   });
 });

@@ -12,6 +12,13 @@
   color: var(--text-muted);
 }
 
+.zone-selector__coverage {
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--text-faint);
+  line-height: 1.35;
+}
+
 .zone-selector__controls {
   position: relative;
   min-width: 0;
@@ -33,7 +40,7 @@
   outline-offset: 2px;
 }
 
-.zone-selector__list {
+.zone-selector__popup {
   position: absolute;
   /* Above sticky live-search (z-40) and topbar chrome so options stay clickable. */
   z-index: 70;
@@ -42,13 +49,51 @@
   right: 0;
   margin: 0;
   padding: var(--space-1);
-  list-style: none;
-  max-height: 240px;
+  max-height: min(360px, 70vh);
   overflow: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow-none);
+}
+
+.zone-selector__coverage-panel {
+  margin: 0 0 var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.zone-selector__coverage-panel p {
+  margin: 0 0 var(--space-2);
+  font-size: var(--type-sm);
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.zone-selector__coverage-panel p:last-child {
+  margin-bottom: 0;
+}
+
+.zone-selector__coverage-hint {
+  color: var(--text-muted);
+}
+
+.zone-selector__group-label {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--type-sm);
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.zone-selector__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .zone-selector__option {
@@ -58,6 +103,8 @@
   gap: 2px;
   width: 100%;
   min-height: var(--touch);
+  /* Spec: every option >= 44px. */
+  min-height: 44px;
   padding: var(--space-2) var(--space-3);
   border: 1px solid transparent;
   border-radius: var(--radius);
@@ -74,6 +121,10 @@
   border-color: var(--border);
 }
 
+.zone-selector__option--selected {
+  border-color: var(--accent);
+}
+
 .zone-selector__option-name {
   font-weight: 600;
   font-size: var(--type-sm);
@@ -82,10 +133,4 @@
 .zone-selector__option-meta {
   font-size: var(--type-sm);
   color: var(--text-muted);
-}
-
-.zone-selector__empty {
-  padding: var(--space-3);
-  color: var(--text-muted);
-  font-size: var(--type-sm);
 }

@@ -85,8 +85,35 @@ https://extension.arizona.edu/publication/frost-protection notes Maricopa County
 
 No mid- or high-elevation Arizona planting calendars were loaded. Without a published window table for those elevations, creating a zone would re-use az1005 dates incorrectly. Frost-only towns outside Maricopa low desert were also rejected for that reason.
 
+Part 2 (optional zone expansion) was **not** applied this session. Searched and reachable (HTTP 200, browser UA, 2026-08-02) but **not** transcribed into planting-window zones:
+
+| Publication | Id / path | URL | Why not added as zones |
+| --- | --- | --- | --- |
+| Planting and Harvesting Calendar for Gardeners in Yuma County | az1615 | https://extension.arizona.edu/sites/default/files/2024-08/az1615-2020.pdf | Used for **depth/spacing** on crop guides only. Yuma planting windows were not transcribed into `planting_windows` / new zones (optional Part 2 deferred; whole-month columns would need `source_granularity=month`). |
+| Ten Steps to a Successful Vegetable Garden | az1435 | https://extension.arizona.edu/sites/default/files/2024-08/az1435-2015.pdf | General garden practice, not a per-town window table. |
+| Vegetable Crops “A to Z” | BYG #74 | https://extension.arizona.edu/sites/default/files/attachment/Vegetables.pdf | Cultural notes, not a county planting calendar. |
+| Tips for Successful Gardening in Mohave County | Mohave PDF | https://extension.arizona.edu/sites/extension.arizona.edu/files/data/tipsforsuccessfulgardening-mohave.pdf | Elevation planting chart not transcribed this session. |
+
+Failed to find as zone sources this session (no authoritative window table transcribed): Flagstaff / high-elevation calendar, Sierra Vista / Cochise calendar, Pinetop / White Mountains calendar, Prescott / Yavapai full county window table as D1 zones.
+
+## Growing guides (how to plant) — migration 0006
+
+Per-crop depth / spacing / sun / water / harvest notes. **Not** planting windows. Each `crop_guides` row cites one source; null fields were not stated in that source.
+
+| Source id | Title | URL | Status (2026-08-02, browser UA) |
+| --- | --- | --- | --- |
+| `src-az1615-yuma` | Planting and Harvesting Calendar for Gardeners in Yuma County (az1615) | https://extension.arizona.edu/sites/default/files/2024-08/az1615-2020.pdf | 200 |
+| `src-tomato-ua` | Tomato Planting, Growing and Harvest | https://extension.arizona.edu/publication/tomato-planting-growing-and-harvest | 200 |
+| `src-asparagus-byg153` | Asparagus (BYG153) | https://extension.arizona.edu/publication/asparagus | 200 |
+| `src-byg74-vegetables` | Vegetable Crops “A to Z” (BYG #74) | https://extension.arizona.edu/sites/default/files/attachment/Vegetables.pdf | 200 |
+
+Crops **with** a guide row: artichokes-globe, asparagus, beans (lima/pinto/snap/yardlong), beets, blackeyed-peas, bok-choy, carrots, cauliflower, celery, chard, corn-sweet, cucumbers, cucumbers-armenian, eggplant, garlic, kale, leek, lettuce-head, lettuce-leaf, melons-watermelon, okra, onions-bulb, peanuts, peas, peppers, potatoes, potatoes-sweet, pumpkin, radishes, spinach, squash-summer, squash-winter, tomatoes, turnips (37 of 45).
+
+Crops **without** a guide (no invented guidance): artichokes-jerusalem, collard-greens, endive, mustard, onions-shallots, parsnips, rutabagas, sunflower (8 of 45).
+
 ## What is not a source
 
 - almanac.com **planting** dates (the original prompt URL is information-architecture reference only; dates are not copied).
 - Invented or interpolated frost dates between cities.
 - Unverified crop marker sequences.
+- Invented growing depth/spacing when no Extension publication was transcribed for that crop.

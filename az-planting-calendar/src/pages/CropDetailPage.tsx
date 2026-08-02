@@ -6,11 +6,11 @@ import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { en } from '../i18n/en';
 import { fetchCropDetail } from '../lib/api';
 import { halfMonthLabel } from '../lib/halfMonth';
-import type { CropDetailResponse } from '../lib/schemas';
+import type { CropDetailResponse, CropGuide } from '../lib/schemas';
 import './ProsePage.css';
 
 /**
- * Crop detail: windows, harvest range, and working citation links.
+ * Crop detail: windows, optional growing guide (how), harvest range, citations.
  */
 export function CropDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -89,6 +89,8 @@ export function CropDetailPage() {
             ) : null}
           </dl>
 
+          <GrowingGuideSection guide={data.guide ?? null} />
+
           <h2>{en.detail.windows}</h2>
           {data.windows.length === 0 ? (
             <p>{en.detail.noWindows}</p>
@@ -137,5 +139,86 @@ export function CropDetailPage() {
         </>
       ) : null}
     </article>
+  );
+}
+
+/**
+ * Render sourced growing guidance, or an honest missing-guide message.
+ *
+ * @param props - Guide payload or null.
+ */
+function GrowingGuideSection({ guide }: { guide: CropGuide | null }) {
+  return (
+    <section className="detail-guide" data-testid="crop-guide">
+      <h2>{en.detail.guide}</h2>
+      {!guide ? (
+        <p className="detail-guide__missing" data-testid="crop-guide-missing">
+          {en.detail.guideMissing}
+        </p>
+      ) : (
+        <>
+          <p className="detail-guide__partial mono">{en.detail.guidePartial}</p>
+          <dl className="detail-guide__fields mono" data-testid="crop-guide-fields">
+            <GuideField label={en.detail.guideDepth} value={guide.depth} testId="guide-depth" />
+            <GuideField
+              label={en.detail.guideSpacingInRow}
+              value={guide.spacing_in_row}
+              testId="guide-spacing-in-row"
+            />
+            <GuideField
+              label={en.detail.guideSpacingBetweenRows}
+              value={guide.spacing_between_rows}
+              testId="guide-spacing-between-rows"
+            />
+            <GuideField label={en.detail.guideSun} value={guide.sun} testId="guide-sun" />
+            <GuideField label={en.detail.guideWater} value={guide.water} testId="guide-water" />
+            <GuideField
+              label={en.detail.guideHarvest}
+              value={guide.harvest_note}
+              testId="guide-harvest"
+            />
+          </dl>
+          <p className="window-card__cite">
+            <span className="window-card__cite-label">{en.detail.guideCitation}</span>{' '}
+            <a
+              href={guide.source.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="guide-citation-link"
+            >
+              {guide.source.title}
+            </a>
+            <span className="window-card__cite-meta mono">
+              {' '}
+              — {guide.source.author}, {guide.source.publisher}. {en.detail.retrieved}{' '}
+              {guide.source.retrieved_at}.
+            </span>
+          </p>
+        </>
+      )}
+    </section>
+  );
+}
+
+/**
+ * One optional guide field; omitted entirely when the source left it null.
+ *
+ * @param props - Label, value, test id.
+ */
+function GuideField({
+  label,
+  value,
+  testId
+}: {
+  label: string;
+  value: string | null;
+  testId: string;
+}) {
+  if (value == null || value.trim().length === 0) return null;
+  return (
+    <div data-testid={testId}>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
   );
 }

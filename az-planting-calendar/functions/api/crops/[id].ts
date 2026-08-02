@@ -1,9 +1,15 @@
 import type { AppContext } from '../../lib/env';
-import { getCrop, getWindowsForCrop, windowToApi } from '../../lib/db';
+import {
+  getCrop,
+  getCropGuide,
+  getWindowsForCrop,
+  guideToApi,
+  windowToApi
+} from '../../lib/db';
 import { errorJson, json, optionsResponse } from '../../lib/http';
 
 /**
- * GET /api/crops/:id — crop detail with all windows and citations.
+ * GET /api/crops/:id — crop detail with windows, optional growing guide, citations.
  */
 export async function onRequestGet(context: AppContext): Promise<Response> {
   const { request, env, params } = context;
@@ -19,8 +25,10 @@ export async function onRequestGet(context: AppContext): Promise<Response> {
 
   const rows = await getWindowsForCrop(env.DB, id);
   const windows = rows.map(windowToApi);
+  const guideRow = await getCropGuide(env.DB, id);
+  const guide = guideRow ? guideToApi(guideRow) : null;
 
-  return json(request, { crop, windows });
+  return json(request, { crop, windows, guide });
 }
 
 /** CORS preflight. */

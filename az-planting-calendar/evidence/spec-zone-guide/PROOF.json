@@ -1,0 +1,31 @@
+{
+  "notes": [
+    {
+      "kind": "zone",
+      "tag": "375",
+      "path": "evidence/spec-zone-guide/zone-sierra-vista-375.png",
+      "msg": "Sierra Vista, Arizona is outside this calendar’s coverage. Planting windows here are for the Maricopa County low desert only (UA Cooperative Extension az1005) and do not apply in Sierra Vista. Covered towns: Buckeye, Cave Creek, Chandler, Glendale, Mesa, Phoenix, Scottsdale, and Tempe.",
+      "optCount": 8
+    },
+    {
+      "kind": "zone",
+      "tag": "1280",
+      "path": "evidence/spec-zone-guide/zone-sierra-vista-1280.png",
+      "msg": "Sierra Vista, Arizona is outside this calendar’s coverage. Planting windows here are for the Maricopa County low desert only (UA Cooperative Extension az1005) and do not apply in Sierra Vista. Covered towns: Buckeye, Cave Creek, Chandler, Glendale, Mesa, Phoenix, Scottsdale, and Tempe.",
+      "optCount": 8
+    },
+    {
+      "kind": "guide",
+      "tag": "375",
+      "path": "evidence/spec-zone-guide/crop-tomatoes-guide-375.png",
+      "guideText": "How to plant\n\nFields below are taken only from the cited Extension publication. Missing fields were not stated in that source -- not omitted as a product feature.\n\nPLANTING DEPTH\nPlant the transplant slightly deeper than it had been growing in the container; tall transplants can be laid sideways in a trench so roots form along the buried stem\nSPACING IN ROW\nAt least 24 in between individual plants\nWATER\nWater tomato plants slowly and deeply at planting. In containers, keep moisture even rather than cycling from very wet to very dry.\n\nGUIDE SOURCE Tomato Planting, Growing and Harvest (publication date February 2019) — University of Arizona Cooperative Extension, University of Arizona Cooperative Extension. Retrieved 2026-08-02."
+    },
+    {
+      "kind": "guide",
+      "tag": "1280",
+      "path": "evidence/spec-zone-guide/crop-tomatoes-guide-1280.png",
+      "guideText": "How to plant\n\nFields below are taken only from the cited Extension publication. Missing fields were not stated in that source -- not omitted as a product feature.\n\nPLANTING DEPTH\nPlant the transplant slightly deeper than it had been growing in the container; tall transplants can be laid sideways in a trench so roots form along the buried stem\nSPACING IN ROW\nAt least 24 in between individual plants\nWATER\nWater tomato plants slowly and deeply at planting. In containers, keep moisture even rather than cycling from very wet to very dry.\n\nGUIDE SOURCE Tomato Planting, Growing and Harvest (publication date February 2019) — University of Arizona Cooperative Extension, University of Arizona Cooperative Extension. Retrieved 2026-08-02."
+    }
+  ],
+  "aboutSnippet": "Coverage boundary: Maricopa County low desert only\n\nThis calendar’s planting windows apply only to the Maricopa County low desert. They are transcribed from University of Arizona Cooperative Extension publication az1005 (“Vegetable Planting Calendar for Maricopa County,” Kai Umeda). Selectable planning zones today are eight Maricopa towns: Buckeye, Cave Creek, Chandler, Glendale, Mesa, Phoenix, Scottsdale, and Tempe. Mid-elevation and high-elevation Arizona places (for example Flagstaff, Pinetop, Prescott, Sedona, Sierra Vista) and other counties (for example Tucson in Pima County, or Yuma) are not covered -- not because the software is missing a feature, but because this app has not transcribed an authoritative planting-window table for those elevations or counties. Using Maricopa low-desert dates there would be actively wrong advice. A search that finds no zone is a stated coverage limit, not a broken lookup.\n\nDefault zone: Cave Creek, Arizona 85331\n\nThe default planning zone is Cave Creek in Maricopa County (ZIP 85331), on the northern edge of the Phoenix low desert. The planting "
+}

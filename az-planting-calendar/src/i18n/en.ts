@@ -154,14 +154,51 @@ export const en = {
     retrieved: 'Retrieved',
     granularityMonth:
       'Source lists this window by whole month; half-month cells are both halves of that month, not finer precision.',
-    granularityHalf: 'Source supports half-month columns (az1005 chart headers).'
+    granularityHalf: 'Source supports half-month columns (az1005 chart headers).',
+    /** Growing-how section (spacing, depth) separate from when-to-plant windows. */
+    guide: 'How to plant',
+    guideDepth: 'Planting depth',
+    guideSpacingInRow: 'Spacing in row',
+    guideSpacingBetweenRows: 'Spacing between rows',
+    guideSun: 'Sun',
+    guideWater: 'Water',
+    guideHarvest: 'Harvest note',
+    guideCitation: 'Guide source',
+    guideMissing:
+      'No sourced growing guide for this crop yet. Planting windows above are still from az1005; depth, spacing, and care notes will appear here only when a University of Arizona Cooperative Extension publication is transcribed for this crop.',
+    guidePartial:
+      'Fields below are taken only from the cited Extension publication. Missing fields were not stated in that source -- not omitted as a product feature.'
   },
 
   zone: {
     label: 'Zone',
-    switchLabel: 'Planning zone',
-    searchPlaceholder: 'City, ZIP, or zone id',
-    noMatch: 'No zones match that search.',
+    /** Label that states the coverage boundary before search. */
+    switchLabel: 'Planning zone (Maricopa County low desert)',
+    /** Accessible name for the zone combobox. */
+    comboboxLabel: 'Planning zone',
+    searchPlaceholder: 'City, ZIP, county, or state',
+    /** Accessible name for the zone listbox. */
+    listLabel: 'Available planning zones',
+    /** Group heading inside the open list. */
+    groupMaricopa: 'Maricopa County low desert · UA Extension az1005',
+    /**
+     * Generic zero-filter explanation (always names coverage + covered towns).
+     *
+     * @param query - What the visitor typed.
+     */
+    noMatch: (query: string) =>
+      `No planning zone matches “${query}”. This calendar covers Maricopa County low desert only, with planting windows from University of Arizona Cooperative Extension az1005 (Vegetable Planting Calendar for Maricopa County). Covered towns: Buckeye, Cave Creek, Chandler, Glendale, Mesa, Phoenix, Scottsdale, and Tempe. Open the list below to pick one of those zones.`,
+    /**
+     * Specific explanation when the query names a known out-of-coverage Arizona place.
+     *
+     * @param place - Display name of the place (e.g. Sierra Vista).
+     */
+    noMatchOutside: (place: string) =>
+      `${place}, Arizona is outside this calendar’s coverage. Planting windows here are for the Maricopa County low desert only (UA Cooperative Extension az1005) and do not apply in ${place}. Covered towns: Buckeye, Cave Creek, Chandler, Glendale, Mesa, Phoenix, Scottsdale, and Tempe.`,
+    /** Hint shown under zero-match copy; full list remains visible for discovery. */
+    noMatchHint: 'Zones that are covered stay listed below -- pick one, or clear the search.',
+    coverageHint:
+      'Covers Maricopa County low desert only (az1005). Open the list to browse covered towns, or type a city, ZIP, county, or state.',
     lastFrost: 'Avg. last spring frost (32°F)',
     firstFrost: 'Approx. first fall frost',
     /** Compact frost labels for the zone bar. */
@@ -245,12 +282,16 @@ export const en = {
         body: 'The home page opens on a “plantable now” view for a chosen calendar date. That date maps to one of twenty-four half-months used by the Extension table (early and late halves of each month). Crops with an active seed or transplant window for that half-month appear first, with method chips and a path into crop detail. Below the fold, a full-year grid lists crops down the side and the twenty-four half-months across, so you can scan an entire season without guessing from a monthly list alone.'
       },
       {
+        heading: 'Coverage boundary: Maricopa County low desert only',
+        body: 'This calendar’s planting windows apply only to the Maricopa County low desert. They are transcribed from University of Arizona Cooperative Extension publication az1005 (“Vegetable Planting Calendar for Maricopa County,” Kai Umeda). Selectable planning zones today are eight Maricopa towns: Buckeye, Cave Creek, Chandler, Glendale, Mesa, Phoenix, Scottsdale, and Tempe. Mid-elevation and high-elevation Arizona places (for example Flagstaff, Pinetop, Prescott, Sedona, Sierra Vista) and other counties (for example Tucson in Pima County, or Yuma) are not covered -- not because the software is missing a feature, but because this app has not transcribed an authoritative planting-window table for those elevations or counties. Using Maricopa low-desert dates there would be actively wrong advice. A search that finds no zone is a stated coverage limit, not a broken lookup.'
+      },
+      {
         heading: 'Default zone: Cave Creek, Arizona 85331',
         body: 'The default planning zone is Cave Creek in Maricopa County (ZIP 85331), on the northern edge of the Phoenix low desert. The planting windows themselves come from county-level Maricopa guidance, not a custom microclimate model for every hillside. Cave Creek sits higher than central Phoenix, so the same published county windows can run early or late relative to your yard. Frost date fields shown with the zone are approximate planning aids from public frost-date references; they are not a substitute for local weather, soil, or water rules.'
       },
       {
         heading: 'Where the planting data comes from',
-        body: 'Crop names, seed versus transplant methods, and half-month windows are transcribed from the University of Arizona Cooperative Extension publication “Vegetable Planting Calendar for Maricopa County” (publication az1005, Kai Umeda). The seed dataset ships forty-five crops whose marker sequences were verified character-for-character against the az1005 PDF text stream. The app does not invent or interpolate a planting date when the source is silent. Each window carries source metadata so you can open the publisher page and verify the table yourself. This project is not affiliated with, endorsed by, or sponsored by the University of Arizona or Maricopa County.'
+        body: 'Crop names, seed versus transplant methods, and half-month windows are transcribed from the University of Arizona Cooperative Extension publication “Vegetable Planting Calendar for Maricopa County” (publication az1005, Kai Umeda). The seed dataset ships forty-five crops whose marker sequences were verified character-for-character against the az1005 PDF text stream. The app does not invent or interpolate a planting date when the source is silent. Each window carries source metadata so you can open the publisher page and verify the table yourself. Per-crop growing guidance (depth, spacing, sun, water) is added only when a separate Extension publication states those figures for that crop; crops without a transcribed guide show windows only. This project is not affiliated with, endorsed by, or sponsored by the University of Arizona or Maricopa County.'
       },
       {
         heading: 'Crops deliberately excluded',

@@ -5,7 +5,7 @@ import { errorJson, json, optionsResponse } from '../lib/http';
 
 /**
  * GET /api/zones — list available planning zones.
- * GET /api/zones?q= — search by city name, ZIP, or zone id (parameterized LIKE).
+ * GET /api/zones?q= — search by city, ZIP, zone id, county, or state (parameterized).
  */
 export async function onRequestGet(context: AppContext): Promise<Response> {
   const { request, env } = context;

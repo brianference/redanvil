@@ -110,6 +110,35 @@ test.describe('Crop detail citation', () => {
     expect(href).toMatch(/^https:\/\/extension\.arizona\.edu\//);
     await expect(cite).toHaveAttribute('target', '_blank');
   });
+
+  test('crop detail shows sourced growing guide for tomatoes', async ({ page }) => {
+    const detailWait = page.waitForResponse(
+      (r) => r.url().includes('/api/crops/crop-tomatoes') && r.ok()
+    );
+    await page.goto('/crop/crop-tomatoes');
+    await detailWait;
+
+    const guide = page.getByTestId('crop-guide');
+    await expect(guide).toBeVisible();
+    await expect(page.getByRole('heading', { name: /How to plant/i })).toBeVisible();
+    await expect(page.getByTestId('guide-spacing-in-row')).toContainText(/24/);
+    const guideCite = page.getByTestId('guide-citation-link');
+    await expect(guideCite).toBeVisible();
+    const href = await guideCite.getAttribute('href');
+    expect(href).toMatch(/^https:\/\/extension\.arizona\.edu\//);
+  });
+
+  test('crop without a guide says so without inventing depth or spacing', async ({ page }) => {
+    const detailWait = page.waitForResponse(
+      (r) => r.url().includes('/api/crops/crop-sunflower') && r.ok()
+    );
+    await page.goto('/crop/crop-sunflower');
+    await detailWait;
+
+    await expect(page.getByTestId('crop-guide-missing')).toBeVisible();
+    await expect(page.getByTestId('crop-guide-missing')).toContainText(/No sourced growing guide/i);
+    await expect(page.getByTestId('crop-guide-fields')).toHaveCount(0);
+  });
 });
 
 /**
@@ -673,10 +702,14 @@ test.describe('Year grid route', () => {
 });
 
 test.describe('Zones', () => {
-  test('GET /api/zones lists zones; ?q= filters by city or ZIP', async ({ request }) => {
+  test('GET /api/zones lists zones; ?q= filters by city, ZIP, county, or state', async ({
+    request
+  }) => {
     const all = await request.get('/api/zones');
     expect(all.ok()).toBeTruthy();
-    const body = (await all.json()) as { zones: Array<{ id: string; zip: string; name: string }> };
+    const body = (await all.json()) as {
+      zones: Array<{ id: string; zip: string; name: string; county?: string | null }>;
+    };
     expect(body.zones.length).toBeGreaterThanOrEqual(2);
     expect(body.zones.some((z) => z.id === 'zone-cave-creek-85331')).toBeTruthy();
 
@@ -684,13 +717,66 @@ test.describe('Zones', () => {
     expect(byZip.ok()).toBeTruthy();
     const zipBody = (await byZip.json()) as { zones: Array<{ zip: string }> };
     expect(zipBody.zones.length).toBeGreaterThan(0);
-    expect(zipBody.zones.every((z) => z.zip.includes('85004') || true)).toBeTruthy();
     expect(zipBody.zones.some((z) => z.zip === '85004')).toBeTruthy();
 
     const byCity = await request.get('/api/zones?q=phoenix');
     expect(byCity.ok()).toBeTruthy();
     const cityBody = (await byCity.json()) as { zones: Array<{ name: string }> };
     expect(cityBody.zones.some((z) => /phoenix/i.test(z.name))).toBeTruthy();
+
+    const byCounty = await request.get('/api/zones?q=Maricopa');
+    expect(byCounty.ok()).toBeTruthy();
+    const countyBody = (await byCounty.json()) as { zones: Array<{ county?: string | null }> };
+    expect(countyBody.zones.length).toBeGreaterThanOrEqual(2);
+    expect(countyBody.zones.every((z) => (z.county ?? '').toLowerCase() === 'maricopa')).toBeTruthy();
+
+    const byState = await request.get('/api/zones?q=AZ');
+    expect(byState.ok()).toBeTruthy();
+    const stateBody = (await byState.json()) as { zones: Array<{ name: string }> };
+    expect(stateBody.zones.length).toBeGreaterThanOrEqual(2);
+
+    const miss = await request.get('/api/zones?q=Sierra%20Vista');
+    expect(miss.ok()).toBeTruthy();
+    const missBody = (await miss.json()) as { zones: unknown[] };
+    expect(missBody.zones).toHaveLength(0);
+  });
+
+  test('out-of-coverage zone search explains Maricopa coverage (not bare no-results)', async ({
+    page
+  }) => {
+    await page.goto('/?date=2026-03-01');
+    await openFilterDrawer(page);
+    const search = page.getByTestId('zone-search');
+    await expect(search).toBeVisible();
+    await search.click();
+    await search.fill('Sierra Vista');
+    const panel = page.getByTestId('zone-no-match');
+    await expect(panel).toBeVisible();
+    const message = page.getByTestId('zone-no-match-message');
+    await expect(message).toContainText(/Sierra Vista/i);
+    await expect(message).toContainText(/Maricopa/i);
+    await expect(message).toContainText(/az1005/i);
+    // Bare "No zones match" without coverage is the old failure mode.
+    await expect(message).not.toHaveText(/^No zones match that search\.?$/);
+    // Full list remains for discovery.
+    await expect(page.getByTestId('zone-list')).toBeVisible();
+    await expect(page.getByTestId('zone-option').first()).toBeVisible();
+    await expect
+      .poll(async () => page.getByTestId('zone-option').count())
+      .toBeGreaterThanOrEqual(2);
+  });
+
+  test('zone combobox opens with all zones without typing', async ({ page }) => {
+    await page.goto('/');
+    await openFilterDrawer(page);
+    const search = page.getByTestId('zone-search');
+    await search.click();
+    await expect(page.getByTestId('zone-list')).toBeVisible();
+    await expect(search).toHaveAttribute('role', 'combobox');
+    await expect(search).toHaveAttribute('aria-expanded', 'true');
+    await expect
+      .poll(async () => page.getByTestId('zone-option').count())
+      .toBeGreaterThanOrEqual(2);
   });
 
   test('switching zone changes the displayed zone context', async ({ page }) => {

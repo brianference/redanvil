@@ -32,6 +32,26 @@ export interface CropRow {
   notes: string | null;
 }
 
+/**
+ * Optional per-crop growing guidance (how to plant), always cited.
+ * Null fields mean the source did not state that value -- never invented.
+ */
+export interface CropGuideRow {
+  crop_id: string;
+  depth: string | null;
+  spacing_in_row: string | null;
+  spacing_between_rows: string | null;
+  sun: string | null;
+  water: string | null;
+  harvest_note: string | null;
+  source_id: string;
+  source_title: string;
+  source_author: string;
+  source_publisher: string;
+  source_url: string;
+  source_retrieved_at: string;
+}
+
 export interface WindowRow {
   id: string;
   crop_id: string;
@@ -117,10 +137,11 @@ export async function resolveZone(
 }
 
 /**
- * List zones, optionally filtered by city name or ZIP fragment.
+ * List zones, optionally filtered by city, ZIP, id, county, or state.
+ * State tokens "AZ" / "Arizona" match zones whose name includes AZ/Arizona.
  *
  * @param db - D1 binding.
- * @param q - Optional search fragment (city or ZIP).
+ * @param q - Optional search fragment (city, ZIP, county, or state).
  */
 export async function listZones(
   db: D1Database,
@@ -128,14 +149,34 @@ export async function listZones(
 ): Promise<ZoneRow[]> {
   const nameFilter = q !== undefined && q.length > 0;
   if (nameFilter) {
+    const token = q.trim().toLowerCase();
+    if (token === 'az' || token === 'arizona') {
+      const result = await db
+        .prepare(
+          `SELECT ${ZONE_SELECT}
+           FROM zones
+           WHERE name LIKE '% AZ %' ESCAPE '\\'
+              OR name LIKE '% AZ(%' ESCAPE '\\'
+              OR name LIKE '% AZ' ESCAPE '\\'
+              OR name LIKE 'AZ %' ESCAPE '\\'
+              OR name LIKE '%Arizona%' ESCAPE '\\'
+           ORDER BY name COLLATE NOCASE`
+        )
+        .all<ZoneRow>();
+      return result.results ?? [];
+    }
+    const like = `%${escapeLike(q)}%`;
     const result = await db
       .prepare(
         `SELECT ${ZONE_SELECT}
          FROM zones
-         WHERE name LIKE ? ESCAPE '\\' OR zip LIKE ? ESCAPE '\\' OR id LIKE ? ESCAPE '\\'
+         WHERE name LIKE ? ESCAPE '\\'
+            OR zip LIKE ? ESCAPE '\\'
+            OR id LIKE ? ESCAPE '\\'
+            OR IFNULL(county, '') LIKE ? ESCAPE '\\'
          ORDER BY name COLLATE NOCASE`
       )
-      .bind(`%${escapeLike(q)}%`, `%${escapeLike(q)}%`, `%${escapeLike(q)}%`)
+      .bind(like, like, like, like)
       .all<ZoneRow>();
     return result.results ?? [];
   }
@@ -266,6 +307,57 @@ export async function getCrop(db: D1Database, id: string): Promise<CropRow | nul
     )
     .bind(id)
     .first<CropRow>();
+}
+
+/**
+ * Optional growing guide for a crop (depth, spacing, sun, water), with citation.
+ * Returns null when no sourced guide row exists -- never invent guidance.
+ *
+ * @param db - D1 binding.
+ * @param cropId - Crop id.
+ */
+export async function getCropGuide(
+  db: D1Database,
+  cropId: string
+): Promise<CropGuideRow | null> {
+  return db
+    .prepare(
+      `SELECT
+         g.crop_id, g.depth, g.spacing_in_row, g.spacing_between_rows,
+         g.sun, g.water, g.harvest_note, g.source_id,
+         s.title AS source_title, s.author AS source_author,
+         s.publisher AS source_publisher, s.url AS source_url,
+         s.retrieved_at AS source_retrieved_at
+       FROM crop_guides g
+       INNER JOIN sources s ON s.id = g.source_id
+       WHERE g.crop_id = ?`
+    )
+    .bind(cropId)
+    .first<CropGuideRow>();
+}
+
+/**
+ * Map a guide row into the API shape (nested source object).
+ *
+ * @param row - Joined crop_guides + sources row.
+ */
+export function guideToApi(row: CropGuideRow) {
+  return {
+    depth: row.depth,
+    spacing_in_row: row.spacing_in_row,
+    spacing_between_rows: row.spacing_between_rows,
+    sun: row.sun,
+    water: row.water,
+    harvest_note: row.harvest_note,
+    source: {
+      id: row.source_id,
+      title: row.source_title,
+      author: row.source_author,
+      publisher: row.source_publisher,
+      url: row.source_url,
+      retrieved_at: row.source_retrieved_at
+    }
+  };
 }
 
 /**

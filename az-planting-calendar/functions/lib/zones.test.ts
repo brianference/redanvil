@@ -154,14 +154,69 @@ describe('listZones', () => {
     expect(rows).toHaveLength(2);
   });
 
-  it('filters by q when provided', async () => {
+  it('filters by city name fragment', async () => {
     const db = mockDb({
-      all: (_sql, binds) => {
+      all: (sql, binds) => {
+        expect(sql).toMatch(/name LIKE/i);
         expect(String(binds[0])).toContain('phoe');
         return [phoenix];
       }
     });
     const rows = await listZones(db, 'phoe');
     expect(rows).toEqual([phoenix]);
+  });
+
+  it('filters by ZIP', async () => {
+    const db = mockDb({
+      all: (sql, binds) => {
+        expect(sql).toMatch(/zip LIKE/i);
+        expect(String(binds[1])).toContain('85004');
+        return [phoenix];
+      }
+    });
+    const rows = await listZones(db, '85004');
+    expect(rows).toEqual([phoenix]);
+  });
+
+  it('filters by county', async () => {
+    const db = mockDb({
+      all: (sql, binds) => {
+        expect(sql).toMatch(/county/i);
+        expect(String(binds[3]).toLowerCase()).toContain('maricopa');
+        return [caveCreek, phoenix];
+      }
+    });
+    const rows = await listZones(db, 'Maricopa');
+    expect(rows).toHaveLength(2);
+  });
+
+  it('filters by state token AZ', async () => {
+    const db = mockDb({
+      all: (sql) => {
+        expect(sql).toMatch(/AZ/i);
+        return [caveCreek, phoenix];
+      }
+    });
+    const rows = await listZones(db, 'AZ');
+    expect(rows).toHaveLength(2);
+  });
+
+  it('filters by state token Arizona', async () => {
+    const db = mockDb({
+      all: (sql) => {
+        expect(sql).toMatch(/Arizona/i);
+        return [caveCreek, phoenix];
+      }
+    });
+    const rows = await listZones(db, 'Arizona');
+    expect(rows).toHaveLength(2);
+  });
+
+  it('returns empty on miss', async () => {
+    const db = mockDb({
+      all: () => []
+    });
+    const rows = await listZones(db, 'sierra vista');
+    expect(rows).toEqual([]);
   });
 });

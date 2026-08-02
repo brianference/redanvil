@@ -84,9 +84,9 @@ export async function fetchGrid(query: FilterQuery = {}): Promise<GridResponse> 
 }
 
 /**
- * GET /api/zones — list or search planning zones by city/ZIP/id.
+ * GET /api/zones — list or search planning zones by city, ZIP, county, or state.
  *
- * @param q - Optional city, ZIP, or zone id fragment.
+ * @param q - Optional city, ZIP, county, state, or zone id fragment.
  */
 export async function fetchZones(q?: string): Promise<ZonesResponse> {
   return getJson(`/api/zones${qs({ q })}`, ZonesResponseSchema);
