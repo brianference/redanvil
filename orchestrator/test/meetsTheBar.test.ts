@@ -187,7 +187,18 @@ describe('evaluateApp end-to-end refusal', () => {
     expect(code).toBe(1);
   });
 
-  it('CLI --result fixture: 90 with skip flags exits 0', () => {
+  it('CLI --result fixture: 90 with skip flags now REFUSES on the definition-of-done rows', () => {
+    // This test used to assert exit 0. It changed deliberately when
+    // docs/DONE-CHECKLIST.md became a finish-line condition rather than a
+    // document: a score of 90 with the git/visual/screenshot checks skipped no
+    // longer means done, because rows like "npm run build exits 0" (A5) and
+    // "the mark reads at 32px" (D7) have no measurement behind them yet.
+    //
+    // The skip flags are the tell. They were always a way to get an answer
+    // without doing the work, and the checklist is what makes that visible.
+    // When the unimplemented rows are implemented, this fixture should exit 0
+    // again -- and the assertion should be changed back at that point, not
+    // relaxed before it.
     const code = main(
       [
         '--result',
@@ -200,7 +211,7 @@ describe('evaluateApp end-to-end refusal', () => {
       ],
       REPO_ROOT
     );
-    expect(code).toBe(0);
+    expect(code).toBe(1);
   });
 
   it('CLI --result fixture: failed rule exits 1 regardless of score', () => {

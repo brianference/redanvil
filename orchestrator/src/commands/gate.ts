@@ -142,7 +142,35 @@ export const APP_CHECKS: Check[] = [
     command: 'node',
     args: [CHECK_SCRIPT, 'fe-light-dark', '.'],
     timeoutMs: 300_000
-  }
+  },
+  // DONE-CHECKLIST A5 / B3 / B5 / D4 / D7 / F4 / G1–G5
+  det('u-build-succeeds'),
+  {
+    ruleId: 'u-api-not-found',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'u-api-not-found', '.'],
+    timeoutMs: 300_000
+  },
+  {
+    ruleId: 'u-api-no-spa-mask',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'u-api-no-spa-mask', '.'],
+    timeoutMs: 300_000
+  },
+  det('u-legal-claims-true'),
+  {
+    ruleId: 'fe-favicon-legible',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'fe-favicon-legible', '.'],
+    timeoutMs: 180_000
+  },
+  det('lg-result-reproduces'),
+  // Measurement provenance — after the checks that write measurement-meta.
+  det('meas-known-bad'),
+  det('meas-two-run'),
+  det('meas-recheck-flattering'),
+  det('meas-standard-tool'),
+  det('meas-engine-named')
 ];
 export interface GateReport {
   outcomes: Outcome[];

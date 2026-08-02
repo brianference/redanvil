@@ -35,12 +35,38 @@ function almostDone(overrides: Partial<DoneResult> = {}): DoneResult {
   };
 }
 
+/**
+ * Isolate the score/rule predicates from the definition-of-done checklist.
+ *
+ * These fixtures are two-rule stubs, not real gate results, so every checklist
+ * row would report unmeasured and drown the axis each test is trying to break.
+ * `skipChecklist` exists only for this file — `doneChecklist.test.ts` asserts no
+ * production call site passes it, because a waiver nobody can see is how
+ * `proc-full-local-suite` stayed permanently waived.
+ */
+const NO_CHECKLIST = { skipChecklist: true } as const;
+
 describe('isDone', () => {
   it('returns done for a green result with every required rule', () => {
-    const v = isDone(almostDone());
+    const v = isDone(almostDone(), NO_CHECKLIST);
     expect(v.reasons).toEqual([]);
     expect(v.done).toBe(true);
-    expect(isDoneBoolean(almostDone())).toBe(true);
+    expect(isDoneBoolean(almostDone(), NO_CHECKLIST)).toBe(true);
+  });
+
+  it('a green result is NOT done once the real checklist is evaluated', () => {
+    // The same fixture, without the escape hatch. This is the behaviour change:
+    // clearing the threshold with every required rule green is no longer the
+    // finish line, because rows like "npm run build exits 0" are unmeasured.
+    const v = isDone(almostDone());
+    expect(v.done).toBe(false);
+    expect(v.reasons.some((r) => r.startsWith('done-checklist'))).toBe(true);
+  });
+
+  it('an unreadable checklist fails rather than passing vacuously', () => {
+    const v = isDone(almostDone(), { checklistPath: 'no/such/DONE-CHECKLIST.md' });
+    expect(v.done).toBe(false);
+    expect(v.reasons.some((r) => /could not be read/.test(r))).toBe(true);
   });
 
   it('is NOT done at score 89', () => {

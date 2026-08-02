@@ -55,7 +55,12 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
 
   const base15 = await readFile(join(corpusDir, 'base-15.md'), 'utf8');
   const perApp = await readFile(join(corpusDir, 'per-app-pack.md'), 'utf8');
-  const claudeMd = `# ${job.slug} — build rules (inherited from RedAnvil corpus ${CORPUS_VERSION})\n\n${base15}\n\n${perApp}\n`;
+  const claudeMd =
+    `# ${job.slug} — build rules (inherited from RedAnvil corpus ${CORPUS_VERSION})\n\n` +
+    `Read \`DONE-CHECKLIST.md\` in this directory before starting and before ` +
+    `reporting anything finished. Nothing is done until every row of it has been ` +
+    `measured and its evidence artifact opened. A spec, a prompt, or a plan is ` +
+    `never evidence.\n\n${base15}\n\n${perApp}\n`;
 
   const conformance = {
     kind: 'conformance' as const,
@@ -76,9 +81,16 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
   // from scratch. Shipping the rule without the template it names would repeat the
   // exact mistake the rule documents: guidance cited and unavailable.
   const logoBrief = await readFile(join(designSystemDir, 'logo-brief-template.md'), 'utf8');
+  // The definition of done travels WITH the app. It was a document in the
+  // orchestrator's own repo, so the builder of a generated app never saw the
+  // forty conditions its work would be judged against and met them one gate
+  // failure at a time. Shipping it is the difference between a requirement and
+  // a surprise.
+  const doneChecklist = await readFile(join(corpusDir, '..', 'docs/DONE-CHECKLIST.md'), 'utf8');
 
   const files: Record<string, string> = {
     'CLAUDE.md': claudeMd,
+    'DONE-CHECKLIST.md': doneChecklist,
     'conformance.json': JSON.stringify(conformance, null, 2) + '\n',
     'design-system/mobile-design-rules.md': designRules,
     'design-system/screen-patterns.md': screenPatterns,

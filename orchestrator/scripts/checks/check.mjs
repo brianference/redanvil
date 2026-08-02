@@ -31,6 +31,17 @@ import { runLightDark } from './fe-light-dark.mjs';
 import { runBrandMark } from './fe-brand-mark.mjs';
 import { runPriorArt } from './fe-prior-art.mjs';
 import { runArtifactVerified } from './proc-artifact-verified.mjs';
+import { runBuildSucceeds } from './u-build-succeeds.mjs';
+import { runApiNotFound } from './u-api-not-found.mjs';
+import { runApiNoSpaMask } from './u-api-no-spa-mask.mjs';
+import { runLegalClaimsTrue } from './u-legal-claims-true.mjs';
+import { runFaviconLegible } from './fe-favicon-legible.mjs';
+import { runResultReproduces } from './lg-result-reproduces.mjs';
+import { runMeasKnownBad } from './meas-known-bad.mjs';
+import { runMeasTwoRun } from './meas-two-run.mjs';
+import { runMeasRecheckFlattering } from './meas-recheck-flattering.mjs';
+import { runMeasStandardTool } from './meas-standard-tool.mjs';
+import { runMeasEngineNamed } from './meas-engine-named.mjs';
 // The cross-app duplication pass already owns the definition of "the same code":
 // comments stripped, whitespace collapsed, identifiers normalised, keywords kept.
 // This check used to compare raw trimmed lines instead, so the two passes
@@ -1070,6 +1081,74 @@ switch (ruleId) {
         process.exit(2);
       }
     });
+    break;
+  }
+  case 'u-build-succeeds': {
+    runBuildSucceeds(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'u-api-not-found': {
+    await runApiNotFound(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
+    break;
+  }
+  case 'u-api-no-spa-mask': {
+    await runApiNoSpaMask(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
+    break;
+  }
+  case 'u-legal-claims-true': {
+    runLegalClaimsTrue(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'fe-favicon-legible': {
+    await runFaviconLegible(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
+    break;
+  }
+  case 'lg-result-reproduces': {
+    runResultReproduces(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'meas-known-bad': {
+    runMeasKnownBad(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'meas-two-run': {
+    runMeasTwoRun(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'meas-recheck-flattering': {
+    runMeasRecheckFlattering(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'meas-standard-tool': {
+    runMeasStandardTool(appDir, { pass, fail, notApplicable });
+    break;
+  }
+  case 'meas-engine-named': {
+    runMeasEngineNamed(appDir, { pass, fail, notApplicable });
     break;
   }
   default:

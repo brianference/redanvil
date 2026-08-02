@@ -2,6 +2,8 @@
 
 - fe-theme-tokens-only (blocker, det): every value from theme tokens; no hardcoded hex or px; overlays via alpha() against an existing token.
 - fe-a11y-contrast (blocker, visual): WCAG AA contrast — 4.5:1 normal text, 3:1 large text and UI boundaries. Measured on the rendered page and recorded with evidence; it cannot be decided statically, and declaring it `det` while no check existed let it pass unmeasured.
+- fe-favicon-legible (blocker, det): the favicon must read at 32x32 — ink coverage in a sane band, mean Sobel detail energy above a floor, and mean ink contrast against white and dark tab chrome. fe-brand-mark only checks bytes and shape; a full-size logo that smudges at tab size passes it.
+- u-legal-claims-true (blocker, det): bidirectional comparison of legal/privacy copy against code for cookies, accounts/auth, payments, third-party analytics/tracking, and email collection. Copy that denies what the code does (or code that does what copy never discloses) fails.
 - fe-i18n-central-copy (blocker, det): all user-facing copy in the central locale bundle, namespaced by feature; never hardcoded inline.
 - fe-no-unsanitized-html (blocker, det): no dangerouslySetInnerHTML without a sanitizer.
 - fe-pages-compose (major, judge): a page's return reads as a short list of named components; the page owns state and passes it down.

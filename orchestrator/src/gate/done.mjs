@@ -4,8 +4,22 @@
  * TypeScript callers import the typed re-exports from `done.ts`.
  */
 
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { loadChecklistRows } from '../done/checklist.mjs';
+import { checklistCoverage, checklistReasons } from '../done/coverage.mjs';
+
 /** Default gate threshold — matches the loop-gate bar. */
 export const DEFAULT_DONE_THRESHOLD = 90;
+
+/**
+ * The definition-of-done document, resolved relative to this file so hooks,
+ * CI and the CLI all read the same one regardless of their cwd.
+ */
+export const DEFAULT_CHECKLIST_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../docs/DONE-CHECKLIST.md'
+);
 
 /**
  * Rule ids that must appear as passed before an app is done.
@@ -27,6 +41,67 @@ function rulePassed(rules, id) {
   const hits = rules.filter((r) => r.ruleId === id);
   if (hits.length === 0) return undefined;
   return hits.every((r) => r.passed === true);
+}
+
+/**
+ * Evaluate every row of the definition of done against this result.
+ *
+ * Every other condition in `isDone` was added after something shipped broken,
+ * one predicate per incident. The checklist is the same list written down in one
+ * place, so evaluating it here is what stops the two from drifting: a row added
+ * to `docs/DONE-CHECKLIST.md` becomes a finish-line condition immediately,
+ * without anyone remembering to add a matching `if` below.
+ *
+ * Fail-closed in both directions. A document that cannot be read is a reason,
+ * never a silent pass — an unreadable checklist would otherwise be the cheapest
+ * way to satisfy every requirement at once.
+ *
+ * @param {{finalScore: number, threshold: number, rules: ReadonlyArray<{ruleId: string, passed: boolean}>}} result
+ * @param {Record<string, unknown>} opts
+ * @returns {string[]} One reason per row that is not a pass.
+ */
+function checklistFailures(result, opts) {
+  if (opts.skipChecklist === true) {
+    // Only for unit tests of the other predicates. Never set by the loop, the
+    // CLI, the pre-push hook or CI — asserted by doneChecklist.test.ts.
+    return [];
+  }
+
+  let rows;
+  try {
+    rows = opts.checklistRows ?? loadChecklistRows(opts.checklistPath ?? DEFAULT_CHECKLIST_PATH);
+  } catch (err) {
+    return [
+      `definition-of-done checklist could not be read (${String(err instanceof Error ? err.message : err)}) — ` +
+        'an unreadable checklist is not an empty one'
+    ];
+  }
+
+  const threshold =
+    Number.isFinite(result.threshold) && result.threshold >= 0
+      ? result.threshold
+      : DEFAULT_DONE_THRESHOLD;
+
+  const statuses = checklistCoverage({
+    rows,
+    ruleOutcomes: result.rules,
+    optValues: {
+      unitTestsPass: opts.unitTestsPass ?? rulePassed(result.rules, 'u-test-presence'),
+      acceptanceTestsPass:
+        opts.acceptanceTestsPass ?? rulePassed(result.rules, 'u-test-acceptance'),
+      coveragePct:
+        opts.coverageHighWater === undefined || opts.coveragePct === undefined
+          ? rulePassed(result.rules, 'u-test-coverage-ratchet')
+          : opts.coveragePct >= opts.coverageHighWater,
+      screenshotsPresent: opts.screenshotsPresent,
+      evidenceStale: opts.evidenceStale,
+      independentReviewOk: opts.independentReviewOk
+    },
+    scoreMet: Number.isFinite(result.finalScore) ? result.finalScore >= threshold : undefined,
+    noFailedRules: result.rules.every((r) => r.passed !== false)
+  });
+
+  return checklistReasons(statuses);
 }
 
 /**
@@ -132,6 +207,8 @@ export function isDone(result, opts = {}) {
       'independent judge-over-diff review is missing or reported unverified findings'
     );
   }
+
+  reasons.push(...checklistFailures(result, opts));
 
   return { done: reasons.length === 0, reasons };
 }

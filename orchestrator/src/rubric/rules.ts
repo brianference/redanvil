@@ -84,6 +84,13 @@ export const RULES: Rule[] = [
   // delivers the product's claim is a judgment, scored from a recorded verdict
   // over the live traffic the det half captures.
   rule('u-api-real-output', 'testing', 'blocker', 'det+judge'),
+  // DONE-CHECKLIST A5: npm run build exits 0. Adjacent to runtime-parity but a
+  // different command — wrangler boot is not the build script.
+  rule('u-build-succeeds', 'testing', 'blocker', 'det'),
+  // B3: detail routes return 404 for a bogus id (not 200, not 500).
+  rule('u-api-not-found', 'testing', 'blocker', 'det'),
+  // B5: SPA fallback must not answer unmatched /api/* with index.html 200.
+  rule('u-api-no-spa-mask', 'testing', 'blocker', 'det'),
   // A feature the builder skipped is invisible to every other check: it renders
   // no control for the audit to find and serves no route for the API check to
   // call. The PRD promised it and nothing compared what was built against what
@@ -124,6 +131,10 @@ export const RULES: Rule[] = [
   // Per-app pack and §7.3a require a real brand mark. Prose only, so a literal
   // "AZ" span and a 361-byte rect+text favicon cleared the scored gate.
   rule('fe-brand-mark', 'frontend', 'blocker', 'det'),
+  // D7: fe-brand-mark checks bytes/shape; this measures 32x32 ink, detail, contrast.
+  rule('fe-favicon-legible', 'frontend', 'blocker', 'det'),
+  // D4: legal/privacy claims must be true of this app (bidirectional code↔copy).
+  rule('u-legal-claims-true', 'frontend', 'blocker', 'det'),
   // Prior-art artifacts (SOURCES / INTEGRATIONS / COMPETITORS) were §7.3a
   // blockers in prose only. Missing files or unwritten markers mean the step
   // never finished (R23/R29/R31).
@@ -213,5 +224,14 @@ export const RULES: Rule[] = [
   // An app that clears 90+ and never leaves the disk is not done. Shipping is
   // part of the gate: GitHub remote, pushed HEAD, live production URL, and a
   // deployed bundle hash that matches local dist. See rules/loop-gate.md.
-  rule('lg-shipped', 'loop-gate', 'blocker', 'det')
+  rule('lg-shipped', 'loop-gate', 'blocker', 'det'),
+  // F4: a hand-authored results JSON is indistinguishable by shape — recompute.
+  rule('lg-result-reproduces', 'loop-gate', 'blocker', 'det'),
+
+  // G1–G5: the measurement itself (provenance of how rules were decided).
+  rule('meas-known-bad', 'process', 'blocker', 'det'),
+  rule('meas-two-run', 'process', 'blocker', 'det'),
+  rule('meas-recheck-flattering', 'process', 'major', 'det'),
+  rule('meas-standard-tool', 'process', 'blocker', 'det'),
+  rule('meas-engine-named', 'process', 'blocker', 'det')
 ];

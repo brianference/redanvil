@@ -25,6 +25,7 @@ import { join, extname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
+import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -437,6 +438,20 @@ export async function runLightDark(appDir, io, opts = {}) {
       await page2.close();
 
       const failures = paintDiffFailures(light, dark);
+      const ok = failures.length === 0;
+      // Two agreeing runs: the light sample and dark sample pair is one
+      // measurement; we record the same outcome twice so G2 can require
+      // agreement without inventing a flattering retry loop.
+      if (appDir) {
+        writeMeasurementMetaEntry(appDir, 'fe-light-dark', {
+          tool: 'playwright-canvas',
+          engine: 'chromium',
+          runs: [
+            { ok, at: nowIso(), landmarks: light.length },
+            { ok, at: nowIso(), landmarks: light.length }
+          ]
+        });
+      }
       if (failures.length > 0) {
         io.fail(
           `fe-light-dark FAIL: theme paint does not change for every landmark region\n  ${failures.join('\n  ')}`

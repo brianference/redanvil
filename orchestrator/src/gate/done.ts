@@ -11,10 +11,20 @@
 
 export {
   DEFAULT_DONE_THRESHOLD,
+  DEFAULT_CHECKLIST_PATH,
   REQUIRED_DONE_RULES,
   isDone,
   isDoneBoolean
 } from './done.mjs';
+
+/** One row of `docs/DONE-CHECKLIST.md`, as parsed. */
+export interface ChecklistRow {
+  id: string;
+  section: string;
+  sectionTitle: string;
+  mustBeTrue: string;
+  evidence: string;
+}
 
 /**
  * Minimal gate result shape that isDone can evaluate.
@@ -48,6 +58,22 @@ export interface DoneOpts {
   screenshotsPresent?: boolean;
   /** Independent judge-over-diff step is acceptable for isDone. */
   independentReviewOk?: boolean;
+  /**
+   * Override the definition-of-done document. Defaults to
+   * `DEFAULT_CHECKLIST_PATH`; a path that cannot be read is a failure reason,
+   * never a pass.
+   */
+  checklistPath?: string;
+  /** Pre-parsed rows, when the caller already read the document. */
+  checklistRows?: ReadonlyArray<ChecklistRow>;
+  /**
+   * Skip checklist evaluation entirely.
+   *
+   * For unit tests of the other predicates ONLY. No production call site may
+   * set it, and `doneChecklist.test.ts` fails if one does — a rule that is
+   * always waived is not a rule.
+   */
+  skipChecklist?: boolean;
 }
 
 /**

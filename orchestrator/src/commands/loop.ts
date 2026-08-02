@@ -245,6 +245,16 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
       // editing code, so name them separately instead of sending it hunting.
       const recorded = new Set(report.outcomes.map((o) => o.ruleId));
       const unreviewed = report.blockersFailed.filter((id) => !recorded.has(id));
+      // The definition-of-done rows the run has NOT met. Without these the coder
+      // optimises the score and discovers the finish line one iteration at a
+      // time — the loop would report "threshold cleared" while isDone still says
+      // no, and the reason would never reach the thing that could fix it.
+      const doneNow = isDone({
+        finalScore: report.score,
+        threshold: opts.threshold,
+        rules: report.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed }))
+      });
+      const checklistUnmet = doneNow.reasons.filter((r) => r.startsWith('done-checklist'));
       const feedback = [
         `score ${report.score}/100 (threshold ${opts.threshold}), evaluated ${report.evaluated}/${report.total}`,
         report.blockersFailed.length > 0
@@ -255,7 +265,12 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
           : '',
         '',
         'failing checks, with the gate output verbatim:',
-        detailed
+        detailed,
+        checklistUnmet.length > 0
+          ? ['', 'definition-of-done rows still unmet:', ...checklistUnmet.map((r) => `- ${r}`)].join(
+              '\n'
+            )
+          : ''
       ]
         .filter((line) => line !== '')
         .join('\n');

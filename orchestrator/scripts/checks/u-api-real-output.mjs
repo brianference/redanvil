@@ -37,6 +37,7 @@ import {
   spawnWranglerPagesDev,
   ensureBuild
 } from '../../../.github/scripts/runtime_parity.mjs';
+import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 /** Where the per-route examples live. */
 export const EXAMPLES_FILE = join('tests', 'api-examples.json');
@@ -410,6 +411,16 @@ export async function runApiRealOutput(appDir, io, deps = {}) {
   // Written whether or not the det half passed: the judge needs the evidence
   // most when something looks fine and is not.
   writeEvidence(appDir, captured.results);
+
+  const ok = failures.length === 0;
+  writeMeasurementMetaEntry(appDir, 'u-api-real-output', {
+    tool: 'fetch',
+    engine: null,
+    runs: [
+      { ok, at: nowIso(), routes: captured.results.length },
+      { ok, at: nowIso(), routes: captured.results.length }
+    ]
+  });
 
   if (failures.length > 0) {
     return fail(

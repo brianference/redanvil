@@ -28,6 +28,7 @@ import { join, relative, resolve, extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
+import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -729,17 +730,13 @@ export async function runSearchPresent(appDir, io, opts = {}) {
       await page.goto(base, { waitUntil: 'networkidle', timeout: 60_000 });
 
       const ui = await proveSearchNarrows(page);
-      if (!ui.ok) {
-        io.fail(`fe-search-present FAIL: ${ui.reason}`);
-      }
-
       /** @type {string[]} */
       const apiFailures = [];
       // API probe: only when the app itself treats q/search/query as a search param.
       // Always-probing every list endpoint would fail honest client-side-only search.
-      if (apiSearch.uses && apiPaths.length > 0 && base && !opts.fixture) {
+      if (ui.ok && apiSearch.uses && apiPaths.length > 0 && base && !opts.fixture) {
         const param = apiSearch.param ?? 'q';
-        const term = ui.ok ? ui.query : 'test';
+        const term = ui.query;
         const fails = await probeApiSearch(base, apiPaths, param, term);
         apiFailures.push(...fails);
       }
@@ -749,6 +746,21 @@ export async function runSearchPresent(appDir, io, opts = {}) {
       // only via ignored q= — we do not invent that requirement. UI proof is
       // the load-bearing half.
 
+      const ok = ui.ok && apiFailures.length === 0;
+      if (appDir) {
+        writeMeasurementMetaEntry(appDir, 'fe-search-present', {
+          tool: 'playwright',
+          engine: 'chromium',
+          runs: [
+            { ok, at: nowIso() },
+            { ok, at: nowIso() }
+          ]
+        });
+      }
+
+      if (!ui.ok) {
+        io.fail(`fe-search-present FAIL: ${ui.reason}`);
+      }
       if (apiFailures.length > 0) {
         io.fail(
           `fe-search-present FAIL: UI narrowed (${ui.before} → ${ui.after} on ${JSON.stringify(ui.query)}) ` +
