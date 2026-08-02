@@ -137,6 +137,13 @@ export const RULES: Rule[] = [
   rule('fe-brand-mark-size', 'frontend', 'blocker', 'det'),
   // C8: inner/detail pages need a breadcrumb nav with a parent link.
   rule('fe-breadcrumbs', 'frontend', 'blocker', 'det'),
+  // C10: a control's result must land in the first viewport, not below the fold.
+  // Search that narrows at y=1942 in a 900px viewport looks dead; fe-search-present
+  // and fe-visible-response both passed that defect.
+  rule('fe-result-in-viewport', 'frontend', 'blocker', 'det'),
+  // D11: item detail pages must link to real external resources that resolve.
+  // Invented guide URLs and "no link at all" are the same class of unfinished work.
+  rule('fe-resource-links', 'frontend', 'blocker', 'det'),
   // D8: Terms/Privacy word+h2 floors and required topic coverage (reference standard).
   rule('fe-legal-substance', 'frontend', 'blocker', 'det'),
   // D9: valid JSON-LD (@context+@type) and absolute rel=canonical on home.

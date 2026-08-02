@@ -84,6 +84,20 @@ export const APP_CHECKS: Check[] = [
     args: [CHECK_SCRIPT, 'fe-breadcrumbs', '.'],
     timeoutMs: 300_000
   },
+  // Search/filter results must land in the first viewport (not below the fold).
+  {
+    ruleId: 'fe-result-in-viewport',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'fe-result-in-viewport', '.'],
+    timeoutMs: 300_000
+  },
+  // Item detail pages link to real external resources that resolve (browser UA).
+  {
+    ruleId: 'fe-resource-links',
+    command: 'node',
+    args: [CHECK_SCRIPT, 'fe-resource-links', '.'],
+    timeoutMs: 300_000
+  },
   // Terms/Privacy substance: word/h2 floors + required topics.
   det('fe-legal-substance'),
   // JSON-LD + absolute canonical on home.

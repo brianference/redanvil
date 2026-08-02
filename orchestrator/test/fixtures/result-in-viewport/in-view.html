@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Search results in the first viewport</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+      }
+      .search-bar {
+        padding: 12px;
+        background: #fff;
+        border-bottom: 1px solid #ccc;
+      }
+      input[type='search'] {
+        width: 100%;
+        min-height: 44px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+      #results {
+        margin: 0;
+        padding: 8px 12px;
+      }
+      #results li {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="search-bar">
+      <label for="q">Search crops</label>
+      <input id="q" type="search" placeholder="Find a crop" aria-label="Search crops" />
+    </div>
+    <main>
+      <ul id="results" data-testid="results-list">
+        <li data-testid="row">Tomato</li>
+        <li data-testid="row">Basil</li>
+        <li data-testid="row">Pepper</li>
+        <li data-testid="row">Carrot</li>
+        <li data-testid="row">Lettuce</li>
+      </ul>
+    </main>
+    <script>
+      const input = document.getElementById('q');
+      const list = document.getElementById('results');
+      const all = ['Tomato', 'Basil', 'Pepper', 'Carrot', 'Lettuce'];
+      function render(items) {
+        list.innerHTML = items.map((n) => `<li data-testid="row">${n}</li>`).join('');
+      }
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        if (!q) {
+          render(all);
+          return;
+        }
+        render(all.filter((n) => n.toLowerCase().includes(q)));
+      });
+    </script>
+  </body>
+</html>

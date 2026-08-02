@@ -221,6 +221,37 @@ try {
             text
           });
         }
+        // Placeholder is an attribute, not textContent -- "Find a crop by nar"
+        // truncated at 375 while scrollWidth stayed clean. Measure with canvas
+        // measureText using the field's computed font against its content box.
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          for (const el of document.querySelectorAll('input[placeholder], textarea[placeholder]')) {
+            if (!(el instanceof HTMLElement)) continue;
+            if (!visible(el)) continue;
+            if (isVisuallyHidden(el)) continue;
+            if (isScrollContainer(el)) continue;
+            const ph = (el.getAttribute('placeholder') || '').trim();
+            if (!ph) continue;
+            const s = getComputedStyle(el);
+            const font = s.font && s.font !== '' ? s.font : `${s.fontStyle} ${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;
+            ctx.font = font;
+            const textW = ctx.measureText(ph).width;
+            const pl = parseFloat(s.paddingLeft) || 0;
+            const pr = parseFloat(s.paddingRight) || 0;
+            // content-box width the placeholder paints into
+            const contentW = el.clientWidth - pl - pr;
+            const overW = textW - contentW;
+            if (overW <= hTol) continue;
+            clipped.push({
+              selector: describeSelector(el) + '[placeholder]',
+              overW: Math.round(overW),
+              overH: 0,
+              text: ph.slice(0, 80)
+            });
+          }
+        }
         // Prefer deepest elements: drop ancestors that only overflow because a
         // reported descendant does (same overflow direction, contains child).
         const clippedDedup = clipped.filter((c, i) => {

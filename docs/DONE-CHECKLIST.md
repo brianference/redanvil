@@ -57,6 +57,7 @@ an unrun check got filled in with the intent of the spec.
 | C7 | Zero console errors | console log from the real load | — |
 | C8 | Inner and detail pages show breadcrumbs | live `nav` named breadcrumb + parent link | a sticky top nav alone looks premium while deep pages have no way back |
 | C9 | The chosen design was picked from three distinct options | `design-refs/design-options/` (≥3) + `DECISION.md` | one mockup shipped because the three-option step was never measured |
+| C10 | A control's result renders where the person is looking | measured y of nearest changed element inside the first viewport at 375 and 1280 | search narrows at y=1942 in a 900px viewport and looks dead while every other check passes |
 
 ## D. Content is real
 
@@ -72,6 +73,7 @@ an unrun check got filled in with the intent of the spec.
 | D8 | Terms and Privacy meet the reference standard | word/h2 floors + required topic coverage | a padded page clears a word count while omitting liability |
 | D9 | Structured data and canonical URL | valid JSON-LD + absolute `rel=canonical` on home | SEO prose required JSON-LD while nothing measured it |
 | D10 | The brand mark renders at a real size | measured header mark height at 1280 and 375 | a real asset still ships at 32px and looks like a smudge |
+| D11 | Domain items link to real, resolving external resources | live crawl of item detail routes + HEAD/GET of every external link (2xx/3xx, browser UA) | crop cards list planting windows with no guide link, or invent a URL that 404s |
 
 ## E. Shipped
 

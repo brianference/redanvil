@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Search results below the fold</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+      }
+      .search-bar {
+        position: sticky;
+        top: 0;
+        padding: 16px;
+        background: #fff;
+        border-bottom: 1px solid #ccc;
+        z-index: 2;
+      }
+      input[type='search'] {
+        width: 100%;
+        min-height: 44px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+      /* Push results far below a 900px viewport (mirrors the y=1942 defect) */
+      .spacer {
+        height: 1600px;
+        background: linear-gradient(#f5f5f5, #e8e8e8);
+      }
+      #results li {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="search-bar">
+      <label for="q">Search crops</label>
+      <input id="q" type="search" placeholder="Find a crop" aria-label="Search crops" />
+    </div>
+    <div class="spacer" aria-hidden="true">Decorative space so results sit below the fold</div>
+    <main>
+      <ul id="results" data-testid="results-list">
+        <li data-testid="row">Tomato</li>
+        <li data-testid="row">Basil</li>
+        <li data-testid="row">Pepper</li>
+        <li data-testid="row">Carrot</li>
+        <li data-testid="row">Lettuce</li>
+      </ul>
+    </main>
+    <script>
+      const input = document.getElementById('q');
+      const list = document.getElementById('results');
+      const all = ['Tomato', 'Basil', 'Pepper', 'Carrot', 'Lettuce'];
+      function render(items) {
+        list.innerHTML = items.map((n) => `<li data-testid="row">${n}</li>`).join('');
+      }
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        if (!q) {
+          render(all);
+          return;
+        }
+        render(all.filter((n) => n.toLowerCase().includes(q)));
+      });
+    </script>
+  </body>
+</html>

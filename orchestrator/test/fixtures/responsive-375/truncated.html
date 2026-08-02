@@ -108,6 +108,15 @@
     <main>
       <label class="zone-selector__label" for="z">Planning zone</label>
       <input id="z" type="search" value="Cave Creek" style="min-height: 44px; width: 100%; font-size: 16px" />
+      <!-- Placeholder wider than a narrow field -- attribute, not textContent -->
+      <label for="crop-search">Find crop</label>
+      <input
+        id="crop-search"
+        type="search"
+        class="crop-search-narrow"
+        placeholder="Find a crop by name, variety, or family"
+        style="min-height: 44px; width: 140px; font-size: 16px; padding: 8px; box-sizing: border-box"
+      />
       <h1>What can I plant right now?</h1>
       <p class="hero__subtitle">
         Arizona low desert (Maricopa County). Seed or transplant windows from University of Arizona Cooperative

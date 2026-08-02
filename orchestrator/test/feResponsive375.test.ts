@@ -81,24 +81,34 @@ afterAll(() => {
 });
 
 describe('fe-responsive-375 element-level truncation', () => {
-  it('FAILS a page with ellipsised zone label and line-clamped subtitle', async () => {
+  it('FAILS a page with ellipsised zone label, line-clamped subtitle, and clipped placeholder', async () => {
     const handle = await serveAsIndex('truncated.html');
     closers.push(handle.close);
     const { out } = await runAudit(handle.base);
-    const line = out.split('\n').find((l) => l.includes('fe-responsive-375')) ?? '';
-    expect(line, out).toMatch(/FAIL\s+fe-responsive-375/);
+    // Prefer the per-rule verdict line (`FAIL fe-responsive-375:`), not the
+    // summary that only lists rule ids (`design audit FAIL: … fe-responsive-375`).
+    const line =
+      out.split('\n').find((l) => /FAIL\s+fe-responsive-375\s*:/.test(l)) ??
+      out.split('\n').find((l) => /FAIL\s+fe-responsive-375/.test(l)) ??
+      '';
+    expect(out, out).toMatch(/FAIL\s+fe-responsive-375/);
     expect(out, out).toMatch(/zone-selector__label/);
     expect(out, out).toMatch(/hero__subtitle/);
+    // Placeholder is an attribute, not textContent -- must still fail when clipped.
+    expect(out, out).toMatch(/placeholder|Find a crop by name/i);
     // Must not blame the deliberate scroll container or the sr-only theme text
     expect(out).not.toMatch(/year-grid-scroll/);
     expect(out).not.toMatch(/theme-toggle__sr-only/);
+    console.log('fe-responsive-375 known-bad (with placeholder):', (line || out).slice(0, 250));
   }, 120_000);
 
   it('PASSES a clean page with wrapping text and a horizontal scroll grid', async () => {
     const handle = await serveAsIndex('clean.html');
     closers.push(handle.close);
     const { out } = await runAudit(handle.base);
-    const line = out.split('\n').find((l) => l.includes('fe-responsive-375')) ?? '';
-    expect(line, out).toMatch(/ok\s+fe-responsive-375/);
+    const line =
+      out.split('\n').find((l) => /ok\s+fe-responsive-375/.test(l)) ?? '';
+    expect(out, out).toMatch(/ok\s+fe-responsive-375/);
+    expect(line || out).toMatch(/ok\s+fe-responsive-375/);
   }, 120_000);
 });

@@ -31,7 +31,9 @@ export const BROWSER_DRIVEN_RULES = Object.freeze([
   'fe-search-present',
   'fe-favicon-legible',
   'fe-breadcrumbs',
-  'fe-brand-mark-size'
+  'fe-brand-mark-size',
+  'fe-result-in-viewport',
+  'fe-resource-links'
 ]);
 
 /**
@@ -58,7 +60,9 @@ export const RULES_REQUIRING_KNOWN_BAD = Object.freeze([
   'fe-legal-substance',
   'fe-structured-data',
   'lg-bindings-bound',
-  'fe-brand-mark-size'
+  'fe-brand-mark-size',
+  'fe-result-in-viewport',
+  'fe-resource-links'
 ]);
 
 /** Contrast / a11y rules that must record tool: "axe-core". */

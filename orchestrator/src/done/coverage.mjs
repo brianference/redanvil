@@ -91,6 +91,10 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
     rules: ['proc-design-options'],
     note: 'design-refs/design-options/ ≥3 artifacts + DECISION.md with choice, why, and structural distinctness.'
   },
+  C10: {
+    rules: ['fe-result-in-viewport'],
+    note: 'After a narrowing search, a changed element must sit inside the first viewport at 375 and 1280.'
+  },
 
   // D. Content is real
   D1: { rules: ['fe-required-pages'] },
@@ -117,6 +121,10 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
   D10: {
     rules: ['fe-brand-mark-size'],
     note: 'Rendered header mark height ≥48px at 1280 and ≥32px at 375.'
+  },
+  D11: {
+    rules: ['fe-resource-links'],
+    note: 'Item detail routes carry external links that resolve 2xx/3xx when fetched with a browser user-agent.'
   },
 
   // E. Shipped — one check decides all five conditions.

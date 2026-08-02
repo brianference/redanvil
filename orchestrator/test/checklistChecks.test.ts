@@ -570,7 +570,9 @@ describe('G1–G5 measurement provenance', () => {
       'fe-legal-substance',
       'fe-structured-data',
       'lg-bindings-bound',
-      'fe-brand-mark-size'
+      'fe-brand-mark-size',
+      'fe-result-in-viewport',
+      'fe-resource-links'
     ]) {
       meta[id] = {
         knownBad: { input: 'fixture', failed: true, recordedAt: future }
@@ -606,7 +608,9 @@ describe('G1–G5 measurement provenance', () => {
         'fe-search-present': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
         'fe-favicon-legible': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
         'fe-breadcrumbs': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
-        'fe-brand-mark-size': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
+        'fe-brand-mark-size': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
+        'fe-result-in-viewport': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
+        'fe-resource-links': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
       })
     );
     const r = await runCaptured((io) => runMeasTwoRun(app, io));
@@ -686,7 +690,9 @@ describe('G1–G5 measurement provenance', () => {
         'fe-search-present': { engine: 'webkit', runs: [{ ok: true }, { ok: true }] },
         'fe-favicon-legible': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
         'fe-breadcrumbs': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
-        'fe-brand-mark-size': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
+        'fe-brand-mark-size': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
+        'fe-result-in-viewport': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
+        'fe-resource-links': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
       })
     );
     const r = await runCaptured((io) => runMeasEngineNamed(app, io));
