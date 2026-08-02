@@ -44,9 +44,17 @@ try {
   // in a half-switched state if its own theme state still reads the system
   // preference -- which yields light tokens on dark surfaces and looks like an
   // app bug when it is an audit-setup bug.
+  // bypassCSP is for the AUDIT HARNESS, not the app. axe-core is injected with
+  // page.addScriptTag, which a correct `script-src 'self'` policy blocks -- so
+  // hardening an app's CSP broke its own accessibility measurement, and the
+  // tempting fix is to add 'unsafe-inline' to the app. That would weaken real
+  // production security to make a tool work. Bypassing CSP in the audit context
+  // changes nothing the audit measures: layout, colour and contrast come from
+  // the page's own stylesheets, which still load normally.
   const page = await browser.newPage({
     viewport: { width: 1280, height: 900 },
-    colorScheme: theme === 'dark' ? 'dark' : 'light'
+    colorScheme: theme === 'dark' ? 'dark' : 'light',
+    bypassCSP: true
   });
   await page.goto(url, { waitUntil: 'networkidle' });
   await page.evaluate((t) => {
