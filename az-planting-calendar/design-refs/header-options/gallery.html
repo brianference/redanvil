@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AZ Planting Calendar -- header options</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 32px;
+        background: #0e1419;
+        color: #e6edf3;
+        font: 16px/1.5 system-ui, sans-serif;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 0 0 8px;
+      }
+      .lede {
+        color: #9fb0bd;
+        max-width: 90ch;
+        margin: 0 0 28px;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 28px;
+        align-items: start;
+      }
+      @media (max-width: 1100px) {
+        .cols {
+          grid-template-columns: 1fr;
+        }
+      }
+      .col {
+        background: #151c23;
+        border: 1px solid #26313a;
+        border-radius: 4px;
+        padding: 16px;
+        min-width: 0;
+      }
+      .col h2 {
+        margin: 0 0 4px;
+        font-size: 18px;
+      }
+      .n {
+        font-family: ui-monospace, monospace;
+        color: #4ade80;
+      }
+      .struct {
+        color: #9fb0bd;
+        font-size: 13px;
+        margin: 0 0 12px;
+      }
+      .metrics {
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        color: #c8d4de;
+        background: #0e1419;
+        border: 1px solid #26313a;
+        border-radius: 4px;
+        padding: 10px 12px;
+        margin: 0 0 12px;
+        line-height: 1.55;
+      }
+      .cost {
+        color: #f0b060;
+        font-size: 13px;
+        margin: 0 0 12px;
+      }
+      .sep {
+        color: #6b7c88;
+        font-size: 12px;
+        margin: 16px 0 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      figure {
+        margin: 0 0 12px;
+      }
+      figcaption {
+        font-size: 12px;
+        color: #9fb0bd;
+        margin-top: 6px;
+        font-family: ui-monospace, monospace;
+      }
+      img.phone {
+        width: 100%;
+        max-width: 280px;
+        height: auto;
+        display: block;
+        border: 1px solid #26313a;
+        border-radius: 8px;
+        background: #000;
+      }
+      img.desktop {
+        width: 100%;
+        height: auto;
+        display: block;
+        border: 1px solid #26313a;
+        border-radius: 4px;
+        background: #000;
+      }
+      .pair {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .pair figure {
+        flex: 1 1 120px;
+      }
+      a {
+        color: #7eb6ff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Header options -- pick before building</h1>
+    <p class="lede">
+      Three structurally distinct header/nav architectures for the live
+      <strong>Timeline + rail</strong> home layout. Filters and assistant are raised into chrome;
+      half-month timeline stays the hero. App tokens (Tailwind v4), real Cave Creek data
+      (last frost Feb 20, first frost Dec 6, 2,529 ft elev.). Dark and light at 375 and 1280.
+      Do not implement until a pick (or mix) is written in DECISION.md.
+    </p>
+    <div class="cols">
+      <section class="col">
+        <h2><span class="n">01</span> Command bar</h2>
+        <p class="struct">
+          One sticky band: brand + search owns the centre; method, month, zone, and Ask collapse into the same chrome.
+          Primary nav as a second strip on desktop / menu on mobile. Assistant rail on desktop.
+          <br /><strong>Separable:</strong> centre search · inline method/month · zone as mono line · Ask button
+        </p>
+        <div class="metrics">
+          header 375: 342px · 1280: 236px<br />
+          search y 375: 72 · 1280: 34<br />
+          mark h 375: 56 · 1280: 96<br />
+          truncated @375: 0<br />
+          timeline space above fold: 502 (375) / 564 (1280)
+        </div>
+        <p class="cost">
+          Cost: densest single band -- method/month/zone wrap under search on a phone, so the bar is still tall at 375 even though everything is one chrome piece.
+        </p>
+        <div class="sep">Phone 375 -- light / dark</div>
+        <div class="pair">
+          <figure>
+            <img class="phone" src="option-1-light-375.png" alt="Option 1 light 375" />
+            <figcaption>light · 375</figcaption>
+          </figure>
+          <figure>
+            <img class="phone" src="option-1-dark-375.png" alt="Option 1 dark 375" />
+            <figcaption>dark · 375</figcaption>
+          </figure>
+        </div>
+        <div class="sep">Desktop 1280 -- light / dark</div>
+        <figure>
+          <img class="desktop" src="option-1-light-1280.png" alt="Option 1 light 1280" />
+          <figcaption>light · 1280</figcaption>
+        </figure>
+        <figure>
+          <img class="desktop" src="option-1-dark-1280.png" alt="Option 1 dark 1280" />
+          <figcaption>dark · 1280</figcaption>
+        </figure>
+        <p class="struct"><a href="option-1-command-bar.html">Open live mockup</a></p>
+      </section>
+
+      <section class="col">
+        <h2><span class="n">02</span> Two-tier sticky</h2>
+        <p class="struct">
+          Tier A: brand + primary nav + theme. Tier B: zone selector, frost context, search, method/month, Ask -- sticks under tier A.
+          Clearest separation of wayfinding vs planning controls.
+          <br /><strong>Separable:</strong> identity tier · zone row · filter/search strip · Ask entry
+        </p>
+        <div class="metrics">
+          header 375: 381px · 1280: 254px<br />
+          search y 375: 224 · 1280: 201<br />
+          mark h 375: 56 · 1280: 96<br />
+          truncated @375: 0<br />
+          timeline space above fold: 463 (375) / 546 (1280)
+        </div>
+        <p class="cost">
+          Cost: two sticky bands eat the most vertical chrome before the timeline on phone; search sits lowest (y 224 at 375) even though it is still above the fold.
+        </p>
+        <div class="sep">Phone 375 -- light / dark</div>
+        <div class="pair">
+          <figure>
+            <img class="phone" src="option-2-light-375.png" alt="Option 2 light 375" />
+            <figcaption>light · 375</figcaption>
+          </figure>
+          <figure>
+            <img class="phone" src="option-2-dark-375.png" alt="Option 2 dark 375" />
+            <figcaption>dark · 375</figcaption>
+          </figure>
+        </div>
+        <div class="sep">Desktop 1280 -- light / dark</div>
+        <figure>
+          <img class="desktop" src="option-2-light-1280.png" alt="Option 2 light 1280" />
+          <figcaption>light · 1280</figcaption>
+        </figure>
+        <figure>
+          <img class="desktop" src="option-2-dark-1280.png" alt="Option 2 dark 1280" />
+          <figcaption>dark · 1280</figcaption>
+        </figure>
+        <p class="struct"><a href="option-2-two-tier.html">Open live mockup</a></p>
+      </section>
+
+      <section class="col">
+        <h2><span class="n">03</span> Compact drawer + dock</h2>
+        <p class="struct">
+          Minimal top bar: brand, search, Filters toggle, theme, menu. Zone + method + month open in an expandable drawer.
+          Assistant is a persistent docked panel (desktop rail always open; mobile full-width dock under content, not a FAB).
+          <br /><strong>Separable:</strong> compact bar · filter drawer · docked assistant panel
+        </p>
+        <div class="metrics">
+          header 375: 452px (drawer open) · 1280: 266px<br />
+          search y 375: 74 · 1280: 34<br />
+          mark h 375: 56 · 1280: 96<br />
+          truncated @375: 0<br />
+          timeline space above fold: 392 (375) / 534 (1280)
+        </div>
+        <p class="cost">
+          Cost: with the drawer open (as framed), this is the tallest header at 375 and leaves the least timeline space above the fold; zone/frost hide when the drawer is closed, so frost context is not always visible.
+        </p>
+        <div class="sep">Phone 375 -- light / dark</div>
+        <div class="pair">
+          <figure>
+            <img class="phone" src="option-3-light-375.png" alt="Option 3 light 375" />
+            <figcaption>light · 375</figcaption>
+          </figure>
+          <figure>
+            <img class="phone" src="option-3-dark-375.png" alt="Option 3 dark 375" />
+            <figcaption>dark · 375</figcaption>
+          </figure>
+        </div>
+        <div class="sep">Desktop 1280 -- light / dark</div>
+        <figure>
+          <img class="desktop" src="option-3-light-1280.png" alt="Option 3 light 1280" />
+          <figcaption>light · 1280</figcaption>
+        </figure>
+        <figure>
+          <img class="desktop" src="option-3-dark-1280.png" alt="Option 3 dark 1280" />
+          <figcaption>dark · 1280</figcaption>
+        </figure>
+        <p class="struct"><a href="option-3-drawer-dock.html">Open live mockup</a></p>
+      </section>
+    </div>
+  </body>
+</html>

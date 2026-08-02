@@ -1,0 +1,242 @@
+{
+  "options": {
+    "option-1": {
+      "name": "Command bar",
+      "file": "option-1-command-bar.html",
+      "frames": {
+        "light-375": "option-1-light-375.png",
+        "light-1280": "option-1-light-1280.png",
+        "dark-375": "option-1-dark-375.png",
+        "dark-1280": "option-1-dark-1280.png"
+      },
+      "metrics": {
+        "light-375": {
+          "headerHeight": 342,
+          "headerBottom": 342,
+          "searchY": 72,
+          "searchBottom": 116,
+          "markHeight": 56,
+          "markWidth": 56,
+          "timelineTop": 342,
+          "timelineHeight": 233,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 502,
+          "viewportH": 844
+        },
+        "light-1280": {
+          "headerHeight": 236,
+          "headerBottom": 236,
+          "searchY": 34,
+          "searchBottom": 78,
+          "markHeight": 96,
+          "markWidth": 96,
+          "timelineTop": 236,
+          "timelineHeight": 225,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 564,
+          "viewportH": 800
+        },
+        "dark-375": {
+          "headerHeight": 342,
+          "headerBottom": 342,
+          "searchY": 72,
+          "searchBottom": 116,
+          "markHeight": 56,
+          "markWidth": 56,
+          "timelineTop": 342,
+          "timelineHeight": 233,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 502,
+          "viewportH": 844
+        },
+        "dark-1280": {
+          "headerHeight": 236,
+          "headerBottom": 236,
+          "searchY": 34,
+          "searchBottom": 78,
+          "markHeight": 96,
+          "markWidth": 96,
+          "timelineTop": 236,
+          "timelineHeight": 225,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 564,
+          "viewportH": 800
+        }
+      },
+      "headerHeight375": 342,
+      "searchY375": 72,
+      "markHeight375": 56,
+      "truncated375": 0,
+      "searchAboveFold375": true,
+      "timelineSpace375": 502,
+      "headerHeight1280": 236,
+      "searchY1280": 34,
+      "markHeight1280": 96,
+      "searchAboveFold1280": true,
+      "timelineSpace1280": 564
+    },
+    "option-2": {
+      "name": "Two-tier sticky",
+      "file": "option-2-two-tier.html",
+      "frames": {
+        "light-375": "option-2-light-375.png",
+        "light-1280": "option-2-light-1280.png",
+        "dark-375": "option-2-dark-375.png",
+        "dark-1280": "option-2-dark-1280.png"
+      },
+      "metrics": {
+        "light-375": {
+          "headerHeight": 381,
+          "headerBottom": 381,
+          "searchY": 224,
+          "searchBottom": 268,
+          "markHeight": 56,
+          "markWidth": 56,
+          "timelineTop": 381,
+          "timelineHeight": 233,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 463,
+          "viewportH": 844
+        },
+        "light-1280": {
+          "headerHeight": 254,
+          "headerBottom": 254,
+          "searchY": 201,
+          "searchBottom": 245,
+          "markHeight": 96,
+          "markWidth": 96,
+          "timelineTop": 254,
+          "timelineHeight": 225,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 546,
+          "viewportH": 800
+        },
+        "dark-375": {
+          "headerHeight": 381,
+          "headerBottom": 381,
+          "searchY": 224,
+          "searchBottom": 268,
+          "markHeight": 56,
+          "markWidth": 56,
+          "timelineTop": 381,
+          "timelineHeight": 233,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 463,
+          "viewportH": 844
+        },
+        "dark-1280": {
+          "headerHeight": 254,
+          "headerBottom": 254,
+          "searchY": 201,
+          "searchBottom": 245,
+          "markHeight": 96,
+          "markWidth": 96,
+          "timelineTop": 254,
+          "timelineHeight": 225,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 546,
+          "viewportH": 800
+        }
+      },
+      "headerHeight375": 381,
+      "searchY375": 224,
+      "markHeight375": 56,
+      "truncated375": 0,
+      "searchAboveFold375": true,
+      "timelineSpace375": 463,
+      "headerHeight1280": 254,
+      "searchY1280": 201,
+      "markHeight1280": 96,
+      "searchAboveFold1280": true,
+      "timelineSpace1280": 546
+    },
+    "option-3": {
+      "name": "Compact drawer + dock",
+      "file": "option-3-drawer-dock.html",
+      "frames": {
+        "light-375": "option-3-light-375.png",
+        "light-1280": "option-3-light-1280.png",
+        "dark-375": "option-3-dark-375.png",
+        "dark-1280": "option-3-dark-1280.png"
+      },
+      "metrics": {
+        "light-375": {
+          "headerHeight": 452,
+          "headerBottom": 452,
+          "searchY": 74,
+          "searchBottom": 118,
+          "markHeight": 56,
+          "markWidth": 56,
+          "timelineTop": 452,
+          "timelineHeight": 233,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 392,
+          "viewportH": 844
+        },
+        "light-1280": {
+          "headerHeight": 266,
+          "headerBottom": 266,
+          "searchY": 34,
+          "searchBottom": 78,
+          "markHeight": 96,
+          "markWidth": 96,
+          "timelineTop": 266,
+          "timelineHeight": 225,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 534,
+          "viewportH": 800
+        },
+        "dark-375": {
+          "headerHeight": 452,
+          "headerBottom": 452,
+          "searchY": 74,
+          "searchBottom": 118,
+          "markHeight": 56,
+          "markWidth": 56,
+          "timelineTop": 452,
+          "timelineHeight": 233,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 392,
+          "viewportH": 844
+        },
+        "dark-1280": {
+          "headerHeight": 266,
+          "headerBottom": 266,
+          "searchY": 34,
+          "searchBottom": 78,
+          "markHeight": 96,
+          "markWidth": 96,
+          "timelineTop": 266,
+          "timelineHeight": 225,
+          "truncatedCount": 0,
+          "searchAboveFold": true,
+          "timelineSpaceAboveFold": 534,
+          "viewportH": 800
+        }
+      },
+      "headerHeight375": 452,
+      "searchY375": 74,
+      "markHeight375": 56,
+      "truncated375": 0,
+      "searchAboveFold375": true,
+      "timelineSpace375": 392,
+      "headerHeight1280": 266,
+      "searchY1280": 34,
+      "markHeight1280": 96,
+      "searchAboveFold1280": true,
+      "timelineSpace1280": 534
+    }
+  },
+  "capturedAt": "2026-08-02T20:08:18.642Z"
+}

@@ -112,6 +112,18 @@ test.describe('Crop detail citation', () => {
   });
 });
 
+/**
+ * Open the option-3 filter drawer when collapsed (default at 375).
+ *
+ * @param page - Playwright page.
+ */
+async function openFilterDrawer(page: import('@playwright/test').Page): Promise<void> {
+  const drawer = page.getByTestId('filter-drawer');
+  if (await drawer.isVisible().catch(() => false)) return;
+  await page.getByTestId('filter-drawer-toggle').click();
+  await expect(drawer).toBeVisible();
+}
+
 test.describe('Filters', () => {
   test('method filter changes plantable results', async ({ page }) => {
     const allWait = page.waitForResponse(
@@ -130,7 +142,8 @@ test.describe('Filters', () => {
     const countAll = await page.getByTestId('plant-card').count();
     expect(countAll).toBeGreaterThan(0);
 
-    // Change method via the UI control (below fold is fine for Playwright)
+    await openFilterDrawer(page);
+    // Change method via the UI control (drawer is fine for Playwright)
     const tWait = page.waitForResponse(
       (r) =>
         r.url().includes('/api/plantable') && r.url().includes('method=T') && r.ok()
@@ -173,6 +186,7 @@ test.describe('Filters', () => {
     const rowsBefore = await rowsBeforeLoc.count();
     expect(rowsBefore).toBeGreaterThan(10);
 
+    await openFilterDrawer(page);
     const julyWait = page.waitForResponse(
       (r) => r.url().includes('/api/grid') && r.url().includes('month=6') && r.ok()
     );
@@ -685,7 +699,8 @@ test.describe('Zones', () => {
     );
     await page.goto('/?date=2026-03-01');
     await plantableWait;
-    // Zone selector is always visible; context line may hide on narrow viewports.
+    // Zone selector lives in the filter drawer (option 3).
+    await openFilterDrawer(page);
     await expect(page.getByTestId('zone-search')).toBeVisible();
     const before = await page.getByTestId('zone-search').inputValue();
 
@@ -706,6 +721,51 @@ test.describe('Zones', () => {
       .not.toBe(before);
     await expect(page.getByTestId('zone-search')).toHaveValue(/Phoenix/i);
     await expect(page.getByTestId('hero-zone-name')).toContainText(/Phoenix/i);
+  });
+});
+
+test.describe('Compact drawer + dock header', () => {
+  test('filter drawer is collapsed on load at 375; opens and closes', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 844 });
+    await page.goto('/');
+    await expect(page.getByTestId('compact-header')).toBeVisible();
+    await expect(page.getByTestId('filter-drawer')).not.toBeVisible();
+    await expect(page.getByTestId('filter-drawer-toggle')).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+
+    await page.getByTestId('filter-drawer-toggle').click();
+    await expect(page.getByTestId('filter-drawer')).toBeVisible();
+    await expect(page.getByTestId('filter-drawer-toggle')).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    await expect(page.getByTestId('filter-method')).toBeVisible();
+    await expect(page.getByTestId('filter-month')).toBeVisible();
+    await expect(page.getByTestId('zone-search')).toBeVisible();
+
+    await page.getByTestId('filter-drawer-toggle').click();
+    await expect(page.getByTestId('filter-drawer')).not.toBeVisible();
+    await expect(page.getByTestId('filter-drawer-toggle')).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+  });
+
+  test('assistant dock is reachable and dismissible on home', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 900 });
+    await page.goto('/');
+    const dock = page.getByTestId('assistant-dock');
+    await expect(dock).toBeVisible();
+    await dock.scrollIntoViewIfNeeded();
+    await expect(page.getByTestId('assistant-panel')).toBeVisible();
+    await expect(page.getByTestId('assistant-input')).toBeVisible();
+
+    await page.getByTestId('assistant-close').click();
+    await expect(page.getByTestId('assistant-panel')).toHaveCount(0);
+    await page.getByTestId('assistant-open').click();
+    await expect(page.getByTestId('assistant-panel')).toBeVisible();
   });
 });
 
@@ -833,14 +893,15 @@ test.describe('Brand and footer', () => {
     page
   }) => {
     await page.goto('/');
-    const logo = page.locator('.topbar__logo');
-    await expect(logo).toBeVisible();
-    const mark = logo.locator('img.topbar__mark');
+    // Home uses compact-header (option 3); other routes keep topbar.
+    const logo = page.locator('.compact-header__logo, .topbar__logo');
+    await expect(logo.first()).toBeVisible();
+    const mark = logo.first().locator('img.compact-header__mark, img.topbar__mark');
     await expect(mark).toBeVisible();
     await expect(mark).toHaveAttribute('aria-hidden', 'true');
     await expect(mark).toHaveAttribute('src', /brand-mark\.png/);
     // Must not be a bare "AZ" span without the app name.
-    const logoText = (await logo.innerText()).replace(/\s+/g, ' ').trim();
+    const logoText = (await logo.first().innerText()).replace(/\s+/g, ' ').trim();
     expect(logoText).not.toMatch(/^AZ$/);
     expect(logoText).toContain('AZ Planting Calendar');
   });
@@ -872,5 +933,52 @@ test.describe('Accessibility', () => {
       (v) => v.impact === 'serious' || v.impact === 'critical'
     );
     expect(serious, JSON.stringify(serious, null, 2)).toEqual([]);
+  });
+
+  test('home has 0 axe violations with filter drawer open (both themes)', async ({
+    page
+  }) => {
+    for (const theme of ['light', 'dark'] as const) {
+      const wait = page.waitForResponse((r) => r.url().includes('/api/plantable') && r.ok());
+      await page.goto('/?date=2026-03-01');
+      await wait;
+      await page.evaluate((t) => {
+        document.documentElement.setAttribute('data-theme', t);
+      }, theme);
+      await openFilterDrawer(page);
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .analyze();
+      expect(
+        results.violations,
+        `${theme} drawer-open: ${JSON.stringify(results.violations, null, 2)}`
+      ).toEqual([]);
+    }
+  });
+
+  test('home has 0 axe violations with suggestion list open (both themes)', async ({
+    page
+  }) => {
+    for (const theme of ['light', 'dark'] as const) {
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.goto('/');
+      await page.evaluate((t) => {
+        document.documentElement.setAttribute('data-theme', t);
+      }, theme);
+      const cropsWait = page.waitForResponse(
+        (r) =>
+          r.url().includes('/api/crops') && r.url().includes('q=tom') && r.ok()
+      );
+      await page.getByTestId('filter-search').fill('tom');
+      await cropsWait;
+      await expect(page.getByTestId('search-result-list')).toBeVisible();
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa'])
+        .analyze();
+      expect(
+        results.violations,
+        `${theme} suggestions-open: ${JSON.stringify(results.violations, null, 2)}`
+      ).toEqual([]);
+    }
   });
 });

@@ -1,11 +1,22 @@
 .live-search {
   position: sticky;
   top: 0;
-  /* Below zone-bar dropdown (z-55/70) so zone options remain clickable. */
+  /* Below zone dropdown (z-70) so zone options remain clickable. */
   z-index: 30;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   width: 100%;
+}
+
+/* Compact header slot: no independent sticky band or outer border. */
+.live-search--embedded {
+  position: relative;
+  top: auto;
+  z-index: auto;
+  background: transparent;
+  border-bottom: none;
+  width: 100%;
+  min-width: 0;
 }
 
 .live-search__bar {
@@ -15,9 +26,18 @@
   padding: var(--space-2) var(--space-4);
 }
 
+.live-search--embedded .live-search__bar {
+  padding: 0;
+  align-items: stretch;
+}
+
 @media (min-width: 900px) {
   .live-search__bar {
     padding-inline: var(--space-6);
+  }
+
+  .live-search--embedded .live-search__bar {
+    padding: 0;
   }
 }
 
@@ -79,9 +99,28 @@
   background: var(--surface);
 }
 
+/* Absolute panel under the compact search row so the sticky header does not grow. */
+.live-search--embedded .live-search__results {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 45;
+  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-none);
+}
+
 @media (min-width: 900px) {
   .live-search__results {
     padding-inline: var(--space-6);
+  }
+
+  .live-search--embedded .live-search__results {
+    padding: var(--space-2) var(--space-3) var(--space-3);
   }
 }
 

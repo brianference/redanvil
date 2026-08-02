@@ -1,0 +1,756 @@
+{
+  "mockup": {
+    "headerHeight375": 452,
+    "headerHeight1280": 266,
+    "timelineSpace375": 392,
+    "searchY375": 74,
+    "searchY1280": 34,
+    "markHeight375": 56,
+    "markHeight1280": 96
+  },
+  "frames": {
+    "light-375": {
+      "viewportW": 375,
+      "viewportH": 844,
+      "headerHeight": 127,
+      "headerBottom": 127,
+      "searchY": 74,
+      "searchBottom": 118,
+      "searchAboveFold": true,
+      "markHeight": 56,
+      "markWidth": 56,
+      "timelineTop": 127,
+      "timelineHeight": 243,
+      "timelineSpaceAboveFold": 717,
+      "timelineTitleVisible": true,
+      "firstTimelineCellVisible": false,
+      "drawerOpen": false,
+      "drawerAriaExpanded": "false",
+      "truncatedCount": 0,
+      "touchFails": [
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 87
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 109
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 52
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 86
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 65
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 110
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 70
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 76
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 86
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 89
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 87
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 115
+        }
+      ],
+      "paint": null,
+      "consoleErrors": [],
+      "cspViolations": [],
+      "screenshot": "evidence\\screenshots\\header-build\\light-375.png"
+    },
+    "dark-375": {
+      "viewportW": 375,
+      "viewportH": 844,
+      "headerHeight": 127,
+      "headerBottom": 127,
+      "searchY": 74,
+      "searchBottom": 118,
+      "searchAboveFold": true,
+      "markHeight": 56,
+      "markWidth": 56,
+      "timelineTop": 127,
+      "timelineHeight": 243,
+      "timelineSpaceAboveFold": 717,
+      "timelineTitleVisible": true,
+      "firstTimelineCellVisible": false,
+      "drawerOpen": false,
+      "drawerAriaExpanded": "false",
+      "truncatedCount": 0,
+      "touchFails": [
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 87
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 109
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 52
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 86
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 65
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 110
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 70
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 76
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 86
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 89
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 87
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 115
+        }
+      ],
+      "paint": null,
+      "consoleErrors": [],
+      "cspViolations": [],
+      "screenshot": "evidence\\screenshots\\header-build\\dark-375.png"
+    },
+    "light-1280": {
+      "viewportW": 1280,
+      "viewportH": 800,
+      "headerHeight": 266,
+      "headerBottom": 266,
+      "searchY": 34,
+      "searchBottom": 78,
+      "searchAboveFold": true,
+      "markHeight": 96,
+      "markWidth": 96,
+      "timelineTop": 266,
+      "timelineHeight": 232,
+      "timelineSpaceAboveFold": 534,
+      "timelineTitleVisible": true,
+      "firstTimelineCellVisible": false,
+      "drawerOpen": true,
+      "drawerAriaExpanded": "true",
+      "truncatedCount": 0,
+      "touchFails": [
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 87
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 109
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 52
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 86
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 65
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 110
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        }
+      ],
+      "paint": null,
+      "consoleErrors": [],
+      "cspViolations": [],
+      "screenshot": "evidence\\screenshots\\header-build\\light-1280.png"
+    },
+    "dark-1280": {
+      "viewportW": 1280,
+      "viewportH": 800,
+      "headerHeight": 266,
+      "headerBottom": 266,
+      "searchY": 34,
+      "searchBottom": 78,
+      "searchAboveFold": true,
+      "markHeight": 96,
+      "markWidth": 96,
+      "timelineTop": 266,
+      "timelineHeight": 232,
+      "timelineSpaceAboveFold": 534,
+      "timelineTitleVisible": true,
+      "firstTimelineCellVisible": false,
+      "drawerOpen": true,
+      "drawerAriaExpanded": "true",
+      "truncatedCount": 0,
+      "touchFails": [
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 87
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 109
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 52
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 86
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 65
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 110
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        }
+      ],
+      "paint": null,
+      "consoleErrors": [],
+      "cspViolations": [],
+      "screenshot": "evidence\\screenshots\\header-build\\dark-1280.png"
+    },
+    "light-375-drawer-open": {
+      "viewportW": 375,
+      "viewportH": 844,
+      "headerHeight": 508,
+      "headerBottom": 508,
+      "searchY": 74,
+      "searchBottom": 118,
+      "searchAboveFold": true,
+      "markHeight": 56,
+      "markWidth": 56,
+      "timelineTop": 508,
+      "timelineHeight": 243,
+      "timelineSpaceAboveFold": 336,
+      "timelineTitleVisible": true,
+      "firstTimelineCellVisible": false,
+      "drawerOpen": true,
+      "drawerAriaExpanded": "true",
+      "truncatedCount": 0,
+      "touchFails": [
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 87
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 109
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 52
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 86
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 65
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 110
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 70
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 76
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 86
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 89
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 87
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 115
+        }
+      ],
+      "paint": null,
+      "consoleErrors": [],
+      "cspViolations": [],
+      "screenshot": "evidence\\screenshots\\header-build\\light-375-drawer-open.png"
+    },
+    "paint-1440": {
+      "viewportW": 1440,
+      "viewportH": 900,
+      "headerHeight": 266,
+      "headerBottom": 266,
+      "searchY": 34,
+      "searchBottom": 78,
+      "searchAboveFold": true,
+      "markHeight": 96,
+      "markWidth": 96,
+      "timelineTop": 266,
+      "timelineHeight": 232,
+      "timelineSpaceAboveFold": 634,
+      "timelineTitleVisible": true,
+      "firstTimelineCellVisible": false,
+      "drawerOpen": true,
+      "drawerAriaExpanded": "true",
+      "truncatedCount": 0,
+      "touchFails": [
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 87
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 109
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 52
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 86
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 65
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 110
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        }
+      ],
+      "paint": {
+        "painted": 1628,
+        "total": 1640,
+        "ratio": 0.9926829268292683
+      },
+      "consoleErrors": [],
+      "cspViolations": [],
+      "screenshot": "evidence\\screenshots\\header-build\\paint-1440.png"
+    },
+    "paint-1920": {
+      "viewportW": 1920,
+      "viewportH": 1080,
+      "headerHeight": 266,
+      "headerBottom": 266,
+      "searchY": 34,
+      "searchBottom": 78,
+      "searchAboveFold": true,
+      "markHeight": 96,
+      "markWidth": 96,
+      "timelineTop": 266,
+      "timelineHeight": 232,
+      "timelineSpaceAboveFold": 814,
+      "timelineTitleVisible": true,
+      "firstTimelineCellVisible": true,
+      "drawerOpen": true,
+      "drawerAriaExpanded": "true",
+      "truncatedCount": 0,
+      "touchFails": [
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 87
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 109
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 52
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 86
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 65
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        },
+        {
+          "tag": "A",
+          "testid": null,
+          "h": 21,
+          "w": 110
+        },
+        {
+          "tag": "A",
+          "testid": "source-link",
+          "h": 21,
+          "w": 349
+        }
+      ],
+      "paint": {
+        "painted": 1593,
+        "total": 1600,
+        "ratio": 0.995625
+      },
+      "consoleErrors": [],
+      "cspViolations": [],
+      "screenshot": "evidence\\screenshots\\header-build\\paint-1920.png"
+    },
+    "reach-375": {
+      "total": 24,
+      "reachable": 24
+    },
+    "reach-1280": {
+      "total": 24,
+      "reachable": 24
+    }
+  },
+  "capturedAt": "2026-08-02T20:17:26.802Z",
+  "summary": {
+    "note": "Default at 375 is drawer collapsed (condition of pick). Mockup 452/392 measured with drawer OPEN for capture only.",
+    "arrival375": {
+      "headerHeight": 127,
+      "timelineSpaceAboveFold": 717,
+      "mockupHeaderOpen": 452,
+      "mockupTimelineSpaceOpen": 392,
+      "searchY": 74,
+      "markHeight": 56,
+      "truncatedCount": 0,
+      "fullTimelineCellsVisible": 4,
+      "timelineTitleVisible": true,
+      "heroHeld": true
+    },
+    "arrival1280": {
+      "headerHeight": 266,
+      "timelineSpaceAboveFold": 534,
+      "mockupHeader": 266,
+      "searchY": 34,
+      "markHeight": 96,
+      "drawerOpenByDefault": true
+    },
+    "paint": {
+      "1440": {
+        "painted": 1628,
+        "total": 1640,
+        "ratio": 0.9926829268292683
+      },
+      "1920": {
+        "painted": 1593,
+        "total": 1600,
+        "ratio": 0.995625
+      }
+    },
+    "reach": {
+      "375": {
+        "total": 24,
+        "reachable": 24
+      },
+      "1280": {
+        "total": 24,
+        "reachable": 24
+      }
+    },
+    "consoleErrors": 0,
+    "cspViolations": 0
+  }
+}

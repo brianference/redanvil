@@ -29,10 +29,7 @@
   padding-block: 0 var(--space-4);
 }
 
-.home__filters {
-  padding-block: var(--space-3) 0;
-}
-
+/* Docked assistant on mobile (full-width under list); sticky rail at >=1100. */
 .home__rail {
   grid-area: rail;
   min-width: 0;

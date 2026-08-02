@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-02T06:55:23.096Z",
+  "checkedAt": "2026-08-02T20:14:59.776Z",
   "probes": {
     "search-narrows": {
       "ok": true,
@@ -8,15 +8,19 @@
     },
     "assistant-grounded": {
       "ok": true,
-      "detail": "HTTP 200; 7 crop(s) from D1; filters {\"half_month\":14}; answer: 7 crops can go in during the first half (Aug 1). Listed: Beans, Snap, Blackeyed Peas, Carrots, Corn, Sweet, Pumpkin, Squ"
+      "detail": "HTTP 200; 7 crop(s) from D1; filters {\"half_month\":14}"
     },
     "no-spa-mask": {
       "ok": true,
-      "detail": "unmatched /api/* -> HTTP 404, body {\"error\":\"no such endpoint: /api/__absent_wejyvc\"}"
+      "detail": "unmatched /api/* -> HTTP 404"
     },
     "detail-404": {
       "ok": true,
       "detail": "bogus detail id -> HTTP 404"
+    },
+    "zone-lookup": {
+      "ok": true,
+      "detail": "zip 85251 -> Scottsdale AZ (low desert, Maricopa County)"
     }
   },
   "ok": true

@@ -24,10 +24,15 @@ export interface LiveSearchProps {
   /** Distinct fail-closed error; never painted as zero matches. */
   searchError: string | null;
   onRetry: () => void;
+  /**
+   * When true, render as a compact bar slot (no independent sticky chrome).
+   * Used inside CompactHeader (option 3).
+   */
+  embedded?: boolean;
 }
 
 /**
- * Sticky crop search: combobox typeahead, labelled Search button, form Enter.
+ * Crop search: combobox typeahead, labelled Search button, form Enter.
  * Suggestions use /api/crops?q= (via parent). Choosing one goes to crop detail.
  * Button and Enter (without a highlighted option) reach the same search state.
  */
@@ -37,7 +42,8 @@ export function LiveSearch({
   results,
   searching,
   searchError,
-  onRetry
+  onRetry,
+  embedded = false
 }: LiveSearchProps) {
   const navigate = useNavigate();
   const listboxId = useId();
@@ -161,8 +167,10 @@ export function LiveSearch({
     setActiveIndex(-1);
   }
 
+  const rootClass = embedded ? 'live-search live-search--embedded' : 'live-search';
+
   return (
-    <div className="live-search" data-testid="live-search">
+    <div className={rootClass} data-testid="live-search">
       <form
         className="live-search__bar"
         onSubmit={handleSubmit}

@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AssistantPanel } from '../components/AssistantPanel';
-import { Filters, type FiltersState } from '../components/Filters';
+import { CompactHeader } from '../components/CompactHeader';
+import type { FiltersState } from '../components/Filters';
 import { HalfMonthTimeline } from '../components/HalfMonthTimeline';
-import { LiveSearch } from '../components/LiveSearch';
 import { PlantableHero } from '../components/PlantableHero';
 import { YearGrid } from '../components/YearGrid';
-import { ZoneBar } from '../components/ZoneBar';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { useZone } from '../hooks/useZone';
 import { en } from '../i18n/en';
@@ -23,9 +22,9 @@ import './HomePage.css';
 const SEARCH_DEBOUNCE_MS = 280;
 
 /**
- * Home: Timeline + rail layout.
- * Zone bar → sticky live search → half-month timeline → crop rows | assistant rail.
- * Crop name search results render next to the input in the first viewport.
+ * Home: Timeline + rail layout with option 3 compact header.
+ * Compact bar (search + Filters drawer + docked assistant rail) → timeline hero → list | rail.
+ * Crop name search results render under the compact search slot in the first viewport.
  */
 export function HomePage() {
   useDocumentMeta(en.meta.homeTitle, en.meta.homeDescription);
@@ -243,18 +242,18 @@ export function HomePage() {
 
   return (
     <div className="home">
-      <ZoneBar zone={zone} />
-      <LiveSearch
-        value={filters.q}
-        onChange={(q) => setFilters((f) => ({ ...f, q }))}
-        results={searchResults}
+      <CompactHeader
+        zone={zone}
+        filters={filters}
+        onFiltersChange={setFilters}
+        searchResults={searchResults}
         searching={searching}
         searchError={searchError}
-        onRetry={() => setReloadKey((k) => k + 1)}
+        onSearchRetry={() => setReloadKey((k) => k + 1)}
       />
 
       <div className="home__body">
-        <div className="home__timeline">
+        <div className="home__timeline" data-measure="timeline">
           <HalfMonthTimeline
             counts={timelineCounts}
             selected={selectedHalf}
@@ -271,12 +270,9 @@ export function HomePage() {
             error={plantableError}
             onRetry={() => setReloadKey((k) => k + 1)}
           />
-          <div className="home__filters">
-            <Filters value={filters} onChange={setFilters} showDate={false} showSearch={false} />
-          </div>
         </div>
 
-        <aside className="home__rail" aria-label={en.assistant.title}>
+        <aside className="home__rail" aria-label={en.assistant.title} data-testid="assistant-dock">
           <AssistantPanel defaultOpen placement="rail" />
         </aside>
 

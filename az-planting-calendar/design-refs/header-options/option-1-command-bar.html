@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Option 1 -- Command bar header</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <style>
+      /*
+       * Option 1 -- Command bar
+       * One sticky chrome band: brand + primary nav on the left/edges,
+       * crop search owns the center, method/month/zone collapse into the same row,
+       * assistant is a bar-level action. Timeline remains the hero below.
+       */
+      .app {
+        min-height: 100dvh;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 100%;
+        min-width: 0;
+      }
+      .main {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: clip;
+      }
+
+      @media (min-width: 1100px) {
+        .app {
+          grid-template-columns: minmax(0, 1fr) 320px;
+          align-items: start;
+        }
+        .rail {
+          display: flex !important;
+        }
+        .assistant-mobile {
+          display: none !important;
+        }
+      }
+
+      /* Entire integrated header (measure this) */
+      .chrome {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: var(--surface);
+        border-bottom: var(--hairline);
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      .command {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        grid-template-areas:
+          'brand menu theme'
+          'search search search'
+          'tools tools tools'
+          'nav nav nav';
+        gap: var(--space-2);
+        align-items: center;
+        padding: var(--space-2) var(--space-3);
+        padding-top: max(var(--space-2), env(safe-area-inset-top, 0px));
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+      }
+
+      .command__brand {
+        grid-area: brand;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        min-width: 0;
+        min-height: var(--touch);
+        text-decoration: none;
+        color: var(--text);
+      }
+
+      .command__menu {
+        grid-area: menu;
+      }
+
+      .command__theme {
+        grid-area: theme;
+        width: var(--touch);
+        height: var(--touch);
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .command__search {
+        grid-area: search;
+        display: flex;
+        align-items: stretch;
+        gap: var(--space-2);
+        min-width: 0;
+      }
+
+      .command__search .ctrl {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      .command__tools {
+        grid-area: tools;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        align-items: center;
+        min-width: 0;
+      }
+
+      .command__tools select.ctrl {
+        flex: 1 1 120px;
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      .command__zone {
+        flex: 1 1 100%;
+        min-width: 0;
+        font-size: var(--type-sm);
+        color: var(--text-muted);
+        line-height: 1.35;
+        /* Wrap, never ellipsis */
+        white-space: normal;
+        overflow: visible;
+      }
+
+      .command__nav {
+        grid-area: nav;
+        display: none;
+        flex-wrap: wrap;
+        gap: var(--space-1);
+      }
+
+      .command__nav.is-open {
+        display: flex;
+      }
+
+      .command__ask {
+        flex: 0 0 auto;
+      }
+
+      @media (min-width: 900px) {
+        .command {
+          grid-template-columns:
+            minmax(180px, 0.7fr)
+            minmax(240px, 1.6fr)
+            minmax(180px, auto)
+            minmax(148px, auto)
+            auto
+            auto;
+          grid-template-areas:
+            'brand search method month ask theme'
+            'zone zone zone zone zone zone';
+          gap: var(--space-2) var(--space-3);
+          padding-inline: var(--space-6);
+          align-items: center;
+        }
+
+        .command__menu {
+          display: none;
+        }
+
+        .command__nav {
+          display: none; /* primary links sit under brand as sub-row on wide */
+        }
+
+        .command__tools {
+          display: contents;
+        }
+
+        .command__brand .brand-name {
+          white-space: normal;
+          max-width: 10rem;
+        }
+
+        .command__method {
+          grid-area: method;
+          flex: none;
+          width: 180px;
+          max-width: none;
+        }
+
+        .command__month {
+          grid-area: month;
+          flex: none;
+          width: 148px;
+          max-width: none;
+        }
+
+        .command__zone {
+          grid-area: zone;
+          flex: none;
+          max-width: none;
+          padding-top: var(--space-1);
+        }
+
+        .command__ask {
+          grid-area: ask;
+        }
+
+        .command__desk-nav {
+          display: flex !important;
+        }
+      }
+
+      .command__desk-nav {
+        display: none;
+        flex-wrap: wrap;
+        gap: var(--space-1);
+        padding: 0 var(--space-6) var(--space-2);
+        border-top: 1px solid transparent;
+      }
+
+      @media (min-width: 900px) {
+        .command__desk-nav {
+          border-top: 1px solid var(--border);
+          padding-top: var(--space-1);
+        }
+      }
+
+      .rail {
+        display: none;
+        flex-direction: column;
+        border-left: 1px solid var(--border);
+        background: var(--surface);
+        padding: var(--space-4);
+        gap: var(--space-3);
+        position: sticky;
+        top: 0;
+        max-height: 100dvh;
+        overflow: auto;
+      }
+
+      .rail h2 {
+        margin: 0;
+        font-size: var(--type-lg);
+      }
+
+      .rail .bubble {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-3);
+        color: var(--text-muted);
+        font-size: var(--type-sm);
+      }
+
+      .rail input {
+        min-height: var(--touch);
+        width: 100%;
+        padding: 0 var(--space-3);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface-2);
+        color: var(--text);
+        font: inherit;
+      }
+
+      .assistant-mobile {
+        margin: var(--space-4);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-3);
+        background: var(--surface);
+      }
+
+      .assistant-mobile h2 {
+        margin: 0 0 var(--space-2);
+        font-size: var(--type-lg);
+      }
+    </style>
+    <script>
+      const t = new URLSearchParams(location.search).get('theme');
+      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+    </script>
+  </head>
+  <body>
+    <div class="app">
+      <div class="main">
+        <header class="chrome" data-measure="header">
+          <div class="command">
+            <a class="command__brand" href="#" aria-label="AZ Planting Calendar">
+              <img
+                class="brand-mark"
+                data-measure="mark"
+                src="../../public/brand-mark.png"
+                width="96"
+                height="96"
+                alt=""
+              />
+              <span class="brand-name">AZ Planting Calendar</span>
+            </a>
+            <button type="button" class="btn command__menu" aria-expanded="false" aria-controls="cmd-nav">
+              Menu
+            </button>
+            <button type="button" class="btn command__theme" aria-label="Theme: Light. Click to switch." title="Theme">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" fill="currentColor" />
+              </svg>
+            </button>
+            <div class="command__search">
+              <label class="sr-only" for="crop-search">Search crops</label>
+              <input
+                id="crop-search"
+                class="ctrl"
+                data-measure="search"
+                type="search"
+                name="search"
+                placeholder="Crop name"
+                autocomplete="off"
+                value=""
+              />
+              <button type="button" class="btn btn--accent">Search</button>
+            </div>
+            <div class="command__tools">
+              <label class="sr-only" for="method">Method</label>
+              <select id="method" class="ctrl command__method" aria-label="Method">
+                <option selected>Seed + transplant</option>
+                <option>Seed only</option>
+                <option>Transplant only</option>
+              </select>
+              <label class="sr-only" for="month">Month</label>
+              <select id="month" class="ctrl command__month" aria-label="Month">
+                <option selected>All months</option>
+                <option>August</option>
+                <option>September</option>
+              </select>
+              <p class="command__zone mono" data-testid="zone-frost">
+                Cave Creek AZ 85331 · Last frost Feb 20 · First frost Dec 6 · 2,529 ft elev.
+              </p>
+              <button type="button" class="btn command__ask" aria-label="Open planting assistant">
+                Ask
+              </button>
+            </div>
+            <nav id="cmd-nav" class="command__nav" aria-label="Primary">
+              <a class="btn--nav is-active" href="#">Home</a>
+              <a class="btn--nav" href="#">Year grid</a>
+              <a class="btn--nav" href="#">About</a>
+              <a class="btn--nav" href="#">Contact</a>
+            </nav>
+          </div>
+          <nav class="command__desk-nav" aria-label="Primary desktop">
+            <a class="btn--nav is-active" href="#">Home</a>
+            <a class="btn--nav" href="#">Year grid</a>
+            <a class="btn--nav" href="#">About</a>
+            <a class="btn--nav" href="#">Contact</a>
+          </nav>
+        </header>
+
+        <section class="timeline" data-measure="timeline">
+          <div class="shell">
+            <h1 class="timeline__title">Half-month timeline</h1>
+            <p class="timeline__lede">
+              Pick a half-month to see what is plantable. Counts are crops with an active seed or transplant window.
+            </p>
+          </div>
+          <div class="timeline__scroll" role="list">
+            <div class="half" role="listitem"><div class="half__label">Jul 1</div><div class="half__count">4</div></div>
+            <div class="half" role="listitem"><div class="half__label">Jul 15</div><div class="half__count">6</div></div>
+            <div class="half half--selected half--now" role="listitem"><div class="half__label">Aug 1</div><div class="half__count">12</div></div>
+            <div class="half" role="listitem"><div class="half__label">Aug 15</div><div class="half__count">9</div></div>
+            <div class="half" role="listitem"><div class="half__label">Sep 1</div><div class="half__count">11</div></div>
+            <div class="half" role="listitem"><div class="half__label">Sep 15</div><div class="half__count">14</div></div>
+            <div class="half" role="listitem"><div class="half__label">Oct 1</div><div class="half__count">18</div></div>
+            <div class="half" role="listitem"><div class="half__label">Oct 15</div><div class="half__count">20</div></div>
+          </div>
+        </section>
+
+        <section class="list">
+          <h2>Plantable in Aug 1-15</h2>
+          <div class="row">
+            <img src="../../public/crops/crop-beans-snap.webp" width="56" height="56" alt="" />
+            <div>
+              <h3>Beans, Snap</h3>
+              <span class="chip chip--s">S seed</span>
+            </div>
+          </div>
+          <div class="row">
+            <img src="../../public/crops/crop-okra.webp" width="56" height="56" alt="" />
+            <div>
+              <h3>Okra</h3>
+              <span class="chip chip--s">S seed</span>
+            </div>
+          </div>
+          <div class="row">
+            <img src="../../public/crops/crop-peppers.webp" width="56" height="56" alt="" />
+            <div>
+              <h3>Peppers</h3>
+              <span class="chip chip--t">T transplant</span>
+            </div>
+          </div>
+        </section>
+
+        <div class="assistant-mobile">
+          <h2>Planting assistant</h2>
+          <p class="mono" style="color: var(--text-muted); font-size: var(--type-sm); margin: 0">
+            Type a question about what to plant in Cave Creek.
+          </p>
+        </div>
+      </div>
+
+      <aside class="rail" aria-label="Planting assistant">
+        <h2>Planting assistant</h2>
+        <div class="bubble">Type a question about what to plant in Cave Creek.</div>
+        <input type="text" placeholder="Ask about planting..." aria-label="Assistant question" />
+        <button type="button" class="btn btn--accent" style="width: 100%">Send</button>
+      </aside>
+    </div>
+    <script>
+      document.querySelector('.command__menu')?.addEventListener('click', () => {
+        const nav = document.getElementById('cmd-nav');
+        const open = nav.classList.toggle('is-open');
+        document.querySelector('.command__menu').setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    </script>
+  </body>
+</html>
