@@ -1,0 +1,120 @@
+{
+  "reachability": {
+    "375x812": {
+      "total": 24,
+      "reachable": 24,
+      "unreachable": [],
+      "overflowX": "auto",
+      "scrollWidth": 2040,
+      "clientWidth": 360,
+      "canScroll": true
+    },
+    "1280x1000": {
+      "total": 24,
+      "reachable": 24,
+      "unreachable": [],
+      "overflowX": "auto",
+      "scrollWidth": 2072,
+      "clientWidth": 945,
+      "canScroll": true
+    }
+  },
+  "keyboardWalk": [
+    {
+      "step": "focus selected",
+      "half": "14"
+    },
+    {
+      "step": "after ArrowLeft to Jan 1",
+      "finalHalf": "0",
+      "inView": true,
+      "selectedJan": "true",
+      "listChanged": true,
+      "url": "http://127.0.0.1:8788/?date=2026-01-01"
+    }
+  ],
+  "suggestions": {
+    "375x900": {
+      "listY": 355,
+      "listHeight": 50,
+      "countY": 323,
+      "inFirstViewport": true,
+      "itemCount": 1,
+      "firstText": "Tomatoes",
+      "hasArt": true,
+      "screenshot": "C:\\Users\\brian\\RedAnvil\\az-planting-calendar\\evidence\\screenshots\\search-tom-suggestions-375.png",
+      "description": {
+        "countText": "1 crop matches tom",
+        "rows": [
+          {
+            "name": "Tomatoes",
+            "hasImg": true
+          }
+        ],
+        "comboboxExpanded": "true",
+        "brandBesideSearch": false
+      },
+      "consoleErrors": [],
+      "cspViolations": []
+    },
+    "1280x900": {
+      "listY": 303,
+      "listHeight": 50,
+      "countY": 271,
+      "inFirstViewport": true,
+      "itemCount": 1,
+      "firstText": "Tomatoes",
+      "hasArt": true,
+      "screenshot": "C:\\Users\\brian\\RedAnvil\\az-planting-calendar\\evidence\\screenshots\\search-tom-suggestions-1280.png",
+      "description": {
+        "countText": "1 crop matches tom",
+        "rows": [
+          {
+            "name": "Tomatoes",
+            "hasImg": true
+          }
+        ],
+        "comboboxExpanded": "true",
+        "brandBesideSearch": false
+      },
+      "consoleErrors": [],
+      "cspViolations": []
+    }
+  },
+  "axe": {
+    "light": {
+      "listOpen": true,
+      "violations": [],
+      "seriousOrCritical": [],
+      "seriousCount": 0
+    },
+    "dark": {
+      "listOpen": true,
+      "violations": [],
+      "seriousOrCritical": [],
+      "seriousCount": 0
+    }
+  },
+  "truncation375": {
+    "truncatedCount": 0,
+    "truncated": [],
+    "cropSearchPlaceholder": {
+      "sel": "[data-testid=\"filter-search\"]",
+      "placeholder": "Crop name",
+      "textWidth": 102,
+      "inputInnerWidth": 225,
+      "fits": true
+    },
+    "assistantPlaceholder": {
+      "sel": "[data-testid=\"assistant-input\"]",
+      "placeholder": "What can I plant now?",
+      "textWidth": 181,
+      "inputInnerWidth": 216,
+      "fits": true
+    }
+  },
+  "cleanLoad": {
+    "consoleErrors": [],
+    "cspViolations": []
+  }
+}

@@ -1,0 +1,139 @@
+.timeline {
+  background: var(--hero-bg);
+  color: var(--hero-text);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-4) 0 var(--space-3);
+}
+
+.timeline__header {
+  margin-bottom: var(--space-2);
+}
+
+.timeline__title {
+  margin: 0 0 var(--space-2);
+  font-size: clamp(1.1rem, 3vw, 1.75rem);
+  color: var(--hero-text);
+}
+
+.timeline__lede {
+  margin: 0;
+  color: var(--hero-muted);
+  font-size: var(--type-sm);
+  max-width: min(70ch, 100%);
+}
+
+.timeline__status {
+  margin: var(--space-2) 0 0;
+  color: var(--hero-muted);
+  font-size: var(--type-sm);
+}
+
+/* Track clips edge fades over the scroller without page overflow. */
+.timeline__track {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+
+.timeline__scroll {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  /* Always reserve a scrollbar gutter so layout does not jump. */
+  scrollbar-gutter: stable;
+}
+
+@media (min-width: 900px) {
+  .timeline__scroll {
+    padding-inline: var(--space-6);
+  }
+}
+
+.timeline__fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.timeline__fade--start {
+  left: 0;
+  background: linear-gradient(to right, var(--hero-bg) 0%, transparent 100%);
+}
+
+.timeline__fade--end {
+  right: 0;
+  background: linear-gradient(to left, var(--hero-bg) 0%, transparent 100%);
+}
+
+.timeline__fade--visible {
+  opacity: 1;
+}
+
+.timeline__half {
+  flex: 0 0 auto;
+  width: 76px;
+  min-width: 76px;
+  min-height: var(--touch);
+  scroll-snap-align: start;
+  border: 1px solid var(--hero-border);
+  border-radius: var(--radius);
+  background: var(--hero-card-bg);
+  padding: var(--space-2);
+  text-align: center;
+  color: var(--hero-text);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  box-sizing: border-box;
+}
+
+.timeline__half:hover {
+  border-color: var(--hero-seed);
+}
+
+.timeline__half:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.timeline__half--selected {
+  border-color: var(--hero-seed);
+  box-shadow: inset 0 0 0 1px var(--hero-seed);
+}
+
+.timeline__half--now {
+  border-color: var(--hero-seed);
+}
+
+.timeline__label {
+  font-size: var(--type-sm);
+  color: var(--hero-muted);
+  line-height: 1.2;
+}
+
+.timeline__count {
+  font-weight: 700;
+  font-size: var(--type-lg);
+  line-height: 1.1;
+  color: var(--hero-text);
+}
+
+.timeline__now-badge {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--hero-seed);
+}

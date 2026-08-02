@@ -1,5 +1,61 @@
-/* AZ Planting Calendar — technical / industrial design tokens.
-   Semantic tokens only; components never use raw hex. */
+/*
+ * AZ Planting Calendar — Tailwind v4 (CSS-first) + semantic tokens.
+ * Utilities come from the compiled stylesheet only (style-src 'self'; no unsafe-inline).
+ * Theme values live on CSS variables that flip with data-theme; components never hardcode hex.
+ */
+
+@import 'tailwindcss/theme' layer(theme);
+@import 'tailwindcss/utilities' layer(utilities);
+
+/* Bridge app tokens into Tailwind so utilities resolve per theme. */
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-seed: var(--seed);
+  --color-seed-bg: var(--seed-bg);
+  --color-seed-border: var(--seed-border);
+  --color-transplant: var(--transplant);
+  --color-transplant-bg: var(--transplant-bg);
+  --color-transplant-border: var(--transplant-border);
+  --color-hero-bg: var(--hero-bg);
+  --color-hero-text: var(--hero-text);
+  --color-hero-muted: var(--hero-muted);
+  --color-hero-seed: var(--hero-seed);
+  --color-hero-transplant: var(--hero-transplant);
+  --color-hero-border: var(--hero-border);
+  --color-hero-card-bg: var(--hero-card-bg);
+  --color-hero-card-border: var(--hero-card-border);
+  --color-hero-input-bg: var(--hero-input-bg);
+  --color-hero-input-border: var(--hero-input-border);
+  --color-focus: var(--focus);
+  --color-danger: var(--danger);
+  --font-family-sans: var(--font-sans);
+  --font-family-mono: var(--font-mono);
+  --text-sm: var(--type-sm);
+  --text-md: var(--type-md);
+  --text-lg: var(--type-lg);
+  --text-xl: var(--type-xl);
+  --text-2xl: var(--type-2xl);
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-7: var(--space-7);
+  --radius-sm: var(--radius);
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 900px;
+  --breakpoint-xl: 1100px;
+}
 
 :root,
 :root[data-theme='light'] {
@@ -18,7 +74,6 @@
   --transplant: #8a4b00;
   --transplant-bg: #fde8c8;
   --transplant-border: #8a4b00;
-  /* Hero follows page theme so light mode stays light. */
   --hero-bg: #f4f6f8;
   --hero-text: #0e1419;
   --hero-muted: #4a5560;
@@ -43,7 +98,6 @@
   --space-7: 48px;
   --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
-  /* Body floor is 16px (fe-type-floor). Small step stays body-scale, not caption. */
   --type-sm: 16px;
   --type-md: 16px;
   --type-lg: 20px;
@@ -211,7 +265,6 @@ input {
   height: 18px;
   border: 1px solid currentColor;
   font-size: var(--type-sm);
-  /* Avoid 2px vertical scrollHeight overflow from line-box rounding on "S"/"T". */
   line-height: 1;
   overflow: visible;
   box-sizing: border-box;

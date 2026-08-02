@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { en } from '../i18n/en';
-import type { PlantableItem, PlantableResponse, Zone } from '../lib/schemas';
+import type { PlantableItem, PlantableResponse } from '../lib/schemas';
 import { CropArt } from './CropArt';
 import { MethodChip } from './MethodChip';
 import './PlantableHero.css';
@@ -10,138 +10,71 @@ interface PlantableHeroProps {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
-  date: string;
-  onDateChange: (date: string) => void;
-  /** Crop name search (single control; narrows year grid). */
-  searchQ: string;
-  onSearchChange: (q: string) => void;
-  /** Active planning zone for citation context. */
-  zone: Zone | null;
 }
 
 /**
- * Focus-hero: first viewport answers "what can I plant now?"
- * Date + crop search live here so plantable results and search stay above the fold.
- * Order: title → controls → meta → list so the first plantable card clears a 375×844 fold
- * after the taller brand mark (item 2).
+ * Crop rows for the selected half-month (secondary to the timeline hero).
+ * Larger crop art so the 45 illustrations are distinguishable at a glance.
  */
-export function PlantableHero({
-  data,
-  loading,
-  error,
-  onRetry,
-  date,
-  onDateChange,
-  searchQ,
-  onSearchChange,
-  zone
-}: PlantableHeroProps) {
+export function PlantableHero({ data, loading, error, onRetry }: PlantableHeroProps) {
+  const heading =
+    data != null
+      ? en.timeline.plantableHeading(data.half_month_label)
+      : en.hero.title;
+
   return (
     <section
       id="plantable-now"
-      className="hero"
+      className="plantable"
       data-testid="plantable-hero"
       aria-labelledby="hero-title"
     >
-      <div className="hero__banner" aria-hidden="true">
-        <img
-          className="hero__banner-img"
-          src="/hero-desert.jpg"
-          alt=""
-          width={1280}
-          height={320}
-          decoding="async"
-        />
-      </div>
-      <div className="hero__inner shell">
-        <p className="hero__kicker mono">{en.hero.kicker}</p>
-        <h1 id="hero-title" className="hero__title">
-          {en.hero.title}
-        </h1>
-        <p className="hero__subtitle">{en.hero.subtitle}</p>
-
-        {zone ? (
-          <p className="hero__zone-context mono" data-testid="hero-zone-context">
-            {en.zone.contextLine(zone)}
-            {zone.elevation_ft != null
-              ? ` · ${en.zone.elevation(zone.elevation_ft)}`
-              : ''}
-            {zone.county ? ` · ${zone.county} County` : ''}
+      <div className="plantable__inner">
+        <div className="plantable__head">
+          <h2 id="hero-title" className="plantable__title">
+            {heading}
+          </h2>
+          {data ? (
+            <div className="plantable__meta mono" data-testid="hero-meta">
+              <span>
+                {en.hero.asOf} <strong>{data.date}</strong>
+              </span>
+              <span className="plantable__meta-sep" aria-hidden="true">
+                ·
+              </span>
+              <span>
+                {en.hero.halfMonth} <strong>{data.half_month_label}</strong>
+              </span>
+              <span className="plantable__meta-sep" aria-hidden="true">
+                ·
+              </span>
+              <span data-testid="hero-count">{en.hero.count(data.items.length)}</span>
+              {data.zone ? (
+                <span className="plantable__meta-zone" data-testid="hero-zone-name">
+                  <span className="plantable__meta-sep" aria-hidden="true">
+                    ·
+                  </span>
+                  {data.zone.name}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+          <p className="plantable__source mono" data-testid="hero-source-note">
+            {en.hero.sourceNote}
           </p>
-        ) : null}
-
-        <div className="hero__controls">
-          <label className="hero__date">
-            <span className="hero__date-label">{en.filters.date}</span>
-            <input
-              type="date"
-              className="hero__date-input mono"
-              value={date}
-              onChange={(e) => onDateChange(e.target.value)}
-              data-testid="filter-date"
-            />
-          </label>
-
-          <label className="hero__search">
-            <span className="hero__search-label">{en.filters.search}</span>
-            <input
-              id="crop-search"
-              type="search"
-              name="search"
-              className="hero__search-input"
-              value={searchQ}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder={en.filters.searchPlaceholder}
-              autoComplete="off"
-              data-testid="filter-search"
-              aria-label={en.filters.search}
-            />
-          </label>
         </div>
 
-        {data ? (
-          <div className="hero__meta mono" data-testid="hero-meta">
-            <span>
-              {en.hero.asOf} <strong>{data.date}</strong>
-            </span>
-            <span className="hero__meta-sep" aria-hidden="true">
-              ·
-            </span>
-            <span>
-              {en.hero.halfMonth} <strong>{data.half_month_label}</strong>
-            </span>
-            <span className="hero__meta-sep" aria-hidden="true">
-              ·
-            </span>
-            <span data-testid="hero-count">{en.hero.count(data.items.length)}</span>
-            {/* Zone name is display:none under 640px; omit trailing separator so we
-                never paint a dangling "7 crops ·" with nothing after it. */}
-            {data.zone ? (
-              <span className="hero__meta-zone" data-testid="hero-zone-name">
-                <span className="hero__meta-sep" aria-hidden="true">
-                  ·
-                </span>
-                {data.zone.name}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-
-        <p className="hero__source-note mono" data-testid="hero-source-note">
-          {en.hero.sourceNote}
-        </p>
-
         {loading ? (
-          <p className="hero__status" role="status">
+          <p className="plantable__status" role="status">
             {en.hero.loading}
           </p>
         ) : null}
 
         {error ? (
-          <div className="hero__error" role="alert">
+          <div className="plantable__error" role="alert">
             <p>{en.hero.error}</p>
             <p className="mono">{error}</p>
-            <button type="button" className="hero__retry" onClick={onRetry}>
+            <button type="button" className="plantable__retry" onClick={onRetry}>
               {en.hero.retry}
             </button>
           </div>
@@ -149,15 +82,14 @@ export function PlantableHero({
 
         {data && !loading && !error ? (
           data.items.length === 0 ? (
-            <p className="hero__status" data-testid="hero-empty">
+            <p className="plantable__status" data-testid="hero-empty">
               {en.hero.empty}
             </p>
           ) : (
-            <ul className="hero__list" data-testid="hero-list">
+            <ul className="plantable__list" data-testid="hero-list">
               {data.items.map((item, index) => (
                 <li key={item.crop.id}>
-                  {/* First two cards are above the fold on 375; rest lazy-load. */}
-                  <PlantableCard item={item} priority={index < 2} />
+                  <PlantableRow item={item} priority={index < 4} />
                 </li>
               ))}
             </ul>
@@ -169,15 +101,15 @@ export function PlantableHero({
 }
 
 /**
- * One plantable crop card with methods and source link.
- * Crop art is optional: missing webp fails closed to the existing text card.
+ * One plantable crop row with larger art, methods, and source link.
+ *
+ * @param props - Crop item and load priority.
  */
-function PlantableCard({
+function PlantableRow({
   item,
   priority = false
 }: {
   item: PlantableItem;
-  /** Eager-load art when this card is above the fold. */
   priority?: boolean;
 }) {
   const harvest =
@@ -189,48 +121,46 @@ function PlantableCard({
   const granularity = item.windows[0]?.source_granularity;
 
   return (
-    <article className="plant-card" data-testid="plant-card">
-      <div className="plant-card__row">
-        <CropArt cropId={item.crop.id} alt="" size="card" priority={priority} />
-        <div className="plant-card__body">
-          <div className="plant-card__head">
-            <h2 className="plant-card__name">
-              <Link to={`/crop/${item.crop.id}`}>{item.crop.name}</Link>
-            </h2>
-            <div className="plant-card__methods">
-              {item.methods.map((m) => (
-                <MethodChip key={m} method={m} />
-              ))}
-            </div>
+    <article className="plant-row" data-testid="plant-card">
+      <CropArt cropId={item.crop.id} alt="" size="row" priority={priority} />
+      <div className="plant-row__body">
+        <div className="plant-row__head">
+          <h3 className="plant-row__name">
+            <Link to={`/crop/${item.crop.id}`}>{item.crop.name}</Link>
+          </h3>
+          <div className="plant-row__methods">
+            {item.methods.map((m) => (
+              <MethodChip key={m} method={m} />
+            ))}
           </div>
-          {harvest ? (
-            <p className="plant-card__harvest mono">
-              <span className="plant-card__harvest-label">{en.hero.daysHarvest}</span> {harvest}
-            </p>
-          ) : null}
-          {primarySource ? (
-            <p className="plant-card__source">
-              <span className="plant-card__source-label">{en.hero.source}</span>{' '}
-              <a
-                href={primarySource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="source-link"
-              >
-                {primarySource.title}
-              </a>
-            </p>
-          ) : null}
-          {granularity === 'month' ? (
-            <p className="plant-card__granularity mono" data-testid="source-granularity">
-              {en.detail.granularityMonth}
-            </p>
-          ) : null}
         </div>
+        {harvest ? (
+          <p className="plant-row__harvest mono">
+            <span className="plant-row__label">{en.hero.daysHarvest}</span> {harvest}
+          </p>
+        ) : null}
+        {primarySource ? (
+          <p className="plant-row__source">
+            <span className="plant-row__label">{en.hero.source}</span>{' '}
+            <a
+              href={primarySource.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="source-link"
+            >
+              {primarySource.title}
+            </a>
+          </p>
+        ) : null}
+        {granularity === 'month' ? (
+          <p className="plant-row__granularity mono" data-testid="source-granularity">
+            {en.detail.granularityMonth}
+          </p>
+        ) : null}
+        <Link className="plant-row__detail" to={`/crop/${item.crop.id}`}>
+          {en.hero.viewCrop}
+        </Link>
       </div>
-      <Link className="plant-card__detail" to={`/crop/${item.crop.id}`}>
-        {en.hero.viewCrop}
-      </Link>
     </article>
   );
 }

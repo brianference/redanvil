@@ -62,7 +62,36 @@ export const en = {
     monthAll: 'All months',
     date: 'Date (for plantable now)',
     search: 'Search crops',
-    searchPlaceholder: 'Find a crop by name',
+    /** Short enough to fit at 375 without ellipsis (old: "Find a crop by name"). */
+    searchPlaceholder: 'Crop name',
+    /** Visible submit control next to the search input. */
+    searchButton: 'Search',
+    /** Accessible name for the suggestion listbox. */
+    searchSuggestions: 'Crop suggestions',
+    /**
+     * When more API matches exist than the visible suggestion cap.
+     *
+     * @param n - Number of matches not shown in the list.
+     */
+    searchMore: (n: number) => (n === 1 ? '1 more match' : `${n} more matches`),
+    /**
+     * Live search match count next to the input.
+     *
+     * @param n - Number of matching crops.
+     * @param q - Query fragment the visitor typed.
+     */
+    searchCount: (n: number, q: string) =>
+      n === 1 ? `1 crop matches ${q}` : `${n} crops match ${q}`,
+    /**
+     * Zero-match live search status (distinct from a failed request).
+     *
+     * @param q - Query fragment.
+     */
+    searchEmpty: (q: string) => `0 crops match ${q}`,
+    searchEmptyHint: 'No crops match that name. Try another spelling or a shorter fragment.',
+    searching: 'Searching crops…',
+    searchError: 'Could not search crops.',
+    searchRetry: 'Retry search',
     clear: 'Clear filters',
     months: [
       'January',
@@ -78,6 +107,20 @@ export const en = {
       'November',
       'December'
     ] as const
+  },
+
+  timeline: {
+    title: 'Half-month timeline',
+    lede: 'Pick a half-month to see what is plantable. Counts are crops with an active seed or transplant window.',
+    listLabel: 'Half-months with plantable crop counts',
+    loadingCounts: 'Loading half-month counts…',
+    now: 'Now',
+    /**
+     * Heading for the plantable list under the timeline.
+     *
+     * @param label - Half-month label such as "Aug 1".
+     */
+    plantableHeading: (label: string) => `Plantable in ${label}`
   },
 
   grid: {
@@ -121,6 +164,9 @@ export const en = {
     noMatch: 'No zones match that search.',
     lastFrost: 'Avg. last spring frost (32°F)',
     firstFrost: 'Approx. first fall frost',
+    /** Compact frost labels for the zone bar. */
+    lastFrostShort: 'Last frost',
+    firstFrostShort: 'First frost',
     zip: 'ZIP',
     /**
      * Header / context line for the active zone.
@@ -169,7 +215,8 @@ export const en = {
     title: 'Planting assistant',
     subtitle:
       'Ask about crops and windows in this app\'s database (az1005 for the low desert). Answers are grounded in D1, not general knowledge.',
-    placeholder: 'e.g. What can I plant in early August?',
+    /** Short enough for the rail input; long copy truncated as "…plant ir". */
+    placeholder: 'What can I plant now?',
     submit: 'Ask',
     thinking: 'Looking up planting data…',
     error: 'Assistant could not answer. Try again or use the crop grid.',

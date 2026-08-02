@@ -25,7 +25,7 @@ export function Layout() {
       <a className="skip-link" href="#main">
         {en.nav.skipToContent}
       </a>
-      <header className="topbar">
+      <header className={isHome ? 'topbar topbar--home' : 'topbar'}>
         <div className="topbar__brand">
           <Link to="/" className="topbar__logo" aria-label={en.appName}>
             <img
@@ -40,12 +40,21 @@ export function Layout() {
             <span className="topbar__name">{en.appName}</span>
           </Link>
         </div>
-        <div className="topbar__zone-block">
-          <span className="topbar__zone mono" data-testid="topbar-zone">
-            {zone ? en.zone.contextLine(zone) : en.appTagline}
-          </span>
-          <ZoneSelector />
-        </div>
+        {/* On home, zone lives in the full-width zone bar above search (Timeline + rail). */}
+        {!isHome ? (
+          <div className="topbar__zone-block">
+            <span className="topbar__zone mono" data-testid="topbar-zone">
+              {zone ? en.zone.contextLine(zone) : en.appTagline}
+            </span>
+            <ZoneSelector />
+          </div>
+        ) : (
+          <div className="topbar__zone-block topbar__zone-block--home-tag">
+            <span className="topbar__zone mono" data-testid="topbar-zone">
+              {zone ? en.zone.contextLine(zone) : en.appTagline}
+            </span>
+          </div>
+        )}
         <button
           type="button"
           className="topbar__menu-btn"

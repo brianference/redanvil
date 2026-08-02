@@ -103,12 +103,12 @@ async function forceThemeMode(
 }
 
 /**
- * Read computed background-color of the plantable hero.
+ * Read computed background-color of the timeline hero (theme-sensitive surface).
  *
  * @param page - Playwright page.
  */
 async function readHeroBg(page: import('@playwright/test').Page): Promise<string> {
-  return page.getByTestId('plantable-hero').evaluate((el) => {
+  return page.getByTestId('half-month-timeline').evaluate((el) => {
     return getComputedStyle(el).backgroundColor;
   });
 }

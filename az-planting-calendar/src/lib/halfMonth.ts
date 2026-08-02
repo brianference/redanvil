@@ -111,6 +111,41 @@ export function halfMonthToMonth(half: number): number {
 }
 
 /**
+ * Representative local calendar date (YYYY-MM-DD) for a half-month index.
+ * Early half → day 1; late half → day 15. Year is supplied by the caller.
+ *
+ * @param half - Half-month index 0..23.
+ * @param year - Calendar year for the date string.
+ */
+export function halfMonthToIsoDate(half: number, year: number): string {
+  assertHalf(half);
+  if (!Number.isInteger(year) || year < 1) {
+    throw new RangeError(`year must be a positive integer, got ${year}`);
+  }
+  const month = Math.floor(half / 2) + 1;
+  const day = half % 2 === 0 ? 1 : 15;
+  const mm = String(month).padStart(2, '0');
+  const dd = String(day).padStart(2, '0');
+  return `${year}-${mm}-${dd}`;
+}
+
+/**
+ * Format a zone frost field (MM-DD or free text) for display.
+ * Cave Creek ships as 02-20 / 12-06 from D1 (NOAA normals).
+ *
+ * @param raw - Zone last_frost or first_frost value.
+ */
+export function formatFrostDate(raw: string): string {
+  const match = /^(\d{2})-(\d{2})$/.exec(raw.trim());
+  if (!match) return raw;
+  const month = Number(match[1]);
+  const day = Number(match[2]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return raw;
+  const date = new Date(2000, month - 1, day, 12, 0, 0, 0);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/**
  * Both half-month indices that fall in a calendar month (0..11).
  *
  * @param month - Calendar month 0..11.

@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   dateToHalfMonth,
   expandHalfMonthRange,
+  formatFrostDate,
   halfMonthInWindow,
   halfMonthLabel,
+  halfMonthToIsoDate,
   halfMonthToMonth,
   monthToHalfMonths,
   HALF_MONTHS_PER_YEAR
@@ -73,5 +75,19 @@ describe('labels and month helpers', () => {
   it('expands ranges including wrap', () => {
     expect(expandHalfMonthRange(2, 4)).toEqual([2, 3, 4]);
     expect(expandHalfMonthRange(22, 1)).toEqual([22, 23, 0, 1]);
+  });
+
+  it('maps half-month to a representative ISO date', () => {
+    expect(halfMonthToIsoDate(0, 2026)).toBe('2026-01-01');
+    expect(halfMonthToIsoDate(1, 2026)).toBe('2026-01-15');
+    expect(halfMonthToIsoDate(14, 2026)).toBe('2026-08-01');
+    expect(halfMonthToIsoDate(15, 2026)).toBe('2026-08-15');
+    expect(dateToHalfMonth(new Date(2026, 7, 1))).toBe(14);
+    expect(dateToHalfMonth(new Date(2026, 7, 15))).toBe(15);
+  });
+
+  it('formats MM-DD frost dates for display', () => {
+    expect(formatFrostDate('02-20')).toBe('Feb 20');
+    expect(formatFrostDate('12-06')).toBe('Dec 6');
   });
 });

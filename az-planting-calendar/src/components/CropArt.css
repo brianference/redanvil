@@ -13,6 +13,11 @@
   height: 72px;
 }
 
+.crop-art--row {
+  width: 88px;
+  height: 88px;
+}
+
 .crop-art--detail {
   width: min(100%, 192px);
   height: auto;
@@ -20,7 +25,12 @@
   max-width: 192px;
 }
 
-.hero .crop-art {
-  background: var(--hero-card-bg);
-  border-color: var(--hero-card-border);
+.crop-art--thumb {
+  width: 40px;
+  height: 40px;
+}
+
+.plantable .crop-art {
+  background: var(--surface-2);
+  border-color: var(--border);
 }

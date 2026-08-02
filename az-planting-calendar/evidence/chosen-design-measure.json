@@ -1,0 +1,259 @@
+{
+  "measuredAt": "2026-08-02T18:47:40.621Z",
+  "base": "http://127.0.0.1:8788",
+  "cspHeader": "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+  "publicHeadersFile": "/*\n  Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'\n  Strict-Transport-Security: max-age=31536000; includeSubDomains\n  X-Frame-Options: DENY\n  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=()\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin",
+  "zone": {
+    "name": "Cave Creek AZ (low desert, Maricopa County)",
+    "last_frost": "02-20",
+    "first_frost": "12-06",
+    "elevation_ft": 2529
+  },
+  "counts": {
+    "crops": 45,
+    "windows": 83,
+    "zones": 8
+  },
+  "runs": [
+    {
+      "theme": "light",
+      "width": 375,
+      "height": 812,
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeIds": [],
+      "consoleErrors": [],
+      "cspViolations": [],
+      "truncatedCount": 2,
+      "truncatedSample": [
+        {
+          "tag": "SPAN",
+          "text": "Search crops",
+          "sw": 47,
+          "cw": 1
+        },
+        {
+          "tag": "LABEL",
+          "text": "e.g. What can I plant in early August?",
+          "sw": 262,
+          "cw": 1
+        }
+      ],
+      "searchY": 212,
+      "brandMarkH": 96,
+      "paintedPct": 100,
+      "searchCountY": 275,
+      "shot": "home-light-375.png"
+    },
+    {
+      "theme": "light",
+      "width": 1280,
+      "height": 900,
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeIds": [],
+      "consoleErrors": [],
+      "cspViolations": [],
+      "truncatedCount": 2,
+      "truncatedSample": [
+        {
+          "tag": "SPAN",
+          "text": "Search crops",
+          "sw": 47,
+          "cw": 1
+        },
+        {
+          "tag": "LABEL",
+          "text": "e.g. What can I plant in early August?",
+          "sw": 262,
+          "cw": 1
+        }
+      ],
+      "searchY": 212,
+      "brandMarkH": 96,
+      "paintedPct": 100,
+      "searchCountY": 275,
+      "shot": "home-light-1280.png"
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "height": 900,
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeIds": [],
+      "consoleErrors": [],
+      "cspViolations": [],
+      "truncatedCount": 2,
+      "truncatedSample": [
+        {
+          "tag": "SPAN",
+          "text": "Search crops",
+          "sw": 47,
+          "cw": 1
+        },
+        {
+          "tag": "LABEL",
+          "text": "e.g. What can I plant in early August?",
+          "sw": 262,
+          "cw": 1
+        }
+      ],
+      "searchY": 212,
+      "brandMarkH": 96,
+      "paintedPct": 100,
+      "searchCountY": null,
+      "shot": "home-light-1440.png"
+    },
+    {
+      "theme": "light",
+      "width": 1920,
+      "height": 1080,
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeIds": [],
+      "consoleErrors": [],
+      "cspViolations": [],
+      "truncatedCount": 2,
+      "truncatedSample": [
+        {
+          "tag": "SPAN",
+          "text": "Search crops",
+          "sw": 47,
+          "cw": 1
+        },
+        {
+          "tag": "LABEL",
+          "text": "e.g. What can I plant in early August?",
+          "sw": 262,
+          "cw": 1
+        }
+      ],
+      "searchY": 212,
+      "brandMarkH": 96,
+      "paintedPct": 100,
+      "searchCountY": null,
+      "shot": "home-light-1920.png"
+    },
+    {
+      "theme": "dark",
+      "width": 375,
+      "height": 812,
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeIds": [],
+      "consoleErrors": [],
+      "cspViolations": [],
+      "truncatedCount": 2,
+      "truncatedSample": [
+        {
+          "tag": "SPAN",
+          "text": "Search crops",
+          "sw": 47,
+          "cw": 1
+        },
+        {
+          "tag": "LABEL",
+          "text": "e.g. What can I plant in early August?",
+          "sw": 262,
+          "cw": 1
+        }
+      ],
+      "searchY": 212,
+      "brandMarkH": 96,
+      "paintedPct": 100,
+      "searchCountY": 275,
+      "shot": "home-dark-375.png"
+    },
+    {
+      "theme": "dark",
+      "width": 1280,
+      "height": 900,
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeIds": [],
+      "consoleErrors": [],
+      "cspViolations": [],
+      "truncatedCount": 2,
+      "truncatedSample": [
+        {
+          "tag": "SPAN",
+          "text": "Search crops",
+          "sw": 47,
+          "cw": 1
+        },
+        {
+          "tag": "LABEL",
+          "text": "e.g. What can I plant in early August?",
+          "sw": 262,
+          "cw": 1
+        }
+      ],
+      "searchY": 212,
+      "brandMarkH": 96,
+      "paintedPct": 100,
+      "searchCountY": 275,
+      "shot": "home-dark-1280.png"
+    },
+    {
+      "theme": "dark",
+      "width": 1440,
+      "height": 900,
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeIds": [],
+      "consoleErrors": [],
+      "cspViolations": [],
+      "truncatedCount": 2,
+      "truncatedSample": [
+        {
+          "tag": "SPAN",
+          "text": "Search crops",
+          "sw": 47,
+          "cw": 1
+        },
+        {
+          "tag": "LABEL",
+          "text": "e.g. What can I plant in early August?",
+          "sw": 262,
+          "cw": 1
+        }
+      ],
+      "searchY": 212,
+      "brandMarkH": 96,
+      "paintedPct": 100,
+      "searchCountY": null,
+      "shot": "home-dark-1440.png"
+    },
+    {
+      "theme": "dark",
+      "width": 1920,
+      "height": 1080,
+      "axeViolations": 0,
+      "axeSerious": 0,
+      "axeIds": [],
+      "consoleErrors": [],
+      "cspViolations": [],
+      "truncatedCount": 2,
+      "truncatedSample": [
+        {
+          "tag": "SPAN",
+          "text": "Search crops",
+          "sw": 47,
+          "cw": 1
+        },
+        {
+          "tag": "LABEL",
+          "text": "e.g. What can I plant in early August?",
+          "sw": 262,
+          "cw": 1
+        }
+      ],
+      "searchY": 212,
+      "brandMarkH": 96,
+      "paintedPct": 100,
+      "searchCountY": null,
+      "shot": "home-dark-1920.png"
+    }
+  ]
+}

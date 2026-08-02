@@ -35,7 +35,8 @@
 
 .zone-selector__list {
   position: absolute;
-  z-index: 40;
+  /* Above sticky live-search (z-40) and topbar chrome so options stay clickable. */
+  z-index: 70;
   top: calc(100% + var(--space-1));
   left: 0;
   right: 0;

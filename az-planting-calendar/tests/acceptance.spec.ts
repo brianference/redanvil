@@ -53,20 +53,21 @@ test.describe('Plantable now hero', () => {
 
     const hero = page.getByTestId('plantable-hero');
     await expect(hero).toBeVisible();
-    await expect(hero).toBeInViewport();
+    // Timeline is the first viewport hero; crop rows sit under it -- scroll into view.
+    await hero.scrollIntoViewIfNeeded();
+    await expect(hero).toBeInViewport({ ratio: 0.01 });
 
     const list = page.getByTestId('hero-list');
     await expect(list).toBeVisible();
-    // First card must clear the fold; the full ul is tall (many crops) and may
-    // extend below the fold while still intersecting -- assert the first card.
     const cards = page.getByTestId('plant-card');
     await expect(cards.first()).toBeVisible();
+    await cards.first().scrollIntoViewIfNeeded();
     await expect(cards.first()).toBeInViewport();
-    await expect(list).toBeInViewport({ ratio: 0.01 });
 
     const text = await list.innerText();
     expect(text.length).toBeGreaterThan(10);
     await expect(page.getByTestId('hero-meta')).toContainText('2026-03-01');
+    await expect(page.getByTestId('half-month-timeline')).toBeVisible();
   });
 });
 
@@ -361,7 +362,274 @@ test.describe('Search above the fold', () => {
       await expect(search).toBeInViewport();
       // Exactly one search control (not duplicated in filters + hero).
       await expect(page.getByTestId('filter-search')).toHaveCount(1);
+      // Search button is present and large enough to tap.
+      const submit = page.getByTestId('search-submit');
+      await expect(submit).toBeVisible();
+      const box = await submit.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+      // No stray brand mark beside the search field.
+      await expect(page.locator('.live-search__brand')).toHaveCount(0);
+      await expect(page.locator('.live-search__mark')).toHaveCount(0);
     }
+  });
+
+  test('live search result count is in the viewport at 375 and 1280 after typing', async ({
+    page
+  }) => {
+    for (const size of [
+      { width: 375, height: 900 },
+      { width: 1280, height: 900 }
+    ]) {
+      await page.setViewportSize(size);
+      await page.goto('/');
+      const cropsWait = page.waitForResponse(
+        (r) =>
+          r.url().includes('/api/crops') &&
+          r.url().includes('q=tomato') &&
+          r.ok()
+      );
+      const search = page.getByTestId('filter-search');
+      await expect(search).toBeVisible();
+      await search.fill('tomato');
+      await cropsWait;
+
+      const count = page.getByTestId('search-result-count');
+      await expect(count).toBeVisible();
+      await expect(count).toBeInViewport();
+      await expect(count).toContainText(/crop/i);
+      await expect(count).toContainText(/tomato/i);
+
+      const box = await count.boundingBox();
+      expect(box).not.toBeNull();
+      // First viewport: top of result count must sit above the fold.
+      expect(box!.y).toBeLessThan(size.height);
+      expect(box!.y).toBeGreaterThanOrEqual(0);
+
+      // Suggestion list with crop art is also in the first viewport.
+      const list = page.getByTestId('search-result-list');
+      await expect(list).toBeVisible();
+      await expect(list).toBeInViewport();
+      const listBox = await list.boundingBox();
+      expect(listBox).not.toBeNull();
+      expect(listBox!.y).toBeLessThan(size.height);
+      await expect(list.getByTestId('crop-art').first()).toBeVisible();
+    }
+  });
+
+  test('suggestions appear; ArrowDown+Enter selects crop detail', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/');
+    const cropsWait = page.waitForResponse(
+      (r) =>
+        r.url().includes('/api/crops') && r.url().includes('q=tom') && r.ok()
+    );
+    const search = page.getByTestId('filter-search');
+    await search.fill('tom');
+    await cropsWait;
+
+    const list = page.getByTestId('search-result-list');
+    await expect(list).toBeVisible();
+    await expect(page.getByTestId('search-result-item').first()).toBeVisible();
+    await expect(search).toHaveAttribute('role', 'combobox');
+    await expect(search).toHaveAttribute('aria-expanded', 'true');
+
+    await search.press('ArrowDown');
+    await expect(search).toHaveAttribute('aria-activedescendant', /.+/);
+    await search.press('Enter');
+    await expect(page).toHaveURL(/\/crop\/crop-/);
+    await expect(page.getByTestId('crop-detail')).toBeVisible();
+  });
+
+  test('Search button and Enter without highlight reach the same result state', async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    /**
+     * Run one submit path and capture the settled result state.
+     *
+     * @param how - How to submit: labelled button or Enter with no highlight.
+     */
+    async function runPath(how: 'button' | 'enter'): Promise<{
+      countText: string;
+      firstName: string;
+      pathname: string;
+      q: string | null;
+    }> {
+      await page.goto('/');
+      const cropsWait = page.waitForResponse(
+        (r) =>
+          r.url().includes('/api/crops') &&
+          r.url().includes('q=tomato') &&
+          r.ok()
+      );
+      const search = page.getByTestId('filter-search');
+      await expect(search).toBeVisible();
+      await search.fill('tomato');
+      await cropsWait;
+      await expect(page.getByTestId('search-result-list')).toBeVisible();
+
+      if (how === 'button') {
+        await page.getByTestId('search-submit').click();
+      } else {
+        // No ArrowDown: activeIndex stays -1 so Enter commits search, not a crop.
+        await search.focus();
+        await search.press('Enter');
+      }
+
+      await expect(page.getByTestId('search-result-count')).toBeVisible();
+      await expect(page.getByTestId('search-result-count')).toContainText(/tomato/i);
+      await expect(page.getByTestId('search-result-item').first()).toBeVisible();
+      // Must stay on home search state, not navigate to a crop detail page.
+      await expect(page).toHaveURL(/[?&]q=tomato/);
+      expect(new URL(page.url()).pathname).toBe('/');
+
+      return {
+        countText: await page.getByTestId('search-result-count').innerText(),
+        firstName: await page.getByTestId('search-result-item').first().innerText(),
+        pathname: new URL(page.url()).pathname,
+        q: new URL(page.url()).searchParams.get('q')
+      };
+    }
+
+    const viaButton = await runPath('button');
+    const viaEnter = await runPath('enter');
+
+    expect(viaEnter.countText).toBe(viaButton.countText);
+    expect(viaEnter.firstName).toBe(viaButton.firstName);
+    expect(viaEnter.pathname).toBe('/');
+    expect(viaButton.pathname).toBe('/');
+    expect(viaEnter.q).toBe('tomato');
+    expect(viaButton.q).toBe('tomato');
+  });
+});
+
+test.describe('Half-month timeline reachability', () => {
+  /**
+   * Reachable = can be brought fully into the scroller client rect via container scroll.
+   */
+  async function measureReachable(page: import('@playwright/test').Page) {
+    return page.evaluate(() => {
+      const scroller = document.querySelector(
+        '[data-testid="timeline-scroll"]'
+      ) as HTMLElement | null;
+      if (!scroller) return { error: 'no scroller', total: 0, reachable: 0 };
+      const cells = [
+        ...scroller.querySelectorAll('[data-testid="timeline-half"]')
+      ] as HTMLElement[];
+      let reachable = 0;
+      const unreachable: string[] = [];
+      for (const cell of cells) {
+        // Scroll this cell into the scroller (container only).
+        const pad = 8;
+        const cellLeft = cell.offsetLeft;
+        const cellRight = cellLeft + cell.offsetWidth;
+        const needLeft = cellLeft - pad;
+        const needRight = cellRight - scroller.clientWidth + pad;
+        if (cellLeft < scroller.scrollLeft + pad) {
+          scroller.scrollLeft = Math.max(0, needLeft);
+        } else if (cellRight > scroller.scrollLeft + scroller.clientWidth - pad) {
+          scroller.scrollLeft = Math.max(0, needRight);
+        }
+        const sRect = scroller.getBoundingClientRect();
+        const r = cell.getBoundingClientRect();
+        const visible =
+          r.left >= sRect.left - 1 &&
+          r.right <= sRect.right + 1 &&
+          r.width > 0;
+        const label =
+          cell.querySelector('.timeline__label')?.textContent ??
+          cell.getAttribute('data-half') ??
+          '?';
+        if (visible) reachable += 1;
+        else unreachable.push(label);
+      }
+      const style = getComputedStyle(scroller);
+      return {
+        total: cells.length,
+        reachable,
+        unreachable,
+        overflowX: style.overflowX,
+        scrollWidth: scroller.scrollWidth,
+        clientWidth: scroller.clientWidth,
+        canScroll: scroller.scrollWidth > scroller.clientWidth
+      };
+    });
+  }
+
+  test('all 24 half-months are reachable at 375 and 1280', async ({ page }) => {
+    for (const size of [
+      { width: 375, height: 812 },
+      { width: 1280, height: 1000 }
+    ]) {
+      await page.setViewportSize(size);
+      const gridWait = page.waitForResponse((r) => r.url().includes('/api/grid') && r.ok());
+      await page.goto('/');
+      await gridWait;
+      await expect(page.getByTestId('timeline-scroll')).toBeVisible();
+      await expect(page.getByTestId('timeline-half')).toHaveCount(24);
+
+      const result = await measureReachable(page);
+      expect(result.overflowX, `${size.width}: overflow-x`).toBe('auto');
+      expect(result.canScroll, `${size.width}: must scroll`).toBe(true);
+      expect(result.total).toBe(24);
+      expect(
+        result.reachable,
+        `${size.width}: unreachable=${JSON.stringify(result.unreachable)}`
+      ).toBe(24);
+    }
+  });
+
+  test('keyboard arrows move selection into a cut-off month and update the list', async ({
+    page
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 1000 });
+    const plantableWait = page.waitForResponse(
+      (r) => r.url().includes('/api/plantable') && r.ok()
+    );
+    await page.goto('/');
+    await plantableWait;
+    await expect(page.getByTestId('timeline-scroll')).toBeVisible();
+
+    // Focus the selected cell (roving tabindex 0).
+    const selected = page.locator(
+      '[data-testid="timeline-half"][aria-selected="true"]'
+    );
+    await selected.focus();
+    await expect(selected).toBeFocused();
+
+    // Walk left until Jan 1 (half 0) -- these are cut off when "now" is mid-year.
+    for (let i = 0; i < 24; i += 1) {
+      const half = await page.evaluate(
+        () => document.activeElement?.getAttribute('data-half') ?? ''
+      );
+      if (half === '0') break;
+      const nextWait = page.waitForResponse(
+        (r) => r.url().includes('/api/plantable') && r.ok()
+      );
+      await page.keyboard.press('ArrowLeft');
+      await nextWait;
+    }
+
+    const focused = page.locator('[data-testid="timeline-half"][data-half="0"]');
+    await expect(focused).toBeFocused();
+    await expect(focused).toHaveAttribute('aria-selected', 'true');
+    // Fully inside the scroller after keyboard navigation.
+    const inScroller = await page.evaluate(() => {
+      const scroller = document.querySelector(
+        '[data-testid="timeline-scroll"]'
+      ) as HTMLElement;
+      const cell = document.querySelector(
+        '[data-testid="timeline-half"][data-half="0"]'
+      ) as HTMLElement;
+      const s = scroller.getBoundingClientRect();
+      const c = cell.getBoundingClientRect();
+      return c.left >= s.left - 1 && c.right <= s.right + 1;
+    });
+    expect(inScroller).toBe(true);
+    await expect(page).toHaveURL(/date=2026-01-01|date=\d{4}-01-01/);
+    await expect(page.getByTestId('plantable-hero')).toBeVisible();
   });
 });
 

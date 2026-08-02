@@ -1,21 +1,31 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AssistantPanel } from '../components/AssistantPanel';
 import { Filters, type FiltersState } from '../components/Filters';
+import { HalfMonthTimeline } from '../components/HalfMonthTimeline';
+import { LiveSearch } from '../components/LiveSearch';
 import { PlantableHero } from '../components/PlantableHero';
 import { YearGrid } from '../components/YearGrid';
+import { ZoneBar } from '../components/ZoneBar';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { useZone } from '../hooks/useZone';
 import { en } from '../i18n/en';
 import { fetchCrops, fetchGrid, fetchPlantable } from '../lib/api';
-import { halfMonthInWindow } from '../lib/halfMonth';
-import type { GridResponse, Method, PlantableResponse } from '../lib/schemas';
-import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import {
+  dateToHalfMonth,
+  halfMonthInWindow,
+  halfMonthToIsoDate
+} from '../lib/halfMonth';
+import type { CropListItem, GridResponse, Method, PlantableResponse } from '../lib/schemas';
 import './HomePage.css';
 
+/** Debounce for live crop name search (ms). */
+const SEARCH_DEBOUNCE_MS = 280;
+
 /**
- * Home: plantable-now hero owns first viewport; filters + grid below the fold.
- * Optional URL: ?date=YYYY-MM-DD&method=S|T&month=0..11&q=
- * Crop name search hits GET /api/crops?q= and narrows the year grid by returned ids.
+ * Home: Timeline + rail layout.
+ * Zone bar → sticky live search → half-month timeline → crop rows | assistant rail.
+ * Crop name search results render next to the input in the first viewport.
  */
 export function HomePage() {
   useDocumentMeta(en.meta.homeTitle, en.meta.homeDescription);
@@ -33,6 +43,9 @@ export function HomePage() {
   const [grid, setGrid] = useState<GridResponse | null>(null);
   /** When set, year grid shows only these crop ids (from /api/crops?q=). */
   const [searchIds, setSearchIds] = useState<Set<string> | null>(null);
+  /** Live search hits shown next to the input (null when idle / loading first paint). */
+  const [searchResults, setSearchResults] = useState<CropListItem[] | null>(null);
+  const [searching, setSearching] = useState(false);
   const [plantableLoading, setPlantableLoading] = useState(true);
   const [gridLoading, setGridLoading] = useState(true);
   const [plantableError, setPlantableError] = useState<string | null>(null);
@@ -51,6 +64,34 @@ export function HomePage() {
   );
   const searchQ = filters.q.trim();
   const zoneId = zone?.id;
+
+  const selectedHalf = useMemo(() => {
+    const d = parseDateParam(filters.date);
+    if (!d) return dateToHalfMonth(new Date());
+    const parts = d.split('-').map(Number);
+    const y = parts[0] ?? new Date().getFullYear();
+    const m = parts[1] ?? 1;
+    const day = parts[2] ?? 1;
+    return dateToHalfMonth(new Date(y, m - 1, day));
+  }, [filters.date]);
+
+  const nowHalf = useMemo(() => dateToHalfMonth(new Date()), []);
+
+  /** Per half-month plantable crop counts from the year grid (method filter applied server-side). */
+  const timelineCounts = useMemo(() => {
+    const counts = Array.from({ length: 24 }, () => 0);
+    if (!grid) return counts;
+    for (const row of grid.crops) {
+      for (let half = 0; half < 24; half += 1) {
+        const cell = row.cells[half];
+        if (cell && cell.methods.length > 0) {
+          const next = (counts[half] ?? 0) + 1;
+          counts[half] = next;
+        }
+      }
+    }
+    return counts;
+  }, [grid]);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,33 +157,49 @@ export function HomePage() {
   }, [methodFilter, monthFilter, zoneId, reloadKey]);
 
   /**
-   * Server-side name search: every keystroke with a non-empty q hits /api/crops?q=.
-   * Empty q clears the id filter so the full grid shows.
+   * Debounced live name search: results next to the input + id filter for the year grid.
+   * AbortController cancels superseded requests so a slow reply cannot overwrite a newer query.
    * Failure sets searchError -- never an empty id set (that would paint as "no matches").
    */
+  const searchAbortRef = useRef<AbortController | null>(null);
   useEffect(() => {
-    let cancelled = false;
     if (!searchQ) {
+      searchAbortRef.current?.abort();
+      searchAbortRef.current = null;
       setSearchIds(null);
+      setSearchResults(null);
       setSearchError(null);
-      return () => {
-        cancelled = true;
-      };
+      setSearching(false);
+      return;
     }
+
+    setSearching(true);
     setSearchError(null);
-    void fetchCrops(searchQ)
-      .then((data) => {
-        if (cancelled) return;
-        setSearchIds(new Set(data.crops.map((c) => c.id)));
-        setSearchError(null);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setSearchIds(null);
-        setSearchError(err instanceof Error ? err.message : 'error');
-      });
+    const timer = window.setTimeout(() => {
+      searchAbortRef.current?.abort();
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
+
+      void fetchCrops(searchQ)
+        .then((data) => {
+          if (controller.signal.aborted) return;
+          setSearchIds(new Set(data.crops.map((c) => c.id)));
+          setSearchResults(data.crops);
+          setSearchError(null);
+        })
+        .catch((err: unknown) => {
+          if (controller.signal.aborted) return;
+          setSearchIds(null);
+          setSearchResults(null);
+          setSearchError(err instanceof Error ? err.message : 'error');
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setSearching(false);
+        });
+    }, SEARCH_DEBOUNCE_MS);
+
     return () => {
-      cancelled = true;
+      window.clearTimeout(timer);
     };
   }, [searchQ, reloadKey]);
 
@@ -171,33 +228,68 @@ export function HomePage() {
     };
   }, [grid, searchIds, searchError]);
 
+  /**
+   * Select a half-month from the timeline; load plantable for its representative date.
+   *
+   * @param half - Half-month index 0..23.
+   */
+  function handleTimelineSelect(half: number): void {
+    const year = filters.date
+      ? Number(filters.date.slice(0, 4))
+      : new Date().getFullYear();
+    const date = halfMonthToIsoDate(half, Number.isFinite(year) ? year : new Date().getFullYear());
+    setFilters((f) => ({ ...f, date }));
+  }
+
   return (
     <div className="home">
-      <PlantableHero
-        data={plantable}
-        loading={plantableLoading}
-        error={plantableError}
-        onRetry={() => setReloadKey((k) => k + 1)}
-        date={filters.date}
-        onDateChange={(date) => setFilters((f) => ({ ...f, date }))}
-        searchQ={filters.q}
-        onSearchChange={(q) => setFilters((f) => ({ ...f, q }))}
-        zone={zone}
-      />
-      {/* Inline assistant on home: open by default, does not cover hero on mobile */}
-      <div className="home__assistant shell">
-        <AssistantPanel defaultOpen placement="inline" />
-      </div>
-      <div className="home__below shell">
-        <Filters value={filters} onChange={setFilters} showDate={false} showSearch={false} />
-      </div>
-      <YearGrid
-        data={filteredGrid}
-        loading={gridLoading}
-        error={gridError}
+      <ZoneBar zone={zone} />
+      <LiveSearch
+        value={filters.q}
+        onChange={(q) => setFilters((f) => ({ ...f, q }))}
+        results={searchResults}
+        searching={searching}
         searchError={searchError}
-        onSearchRetry={() => setReloadKey((k) => k + 1)}
+        onRetry={() => setReloadKey((k) => k + 1)}
       />
+
+      <div className="home__body">
+        <div className="home__timeline">
+          <HalfMonthTimeline
+            counts={timelineCounts}
+            selected={selectedHalf}
+            now={nowHalf}
+            onSelect={handleTimelineSelect}
+            loading={gridLoading && !grid}
+          />
+        </div>
+
+        <div className="home__list shell">
+          <PlantableHero
+            data={plantable}
+            loading={plantableLoading}
+            error={plantableError}
+            onRetry={() => setReloadKey((k) => k + 1)}
+          />
+          <div className="home__filters">
+            <Filters value={filters} onChange={setFilters} showDate={false} showSearch={false} />
+          </div>
+        </div>
+
+        <aside className="home__rail" aria-label={en.assistant.title}>
+          <AssistantPanel defaultOpen placement="rail" />
+        </aside>
+
+        <div className="home__grid">
+          <YearGrid
+            data={filteredGrid}
+            loading={gridLoading}
+            error={gridError}
+            searchError={searchError}
+            onSearchRetry={() => setReloadKey((k) => k + 1)}
+          />
+        </div>
+      </div>
     </div>
   );
 }

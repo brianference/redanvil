@@ -79,6 +79,15 @@
   max-width: 100%;
 }
 
+/* Home: context line only (zone control is the full-width zone bar). */
+.topbar--home .topbar__zone-block--home-tag {
+  justify-content: center;
+}
+
+.topbar--home .topbar__zone {
+  display: block;
+}
+
 .topbar__logo {
   display: inline-flex;
   align-items: center;

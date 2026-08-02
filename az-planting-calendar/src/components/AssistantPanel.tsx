@@ -17,8 +17,12 @@ const SESSION_CLOSED_KEY = 'az-assistant-closed';
 interface AssistantPanelProps {
   /** Open on mount when true (home only), unless the visitor closed it this session. */
   defaultOpen?: boolean;
-  /** inline = document flow (mobile-safe); floating = fixed dock. */
-  placement?: 'inline' | 'floating';
+  /**
+   * inline = document flow under content;
+   * floating = fixed dock (non-home);
+   * rail = desktop right column / mobile block under list (not a FAB).
+   */
+  placement?: 'inline' | 'floating' | 'rail';
 }
 
 /**
@@ -125,7 +129,9 @@ export function AssistantPanel({
   const rootClass =
     placement === 'inline'
       ? 'assistant assistant--inline'
-      : 'assistant assistant--floating';
+      : placement === 'rail'
+        ? 'assistant assistant--rail'
+        : 'assistant assistant--floating';
 
   return (
     <div className={rootClass} data-testid="assistant-root" data-placement={placement}>
@@ -232,16 +238,32 @@ export function AssistantPanel({
         </div>
       ) : null}
 
-      <button
-        type="button"
-        className="assistant__fab"
-        onClick={() => (open ? handleClose() : handleOpen())}
-        aria-expanded={open}
-        aria-label={open ? en.assistant.close : en.assistant.openAria}
-        data-testid="assistant-open"
-      >
-        {open ? en.assistant.close : en.assistant.open}
-      </button>
+      {/* Rail: docked reopen control (not a floating action button). Floating/inline keep FAB. */}
+      {placement === 'rail' ? (
+        !open ? (
+          <button
+            type="button"
+            className="assistant__rail-open"
+            onClick={handleOpen}
+            aria-expanded={false}
+            aria-label={en.assistant.openAria}
+            data-testid="assistant-open"
+          >
+            {en.assistant.open}
+          </button>
+        ) : null
+      ) : (
+        <button
+          type="button"
+          className="assistant__fab"
+          onClick={() => (open ? handleClose() : handleOpen())}
+          aria-expanded={open}
+          aria-label={open ? en.assistant.close : en.assistant.openAria}
+          data-testid="assistant-open"
+        >
+          {open ? en.assistant.close : en.assistant.open}
+        </button>
+      )}
     </div>
   );
 }
