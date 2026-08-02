@@ -4,8 +4,8 @@
   "finalScore": 0,
   "threshold": 90,
   "passed": false,
-  "evaluated": 66,
-  "total": 90,
+  "evaluated": 73,
+  "total": 82,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -253,7 +253,7 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-known-bad",
@@ -274,6 +274,66 @@
     {
       "ruleId": "meas-engine-named",
       "passed": true
+    },
+    {
+      "ruleId": "fe-a11y-contrast",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-desktop-width",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cold-visitor",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-product-completeness",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-visual-review-recorded",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-premium-nav",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-required-pages",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-no-attribution",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-responsive-375",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-touch-targets",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-type-floor",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-noncolor-state",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-safe-areas",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cross-link",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-seo-og",
+      "passed": true
     }
   ],
   "iterations": [
@@ -281,32 +341,24 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "fe-a11y-contrast",
-        "fe-premium-nav",
-        "fe-required-pages",
-        "fe-no-attribution",
-        "fe-responsive-375",
-        "fe-product-completeness",
-        "fe-visual-review-recorded",
-        "fe-cold-visitor",
-        "fe-touch-targets",
-        "fe-type-floor",
-        "fe-desktop-width",
-        "lg-shipped"
+        "lg-shipped",
+        "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-02T22:14:47.149Z",
+  "finishedAt": "2026-08-02T22:28:11.443Z",
   "provenance": {
-    "commit": "a86ed3200c8fb3520129a3ba37fb16482fd13994",
-    "dirty": true,
+    "commit": "b0b230a5635ae61971062a26c238613de44edbfb",
+    "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": null,
-    "notApplicable": [],
+    "verdictsHash": "979adf6111f18f4b45e134c1753dbe66f95f0d891782a8fc0938305deff6a045",
+    "notApplicable": [
+      "process"
+    ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-02T22:14:47.206Z"
+    "generatedAt": "2026-08-02T22:28:11.496Z"
   }
 }

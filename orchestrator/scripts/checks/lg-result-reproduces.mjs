@@ -21,6 +21,7 @@ import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SCORE_HELPER = join(here, 'lg-result-reproduces-score.mts');
+const RUBRIC_IDS_HELPER = join(here, 'lg-rubric-ids.mts');
 
 /**
  * @typedef {{
@@ -123,6 +124,33 @@ export function recomputeScore(outcomes, notApplicable = []) {
 }
 
 /**
+ * Every rule id in the rubric, with NO lane exclusions applied.
+ *
+ * `recomputeScore` returns the n/a-filtered set, which is right for scoring and
+ * wrong for deciding whether an id was invented: a run with `--na process`
+ * legitimately records nine process-lane rules that the filtered set omits.
+ *
+ * @returns {string[]} All rubric rule ids.
+ */
+export function allRubricRuleIds() {
+  const r = spawnSync(
+    process.platform === 'win32' ? 'npx.cmd' : 'npx',
+    ['tsx', RUBRIC_IDS_HELPER],
+    {
+      encoding: 'utf8',
+      cwd: join(here, '../..'),
+      shell: process.platform === 'win32',
+      env: process.env
+    }
+  );
+  if (r.status !== 0) {
+    throw new Error(`rubric id helper failed (exit ${r.status}): ${(r.stderr || '').slice(0, 300)}`);
+  }
+  const line = (r.stdout ?? '').trim().split(/\r?\n/).filter(Boolean).pop() ?? '[]';
+  return JSON.parse(line);
+}
+
+/**
  * Pure structural checks that do not need score.ts (unit-testable).
  *
  * @param {object} result Parsed results JSON.
@@ -155,7 +183,14 @@ export function evaluateReproduction(result, recomputed, head) {
   const resultIds = new Set(rules.map((r) => r?.ruleId).filter((id) => typeof id === 'string'));
   const rubricIds = new Set(recomputed.rubricIds);
 
-  const invented = [...resultIds].filter((id) => !rubricIds.has(id)).sort();
+  // Compare against the FULL rubric, not the n/a-filtered set. `recomputed.rubricIds`
+  // has lane exclusions already applied, so a run with `--na process` drops nine
+  // real rules from it -- and every one of them that the gate still recorded then
+  // read as "invented". A rule that ran, was recorded, and simply sits in an
+  // excluded lane is the opposite of invented; flagging it accuses the result of
+  // fabrication for doing exactly the right thing.
+  const fullRubricIds = new Set(allRubricRuleIds());
+  const invented = [...resultIds].filter((id) => !fullRubricIds.has(id)).sort();
   if (invented.length > 0) {
     failures.push(`invented rule id(s) not in rubric: ${invented.join(', ')}`);
   }
