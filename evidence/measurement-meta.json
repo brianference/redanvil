@@ -1,0 +1,32 @@
+{
+  "fe-light-dark": {
+    "tool": "playwright-canvas",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T06:45:51.016Z",
+        "landmarks": 5
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T06:45:51.016Z",
+        "landmarks": 5
+      }
+    ]
+  },
+  "fe-search-present": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T06:45:54.428Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T06:45:54.428Z"
+      }
+    ]
+  }
+}
