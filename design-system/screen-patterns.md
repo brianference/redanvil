@@ -93,3 +93,50 @@ Notes:
 | ---------- | -------------------- | ------------------ |
 | 2026-07-21 | Bootstrap skeletons  | Initial skill      |
 | 2026-07-21 | Agent companion home | OpenClaw real pass |
+
+## Timeline rail (time-window reference tools)
+
+Chosen for az-planting-calendar 2026-08-02 over a focus hero and an image
+gallery. Use when the product's core question is *"what applies during this
+period"* -- planting windows, seasons, schedules, availability.
+
+```
+[ Safe top ]
+[ Zone / context bar — full width ]
+[ Sticky search ]
+[ ─ Horizontal period strip: one cell per window, each with its COUNT ─ ]   <- hero
+[ Rows for the selected period — secondary ]
+[ Assistant: right rail (desktop) / block under the list (mobile) ]
+```
+
+Why it wins: the period model becomes a visible control instead of a hidden
+filter, and the per-cell counts show the shape of the whole year before the
+reader opens a single row. A focus hero answers only "now"; this answers "now,
+and what comes next".
+
+Notes: the strip is a real control, not decoration -- selecting a cell changes
+the list. Never hardcode period boundaries or dates into the strip; read them
+from the data, or the mockup's stale values ship (ours carried superseded frost
+dates into three option frames).
+
+## Card catalog (collections that grow)
+
+Chosen for the RedAnvil examples page 2026-08-02 over a story stack and a
+full-bleed hero.
+
+```
+[ Filter chips ]
+[ Equal-weight cards in a grid ]
+    card face = overlapping stacked device frames (desktop + mobile in one)
+    under the face = title, stat chips, actions
+    expanded = grouped "What it does" prose, closing with measured numbers
+```
+
+Why it wins: a story stack buries the second item and a full-bleed hero demotes
+everything after the first. Equal cards keep every entry legible at the same
+weight and the chrome scales as the set grows.
+
+Notes: stacked device frames show both breakpoints without a strip that scrolls
+away. The expanded body must be behaviour, not adjectives -- each bullet a
+concrete capability, and a closing paragraph citing real gate numbers with the
+date they were measured.

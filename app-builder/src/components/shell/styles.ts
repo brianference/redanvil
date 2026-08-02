@@ -151,41 +151,143 @@ ${SHARED_SHELL_CSS}
 
         }
 
-        /* Examples. The prompt and the PRD sit side by side from 900 up; below
-           that they stack. Width lives here rather than inline so the media
-           query can lift it (R14) and so the page still paints across the
-           viewport at 1440 and 1920 (R22). */
-        .ex-story {
+        /* Examples -- card catalog (option 3). Filter chips + equal magazine cards.
+           Width lives in CSS so media queries can lift it (no JS maxWidth). */
+        .ex-catalog {
           display: flex;
           flex-direction: column;
-          gap: ${theme.space.xl}px;
-          padding-bottom: ${theme.space.xl}px;
+          gap: ${theme.space.lg}px;
+          width: 100%;
         }
-        .ex-story + .ex-story {
+        .ex-catalog__bar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          gap: ${theme.space.md}px;
+        }
+        .ex-catalog__filters {
+          display: flex;
+          flex-wrap: wrap;
+          gap: ${theme.space.sm}px;
+        }
+        .ex-chip {
+          min-height: 36px;
+          padding: 0 ${theme.space.md}px;
+          border-radius: ${theme.radius.pill}px;
+          border: 1px solid ${theme.color.border};
+          background: ${theme.color.chipBg};
+          color: ${theme.color.text};
+          font-size: ${theme.type.scale[1]}px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .ex-chip--on {
+          border-color: ${theme.color.accent};
+          color: ${theme.color.accentFg};
+          font-weight: 700;
+        }
+        .ex-chip:focus-visible {
+          outline: none;
+          box-shadow: ${theme.shadow.focus};
+        }
+        .ex-catalog__grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: ${theme.space.lg}px;
+          width: 100%;
+        }
+        @media (min-width: 900px) {
+          .ex-catalog__grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+        .ex-card {
+          display: flex;
+          flex-direction: column;
+          gap: ${theme.space.lg}px;
+          min-width: 0;
+        }
+        .ex-card__face {
+          background: ${theme.color.surface};
+          border: 1px solid ${theme.color.border};
+          border-radius: ${theme.radius.lg ?? 16}px;
+          overflow: hidden;
+          min-width: 0;
+        }
+        .ex-card__stack {
+          display: grid;
+          grid-template-columns: 1.1fr 0.9fr;
+          gap: ${theme.space.sm}px;
+          padding: ${theme.space.md}px ${theme.space.md}px 0;
+          align-items: end;
+        }
+        .ex-card__device {
+          width: 100%;
+          height: auto;
+          border-radius: ${theme.radius.md}px ${theme.radius.md}px 0 0;
+          border: 1px solid ${theme.color.border};
+          border-bottom: 0;
+          display: block;
+          background: ${theme.color.bg};
+        }
+        .ex-card__device--back {
+          opacity: 0.88;
+          transform: translateY(12px);
+        }
+        .ex-card__meta {
+          padding: ${theme.space.lg}px;
           border-top: 1px solid ${theme.color.border};
-          padding-top: ${theme.space.xl}px;
         }
-        .ex-grid {
+        .ex-card__stats {
+          list-style: none;
+          margin: ${theme.space.md}px 0 0;
+          padding: 0;
+          display: flex;
+          flex-wrap: wrap;
+          gap: ${theme.space.sm}px;
+        }
+        .ex-card__actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: ${theme.space.sm}px;
+          margin-top: ${theme.space.md}px;
+        }
+        .ex-card__does,
+        .ex-card__shipped,
+        .ex-card__built {
+          display: flex;
+          flex-direction: column;
+          gap: ${theme.space.md}px;
+          min-width: 0;
+        }
+        .ex-features {
+          display: flex;
+          flex-direction: column;
+          gap: ${theme.space.md}px;
+        }
+        .ex-feature-group {
+          min-width: 0;
+        }
+        .ex-card__built-grid {
           display: grid;
           grid-template-columns: 1fr;
           gap: ${theme.space.lg}px;
         }
         @media (min-width: 900px) {
-          .ex-grid {
+          .ex-card__built-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            align-items: start;
           }
         }
-        /* Three panels once there is room for them: prompt, brand, PRD. */
         @media (min-width: 1280px) {
-          .ex-grid {
-            grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1.15fr);
+          .ex-card__built-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
           }
         }
         .ex-logo {
           display: block;
           width: 100%;
-          max-width: 220px;
+          max-width: 180px;
           height: auto;
           margin: 0 auto;
         }
@@ -195,38 +297,6 @@ ${SHARED_SHELL_CSS}
           height: auto;
           border: 1px solid ${theme.color.border};
           border-radius: ${theme.radius.sm}px;
-        }
-        /* Store-style strip: captioned phones in a row that scrolls on its own
-           rather than making the page scroll sideways (fe-responsive-375). */
-        .ex-screens {
-          list-style: none;
-          margin: 0;
-          padding: 0 0 ${theme.space.sm}px;
-          display: grid;
-          grid-auto-flow: column;
-          grid-auto-columns: minmax(240px, 1fr);
-          gap: ${theme.space.lg}px;
-          overflow-x: auto;
-          scroll-snap-type: x mandatory;
-        }
-        .ex-screen {
-          min-width: 0;
-          scroll-snap-align: start;
-        }
-        .ex-phone {
-          display: block;
-          width: 100%;
-          height: auto;
-          border: 1px solid ${theme.color.border};
-          border-radius: ${theme.radius.md}px;
-          background: ${theme.color.surface};
-        }
-        @media (min-width: 900px) {
-          .ex-screens {
-            grid-auto-flow: row;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            overflow-x: visible;
-          }
         }
       `;
 }

@@ -78,7 +78,19 @@ export function resolveOptionsDir(appDir) {
   for (const p of candidates) {
     if (existsSync(p) && statSync(p).isDirectory()) return p;
   }
-  return null;
+  // An app legitimately has options for more than one surface, and names the
+  // directory after what they are options FOR -- `home-options`, `examples-options`.
+  // Hardcoding one name failed an app that had done the §7.3a step properly,
+  // which is a false negative: it teaches people the rule is broken rather than
+  // that the work is missing. Accept any design-refs/*options* directory; the
+  // bar (>= 3 artifacts and a written DECISION.md) is unchanged.
+  const refs = join(appDir, 'design-refs');
+  if (!existsSync(refs) || !statSync(refs).isDirectory()) return null;
+  const named = readdirSync(refs, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && /options/i.test(e.name))
+    .map((e) => join(refs, e.name))
+    .sort();
+  return named[0] ?? null;
 }
 
 /**

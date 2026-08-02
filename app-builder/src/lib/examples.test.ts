@@ -47,6 +47,10 @@ describe('shipped examples', () => {
     expect(featureText).toMatch(/45 crops/);
     expect(featureText).toMatch(/83 planting windows/);
     expect(featureText).toMatch(/8 Maricopa/);
+    expect(az!.stats?.join(' ')).toMatch(/45 crops/);
+    expect(az!.stats?.join(' ')).toMatch(/83 windows/);
+    expect(az!.gate).toMatch(/101/);
+    expect(az!.gate).toMatch(/56/);
   });
 
   it('every screen carries a caption and a real alt description', () => {

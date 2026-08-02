@@ -61,9 +61,18 @@ export const en = {
       prdAlt: (name: string): string =>
         `The RedAnvil wizard review step showing the answers that generated the ${name} spec`,
       screensLabel: (name: string): string => `${name} screens`,
+      statsLabel: (name: string): string => `${name} measured stats`,
       viewLive: 'Open the live app',
       viewSource: 'Read the source',
-      featuresHeading: 'What it does'
+      featuresHeading: 'What it does',
+      filtersLabel: 'Filter examples',
+      filterEmpty: 'No shipped apps match that filter.',
+      /**
+       * Catalog header count.
+       *
+       * @param n - Number of shipped examples.
+       */
+      shippedCount: (n: number): string => (n === 1 ? '1 shipped' : `${n} shipped`)
     },
     home: {
       title: 'What app should we forge?',

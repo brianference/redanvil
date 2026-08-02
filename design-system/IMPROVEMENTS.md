@@ -88,3 +88,47 @@ What changed, and what to carry forward:
 Shared shell: twelve units parameterised into `design-system/` (duplication
 394 → 40). The pattern that works is tokens-plus-copy props, so each app keeps
 its own palette and wording while the markup lives once.
+
+## 2026-08-02 — az-planting-calendar, and what the gate could not see
+
+Twelve design rules passed while a user found four defects in twenty minutes.
+Every item below was invisible to a green gate.
+
+- **A control whose result is off-screen looks broken.** Search sat at y=327 and
+  narrowed a grid whose first row was at y=1942, so typing changed nothing in
+  the first viewport. `fe-search-present` passed (it narrows) and
+  `fe-visible-response` passed (something changed). Neither asks whether the
+  change is where the person is looking. Render the result **beside the input**,
+  with a stated count, and an empty state distinct from an error state.
+- **Size the art to the discrimination task.** 45 generated crop illustrations
+  at thumbnail size made beans, okra and yardlong read as the same green shape.
+  Per-item imagery only earns its weight when the item is identifiable at the
+  size it actually renders.
+- **A brand mark below ~48px reads as an afterthought.** Shipped at 32px and was
+  called "way too small". Now enforced by `fe-brand-mark-size` (>=48px at 1280,
+  >=32px at 375).
+- **Never delete the brand's defining element to fix a rendering problem.** At
+  96px the logo's calendar backdrop looked like a plate on the dark header, so
+  it was keyed away -- removing the calendar from a planting *calendar*. Fix the
+  rendering, keep the identity.
+- **Three options is a real step, and it was skipped.** §7.3a called it "not
+  optional" and nothing measured it, so the app was built straight from a
+  hypothesis. `proc-design-options` now requires >=3 artifacts plus a
+  DECISION.md naming the pick, the why, and the structural difference. Name
+  option directories `*-options` -- an app has options for more than one surface.
+- **Mockups carry stale data into the build.** All three option frames hardcoded
+  superseded frost dates. Wire option frames to the real source, or mark the
+  numbers as placeholder in the frame itself.
+- **Truncation is not overflow, and the check knew it before the code did.** The
+  rule text said "an ellipsis is not overflow"; the implementation compared
+  scroll width at page level and passed a page with five truncated labels.
+  Element-level `scrollWidth`/`scrollHeight` now, excluding sr-only elements and
+  deliberate scroll containers -- a naive version reported 12 hits of which 2
+  were false.
+- **Placeholder text is a third blind spot.** `placeholder` is not `textContent`,
+  so a truncated placeholder passes both the old and new checks. Keep
+  placeholders short enough for 375 rather than relying on a measurement.
+- **A strict CSP breaks axe injection.** `script-src 'self'` blocks
+  `page.addScriptTag`. Fix the harness (`bypassCSP` in the audit context), never
+  the app -- adding `unsafe-inline` to make a tool work undoes the security work
+  in the same session that added it.
