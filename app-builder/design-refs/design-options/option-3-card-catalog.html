@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Option 3 -- Card catalog</title>
+    <style>
+      :root,
+      [data-theme='light'] {
+        --bg: #fafafa;
+        --surface: #fff;
+        --text: #111;
+        --muted: #666;
+        --accent: #c2410c;
+        --border: #e5e5e5;
+        --chip: #fff7ed;
+      }
+      [data-theme='dark'] {
+        --bg: #0a0a0a;
+        --surface: #171717;
+        --text: #f5f5f5;
+        --muted: #a3a3a3;
+        --accent: #fb923c;
+        --border: #262626;
+        --chip: #292524;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font: 16px/1.45 system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .bar {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: baseline;
+        justify-content: space-between;
+        background: var(--surface);
+      }
+      .bar h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+      .bar p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+      }
+      .chip {
+        min-height: 36px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--chip);
+        color: var(--text);
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+      }
+      .chip.on {
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .grid {
+        padding: 16px;
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1fr;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      @media (min-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      /* Self-contained magazine card: stacked device frames + overlay title. No multi-section story. */
+      .mag {
+        position: relative;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        overflow: hidden;
+        min-height: 420px;
+      }
+      .stack {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 8px;
+        padding: 14px 14px 0;
+        align-items: end;
+      }
+      .stack img {
+        width: 100%;
+        height: auto;
+        border-radius: 12px 12px 0 0;
+        border: 1px solid var(--border);
+        border-bottom: 0;
+        display: block;
+        background: #000;
+      }
+      .stack img.back {
+        opacity: 0.85;
+        transform: translateY(12px);
+      }
+      .meta {
+        padding: 16px;
+        border-top: 1px solid var(--border);
+      }
+      .meta .kicker {
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 700;
+        margin: 0 0 6px;
+      }
+      .meta h2 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: -0.02em;
+      }
+      .meta p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .stat {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .actions a {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 14px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 650;
+        font-size: 14px;
+      }
+      .actions a.primary {
+        background: var(--accent);
+        color: #1c1917;
+      }
+      [data-theme='light'] .actions a.primary {
+        color: #fff;
+      }
+      .actions a.ghost {
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .note {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 16px 40px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <div>
+        <h1>Examples</h1>
+        <p>Option 03 · Card catalog -- each app is one magazine card, not a long story</p>
+      </div>
+      <p>2 shipped</p>
+    </div>
+    <div class="filters" aria-label="Filter chips (mock)">
+      <span class="chip on">All</span>
+      <span class="chip">Mobile</span>
+      <span class="chip">Data tools</span>
+      <span class="chip">Travel</span>
+    </div>
+
+    <div class="grid">
+      <article class="mag">
+        <div class="stack">
+          <img
+            src="../../public/examples/az-planting-calendar/home-375-light.webp"
+            width="390"
+            height="1040"
+            alt="AZ planting light phone"
+          />
+          <img
+            class="back"
+            src="../../public/examples/az-planting-calendar/home-375-dark.webp"
+            width="390"
+            height="1040"
+            alt="AZ planting dark phone"
+          />
+        </div>
+        <div class="meta">
+          <p class="kicker">Maricopa · low desert</p>
+          <h2>AZ Planting Calendar</h2>
+          <p>
+            Stacked device frames lead. Title and stats sit under the stack. No features section,
+            no PRD panel -- the card is the unit.
+          </p>
+          <div class="stats">
+            <span class="stat">45 crops</span>
+            <span class="stat">83 windows</span>
+            <span class="stat">8 zones</span>
+            <span class="stat">az1005</span>
+          </div>
+          <div class="actions">
+            <a class="primary" href="#">Open live</a>
+            <a class="ghost" href="#">Source</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="mag">
+        <div class="stack">
+          <img
+            src="../../public/examples/quickflight/app-home.png"
+            width="390"
+            height="844"
+            alt="QuickFlight home"
+          />
+          <img
+            class="back"
+            src="../../public/examples/quickflight/app-results-dark.png"
+            width="390"
+            height="844"
+            alt="QuickFlight dark"
+          />
+        </div>
+        <div class="meta">
+          <p class="kicker">Travel · fares</p>
+          <h2>QuickFlight</h2>
+          <p>Lowest-cost airline fares with real filters. Same card architecture as the planting app.</p>
+          <div class="stats">
+            <span class="stat">Live fares</span>
+            <span class="stat">Dark theme</span>
+          </div>
+          <div class="actions">
+            <a class="primary" href="#">Open live</a>
+            <a class="ghost" href="#">Source</a>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <p class="note">
+      Structural difference: filter chrome + equal magazine cards with overlapping device stack.
+      Screenshots are the card face, not a horizontal App Store strip or a full-bleed hero.
+    </p>
+
+    <script>
+      const q = new URLSearchParams(location.search);
+      document.documentElement.dataset.theme = q.get('theme') === 'dark' ? 'dark' : 'light';
+    </script>
+  </body>
+</html>

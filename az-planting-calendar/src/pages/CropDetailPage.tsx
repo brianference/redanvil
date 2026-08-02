@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { CropArt } from '../components/CropArt';
 import { MethodChip } from '../components/MethodChip';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { en } from '../i18n/en';
@@ -62,7 +63,15 @@ export function CropDetailPage() {
 
       {data ? (
         <>
-          <h1>{data.crop.name}</h1>
+          <div className="detail-hero">
+            <CropArt
+              cropId={data.crop.id}
+              alt={data.crop.name}
+              size="detail"
+              priority
+            />
+            <h1>{data.crop.name}</h1>
+          </div>
           <dl className="detail-meta mono">
             <div>
               <dt>{en.detail.harvest}</dt>

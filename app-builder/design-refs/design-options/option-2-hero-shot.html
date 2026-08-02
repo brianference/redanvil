@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Option 2 -- Hero shot</title>
+    <style>
+      :root,
+      [data-theme='light'] {
+        --bg: #eef1f4;
+        --surface: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --accent: #0f766e;
+        --border: #cbd5e1;
+        --hero-fade: linear-gradient(180deg, rgba(15, 23, 42, 0.05), rgba(15, 23, 42, 0.72));
+      }
+      [data-theme='dark'] {
+        --bg: #0b1220;
+        --surface: #111827;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #2dd4bf;
+        --border: #1f2937;
+        --hero-fade: linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.78));
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font: 16px/1.5 system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .top strong {
+        letter-spacing: -0.02em;
+      }
+      .top span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .hero {
+        position: relative;
+        min-height: 52vh;
+        background: #000;
+        overflow: hidden;
+      }
+      .hero img {
+        width: 100%;
+        height: 100%;
+        min-height: 320px;
+        max-height: 560px;
+        object-fit: cover;
+        object-position: top center;
+        display: block;
+        opacity: 0.92;
+      }
+      .hero .overlay {
+        position: absolute;
+        inset: 0;
+        background: var(--hero-fade);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 24px 16px;
+        color: #fff;
+      }
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(28px, 5vw, 44px);
+        letter-spacing: -0.03em;
+        max-width: 16ch;
+      }
+      .hero p {
+        margin: 8px 0 0;
+        max-width: 48ch;
+        color: rgba(255, 255, 255, 0.88);
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        background: var(--border);
+        border-bottom: 1px solid var(--border);
+      }
+      .metric {
+        background: var(--surface);
+        padding: 16px;
+        text-align: center;
+      }
+      .metric b {
+        display: block;
+        font-size: 28px;
+        letter-spacing: -0.03em;
+      }
+      .metric span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .rail {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px 16px 48px;
+      }
+      .rail h2 {
+        margin: 0 0 12px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .card-row {
+        display: grid;
+        gap: 12px;
+      }
+      @media (min-width: 900px) {
+        .card-row {
+          grid-template-columns: 160px 1fr auto;
+          align-items: center;
+        }
+      }
+      .card {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 88px 1fr;
+        align-items: center;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+      }
+      @media (min-width: 900px) {
+        .card {
+          grid-template-columns: 120px 1fr auto;
+        }
+      }
+      .card img.thumb {
+        width: 100%;
+        aspect-ratio: 3/4;
+        object-fit: cover;
+        object-position: top;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+      .card h3 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .card p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 16px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #042f2e;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      [data-theme='light'] .cta {
+        color: #fff;
+      }
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 8px;
+      }
+      .phones-mini {
+        display: none;
+      }
+      @media (min-width: 900px) {
+        .phones-mini {
+          display: flex;
+          gap: 8px;
+          margin-top: 16px;
+        }
+        .phones-mini img {
+          width: 72px;
+          height: 96px;
+          object-fit: cover;
+          object-position: top;
+          border-radius: 6px;
+          border: 1px solid rgba(255, 255, 255, 0.35);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top">
+      <strong>Examples</strong>
+      <span>Option 02 · Hero screenshot leads</span>
+    </div>
+
+    <section class="hero" aria-label="Featured example">
+      <img
+        class="hero-shot"
+        src="../../public/examples/az-planting-calendar/home-1280-light.webp"
+        width="960"
+        height="750"
+        alt="Featured production screenshot"
+      />
+      <div class="overlay">
+        <span class="badge" style="color: #5eead4">Featured ship</span>
+        <h1>AZ Planting Calendar</h1>
+        <p>
+          Full-bleed production screenshot owns the first viewport. Metrics strip and compact
+          catalogue rows follow -- not a multi-panel story.
+        </p>
+        <div class="phones-mini">
+          <img
+            src="../../public/examples/az-planting-calendar/home-375-light.webp"
+            alt=""
+            width="390"
+            height="1040"
+          />
+          <img
+            src="../../public/examples/az-planting-calendar/home-375-dark.webp"
+            alt=""
+            width="390"
+            height="1040"
+          />
+        </div>
+      </div>
+    </section>
+
+    <div class="metrics" aria-label="Verified counts">
+      <div class="metric">
+        <b>45</b>
+        <span>crops</span>
+      </div>
+      <div class="metric">
+        <b>83</b>
+        <span>windows</span>
+      </div>
+      <div class="metric">
+        <b>8</b>
+        <span>zones</span>
+      </div>
+    </div>
+
+    <div class="rail">
+      <h2>Shipped catalogue</h2>
+      <div class="card">
+        <img
+          class="thumb"
+          src="../../public/examples/az-planting-calendar/home-375-light.webp"
+          width="390"
+          height="1040"
+          alt="AZ Planting Calendar thumb"
+        />
+        <div>
+          <h3>AZ Planting Calendar</h3>
+          <p>Maricopa low-desert · az1005 · live at az-planting-calendar.pages.dev</p>
+        </div>
+        <a class="cta" href="#">Open live</a>
+      </div>
+      <div class="card" style="margin-top: 12px; opacity: 0.85">
+        <img
+          class="thumb"
+          src="../../public/examples/quickflight/app-home.png"
+          width="390"
+          height="844"
+          alt="QuickFlight thumb"
+        />
+        <div>
+          <h3>QuickFlight</h3>
+          <p>Lowest-cost fares with real filters · quickflight.pages.dev</p>
+        </div>
+        <a class="cta" href="#">Open live</a>
+      </div>
+    </div>
+
+    <script>
+      const q = new URLSearchParams(location.search);
+      const theme = q.get('theme') === 'dark' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = theme;
+      const hero = document.querySelector('.hero-shot');
+      if (hero instanceof HTMLImageElement) {
+        hero.src =
+          theme === 'dark'
+            ? '../../public/examples/az-planting-calendar/home-1280-dark.webp'
+            : '../../public/examples/az-planting-calendar/home-1280-light.webp';
+      }
+    </script>
+  </body>
+</html>

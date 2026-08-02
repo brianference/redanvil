@@ -1,0 +1,173 @@
+/* App tokens mirrored for static mockups -- same names as src/theme.css */
+:root,
+:root[data-theme='light'] {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --surface-2: #f4f6f8;
+  --border: #c5cdd6;
+  --text: #0e1419;
+  --text-muted: #4a5560;
+  --text-faint: #5a6570;
+  --accent: #0b5fff;
+  --accent-text: #ffffff;
+  --seed: #0a6b42;
+  --seed-bg: #d8f3e6;
+  --seed-border: #0a6b42;
+  --transplant: #8a4b00;
+  --transplant-bg: #fde8c8;
+  --transplant-border: #8a4b00;
+  --hero-bg: #f4f6f8;
+  --hero-text: #0e1419;
+  --hero-muted: #4a5560;
+  --hero-seed: #0a6b42;
+  --hero-transplant: #8a4b00;
+  --hero-border: #c5cdd6;
+  --hero-card-bg: #ffffff;
+  --hero-card-border: #c5cdd6;
+  --hero-input-bg: #ffffff;
+  --hero-input-border: #c5cdd6;
+  --hero-chip-seed-bg: #d8f3e6;
+  --hero-chip-transplant-bg: #fde8c8;
+  --focus: #0b5fff;
+  --radius: 4px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --type-sm: 16px;
+  --type-md: 16px;
+  --type-lg: 20px;
+  --type-xl: 28px;
+  --type-2xl: 36px;
+  --touch: 44px;
+}
+:root[data-theme='dark'] {
+  --bg: #0a0e12;
+  --surface: #141a21;
+  --surface-2: #1a222c;
+  --border: #2c3844;
+  --text: #eef2f5;
+  --text-muted: #a8b2bc;
+  --text-faint: #9aa6b2;
+  --accent: #4d8dff;
+  --accent-text: #061018;
+  --seed: #3dd68c;
+  --seed-bg: #0f2a1c;
+  --seed-border: #3dd68c;
+  --transplant: #f0b060;
+  --transplant-bg: #2a1c08;
+  --transplant-border: #f0b060;
+  --hero-bg: #06090c;
+  --hero-text: #f2f5f7;
+  --hero-muted: #b0bbc6;
+  --hero-seed: #5ee9a8;
+  --hero-transplant: #f5c07a;
+  --hero-border: #2c3844;
+  --hero-card-bg: #141a21;
+  --hero-card-border: #2c3844;
+  --hero-input-bg: #141a21;
+  --hero-input-border: #2c3844;
+  --hero-chip-seed-bg: #0f2a1c;
+  --hero-chip-transplant-bg: #2a1c08;
+  --focus: #4d8dff;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--type-md);
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--text);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.shell {
+  width: 100%;
+  padding-inline: var(--space-4);
+  max-width: 1200px;
+  margin-inline: auto;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 2px 8px;
+  border: 1px solid;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: var(--type-sm);
+  font-weight: 600;
+}
+.chip--s {
+  color: var(--seed);
+  background: var(--seed-bg);
+  border-color: var(--seed-border);
+}
+.chip--t {
+  color: var(--transplant);
+  background: var(--transplant-bg);
+  border-color: var(--transplant-border);
+}
+input[type='search'],
+input[type='date'],
+select {
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--hero-input-border);
+  border-radius: var(--radius);
+  background: var(--hero-input-bg);
+  color: var(--hero-text);
+  width: 100%;
+  font: inherit;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.topbar__mark {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+}
+@media (min-width: 1280px) {
+  .topbar__mark {
+    width: 56px;
+    height: 56px;
+  }
+}
+.topbar__name {
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+.topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: inherit;
+}
+.topbar__zone {
+  margin-left: auto;
+  font-size: var(--type-sm);
+  color: var(--text-muted);
+}

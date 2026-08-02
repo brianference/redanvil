@@ -17,13 +17,36 @@ describe('shipped examples', () => {
   it('every referenced screenshot exists on disk', () => {
     const missing: string[] = [];
     for (const ex of EXAMPLES) {
-      const paths = [ex.reviewShot, ex.logo, ...ex.screens.map((s) => s.src)];
+      const paths = [
+        ...(ex.reviewShot !== undefined ? [ex.reviewShot] : []),
+        ex.logo,
+        ...ex.screens.map((s) => s.src)
+      ];
       for (const p of paths) {
         expect(p.startsWith('/'), `${p} must be an absolute public path`).toBe(true);
         if (!existsSync(join(publicDir, p.replace(/^\//, '')))) missing.push(p);
       }
     }
     expect(missing, `capture these with capture_example.mjs: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('every screen declares intrinsic width and height', () => {
+    for (const ex of EXAMPLES) {
+      for (const s of ex.screens) {
+        expect(s.width, `${ex.slug} ${s.src} width`).toBeGreaterThan(0);
+        expect(s.height, `${ex.slug} ${s.src} height`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('includes the AZ Planting Calendar example with live URL and verified counts', () => {
+    const az = EXAMPLES.find((e) => e.slug === 'az-planting-calendar');
+    expect(az).toBeDefined();
+    expect(az!.liveUrl).toBe('https://az-planting-calendar.pages.dev');
+    const featureText = az!.features.flatMap((g) => g.items).join(' ');
+    expect(featureText).toMatch(/45 crops/);
+    expect(featureText).toMatch(/83 planting windows/);
+    expect(featureText).toMatch(/8 Maricopa/);
   });
 
   it('every screen carries a caption and a real alt description', () => {

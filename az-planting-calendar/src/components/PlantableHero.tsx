@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { en } from '../i18n/en';
 import type { PlantableItem, PlantableResponse, Zone } from '../lib/schemas';
+import { CropArt } from './CropArt';
 import { MethodChip } from './MethodChip';
 import './PlantableHero.css';
 
@@ -153,9 +154,10 @@ export function PlantableHero({
             </p>
           ) : (
             <ul className="hero__list" data-testid="hero-list">
-              {data.items.map((item) => (
+              {data.items.map((item, index) => (
                 <li key={item.crop.id}>
-                  <PlantableCard item={item} />
+                  {/* First two cards are above the fold on 375; rest lazy-load. */}
+                  <PlantableCard item={item} priority={index < 2} />
                 </li>
               ))}
             </ul>
@@ -168,8 +170,16 @@ export function PlantableHero({
 
 /**
  * One plantable crop card with methods and source link.
+ * Crop art is optional: missing webp fails closed to the existing text card.
  */
-function PlantableCard({ item }: { item: PlantableItem }) {
+function PlantableCard({
+  item,
+  priority = false
+}: {
+  item: PlantableItem;
+  /** Eager-load art when this card is above the fold. */
+  priority?: boolean;
+}) {
   const harvest =
     item.crop.days_to_harvest_min != null && item.crop.days_to_harvest_max != null
       ? `${item.crop.days_to_harvest_min}–${item.crop.days_to_harvest_max}`
@@ -180,39 +190,44 @@ function PlantableCard({ item }: { item: PlantableItem }) {
 
   return (
     <article className="plant-card" data-testid="plant-card">
-      <div className="plant-card__head">
-        <h2 className="plant-card__name">
-          <Link to={`/crop/${item.crop.id}`}>{item.crop.name}</Link>
-        </h2>
-        <div className="plant-card__methods">
-          {item.methods.map((m) => (
-            <MethodChip key={m} method={m} />
-          ))}
+      <div className="plant-card__row">
+        <CropArt cropId={item.crop.id} alt="" size="card" priority={priority} />
+        <div className="plant-card__body">
+          <div className="plant-card__head">
+            <h2 className="plant-card__name">
+              <Link to={`/crop/${item.crop.id}`}>{item.crop.name}</Link>
+            </h2>
+            <div className="plant-card__methods">
+              {item.methods.map((m) => (
+                <MethodChip key={m} method={m} />
+              ))}
+            </div>
+          </div>
+          {harvest ? (
+            <p className="plant-card__harvest mono">
+              <span className="plant-card__harvest-label">{en.hero.daysHarvest}</span> {harvest}
+            </p>
+          ) : null}
+          {primarySource ? (
+            <p className="plant-card__source">
+              <span className="plant-card__source-label">{en.hero.source}</span>{' '}
+              <a
+                href={primarySource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="source-link"
+              >
+                {primarySource.title}
+              </a>
+            </p>
+          ) : null}
+          {granularity === 'month' ? (
+            <p className="plant-card__granularity mono" data-testid="source-granularity">
+              {en.detail.granularityMonth}
+            </p>
+          ) : null}
         </div>
       </div>
-      {harvest ? (
-        <p className="plant-card__harvest mono">
-          <span className="plant-card__harvest-label">{en.hero.daysHarvest}</span> {harvest}
-        </p>
-      ) : null}
-      {primarySource ? (
-        <p className="plant-card__source">
-          <span className="plant-card__source-label">{en.hero.source}</span>{' '}
-          <a
-            href={primarySource.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="source-link"
-          >
-            {primarySource.title}
-          </a>
-        </p>
-      ) : null}
-      {granularity === 'month' ? (
-        <p className="plant-card__granularity mono" data-testid="source-granularity">
-          {en.detail.granularityMonth}
-        </p>
-      ) : null}
       <Link className="plant-card__detail" to={`/crop/${item.crop.id}`}>
         {en.hero.viewCrop}
       </Link>

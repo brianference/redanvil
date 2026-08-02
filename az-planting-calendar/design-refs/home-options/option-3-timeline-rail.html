@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Option 3 -- Timeline + rail</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <style>
+      .app {
+        display: grid;
+        grid-template-columns: 1fr;
+        min-height: 100dvh;
+      }
+      @media (min-width: 1100px) {
+        .app {
+          grid-template-columns: 1fr 320px;
+        }
+        .rail {
+          display: flex !important;
+        }
+      }
+      .zone-bar {
+        background: var(--surface-2);
+        border-bottom: 1px solid var(--border);
+        padding: var(--space-2) var(--space-4);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+      }
+      .zone-bar strong {
+        font-weight: 700;
+      }
+      .zone-bar select {
+        max-width: 220px;
+      }
+      .sticky-search {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-4);
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .sticky-search img {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+      }
+      .sticky-search input {
+        flex: 1;
+        min-width: 0;
+      }
+      .timeline {
+        padding: var(--space-4) 0;
+        background: var(--hero-bg);
+        border-bottom: 1px solid var(--border);
+      }
+      .timeline h1 {
+        margin: 0 0 var(--space-2);
+        font-size: clamp(1.1rem, 3vw, 1.75rem);
+        color: var(--hero-text);
+        padding-inline: var(--space-4);
+      }
+      .timeline__scroll {
+        display: flex;
+        gap: var(--space-2);
+        overflow-x: auto;
+        padding: var(--space-2) var(--space-4) var(--space-3);
+        scroll-snap-type: x mandatory;
+      }
+      .half {
+        flex: 0 0 auto;
+        width: 72px;
+        scroll-snap-align: start;
+        border: 1px solid var(--hero-border);
+        border-radius: var(--radius);
+        background: var(--hero-card-bg);
+        padding: var(--space-2);
+        text-align: center;
+        color: var(--hero-text);
+      }
+      .half--now {
+        border-color: var(--hero-seed);
+        box-shadow: inset 0 0 0 1px var(--hero-seed);
+      }
+      .half__label {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--hero-muted);
+      }
+      .half__count {
+        font-weight: 700;
+        font-size: var(--type-lg);
+        margin-top: var(--space-1);
+      }
+      .list {
+        padding: var(--space-4);
+      }
+      .list h2 {
+        margin: 0 0 var(--space-3);
+        font-size: var(--type-lg);
+      }
+      .row {
+        display: flex;
+        gap: var(--space-3);
+        align-items: center;
+        padding: var(--space-3) 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .row img {
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        object-fit: cover;
+      }
+      .row h3 {
+        margin: 0 0 var(--space-1);
+        font-size: var(--type-md);
+      }
+      .rail {
+        display: none;
+        flex-direction: column;
+        border-left: 1px solid var(--border);
+        background: var(--surface);
+        padding: var(--space-4);
+        gap: var(--space-3);
+      }
+      .rail h2 {
+        margin: 0;
+        font-size: var(--type-lg);
+      }
+      .rail .bubble {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-3);
+        color: var(--text-muted);
+        font-size: var(--type-sm);
+      }
+      .rail input {
+        min-height: var(--touch);
+      }
+      .mobile-assistant {
+        margin: var(--space-4);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-3);
+        background: var(--surface);
+      }
+      @media (min-width: 1100px) {
+        .mobile-assistant {
+          display: none;
+        }
+      }
+    </style>
+    <script>
+      const t = new URLSearchParams(location.search).get('theme');
+      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+    </script>
+  </head>
+  <body>
+    <div class="app">
+      <div class="main">
+        <div class="zone-bar">
+          <strong>Planning zone</strong>
+          <select aria-label="Zone">
+            <option selected>Cave Creek AZ (low desert)</option>
+            <option>Phoenix</option>
+            <option>Mesa</option>
+          </select>
+          <span class="mono" style="color: var(--text-muted); font-size: var(--type-sm)">Last frost Mar 9 · First frost Nov 15</span>
+        </div>
+        <div class="sticky-search">
+          <img src="../../public/brand-mark.png" width="48" height="48" alt="" />
+          <input type="search" id="search" placeholder="Search crops" aria-label="Search crops" />
+        </div>
+        <section class="timeline">
+          <h1>Half-month timeline</h1>
+          <div class="timeline__scroll" role="list">
+            <div class="half" role="listitem"><div class="half__label">Jul 1</div><div class="half__count">4</div></div>
+            <div class="half" role="listitem"><div class="half__label">Jul 15</div><div class="half__count">6</div></div>
+            <div class="half half--now" role="listitem"><div class="half__label">Aug 1</div><div class="half__count">12</div></div>
+            <div class="half" role="listitem"><div class="half__label">Aug 15</div><div class="half__count">9</div></div>
+            <div class="half" role="listitem"><div class="half__label">Sep 1</div><div class="half__count">11</div></div>
+            <div class="half" role="listitem"><div class="half__label">Sep 15</div><div class="half__count">14</div></div>
+            <div class="half" role="listitem"><div class="half__label">Oct 1</div><div class="half__count">18</div></div>
+            <div class="half" role="listitem"><div class="half__label">Oct 15</div><div class="half__count">20</div></div>
+          </div>
+        </section>
+        <section class="list">
+          <h2>Plantable in Aug 1-15</h2>
+          <div class="row">
+            <img src="../../public/crops/crop-beans-snap.webp" width="56" height="56" alt="" />
+            <div><h3>Beans, Snap</h3><span class="chip chip--s">S seed</span></div>
+          </div>
+          <div class="row">
+            <img src="../../public/crops/crop-corn-sweet.webp" width="56" height="56" alt="" />
+            <div><h3>Corn, Sweet</h3><span class="chip chip--s">S seed</span></div>
+          </div>
+          <div class="row">
+            <img src="../../public/crops/crop-peppers.webp" width="56" height="56" alt="" />
+            <div><h3>Peppers</h3><span class="chip chip--t">T transplant</span></div>
+          </div>
+          <div class="row">
+            <img src="../../public/crops/crop-tomatoes.webp" width="56" height="56" alt="" />
+            <div><h3>Tomatoes</h3><span class="chip chip--t">T transplant</span></div>
+          </div>
+          <div class="row">
+            <img src="../../public/crops/crop-okra.webp" width="56" height="56" alt="" />
+            <div><h3>Okra</h3><span class="chip chip--s">S seed</span></div>
+          </div>
+        </section>
+        <div class="mobile-assistant">
+          <strong>Assistant</strong>
+          <p style="margin: 8px 0 0; color: var(--text-muted); font-size: 16px">On mobile the assistant sits under the list; on desktop it becomes a fixed right rail.</p>
+        </div>
+      </div>
+      <aside class="rail" aria-label="Assistant rail">
+        <h2>Assistant</h2>
+        <div class="bubble">What can I plant after the monsoon?</div>
+        <div class="bubble">Fall brassicas open mid-Sep in low desert...</div>
+        <input type="search" placeholder="Ask about a crop" aria-label="Ask assistant" />
+      </aside>
+    </div>
+  </body>
+</html>

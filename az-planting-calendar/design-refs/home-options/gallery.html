@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AZ Planting Calendar -- home layout options</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 32px;
+        background: #0e1419;
+        color: #e6edf3;
+        font: 16px/1.5 system-ui, sans-serif;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 0 0 8px;
+      }
+      .lede {
+        color: #9fb0bd;
+        max-width: 80ch;
+        margin: 0 0 28px;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 28px;
+        align-items: start;
+      }
+      @media (max-width: 1100px) {
+        .cols {
+          grid-template-columns: 1fr;
+        }
+      }
+      .col {
+        background: #151c23;
+        border: 1px solid #26313a;
+        border-radius: 4px;
+        padding: 16px;
+        min-width: 0;
+      }
+      .col h2 {
+        margin: 0 0 4px;
+        font-size: 18px;
+      }
+      .n {
+        font-family: ui-monospace, monospace;
+        color: #4ade80;
+      }
+      .struct {
+        color: #9fb0bd;
+        font-size: 13px;
+        margin: 0 0 12px;
+      }
+      .sep {
+        color: #6b7c88;
+        font-size: 12px;
+        margin: 16px 0 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      figure {
+        margin: 0 0 12px;
+      }
+      figcaption {
+        font-size: 12px;
+        color: #9fb0bd;
+        margin-top: 6px;
+        font-family: ui-monospace, monospace;
+      }
+      img.phone {
+        width: 100%;
+        max-width: 280px;
+        height: auto;
+        display: block;
+        border: 1px solid #26313a;
+        border-radius: 8px;
+        background: #000;
+      }
+      img.desktop {
+        width: 100%;
+        height: auto;
+        display: block;
+        border: 1px solid #26313a;
+        border-radius: 4px;
+        background: #000;
+      }
+      .pair {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .pair figure {
+        flex: 1 1 120px;
+      }
+      a {
+        color: #7eb6ff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Home layout options -- pick before building</h1>
+    <p class="lede">
+      Three structurally distinct mockups using app tokens and real crop WebP art.
+      Dark and light at 375 and 1280. Option 1 is the current shipped structure, restated as a mockup.
+      Do not implement until a pick (or mix) is written in DECISION.md.
+      Separable pieces: hero type, search placement, zone placement, assistant placement.
+    </p>
+    <div class="cols">
+      <section class="col">
+        <h2><span class="n">01</span> Focus hero</h2>
+        <p class="struct">
+          Dominates first viewport: title + date/search + text cards with art.
+          Zone in topbar. Assistant inline below hero. Year grid last.
+          <br /><strong>Separable:</strong> hero copy/controls · card list · inline assistant
+        </p>
+        <div class="sep">Phone 375 -- light / dark</div>
+        <div class="pair">
+          <figure>
+            <img class="phone" src="option-1-light-375.png" alt="Option 1 light 375" />
+            <figcaption>light · 375</figcaption>
+          </figure>
+          <figure>
+            <img class="phone" src="option-1-dark-375.png" alt="Option 1 dark 375" />
+            <figcaption>dark · 375</figcaption>
+          </figure>
+        </div>
+        <div class="sep">Desktop 1280 -- light / dark</div>
+        <figure>
+          <img class="desktop" src="option-1-light-1280.png" alt="Option 1 light 1280" />
+          <figcaption>light · 1280</figcaption>
+        </figure>
+        <figure>
+          <img class="desktop" src="option-1-dark-1280.png" alt="Option 1 dark 1280" />
+          <figcaption>dark · 1280</figcaption>
+        </figure>
+        <p class="struct"><a href="option-1-focus-hero.html">Open live mockup</a></p>
+      </section>
+
+      <section class="col">
+        <h2><span class="n">02</span> Gallery first</h2>
+        <p class="struct">
+          Dominates first viewport: dense image tile grid.
+          Search sticky next to brand; zone as pill. Assistant as FAB.
+          <br /><strong>Separable:</strong> tile grid · sticky search chrome · FAB assistant
+        </p>
+        <div class="sep">Phone 375 -- light / dark</div>
+        <div class="pair">
+          <figure>
+            <img class="phone" src="option-2-light-375.png" alt="Option 2 light 375" />
+            <figcaption>light · 375</figcaption>
+          </figure>
+          <figure>
+            <img class="phone" src="option-2-dark-375.png" alt="Option 2 dark 375" />
+            <figcaption>dark · 375</figcaption>
+          </figure>
+        </div>
+        <div class="sep">Desktop 1280 -- light / dark</div>
+        <figure>
+          <img class="desktop" src="option-2-light-1280.png" alt="Option 2 light 1280" />
+          <figcaption>light · 1280</figcaption>
+        </figure>
+        <figure>
+          <img class="desktop" src="option-2-dark-1280.png" alt="Option 2 dark 1280" />
+          <figcaption>dark · 1280</figcaption>
+        </figure>
+        <p class="struct"><a href="option-2-gallery-first.html">Open live mockup</a></p>
+      </section>
+
+      <section class="col">
+        <h2><span class="n">03</span> Timeline + rail</h2>
+        <p class="struct">
+          Dominates first viewport: horizontal half-month timeline with counts.
+          Crop list secondary. Zone full-width bar. Assistant = desktop rail.
+          <br /><strong>Separable:</strong> timeline hero · list rows · zone bar · rail assistant
+        </p>
+        <div class="sep">Phone 375 -- light / dark</div>
+        <div class="pair">
+          <figure>
+            <img class="phone" src="option-3-light-375.png" alt="Option 3 light 375" />
+            <figcaption>light · 375</figcaption>
+          </figure>
+          <figure>
+            <img class="phone" src="option-3-dark-375.png" alt="Option 3 dark 375" />
+            <figcaption>dark · 375</figcaption>
+          </figure>
+        </div>
+        <div class="sep">Desktop 1280 -- light / dark</div>
+        <figure>
+          <img class="desktop" src="option-3-light-1280.png" alt="Option 3 light 1280" />
+          <figcaption>light · 1280</figcaption>
+        </figure>
+        <figure>
+          <img class="desktop" src="option-3-dark-1280.png" alt="Option 3 dark 1280" />
+          <figcaption>dark · 1280</figcaption>
+        </figure>
+        <p class="struct"><a href="option-3-timeline-rail.html">Open live mockup</a></p>
+      </section>
+    </div>
+  </body>
+</html>

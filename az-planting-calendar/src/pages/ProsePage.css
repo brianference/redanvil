@@ -17,6 +17,26 @@
   margin-bottom: var(--space-4);
 }
 
+/* Crop detail: art + title; art unmounts if webp missing (fail closed). */
+.detail-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.detail-hero h1 {
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .detail-hero {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
 .prose h2 {
   margin-top: 0;
   margin-bottom: var(--space-3);

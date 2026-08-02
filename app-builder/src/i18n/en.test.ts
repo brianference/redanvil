@@ -89,11 +89,11 @@ describe('en locale bundle', () => {
     }
   });
 
-  it('meets R30 substance floor on Terms and Privacy (>=150 words, >=3 sections)', () => {
+  it('meets fe-legal-substance floor on Terms and Privacy (>=1400 words, >=14 sections)', () => {
     for (const key of ['terms', 'privacy'] as const) {
       const p = en.pages[key];
-      expect(p.sections.length, `${key} section count`).toBeGreaterThanOrEqual(3);
-      expect(pageWordCount(p), `${key} word count`).toBeGreaterThanOrEqual(150);
+      expect(p.sections.length, `${key} section count`).toBeGreaterThanOrEqual(14);
+      expect(pageWordCount(p), `${key} word count`).toBeGreaterThanOrEqual(1400);
     }
   });
 

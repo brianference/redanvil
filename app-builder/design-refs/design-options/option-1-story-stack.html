@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Option 1 -- Story stack</title>
+    <style>
+      :root,
+      [data-theme='light'] {
+        --bg: #f4f1ec;
+        --surface: #ffffff;
+        --text: #1a1a1a;
+        --muted: #5c5c5c;
+        --accent: #b91c1c;
+        --border: #d9d2c8;
+      }
+      [data-theme='dark'] {
+        --bg: #121212;
+        --surface: #1c1c1c;
+        --text: #f2f2f2;
+        --muted: #a3a3a3;
+        --accent: #f87171;
+        --border: #333;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font: 16px/1.5 system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      header.page {
+        padding: 20px 16px 12px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+      header.page h1 {
+        margin: 0;
+        font-size: 28px;
+        letter-spacing: -0.02em;
+      }
+      header.page p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        max-width: 62ch;
+      }
+      main {
+        padding: 20px 16px 48px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      article {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+      }
+      .name {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .tag {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+      .links a {
+        color: var(--accent);
+        font-weight: 600;
+        margin-right: 16px;
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+      }
+      h3 {
+        margin: 20px 0 10px;
+        font-size: 18px;
+      }
+      .features {
+        display: grid;
+        gap: 12px;
+      }
+      @media (min-width: 900px) {
+        .features {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+      .feat {
+        border-top: 1px solid var(--border);
+        padding-top: 8px;
+      }
+      .feat h4 {
+        margin: 0 0 6px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+      .feat ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .phones {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(220px, 1fr);
+        gap: 16px;
+        overflow-x: auto;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      @media (min-width: 900px) {
+        .phones {
+          grid-auto-flow: row;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          overflow: visible;
+        }
+      }
+      .phones figcaption {
+        font-weight: 700;
+        margin-bottom: 8px;
+        font-size: 15px;
+      }
+      .phones img {
+        width: 100%;
+        height: auto;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        display: block;
+        background: var(--bg);
+      }
+      .built {
+        margin: 28px 0 12px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+      .grid3 {
+        display: grid;
+        gap: 12px;
+      }
+      @media (min-width: 900px) {
+        .grid3 {
+          grid-template-columns: 1.1fr 0.8fr 1.1fr;
+        }
+      }
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+        background: var(--bg);
+      }
+      .panel h4 {
+        margin: 0 0 8px;
+      }
+      blockquote {
+        margin: 0;
+        border-left: 3px solid var(--accent);
+        padding: 10px 12px;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 14px;
+      }
+      .logo {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        display: block;
+        margin: 8px auto 0;
+      }
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 999px;
+        padding: 4px 10px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page">
+      <span class="badge">Option 01 · Story stack</span>
+      <h1>Examples</h1>
+      <p>
+        Features lead. Phone strip next. Prompt / brand / PRD panels last. Architecture:
+        multi-section long-form story per app.
+      </p>
+    </header>
+    <main>
+      <article>
+        <h2 class="name">AZ Planting Calendar</h2>
+        <p class="tag">
+          Arizona low-desert planting calendar for Maricopa County -- 45 crops, 83 windows, 8
+          zones.
+        </p>
+        <div class="links">
+          <a href="#">Open the live app</a>
+          <a href="#">Read the source</a>
+        </div>
+
+        <h3>What it does</h3>
+        <div class="features">
+          <div class="feat">
+            <h4>Planting data</h4>
+            <ul>
+              <li>45 crops from UA az1005</li>
+              <li>83 planting windows</li>
+              <li>8 Maricopa zones</li>
+            </ul>
+          </div>
+          <div class="feat">
+            <h4>Visitor controls</h4>
+            <ul>
+              <li>Plantable-for-date API</li>
+              <li>Crop detail + windows</li>
+              <li>Zone list / default zone</li>
+            </ul>
+          </div>
+          <div class="feat">
+            <h4>Limits</h4>
+            <ul>
+              <li>Maricopa low-desert only</li>
+              <li>No accounts on public APIs</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>The app it shipped</h3>
+        <ul class="phones">
+          <li>
+            <figure>
+              <figcaption>What is plantable this half-month</figcaption>
+              <img
+                src="../../public/examples/az-planting-calendar/home-375-light.webp"
+                width="390"
+                height="1040"
+                alt="Phone light"
+              />
+            </figure>
+          </li>
+          <li>
+            <figure>
+              <figcaption>The same home, dark theme</figcaption>
+              <img
+                src="../../public/examples/az-planting-calendar/home-375-dark.webp"
+                width="390"
+                height="1040"
+                alt="Phone dark"
+              />
+            </figure>
+          </li>
+          <li>
+            <figure>
+              <figcaption>Desktop, light</figcaption>
+              <img
+                src="../../public/examples/az-planting-calendar/home-1280-light.webp"
+                width="960"
+                height="750"
+                alt="Desktop light"
+              />
+            </figure>
+          </li>
+          <li>
+            <figure>
+              <figcaption>Desktop, dark</figcaption>
+              <img
+                src="../../public/examples/az-planting-calendar/home-1280-dark.webp"
+                width="960"
+                height="750"
+                alt="Desktop dark"
+              />
+            </figure>
+          </li>
+        </ul>
+
+        <p class="built">How it was built</p>
+        <div class="grid3">
+          <section class="panel">
+            <h4>1 · The prompt</h4>
+            <blockquote>
+              Show what is plantable in the current half-month window, seed vs transplant marked…
+            </blockquote>
+          </section>
+          <section class="panel">
+            <h4>2 · The brand</h4>
+            <img
+              class="logo"
+              src="../../public/examples/az-planting-calendar/logo.webp"
+              width="220"
+              height="220"
+              alt="Logo"
+            />
+          </section>
+          <section class="panel">
+            <h4>3 · Provenance</h4>
+            <p style="margin: 0; color: var(--muted); font-size: 14px">
+              Live counts from /api/crops and /api/zones on 2026-08-02. Screens are production
+              captures, not mockups.
+            </p>
+          </section>
+        </div>
+      </article>
+    </main>
+    <script>
+      const q = new URLSearchParams(location.search);
+      const theme = q.get('theme') === 'dark' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = theme;
+    </script>
+  </body>
+</html>

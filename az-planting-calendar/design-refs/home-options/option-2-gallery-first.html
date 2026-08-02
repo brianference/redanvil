@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Option 2 -- Gallery first</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <style>
+      .chrome {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .chrome__row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-4);
+      }
+      .chrome__search {
+        flex: 1;
+        min-width: 0;
+      }
+      .zone-pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 36px;
+        padding: 0 var(--space-3);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface-2);
+        color: var(--text-muted);
+        font-size: var(--type-sm);
+        white-space: nowrap;
+      }
+      .gallery-hero {
+        padding: var(--space-3) 0 var(--space-4);
+      }
+      .gallery-hero h1 {
+        margin: 0 0 var(--space-1);
+        font-size: clamp(1.1rem, 3vw, 1.75rem);
+      }
+      .gallery-hero .meta {
+        margin: 0 0 var(--space-3);
+        color: var(--text-muted);
+        font-size: var(--type-sm);
+      }
+      .tile-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--space-2);
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      @media (min-width: 768px) {
+        .tile-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: var(--space-3);
+        }
+      }
+      @media (min-width: 1100px) {
+        .tile-grid {
+          grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+      }
+      .tile {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        min-width: 0;
+      }
+      .tile img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        display: block;
+        background: var(--surface-2);
+      }
+      .tile__body {
+        padding: var(--space-2);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        min-width: 0;
+      }
+      .tile__name {
+        margin: 0;
+        font-size: var(--type-sm);
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .fab {
+        position: fixed;
+        right: var(--space-4);
+        bottom: var(--space-4);
+        min-height: var(--touch);
+        padding: 0 var(--space-4);
+        border: none;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--accent-text);
+        font-weight: 700;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        z-index: 20;
+      }
+      .secondary {
+        padding: var(--space-4) 0 var(--space-7);
+        border-top: 1px solid var(--border);
+      }
+      .secondary h2 {
+        margin: 0 0 var(--space-2);
+        font-size: var(--type-lg);
+      }
+      .secondary p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: var(--type-sm);
+      }
+    </style>
+    <script>
+      const t = new URLSearchParams(location.search).get('theme');
+      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+    </script>
+  </head>
+  <body>
+    <div class="chrome">
+      <div class="chrome__row">
+        <a class="topbar__brand" href="#">
+          <img class="topbar__mark" src="../../public/brand-mark.png" width="48" height="48" alt="" />
+        </a>
+        <div class="chrome__search">
+          <input type="search" placeholder="Search crops" id="search" aria-label="Search crops" />
+        </div>
+        <span class="zone-pill mono">Cave Creek</span>
+      </div>
+    </div>
+    <section class="gallery-hero shell">
+      <h1>Plantable now -- 12 crops</h1>
+      <p class="meta mono">As of 2026-08-02 · Aug 1-15 · image-first tiles</p>
+      <ul class="tile-grid">
+        <li class="tile">
+          <img src="../../public/crops/crop-beans-snap.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Beans, Snap</p><span class="chip chip--s">S</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-corn-sweet.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Corn, Sweet</p><span class="chip chip--s">S</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-cucumbers.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Cucumbers</p><span class="chip chip--s">S</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-okra.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Okra</p><span class="chip chip--s">S</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-peppers.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Peppers</p><span class="chip chip--t">T</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-tomatoes.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Tomatoes</p><span class="chip chip--t">T</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-squash-summer.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Squash, Summer</p><span class="chip chip--s">S</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-melons-watermelon.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Watermelon</p><span class="chip chip--s">S</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-eggplant.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Eggplant</p><span class="chip chip--t">T</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-beans-yardlong.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Yardlong</p><span class="chip chip--s">S</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-sunflower.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Sunflower</p><span class="chip chip--s">S</span></div>
+        </li>
+        <li class="tile">
+          <img src="../../public/crops/crop-blackeyed-peas.webp" width="192" height="192" alt="" />
+          <div class="tile__body"><p class="tile__name">Blackeyed Peas</p><span class="chip chip--s">S</span></div>
+        </li>
+      </ul>
+    </section>
+    <section class="secondary shell">
+      <h2>Year grid</h2>
+      <p>Full 24 half-month matrix scrolls below the gallery -- not competing for first viewport.</p>
+    </section>
+    <button type="button" class="fab">Ask assistant</button>
+  </body>
+</html>

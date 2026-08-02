@@ -17,11 +17,11 @@ const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), 'prd.character
  * payloads live in `prd.characterization.fixtures/*.json`.
  */
 const EXPECTED_DIGESTS: Readonly<Record<string, string>> = {
-  'dashboard-auth-two-entities': '1a87c5eac6eb0ff9ade4cff38bcd1955b8305ced77746c314ee571882a4a2f66',
-  'mobile-no-auth-two-entities': 'f1bd4a4b99b9de75500c68bb82243f82b428d52e40eb4cb038a0545aea975522',
-  'marketplace-auth-scoped': 'bc437fcd4a4cce622eee585a72a9af35828744714981330b6bff9b7c459d479f',
-  'empty-entities-no-auth': 'f91af7dbc69e333c743c8524e9433a640210982b96a3bf917290aff8dec171e5',
-  'long-prompt-many-entities': 'e5e825f74eecc735a8dfcadba43a87de48c35457b06694a631cf580054046fbc'
+  'dashboard-auth-two-entities': '7ee9352749c433d51df0bec90ad68a038543721338c3a22f740ba639be7f1f3c',
+  'mobile-no-auth-two-entities': '78ca7b6c96b387f2648772bd5960fb0a192a0099babdef26eb60d154aabdc0ed',
+  'marketplace-auth-scoped': 'd94f99df69a6cefe5d48ddbc53dc7685ff8894d0b6770a61a2f7894cea99299c',
+  'empty-entities-no-auth': '5b0e9b93b498e7bd26939df3bf1407a995ce9707ab37b5c3008b4a65f9dfb04b',
+  'long-prompt-many-entities': 'c6119283725203c87876404ca830d88cc9d7a56283f6260d62f8b30175a2c502'
 };
 
 describe('generatePrd characterization (byte-identical output)', () => {

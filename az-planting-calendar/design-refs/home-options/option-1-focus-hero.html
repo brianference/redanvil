@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Option 1 -- Focus hero (current structure)</title>
+    <link rel="stylesheet" href="tokens.css" />
+    <style>
+      .hero {
+        background: var(--hero-bg);
+        color: var(--hero-text);
+        padding: var(--space-3) 0 var(--space-5);
+        border-bottom: 1px solid var(--border);
+      }
+      .hero__kicker {
+        margin: 0;
+        font-size: var(--type-sm);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--hero-seed);
+        font-weight: 700;
+      }
+      .hero__title {
+        margin: var(--space-2) 0;
+        font-size: clamp(1.2rem, 3.2vw, 2rem);
+        max-width: 28ch;
+      }
+      .hero__sub {
+        margin: 0 0 var(--space-3);
+        color: var(--hero-muted);
+        font-size: var(--type-sm);
+      }
+      .hero__controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+      }
+      .hero__controls label {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-1);
+        font-size: var(--type-sm);
+        font-weight: 600;
+        color: var(--hero-muted);
+        flex: 1 1 140px;
+      }
+      .hero__list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: var(--space-2);
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 640px) {
+        .hero__list {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (min-width: 1100px) {
+        .hero__list {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+      .plant-card {
+        display: flex;
+        gap: var(--space-3);
+        padding: var(--space-3);
+        border: 1px solid var(--hero-card-border);
+        border-radius: var(--radius);
+        background: var(--hero-card-bg);
+      }
+      .plant-card img {
+        width: 72px;
+        height: 72px;
+        border-radius: var(--radius);
+        border: 1px solid var(--hero-card-border);
+        object-fit: cover;
+      }
+      .plant-card h2 {
+        margin: 0 0 var(--space-2);
+        font-size: var(--type-md);
+      }
+      .below {
+        padding: var(--space-4) 0;
+      }
+      .assistant {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        padding: var(--space-3);
+        margin-bottom: var(--space-4);
+      }
+      .assistant h2 {
+        margin: 0 0 var(--space-2);
+        font-size: var(--type-lg);
+      }
+      .assistant p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: var(--type-sm);
+      }
+      .grid-placeholder {
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-5);
+        color: var(--text-muted);
+        text-align: center;
+      }
+    </style>
+    <script>
+      const t = new URLSearchParams(location.search).get('theme');
+      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+    </script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="topbar__brand" href="#">
+        <img class="topbar__mark" src="../../public/brand-mark.png" width="56" height="56" alt="" />
+        <span class="topbar__name">AZ Planting Calendar</span>
+      </a>
+      <span class="topbar__zone mono">Cave Creek · Maricopa</span>
+    </header>
+    <section class="hero">
+      <div class="shell">
+        <p class="hero__kicker mono">Plantable now</p>
+        <h1 class="hero__title">What can I plant right now?</h1>
+        <p class="hero__sub">Arizona low desert, Maricopa County. Seed and transplant windows from UA Cooperative Extension az1005.</p>
+        <div class="hero__controls">
+          <label>
+            Date
+            <input type="date" value="2026-08-02" />
+          </label>
+          <label>
+            Search crops
+            <input type="search" placeholder="e.g. tomato, beans" id="search" />
+          </label>
+        </div>
+        <ul class="hero__list">
+          <li class="plant-card">
+            <img src="../../public/crops/crop-beans-snap.webp" width="72" height="72" alt="" />
+            <div>
+              <h2>Beans, Snap</h2>
+              <span class="chip chip--s">S seed</span>
+            </div>
+          </li>
+          <li class="plant-card">
+            <img src="../../public/crops/crop-corn-sweet.webp" width="72" height="72" alt="" />
+            <div>
+              <h2>Corn, Sweet</h2>
+              <span class="chip chip--s">S seed</span>
+            </div>
+          </li>
+          <li class="plant-card">
+            <img src="../../public/crops/crop-cucumbers.webp" width="72" height="72" alt="" />
+            <div>
+              <h2>Cucumbers</h2>
+              <span class="chip chip--s">S seed</span>
+            </div>
+          </li>
+          <li class="plant-card">
+            <img src="../../public/crops/crop-okra.webp" width="72" height="72" alt="" />
+            <div>
+              <h2>Okra</h2>
+              <span class="chip chip--s">S seed</span>
+            </div>
+          </li>
+          <li class="plant-card">
+            <img src="../../public/crops/crop-peppers.webp" width="72" height="72" alt="" />
+            <div>
+              <h2>Peppers</h2>
+              <span class="chip chip--t">T transplant</span>
+            </div>
+          </li>
+          <li class="plant-card">
+            <img src="../../public/crops/crop-tomatoes.webp" width="72" height="72" alt="" />
+            <div>
+              <h2>Tomatoes</h2>
+              <span class="chip chip--t">T transplant</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+    <div class="below shell">
+      <div class="assistant">
+        <h2>Planting assistant</h2>
+        <p>Ask about a crop or half-month -- opens inline below the hero (not a full-screen sheet).</p>
+      </div>
+      <div class="grid-placeholder">Year grid (below the fold)</div>
+    </div>
+  </body>
+</html>

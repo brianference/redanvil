@@ -60,7 +60,9 @@ export const DONE_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
       { id: "C4", mustBeTrue: "The theme control is discoverable", evidence: "the screenshot" },
       { id: "C5", mustBeTrue: "Painted content ≥ 80% of viewport at 1440/1920", evidence: "`desktop_width` report" },
       { id: "C6", mustBeTrue: "No overlap or clipping at 375px", evidence: "the screenshot" },
-      { id: "C7", mustBeTrue: "Zero console errors", evidence: "console log from the real load" }
+      { id: "C7", mustBeTrue: "Zero console errors", evidence: "console log from the real load" },
+      { id: "C8", mustBeTrue: "Inner and detail pages show breadcrumbs", evidence: "live `nav` named breadcrumb + parent link" },
+      { id: "C9", mustBeTrue: "The chosen design was picked from three distinct options", evidence: "`design-refs/design-options/` (≥3) + `DECISION.md`" }
     ]
   },
   {
@@ -73,7 +75,10 @@ export const DONE_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
       { id: "D4", mustBeTrue: "Every legal claim is **true of this app**", evidence: "the code path proving it" },
       { id: "D5", mustBeTrue: "Data rows trace to a cited source", evidence: "per-row citation + a verification run" },
       { id: "D6", mustBeTrue: "Brand mark is a real generated asset", evidence: "the image, opened" },
-      { id: "D7", mustBeTrue: "The mark reads at 32px", evidence: "the **downscaled** image, opened" }
+      { id: "D7", mustBeTrue: "The mark reads at 32px", evidence: "the **downscaled** image, opened" },
+      { id: "D8", mustBeTrue: "Terms and Privacy meet the reference standard", evidence: "word/h2 floors + required topic coverage" },
+      { id: "D9", mustBeTrue: "Structured data and canonical URL", evidence: "valid JSON-LD + absolute `rel=canonical` on home" },
+      { id: "D10", mustBeTrue: "The brand mark renders at a real size", evidence: "measured header mark height at 1280 and 375" }
     ]
   },
   {
@@ -84,7 +89,8 @@ export const DONE_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
       { id: "E2", mustBeTrue: "HEAD pushed", evidence: "`git rev-list origin/<branch>..HEAD` empty" },
       { id: "E3", mustBeTrue: "Production URL returns 200", evidence: "captured response" },
       { id: "E4", mustBeTrue: "Served asset hash == local `dist`", evidence: "both hashes, compared" },
-      { id: "E5", mustBeTrue: "The server measured is **this app**", evidence: "the served `<title>`" }
+      { id: "E5", mustBeTrue: "The server measured is **this app**", evidence: "the served `<title>`" },
+      { id: "E6", mustBeTrue: "Every binding declared in config exists in the deployed environment", evidence: "live 503 / \"binding unavailable\" probe" }
     ]
   },
   {

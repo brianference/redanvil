@@ -68,7 +68,14 @@ export function ExampleStory({ example }: ExampleStoryProps): JSX.Element {
           {example.screens.map((s) => (
             <li key={s.src} className="ex-screen">
               <p style={captionStyle}>{s.caption}</p>
-              <img src={s.src} alt={s.alt} loading="lazy" className="ex-phone" />
+              <img
+                src={s.src}
+                alt={s.alt}
+                width={s.width}
+                height={s.height}
+                loading="lazy"
+                className="ex-phone"
+              />
             </li>
           ))}
         </ul>
@@ -102,24 +109,28 @@ export function ExampleStory({ example }: ExampleStoryProps): JSX.Element {
           <img
             src={example.logo}
             alt={copy.brandAlt(example.name)}
+            width={220}
+            height={220}
             loading="lazy"
             className="ex-logo"
           />
         </section>
 
-        <section aria-labelledby={`prd-${example.slug}`} style={panelStyle}>
-          <h3 id={`prd-${example.slug}`} style={stepStyle}>
-            <span style={numStyle}>3</span>
-            {copy.stepPrd}
-          </h3>
-          <p style={noteStyle}>{copy.prdNote}</p>
-          <img
-            src={example.reviewShot}
-            alt={copy.prdAlt(example.name)}
-            loading="lazy"
-            className="ex-shot"
-          />
-        </section>
+        {example.reviewShot !== undefined && (
+          <section aria-labelledby={`prd-${example.slug}`} style={panelStyle}>
+            <h3 id={`prd-${example.slug}`} style={stepStyle}>
+              <span style={numStyle}>3</span>
+              {copy.stepPrd}
+            </h3>
+            <p style={noteStyle}>{copy.prdNote}</p>
+            <img
+              src={example.reviewShot}
+              alt={copy.prdAlt(example.name)}
+              loading="lazy"
+              className="ex-shot"
+            />
+          </section>
+        )}
       </div>
     </article>
   );
