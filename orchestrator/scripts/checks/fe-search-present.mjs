@@ -29,6 +29,13 @@ import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+import {
+  pickFreePort,
+  killProcessTree,
+  waitForReady,
+  spawnWranglerPagesDev,
+  ensureBuild
+} from '../../../.github/scripts/runtime_parity.mjs';
 
 const require = createRequire(import.meta.url);
 
@@ -712,15 +719,37 @@ export async function runSearchPresent(appDir, io, opts = {}) {
       apiPaths = listCollectionApiPaths(appDir);
       apiSearch = detectApiSearchParam(sources);
 
-      if (!base) {
-        base = readDeployUrl(appDir);
+      // Prefer a local Pages+Functions base when the app declares API search
+      // params. Deploy URLs lag unpushed HEAD and report false "q ignored"
+      // failures against yesterday's build.
+      if (!base && apiSearch.uses && apiPaths.length > 0) {
+        const build = ensureBuild(appDir);
+        if (build.ok !== false) {
+          const port = await pickFreePort();
+          const { child, output } = spawnWranglerPagesDev(appDir, port);
+          const ready = await waitForReady(port, 90_000);
+          if (ready) {
+            base = `http://127.0.0.1:${port}`;
+            close = async () => {
+              if (child.pid !== undefined) killProcessTree(child.pid);
+            };
+          } else if (child.pid !== undefined) {
+            killProcessTree(child.pid);
+            // fall through to dist/deploy
+            void output;
+          }
+        }
       }
       if (!base) {
         const dist = ensureDist(appDir);
-        if (!dist.ok) io.infra(dist.reason);
-        const served = await serveStatic(join(appDir, 'dist'));
-        base = served.base;
-        close = served.close;
+        if (dist.ok) {
+          const served = await serveStatic(join(appDir, 'dist'));
+          base = served.base;
+          close = served.close;
+        } else {
+          base = readDeployUrl(appDir);
+          if (!base) io.infra(dist.reason);
+        }
       }
     }
 

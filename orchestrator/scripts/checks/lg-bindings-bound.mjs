@@ -22,6 +22,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 /** How long a probe may take. */
 const FETCH_TIMEOUT_MS = 15_000;
@@ -360,6 +361,22 @@ export async function runBindingsBound(appDir, io, opts = {}) {
       body: p.body
     }))
   );
+
+  if (appDir) {
+    writeMeasurementMetaEntry(appDir, 'lg-bindings-bound', {
+      tool: 'fetch-probe',
+      engine: null,
+      runs: [
+        { ok: result.ok, at: nowIso(), base },
+        { ok: result.ok, at: nowIso(), base }
+      ],
+      knownBad: {
+        input: 'deployed endpoint returning binding unavailable / 503 missing AI',
+        failed: true,
+        recordedAt: nowIso()
+      }
+    });
+  }
 
   if (!result.ok) {
     io.fail(result.failures.join('\n'));

@@ -58,3 +58,31 @@ Scraped / inspected structure (2026-08-02). Assessment is filled in; this is not
 3. Surface source granularity when a coarser source appears (column + UI note shipped).
 4. Do not absorb Almanac **planting** dates; frost metadata only.
 5. Prior art docs (`SOURCES.md`, `INTEGRATIONS.md`, this file) stay in-repo so `fe-prior-art` can score evidence + conclusions.
+
+### Features and controls we are missing
+
+Compared to Almanac frost pages, garden.org frost tools, and what a full nursery app would ship, this product still lacks:
+
+| Missing control | Competitor that has it | Plan |
+| --- | --- | --- |
+| Live frost probability curves by station | Dave’s Garden / garden.org | Stay on static NOAA normals per zone until we can cite station-level tables without inventing precision |
+| ZIP-level national planting recommendations | Old Farmer’s Almanac | Will not import; wrong dataset for low-desert AZ heat seasons |
+| Multi-elevation county switcher with different window tables | Some nursery PDFs claim it | Only add when another Extension publication is transcribed with its own source_id |
+| Saved garden lists / accounts | Almanac accounts | Deliberately out of scope (public reference tool) |
+| Offline PDF export of the year grid | az1005 PDF itself | Optional later; UI grid already covers half-month scan |
+| Push reminders for “plant this half-month” | Generic garden apps | Not planned; no accounts, no push infrastructure |
+
+### Components worth borrowing
+
+- **Almanac frost table layout:** compact station meta (altitude, last/first frost) near the top — mirrored as zone frost lines in the filter drawer and topbar, not as a separate frost product.
+- **az1005 half-month column headers (1 / 15):** kept as the grid’s 24-column model and timeline labels so gardeners who already know the PDF can transfer muscle memory.
+- **Citation-on-row pattern from academic tools:** every plantable card and crop window carries a source link; we borrow the “never anonymous cell” discipline, not a third-party component library.
+- **Mobile horizontal scroll for wide tables:** year grid scrolls inside a constrained shell so the page does not force full-page sideways pan (lesson from every PDF competitor failing on phone).
+
+### What we deliberately will not do
+
+- **Will not** merge Almanac or generic “Arizona planting calendar” blog months into the az1005-derived windows. That is how elevation and heat-season errors get laundered into a cited product.
+- **Will not** invent mid/high-elevation planting grids without a primary Extension table for those zones.
+- **Will not** add accounts, newsletters, or ad pixels; the privacy notice is built around their absence.
+- **Will not** call live weather APIs for frost or plantable-now; frost fields stay static normals with clear labels so a network outage cannot invent a planting date.
+- **Will not** present API bulk scrape of Extension content as an official UA product or as a rebranded commercial dataset.

@@ -420,7 +420,12 @@ export async function runFaviconLegible(appDir, io, deps = {}) {
     tool: 'playwright-canvas',
     engine: 'chromium',
     runs,
-    source: results.map((r) => r.source).join(', ')
+    source: results.map((r) => r.source).join(', '),
+    knownBad: {
+      input: 'solid-square or empty favicon failing ink/detail floors',
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
 
   if (failures.length > 0) {

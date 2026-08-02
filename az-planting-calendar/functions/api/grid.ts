@@ -1,13 +1,15 @@
 import { FilterQuerySchema } from '../../src/lib/schemas';
 import type { AppContext } from '../lib/env';
-import { getAllCrops, getAllWindows, resolveZoneParam } from '../lib/db';
-import { errorJson, json, optionsResponse } from '../lib/http';
+import { getAllCrops, getAllWindows } from '../lib/db';
+import { json, optionsResponse } from '../lib/http';
 import { expandHalfMonthRange } from '../lib/gridMath';
+import { queryValidationError, resolveZoneOrError } from '../lib/queryErrors';
 
 /**
- * GET /api/grid?method=S|T&month=0..11&zone=
+ * GET /api/grid?method=S|T&month=0..11&zone=&q=
  * Full-year grid: crops × 24 half-months with S/T marks.
  * Query is validated with FilterQuerySchema (Zod) -- fail closed on bad input.
+ * `q` narrows crop rows by case-insensitive name (server-side, not decorative).
  */
 export async function onRequestGet(context: AppContext): Promise<Response> {
   const { request, env } = context;
@@ -16,36 +18,22 @@ export async function onRequestGet(context: AppContext): Promise<Response> {
   const parsedQuery = FilterQuerySchema.safeParse({
     method: url.searchParams.get('method') ?? undefined,
     month: url.searchParams.get('month') ?? undefined,
-    zone: url.searchParams.get('zone') ?? undefined
+    zone: url.searchParams.get('zone') ?? undefined,
+    q: url.searchParams.get('q') ?? undefined
   });
   if (!parsedQuery.success) {
-    const issue = parsedQuery.error.issues[0];
-    const field = issue?.path[0];
-    if (field === 'method') {
-      return errorJson(request, 'method must be S or T', 400);
-    }
-    if (field === 'month') {
-      return errorJson(request, 'month must be integer 0..11', 400);
-    }
-    if (field === 'zone') {
-      return errorJson(request, 'zone must be a non-empty id, city, or ZIP', 400);
-    }
-    return errorJson(request, 'invalid query', 400);
+    return queryValidationError(request, parsedQuery.error);
   }
 
-  const { method, month, zone: zoneParam } = parsedQuery.data;
+  const { method, month, zone: zoneParam, q } = parsedQuery.data;
 
-  const zoneResult = await resolveZoneParam(env.DB, zoneParam);
-  if ('error' in zoneResult) {
-    if (zoneResult.error === 'not_found') {
-      return errorJson(request, 'zone not found', 404);
-    }
-    return errorJson(request, 'default zone not configured', 500);
-  }
-  const zone = zoneResult.zone;
+  const zoneResult = await resolveZoneOrError(request, env.DB, zoneParam);
+  if (zoneResult instanceof Response) return zoneResult;
+  const { zone } = zoneResult;
 
   const allCrops = await getAllCrops(env.DB);
   const windows = await getAllWindows(env.DB, method, month);
+  const nameNeedle = q !== undefined ? q.toLowerCase() : null;
 
   const marks = new Map<string, Map<number, Set<'S' | 'T'>>>();
   for (const w of windows) {
@@ -66,6 +54,9 @@ export async function onRequestGet(context: AppContext): Promise<Response> {
 
   const crops = allCrops
     .filter((c) => {
+      if (nameNeedle !== null && !c.name.toLowerCase().includes(nameNeedle)) {
+        return false;
+      }
       if (method === undefined && month === undefined) return true;
       return marks.has(c.id);
     })

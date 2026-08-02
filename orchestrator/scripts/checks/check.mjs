@@ -255,20 +255,99 @@ const SQL_CLAUSE =
   /(\bSELECT\b[\s\S]*?\bFROM\b|\bINSERT\s+INTO\b|\bUPDATE\b[\s\S]*?\bSET\b|\bDELETE\s+FROM\b)/i;
 
 /**
+ * Identifiers that hold fixed SQL structure (column lists, optional `?` clauses,
+ * `?,?,?` placeholder runs) — not request values.
+ *
+ * Safe shapes in the same module/function:
+ * - `const COLS = 'id, name'` / `` const COLS = `id, name` `` (no nested `${`)
+ * - `const clause = cond ? ' AND x = ?' : ''` (both branches string literals)
+ * - `const placeholders = ids.map(() => '?').join(',')` (only `?` markers; values
+ *   are still bound separately)
+ *
+ * Parameters, request-derived expressions, and any other interpolation still fail.
+ *
+ * @param {string} content File source.
+ * @returns {Set<string>} Identifier names.
+ */
+function safeSqlFragmentIdents(content) {
+  /** @type {Set<string>} */
+  const names = new Set();
+
+  // const NAME = 'lit' / "lit" / `lit without ${}`
+  const litRe =
+    /\b(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(['"`])([\s\S]*?)\2\s*;/g;
+  let m;
+  while ((m = litRe.exec(content)) !== null) {
+    const quote = m[2];
+    const body = m[3] ?? '';
+    if (quote === '`' && /\$\{/.test(body)) continue;
+    names.add(m[1]);
+  }
+
+  // Single-line only: const NAME = <simpleExpr> ? 'a' : 'b'
+  // Branches must be ' or " literals (not backticks) so ${} cannot sneak in.
+  // Multi-line / template branches are not treated as safe structure.
+  const ternaryRe =
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*[^\n;?=]+?\?\s*(['"])([^'"]*)\2\s*:\s*(['"])([^'"]*)\4\s*;/g;
+  while ((m = ternaryRe.exec(content)) !== null) {
+    names.add(m[1]);
+  }
+
+  // const placeholders = ids.map(() => '?').join(',')  — structure only, values bound later
+  const phRe =
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*[^;]*?\.map\s*\(\s*(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>\s*['"`]\?['"`]\s*\)\s*\.join\s*\(\s*['"`],['"`]\s*\)/g;
+  while ((m = phRe.exec(content)) !== null) {
+    names.add(m[1]);
+  }
+
+  return names;
+}
+
+/**
+ * True when every `${expr}` in a template is a bare identifier in the safe set.
+ *
+ * @param {string} templateLit Full template including backticks.
+ * @param {Set<string>} safeIdents Safe fragment names.
+ * @returns {boolean}
+ */
+function onlySafeConstInterpolations(templateLit, safeIdents) {
+  const inner = templateLit.slice(1, -1);
+  const exprRe = /\$\{([^}]*)\}/g;
+  let m;
+  let count = 0;
+  while ((m = exprRe.exec(inner)) !== null) {
+    count += 1;
+    const expr = (m[1] ?? '').trim();
+    // Bare identifier only — not id.x, not fn(), not a || b.
+    if (!/^[A-Za-z_$][\w$]*$/.test(expr)) return false;
+    if (!safeIdents.has(expr)) return false;
+  }
+  return count > 0;
+}
+
+/**
  * Find SQL built by string interpolation — in a template literal (`... ${x}`) OR
  * by concatenation (`"SELECT ... " + id`). The template-only version missed the
  * textbook `"SELECT * FROM t WHERE id = '" + id + "'"`, so a string-concat
  * injection cleared the blocker. Prose like "create, edit, and delete ${e}" is
  * ignored because it lacks SQL clause structure.
+ *
+ * Fixed structure fragments (module/local const column lists, optional `?`
+ * clauses, `?,?,?` placeholder runs) are not findings — they cannot carry a
+ * request value. Parameters, arguments, and any other expression still fail.
+ *
+ * @param {string} content File source.
+ * @returns {string | null} Snippet of the finding, or null when clean.
  */
 function findInterpolatedSql(content) {
+  const safeIdents = safeSqlFragmentIdents(content);
   const templateRe = /`(?:\\[\s\S]|[^\\`])*`/g;
   let m;
   while ((m = templateRe.exec(content)) !== null) {
     const lit = m[0];
-    if (/\$\{/.test(lit) && SQL_CLAUSE.test(lit)) {
-      return lit.slice(0, 120).replace(/\s+/g, ' ');
-    }
+    if (!/\$\{/.test(lit) || !SQL_CLAUSE.test(lit)) continue;
+    if (onlySafeConstInterpolations(lit, safeIdents)) continue;
+    return lit.slice(0, 120).replace(/\s+/g, ' ');
   }
   // Concatenation: a SQL-clause string literal adjacent to a `+`, i.e. a query
   // string being glued to a variable. `'...' + x` or `x + '...'`.
@@ -939,7 +1018,12 @@ switch (ruleId) {
     // both reading values from shared theme tokens is consistent token usage, not
     // harmful duplication, and forcing them into a shared abstraction would trip
     // the no-speculative-abstraction rule. This mirrors token-based tools (jscpd).
-    const files = [...tsx(), ...walk(functionsDir, ['.ts', '.js'])];
+    //
+    // Test files are excluded: shared vi.mock setups and zone fixtures are not
+    // product duplication, and collapsing them would not improve the app.
+    const files = [...tsx(), ...walk(functionsDir, ['.ts', '.js'])].filter(
+      (f) => !isTestFile(f)
+    );
     const seen = new Map();
     // Framework-mandated boilerplate that cannot (and must not) be abstracted:
     // Cloudflare Pages Function handler signatures are exported per-route by design.
@@ -1177,7 +1261,15 @@ switch (ruleId) {
     break;
   }
   case 'fe-legal-substance': {
-    runLegalSubstance(appDir, { pass, fail, notApplicable });
+    await runLegalSubstance(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
     break;
   }
   case 'fe-structured-data': {

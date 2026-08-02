@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
 import { formatFrostDate } from '../lib/halfMonth';
 import { en } from '../i18n/en';
 import type { CropListItem, Method, Zone } from '../lib/schemas';
+import { BrandLogo } from './BrandLogo';
 import type { FiltersState } from './Filters';
 import { LiveSearch } from './LiveSearch';
+import { PrimaryNavLinks } from './PrimaryNavLinks';
 import { ThemeToggle } from './ThemeToggle';
 import { ZoneSelector } from './ZoneSelector';
 import './CompactHeader.css';
@@ -67,19 +68,12 @@ export function CompactHeader({
   return (
     <header className="compact-header" data-testid="compact-header" data-measure="header">
       <div className="compact-header__bar">
-        <Link to="/" className="compact-header__logo" aria-label={en.appName}>
-          <img
-            className="compact-header__mark"
-            src="/brand-mark.png"
-            alt=""
-            width={96}
-            height={96}
-            aria-hidden="true"
-            decoding="async"
-            data-measure="mark"
-          />
-          <span className="compact-header__name">{en.appName}</span>
-        </Link>
+        <BrandLogo
+          className="compact-header__logo"
+          markClassName="compact-header__mark"
+          nameClassName="compact-header__name"
+          markMeasure="mark"
+        />
 
         <div className="compact-header__search" data-measure="search-slot">
           <LiveSearch
@@ -124,18 +118,7 @@ export function CompactHeader({
         </button>
 
         <nav className="compact-header__nav" aria-label="Primary" data-testid="primary-nav-desktop">
-          <NavLink to="/" end className={navClass} onClick={() => setNavOpen(false)}>
-            {en.nav.home}
-          </NavLink>
-          <NavLink to="/grid" className={navClass} onClick={() => setNavOpen(false)}>
-            {en.nav.grid}
-          </NavLink>
-          <NavLink to="/about" className={navClass} onClick={() => setNavOpen(false)}>
-            {en.nav.about}
-          </NavLink>
-          <NavLink to="/contact" className={navClass} onClick={() => setNavOpen(false)}>
-            {en.nav.contact}
-          </NavLink>
+          <PrimaryNavLinks className={navClass} onNavigate={() => setNavOpen(false)} />
         </nav>
       </div>
 
@@ -149,18 +132,7 @@ export function CompactHeader({
         aria-label="Primary"
         hidden={!navOpen}
       >
-        <NavLink to="/" end className={navClass} onClick={() => setNavOpen(false)}>
-          {en.nav.home}
-        </NavLink>
-        <NavLink to="/grid" className={navClass} onClick={() => setNavOpen(false)}>
-          {en.nav.grid}
-        </NavLink>
-        <NavLink to="/about" className={navClass} onClick={() => setNavOpen(false)}>
-          {en.nav.about}
-        </NavLink>
-        <NavLink to="/contact" className={navClass} onClick={() => setNavOpen(false)}>
-          {en.nav.contact}
-        </NavLink>
+        <PrimaryNavLinks className={navClass} onNavigate={() => setNavOpen(false)} />
       </nav>
 
       <div
@@ -255,9 +227,11 @@ export function CompactHeader({
 }
 
 /**
- * @param args - NavLink className args.
+ * Compact-header NavLink class names.
+ *
+ * @param isActive - Whether the link matches the current route.
  */
-function navClass({ isActive }: { isActive: boolean }): string {
+function navClass(isActive: boolean): string {
   return isActive
     ? 'compact-header__link compact-header__link--active'
     : 'compact-header__link';

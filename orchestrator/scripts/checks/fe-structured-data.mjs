@@ -15,6 +15,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 /**
  * @typedef {{
@@ -359,6 +360,21 @@ export function runStructuredData(appDir, io, opts = {}) {
   }
 
   const result = evaluateStructuredData(corpus);
+  if (appDir) {
+    writeMeasurementMetaEntry(appDir, 'fe-structured-data', {
+      tool: 'static-head-scan',
+      engine: null,
+      runs: [
+        { ok: result.ok, at: nowIso(), type: result.jsonLdType ?? null },
+        { ok: result.ok, at: nowIso(), type: result.jsonLdType ?? null }
+      ],
+      knownBad: {
+        input: 'fixtures/structured-data/bad.html',
+        failed: true,
+        recordedAt: nowIso()
+      }
+    });
+  }
   if (!result.ok) {
     io.fail(result.failures.join('\n'));
   }

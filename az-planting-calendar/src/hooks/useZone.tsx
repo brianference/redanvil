@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { fetchZones } from '../lib/api';
 import type { Zone } from '../lib/schemas';
+import { useAsyncLoad } from './useAsyncLoad';
 
 const STORAGE_KEY = 'az-planting-zone-id';
 const DEFAULT_ZONE_ID = 'zone-cave-creek-85331';
@@ -40,47 +41,31 @@ const ZoneContext = createContext<ZoneContextValue | null>(null);
  * @param props - Children.
  */
 export function ZoneProvider({ children }: { children: ReactNode }) {
-  const [zones, setZones] = useState<Zone[]>([]);
   const [zone, setZoneState] = useState<Zone | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
+  const {
+    data: zonesPayload,
+    error: loadError,
+    loading,
+    reload
+  } = useAsyncLoad(0, () => fetchZones());
+
+  const zones = zonesPayload?.zones ?? [];
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    void fetchZones()
-      .then((res) => {
-        if (cancelled) return;
-        setZones(res.zones);
-        const storedId =
-          typeof localStorage !== 'undefined'
-            ? localStorage.getItem(STORAGE_KEY)
-            : null;
-        const preferred =
-          res.zones.find((z) => z.id === storedId) ??
-          res.zones.find((z) => z.id === DEFAULT_ZONE_ID) ??
-          res.zones[0] ??
-          null;
-        setZoneState(preferred);
-        if (!preferred) {
-          setError('No planning zones configured');
-        }
-      })
-      .catch((cause: unknown) => {
-        if (cancelled) return;
-        setError(cause instanceof Error ? cause.message : 'zones failed');
-        setZones([]);
-        setZoneState(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [reloadKey]);
+    if (!zonesPayload) return;
+    const storedId =
+      typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    const preferred =
+      zonesPayload.zones.find((z) => z.id === storedId) ??
+      zonesPayload.zones.find((z) => z.id === DEFAULT_ZONE_ID) ??
+      zonesPayload.zones[0] ??
+      null;
+    setZoneState(preferred);
+  }, [zonesPayload]);
+
+  const error =
+    loadError ??
+    (zonesPayload && zones.length === 0 ? 'No planning zones configured' : null);
 
   /**
    * Persist selection and update state.
@@ -94,13 +79,6 @@ export function ZoneProvider({ children }: { children: ReactNode }) {
     } catch {
       /* private mode — selection still applies for the session */
     }
-  }, []);
-
-  /**
-   * Bump reload key to re-fetch zones.
-   */
-  const reload = useCallback(() => {
-    setReloadKey((k) => k + 1);
   }, []);
 
   const value = useMemo(

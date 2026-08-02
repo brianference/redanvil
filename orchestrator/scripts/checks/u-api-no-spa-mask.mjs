@@ -209,7 +209,12 @@ export async function runApiNoSpaMask(appDir, io, deps = {}) {
     runs: [
       { ok, at: nowIso(), path, status },
       { ok, at: nowIso(), path, status }
-    ]
+    ],
+    knownBad: {
+      input: 'API path that returns SPA index.html at 200',
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
 
   if (!ok) {

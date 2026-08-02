@@ -10,6 +10,7 @@ import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { useZone } from '../hooks/useZone';
 import { en } from '../i18n/en';
 import { fetchCrops, fetchGrid, fetchPlantable } from '../lib/api';
+import { useFilterDerived } from '../lib/filterDerived';
 import {
   dateToHalfMonth,
   halfMonthInWindow,
@@ -53,15 +54,7 @@ export function HomePage() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const methodFilter = useMemo(
-    () => (filters.method === '' ? undefined : (filters.method as Method)),
-    [filters.method]
-  );
-  const monthFilter = useMemo(
-    () => (filters.month === '' ? undefined : filters.month),
-    [filters.month]
-  );
-  const searchQ = filters.q.trim();
+  const { methodFilter, monthFilter, searchQ } = useFilterDerived(filters);
   const zoneId = zone?.id;
 
   const selectedHalf = useMemo(() => {
@@ -92,73 +85,90 @@ export function HomePage() {
     return counts;
   }, [grid]);
 
+  /**
+   * Plantable + grid both honour `q` on the server. Debounce name search so
+   * typing does not flood the endpoints; method/date/zone still reload immediately.
+   */
   useEffect(() => {
     let cancelled = false;
     setPlantableLoading(true);
     setPlantableError(null);
-    void fetchPlantable({
-      date: filters.date || undefined,
-      method: methodFilter,
-      zone: zoneId
-    })
-      .then((data) => {
-        if (cancelled) return;
-        if (monthFilter !== undefined) {
-          const [h0, h1] = [monthFilter * 2, monthFilter * 2 + 1];
-          const items = data.items.filter((item) =>
-            item.windows.some(
-              (w) =>
-                halfMonthInWindow(w.start_half_month, w.end_half_month, h0) ||
-                halfMonthInWindow(w.start_half_month, w.end_half_month, h1)
-            )
-          );
-          setPlantable({ ...data, items });
-        } else {
-          setPlantable(data);
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setPlantableError(err instanceof Error ? err.message : 'error');
-        setPlantable(null);
-      })
-      .finally(() => {
-        if (!cancelled) setPlantableLoading(false);
-      });
+    const timer = window.setTimeout(
+      () => {
+        void fetchPlantable({
+          date: filters.date || undefined,
+          method: methodFilter,
+          zone: zoneId,
+          q: searchQ || undefined
+        })
+          .then((data) => {
+            if (cancelled) return;
+            if (monthFilter !== undefined) {
+              const [h0, h1] = [monthFilter * 2, monthFilter * 2 + 1];
+              const items = data.items.filter((item) =>
+                item.windows.some(
+                  (w) =>
+                    halfMonthInWindow(w.start_half_month, w.end_half_month, h0) ||
+                    halfMonthInWindow(w.start_half_month, w.end_half_month, h1)
+                )
+              );
+              setPlantable({ ...data, items });
+            } else {
+              setPlantable(data);
+            }
+          })
+          .catch((err: unknown) => {
+            if (cancelled) return;
+            setPlantableError(err instanceof Error ? err.message : 'error');
+            setPlantable(null);
+          })
+          .finally(() => {
+            if (!cancelled) setPlantableLoading(false);
+          });
+      },
+      searchQ ? SEARCH_DEBOUNCE_MS : 0
+    );
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [filters.date, methodFilter, monthFilter, zoneId, reloadKey]);
+  }, [filters.date, methodFilter, monthFilter, zoneId, searchQ, reloadKey]);
 
   useEffect(() => {
     let cancelled = false;
     setGridLoading(true);
     setGridError(null);
-    void fetchGrid({
-      method: methodFilter,
-      month: monthFilter,
-      zone: zoneId
-    })
-      .then((data) => {
-        if (!cancelled) setGrid(data);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setGridError(err instanceof Error ? err.message : 'error');
-        setGrid(null);
-      })
-      .finally(() => {
-        if (!cancelled) setGridLoading(false);
-      });
+    const timer = window.setTimeout(
+      () => {
+        void fetchGrid({
+          method: methodFilter,
+          month: monthFilter,
+          zone: zoneId,
+          q: searchQ || undefined
+        })
+          .then((data) => {
+            if (!cancelled) setGrid(data);
+          })
+          .catch((err: unknown) => {
+            if (cancelled) return;
+            setGridError(err instanceof Error ? err.message : 'error');
+            setGrid(null);
+          })
+          .finally(() => {
+            if (!cancelled) setGridLoading(false);
+          });
+      },
+      searchQ ? SEARCH_DEBOUNCE_MS : 0
+    );
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [methodFilter, monthFilter, zoneId, reloadKey]);
+  }, [methodFilter, monthFilter, zoneId, searchQ, reloadKey]);
 
   /**
-   * Debounced live name search: results next to the input + id filter for the year grid.
-   * AbortController cancels superseded requests so a slow reply cannot overwrite a newer query.
-   * Failure sets searchError -- never an empty id set (that would paint as "no matches").
+   * Debounced live name search suggestions next to the input (from /api/crops).
+   * Grid/plantable narrowing is server-side via q on those endpoints.
    */
   const searchAbortRef = useRef<AbortController | null>(null);
   useEffect(() => {

@@ -1,5 +1,8 @@
 import { errorJson } from './lib/http';
 
+/** Ceiling for asset-shell fetch when rewriting SPA routes (ms). */
+const ASSET_FETCH_TIMEOUT_MS = 10_000;
+
 /**
  * SPA fallback: non-API GET 404s serve index.html so client routes work
  * (/crop/:id, /about, …) under wrangler pages dev and Pages.
@@ -34,7 +37,10 @@ export async function onRequest(context: EventContext<unknown, string, unknown>)
   ) {
     const assets = (context.env as { ASSETS?: Fetcher }).ASSETS;
     if (assets) {
-      return assets.fetch(new Request(new URL('/index.html', url.origin), context.request));
+      const indexReq = new Request(new URL('/index.html', url.origin), context.request);
+      return assets.fetch(
+        new Request(indexReq, { signal: AbortSignal.timeout(ASSET_FETCH_TIMEOUT_MS) })
+      );
     }
   }
 

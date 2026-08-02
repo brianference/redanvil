@@ -37,3 +37,20 @@ test-results/
 # Scratch source dumps from transcription runs. The sourced rows live in
 # migrations/ and SOURCES.md; the raw dumps are reproducible and not evidence.
 tmp-sources/
+
+# Generation intermediates for crop art. Shipped WebP assets live in
+# az-planting-calendar/public/crops/; raw JPG sources are not product evidence.
+**/design-refs/crop-art/raw/
+
+# Design-option raster previews under design-refs/ (HTML decisions stay tracked).
+# hyg-no-binaries only allows public/assets/static/images/screenshots for images.
+**/design-refs/**/*.png
+**/design-refs/**/*.jpg
+**/design-refs/**/*.jpeg
+**/design-refs/**/*.webp
+**/design-refs/**/*.gif
+
+# Spec proof PNGs under evidence/ that are not under evidence/screenshots/
+# (hyg-no-binaries allowlists only public|assets|static|images|screenshots).
+az-planting-calendar/evidence/spec-*/**
+az-planting-calendar/evidence/*.png

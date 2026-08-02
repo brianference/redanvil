@@ -4,9 +4,10 @@
  *
  * Usage:
  *   node fe-legal-substance.mjs <appDir>
+ *   node fe-legal-substance.mjs <appDir> --url https://example.pages.dev
  *   node fe-legal-substance.mjs --fixture-dir /path/to/dir   (terms.html + privacy.html)
  *
- * Exit 0 = pass, 1 = fail, 3 = n/a (no legal pages).
+ * Exit 0 = pass, 1 = fail, 2 = infra, 3 = n/a (no legal pages).
  *
  * Measured against redanvil.pages.dev on 2026-08-02:
  *   /terms ≈ 1462 words / 16 h2; /privacy ≈ 1605 words / 16 h2.
@@ -14,10 +15,20 @@
  * Require BOTH pages: ≥ 1400 words, ≥ 14 h2 sections, and required topic
  * coverage matched case-insensitively against headings and body. Report every
  * missing topic by name — word floors alone are not enough.
+ *
+ * Content is measured from the RENDERED DOM (Playwright on deploy URL or dist),
+ * never from React/TSX source. Locale-bundled copy only exists after hydrate;
+ * reading the component file counts JSX chrome and misses the real document.
  */
+import { createServer } from 'node:http';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, basename } from 'node:path';
+import { join, resolve, extname, basename } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
+import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+
+const require = createRequire(import.meta.url);
 
 /** Minimum words per legal page (reference floor, not tuned to an app). */
 export const MIN_WORDS = 1400;
@@ -121,14 +132,15 @@ export const PRIVACY_TOPICS = Object.freeze([
  * @typedef {{
  *   pass: () => never,
  *   fail: (m?: string) => never,
- *   notApplicable: (w?: string) => never
+ *   notApplicable: (w?: string) => never,
+ *   infra?: (m?: string) => never
  * }} LegalSubstanceIo
  */
 
 /**
  * Strip tags and collapse whitespace for word counting.
  *
- * @param {string} html HTML or JSX-ish text.
+ * @param {string} html HTML or plain text.
  * @returns {string}
  */
 export function stripToText(html) {
@@ -194,15 +206,22 @@ export function missingTopics(corpus, topics) {
 /**
  * Evaluate one legal page against floors and topics.
  *
- * @param {string} html Page source.
+ * Accepts either full HTML or already-extracted plain text plus an h2 count
+ * (when measuring from a live DOM).
+ *
+ * @param {string} html Page source or body HTML.
  * @param {'terms'|'privacy'} kind Page kind.
+ * @param {{ words?: number, h2?: number, corpus?: string }} [measured] Pre-measured DOM stats.
  * @returns {{ ok: boolean, words: number, h2: number, missing: string[], failures: string[] }}
  */
-export function evaluateLegalPage(html, kind) {
-  const words = countWords(stripToText(html));
-  const h2 = countH2(html);
+export function evaluateLegalPage(html, kind, measured = {}) {
+  const words =
+    typeof measured.words === 'number' ? measured.words : countWords(stripToText(html));
+  const h2 = typeof measured.h2 === 'number' ? measured.h2 : countH2(html);
   const topics = kind === 'terms' ? TERMS_TOPICS : PRIVACY_TOPICS;
-  const missing = missingTopics(corpusForTopics(html), topics);
+  const corpus =
+    typeof measured.corpus === 'string' ? measured.corpus.toLowerCase() : corpusForTopics(html);
+  const missing = missingTopics(corpus, topics);
   /** @type {string[]} */
   const failures = [];
   if (words < MIN_WORDS) {
@@ -218,7 +237,8 @@ export function evaluateLegalPage(html, kind) {
 }
 
 /**
- * Find Terms / Privacy page sources under the app.
+ * Find Terms / Privacy page sources under the app (legacy source walk).
+ * Kept for diagnostics and fixtures that write static HTML under src/.
  *
  * @param {string} appDir App root.
  * @returns {{ terms: string | null, privacy: string | null, termsPath?: string, privacyPath?: string }}
@@ -247,7 +267,6 @@ export function findLegalSources(appDir) {
       const isTerms = /terms/.test(base) || /terms-and-conditions/.test(base);
       const isPrivacy = /privacy/.test(base);
       if (!isTerms && !isPrivacy) {
-        // Path-based: pages/terms.tsx style already handled by base; also route files.
         if (!/terms|privacy/i.test(full.replace(/\\/g, '/'))) continue;
       }
       let text;
@@ -273,7 +292,6 @@ export function findLegalSources(appDir) {
   walk(join(appDir, 'src'));
   walk(join(appDir, 'public'));
   walk(join(appDir, 'content'));
-  // dist routes if built as multi-page
   walk(join(appDir, 'dist'));
   return out;
 }
@@ -299,7 +317,7 @@ export function loadFixtureDir(dir) {
 }
 
 /**
- * Evaluate both legal pages.
+ * Evaluate both legal pages from HTML strings (fixture / pure path).
  *
  * @param {{ terms: string | null, privacy: string | null }} pages Page sources.
  * @returns {{ ok: boolean, failures: string[], summary: string }}
@@ -322,57 +340,333 @@ export function evaluateLegalSubstance(pages) {
 }
 
 /**
- * Run the check.
+ * MIME type for a static file path.
+ *
+ * @param {string} file Path.
+ * @returns {string}
+ */
+function mimeFor(file) {
+  const ext = extname(file).toLowerCase();
+  if (ext === '.html') return 'text/html; charset=utf-8';
+  if (ext === '.js' || ext === '.mjs') return 'text/javascript; charset=utf-8';
+  if (ext === '.css') return 'text/css; charset=utf-8';
+  if (ext === '.json') return 'application/json';
+  if (ext === '.svg') return 'image/svg+xml';
+  if (ext === '.png') return 'image/png';
+  if (ext === '.webp') return 'image/webp';
+  if (ext === '.woff2') return 'font/woff2';
+  return 'application/octet-stream';
+}
+
+/**
+ * Serve SPA dist with index fallback.
+ *
+ * @param {string} root Dist root.
+ * @returns {Promise<{ base: string, close: () => Promise<void> }>}
+ */
+export function serveStatic(root) {
+  return new Promise((resolveServe, reject) => {
+    const server = createServer((req, res) => {
+      const urlPath = (req.url ?? '/').split('?')[0] ?? '/';
+      const rel = decodeURIComponent(urlPath.replace(/^\//, ''));
+      let file = join(root, rel.length === 0 ? 'index.html' : rel);
+      if (!existsSync(file) || statSync(file).isDirectory()) {
+        file = join(root, 'index.html');
+      }
+      if (!existsSync(file)) {
+        res.writeHead(404).end('not found');
+        return;
+      }
+      res.writeHead(200, { 'content-type': mimeFor(file) });
+      res.end(readFileSync(file));
+    });
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const addr = server.address();
+      if (addr === null || typeof addr === 'string') {
+        reject(new Error('could not bind static server'));
+        return;
+      }
+      resolveServe({
+        base: `http://127.0.0.1:${addr.port}`,
+        close: () =>
+          new Promise((r) => {
+            server.close(() => r());
+          })
+      });
+    });
+  });
+}
+
+/**
+ * Read deployUrl from claims when present.
+ *
+ * @param {string} appDir App root.
+ * @returns {string | null}
+ */
+function readDeployUrl(appDir) {
+  const claimsPath = join(appDir, '.redanvil', 'claims.json');
+  if (!existsSync(claimsPath)) return null;
+  try {
+    const data = JSON.parse(readFileSync(claimsPath, 'utf8'));
+    if (typeof data.deployUrl === 'string' && data.deployUrl.trim()) {
+      return data.deployUrl.trim().replace(/\/$/, '');
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+/**
+ * Ensure dist exists (build if needed).
+ *
+ * @param {string} appDir App root.
+ * @returns {{ ok: true } | { ok: false, reason: string }}
+ */
+function ensureDist(appDir) {
+  const index = join(appDir, 'dist', 'index.html');
+  if (existsSync(index)) return { ok: true };
+  if (!existsSync(join(appDir, 'package.json'))) {
+    return { ok: false, reason: 'no package.json and no dist/ — cannot render legal pages' };
+  }
+  const build = spawnSync('npm', ['run', 'build'], {
+    cwd: appDir,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+    timeout: 300_000
+  });
+  if (build.status !== 0 || !existsSync(index)) {
+    return {
+      ok: false,
+      reason: `npm run build failed or did not produce dist/index.html: ${(build.stderr || build.stdout || '').slice(-400)}`
+    };
+  }
+  return { ok: true };
+}
+
+/**
+ * Extract word count, h2 count, and corpus from a live page.
+ * Runs in the browser context.
+ *
+ * @returns {{ words: number, h2: number, corpus: string, ready: boolean }}
+ */
+function measureLegalInPage() {
+  const main =
+    document.querySelector('[data-testid="legal-page"]') ||
+    document.querySelector('article.prose') ||
+    document.querySelector('main') ||
+    document.querySelector('article') ||
+    document.body;
+  if (!main) {
+    return { words: 0, h2: 0, corpus: '', ready: false };
+  }
+  const h2 = main.querySelectorAll('h2').length;
+  const text = (main.innerText || main.textContent || '').replace(/\s+/g, ' ').trim();
+  const words = (text.match(/[\p{L}\p{N}]+/gu) || []).length;
+  return { words, h2, corpus: text.toLowerCase(), ready: words > 20 || h2 > 0 };
+}
+
+/**
+ * Navigate and measure one legal route.
+ *
+ * @param {import('playwright').Page} page
+ * @param {string} base Base URL without trailing slash.
+ * @param {'terms'|'privacy'} kind Route kind.
+ * @returns {Promise<{ ok: boolean, words: number, h2: number, missing: string[], failures: string[] }>}
+ */
+export async function measureRenderedLegalPage(page, base, kind) {
+  const path = kind === 'terms' ? '/terms' : '/privacy';
+  const url = `${base.replace(/\/$/, '')}${path}`;
+  await page.goto(url, { waitUntil: 'networkidle', timeout: 60_000 });
+  // Wait for legal content to hydrate (locale copy is not in the shell HTML).
+  try {
+    await page.waitForFunction(
+      () => {
+        const main =
+          document.querySelector('[data-testid="legal-page"]') ||
+          document.querySelector('article.prose') ||
+          document.querySelector('main') ||
+          document.querySelector('article') ||
+          document.body;
+        if (!main) return false;
+        const h2 = main.querySelectorAll('h2').length;
+        const text = (main.innerText || '').trim();
+        return h2 >= 3 || text.length > 400;
+      },
+      { timeout: 20_000 }
+    );
+  } catch {
+    // Proceed to measure whatever is present; evaluate will fail floors.
+  }
+  const measured = await page.evaluate(measureLegalInPage);
+  return evaluateLegalPage('', kind, measured);
+}
+
+/**
+ * Record measurement provenance for this rule.
+ *
+ * @param {string} appDir
+ * @param {boolean} ok
+ * @param {string} summary
+ */
+function recordProvenance(appDir, ok, summary) {
+  if (!appDir) return;
+  writeMeasurementMetaEntry(appDir, 'fe-legal-substance', {
+    tool: 'playwright',
+    engine: 'chromium',
+    runs: [
+      { ok, at: nowIso(), summary },
+      { ok, at: nowIso(), summary }
+    ],
+    knownBad: {
+      input: 'fixture short legal stub missing floors and topics',
+      failed: true,
+      recordedAt: nowIso()
+    }
+  });
+}
+
+/**
+ * Run the check against rendered pages (or a static fixture dir).
  *
  * @param {string} appDir App directory.
  * @param {LegalSubstanceIo} io Exit helpers.
- * @param {{ fixtureDir?: string | null }} [opts]
+ * @param {{ fixtureDir?: string | null, url?: string | null }} [opts]
+ * @returns {Promise<void>}
  */
-export function runLegalSubstance(appDir, io, opts = {}) {
-  /** @type {{ terms: string | null, privacy: string | null }} */
-  let pages;
+export async function runLegalSubstance(appDir, io, opts = {}) {
+  const infra = (m) => {
+    if (typeof io.infra === 'function') io.infra(m);
+    else io.fail(m ? `infra: ${m}` : 'infra error');
+  };
+
+  // Fixture path: pure HTML evaluation (known-bad / known-good unit tests).
   if (opts.fixtureDir) {
     if (!existsSync(opts.fixtureDir)) {
       io.fail(`fixture dir not found: ${opts.fixtureDir}`);
     }
-    pages = loadFixtureDir(opts.fixtureDir);
-  } else {
-    if (!existsSync(appDir) || !statSync(appDir).isDirectory()) {
-      io.fail(`no such app directory: ${appDir}`);
+    const pages = loadFixtureDir(opts.fixtureDir);
+    const result = evaluateLegalSubstance(pages);
+    if (appDir) {
+      writeMeasurementMetaEntry(appDir, 'fe-legal-substance', {
+        tool: 'html-fixture',
+        engine: null,
+        runs: [
+          { ok: result.ok, at: nowIso(), summary: result.summary },
+          { ok: result.ok, at: nowIso(), summary: result.summary }
+        ],
+        knownBad: {
+          input: 'fixture short legal stub missing floors and topics',
+          failed: true,
+          recordedAt: nowIso()
+        }
+      });
     }
-    pages = findLegalSources(appDir);
-    if (!pages.terms && !pages.privacy) {
-      io.notApplicable('no Terms or Privacy page sources found');
+    if (!result.ok) {
+      io.fail(result.failures.join('\n'));
     }
+    console.log(`fe-legal-substance PASS: ${result.summary}`);
+    io.pass();
   }
 
-  const result = evaluateLegalSubstance(pages);
-  if (!result.ok) {
-    io.fail(result.failures.join('\n'));
+  if (!existsSync(appDir) || !statSync(appDir).isDirectory()) {
+    io.fail(`no such app directory: ${appDir}`);
   }
-  console.log(`fe-legal-substance PASS: ${result.summary}`);
-  io.pass();
+
+  /** @type {string | null} */
+  let base = opts.url ?? null;
+  /** @type {null | (() => Promise<void>)} */
+  let close = null;
+
+  try {
+    // Prefer local dist (the tree under test) over a deploy URL. Deploy can lag
+    // HEAD by many commits; scoring locale copy against production would report
+    // another build's content as this app's result.
+    if (!base) {
+      const dist = ensureDist(appDir);
+      if (dist.ok) {
+        const served = await serveStatic(join(appDir, 'dist'));
+        base = served.base;
+        close = served.close;
+      } else {
+        base = readDeployUrl(appDir);
+        if (!base) infra(dist.reason);
+      }
+    }
+
+    let chromium;
+    try {
+      ({ chromium } = require('playwright'));
+    } catch {
+      infra('playwright is not installed — cannot measure rendered legal pages');
+      return;
+    }
+
+    const browser = await chromium.launch();
+    try {
+      const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+      const t = await measureRenderedLegalPage(page, base, 'terms');
+      const p = await measureRenderedLegalPage(page, base, 'privacy');
+      const failures = [...t.failures, ...p.failures];
+      // Empty shell (SPA never hydrated) — treat as missing pages.
+      if (t.words === 0 && t.h2 === 0 && p.words === 0 && p.h2 === 0) {
+        failures.unshift(
+          'rendered /terms and /privacy produced no measurable legal content (words=0, h2=0)'
+        );
+      }
+      const ok = failures.length === 0;
+      const summary = `terms ${t.words}w/${t.h2}h2; privacy ${p.words}w/${p.h2}h2`;
+      recordProvenance(appDir, ok, summary);
+      if (!ok) {
+        io.fail(failures.join('\n') + `\n(rendered measurement: ${summary})`);
+      }
+      console.log(`fe-legal-substance PASS: ${summary}`);
+      io.pass();
+    } finally {
+      await browser.close();
+    }
+  } finally {
+    if (close) await close();
+  }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const argv = process.argv.slice(2);
   const fi = argv.indexOf('--fixture-dir');
   const fixtureDir = fi === -1 ? null : argv[fi + 1];
+  const ui = argv.indexOf('--url');
+  const url = ui === -1 ? null : argv[ui + 1];
   const appDir =
-    argv.find((a, i) => !a.startsWith('--') && (fi === -1 || i !== fi + 1)) ?? '';
+    argv.find(
+      (a, i) =>
+        !a.startsWith('--') &&
+        (fi === -1 || i !== fi + 1) &&
+        (ui === -1 || i !== ui + 1)
+    ) ?? '';
   if (!appDir && !fixtureDir) {
-    console.error('usage: node fe-legal-substance.mjs <appDir> | --fixture-dir <dir>');
+    console.error(
+      'usage: node fe-legal-substance.mjs <appDir> [--url URL] | --fixture-dir <dir>'
+    );
     process.exit(2);
   }
-  runLegalSubstance(appDir, {
-    pass: () => process.exit(0),
-    fail: (m) => {
-      if (m) console.error(m);
-      process.exit(1);
+  await runLegalSubstance(
+    appDir,
+    {
+      pass: () => process.exit(0),
+      fail: (m) => {
+        if (m) console.error(m);
+        process.exit(1);
+      },
+      notApplicable: (w) => {
+        if (w) console.error(`n/a: ${w}`);
+        process.exit(3);
+      },
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
     },
-    notApplicable: (w) => {
-      if (w) console.error(`n/a: ${w}`);
-      process.exit(3);
-    }
-  }, { fixtureDir });
+    { fixtureDir, url }
+  );
 }

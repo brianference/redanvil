@@ -5,6 +5,13 @@ import {
   useState,
   type KeyboardEvent
 } from 'react';
+import {
+  closeListbox,
+  nextDownIndex,
+  nextUpIndex,
+  openListAndClearHighlight,
+  useListboxActiveIndex
+} from '../hooks/useListboxActiveIndex';
 import { en } from '../i18n/en';
 import { isStateQuery, matchOutOfCoveragePlace } from '../lib/coverage';
 import type { Zone } from '../lib/schemas';
@@ -24,7 +31,7 @@ export function ZoneSelector() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   /** Index into the visible option list; -1 means none highlighted. */
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeIndex, setActiveIndex] = useListboxActiveIndex();
 
   const trimmed = query.trim();
   const matches = useMemo(() => filterZones(zones, trimmed), [zones, trimmed]);
@@ -69,20 +76,14 @@ export function ZoneSelector() {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
       setOpen(true);
-      setActiveIndex((i) => {
-        if (i < 0) return 0;
-        return Math.min(i + 1, visibleZones.length - 1);
-      });
+      setActiveIndex((i) => nextDownIndex(i, visibleZones.length));
       return;
     }
 
     if (event.key === 'ArrowUp') {
       event.preventDefault();
       setOpen(true);
-      setActiveIndex((i) => {
-        if (i <= 0) return visibleZones.length - 1;
-        return i - 1;
-      });
+      setActiveIndex((i) => nextUpIndex(i, visibleZones.length));
       return;
     }
 
@@ -97,9 +98,7 @@ export function ZoneSelector() {
 
     if (event.key === 'Escape') {
       event.preventDefault();
-      setOpen(false);
-      setActiveIndex(-1);
-      inputRef.current?.focus();
+      closeListbox(setOpen, setActiveIndex, inputRef);
       return;
     }
 
@@ -122,8 +121,7 @@ export function ZoneSelector() {
    */
   function handleChange(next: string): void {
     setQuery(next);
-    setOpen(true);
-    setActiveIndex(-1);
+    openListAndClearHighlight(setOpen, setActiveIndex);
   }
 
   const inputDisplay = open || trimmed.length > 0 ? query : zoneLabel(zone);

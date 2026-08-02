@@ -1,10 +1,18 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-02T21:32:14.694Z",
+  "checkedAt": "2026-08-02T22:20:03.577Z",
   "probes": {
-    "search-narrows": {
+    "q-narrows-crops": {
       "ok": true,
-      "detail": "45 -> 1"
+      "detail": "/api/crops 45 -> 4"
+    },
+    "q-narrows-grid": {
+      "ok": true,
+      "detail": "/api/grid 45 -> 4"
+    },
+    "q-narrows-plantable": {
+      "ok": true,
+      "detail": "/api/plantable 7 -> 1"
     },
     "assistant-grounded": {
       "ok": true,

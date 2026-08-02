@@ -1,57 +1,13 @@
 /**
- * Date helpers for Pages Functions (no Node-only globals).
- * Duplicated lightly from src so the Worker bundle stays independent.
+ * Date helpers for Pages Functions.
+ * Half-month math and labels are the single source in src/lib/halfMonth.ts
+ * (same pattern as Zod schemas imported from src).
  */
-
-/**
- * Convert a calendar date to half-month index 0..23.
- *
- * @param date - Local date.
- */
-export function dateToHalfMonth(date: Date): number {
-  const month = date.getMonth();
-  const day = date.getDate();
-  return month * 2 + (day >= 15 ? 1 : 0);
-}
-
-/** Labels matching the UA az1005 half-month columns. */
-export const HALF_MONTH_LABELS: readonly string[] = [
-  'Jan 1',
-  'Jan 15',
-  'Feb 1',
-  'Feb 15',
-  'Mar 1',
-  'Mar 15',
-  'Apr 1',
-  'Apr 15',
-  'May 1',
-  'May 15',
-  'Jun 1',
-  'Jun 15',
-  'Jul 1',
-  'Jul 15',
-  'Aug 1',
-  'Aug 15',
-  'Sep 1',
-  'Sep 15',
-  'Oct 1',
-  'Oct 15',
-  'Nov 1',
-  'Nov 15',
-  'Dec 1',
-  'Dec 15'
-];
-
-/**
- * Label for a half-month index.
- *
- * @param half - 0..23.
- */
-export function halfMonthLabel(half: number): string {
-  const label = HALF_MONTH_LABELS[half];
-  if (!label) throw new RangeError(`half-month ${half}`);
-  return label;
-}
+export {
+  dateToHalfMonth,
+  halfMonthLabel,
+  HALF_MONTH_LABELS
+} from '../../src/lib/halfMonth';
 
 /**
  * Parse YYYY-MM-DD as a local calendar date (noon to avoid DST edge).

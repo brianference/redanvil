@@ -17,6 +17,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 /** Minimum distinct option artifacts required. */
 export const MIN_OPTIONS = 3;
@@ -274,6 +275,22 @@ export function evaluateDesignOptions(appDir) {
  */
 export function runDesignOptions(appDir, io) {
   const result = evaluateDesignOptions(appDir);
+  const ok = result.status === 'pass';
+  if (appDir) {
+    writeMeasurementMetaEntry(appDir, 'proc-design-options', {
+      tool: 'static-scan',
+      engine: null,
+      runs: [
+        { ok, at: nowIso() },
+        { ok, at: nowIso() }
+      ],
+      knownBad: {
+        input: 'app with no design-refs/design-options or empty DECISION.md',
+        failed: true,
+        recordedAt: nowIso()
+      }
+    });
+  }
   if (result.status === 'na') {
     io.notApplicable(result.messages[0] ?? 'not applicable');
   }

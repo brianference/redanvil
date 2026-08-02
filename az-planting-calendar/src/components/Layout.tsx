@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { en } from '../i18n/en';
 import { useZone } from '../hooks/useZone';
 import { AssistantPanel } from './AssistantPanel';
+import { BrandLogo } from './BrandLogo';
+import { Breadcrumbs } from './Breadcrumbs';
+import { PrimaryNavLinks } from './PrimaryNavLinks';
 import { ThemeToggle } from './ThemeToggle';
 import { ZoneSelector } from './ZoneSelector';
 import './Layout.css';
@@ -26,18 +29,11 @@ export function Layout() {
       {!isHome ? (
         <header className="topbar">
           <div className="topbar__brand">
-            <Link to="/" className="topbar__logo" aria-label={en.appName}>
-              <img
-                className="topbar__mark"
-                src="/brand-mark.png"
-                alt=""
-                width={96}
-                height={96}
-                aria-hidden="true"
-                decoding="async"
-              />
-              <span className="topbar__name">{en.appName}</span>
-            </Link>
+            <BrandLogo
+              className="topbar__logo"
+              markClassName="topbar__mark"
+              nameClassName="topbar__name"
+            />
           </div>
           <div className="topbar__zone-block">
             <span className="topbar__zone mono" data-testid="topbar-zone">
@@ -60,22 +56,15 @@ export function Layout() {
             className={navOpen ? 'topbar__nav topbar__nav--open' : 'topbar__nav'}
             aria-label="Primary"
           >
-            <NavLink to="/" end className={navClass} onClick={() => setNavOpen(false)}>
-              {en.nav.home}
-            </NavLink>
-            <NavLink to="/grid" className={navClass} onClick={() => setNavOpen(false)}>
-              {en.nav.grid}
-            </NavLink>
-            <NavLink to="/about" className={navClass} onClick={() => setNavOpen(false)}>
-              {en.nav.about}
-            </NavLink>
-            <NavLink to="/contact" className={navClass} onClick={() => setNavOpen(false)}>
-              {en.nav.contact}
-            </NavLink>
+            <PrimaryNavLinks
+              className={navClass}
+              onNavigate={() => setNavOpen(false)}
+            />
           </nav>
           <ThemeToggle />
         </header>
       ) : null}
+      {!isHome ? <Breadcrumbs /> : null}
       <main id="main" className="layout__main">
         <Outlet />
       </main>
@@ -144,8 +133,10 @@ export function Layout() {
 }
 
 /**
- * @param args - NavLink className args.
+ * Topbar NavLink class names.
+ *
+ * @param args - Active state from react-router.
  */
-function navClass({ isActive }: { isActive: boolean }): string {
+function navClass(isActive: boolean): string {
   return isActive ? 'topbar__link topbar__link--active' : 'topbar__link';
 }

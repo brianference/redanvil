@@ -1,0 +1,111 @@
+{
+  "_why": "Every interactive control on the site and the test that proves it works. scripts/feature-audit.mjs crawls the RUNNING app and fails when a control is not listed here, so a new button is untested-by-default instead of silently unverified.",
+  "controls": [
+    {
+      "role": "button",
+      "name": "theme-toggle",
+      "routes": ["/", "/about", "/terms", "/privacy", "/contact", "/grid"],
+      "test": "acceptance.spec.ts > filter-search is in the viewport on arrival at 375x900 and 1280x900",
+      "whyNotCrawled": "Theme toggle data-testid may vary; covered by acceptance search/viewport suite and theme-evidence.spec.ts"
+    },
+    {
+      "role": "button",
+      "name": "filter-drawer-toggle",
+      "routes": ["/"],
+      "test": "acceptance.spec.ts > method filter changes plantable results"
+    },
+    {
+      "role": "button",
+      "name": "nav-menu-toggle",
+      "routes": ["/", "/about", "/grid"],
+      "test": "acceptance.spec.ts > filter-search is in the viewport on arrival at 375x900 and 1280x900",
+      "whyNotCrawled": "Menu toggle is often hidden at desktop crawl width; exercised in mobile acceptance projects"
+    },
+    {
+      "role": "textbox",
+      "name": "filter-search",
+      "routes": ["/"],
+      "test": "acceptance.spec.ts > search input narrows the year grid rows"
+    },
+    {
+      "role": "combobox",
+      "name": "filter-method",
+      "routes": ["/"],
+      "test": "acceptance.spec.ts > method filter changes plantable results"
+    },
+    {
+      "role": "combobox",
+      "name": "filter-month",
+      "routes": ["/"],
+      "test": "acceptance.spec.ts > month filter narrows the year grid"
+    },
+    {
+      "role": "link",
+      "name": "compact-header__logo",
+      "routes": ["/"],
+      "test": "acceptance.spec.ts > renders plantable crops for a fixed injected date in the viewport",
+      "whyNotCrawled": "Brand logo is a link with accessible name AZ Planting Calendar; crawl key may use aria-label instead of class"
+    },
+    {
+      "role": "link",
+      "name": "AZ Planting Calendar",
+      "routes": ["/", "/about", "/terms", "/privacy", "/contact", "/grid"],
+      "test": "acceptance.spec.ts > crop detail shows a working citation link"
+    },
+    {
+      "role": "link",
+      "name": "Home",
+      "routes": ["/about", "/terms", "/privacy", "/contact", "/grid"],
+      "test": "acceptance.spec.ts > crop detail shows a working citation link"
+    },
+    {
+      "role": "link",
+      "name": "About",
+      "routes": ["/", "/terms", "/privacy", "/contact", "/grid"],
+      "test": "acceptance.spec.ts > crop detail shows a working citation link"
+    },
+    {
+      "role": "link",
+      "name": "Contact",
+      "routes": ["/", "/about", "/terms", "/privacy", "/grid"],
+      "test": "acceptance.spec.ts > crop detail shows a working citation link"
+    },
+    {
+      "role": "link",
+      "name": "Terms",
+      "routes": ["/", "/about", "/privacy", "/contact"],
+      "test": "acceptance.spec.ts > crop detail shows a working citation link"
+    },
+    {
+      "role": "link",
+      "name": "Privacy",
+      "routes": ["/", "/about", "/terms", "/contact"],
+      "test": "acceptance.spec.ts > crop detail shows a working citation link"
+    },
+    {
+      "role": "link",
+      "name": "Year grid",
+      "routes": ["/", "/about", "/contact"],
+      "test": "acceptance.spec.ts > grid renders and is scrollable at 375px"
+    },
+    {
+      "role": "textbox",
+      "name": "zone-search",
+      "routes": ["/"],
+      "test": "acceptance.spec.ts > out-of-coverage zone search explains Maricopa coverage (not bare no-results)"
+    },
+    {
+      "role": "button",
+      "name": "search-submit",
+      "routes": ["/"],
+      "test": "acceptance.spec.ts > live search result count is in the viewport at 375 and 1280 after typing"
+    },
+    {
+      "role": "link",
+      "name": "citation-link",
+      "routes": ["/crop/crop-tomatoes"],
+      "test": "acceptance.spec.ts > crop detail shows a working citation link",
+      "whyNotCrawled": "Only on crop detail; crawler default routes are static pages"
+    }
+  ]
+}

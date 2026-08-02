@@ -382,6 +382,11 @@ export async function runBrandMarkSize(appDir, io, opts = {}) {
             h1280: at1280.height,
             h375: at375.height,
             selector: at1280.selector ?? at375.selector
+          },
+          knownBad: {
+            input: 'fixtures/brand-mark-size/small.html',
+            failed: true,
+            recordedAt: nowIso()
           }
         });
       }

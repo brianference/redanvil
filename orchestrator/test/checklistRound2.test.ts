@@ -345,12 +345,29 @@ describe('D8 fe-legal-substance', () => {
     console.log('fe-legal-substance known-bad:', t.failures.join('; ').slice(0, 300));
   });
 
-  it('PASSES full terms+privacy (known-good)', async () => {
+  it('PASSES full terms+privacy (known-good via fixture-dir)', async () => {
     const app = makeAppDir();
-    write(app, 'src/pages/Terms.tsx', buildLegalHtml('terms'));
-    write(app, 'src/pages/Privacy.tsx', buildLegalHtml('privacy'));
-    const r = await runCaptured((io) => runLegalSubstance(app, io));
+    write(app, 'terms.html', buildLegalHtml('terms'));
+    write(app, 'privacy.html', buildLegalHtml('privacy'));
+    const r = await runCaptured((io) => runLegalSubstance(app, io, { fixtureDir: app }));
     expect(r.code).toBe(0);
+  });
+
+  it('FAILS short fixture through fixture-dir (known-bad path)', async () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'terms.html',
+      '<html><body><h2>Intro</h2><p>Short legal stub with almost nothing.</p></body></html>'
+    );
+    write(
+      app,
+      'privacy.html',
+      '<html><body><h2>Intro</h2><p>Short privacy stub with almost nothing.</p></body></html>'
+    );
+    const r = await runCaptured((io) => runLegalSubstance(app, io, { fixtureDir: app }));
+    expect(r.code).toBe(1);
+    expect(r.msg).toMatch(/words|h2|missing topics/i);
   });
 
   it('reports missing liability by name even when padded', () => {

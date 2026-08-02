@@ -122,6 +122,67 @@ export function getUser(db: { prepare: (s: string) => unknown }, id: string) {
     expect(r.stderr).toMatch(/interpolated SQL/i);
   });
 
+  it('fails genuine WHERE id = ${userInput} injection', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'functions/api/users.ts',
+      `
+export function getUser(db: { prepare: (s: string) => unknown }, userInput: string) {
+  return db.prepare(\`SELECT * FROM users WHERE id = \${userInput}\`);
+}
+`
+    );
+    const r = runCheck('u-sec-param-sql', app);
+    expect(r.status, r.stderr).not.toBe(0);
+    expect(r.stderr).toMatch(/interpolated SQL/i);
+  });
+
+  it('passes ZONE_SELECT-style const column list with bound ?', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'functions/lib/db.ts',
+      `
+const ZONE_SELECT =
+  'id, name, zip, last_frost, first_frost, county, elevation_ft';
+
+export async function getZoneById(db: D1Database, id: string) {
+  return db
+    .prepare(\`SELECT \${ZONE_SELECT} FROM zones WHERE id = ?\`)
+    .bind(id)
+    .first();
+}
+`
+    );
+    const r = runCheck('u-sec-param-sql', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+
+  it('passes optional methodClause and IN placeholders built from ? only', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'functions/lib/db.ts',
+      `
+export async function getWindows(db: D1Database, half: number, method?: string) {
+  const methodClause = method ? ' AND pw.method = ?' : '';
+  const sql = \`SELECT pw.id FROM planting_windows pw WHERE half = ?\${methodClause}\`;
+  return db.prepare(sql).bind(half, ...(method ? [method] : [])).all();
+}
+export async function getByIds(db: D1Database, ids: string[]) {
+  const placeholders = ids.map(() => '?').join(',');
+  return db
+    .prepare(\`SELECT id, name FROM crops WHERE id IN (\${placeholders})\`)
+    .bind(...ids)
+    .all();
+}
+`
+    );
+    const r = runCheck('u-sec-param-sql', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+
   it('passes on parameterized SQL and on non-SQL prose with ${', () => {
     const app = makeAppDir();
     write(

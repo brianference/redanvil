@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Filters, type FiltersState } from '../components/Filters';
 import { YearGrid } from '../components/YearGrid';
+import { useAsyncLoad } from '../hooks/useAsyncLoad';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { useZone } from '../hooks/useZone';
 import { en } from '../i18n/en';
-import { fetchCrops, fetchGrid } from '../lib/api';
-import type { GridResponse, Method } from '../lib/schemas';
+import { fetchGrid } from '../lib/api';
+import { useFilterDerived } from '../lib/filterDerived';
 import './HomePage.css';
 
 /**
  * Full-year grid as its own route (/grid) for linking, sharing, and nav.
+ * Crop name search is applied server-side via /api/grid?q=.
  */
 export function GridPage() {
   useDocumentMeta(en.meta.gridTitle, en.meta.gridDescription);
@@ -21,84 +23,24 @@ export function GridPage() {
     date: '',
     q: ''
   });
-  const [grid, setGrid] = useState<GridResponse | null>(null);
-  const [searchIds, setSearchIds] = useState<Set<string> | null>(null);
-  const [gridLoading, setGridLoading] = useState(true);
-  const [gridError, setGridError] = useState<string | null>(null);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
 
-  const methodFilter = useMemo(
-    () => (filters.method === '' ? undefined : (filters.method as Method)),
-    [filters.method]
-  );
-  const monthFilter = useMemo(
-    () => (filters.month === '' ? undefined : filters.month),
-    [filters.month]
-  );
-  const searchQ = filters.q.trim();
+  const { methodFilter, monthFilter, searchQ } = useFilterDerived(filters);
   const zoneId = zone?.id;
+  const loadKey = `${methodFilter ?? ''}|${monthFilter ?? ''}|${zoneId ?? ''}|${searchQ}`;
 
-  useEffect(() => {
-    let cancelled = false;
-    setGridLoading(true);
-    setGridError(null);
-    void fetchGrid({
+  const {
+    data: grid,
+    error: gridError,
+    loading: gridLoading,
+    reload
+  } = useAsyncLoad(loadKey, () =>
+    fetchGrid({
       method: methodFilter,
       month: monthFilter,
-      zone: zoneId
+      zone: zoneId,
+      q: searchQ || undefined
     })
-      .then((data) => {
-        if (!cancelled) setGrid(data);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setGridError(err instanceof Error ? err.message : 'error');
-        setGrid(null);
-      })
-      .finally(() => {
-        if (!cancelled) setGridLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [methodFilter, monthFilter, zoneId, reloadKey]);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!searchQ) {
-      setSearchIds(null);
-      setSearchError(null);
-      return () => {
-        cancelled = true;
-      };
-    }
-    setSearchError(null);
-    void fetchCrops(searchQ)
-      .then((data) => {
-        if (cancelled) return;
-        setSearchIds(new Set(data.crops.map((c) => c.id)));
-        setSearchError(null);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setSearchIds(null);
-        setSearchError(err instanceof Error ? err.message : 'error');
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [searchQ, reloadKey]);
-
-  const filteredGrid = useMemo(() => {
-    if (!grid) return null;
-    if (searchError) return grid;
-    if (!searchIds) return grid;
-    return {
-      ...grid,
-      crops: grid.crops.filter((row) => searchIds.has(row.crop.id))
-    };
-  }, [grid, searchIds, searchError]);
+  );
 
   return (
     <div className="home grid-page" data-testid="grid-page">
@@ -117,11 +59,11 @@ export function GridPage() {
         <Filters value={filters} onChange={setFilters} showDate={false} showSearch />
       </div>
       <YearGrid
-        data={filteredGrid}
+        data={grid}
         loading={gridLoading}
         error={gridError}
-        searchError={searchError}
-        onSearchRetry={() => setReloadKey((k) => k + 1)}
+        searchError={null}
+        onSearchRetry={reload}
       />
     </div>
   );

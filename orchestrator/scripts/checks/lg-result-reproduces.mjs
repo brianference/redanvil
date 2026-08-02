@@ -250,7 +250,12 @@ export function runResultReproduces(appDir, io, deps = {}) {
     runs: [
       { ok, at: nowIso(), recomputed: recomputed.score, recorded: result.finalScore },
       { ok, at: nowIso(), recomputed: recomputed.score, recorded: result.finalScore }
-    ]
+    ],
+    knownBad: {
+      input: 'results JSON whose finalScore does not match recompute',
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
 
   if (!ok) {

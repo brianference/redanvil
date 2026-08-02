@@ -185,7 +185,12 @@ export async function runApiNotFound(appDir, io, deps = {}) {
     runs: [
       { ok, at: nowIso() },
       { ok, at: nowIso() }
-    ]
+    ],
+    knownBad: {
+      input: 'detail route that returns 200 for a bogus id',
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
 
   if (!ok) {

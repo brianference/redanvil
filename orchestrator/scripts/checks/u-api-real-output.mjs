@@ -419,7 +419,12 @@ export async function runApiRealOutput(appDir, io, deps = {}) {
     runs: [
       { ok, at: nowIso(), routes: captured.results.length },
       { ok, at: nowIso(), routes: captured.results.length }
-    ]
+    ],
+    knownBad: {
+      input: 'API route with no example or empty placeholder response',
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
 
   if (failures.length > 0) {

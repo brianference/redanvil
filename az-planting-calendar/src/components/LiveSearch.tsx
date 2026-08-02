@@ -6,6 +6,13 @@ import {
   type KeyboardEvent
 } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  closeListbox,
+  nextDownIndex,
+  nextUpIndex,
+  openListAndClearHighlight,
+  useListboxActiveIndex
+} from '../hooks/useListboxActiveIndex';
 import { CropArt } from './CropArt';
 import { en } from '../i18n/en';
 import type { CropListItem } from '../lib/schemas';
@@ -48,9 +55,9 @@ export function LiveSearch({
   const navigate = useNavigate();
   const listboxId = useId();
   const inputId = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
   /** Index into the visible suggestion slice; -1 means none highlighted. */
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeIndex, setActiveIndex] = useListboxActiveIndex();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [listOpen, setListOpen] = useState(false);
 
   const trimmed = value.trim();
@@ -118,10 +125,7 @@ export function LiveSearch({
       if (suggestions.length === 0) return;
       event.preventDefault();
       setListOpen(true);
-      setActiveIndex((i) => {
-        if (i < 0) return 0;
-        return Math.min(i + 1, suggestions.length - 1);
-      });
+      setActiveIndex((i) => nextDownIndex(i, suggestions.length));
       return;
     }
 
@@ -129,18 +133,13 @@ export function LiveSearch({
       if (suggestions.length === 0) return;
       event.preventDefault();
       setListOpen(true);
-      setActiveIndex((i) => {
-        if (i <= 0) return suggestions.length - 1;
-        return i - 1;
-      });
+      setActiveIndex((i) => nextUpIndex(i, suggestions.length));
       return;
     }
 
     if (event.key === 'Escape') {
       event.preventDefault();
-      setListOpen(false);
-      setActiveIndex(-1);
-      inputRef.current?.focus();
+      closeListbox(setListOpen, setActiveIndex, inputRef);
       return;
     }
 
@@ -163,8 +162,7 @@ export function LiveSearch({
    */
   function handleChange(next: string): void {
     onChange(next);
-    setListOpen(true);
-    setActiveIndex(-1);
+    openListAndClearHighlight(setListOpen, setActiveIndex);
   }
 
   const rootClass = embedded ? 'live-search live-search--embedded' : 'live-search';

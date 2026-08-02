@@ -116,4 +116,58 @@ describe('GET /api/plantable query validation', () => {
     expect(body.items).toHaveLength(1);
     expect(getWindowsForHalfMock).toHaveBeenCalledWith(expect.anything(), 4, 'S');
   });
+
+  it('q=Beans returns a strictly smaller item set than no q', async () => {
+    const beans: CropRow = {
+      id: 'crop-beans-snap',
+      name: 'Beans, Snap',
+      days_to_harvest_min: 50,
+      days_to_harvest_max: 60,
+      notes: null
+    };
+    const lettuce: CropRow = {
+      id: 'crop-lettuce',
+      name: 'Lettuce',
+      days_to_harvest_min: 40,
+      days_to_harvest_max: 60,
+      notes: null
+    };
+    const mkWin = (id: string, cropId: string): WindowWithSource => ({
+      id,
+      crop_id: cropId,
+      start_half_month: 4,
+      end_half_month: 6,
+      method: 'S',
+      source_id: 'src-az1005',
+      source_granularity: 'half-month',
+      source_title: 'az1005',
+      source_author: 'Kai Umeda',
+      source_publisher: 'UA Extension',
+      source_url: 'https://extension.arizona.edu/example',
+      source_retrieved_at: '2026-01-15'
+    });
+    getWindowsForHalfMock.mockResolvedValue([
+      mkWin('w-b', beans.id),
+      mkWin('w-l', lettuce.id)
+    ]);
+    getCropsByIdsMock.mockResolvedValue(
+      new Map([
+        [beans.id, beans],
+        [lettuce.id, lettuce]
+      ])
+    );
+
+    const all = await onRequestGet(ctx('date=2026-03-01'));
+    expect(all.status).toBe(200);
+    const allBody = (await all.json()) as { items: Array<{ crop: { name: string } }> };
+    expect(allBody.items.length).toBe(2);
+
+    const filtered = await onRequestGet(ctx('date=2026-03-01&q=Beans'));
+    expect(filtered.status).toBe(200);
+    const filteredBody = (await filtered.json()) as {
+      items: Array<{ crop: { name: string } }>;
+    };
+    expect(filteredBody.items.length).toBeLessThan(allBody.items.length);
+    expect(filteredBody.items.every((i) => /bean/i.test(i.crop.name))).toBe(true);
+  });
 });

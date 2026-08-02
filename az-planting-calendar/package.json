@@ -11,6 +11,8 @@
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:features": "node scripts/feature-audit.mjs --base http://127.0.0.1:8788",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run test:features",
     "seed:gen": "node scripts/generate-seed.mjs"
   },
   "dependencies": {

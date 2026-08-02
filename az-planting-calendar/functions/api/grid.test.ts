@@ -116,4 +116,36 @@ describe('GET /api/grid query validation', () => {
     expect(Array.isArray(body.crops)).toBe(true);
     expect(getAllWindowsMock).toHaveBeenCalledWith(expect.anything(), 'T', 6);
   });
+
+  it('q=Beans returns a strictly smaller crop set than no q', async () => {
+    const beans: CropRow = {
+      id: 'crop-beans-snap',
+      name: 'Beans, Snap',
+      days_to_harvest_min: 50,
+      days_to_harvest_max: 60,
+      notes: null
+    };
+    const tomato: CropRow = {
+      id: 'crop-tomatoes',
+      name: 'Tomatoes',
+      days_to_harvest_min: 60,
+      days_to_harvest_max: 90,
+      notes: null
+    };
+    getAllCropsMock.mockResolvedValue([beans, tomato]);
+    getAllWindowsMock.mockResolvedValue([]);
+
+    const all = await onRequestGet(ctx(''));
+    expect(all.status).toBe(200);
+    const allBody = (await all.json()) as { crops: Array<{ crop: { name: string } }> };
+    expect(allBody.crops.length).toBe(2);
+
+    const filtered = await onRequestGet(ctx('q=Beans'));
+    expect(filtered.status).toBe(200);
+    const filteredBody = (await filtered.json()) as {
+      crops: Array<{ crop: { name: string } }>;
+    };
+    expect(filteredBody.crops.length).toBeLessThan(allBody.crops.length);
+    expect(filteredBody.crops.every((r) => /bean/i.test(r.crop.name))).toBe(true);
+  });
 });

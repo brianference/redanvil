@@ -339,7 +339,12 @@ export function runLegalClaimsTrue(appDir, io) {
     runs: [
       { ok, at: nowIso() },
       { ok, at: nowIso() }
-    ]
+    ],
+    knownBad: {
+      input: 'privacy page that denies cookies while code sets document.cookie',
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
 
   if (!ok) {

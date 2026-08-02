@@ -83,7 +83,12 @@ export function runBuildSucceeds(appDir, io, deps = {}) {
     runs: [
       { ok: result.ok, at: nowIso(), status: result.status },
       { ok: result.ok, at: nowIso(), status: result.status }
-    ]
+    ],
+    knownBad: {
+      input: 'package.json build script that exits 1',
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
 
   if (!result.ok) {

@@ -165,6 +165,20 @@ export const ZoneParamSchema = z
   .max(80)
   .optional();
 
+/**
+ * Optional crop-name search fragment (plantable, grid, crops).
+ * Empty or whitespace-only is treated as absent.
+ */
+const CropNameQuerySchema = z
+  .string()
+  .max(100)
+  .optional()
+  .transform((value) => {
+    if (value === undefined) return undefined;
+    const trimmed = value.trim();
+    return trimmed.length === 0 ? undefined : trimmed;
+  });
+
 /** Query: optional ISO date YYYY-MM-DD for plantable-now. */
 export const PlantableQuerySchema = z.object({
   date: z
@@ -174,7 +188,9 @@ export const PlantableQuerySchema = z.object({
     .optional(),
   method: MethodSchema.optional(),
   month: z.coerce.number().int().min(0).max(11).optional(),
-  zone: ZoneParamSchema
+  zone: ZoneParamSchema,
+  /** Case-insensitive crop name fragment; narrows plantable items. */
+  q: CropNameQuerySchema
 });
 export type PlantableQuery = z.infer<typeof PlantableQuerySchema>;
 
@@ -182,7 +198,9 @@ export type PlantableQuery = z.infer<typeof PlantableQuerySchema>;
 export const FilterQuerySchema = z.object({
   method: MethodSchema.optional(),
   month: z.coerce.number().int().min(0).max(11).optional(),
-  zone: ZoneParamSchema
+  zone: ZoneParamSchema,
+  /** Case-insensitive crop name fragment; narrows returned rows. */
+  q: CropNameQuerySchema
 });
 export type FilterQuery = z.infer<typeof FilterQuerySchema>;
 
@@ -211,15 +229,7 @@ export type ZonesResponse = z.infer<typeof ZonesResponseSchema>;
  * Empty or whitespace-only q is treated as absent (list all).
  */
 export const CropsQuerySchema = z.object({
-  q: z
-    .string()
-    .max(100)
-    .optional()
-    .transform((value) => {
-      if (value === undefined) return undefined;
-      const trimmed = value.trim();
-      return trimmed.length === 0 ? undefined : trimmed;
-    })
+  q: CropNameQuerySchema
 });
 export type CropsQuery = z.infer<typeof CropsQuerySchema>;
 

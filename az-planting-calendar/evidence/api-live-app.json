@@ -1,0 +1,128 @@
+{
+  "_why": "Live request/response pairs captured by u-api-real-output against the real Workers runtime. The judge half of the rule reads THIS, not the source: the question it answers is whether these answers deliver what the product claims, which nothing static can decide.",
+  "routes": [
+    {
+      "route": "/api/assistant",
+      "path": "/api/assistant",
+      "method": "POST",
+      "requestBody": {
+        "message": "What can I plant in March as seed?"
+      },
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true
+      },
+      "status": 200,
+      "responseBody": "{\"answer\":\"13 crops can be seeded during the first half (Mar 1). Examples: Beets, Carrots, Corn, Sweet, Cucumbers, Cucumbers, Armenian, Melons, Watermelon, and more. Windows come from UA Cooperative Extension az1005 for Maricopa County.\",\"crops\":[{\"id\":\"crop-beets\",\"name\":\"Beets\",\"methods\":[\"S\"]},{\"id\":\"crop-carrots\",\"name\":\"Carrots\",\"methods\":[\"S\"]},{\"id\":\"crop-corn-sweet\",\"name\":\"Corn, Sweet\",\"methods\":[\"S\"]},{\"id\":\"crop-cucumbers\",\"name\":\"Cucumbers\",\"methods\":[\"S\"]},{\"id\":\"crop-cucumbers-armenian\",\"name\":\"Cucumbers, Armenian\",\"methods\":[\"S\"]},{\"id\":\"crop-melons-watermelon\",\"name\":\"Melons, Watermelon\",\"methods\":[\"S\"]},{\"id\":\"crop-okra\",\"name\":\"Okra\",\"methods\":[\"S\"]},{\"id\":\"crop-potatoes\",\"name\":\"Potatoes\",\"methods\":[\"S\"]},{\"id\":\"crop-pumpkin\",\"name\":\"Pumpkin\",\"methods\":[\"S\"]},{\"id\":\"crop-radishes\",\"name\":\"Radishes\",\"methods\":[\"S\"]},{\"id\":\"crop-squash-summer\",\"name\":\"Squash, Summer\",\"methods\":[\"S\"]},{\"id\":\"crop-squash-winter\",\"name\":\"Squash, Winter\",\"methods\":[\"S\"]},{\"id\":\"crop-sunflower\",\"name\":\"Sunflower\",\"methods\":[\"S\"]}],\"filters\":{\"half_month\":4,\"method\":\"S\"}}",
+      "error": null
+    },
+    {
+      "route": "/api/crops",
+      "path": "/api/crops",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true,
+        "minItems": 1
+      },
+      "status": 200,
+      "responseBody": "{\"crops\":[{\"id\":\"crop-artichokes-globe\",\"name\":\"Artichokes, Globe\",\"days_to_harvest_min\":null,\"days_to_harvest_max\":null,\"notes\":\"4-6 months\",\"window_count\":2},{\"id\":\"crop-artichokes-jerusalem\",\"name\":\"Artichokes, Jerusalem\",\"days_to_harvest_min\":null,\"days_to_harvest_max\":null,\"notes\":\"6-8 months\",\"window_count\":1},{\"id\":\"crop-asparagus\",\"name\":\"Asparagus\",\"days_to_harvest_min\":null,\"days_to_harvest_max\":null,\"notes\":\"2-3 years\",\"window_count\":2},{\"id\":\"crop-beans-lima\",\"name\":\"Beans, Lima\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":100,\"notes\":\"60-100 days\",\"window_count\":1},{\"id\":\"crop-beans-pinto\",\"name\":\"Beans, Pinto\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":90,\"notes\":\"60-90 days\",\"window_count\":1},{\"id\":\"crop-beans-snap\",\"name\":\"Beans, Snap\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":90,\"notes\":\"60-90 days\",\"window_count\":2},{\"id\":\"crop-beans-yardlong\",\"name\":\"Beans, Yardlong\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":90,\"notes\":\"60-90days\",\"window_count\":2},{\"id\":\"crop-beets\",\"name\":\"Beets\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":80,\"notes\":\"60-80 days\",\"window_count\":2},{\"id\":\"crop-blackeyed-peas\",\"name\":\"Blackeyed Peas\",\"days_to_harvest_min\":90,\"days_to_harvest_max\":120,\"notes\":\"90-120 days\",\"window_count\":1},{\"id\":\"crop-bok-choy\",\"name\":\"Bok Choy\",\"days_to_harvest_min\":45,\"days_to_harvest_max\":45,\"notes\":\"45 days\",\"window_count\":2},{\"id\":\"crop-carrots\",\"name\":\"Carrots\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":100,\"notes\":\"60-100 days\",\"window_count\":2},{\"id\":\"crop-cauliflower\",\"name\":\"Cauliflower\",\"days_to_harvest_min\":120,\"days_to_harvest_max\":130,\"notes\":\"T=90-100 S=120-130 days\",\"window_count\":4},{\"id\":\"crop-celery\",\"name\":\"Celery\",\"days_to_harvest_min\":120,\"days_to_harvest_max\":150,\"notes\":\"120-150 days\",\"window_count\":2},{\"id\":\"crop-chard\",\"name\":\"Chard\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":90,\"notes\":\"60-90 days\",\"window_count\":4},{\"id\":\"crop-collard-greens\",\"name\":\"Collard Greens\",\"days_to_harvest_min\":80,\"days_to_harvest_max\":80,\"notes\":\"80 days\",\"window_count\":3},{\"id\":\"crop-corn-sweet\",\"name\":\"Corn, Sweet\",\"days_to_harvest_min\":70,\"days_to_harvest_max\":90,\"notes\":\"70-90 days\",\"window_count\":2},{\"id\":\"crop-cucumbers\",\"name\":\"Cucumbers\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":90,\"notes\":\"60-90 days\",\"window_count\":2},{\"id\":\"crop-cucumbers-armenian\",\"name\":\"Cucumbers, Armenian\",\"days_to_harvest_min\":55,\"days_to_harvest_max\":55,\"notes\":\"55 days\",\"window_count\":1},{\"id\":\"crop-eggplant\",\"name\":\"Eggplant\",\"days_to_harvest_min\":70,\"days_to_harvest_max\":120,\"notes\":\"70-120 days\",\"window_count\":1},{\"id\":\"crop-endive\",\"name\":\"Endive\",\"days_to_harvest_min\":80,\"days_to_harvest_max\":120,\"notes\":\"80-120 days\",\"window_count\":2},{\"id\":\"crop-garlic\",\"name\":\"Garlic\",\"days_to_harvest_min\":null,\"days_to_harvest_max\":null,\"notes\":\"5-7 months\",\"window_count\":1},{\"id\":\"crop-kale\",\"name\":\"Kale\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":90,\"notes\":\"60-90 days\",\"window_count\":1},{\"id\":\"crop-leek\",\"name\":\"Leek\",\"days_to_harvest_min\":180,\"days_to_harvest_max\":200,\"notes\":\"180-200 days\",\"window_count\":2},{\"id\":\"crop-lettuce-head\",\"name\":\"Lettuce, Head\",\"days_to_harvest_min\":50,\"days_to_harvest_max\":100,\"notes\":\"50-100 days\",\"window_count\":4},{\"id\":\"crop-lettuce-leaf\",\"name\":\"Lettuce, Leaf\",\"days_to_harvest_min\":30,\"days_to_harvest_max\":90,\"notes\":\"30-90 days\",\"window_count\":4},{\"id\":\"crop-melons-watermelon\",\"name\":\"Melons, Watermelon\",\"days_to_harvest_min\":90,\"days_to_harvest_max\":120,\"notes\":\"90-120 days\",\"window_count\":1},{\"id\":\"crop-mustard\",\"name\":\"Mustard\",\"days_to_harvest_min\":35,\"days_to_harvest_max\":45,\"notes\":\"35-45 days\",\"window_count\":2},{\"id\":\"crop-okra\",\"name\":\"Okra\",\"days_to_harvest_min\":70,\"days_to_harvest_max\":100,\"notes\":\"70-100 days\",\"window_count\":1},{\"id\":\"crop-onions-bulb\",\"name\":\"Onions, Bulb\",\"days_to_harvest_min\":4,\"days_to_harvest_max\":5,\"notes\":\"Sets=4-5 months S=7-8 months\",\"window_count\":2},{\"id\":\"crop-onions-shallots\",\"name\":\"Onions, Shallots\",\"days_to_h",
+      "error": null
+    },
+    {
+      "route": "/api/crops/[id]",
+      "path": "/api/crops/crop-tomatoes",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true
+      },
+      "status": 200,
+      "responseBody": "{\"crop\":{\"id\":\"crop-tomatoes\",\"name\":\"Tomatoes\",\"days_to_harvest_min\":50,\"days_to_harvest_max\":120,\"notes\":\"50-120 days\"},\"windows\":[{\"id\":\"pw-crop-tomatoes-t-3-5\",\"crop_id\":\"crop-tomatoes\",\"start_half_month\":3,\"end_half_month\":5,\"method\":\"T\",\"source_id\":\"src-az1005-maricopa\",\"source_granularity\":\"half-month\",\"source\":{\"id\":\"src-az1005-maricopa\",\"title\":\"Vegetable Planting Calendar for Maricopa County\",\"author\":\"Kai Umeda\",\"publisher\":\"University of Arizona Cooperative Extension\",\"url\":\"https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf\",\"retrieved_at\":\"2026-08-01\"}},{\"id\":\"pw-crop-tomatoes-t-13-14\",\"crop_id\":\"crop-tomatoes\",\"start_half_month\":13,\"end_half_month\":14,\"method\":\"T\",\"source_id\":\"src-az1005-maricopa\",\"source_granularity\":\"half-month\",\"source\":{\"id\":\"src-az1005-maricopa\",\"title\":\"Vegetable Planting Calendar for Maricopa County\",\"author\":\"Kai Umeda\",\"publisher\":\"University of Arizona Cooperative Extension\",\"url\":\"https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf\",\"retrieved_at\":\"2026-08-01\"}}],\"guide\":{\"depth\":\"Plant the transplant slightly deeper than it had been growing in the container; tall transplants can be laid sideways in a trench so roots form along the buried stem\",\"spacing_in_row\":\"At least 24 in between individual plants\",\"spacing_between_rows\":null,\"sun\":null,\"water\":\"Water tomato plants slowly and deeply at planting. In containers, keep moisture even rather than cycling from very wet to very dry.\",\"harvest_note\":null,\"source\":{\"id\":\"src-tomato-ua\",\"title\":\"Tomato Planting, Growing and Harvest (publication date February 2019)\",\"author\":\"University of Arizona Cooperative Extension\",\"publisher\":\"University of Arizona Cooperative Extension\",\"url\":\"https://extension.arizona.edu/publication/tomato-planting-growing-and-harvest\",\"retrieved_at\":\"2026-08-02\"}}}",
+      "error": null
+    },
+    {
+      "route": "/api/crops/[id]",
+      "path": "/api/crops/crop-definitely-missing",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 404,
+        "nonEmpty": true
+      },
+      "status": 404,
+      "responseBody": "{\"error\":\"crop not found\"}",
+      "error": null
+    },
+    {
+      "route": "/api/grid",
+      "path": "/api/grid",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true,
+        "minItems": 1
+      },
+      "status": 200,
+      "responseBody": "{\"zone\":{\"id\":\"zone-cave-creek-85331\",\"name\":\"Cave Creek AZ (low desert, Maricopa County)\",\"zip\":\"85331\",\"last_frost\":\"02-20\",\"first_frost\":\"12-06\",\"county\":\"Maricopa\",\"elevation_ft\":2529},\"crops\":[{\"crop\":{\"id\":\"crop-artichokes-globe\",\"name\":\"Artichokes, Globe\",\"days_to_harvest_min\":null,\"days_to_harvest_max\":null,\"notes\":\"4-6 months\"},\"cells\":[{\"half_month\":0,\"methods\":[]},{\"half_month\":1,\"methods\":[\"T\"]},{\"half_month\":2,\"methods\":[\"T\"]},{\"half_month\":3,\"methods\":[\"T\"]},{\"half_month\":4,\"methods\":[\"T\"]},{\"half_month\":5,\"methods\":[\"T\"]},{\"half_month\":6,\"methods\":[]},{\"half_month\":7,\"methods\":[]},{\"half_month\":8,\"methods\":[]},{\"half_month\":9,\"methods\":[]},{\"half_month\":10,\"methods\":[]},{\"half_month\":11,\"methods\":[]},{\"half_month\":12,\"methods\":[]},{\"half_month\":13,\"methods\":[]},{\"half_month\":14,\"methods\":[]},{\"half_month\":15,\"methods\":[]},{\"half_month\":16,\"methods\":[]},{\"half_month\":17,\"methods\":[]},{\"half_month\":18,\"methods\":[]},{\"half_month\":19,\"methods\":[]},{\"half_month\":20,\"methods\":[\"S\"]},{\"half_month\":21,\"methods\":[\"S\"]},{\"half_month\":22,\"methods\":[\"S\"]},{\"half_month\":23,\"methods\":[]}]},{\"crop\":{\"id\":\"crop-artichokes-jerusalem\",\"name\":\"Artichokes, Jerusalem\",\"days_to_harvest_min\":null,\"days_to_harvest_max\":null,\"notes\":\"6-8 months\"},\"cells\":[{\"half_month\":0,\"methods\":[]},{\"half_month\":1,\"methods\":[\"T\"]},{\"half_month\":2,\"methods\":[\"T\"]},{\"half_month\":3,\"methods\":[\"T\"]},{\"half_month\":4,\"methods\":[\"T\"]},{\"half_month\":5,\"methods\":[\"T\"]},{\"half_month\":6,\"methods\":[\"T\"]},{\"half_month\":7,\"methods\":[\"T\"]},{\"half_month\":8,\"methods\":[\"T\"]},{\"half_month\":9,\"methods\":[\"T\"]},{\"half_month\":10,\"methods\":[]},{\"half_month\":11,\"methods\":[]},{\"half_month\":12,\"methods\":[]},{\"half_month\":13,\"methods\":[]},{\"half_month\":14,\"methods\":[]},{\"half_month\":15,\"methods\":[]},{\"half_month\":16,\"methods\":[]},{\"half_month\":17,\"methods\":[]},{\"half_month\":18,\"methods\":[]},{\"half_month\":19,\"methods\":[]},{\"half_month\":20,\"methods\":[]},{\"half_month\":21,\"methods\":[]},{\"half_month\":22,\"methods\":[]},{\"half_month\":23,\"methods\":[]}]},{\"crop\":{\"id\":\"crop-asparagus\",\"name\":\"Asparagus\",\"days_to_harvest_min\":null,\"days_to_harvest_max\":null,\"notes\":\"2-3 years\"},\"cells\":[{\"half_month\":0,\"methods\":[\"T\"]},{\"half_month\":1,\"methods\":[\"T\"]},{\"half_month\":2,\"methods\":[\"T\"]},{\"half_month\":3,\"methods\":[]},{\"half_month\":4,\"methods\":[]},{\"half_month\":5,\"methods\":[]},{\"half_month\":6,\"methods\":[]},{\"half_month\":7,\"methods\":[]},{\"half_month\":8,\"methods\":[]},{\"half_month\":9,\"methods\":[]},{\"half_month\":10,\"methods\":[]},{\"half_month\":11,\"methods\":[]},{\"half_month\":12,\"methods\":[]},{\"half_month\":13,\"methods\":[]},{\"half_month\":14,\"methods\":[]},{\"half_month\":15,\"methods\":[]},{\"half_month\":16,\"methods\":[]},{\"half_month\":17,\"methods\":[]},{\"half_month\":18,\"methods\":[]},{\"half_month\":19,\"methods\":[]},{\"half_month\":20,\"methods\":[\"T\"]},{\"half_month\":21,\"methods\":[\"T\"]},{\"half_month\":22,\"methods\":[\"T\"]},{\"half_month\":23,\"methods\":[\"T\"]}]},{\"crop\":{\"id\":\"crop-beans-lima\",\"name\":\"Beans, Lima\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":100,\"notes\":\"60-100 days\"},\"cells\":[{\"half_month\":0,\"methods\":[]},{\"half_month\":1,\"methods\":[]},{\"half_month\":2,\"methods\":[]},{\"half_month\":3,\"methods\":[]},{\"half_month\":4,\"methods\":[]},{\"half_month\":5,\"methods\":[\"S\"]},{\"half_month\":6,\"methods\":[\"S\"]},{\"half_month\":7,\"methods\":[]},{\"half_month\":8,\"methods\":[]},{\"half_month\":9,\"methods\":[]},{\"half_month\":10,\"methods\":[]},{\"half_month\":11,\"methods\":[]},{\"half_month\":12,\"methods\":[]},{\"half_month\":13,\"methods\":[]},{\"half_month\":14,\"methods\":[]},{\"half_month\":15,\"methods\":[]},{\"half_month\":16,\"methods\":[]},{\"half_month\":17,\"methods\":[]},{\"half_month\":18,\"methods\":[]},{\"half_month\":19,\"methods\":[]},{\"half_month\":20,\"methods\":[]},{\"half_month\":21,\"methods\":[]},{\"half_month\":22,\"methods\":[]},{\"half_month\":23,\"methods\":[]}]},{\"crop\":{\"id\":\"crop-beans-pinto\",\"name\":\"Beans, Pinto\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":90,\"notes\":\"60-90 days\"},\"cells\":[{\"half_month\":0,\"methods\":[]},{\"half_month\":1,\"methods\":[]},{\"half",
+      "error": null
+    },
+    {
+      "route": "/api/health",
+      "path": "/api/health",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true
+      },
+      "status": 200,
+      "responseBody": "{\"status\":\"ok\"}",
+      "error": null
+    },
+    {
+      "route": "/api/plantable",
+      "path": "/api/plantable?date=2026-03-01",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true,
+        "minItems": 1
+      },
+      "status": 200,
+      "responseBody": "{\"half_month\":4,\"half_month_label\":\"Mar 1\",\"date\":\"2026-03-01\",\"zone\":{\"id\":\"zone-cave-creek-85331\",\"name\":\"Cave Creek AZ (low desert, Maricopa County)\",\"zip\":\"85331\",\"last_frost\":\"02-20\",\"first_frost\":\"12-06\",\"county\":\"Maricopa\",\"elevation_ft\":2529},\"items\":[{\"crop\":{\"id\":\"crop-artichokes-globe\",\"name\":\"Artichokes, Globe\",\"days_to_harvest_min\":null,\"days_to_harvest_max\":null,\"notes\":\"4-6 months\"},\"methods\":[\"T\"],\"windows\":[{\"id\":\"pw-crop-artichokes-globe-t-1-5\",\"crop_id\":\"crop-artichokes-globe\",\"start_half_month\":1,\"end_half_month\":5,\"method\":\"T\",\"source_id\":\"src-az1005-maricopa\",\"source_granularity\":\"half-month\",\"source\":{\"id\":\"src-az1005-maricopa\",\"title\":\"Vegetable Planting Calendar for Maricopa County\",\"author\":\"Kai Umeda\",\"publisher\":\"University of Arizona Cooperative Extension\",\"url\":\"https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf\",\"retrieved_at\":\"2026-08-01\"}}]},{\"crop\":{\"id\":\"crop-artichokes-jerusalem\",\"name\":\"Artichokes, Jerusalem\",\"days_to_harvest_min\":null,\"days_to_harvest_max\":null,\"notes\":\"6-8 months\"},\"methods\":[\"T\"],\"windows\":[{\"id\":\"pw-crop-artichokes-jerusalem-t-1-9\",\"crop_id\":\"crop-artichokes-jerusalem\",\"start_half_month\":1,\"end_half_month\":9,\"method\":\"T\",\"source_id\":\"src-az1005-maricopa\",\"source_granularity\":\"half-month\",\"source\":{\"id\":\"src-az1005-maricopa\",\"title\":\"Vegetable Planting Calendar for Maricopa County\",\"author\":\"Kai Umeda\",\"publisher\":\"University of Arizona Cooperative Extension\",\"url\":\"https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf\",\"retrieved_at\":\"2026-08-01\"}}]},{\"crop\":{\"id\":\"crop-beets\",\"name\":\"Beets\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":80,\"notes\":\"60-80 days\"},\"methods\":[\"S\"],\"windows\":[{\"id\":\"pw-crop-beets-s-0-4\",\"crop_id\":\"crop-beets\",\"start_half_month\":0,\"end_half_month\":4,\"method\":\"S\",\"source_id\":\"src-az1005-maricopa\",\"source_granularity\":\"half-month\",\"source\":{\"id\":\"src-az1005-maricopa\",\"title\":\"Vegetable Planting Calendar for Maricopa County\",\"author\":\"Kai Umeda\",\"publisher\":\"University of Arizona Cooperative Extension\",\"url\":\"https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf\",\"retrieved_at\":\"2026-08-01\"}}]},{\"crop\":{\"id\":\"crop-carrots\",\"name\":\"Carrots\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":100,\"notes\":\"60-100 days\"},\"methods\":[\"S\"],\"windows\":[{\"id\":\"pw-crop-carrots-s-0-7\",\"crop_id\":\"crop-carrots\",\"start_half_month\":0,\"end_half_month\":7,\"method\":\"S\",\"source_id\":\"src-az1005-maricopa\",\"source_granularity\":\"half-month\",\"source\":{\"id\":\"src-az1005-maricopa\",\"title\":\"Vegetable Planting Calendar for Maricopa County\",\"author\":\"Kai Umeda\",\"publisher\":\"University of Arizona Cooperative Extension\",\"url\":\"https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf\",\"retrieved_at\":\"2026-08-01\"}}]},{\"crop\":{\"id\":\"crop-corn-sweet\",\"name\":\"Corn, Sweet\",\"days_to_harvest_min\":70,\"days_to_harvest_max\":90,\"notes\":\"70-90 days\"},\"methods\":[\"S\"],\"windows\":[{\"id\":\"pw-crop-corn-sweet-s-3-6\",\"crop_id\":\"crop-corn-sweet\",\"start_half_month\":3,\"end_half_month\":6,\"method\":\"S\",\"source_id\":\"src-az1005-maricopa\",\"source_granularity\":\"half-month\",\"source\":{\"id\":\"src-az1005-maricopa\",\"title\":\"Vegetable Planting Calendar for Maricopa County\",\"author\":\"Kai Umeda\",\"publisher\":\"University of Arizona Cooperative Extension\",\"url\":\"https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf\",\"retrieved_at\":\"2026-08-01\"}}]},{\"crop\":{\"id\":\"crop-cucumbers\",\"name\":\"Cucumbers\",\"days_to_harvest_min\":60,\"days_to_harvest_max\":90,\"notes\":\"60-90 days\"},\"methods\":[\"S\"],\"windows\":[{\"id\":\"pw-crop-cucumbers-s-3-7\",\"crop_id\":\"crop-cucumbers\",\"start_half_month\":3,\"end_half_month\":7,\"method\":\"S\",\"source_id\":\"src-az1005-maricopa\",\"source_granularity\":\"half-month\",\"source\":{\"id\":\"src-az1005-maricopa\",\"title\":\"Vegetable Planting Calendar for Maricopa County\",\"author\":\"Kai Umeda\",\"publisher\":\"University of Arizona Cooperative Extension\",\"url\":\"https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf\",\"retr",
+      "error": null
+    },
+    {
+      "route": "/api/zone",
+      "path": "/api/zone",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true
+      },
+      "status": 200,
+      "responseBody": "{\"zone\":{\"id\":\"zone-cave-creek-85331\",\"name\":\"Cave Creek AZ (low desert, Maricopa County)\",\"zip\":\"85331\",\"last_frost\":\"02-20\",\"first_frost\":\"12-06\",\"county\":\"Maricopa\",\"elevation_ft\":2529}}",
+      "error": null
+    },
+    {
+      "route": "/api/zones",
+      "path": "/api/zones",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true,
+        "minItems": 1
+      },
+      "status": 200,
+      "responseBody": "{\"zones\":[{\"id\":\"zone-buckeye-85326\",\"name\":\"Buckeye AZ (low desert, Maricopa County)\",\"zip\":\"85326\",\"last_frost\":\"01-18\",\"first_frost\":\"12-16\",\"county\":\"Maricopa\",\"elevation_ft\":1040},{\"id\":\"zone-cave-creek-85331\",\"name\":\"Cave Creek AZ (low desert, Maricopa County)\",\"zip\":\"85331\",\"last_frost\":\"02-20\",\"first_frost\":\"12-06\",\"county\":\"Maricopa\",\"elevation_ft\":2529},{\"id\":\"zone-chandler-85224\",\"name\":\"Chandler AZ (low desert, Maricopa County)\",\"zip\":\"85224\",\"last_frost\":\"02-24\",\"first_frost\":\"11-29\",\"county\":\"Maricopa\",\"elevation_ft\":1167},{\"id\":\"zone-glendale-85301\",\"name\":\"Glendale AZ (low desert, Maricopa County)\",\"zip\":\"85301\",\"last_frost\":\"02-02\",\"first_frost\":\"12-08\",\"county\":\"Maricopa\",\"elevation_ft\":1135},{\"id\":\"zone-mesa-85201\",\"name\":\"Mesa AZ (low desert, Maricopa County)\",\"zip\":\"85201\",\"last_frost\":\"02-24\",\"first_frost\":\"11-29\",\"county\":\"Maricopa\",\"elevation_ft\":1167},{\"id\":\"zone-phoenix-85004\",\"name\":\"Phoenix AZ (low desert, Maricopa County)\",\"zip\":\"85004\",\"last_frost\":\"02-03\",\"first_frost\":\"12-08\",\"county\":\"Maricopa\",\"elevation_ft\":1154},{\"id\":\"zone-scottsdale-85251\",\"name\":\"Scottsdale AZ (low desert, Maricopa County)\",\"zip\":\"85251\",\"last_frost\":\"02-24\",\"first_frost\":\"11-29\",\"county\":\"Maricopa\",\"elevation_ft\":1167},{\"id\":\"zone-tempe-85281\",\"name\":\"Tempe AZ (low desert, Maricopa County)\",\"zip\":\"85281\",\"last_frost\":\"02-24\",\"first_frost\":\"11-29\",\"county\":\"Maricopa\",\"elevation_ft\":1167}]}",
+      "error": null
+    }
+  ]
+}

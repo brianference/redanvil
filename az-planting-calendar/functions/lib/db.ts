@@ -208,6 +208,22 @@ export async function resolveZoneParam(
   return { zone: def };
 }
 
+/** Half-month window predicate; values bound with four `?` (start/end pairs). */
+const WINDOW_HALF_BOUNDS = `(
+  (pw.start_half_month <= pw.end_half_month
+    AND ? >= pw.start_half_month AND ? <= pw.end_half_month)
+  OR
+  (pw.start_half_month > pw.end_half_month
+    AND (? >= pw.start_half_month OR ? <= pw.end_half_month))
+)`;
+
+const WINDOW_SELECT = `
+  pw.id, pw.crop_id, pw.start_half_month, pw.end_half_month, pw.method, pw.source_id,
+  pw.source_granularity,
+  s.title AS source_title, s.author AS source_author, s.publisher AS source_publisher,
+  s.url AS source_url, s.retrieved_at AS source_retrieved_at
+`;
+
 /**
  * Windows active for a half-month, with source joined.
  * Non-wrapping: start <= end AND half between them.
@@ -222,29 +238,22 @@ export async function getWindowsForHalf(
   half: number,
   method?: 'S' | 'T'
 ): Promise<WindowWithSource[]> {
-  const methodClause = method ? ' AND pw.method = ?' : '';
-  const sql = `
-    SELECT
-      pw.id, pw.crop_id, pw.start_half_month, pw.end_half_month, pw.method, pw.source_id,
-      pw.source_granularity,
-      s.title AS source_title, s.author AS source_author, s.publisher AS source_publisher,
-      s.url AS source_url, s.retrieved_at AS source_retrieved_at
-    FROM planting_windows pw
-    INNER JOIN sources s ON s.id = pw.source_id
-    WHERE (
-      (pw.start_half_month <= pw.end_half_month
-        AND ? >= pw.start_half_month AND ? <= pw.end_half_month)
-      OR
-      (pw.start_half_month > pw.end_half_month
-        AND (? >= pw.start_half_month OR ? <= pw.end_half_month))
-    )${methodClause}
-    ORDER BY pw.crop_id, pw.method
-  `;
-  const stmt = db.prepare(sql);
+  // Two fixed queries so structure never interpolates a parameter value.
+  const sql = method
+    ? `SELECT ${WINDOW_SELECT}
+       FROM planting_windows pw
+       INNER JOIN sources s ON s.id = pw.source_id
+       WHERE ${WINDOW_HALF_BOUNDS} AND pw.method = ?
+       ORDER BY pw.crop_id, pw.method`
+    : `SELECT ${WINDOW_SELECT}
+       FROM planting_windows pw
+       INNER JOIN sources s ON s.id = pw.source_id
+       WHERE ${WINDOW_HALF_BOUNDS}
+       ORDER BY pw.crop_id, pw.method`;
   const binds = method
     ? [half, half, half, half, method]
     : [half, half, half, half];
-  const result = await stmt.bind(...binds).all<WindowWithSource>();
+  const result = await db.prepare(sql).bind(...binds).all<WindowWithSource>();
   return result.results ?? [];
 }
 
@@ -387,8 +396,21 @@ export async function getWindowsForCrop(
   return result.results ?? [];
 }
 
+/** Month-overlap predicate; eight `?` binds (h1,h0,h1,h0,h0,h0,h1,h1). */
+const WINDOW_MONTH_OVERLAP = `(
+  (pw.start_half_month <= pw.end_half_month AND pw.start_half_month <= ? AND pw.end_half_month >= ?)
+  OR
+  (pw.start_half_month <= pw.end_half_month AND pw.start_half_month <= ? AND pw.end_half_month >= ?)
+  OR
+  (pw.start_half_month > pw.end_half_month AND (
+    ? >= pw.start_half_month OR ? <= pw.end_half_month OR
+    ? >= pw.start_half_month OR ? <= pw.end_half_month
+  ))
+)`;
+
 /**
  * All windows (for grid), optional filters.
+ * Four fixed SQL shapes (method × month) so structure never interpolates values.
  *
  * @param db - D1 binding.
  * @param method - Optional method filter.
@@ -399,42 +421,34 @@ export async function getAllWindows(
   method?: 'S' | 'T',
   month?: number
 ): Promise<WindowWithSource[]> {
-  const clauses: string[] = [];
+  const fromJoin = `FROM planting_windows pw
+    INNER JOIN sources s ON s.id = pw.source_id`;
+  const order = `ORDER BY pw.crop_id, pw.start_half_month, pw.method`;
+
+  let sql: string;
+  /** @type {Array<string | number>} */
   const binds: Array<string | number> = [];
 
-  if (method) {
-    clauses.push('pw.method = ?');
-    binds.push(method);
-  }
-  if (month !== undefined) {
+  if (method && month !== undefined) {
     const h0 = month * 2;
     const h1 = month * 2 + 1;
-    // Window overlaps either half of the month
-    clauses.push(`(
-      (pw.start_half_month <= pw.end_half_month AND pw.start_half_month <= ? AND pw.end_half_month >= ?)
-      OR
-      (pw.start_half_month <= pw.end_half_month AND pw.start_half_month <= ? AND pw.end_half_month >= ?)
-      OR
-      (pw.start_half_month > pw.end_half_month AND (
-        ? >= pw.start_half_month OR ? <= pw.end_half_month OR
-        ? >= pw.start_half_month OR ? <= pw.end_half_month
-      ))
-    )`);
+    sql = `SELECT ${WINDOW_SELECT} ${fromJoin}
+      WHERE pw.method = ? AND ${WINDOW_MONTH_OVERLAP} ${order}`;
+    binds.push(method, h1, h0, h1, h0, h0, h0, h1, h1);
+  } else if (method) {
+    sql = `SELECT ${WINDOW_SELECT} ${fromJoin}
+      WHERE pw.method = ? ${order}`;
+    binds.push(method);
+  } else if (month !== undefined) {
+    const h0 = month * 2;
+    const h1 = month * 2 + 1;
+    sql = `SELECT ${WINDOW_SELECT} ${fromJoin}
+      WHERE ${WINDOW_MONTH_OVERLAP} ${order}`;
     binds.push(h1, h0, h1, h0, h0, h0, h1, h1);
+  } else {
+    sql = `SELECT ${WINDOW_SELECT} ${fromJoin} ${order}`;
   }
 
-  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-  const sql = `
-    SELECT
-      pw.id, pw.crop_id, pw.start_half_month, pw.end_half_month, pw.method, pw.source_id,
-      pw.source_granularity,
-      s.title AS source_title, s.author AS source_author, s.publisher AS source_publisher,
-      s.url AS source_url, s.retrieved_at AS source_retrieved_at
-    FROM planting_windows pw
-    INNER JOIN sources s ON s.id = pw.source_id
-    ${where}
-    ORDER BY pw.crop_id, pw.start_half_month, pw.method
-  `;
   const result = await db
     .prepare(sql)
     .bind(...binds)

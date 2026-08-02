@@ -15,6 +15,9 @@ import {
   type ZonesResponse
 } from './schemas';
 
+/** Ceiling for same-origin JSON requests (ms). */
+const FETCH_TIMEOUT_MS = 20_000;
+
 /**
  * Fetch JSON and parse with a Zod schema.
  *
@@ -26,7 +29,8 @@ async function getJson<T>(
   schema: { parse: (data: unknown) => T }
 ): Promise<T> {
   const res = await fetch(path, {
-    headers: { accept: 'application/json' }
+    headers: { accept: 'application/json' },
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
   });
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
@@ -69,7 +73,8 @@ export async function fetchPlantable(query: PlantableQuery = {}): Promise<Planta
       date: query.date,
       method: query.method,
       month: query.month,
-      zone: query.zone
+      zone: query.zone,
+      q: query.q
     })}`,
     PlantableResponseSchema
   );
@@ -78,7 +83,12 @@ export async function fetchPlantable(query: PlantableQuery = {}): Promise<Planta
 /** GET /api/grid */
 export async function fetchGrid(query: FilterQuery = {}): Promise<GridResponse> {
   return getJson(
-    `/api/grid${qs({ method: query.method, month: query.month, zone: query.zone })}`,
+    `/api/grid${qs({
+      method: query.method,
+      month: query.month,
+      zone: query.zone,
+      q: query.q
+    })}`,
     GridResponseSchema
   );
 }
@@ -122,7 +132,8 @@ export async function askAssistant(
       accept: 'application/json',
       'content-type': 'application/json'
     },
-    body: JSON.stringify({ message, zone })
+    body: JSON.stringify({ message, zone }),
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
   });
   if (!res.ok) {
     let errMessage = `Request failed (${res.status})`;

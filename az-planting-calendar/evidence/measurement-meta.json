@@ -38,5 +38,534 @@
       "w": 96,
       "h": 96
     }
+  },
+  "fe-search-present": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:01.055Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:01.055Z"
+      }
+    ],
+    "knownBad": {
+      "input": "dead-search fixture",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:10:48.384Z"
+    }
+  },
+  "fe-brand-mark-size": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:02.515Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:02.515Z"
+      }
+    ],
+    "heights": {
+      "h1280": 96,
+      "h375": 56,
+      "selector": "img.compact-header__mark"
+    },
+    "knownBad": {
+      "input": "fixtures/brand-mark-size/small.html",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:02.515Z"
+    }
+  },
+  "fe-breadcrumbs": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:04.547Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:04.547Z"
+      }
+    ],
+    "knownBad": {
+      "input": "fixtures/breadcrumbs/bad-about.html",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:04.547Z"
+    }
+  },
+  "fe-result-in-viewport": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:13.160Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:13.160Z"
+      }
+    ],
+    "knownBad": {
+      "input": "fixture with result list far below the fold",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:13.160Z"
+    }
+  },
+  "fe-resource-links": {
+    "tool": "playwright+fetch",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:14.832Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:14.832Z"
+      }
+    ],
+    "knownBad": {
+      "input": "fixture with dead external URL (real 404)",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:14.832Z"
+    }
+  },
+  "fe-light-dark": {
+    "tool": "playwright-canvas",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:33.414Z",
+        "landmarks": 10
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:33.414Z",
+        "landmarks": 10
+      }
+    ],
+    "knownBad": {
+      "input": "hardcoded-hero theme fixture",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:04:36.956Z"
+    }
+  },
+  "u-build-succeeds": {
+    "tool": "npm-run-build",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:37.262Z",
+        "status": 0
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:37.263Z",
+        "status": 0
+      }
+    ],
+    "knownBad": {
+      "input": "package.json build script that exits 1",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:37.263Z"
+    }
+  },
+  "u-api-not-found": {
+    "tool": "fetch",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:40.706Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:40.707Z"
+      }
+    ],
+    "knownBad": {
+      "input": "detail route that returns 200 for a bogus id",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:40.707Z"
+    }
+  },
+  "u-api-no-spa-mask": {
+    "tool": "fetch",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:44.146Z",
+        "path": "/api/__definitely_absent_0e9847fc4c56b3ab",
+        "status": 404
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:44.147Z",
+        "path": "/api/__definitely_absent_0e9847fc4c56b3ab",
+        "status": 404
+      }
+    ],
+    "knownBad": {
+      "input": "API path that returns SPA index.html at 200",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:44.147Z"
+    }
+  },
+  "u-legal-claims-true": {
+    "tool": "static-bidirectional",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:44.261Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:44.262Z"
+      }
+    ],
+    "knownBad": {
+      "input": "privacy page that denies cookies while code sets document.cookie",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:44.262Z"
+    }
+  },
+  "fe-favicon-legible": {
+    "tool": "playwright-canvas",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:44.874Z",
+        "metrics": {
+          "inkCoverage": 0.458984375,
+          "detailEnergy": 188.8609034439758,
+          "contrastOnWhite": 0.8153792277878996,
+          "contrastOnDark": 0.17857193918924336,
+          "inkCount": 470,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:44.874Z",
+        "metrics": {
+          "inkCoverage": 0.458984375,
+          "detailEnergy": 188.8609034439758,
+          "contrastOnWhite": 0.8153792277878996,
+          "contrastOnDark": 0.17857193918924336,
+          "inkCount": 470,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:45.210Z",
+        "metrics": {
+          "inkCoverage": 0.375,
+          "detailEnergy": 188.80813895337675,
+          "contrastOnWhite": 0.7927865220792812,
+          "contrastOnDark": 0.20116464489786168,
+          "inkCount": 384,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:45.210Z",
+        "metrics": {
+          "inkCoverage": 0.375,
+          "detailEnergy": 188.80813895337675,
+          "contrastOnWhite": 0.7927865220792812,
+          "contrastOnDark": 0.20116464489786168,
+          "inkCount": 384,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:45.542Z",
+        "metrics": {
+          "inkCoverage": 0.3701171875,
+          "detailEnergy": 160.98443392176873,
+          "contrastOnWhite": 0.8054025318949765,
+          "contrastOnDark": 0.18854863508216643,
+          "inkCount": 379,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:45.542Z",
+        "metrics": {
+          "inkCoverage": 0.3701171875,
+          "detailEnergy": 160.98443392176873,
+          "contrastOnWhite": 0.8054025318949765,
+          "contrastOnDark": 0.18854863508216643,
+          "inkCount": 379,
+          "pixelCount": 1024
+        }
+      }
+    ],
+    "source": "public\\favicon.svg, public\\favicon-32.png, public\\apple-touch-icon.png",
+    "knownBad": {
+      "input": "solid-square or empty favicon failing ink/detail floors",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:45.542Z"
+    }
+  },
+  "meas-known-bad": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:46.766Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:46.767Z"
+      }
+    ],
+    "knownBad": {
+      "input": "empty measurement-meta.json",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:04:36.956Z"
+    }
+  },
+  "meas-two-run": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:46.859Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:46.860Z"
+      }
+    ],
+    "knownBad": {
+      "input": "meta with only one run",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:04:36.956Z"
+    }
+  },
+  "meas-recheck-flattering": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:46.951Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:46.951Z"
+      }
+    ],
+    "knownBad": {
+      "input": "meas-recheck-flattering known-bad fixture from test suite",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:05:06.949Z"
+    }
+  },
+  "meas-standard-tool": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:47.045Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:47.045Z"
+      }
+    ],
+    "knownBad": {
+      "input": "meta with hand-rolled contrast tool",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:04:36.956Z"
+    }
+  },
+  "meas-engine-named": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:47.138Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:47.139Z"
+      }
+    ],
+    "knownBad": {
+      "input": "browser rule missing engine field",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:04:36.956Z"
+    }
+  },
+  "fe-legal-substance": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:17:02.197Z",
+        "summary": "terms 1746w/16h2; privacy 1804w/15h2"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:17:02.197Z",
+        "summary": "terms 1746w/16h2; privacy 1804w/15h2"
+      }
+    ],
+    "knownBad": {
+      "input": "fixture short legal stub missing floors and topics",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:17:02.197Z"
+    }
+  },
+  "fe-a11y-contrast": {
+    "tool": "axe-core",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T21:52:36.933Z",
+        "report": "evidence/axe/az-planting-calendar-dark.json"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T21:52:36.934Z",
+        "report": "evidence/axe/az-planting-calendar-light.json"
+      }
+    ],
+    "knownBad": {
+      "input": "page with contrast failure reported by axe-core",
+      "failed": true,
+      "recordedAt": "2026-08-02T21:52:36.934Z"
+    }
+  },
+  "fe-structured-data": {
+    "tool": "static-head-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:16.649Z",
+        "type": "WebApplication"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:16.649Z",
+        "type": "WebApplication"
+      }
+    ],
+    "knownBad": {
+      "input": "fixtures/structured-data/bad.html",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:16.649Z"
+    }
+  },
+  "proc-design-options": {
+    "tool": "static-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:16.742Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:16.743Z"
+      }
+    ],
+    "knownBad": {
+      "input": "app with no design-refs/design-options or empty DECISION.md",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:16.743Z"
+    }
+  },
+  "lg-result-reproduces": {
+    "tool": "computeScore",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:46.666Z",
+        "recomputed": 0,
+        "recorded": 0
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:46.667Z",
+        "recomputed": 0,
+        "recorded": 0
+      }
+    ],
+    "knownBad": {
+      "input": "results JSON whose finalScore does not match recompute",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:46.667Z"
+    }
+  },
+  "lg-bindings-bound": {
+    "tool": "fetch-probe",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:31.430Z",
+        "base": "https://az-planting-calendar.pages.dev"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:31.430Z",
+        "base": "https://az-planting-calendar.pages.dev"
+      }
+    ],
+    "knownBad": {
+      "input": "deployed endpoint returning binding unavailable / 503 missing AI",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:31.430Z"
+    }
+  },
+  "u-api-real-output": {
+    "tool": "fetch",
+    "engine": null,
+    "knownBad": {
+      "input": "API route with no example or empty placeholder response",
+      "failed": true,
+      "recordedAt": "2026-08-02T22:14:26.919Z"
+    },
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:26.919Z",
+        "routes": 9
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T22:14:26.919Z",
+        "routes": 9
+      }
+    ]
   }
 }

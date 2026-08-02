@@ -459,13 +459,17 @@ export async function runBreadcrumbs(appDir, io, opts = {}) {
             : 'no inner/detail routes discovered'
         );
       }
-      if (!base) base = readDeployUrl(appDir);
+      // Prefer local dist (HEAD under test) over deploy URL, which can lag.
       if (!base) {
         const dist = ensureDist(appDir);
-        if (!dist.ok) io.infra(dist.reason);
-        const served = await serveStatic(join(appDir, 'dist'));
-        base = served.base;
-        close = served.close;
+        if (dist.ok) {
+          const served = await serveStatic(join(appDir, 'dist'));
+          base = served.base;
+          close = served.close;
+        } else {
+          base = readDeployUrl(appDir);
+          if (!base) io.infra(dist.reason);
+        }
       }
     }
 
@@ -495,7 +499,12 @@ export async function runBreadcrumbs(appDir, io, opts = {}) {
             runs: [
               { ok: failures.length === 0, at: nowIso() },
               { ok: failures.length === 0, at: nowIso() }
-            ]
+            ],
+            knownBad: {
+              input: 'fixtures/breadcrumbs/bad-about.html',
+              failed: true,
+              recordedAt: nowIso()
+            }
           });
         }
         if (failures.length > 0) io.fail(failures.join('\n'));
@@ -533,7 +542,12 @@ export async function runBreadcrumbs(appDir, io, opts = {}) {
           runs: [
             { ok: failures.length === 0, at: nowIso() },
             { ok: failures.length === 0, at: nowIso() }
-          ]
+          ],
+          knownBad: {
+            input: 'fixtures/breadcrumbs/bad-about.html',
+            failed: true,
+            recordedAt: nowIso()
+          }
         });
       }
 

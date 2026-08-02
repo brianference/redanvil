@@ -1,0 +1,57 @@
+{
+  "_why": "One realistic call per API route. u-api-real-output boots the Workers runtime and fails when a route has no example, returns non-2xx when 2xx is required, or returns empty/placeholder content.",
+  "examples": [
+    {
+      "route": "/api/health",
+      "method": "GET",
+      "expect": { "status": 200, "nonEmpty": true }
+    },
+    {
+      "route": "/api/plantable",
+      "method": "GET",
+      "query": { "date": "2026-03-01" },
+      "expect": { "status": 200, "nonEmpty": true, "minItems": 1 }
+    },
+    {
+      "route": "/api/grid",
+      "method": "GET",
+      "expect": { "status": 200, "nonEmpty": true, "minItems": 1 }
+    },
+    {
+      "route": "/api/crops",
+      "method": "GET",
+      "expect": { "status": 200, "nonEmpty": true, "minItems": 1 }
+    },
+    {
+      "route": "/api/crops/[id]",
+      "method": "GET",
+      "params": { "id": "crop-tomatoes" },
+      "expect": { "status": 200, "nonEmpty": true }
+    },
+    {
+      "route": "/api/crops/[id]",
+      "method": "GET",
+      "params": { "id": "crop-definitely-missing" },
+      "comment": "Missing crop must 404 with a real error body.",
+      "expect": { "status": 404, "nonEmpty": true }
+    },
+    {
+      "route": "/api/zone",
+      "method": "GET",
+      "expect": { "status": 200, "nonEmpty": true }
+    },
+    {
+      "route": "/api/zones",
+      "method": "GET",
+      "expect": { "status": 200, "nonEmpty": true, "minItems": 1 }
+    },
+    {
+      "route": "/api/assistant",
+      "method": "POST",
+      "body": { "message": "What can I plant in March as seed?" },
+      "comment": "Workers AI cannot authenticate under plain `wrangler pages dev` (InferenceUpstreamError: Not logged in). Measure the success path on the deployed origin where the AI binding is bound and billed.",
+      "remoteOrigin": "https://az-planting-calendar.pages.dev",
+      "expect": { "status": 200, "nonEmpty": true }
+    }
+  ]
+}

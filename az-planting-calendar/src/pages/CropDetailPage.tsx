@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CropArt } from '../components/CropArt';
 import { MethodChip } from '../components/MethodChip';
+import { useAsyncLoad } from '../hooks/useAsyncLoad';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { en } from '../i18n/en';
 import { fetchCropDetail } from '../lib/api';
 import { halfMonthLabel } from '../lib/halfMonth';
-import type { CropDetailResponse, CropGuide } from '../lib/schemas';
+import type { CropGuide } from '../lib/schemas';
 import './ProsePage.css';
 
 /**
@@ -14,9 +14,11 @@ import './ProsePage.css';
  */
 export function CropDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<CropDetailResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, error, loading } = useAsyncLoad(
+    id ?? '',
+    () => fetchCropDetail(id as string),
+    Boolean(id)
+  );
 
   useDocumentMeta(
     data ? `${data.crop.name} — ${en.appName}` : en.meta.homeTitle,
@@ -24,29 +26,6 @@ export function CropDetailPage() {
       ? `Planting windows for ${data.crop.name} in the Arizona low desert (Cave Creek / Maricopa).`
       : en.meta.homeDescription
   );
-
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    void fetchCropDetail(id)
-      .then((res) => {
-        if (!cancelled) setData(res);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'error');
-          setData(null);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
 
   return (
     <article className="prose shell" data-testid="crop-detail">
