@@ -1,9 +1,11 @@
 import {
+  AssistantResponseSchema,
   CropDetailResponseSchema,
   CropsResponseSchema,
   GridResponseSchema,
   HealthResponseSchema,
   PlantableResponseSchema,
+  type AssistantResponse,
   type CropDetailResponse,
   type FilterQuery,
   type GridResponse,
@@ -90,4 +92,32 @@ export async function fetchCrops(q?: string) {
 /** GET /api/crops/:id */
 export async function fetchCropDetail(id: string): Promise<CropDetailResponse> {
   return getJson(`/api/crops/${encodeURIComponent(id)}`, CropDetailResponseSchema);
+}
+
+/**
+ * POST /api/assistant — grounded answer from D1 crop data via Workers AI.
+ *
+ * @param message - User question (1–500 chars after trim).
+ */
+export async function askAssistant(message: string): Promise<AssistantResponse> {
+  const res = await fetch('/api/assistant', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({ message })
+  });
+  if (!res.ok) {
+    let errMessage = `Request failed (${res.status})`;
+    try {
+      const body = (await res.json()) as { error?: string };
+      if (body.error) errMessage = body.error;
+    } catch {
+      /* ignore parse errors */
+    }
+    throw new Error(errMessage);
+  }
+  const data: unknown = await res.json();
+  return AssistantResponseSchema.parse(data);
 }

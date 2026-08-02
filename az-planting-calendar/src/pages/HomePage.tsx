@@ -4,14 +4,15 @@ import { Filters, type FiltersState } from '../components/Filters';
 import { PlantableHero } from '../components/PlantableHero';
 import { YearGrid } from '../components/YearGrid';
 import { en } from '../i18n/en';
-import { fetchGrid, fetchPlantable } from '../lib/api';
+import { fetchCrops, fetchGrid, fetchPlantable } from '../lib/api';
 import type { GridResponse, Method, PlantableResponse } from '../lib/schemas';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import './HomePage.css';
 
 /**
  * Home: plantable-now hero owns first viewport; filters + grid below the fold.
- * Optional URL: ?date=YYYY-MM-DD&method=S|T&month=0..11
+ * Optional URL: ?date=YYYY-MM-DD&method=S|T&month=0..11&q=
+ * Crop name search hits GET /api/crops?q= and narrows the year grid by returned ids.
  */
 export function HomePage() {
   useDocumentMeta(en.meta.homeTitle, en.meta.homeDescription);
@@ -26,6 +27,8 @@ export function HomePage() {
 
   const [plantable, setPlantable] = useState<PlantableResponse | null>(null);
   const [grid, setGrid] = useState<GridResponse | null>(null);
+  /** When set, year grid shows only these crop ids (from /api/crops?q=). */
+  const [searchIds, setSearchIds] = useState<Set<string> | null>(null);
   const [plantableLoading, setPlantableLoading] = useState(true);
   const [gridLoading, setGridLoading] = useState(true);
   const [plantableError, setPlantableError] = useState<string | null>(null);
@@ -40,6 +43,7 @@ export function HomePage() {
     () => (filters.month === '' ? undefined : filters.month),
     [filters.month]
   );
+  const searchQ = filters.q.trim();
 
   useEffect(() => {
     let cancelled = false;
@@ -101,30 +105,54 @@ export function HomePage() {
     };
   }, [methodFilter, monthFilter, reloadKey]);
 
+  /**
+   * Server-side name search: every keystroke with a non-empty q hits /api/crops?q=.
+   * Empty q clears the id filter so the full grid shows.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    if (!searchQ) {
+      setSearchIds(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+    void fetchCrops(searchQ)
+      .then((data) => {
+        if (cancelled) return;
+        setSearchIds(new Set(data.crops.map((c) => c.id)));
+      })
+      .catch(() => {
+        if (!cancelled) setSearchIds(new Set());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [searchQ, reloadKey]);
+
   /** Keep shareable URL in sync with filters (do not echo-loop from URL). */
   useEffect(() => {
     const next = new URLSearchParams();
     if (filters.date) next.set('date', filters.date);
     if (filters.method) next.set('method', filters.method);
     if (filters.month !== '') next.set('month', String(filters.month));
-    if (filters.q.trim()) next.set('q', filters.q.trim());
+    if (searchQ) next.set('q', searchQ);
     const current = searchParams.toString();
     const upcoming = next.toString();
     if (current !== upcoming) {
       setSearchParams(next, { replace: true });
     }
-  }, [filters, searchParams, setSearchParams]);
+  }, [filters.date, filters.method, filters.month, searchQ, searchParams, setSearchParams]);
 
-  /** Narrow grid rows by crop name when the search box has text. */
+  /** Apply server search ids to the year grid. */
   const filteredGrid = useMemo(() => {
     if (!grid) return null;
-    const needle = filters.q.trim().toLowerCase();
-    if (!needle) return grid;
+    if (!searchIds) return grid;
     return {
       ...grid,
-      crops: grid.crops.filter((row) => row.crop.name.toLowerCase().includes(needle))
+      crops: grid.crops.filter((row) => searchIds.has(row.crop.id))
     };
-  }, [grid, filters.q]);
+  }, [grid, searchIds]);
 
   return (
     <div className="home">

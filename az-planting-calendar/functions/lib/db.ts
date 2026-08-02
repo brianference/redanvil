@@ -305,3 +305,49 @@ export async function getAllCrops(db: D1Database): Promise<CropRow[]> {
     .all<CropRow>();
   return result.results ?? [];
 }
+
+/** One crop row with its planting windows for assistant grounding. */
+export interface CropWindowSummary {
+  crop: CropRow;
+  windows: Array<{
+    method: 'S' | 'T';
+    start_half_month: number;
+    end_half_month: number;
+  }>;
+}
+
+/**
+ * Load every crop and its planting windows for the assistant knowledge base.
+ * Parameterized SELECT only — no user input in SQL.
+ *
+ * @param db - D1 binding.
+ */
+export async function getAssistantCropData(db: D1Database): Promise<CropWindowSummary[]> {
+  const crops = await getAllCrops(db);
+  const winResult = await db
+    .prepare(
+      `SELECT crop_id, method, start_half_month, end_half_month
+       FROM planting_windows
+       ORDER BY crop_id, start_half_month, method`
+    )
+    .all<{
+      crop_id: string;
+      method: 'S' | 'T';
+      start_half_month: number;
+      end_half_month: number;
+    }>();
+  const byCrop = new Map<string, CropWindowSummary['windows']>();
+  for (const row of winResult.results ?? []) {
+    const list = byCrop.get(row.crop_id) ?? [];
+    list.push({
+      method: row.method,
+      start_half_month: row.start_half_month,
+      end_half_month: row.end_half_month
+    });
+    byCrop.set(row.crop_id, list);
+  }
+  return crops.map((crop) => ({
+    crop,
+    windows: byCrop.get(crop.id) ?? []
+  }));
+}

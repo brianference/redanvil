@@ -109,8 +109,49 @@ export const en = {
   },
 
   footer: {
+    brandBlurb:
+      'Free low-desert planting calendar for Cave Creek, Arizona 85331. Seed and transplant windows by half-month for home garden planning.',
+    colCalendar: 'The calendar',
+    colAbout: 'About',
+    colLegal: 'Legal',
+    home: 'Home',
+    yearGrid: 'Year grid',
+    plantable: 'Plantable now',
+    about: 'About',
+    contact: 'Contact',
+    terms: 'Terms of use',
+    privacy: 'Privacy',
+    dataTitle: 'UA Cooperative Extension az1005',
+    dataBlurb:
+      'Vegetable Planting Calendar for Maricopa County by Kai Umeda. Forty-five crops with character-verified windows.',
+    dataLinkLabel: 'Open az1005 PDF (extension.arizona.edu)',
+    dataLinkHref:
+      'https://extension.arizona.edu/sites/default/files/2024-08/az1005-2018.pdf',
     sources: 'Data sources',
     rights: 'Not affiliated with the University of Arizona. For home garden planning only.'
+  },
+
+  assistant: {
+    open: 'Ask the calendar',
+    openAria: 'Open planting assistant',
+    close: 'Close assistant',
+    title: 'Planting assistant',
+    subtitle:
+      'Ask about crops and windows in this app\'s database (az1005 for the low desert). Answers are grounded in D1, not general knowledge.',
+    placeholder: 'e.g. What can I plant in early August?',
+    submit: 'Ask',
+    thinking: 'Looking up planting data…',
+    error: 'Assistant could not answer. Try again or use the crop grid.',
+    empty: 'Type a question about what to plant in Cave Creek.',
+    you: 'You',
+    reply: 'Assistant',
+    cropsHeading: 'Matching crops',
+    noCrops: 'No crops matched those filters in this database.'
+  },
+
+  aboutBrand: {
+    alt: 'AZ Planting Calendar brand art: saguaro and seedling on a calendar grid',
+    caption: 'Brand mark for this calendar (saguaro, seedling, half-month grid).'
   },
 
   about: {
@@ -157,7 +198,7 @@ export const en = {
       },
       {
         heading: 'How the site is built',
-        body: 'The interface is a static single-page application hosted on Cloudflare Pages. Planting data for the app is served from Cloudflare Pages Functions backed by a Cloudflare D1 database that holds crops, planting windows, sources, and the default zone record. There are no user accounts and no visitor profiles in that database. The public JSON APIs expose plantable crops, the year grid, crop detail, crop list with optional name search, zone metadata, and a health check for operators.'
+        body: 'The interface is a static single-page application hosted on Cloudflare Pages. Planting data for the app is served from Cloudflare Pages Functions backed by a Cloudflare D1 database that holds crops, planting windows, sources, and the default zone record. There are no user accounts and no visitor profiles in that database. The public JSON APIs expose plantable crops, the year grid, crop detail, crop list with optional name search, zone metadata, a health check for operators, and an optional planting assistant. The assistant loads crop and window rows from D1, then sends your question plus that grounded context to Cloudflare Workers AI so the reply is based on this app’s dataset rather than general knowledge. A model failure returns a visible error, not an empty success.'
       },
       {
         heading: 'Honesty about limits',
@@ -274,6 +315,7 @@ export const en = {
         items: [
           'Theme preference on your device only: localStorage key theme with value light, dark, or system, set when you use the theme control—nothing else is written to localStorage by this app',
           'Optional view state you put in the page URL (for example date, method, month, or search query parameters) so a shared link opens the same plantable or filter view—these are not stored as a server-side profile',
+          'Assistant questions you choose to submit: the free-text sentence is POSTed to this app’s /api/assistant function, which loads crop and window rows from D1 and sends your sentence plus that context to Cloudflare Workers AI for a single response. This app does not keep a chat archive of those messages',
           'Request metadata that Cloudflare may log while serving Pages and Functions (for example IP address, user agent, path, and timestamps under Cloudflare’s own practices)',
           'Ordinary browser behaviour such as HTTP cache entries for static assets you load'
         ]
@@ -308,6 +350,7 @@ export const en = {
         body: 'Infrastructure and outbound destinations this product actually uses:',
         items: [
           'Cloudflare Pages hosts static assets and runs Pages Functions for /api routes; Cloudflare D1 stores crop, window, source, and zone rows for the app. Cloudflare receives the request metadata needed to serve those resources under Cloudflare’s terms and privacy policy.',
+          'Cloudflare Workers AI receives the assistant sentence you submit (only when you use the assistant) together with crop/window context loaded from D1, so a model can return a grounded answer. We do not send theme preference or a user account (there is none).',
           'Citation links may open University of Arizona Cooperative Extension pages (for example extension.arizona.edu) when you choose to follow them; those hosts process that request under their own policies.',
           'Contact via public GitHub issues is handled by GitHub under GitHub’s terms and privacy policy; this app does not operate an in-app ticket database.'
         ]

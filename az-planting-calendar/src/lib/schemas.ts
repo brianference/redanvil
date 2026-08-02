@@ -147,3 +147,32 @@ export const CropsQuerySchema = z.object({
     })
 });
 export type CropsQuery = z.infer<typeof CropsQuerySchema>;
+
+/** POST /api/assistant request body. */
+export const AssistantRequestSchema = z.object({
+  message: z.string().trim().min(1).max(500)
+});
+export type AssistantRequest = z.infer<typeof AssistantRequestSchema>;
+
+/** Filters the assistant model may emit (validated server-side). */
+export const AssistantFiltersSchema = z.object({
+  half_month: HalfMonthSchema.optional(),
+  method: MethodSchema.optional(),
+  crop: z.string().min(1).max(100).optional()
+});
+export type AssistantFilters = z.infer<typeof AssistantFiltersSchema>;
+
+/** One crop row returned after D1 grounding. */
+export const AssistantCropSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  methods: z.array(MethodSchema)
+});
+
+/** POST /api/assistant success response — answer is code-built from D1, not model prose. */
+export const AssistantResponseSchema = z.object({
+  answer: z.string().min(1),
+  crops: z.array(AssistantCropSchema),
+  filters: AssistantFiltersSchema
+});
+export type AssistantResponse = z.infer<typeof AssistantResponseSchema>;

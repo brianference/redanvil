@@ -15,7 +15,12 @@ interface YearGridProps {
  */
 export function YearGrid({ data, loading, error }: YearGridProps) {
   return (
-    <section className="year-grid shell" data-testid="year-grid" aria-labelledby="grid-title">
+    <section
+      id="year-grid"
+      className="year-grid shell"
+      data-testid="year-grid"
+      aria-labelledby="grid-title"
+    >
       <div className="year-grid__intro">
         <h2 id="grid-title">{en.grid.title}</h2>
         <p>{en.grid.subtitle}</p>

@@ -20,8 +20,12 @@ The favicon must be a SEPARATE simplified mark, not a downscale of this file:
 cactus silhouette only, no grid, high contrast, one or two colours. Deriving the
 favicon by resizing this image will ship an unreadable icon.
 
-## Still to do
-- [ ] simplified favicon variant, verified by opening the 32px render
-- [ ] transparent background version for the header (current has a light plate)
-- [ ] OG image derived from the full-size mark
-- [ ] wire into the shell, replacing the literal text `AZ` in Layout.tsx
+## Shipped assets
+- [x] simplified favicon: `public/favicon.svg` (cactus silhouette only, green on
+      dark; verified by opening `v2/verify/favicon-32.png` and
+      `v2/verify/favicon-32-4x.png` — cactus arms read at 32px, no pale grid square)
+- [x] transparent header mark: `public/brand-mark.png` (outer light plate keyed
+      out; calendar panel is part of the approved artwork)
+- [x] OG image: `public/og.png` (1200×630 from full-size mark + title)
+- [x] wired into shell: Layout uses `<img src="/brand-mark.png">`, not the
+      literal text `AZ`

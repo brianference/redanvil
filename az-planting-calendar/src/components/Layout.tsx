@@ -2,10 +2,12 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { en } from '../i18n/en';
 import { useTheme } from '../hooks/useTheme';
 import type { ThemeMode } from '../theme';
+import { AssistantPanel } from './AssistantPanel';
 import './Layout.css';
 
 /**
- * Site chrome: compact top bar + full-bleed content (not a centered sticky shell).
+ * Site chrome: compact top bar + full-bleed content + multi-column footer.
+ * Brand mark is the finalized cactus/seedling/calendar artwork (public/brand-mark.png).
  */
 export function Layout() {
   const { mode, cycle } = useTheme();
@@ -18,10 +20,16 @@ export function Layout() {
       </a>
       <header className="topbar">
         <div className="topbar__brand">
-          <Link to="/" className="topbar__logo">
-            <span className="topbar__mark" aria-hidden="true">
-              AZ
-            </span>
+          <Link to="/" className="topbar__logo" aria-label={en.appName}>
+            <img
+              className="topbar__mark"
+              src="/brand-mark.png"
+              alt=""
+              width={32}
+              height={32}
+              aria-hidden="true"
+              decoding="async"
+            />
             <span className="topbar__name">{en.appName}</span>
           </Link>
           <span className="topbar__zone mono">{en.appTagline}</span>
@@ -47,7 +55,9 @@ export function Layout() {
           data-theme-mode={mode}
         >
           <ThemeToggleIcon mode={mode} />
-          <span className="theme-toggle__sr-only">{en.nav.theme}: {themeLabel}</span>
+          <span className="theme-toggle__sr-only">
+            {en.nav.theme}: {themeLabel}
+          </span>
         </button>
       </header>
       <main id="main" className="layout__main">
@@ -55,15 +65,63 @@ export function Layout() {
       </main>
       <footer className="site-footer shell">
         <div className="site-footer__inner">
-          <nav className="site-footer__nav" aria-label="Legal">
-            <Link to="/about">{en.nav.about}</Link>
-            <Link to="/terms">{en.nav.terms}</Link>
-            <Link to="/privacy">{en.nav.privacy}</Link>
-            <Link to="/contact">{en.nav.contact}</Link>
-          </nav>
+          <div className="site-footer__grid">
+            <section className="site-footer__col" aria-labelledby="footer-calendar">
+              <h2 id="footer-calendar" className="site-footer__heading">
+                {en.footer.colCalendar}
+              </h2>
+              <ul className="site-footer__list">
+                <li>
+                  <Link to="/">{en.footer.home}</Link>
+                </li>
+                <li>
+                  <a href="/#year-grid">{en.footer.yearGrid}</a>
+                </li>
+                <li>
+                  <a href="/#plantable-now">{en.footer.plantable}</a>
+                </li>
+              </ul>
+            </section>
+            <section className="site-footer__col" aria-labelledby="footer-about">
+              <h2 id="footer-about" className="site-footer__heading">
+                {en.footer.colAbout}
+              </h2>
+              <ul className="site-footer__list">
+                <li>
+                  <Link to="/about">{en.footer.about}</Link>
+                </li>
+                <li>
+                  <Link to="/contact">{en.footer.contact}</Link>
+                </li>
+                <li>
+                  <a
+                    href={en.footer.dataLinkHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {en.footer.dataLinkLabel}
+                  </a>
+                </li>
+              </ul>
+            </section>
+            <section className="site-footer__col" aria-labelledby="footer-legal">
+              <h2 id="footer-legal" className="site-footer__heading">
+                {en.footer.colLegal}
+              </h2>
+              <ul className="site-footer__list">
+                <li>
+                  <Link to="/terms">{en.footer.terms}</Link>
+                </li>
+                <li>
+                  <Link to="/privacy">{en.footer.privacy}</Link>
+                </li>
+              </ul>
+            </section>
+          </div>
           <p className="site-footer__note">{en.footer.rights}</p>
         </div>
       </footer>
+      <AssistantPanel />
     </div>
   );
 }
@@ -129,7 +187,6 @@ function ThemeToggleIcon({ mode }: { mode: ThemeMode }) {
     );
   }
 
-  /* System: sun + moon pair signals both light and dark are available */
   return (
     <svg
       className="theme-toggle__icon"

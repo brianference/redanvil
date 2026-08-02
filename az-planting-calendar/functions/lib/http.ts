@@ -3,6 +3,8 @@
  * Security headers and JSON responses for every API route.
  */
 
+import type { z, ZodTypeAny } from 'zod';
+
 const SECURITY_HEADERS: Record<string, string> = {
   'content-type': 'application/json; charset=utf-8',
   'x-content-type-options': 'nosniff',
@@ -66,4 +68,41 @@ export function errorJson(request: Request, message: string, status: number): Re
  */
 export function optionsResponse(request: Request, methods?: string): Response {
   return new Response(null, { status: 204, headers: apiHeaders(request, methods) });
+}
+
+/**
+ * Parse and schema-validate a JSON request body.
+ *
+ * @param request - Incoming request.
+ * @param schema - Zod schema for the expected body.
+ * @param invalidMessage - Fallback when Zod does not supply a first issue message.
+ * @returns Validated data, or a 400 Response.
+ */
+export async function readJsonBody<S extends ZodTypeAny>(
+  request: Request,
+  schema: S,
+  invalidMessage = 'Invalid request body'
+): Promise<z.infer<S> | Response> {
+  let raw: unknown;
+  try {
+    raw = await request.json();
+  } catch {
+    return errorJson(request, 'Invalid JSON body', 400);
+  }
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) {
+    const message = parsed.error.issues[0]?.message ?? invalidMessage;
+    return errorJson(request, message, 400);
+  }
+  return parsed.data as z.infer<S>;
+}
+
+/**
+ * True when a readJsonBody result is already an error Response.
+ *
+ * @param value - Result of readJsonBody.
+ * @returns Whether the caller should return it as-is.
+ */
+export function isErrorResponse(value: unknown): value is Response {
+  return value instanceof Response;
 }

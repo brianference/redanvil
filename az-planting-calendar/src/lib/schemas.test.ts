@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AssistantRequestSchema,
+  AssistantResponseSchema,
   CropSchema,
   CropsQuerySchema,
   FilterQuerySchema,
@@ -110,5 +112,29 @@ describe('query schemas', () => {
     expect(CropsQuerySchema.parse({ q: '   ' }).q).toBeUndefined();
     expect(CropsQuerySchema.parse({}).q).toBeUndefined();
     expect(() => CropsQuerySchema.parse({ q: 'x'.repeat(101) })).toThrow();
+  });
+});
+
+describe('Assistant schemas', () => {
+  it('requires a non-empty message up to 500 chars', () => {
+    expect(AssistantRequestSchema.parse({ message: 'When to plant beans?' }).message).toBe(
+      'When to plant beans?'
+    );
+    expect(() => AssistantRequestSchema.parse({ message: '' })).toThrow();
+    expect(() => AssistantRequestSchema.parse({ message: '   ' })).toThrow();
+    expect(() => AssistantRequestSchema.parse({ message: 'x'.repeat(501) })).toThrow();
+  });
+
+  it('requires a non-empty answer, crops array, and filters', () => {
+    const ok = AssistantResponseSchema.parse({
+      answer: '2 crops can go in during the first half (Aug 1).',
+      crops: [{ id: 'crop-tomatoes', name: 'Tomatoes', methods: ['T'] }],
+      filters: { half_month: 14, method: 'T' }
+    });
+    expect(ok.crops).toHaveLength(1);
+    expect(ok.filters.half_month).toBe(14);
+    expect(() =>
+      AssistantResponseSchema.parse({ answer: '', crops: [], filters: {} })
+    ).toThrow();
   });
 });

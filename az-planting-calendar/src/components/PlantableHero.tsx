@@ -26,7 +26,12 @@ export function PlantableHero({
   onDateChange
 }: PlantableHeroProps) {
   return (
-    <section className="hero" data-testid="plantable-hero" aria-labelledby="hero-title">
+    <section
+      id="plantable-now"
+      className="hero"
+      data-testid="plantable-hero"
+      aria-labelledby="hero-title"
+    >
       <div className="hero__inner shell">
         <p className="hero__kicker mono">{en.hero.kicker}</p>
         <h1 id="hero-title" className="hero__title">

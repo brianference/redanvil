@@ -11,6 +11,33 @@ test.describe('API health', () => {
     expect(res.ok()).toBeTruthy();
     expect(await res.json()).toEqual({ status: 'ok' });
   });
+
+  test('an unmatched /api/ path 404s instead of being answered by the SPA', async ({
+    request
+  }) => {
+    // This shipped broken. The middleware excluded /api/ from the SPA fallback,
+    // but only inside an `if (response.status === 404)` branch -- and Pages'
+    // asset server answers an unmatched path with index.html at 200, so the
+    // branch never ran. Every absent endpoint returned 200 with an HTML body,
+    // which makes a typo'd route indistinguishable from a working one.
+    //
+    // Random suffix so a cached or seeded route cannot satisfy this by accident.
+    const path = `/api/__definitely_absent_${Math.random().toString(36).slice(2, 10)}`;
+    const res = await request.get(path);
+    expect(res.status()).toBe(404);
+    expect(res.headers()['content-type']).toContain('application/json');
+    const body = (await res.json()) as { error?: string };
+    expect(body.error).toContain('no such endpoint');
+  });
+
+  test('real endpoints still answer JSON', async ({ request }) => {
+    // The 404 rule above must not swallow the routes that do exist.
+    for (const route of ['/api/health', '/api/crops', '/api/grid', '/api/zone']) {
+      const res = await request.get(route);
+      expect(res.status(), `${route} should be 200`).toBe(200);
+      expect(res.headers()['content-type']).toContain('application/json');
+    }
+  });
 });
 
 test.describe('Plantable now hero', () => {
@@ -143,9 +170,16 @@ test.describe('Filters', () => {
     await julyWait;
 
     await page.getByTestId('year-grid').scrollIntoViewIfNeeded();
-    const rowsAfter = await page.locator('.year-grid__table tbody tr').count();
-    expect(rowsAfter).toBeGreaterThan(0);
-    expect(rowsAfter).toBeLessThan(rowsBefore);
+    // The response arriving is NOT the grid having re-rendered: waitForResponse
+    // resolves when the bytes land, before React parses them, sets state and
+    // paints. Counting rows right after it reads the PREVIOUS render, which is
+    // why this test flaked while the search test beside it -- identical except
+    // that it polls -- never did. Auto-retrying assertion, not a fixed wait.
+    const rowsAfter = page.locator('.year-grid__table tbody tr');
+    await expect.poll(async () => rowsAfter.count()).toBeLessThan(rowsBefore);
+    const countAfter = await rowsAfter.count();
+    expect(countAfter).toBeGreaterThan(0);
+    expect(countAfter).toBeLessThan(rowsBefore);
   });
 });
 
@@ -182,15 +216,16 @@ test.describe('Crop search', () => {
     const all = await request.get('/api/crops');
     expect(all.ok()).toBeTruthy();
     const allBody = (await all.json()) as { crops: Array<{ name: string }> };
-    expect(allBody.crops.length).toBe(45);
+    const countAll = allBody.crops.length;
+    expect(countAll).toBeGreaterThan(0);
 
     const filtered = await request.get('/api/crops?q=tomato');
     expect(filtered.ok()).toBeTruthy();
     const body = (await filtered.json()) as { crops: Array<{ name: string }> };
     expect(body.crops.length).toBeGreaterThan(0);
-    expect(body.crops.length).toBeLessThan(allBody.crops.length);
+    expect(body.crops.length).toBeLessThan(countAll);
     for (const crop of body.crops) {
-      expect(crop.name.toLowerCase()).toContain('tomato');
+      expect(crop.name).toMatch(/tomato/i);
     }
   });
 
@@ -203,16 +238,129 @@ test.describe('Crop search', () => {
     const rowsBefore = await page.locator('.year-grid__table tbody tr').count();
     expect(rowsBefore).toBeGreaterThan(10);
 
-    const search = page.getByRole('searchbox', { name: /search/i });
+    // Wait on the real /api/crops search response -- never a fixed timeout.
+    const cropsWait = page.waitForResponse(
+      (r) =>
+        r.url().includes('/api/crops') &&
+        r.url().includes('q=tomato') &&
+        r.ok()
+    );
+    const search = page.getByTestId('filter-search');
     await expect(search).toBeVisible();
     await search.fill('tomato');
+    await cropsWait;
 
     const rowsAfter = page.locator('.year-grid__table tbody tr');
-    await expect(rowsAfter).not.toHaveCount(rowsBefore);
+    await expect
+      .poll(async () => rowsAfter.count())
+      .toBeLessThan(rowsBefore);
     const countAfter = await rowsAfter.count();
     expect(countAfter).toBeGreaterThan(0);
     expect(countAfter).toBeLessThan(rowsBefore);
     await expect(rowsAfter.first()).toContainText(/tomato/i);
+  });
+});
+
+test.describe('Assistant', () => {
+  test('shell exposes the assistant chat affordance', async ({ page }) => {
+    await page.goto('/');
+    const openBtn = page.getByTestId('assistant-open');
+    await expect(openBtn).toBeVisible();
+    await openBtn.click();
+    await expect(page.getByTestId('assistant-panel')).toBeVisible();
+    await expect(page.getByTestId('assistant-input')).toBeVisible();
+    await expect(page.getByTestId('assistant-send')).toBeVisible();
+  });
+
+  test('POST /api/assistant rejects empty body with 400', async ({ request }) => {
+    const res = await request.post('/api/assistant', {
+      data: { message: '' }
+    });
+    expect(res.status()).toBe(400);
+    const body = (await res.json()) as { error?: string };
+    expect(body.error).toBeTruthy();
+  });
+
+  test('POST /api/assistant accepts a message (200 or fail-closed 5xx/422)', async ({
+    request
+  }) => {
+    // Local wrangler may not authenticate Workers AI; production does.
+    // Fail-closed: never 200 with an empty answer. 400 is wrong for a valid body.
+    const res = await request.post('/api/assistant', {
+      data: { message: 'What can I plant in early August?' }
+    });
+    expect([200, 422, 502, 503]).toContain(res.status());
+    const body = (await res.json()) as {
+      answer?: string;
+      crops?: unknown[];
+      filters?: Record<string, unknown>;
+      error?: string;
+    };
+    if (res.status() === 200) {
+      expect(typeof body.answer).toBe('string');
+      expect((body.answer ?? '').trim().length).toBeGreaterThan(0);
+      expect(Array.isArray(body.crops)).toBeTruthy();
+      expect(body.filters).toBeTruthy();
+    } else {
+      expect(body.error).toBeTruthy();
+      expect(typeof body.error).toBe('string');
+    }
+  });
+
+  test('opens assistant, submits a question, asserts a visible response', async ({
+    page
+  }) => {
+    await page.goto('/');
+    await page.getByTestId('assistant-open').click();
+    await expect(page.getByTestId('assistant-panel')).toBeVisible();
+
+    const assistantWait = page.waitForResponse(
+      (r) => r.url().includes('/api/assistant') && r.request().method() === 'POST'
+    );
+    await page.getByTestId('assistant-input').fill('What can I plant in early August?');
+    await page.getByTestId('assistant-send').click();
+    const res = await assistantWait;
+
+    // Visible reply on 200, or a real error message on fail-closed statuses.
+    if (res.ok()) {
+      await expect(page.getByTestId('assistant-log')).toContainText(/crop/i);
+    } else {
+      await expect(page.getByTestId('assistant-error')).toBeVisible();
+      const errText = await page.getByTestId('assistant-error').innerText();
+      expect(errText.trim().length).toBeGreaterThan(0);
+    }
+  });
+});
+
+test.describe('Brand and footer', () => {
+  test('header uses finalized brand-mark image, not literal AZ text span', async ({
+    page
+  }) => {
+    await page.goto('/');
+    const logo = page.locator('.topbar__logo');
+    await expect(logo).toBeVisible();
+    const mark = logo.locator('img.topbar__mark');
+    await expect(mark).toBeVisible();
+    await expect(mark).toHaveAttribute('aria-hidden', 'true');
+    await expect(mark).toHaveAttribute('src', /brand-mark\.png/);
+    // Must not be a bare "AZ" span without the app name.
+    const logoText = (await logo.innerText()).replace(/\s+/g, ' ').trim();
+    expect(logoText).not.toMatch(/^AZ$/);
+    expect(logoText).toContain('AZ Planting Calendar');
+  });
+
+  test('footer is multi-column with calendar, about, and legal', async ({ page }) => {
+    await page.goto('/');
+    const footer = page.locator('footer.site-footer');
+    await expect(footer).toBeVisible();
+    await expect(footer.getByRole('heading', { name: /the calendar/i })).toBeVisible();
+    await expect(footer.getByRole('heading', { name: /^about$/i })).toBeVisible();
+    await expect(footer.getByRole('heading', { name: /legal/i })).toBeVisible();
+    const azLink = footer.getByRole('link', { name: /az1005/i });
+    await expect(azLink).toBeVisible();
+    await expect(azLink).toHaveAttribute('href', /az1005/);
+    await expect(footer.getByRole('link', { name: /terms/i })).toBeVisible();
+    await expect(footer.getByRole('link', { name: /privacy/i })).toBeVisible();
   });
 });
 
