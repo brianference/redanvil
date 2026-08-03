@@ -1,0 +1,40 @@
+{
+  "$comment": [
+    "Accepted-for-this-release defects. A waiver here does NOT hide a failure:",
+    "the rule still runs, still reports FAIL, and meets_the_bar still prints it —",
+    "it just stops that one rule blocking an unrelated release. This exists so a",
+    "known defect in one app cannot hold every other app's work hostage, which is",
+    "what happens when shared-file changes pull every app into the push range.",
+    "",
+    "RULES FOR THIS FILE:",
+    "  - Every entry names ONE app and ONE rule. No wildcards, no 'all'.",
+    "  - Every entry states why it is accepted and what will fix it.",
+    "  - `since` is the date it was first accepted. An entry that keeps being",
+    "    renewed is a decision to look at, not a fact of life.",
+    "  - lg-shipped is NOT waivable. Ship proof is the one thing a release cannot",
+    "    take on credit; enforced in code, not by convention."
+  ],
+  "waivers": [
+    {
+      "app": "app-builder",
+      "rule": "fe-touch-targets",
+      "reason": "Sub-44px chips on /examples. Pre-existing, found before this release and deliberately left alone: the page is being rebuilt under task #43 and hacking CSS into a page about to be replaced is waste.",
+      "since": "2026-08-03",
+      "fixedBy": "task #43 — /examples redesign"
+    },
+    {
+      "app": "app-builder",
+      "rule": "fe-type-floor",
+      "reason": "14px eyebrow labels on /examples. Same page, same rebuild.",
+      "since": "2026-08-03",
+      "fixedBy": "task #43 — /examples redesign"
+    },
+    {
+      "app": "app-builder",
+      "rule": "fe-responsive-375",
+      "reason": "+96px horizontal overflow on /examples at 375px. Same page, same rebuild.",
+      "since": "2026-08-03",
+      "fixedBy": "task #43 — /examples redesign"
+    }
+  ]
+}

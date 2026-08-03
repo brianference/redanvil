@@ -283,12 +283,17 @@ export function scoreBarReasons(result, opts = {}) {
     );
   }
   const failed = result.rules.filter((r) => r.passed === false);
-  if (failed.length > 0) {
+  // A waived rule still FAILED and is still reported by the caller; it just does
+  // not block this release. Without this, a known defect in one app holds every
+  // other app's unrelated work hostage indefinitely.
+  const waived = opts.waivedRules ?? [];
+  const blocking = failed.filter((r) => !waived.includes(r.ruleId));
+  if (blocking.length > 0) {
     reasons.push(
-      `${failed.length} rule(s) have passed === false: ${failed
+      `${blocking.length} rule(s) have passed === false: ${blocking
         .map((r) => r.ruleId)
         .slice(0, 8)
-        .join(', ')}${failed.length > 8 ? ', …' : ''}`
+        .join(', ')}${blocking.length > 8 ? ', …' : ''}`
     );
   }
   return reasons;
