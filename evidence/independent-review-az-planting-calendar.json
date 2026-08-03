@@ -1,82 +1,79 @@
 {
   "slug": "az-planting-calendar",
   "verdict": "fail",
-  "reviewer": "grok-4.5 via grok CLI, fresh context (session 5e06b2f2-1596-4184-8df3-d352fe6291cd) -- independent of the authoring agent (Claude)",
-  "commit": "8d625b2060242a88ff138f60bcbff954ba283342",
-  "reviewedAt": "2026-08-02T23:14:01.000Z",
+  "reviewer": "claude (opus 5) fresh refute-mode pass, cross-checked with grok-4.5 via grok CLI session bcaeb150-fd0c-4606-9a1f-761db58dd661 as an independent second judge -- independent of the authoring agent and of the agent that wrote commit b77e04e",
+  "commit": "5427d97e9df31a97e502fa12f8b21ed4e0dc580d",
+  "reviewedAt": "2026-08-03T04:00:00.000Z",
   "reviewedRange": "origin/master..HEAD",
   "reviewedPaths": [
     "orchestrator/scripts/checks",
-    "orchestrator/src",
-    ".github/scripts",
+    "orchestrator/scripts/lib/measurement-meta.mjs",
+    "orchestrator/src/gate/done.mjs",
+    "orchestrator/src/gate/score.ts",
+    "orchestrator/src/team/productJudgement.mjs",
+    ".github/scripts/meets_the_bar.mjs",
+    ".githooks/pre-push",
     "az-planting-calendar"
   ],
-  "diffHash": "ff620f0a23b8ac66aa82be878e458b966c4d4abbfa9341e0ba655833b9ae736f",
-  "verifiedBy": "claude (opened every cited file:line and confirmed or refuted each finding before recording; none were refuted)",
+  "diffHash": "dc5937a06969b262fbf3445b97df6c0f216a4855c28754d4a1f16ef7538a6a82",
+  "verifiedBy": "claude: read every cited file:line directly, then re-ran the actual check scripts (not their unit tests) with hand-built adversarial inputs in isolated tmp dirs -- never mutating the live shared evidence files after the first accidental mutation (see notes). Grok's claims were treated as hypotheses and independently reproduced or refuted, not accepted.",
   "findings": [
     {
-      "title": "meas-two-run defeated by duplicated single-run records",
-      "citation": "orchestrator/scripts/checks/fe-brand-mark-size.mjs:377",
-      "detail": "writeMeasurementMetaEntry is called with runs: [{ ok: result.ok, at: nowIso() }, { ok: result.ok, at: nowIso() }] -- one computed `result.ok` duplicated with two timestamps, not two independent runs. meas-two-run.mjs (evaluateTwoRun) only checks runs.length>=2 and runsAgree(runs); a duplicated single value always agrees with itself. Same pattern confirmed at fe-breadcrumbs.mjs:499-501, fe-light-dark.mjs:449-451 (comment at line 443-445 explicitly documents the duplication as intentional), fe-search-present.mjs:783-786, fe-result-in-viewport.mjs:561-563, fe-resource-links.mjs:551-553, lg-result-reproduces.mjs:346-347, u-api-not-found.mjs:186-187, meas-known-bad.mjs:170-172. G2 (meas-two-run) is satisfiable by every browser-driven rule in the codebase without ever running an independent second measurement.",
-      "citationVerified": true,
-      "passed": false
-    },
-    {
-      "title": "meas-known-bad's rerun gate is satisfied by an unresolvable path, not a run",
-      "citation": "orchestrator/scripts/checks/meas-known-bad.mjs:159",
-      "detail": "rerun(ruleId, input): `if (!abs) return 1;` -- when knownBad.input does not resolve under process.cwd() or appDir, the function returns 1 (\"did not pass\") WITHOUT spawning anything, and evaluateKnownBad (meas-known-bad.mjs:113-120) only fails when the rerun code is 0. A missing/unresolvable path is therefore indistinguishable from a correctly-failing known-bad fixture. Verified live: fe-brand-mark-size.mjs:387 records knownBad.input = 'fixtures/brand-mark-size/small.html' (app-relative), but the real fixture lives at orchestrator/test/fixtures/brand-mark-size/small.html; az-planting-calendar/fixtures/brand-mark-size/small.html does not exist, and 'fixtures/brand-mark-size/small.html' does not exist relative to repo root either -- so this specific knownBad entry has never actually been executed by meas-known-bad, yet it satisfies G1.",
-      "citationVerified": true,
-      "passed": false
-    },
-    {
-      "title": "knownBad entries recorded as prose, not paths -- G1 proof never runs",
-      "citation": "orchestrator/scripts/checks/fe-result-in-viewport.mjs:566",
-      "detail": "knownBad.input is a sentence, not a file path: 'fixture with result list far below the fold' (fe-result-in-viewport.mjs:566), 'fixture with dead external URL (real 404)' (fe-resource-links.mjs:556), 'results JSON whose finalScore does not match recompute' (lg-result-reproduces.mjs:350), 'detail route that returns 200 for a bogus id' (u-api-not-found.mjs:189). None of these resolve via existsSync under cwd or appDir, so per the finding above every one of them silently satisfies meas-known-bad's rerun gate via the `!abs -> return 1` branch without a fixture ever being run. Combined with finding #2, G1 (meas-known-bad) is currently vacuous for at least these four rules plus fe-brand-mark-size, fe-breadcrumbs, and proc-design-options.",
-      "citationVerified": true,
-      "passed": false
-    },
-    {
-      "title": "lg-result-reproduces' missing-rubric-rule branch is a dead no-op",
-      "citation": "orchestrator/scripts/checks/lg-result-reproduces.mjs:273",
-      "detail": "`if (missing.length > 0 && result.total >= rubricIds.size - na.size) { /* comments only, no push to failures */ }` -- the `missing` array (rubric rule ids that are neither in the result nor listed notApplicable) is computed and then the branch that could act on it contains only comments, never `failures.push(...)`. Confirmed by reading lines 255-280 directly: `failures` is never mutated inside this block. A results JSON can omit a scored rubric rule outright (not list it n/a, just not include it) and lg-result-reproduces will not flag it, as long as invented ids are absent.",
-      "citationVerified": true,
-      "passed": false
-    },
-    {
-      "title": "lg-shipped condition 5 reads its own prior failure and cannot self-clear",
-      "citation": "orchestrator/scripts/checks/lg-shipped.mjs:218",
-      "detail": "requireGateResultMeetsBar (lg-shipped.mjs:210-227) calls scoreBarReasons(result, {threshold}) against the stored results/<slug>.json and fails if finalScore<threshold or any recorded rule has passed===false. Verified against the actual file on disk: results/az-planting-calendar.json currently has finalScore:0, threshold:90, and exactly one rule with passed===false out of 82 -- ruleId 'lg-shipped' itself (confirmed via `j.rules.filter(r=>r.passed===false)` => ['lg-shipped']). Running lg-shipped.mjs right now reads this same file and fails again citing its own prior recorded failure and the stale score-0, with no mechanism in this function to exclude its own prior verdict from the zero-failed-rules check it performs on itself. The check can only clear once some OTHER path overwrites the stored result with a run where lg-shipped is not itself the recorded failure -- which requires lg-shipped to have already passed in that run, i.e. the same circularity.",
-      "citationVerified": true,
-      "passed": false
-    },
-    {
-      "title": "fe-assistant-present's grounding proof is a weak regex, satisfiable without touching data",
-      "citation": "orchestrator/scripts/checks/fe-assistant-present.mjs:42-48",
-      "detail": "assessAssistantEndpoint (line 142) requires MODEL_CALL to match AND at least one GROUNDS_DATA pattern (line 154, .some()). GROUNDS_DATA includes bare `/\\bfilters?\\b/` and `/SYSTEM_PROMPT|systemPrompt|system:\\s*['\"`]/` (lines 45 and 48) alongside the real DB-access patterns. A model-calling endpoint with a variable literally named `filters` or a `SYSTEM_PROMPT` constant, and no database access at all, would satisfy this check. NOTE: verified az-planting-calendar/functions/api/assistant.ts is NOT currently exploiting this gap -- it does call getWindowsForHalf/listCrops against env.DB (assistant.ts:238-266) for real grounding. The defect is in the check's soundness (it would pass a stubbed assistant on a future or different app), not a live false-positive on this specific app today.",
-      "citationVerified": true,
-      "passed": false
-    },
-    {
-      "title": "meets_the_bar.mjs never supplies independentReviewOk to isDone",
-      "citation": ".github/scripts/meets_the_bar.mjs:600-610",
-      "detail": "The isDone() call inside decideApp/scoreBarReasons (the function backing the pre-push hook and CI's apps-meet-the-bar job) passes only { evidenceStale, screenshotsPresent } as opts -- independentReviewOk, qaVisualOk and userRefuseOk are never read or supplied here (confirmed by grepping the whole file: zero occurrences of independentReviewOk). Since this repo's isDone/coverage.mjs treats an unsupplied opt as 'unmeasured', not 'pass', F5 is currently unreachable (always fails/unmeasured) through the actual push-time and CI enforcement path regardless of what any evidence/independent-review-*.json file says -- this file was reportedly wired to be read by productJudgement.mjs's independentReviewOk(), but meets_the_bar.mjs does not appear to call that reader for this key at the point I inspected. Worth re-checking after the just-landed wiring change lands, since I read this before that change was described to me.",
-      "citationVerified": true,
-      "passed": false
-    },
-    {
-      "title": "SQL is parameterized -- no string-concatenation injection found",
-      "citation": "az-planting-calendar/functions/lib/db.ts:256",
-      "detail": "Reviewed getWindowsForHalf, listCrops, resolveZone, listZones, getCropsByIds (IN (...) built from a fixed-count '?' placeholder list, bound via .bind(...ids)), and getWindowsForCropMethod. All request-derived values (zip, crop query, half_month, method, ids) go through .prepare(...).bind(...). Template literals (`${ZONE_SELECT}`, `${WINDOW_SELECT}`, `${WINDOW_HALF_BOUNDS}`, `${WINDOW_MONTH_OVERLAP}`) interpolate only fixed module-level string constants (db.ts:75-76, 212-219, 220-225, 400-403) that contain no request input -- verified by reading each constant's definition. No SQL injection vector in this diff.",
+      "title": "meas-two-run genuinely rejects byte-identical duplicates and disagreement",
+      "citation": "orchestrator/scripts/checks/meas-two-run.mjs:49-60; orchestrator/scripts/lib/measurement-meta.mjs:127-149",
+      "detail": "Live-ran meas-two-run.mjs against az-planting-calendar's real evidence (clean pass). Then hand-mutated a scratch copy of evidence/measurement-meta.json: (1) duplicated fe-search-present's first run object verbatim as both entries -> meas-two-run correctly FAILed with 'the two recorded runs are byte-identical'; (2) set the two runs to {ok:true} and {ok:false} -> correctly FAILed with 'two runs disagree'. Both directions hold.",
       "citationVerified": true,
       "passed": true
     },
     {
-      "title": "API middleware fails closed on unmatched /api/* routes",
-      "citation": "az-planting-calendar/functions/_middleware.ts:23",
-      "detail": "Unmatched /api/* paths whose response content-type is not application/json now return errorJson(...,404) instead of falling through to the SPA's index.html 200 (the code's own comment at lines 15-20 documents that this was previously broken -- Pages answers unmatched paths with index.html at 200, so a naive `response.status===404` guard never fired). Verified the current condition at line 23 checks the content-type of the actual response, not response.status, which correctly distinguishes a real JSON 404 from the SPA shell. Rate limiting (functions/lib/rateLimit.ts) maps a missing CF-Connecting-IP to a shared bucket rather than bypassing the limit. No always-true auth/permission guard found in the touched middleware or assistant paths.",
+      "title": "Six fe-* browser checks run two genuinely independent full passes, timestamped on completion",
+      "citation": "fe-light-dark.mjs:523-526, fe-search-present.mjs:789-792, fe-breadcrumbs.mjs:567-570, fe-brand-mark-size.mjs:387-390, fe-result-in-viewport.mjs:569-572, fe-resource-links.mjs:567-575",
+      "detail": "Read each run1/run2 construction: every one opens a fresh page (or fresh crawl) per pass, navigates fresh, and captures nowIso() only after that pass's await resolves -- not two clock reads back-to-back on one computed value. Live-ran fe-light-dark against all four orchestrator/test/fixtures/theme-paint/*.html fixtures: gradient-shell-changes.html PASS, gradient-shell-unchanged.html FAIL, hardcoded-hero.html (known-bad) FAIL, tokenised.html PASS -- real Playwright renders, not fixture text-matching. fe-resource-links.mjs:513-514 shares one Map across both crawls, but only for external-URL-liveness memoization (documented at :507-512); each crawl still opens its own page and re-discovers links from a fresh DOM. This is a defensible optimization (avoids doubling real network calls to the same third-party host), not the vacuous 'one result written twice' pattern the original review flagged -- reviewed and not counted as a defect.",
+      "citationVerified": true,
+      "passed": true
+    },
+    {
+      "title": "meas-known-bad: prose/typo paths correctly fail, but a MISSING or empty knownBad.input silently skips the rerun proof entirely",
+      "citation": "orchestrator/scripts/checks/meas-known-bad.mjs:162",
+      "detail": "Confirmed live that the original defect (prose or a typo'd path satisfying G1) is fixed: ran meas-known-bad.mjs against az-planting-calendar's real evidence with knownBad.input mutated to 'a fixture with a dead search box' and to 'nonexistent/typo/path.html' in isolated scratch copies -- both correctly exited 1. BUT line 162, `if (typeof kb.input !== 'string' || kb.input.length === 0) continue;`, means an entry that omits `input` altogether (or sets it to '') skips straight past the rerun requirement with zero failures recorded, as long as `failed:true` and a fresh `recordedAt` are present. Reproduced directly: called evaluateKnownBad() with `{knownBad: {failed:true, recordedAt: <now>}}` (no input key) and got `failures: []` -- G1 passes with no fixture ever having been proven to fail. This is the same class of hole the fix was written to close, just reached by omitting the field instead of writing prose in it. Does not currently affect az-planting-calendar (every rule's measurement-meta.json has a real, resolvable absolute knownBad.input), but the check itself is not sound against a future or careless entry.",
+      "citationVerified": true,
+      "passed": false
+    },
+    {
+      "title": "lg-shipped condition 5: the rules-list exclusion is real, but the circularity survives through the stale finalScore",
+      "citation": "orchestrator/scripts/checks/lg-shipped.mjs:227-233; .github/scripts/meets_the_bar.mjs:273-282 (scoreBarReasons uses result.finalScore, not a recomputed one); orchestrator/src/gate/score.ts:73-74 (any failing blocker, including lg-shipped itself, zeroes the WHOLE score to 0); orchestrator/src/rubric/rules.ts:247 (lg-shipped is severity:'blocker')",
+      "detail": "The claimed fix filters `lg-shipped` out of `result.rules` before calling scoreBarReasons, and that filter does work -- verified live that when 3 OTHER real rules were also failing, the message correctly omitted lg-shipped from the 'N rule(s) have passed===false' list. But scoreBarReasons' FIRST check is `result.finalScore < threshold`, and `effectiveResult.finalScore` is copied unchanged from the stored file -- never recomputed from the filtered rule set. Because lg-shipped is a blocker and computeScore() zeroes finalScore to 0 whenever ANY blocker fails (score.ts:73-74), a prior run where lg-shipped was the ONLY failing rule still leaves `finalScore: 0` baked into results/<slug>.json. Reproduced in isolation: built a results.json with every rule passing except lg-shipped (matching what computeScore would actually produce, finalScore:0), called requireGateResultMeetsBar() directly, and it still called io.fail() with 'finalScore 0 is below the finish-line threshold 90' -- lg-shipped citing the effect of its own prior failure, just relocated from the rule-list check to the score check. orchestrator/test/lgShipped.test.ts's own new coverage (around line 392-419) masks this: the test fixture hand-authors `finalScore: 100` alongside `lg-shipped: false`, a combination the real computeScore() can never produce (a failing blocker always yields score 0, never 100). The new unit test is green because it tests an unrealistic input, not because the real gap is closed. Live evidence: running `REDANVIL_PRE_PUSH=1 node lg-shipped.mjs az-planting-calendar` right now (41 unpushed commits, deferred) still fails citing 'finalScore 0 is below the finish-line threshold 90' from the stored results/az-planting-calendar.json.",
+      "citationVerified": true,
+      "passed": false
+    },
+    {
+      "title": "REDANVIL_PRE_PUSH deferral is sound: literal '1' only, hook-only, no CI workflow sets it",
+      "citation": "orchestrator/scripts/checks/lg-shipped.mjs:363; .githooks/pre-push:33-34; orchestrator/test/lgShippedPrePush.test.ts:79-102",
+      "detail": "Confirmed `process.env.REDANVIL_PRE_PUSH === '1'` (strict equality). Live-ran lg-shipped.mjs three ways: unset -> correctly failed on 41 unpushed commits; set to '1' -> correctly deferred that one condition and proceeded to (a real, unrelated) condition 5 failure; set to the sneaky value 'true' -> correctly still failed on unpushed commits. Grepped .github/workflows/ci.yml and drift.yml for REDANVIL_PRE_PUSH -- zero matches (the one hit in ci.yml:87 is a code comment, not an assignment). Only .githooks/pre-push sets and exports it.",
+      "citationVerified": true,
+      "passed": true
+    },
+    {
+      "title": "fe-assistant-present: the specific literal gaps (bare 'filters'/'SYSTEM_PROMPT', 503-as-infra) are closed, but the underlying regex is still text-matchable by a comment or string literal",
+      "citation": "orchestrator/scripts/checks/fe-assistant-present.mjs:57-62 (GROUNDS_DATA), :301-330 (verifyLiveGrounding 503 handling), :481-486 (hard-fail wiring)",
+      "detail": "Confirmed live: a 503 response from a reachable assistant endpoint is a hard fail, not infra (verifyLiveGrounding returns {ok:false} with no infra flag on non-2xx; runAssistantPresent then calls io.fail, never io.infra, for that case -- reproduced with an injected fetch stub returning HTTP 503). Confirmed the bare words 'filters' and 'SYSTEM_PROMPT' alone no longer satisfy GROUNDS_DATA. Residual gap: the patterns are plain regexes over raw file text, not AST-aware, so a comment ('// env.DB is not actually used here') or a hardcoded fake response containing the substring 'env.DB' anywhere in the file still satisfies assessAssistantEndpoint -- reproduced live with a fabricated handler that returns a hardcoded crop list and calls env.AI.run but never touches a database, decorated with a comment mentioning env.DB; assessAssistantEndpoint returned {ok:true}. This does NOT currently affect az-planting-calendar: grepped functions/api/assistant.ts and confirmed real `env.DB`, `D1Database`, `env.AI.run` and a parameterized `.prepare()` call at lines 233-402, and separately ran fe-assistant-present.mjs live against the deployed app -- it executed the LIVE cross-check (tests/assistant-grounding.json exists and deployUrl is recorded) and passed by matching the assistant's returned crop set against the app's own /api/plantable D1 query for the same half-month, which a stub cannot fake on demand. Recorded as a soundness weakness in the check's general design (would misjudge a different or future app), not a live false-positive here.",
+      "citationVerified": true,
+      "passed": false
+    },
+    {
+      "title": "fe-light-dark detects gradient/background-image paint and still fails a cosmetic-only theme toggle",
+      "citation": "orchestrator/scripts/checks/fe-light-dark.mjs:238-268 (sampleLandmarksInPage bgImage walk), :394-397 (samePaintIncludingImage), :406-441 (paintDiffFailures)",
+      "detail": "Live-ran fe-light-dark.mjs --fixture against all four orchestrator/test/fixtures/theme-paint/*.html fixtures (real Playwright chromium launches, not code reading): gradient-shell-changes.html -> PASS (5 regions change paint); gradient-shell-unchanged.html -> FAIL, citing every region's background as 'effectively unchanged between themes' including the gradient-painted shell; hardcoded-hero.html (the known-bad fixture) -> FAIL; tokenised.html -> PASS. Both directions of the requirement hold on real renders.",
+      "citationVerified": true,
+      "passed": true
+    },
+    {
+      "title": "productJudgement.mjs is fail-closed and genuinely wired into isDone(); an unnamed reviewer cannot pass",
+      "citation": "orchestrator/src/team/productJudgement.mjs:87-92 (independentReviewOk), :152-166 (loadProductJudgement); .github/scripts/meets_the_bar.mjs:601-616 (evaluateApp spreads loadProductJudgement into isDone); orchestrator/src/gate/done.mjs:209-233 (isDone gates on independentReviewOk/qaVisualOk/userRefuseOk)",
+      "detail": "Live-tested independentReviewOk() in an isolated tmp dir against five cases: no `reviewer` field -> false; blank/whitespace `reviewer` -> false; malformed JSON -> false; file missing entirely -> false; real named reviewer + verdict:'pass' -> true. Confirmed evaluateApp() in meets_the_bar.mjs spreads loadProductJudgement(...) directly into the isDone() opts object (not a dead, uncalled function), and done.mjs itself pushes a blocking reason whenever independentReviewOk/qaVisualOk/userRefuseOk are not explicitly true. This closes the original 'meets_the_bar.mjs never supplies independentReviewOk to isDone' finding for real.",
       "citationVerified": true,
       "passed": true
     }
   ],
-  "notes": "verdict is 'fail' because 7 of 9 findings are confirmed real defects (all in gate/check infrastructure under orchestrator/scripts/checks/** and .github/scripts, not az-planting-calendar's application code). The two SQL/middleware findings clear cleanly. Do not treat this as a pass to unblock push."
+  "notes": "verdict is 'fail'. Of the 8 items asked to be re-verified in refute mode: 5 fully hold (meas-two-run, the six independent-run timestamp fixes, the REDANVIL_PRE_PUSH deferral, fe-light-dark's gradient handling, and productJudgement.mjs's fail-closed wiring). 3 have real, live-reproduced residual gaps: (1) meas-known-bad can still be satisfied with zero fixture proof by omitting knownBad.input rather than writing prose in it; (2) lg-shipped condition 5's circularity is NOT actually closed -- the rules-list exclusion filter was applied, but scoreBarReasons checks the stored finalScore first, and a prior lg-shipped-only failure leaves finalScore permanently pinned at 0 (blockers zero the whole score in score.ts), so the check can still fail citing the effect of its own past verdict; the new unit test for this passes only because it hand-authors an impossible finalScore:100+lg-shipped:false combination that real scoring never produces; (3) fe-assistant-present's GROUNDS_DATA patterns are plain text regexes, satisfiable by a comment or stray string containing 'env.DB' with zero real database access -- az-planting-calendar itself is unaffected because its assistant.ts has real D1 calls and the live cross-check independently verifies it against the deployed app, but the check's general soundness has the same shape of hole as the original defect it was written to close. Used grok-4.5 (session bcaeb150-fd0c-4606-9a1f-761db58dd661) as an independent second judge in genuine refute mode; grok's 4 flagged items (of 8) were each independently reproduced or refuted here rather than taken on its word -- 2 (meas-known-bad, lg-shipped) confirmed as real, 1 (fe-assistant-present) confirmed as real but non-blocking for this app, 1 (fe-resource-links shared cache) investigated and refuted as a defensible optimization, not a defect. Also flagging for the team: this review found the working tree being actively mutated by concurrent teammates (evidence/measurement-meta.json, results/az-planting-calendar.json, evidence/verdicts-az-planting-calendar.json, lg-bindings-bound.mjs, fe-favicon-legible.mjs, new fixture dirs) while it ran; do not treat results/az-planting-calendar.json's exact contents at any single instant during this window as settled until that concurrent work lands. Do not treat this as a pass to unblock push -- fix items 3, 4 and 6's soundness gap (or at minimum add unit tests shaped like the real computeScore/regex-defeat cases above) before the next review pass."
 }
