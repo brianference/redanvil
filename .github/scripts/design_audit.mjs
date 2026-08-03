@@ -509,6 +509,14 @@ try {
     stored: localStorage.getItem('theme')
   }));
   await d.reload({ waitUntil: 'networkidle' });
+  // Wait for the app's real ready signal before reading the persisted theme.
+  // `networkidle` means bytes stopped arriving, not that the client re-applied
+  // the stored preference, so this read could sample the pre-hydration DOM and
+  // report a working toggle as broken. Falls through after the timeout so a
+  // genuinely absent attribute still fails rather than hanging.
+  await d
+    .waitForFunction(() => document.documentElement.hasAttribute('data-theme'), { timeout: 10_000 })
+    .catch(() => undefined);
   const persisted = await d.evaluate(() => document.documentElement.getAttribute('data-theme'));
   await d.close();
 
