@@ -18,7 +18,10 @@
 
 .compact-header__bar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  /* The brand needs a floor: with `minmax(0, 1fr)` the three auto columns took
+     everything and squeezed it to a few pixels, which is what made the text
+     escape its column and collide with the buttons. */
+  grid-template-columns: minmax(7rem, 1fr) auto auto auto;
   grid-template-areas:
     'brand filters theme menu'
     'search search search search';
@@ -63,8 +66,15 @@
   font-size: var(--type-sm);
   line-height: 1.2;
   white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
+  /* `overflow: visible` let the brand text spill out of its grid column and
+     paint underneath the Filters / theme / menu buttons at 375px. A long word
+     ("Planting") has no break opportunity in a narrow column, so it escaped.
+     Clip to the column and allow long words to break instead. */
+  overflow: hidden;
+  /* Wrap between words only. `anywhere` did prevent the spill but broke the
+     brand mid-word ("Plan / ting / Cale / ndar"); the column floor below is
+     wide enough for the longest word, so normal wrapping is sufficient. */
+  overflow-wrap: normal;
   min-width: 0;
 }
 
@@ -127,6 +137,13 @@
   justify-content: center;
   min-height: var(--touch);
   min-width: var(--touch);
+  /* The three auto columns (Filters, theme, menu) were free to grow, so the
+     wider "Close menu" label starved the brand column and the buttons rode
+     over the brand text at 375px. Cap the label and keep it on one line. */
+  max-width: 8.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 0 var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -151,7 +168,11 @@
 
 .compact-header__nav-mobile {
   display: none;
-  flex-wrap: wrap;
+  /* A dropdown menu stacks. Without an explicit column direction the default
+     `row` laid Home / Year grid / About across one line and wrapped Contact
+     onto a second, which read as a broken toolbar rather than a menu. */
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--space-1);
   padding: 0 var(--space-3) var(--space-2);
   padding-left: max(var(--space-3), env(safe-area-inset-left, 0px));

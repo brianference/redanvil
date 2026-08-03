@@ -25,7 +25,10 @@ export const en = {
     themeLight: 'Light',
     themeDark: 'Dark',
     menuOpen: 'Menu',
-    menuClose: 'Close menu',
+    // Short by necessity: "Close menu" was wide enough to starve the brand
+    // column at 375px and clip the app name. The button carries aria-expanded
+    // and aria-controls, so the state stays clear to assistive tech.
+    menuClose: 'Close',
     /** Accessible name for the header theme control (includes current mode). */
     themeToggleAria: (modeLabel: string) => `Theme: ${modeLabel}. Click to switch light, dark, or system.`,
     skipToContent: 'Skip to content'
