@@ -15,17 +15,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-03T19:05:33.774Z"
+        "at": "2026-08-03T19:10:31.052Z"
       },
       {
         "ok": false,
-        "at": "2026-08-03T19:05:33.775Z"
+        "at": "2026-08-03T19:10:31.052Z"
       }
     ],
     "knownBad": {
-      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-two-run\\bad-app",
+      "input": "C:\\Users\\brian\\redanvil-dashboard-measure\\orchestrator\\test\\fixtures\\meas-two-run\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-03T19:05:33.775Z"
+      "recordedAt": "2026-08-03T19:10:31.052Z"
     }
   }
 }
