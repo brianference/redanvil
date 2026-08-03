@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-03T21:40:48.982Z",
+  "checkedAt": "2026-08-03T21:42:08.231Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
