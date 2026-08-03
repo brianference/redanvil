@@ -1,11 +1,11 @@
 {
   "kind": "results",
   "slug": "app-builder",
-  "finalScore": 95,
+  "finalScore": 0,
   "threshold": 90,
-  "passed": true,
-  "evaluated": 62,
-  "total": 63,
+  "passed": false,
+  "evaluated": 81,
+  "total": 81,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -21,7 +21,11 @@
     },
     {
       "ruleId": "u-test-presence",
-      "passed": true
+      "passed": false
+    },
+    {
+      "ruleId": "u-test-runners",
+      "passed": false
     },
     {
       "ruleId": "u-test-coverage-ratchet",
@@ -46,6 +50,46 @@
     {
       "ruleId": "fe-visible-response",
       "passed": true
+    },
+    {
+      "ruleId": "fe-search-present",
+      "passed": false
+    },
+    {
+      "ruleId": "fe-assistant-present",
+      "passed": false
+    },
+    {
+      "ruleId": "fe-brand-mark",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-brand-mark-size",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-breadcrumbs",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-resource-links",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-legal-substance",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-structured-data",
+      "passed": false
+    },
+    {
+      "ruleId": "proc-design-options",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-prior-art",
+      "passed": false
     },
     {
       "ruleId": "u-typing-scoped-ignores",
@@ -85,7 +129,7 @@
     },
     {
       "ruleId": "hyg-no-binaries",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "hyg-secret-scan",
@@ -137,7 +181,7 @@
     },
     {
       "ruleId": "hyg-no-duplication",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "ci-actionlint",
@@ -164,16 +208,76 @@
       "passed": true
     },
     {
-      "ruleId": "fe-touch-targets",
+      "ruleId": "proc-artifact-verified",
+      "passed": false
+    },
+    {
+      "ruleId": "lg-shipped",
+      "passed": false
+    },
+    {
+      "ruleId": "lg-bindings-bound",
       "passed": true
+    },
+    {
+      "ruleId": "fe-light-dark",
+      "passed": true
+    },
+    {
+      "ruleId": "u-build-succeeds",
+      "passed": true
+    },
+    {
+      "ruleId": "u-api-not-found",
+      "passed": true
+    },
+    {
+      "ruleId": "u-api-no-spa-mask",
+      "passed": false
+    },
+    {
+      "ruleId": "u-legal-claims-true",
+      "passed": false
+    },
+    {
+      "ruleId": "fe-favicon-legible",
+      "passed": false
+    },
+    {
+      "ruleId": "lg-result-reproduces",
+      "passed": false
+    },
+    {
+      "ruleId": "meas-known-bad",
+      "passed": false
+    },
+    {
+      "ruleId": "meas-two-run",
+      "passed": false
+    },
+    {
+      "ruleId": "meas-recheck-flattering",
+      "passed": true
+    },
+    {
+      "ruleId": "meas-standard-tool",
+      "passed": false
+    },
+    {
+      "ruleId": "meas-engine-named",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-touch-targets",
+      "passed": false
     },
     {
       "ruleId": "fe-type-floor",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "fe-responsive-375",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "fe-safe-areas",
@@ -197,10 +301,6 @@
     },
     {
       "ruleId": "fe-seo-og",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-light-dark",
       "passed": true
     },
     {
@@ -258,28 +358,54 @@
     {
       "ruleId": "fe-product-completeness",
       "passed": true
+    },
+    {
+      "ruleId": "fe-design-archetype",
+      "passed": true
     }
   ],
   "iterations": [
     {
       "index": 1,
-      "score": 95,
-      "blockers": []
+      "score": 0,
+      "blockers": [
+        "u-test-presence",
+        "u-test-runners",
+        "u-api-no-spa-mask",
+        "fe-search-present",
+        "fe-assistant-present",
+        "fe-favicon-legible",
+        "fe-structured-data",
+        "u-legal-claims-true",
+        "fe-prior-art",
+        "fe-responsive-375",
+        "fe-touch-targets",
+        "fe-type-floor",
+        "hyg-no-binaries",
+        "hyg-no-duplication",
+        "lg-shipped",
+        "lg-result-reproduces"
+      ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-01T01:27:25.959Z",
+  "finishedAt": "2026-08-03T22:26:01.449Z",
   "provenance": {
-    "commit": "0c5031bcec93fec1fe728ff389185838c58fa3d2",
+    "commit": "5604c7787bee63cc2302f3d80ad1435960814d01",
     "dirty": false,
-    "rubricHash": "e64fba891e2da5c4317c82c62dc5d4615123a70949cfe9135b78748938b5da7c",
-    "rubricRuleCount": 68,
+    "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
+    "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "2fe1e0049f20ea816801b2092e327f9da9661f61161870e1965e03e422355fa4",
+    "verdictsHash": "b8605998e2dd4f15306685e7deaca7d8a37f451916023f97c2e6a601b5caa1d0",
     "notApplicable": [
-      "process"
+      "fe-result-in-viewport",
+      "proc-pr-title-ticket",
+      "process",
+      "u-claims-covered",
+      "u-competitor-scan",
+      "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-01T01:27:26.012Z"
+    "generatedAt": "2026-08-03T22:26:01.534Z"
   }
 }
