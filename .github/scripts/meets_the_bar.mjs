@@ -265,6 +265,74 @@ export function parseResultShape(raw) {
  * @param {{ threshold?: number }} [opts]
  * @returns {string[]} Failure reasons (empty = passes this half).
  */
+/**
+ * Rules that can NEVER be waived, whatever the file says.
+ *
+ * Ship proof is the one thing a release cannot take on credit: waiving it would
+ * let "we shipped" be asserted rather than measured, which is the exact failure
+ * the finish line exists to prevent.
+ */
+const UNWAIVABLE = Object.freeze(['lg-shipped']);
+
+/**
+ * Accepted-for-this-release waivers for one app.
+ *
+ * @param {string} repoRoot Repository root.
+ * @param {string} slug App slug.
+ * @returns {Map<string, {reason?: string, fixedBy?: string, since?: string}>} Rule id to waiver.
+ */
+export function waiversForApp(repoRoot, slug) {
+  const out = new Map();
+  const p = join(repoRoot, '.redanvil', 'known-issues.json');
+  if (!existsSync(p)) return out;
+  let doc;
+  try {
+    doc = JSON.parse(readFileSync(p, 'utf8'));
+  } catch {
+    // A malformed waiver file waives NOTHING. Failing open here would let a
+    // stray comma silence the whole finish line.
+    return out;
+  }
+  for (const w of Array.isArray(doc?.waivers) ? doc.waivers : []) {
+    if (w?.app !== slug || typeof w?.rule !== 'string') continue;
+    if (UNWAIVABLE.includes(w.rule)) continue;
+    out.set(w.rule, { reason: w.reason, fixedBy: w.fixedBy, since: w.since });
+  }
+  return out;
+}
+
+/**
+ * Whether a finish-line reason is attributable ONLY to waived rules.
+ *
+ * Deliberately narrow. A reason naming any rule that is NOT waived still blocks,
+ * and the score reason is dropped only when every failing rule is waived — a
+ * score depressed by a real failure must keep blocking.
+ *
+ * @param {string} reason One reason line from isDone.
+ * @param {Map<string, object>} waived Waived rule ids for this app.
+ * @param {string[]} blockingFailing Failing rule ids that are NOT waived.
+ * @returns {boolean} True when the reason is fully absorbed by waivers.
+ */
+export function reasonIsOnlyAboutWaived(reason, waived, blockingFailing) {
+  if (waived.size === 0) return false;
+  const ids = [...waived.keys()];
+  const mentionsWaived = ids.some((id) => reason.includes(id));
+
+  // "N rule(s) have passed === false: a, b, c" — blocks unless every id is waived.
+  if (reason.includes('passed === false')) return blockingFailing.length === 0;
+
+  // Score and zero-failures rows are depressed by blockers; drop them only when
+  // nothing unwaived is failing.
+  if (reason.includes('below the finish-line threshold')) return blockingFailing.length === 0;
+  if (reason.includes('at least one rule has passed === false')) {
+    return blockingFailing.length === 0;
+  }
+
+  // A checklist row naming a waived rule and no unwaived one.
+  if (mentionsWaived) return !blockingFailing.some((id) => reason.includes(id));
+  return false;
+}
+
 export function scoreBarReasons(result, opts = {}) {
   /** @type {string[]} */
   const reasons = [];
@@ -601,6 +669,15 @@ export function evaluateApp(repoRoot, app, opts = {}) {
     if (!shots.present) reasons.push(...shots.reasons);
   }
 
+  // Accepted-for-this-release defects. A waiver never hides a failure: the rule
+  // still ran, still reports FAIL in the result file, and is printed below. It
+  // only stops ONE app's known defect blocking every other app's finished work,
+  // which is what happens when a shared change pulls every app into a push.
+  const waived = waiversForApp(repoRoot, slug);
+  const failedIds = (result?.rules ?? []).filter((r) => r.passed === false).map((r) => r.ruleId);
+  const waivedFailing = failedIds.filter((id) => waived.has(id));
+  const blockingFailing = failedIds.filter((id) => !waived.has(id));
+
   // Single definition of done — no parallel score logic for the finish line.
   if (result) {
     const done = isDone(
@@ -621,11 +698,25 @@ export function evaluateApp(repoRoot, app, opts = {}) {
     );
     if (!done.done) {
       for (const r of done.reasons) {
-        if (!reasons.includes(r)) reasons.push(r);
+        if (!reasons.includes(r) && !reasonIsOnlyAboutWaived(r, waived, blockingFailing)) {
+          reasons.push(r);
+        }
       }
     }
   } else {
-    reasons.push(...scoreBarReasons(result, { threshold }));
+    reasons.push(...scoreBarReasons(result, { threshold, waivedRules: [...waived] }));
+  }
+
+  // Print every waiver that actually absorbed a failure, so a release never
+  // looks cleaner than it is. Silent waivers would be the pass-by-default this
+  // repo removes everywhere else.
+  for (const id of waivedFailing) {
+    const w = waived.get(id);
+    console.log(
+      `  WAIVED  ${slug}/${id} — ${w?.reason ?? 'no reason recorded'}` +
+        (w?.fixedBy ? ` [fixed by: ${w.fixedBy}]` : '') +
+        (w?.since ? ` (since ${w.since})` : '')
+    );
   }
 
   // Always surface freshness/visual detail even when isDone already collapsed them.
