@@ -1,10 +1,10 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-03T17:42:02.000Z",
+  "checkedAt": "2026-08-03T18:10:31.000Z",
   "findings": {
     "u-conc-smallest-diff": {
       "ok": true,
-      "detail": "az-planting-calendar/tmp-design.json (a leftover design_audit.mjs report against a local dev server, introduced in commit 14d4ede, baseUrl http://127.0.0.1:8877, checkedAt 2026-08-01T20:52:27Z) was deleted in commit f441d14d6d1b2a0ef410bbf7459e79b7acb775b6. Re-verified at commit 9498a6c: `ls az-planting-calendar/tmp-design.json` reports no such file, and `grep -rn tmp-design az-planting-calendar .github orchestrator` finds zero references to the filename anywhere in source, scripts or tests -- nothing ever read it."
+      "detail": "az-planting-calendar/tmp-design.json (a leftover design_audit.mjs report against a local dev server, introduced in commit 14d4ede, baseUrl http://127.0.0.1:8877, checkedAt 2026-08-01T20:52:27Z) was deleted in commit f441d14d6d1b2a0ef410bbf7459e79b7acb775b6. Re-verified this pass: `ls az-planting-calendar/tmp-design.json` reports no such file, and `grep -rn tmp-design az-planting-calendar .github orchestrator` finds zero references to the filename anywhere in source, scripts or tests -- nothing ever read it."
     }
   },
   "ok": true
