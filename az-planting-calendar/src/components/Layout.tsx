@@ -65,6 +65,11 @@ export function Layout() {
         </header>
       ) : null}
       {!isHome ? <Breadcrumbs /> : null}
+      {!isHome ? (
+        <div className="layout__assistant-dock shell">
+          <AssistantPanel defaultOpen={false} placement="floating" />
+        </div>
+      ) : null}
       <main id="main" className="layout__main">
         <Outlet />
       </main>
@@ -126,8 +131,6 @@ export function Layout() {
           <p className="site-footer__note">{en.footer.rights}</p>
         </div>
       </footer>
-      {/* Floating assistant only off home; home mounts a docked rail/dock panel. */}
-      {!isHome ? <AssistantPanel defaultOpen={false} placement="floating" /> : null}
     </div>
   );
 }

@@ -58,7 +58,8 @@ const caveCreek: ZoneRow = {
   last_frost: '02-20',
   first_frost: '12-06',
   county: 'Maricopa',
-  elevation_ft: 2529
+  elevation_ft: 2529,
+  usda_zone: '9b'
 };
 
 const phoenix: ZoneRow = {
@@ -68,7 +69,8 @@ const phoenix: ZoneRow = {
   last_frost: '02-03',
   first_frost: '12-08',
   county: 'Maricopa',
-  elevation_ft: 1154
+  elevation_ft: 1154,
+  usda_zone: '10a'
 };
 
 describe('escapeLike', () => {

@@ -26,7 +26,9 @@ export const ZoneSchema = z.object({
   last_frost: z.string().min(1),
   first_frost: z.string().min(1),
   county: z.string().nullable().optional(),
-  elevation_ft: z.number().int().nullable().optional()
+  elevation_ft: z.number().int().nullable().optional(),
+  /** USDA Plant Hardiness Zone (e.g. "9b", "10a"). Null when not sourced -- never invented. */
+  usda_zone: z.string().nullable().optional()
 });
 export type Zone = z.infer<typeof ZoneSchema>;
 

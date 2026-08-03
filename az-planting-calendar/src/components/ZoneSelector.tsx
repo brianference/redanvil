@@ -222,7 +222,10 @@ export function ZoneSelector() {
                       data-testid="zone-option"
                       data-zone-id={z.id}
                     >
-                      <span className="zone-selector__option-name">{z.name}</span>
+                      <span className="zone-selector__option-name">
+                        {z.name}
+                        {z.usda_zone ? ` (Zone ${z.usda_zone})` : ''}
+                      </span>
                       <span className="zone-selector__option-meta mono">
                         {z.zip}
                         {z.county ? ` · ${z.county} County` : ''}
@@ -286,5 +289,6 @@ function zoneMatchesState(zone: Zone, q: string): boolean {
 function zoneLabel(zone: Zone | null): string {
   if (!zone) return '';
   const short = zone.name.replace(/\s*\(.*?\)\s*/g, '').trim();
-  return `${short} ${zone.zip}`.trim();
+  const usda = zone.usda_zone ? ` ${zone.usda_zone}` : '';
+  return `${short}${usda} ${zone.zip}`.trim();
 }

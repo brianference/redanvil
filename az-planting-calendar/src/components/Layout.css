@@ -10,6 +10,18 @@
   width: 100%;
 }
 
+/*
+ * In-flow row for the non-home assistant trigger, directly under breadcrumbs.
+ * Reserves real layout space (unlike the old position:fixed dock) so the
+ * trigger -- and its dropdown panel when open -- never paints over page
+ * prose below (fe-responsive-375).
+ */
+.layout__assistant-dock {
+  display: flex;
+  justify-content: flex-end;
+  padding-block: 0 var(--space-2);
+}
+
 .skip-link {
   position: absolute;
   left: max(var(--space-4), env(safe-area-inset-left, 0px));

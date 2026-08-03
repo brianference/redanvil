@@ -19,6 +19,8 @@ export interface ZoneRow {
   first_frost: string;
   county: string | null;
   elevation_ft: number | null;
+  /** USDA Plant Hardiness Zone (e.g. "9b", "10a"); null when not sourced. */
+  usda_zone: string | null;
 }
 
 /** Source column precision for a planting window (from the cited publication). */
@@ -73,7 +75,7 @@ export interface WindowWithSource extends WindowRow {
 export const DEFAULT_ZONE_ID = 'zone-cave-creek-85331';
 
 const ZONE_SELECT =
-  'id, name, zip, last_frost, first_frost, county, elevation_ft';
+  'id, name, zip, last_frost, first_frost, county, elevation_ft, usda_zone';
 
 /**
  * Load the default Cave Creek zone.

@@ -34,7 +34,8 @@ describe('getDefaultZone', () => {
       last_frost: 'Feb 15',
       first_frost: 'Nov 25',
       county: 'Maricopa',
-      elevation_ft: 2529
+      elevation_ft: 2529,
+      usda_zone: '9b'
     };
     const db = mockDb({ first: zone });
     const got = await getDefaultZone(db);

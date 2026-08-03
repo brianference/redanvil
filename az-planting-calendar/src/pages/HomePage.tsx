@@ -14,7 +14,8 @@ import { useFilterDerived } from '../lib/filterDerived';
 import {
   dateToHalfMonth,
   halfMonthInWindow,
-  halfMonthToIsoDate
+  halfMonthToIsoDate,
+  monthToHalfMonths
 } from '../lib/halfMonth';
 import type { CropListItem, GridResponse, Method, PlantableResponse } from '../lib/schemas';
 import './HomePage.css';
@@ -250,12 +251,34 @@ export function HomePage() {
     setFilters((f) => ({ ...f, date }));
   }
 
+  /**
+   * Apply a filter change from the header/drawer. When the month filter is newly
+   * set (or changed to a different month), also move the selected date to that
+   * month's first half -- otherwise the hero keeps fetching the CURRENT half-month
+   * and post-filtering it by the chosen month always returns zero crops unless
+   * today happens to fall in that month.
+   *
+   * @param next - Next filter state from the drawer.
+   */
+  function handleFiltersChange(next: FiltersState): void {
+    if (next.month !== '' && next.month !== filters.month) {
+      const year = filters.date
+        ? Number(filters.date.slice(0, 4))
+        : new Date().getFullYear();
+      const [half] = monthToHalfMonths(next.month);
+      const date = halfMonthToIsoDate(half, Number.isFinite(year) ? year : new Date().getFullYear());
+      setFilters({ ...next, date });
+      return;
+    }
+    setFilters(next);
+  }
+
   return (
     <div className="home">
       <CompactHeader
         zone={zone}
         filters={filters}
-        onFiltersChange={setFilters}
+        onFiltersChange={handleFiltersChange}
         searchResults={searchResults}
         searching={searching}
         searchError={searchError}
