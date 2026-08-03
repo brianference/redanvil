@@ -214,21 +214,21 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-03T18:43:33.893Z",
-        "path": "/api/__definitely_absent_2b5449db7eadf87d",
+        "at": "2026-08-03T18:55:05.291Z",
+        "path": "/api/__definitely_absent_d2b35cd3b1360e62",
         "status": 404
       },
       {
         "ok": true,
-        "at": "2026-08-03T18:43:33.895Z",
-        "path": "/api/__definitely_absent_2b5449db7eadf87d",
+        "at": "2026-08-03T18:55:05.292Z",
+        "path": "/api/__definitely_absent_d2b35cd3b1360e62",
         "status": 404
       }
     ],
     "knownBad": {
-      "input": "C:\\Users\\brian\\redanvil-dashboard-measure\\known-bad-fixtures\\u-api-no-spa-mask\\bad-app",
+      "input": "C:\\Users\\brian\\RedAnvil\\known-bad-fixtures\\u-api-no-spa-mask\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-03T18:43:33.895Z"
+      "recordedAt": "2026-08-03T18:55:05.292Z"
     }
   },
   "u-legal-claims-true": {
