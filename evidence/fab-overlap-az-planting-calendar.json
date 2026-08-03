@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-03T04:01:26.424Z",
+  "checkedAt": "2026-08-03T04:31:56.932Z",
   "method": "For each route/width, find .assistant--floating (the fixed \"Ask the calendar\" launcher) and report any leaf text elements whose getBoundingClientRect() intersects it.",
   "results": [
     {
