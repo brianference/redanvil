@@ -228,9 +228,16 @@ export const en = {
   footer: {
     brandBlurb:
       'Free low-desert planting calendar for Cave Creek, Arizona 85331. Seed and transplant windows by half-month for home garden planning.',
-    colCalendar: 'The calendar',
-    colAbout: 'About',
+    // Group labels, deliberately NOT the name of any link inside them. The old
+    // "About" heading sat directly above an "About" link, which read as the same
+    // destination twice, and Contact appeared in both the nav and this column.
+    colCalendar: 'Explore',
+    colAbout: 'Resources',
     colLegal: 'Legal',
+    sourceLabel: 'Source',
+    sourceLine:
+      'UA Cooperative Extension az1005 · NOAA 1991–2020 frost normals',
+    copyright: '© 2026 AZ Planting Calendar',
     home: 'Home',
     yearGrid: 'Year grid',
     plantable: 'Plantable now',

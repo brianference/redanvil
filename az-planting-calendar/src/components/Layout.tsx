@@ -103,30 +103,36 @@ export function Layout() {
                 <li>
                   <Link to="/contact">{en.footer.contact}</Link>
                 </li>
-                <li>
-                  <a
-                    href={en.footer.dataLinkHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {en.footer.dataLinkLabel}
-                  </a>
-                </li>
               </ul>
             </section>
-            <section className="site-footer__col" aria-labelledby="footer-legal">
-              <h2 id="footer-legal" className="site-footer__heading">
-                {en.footer.colLegal}
-              </h2>
-              <ul className="site-footer__list">
-                <li>
-                  <Link to="/terms">{en.footer.terms}</Link>
-                </li>
-                <li>
-                  <Link to="/privacy">{en.footer.privacy}</Link>
-                </li>
-              </ul>
-            </section>
+          </div>
+
+          {/*
+            Provenance promoted out of the link list and cited. This app's whole
+            claim is that its windows come from a real extension publication, so
+            burying that as the third bullet under a heading understated it.
+          */}
+          <aside className="site-footer__source" aria-labelledby="footer-source">
+            <p id="footer-source" className="site-footer__source-label">
+              {en.footer.sourceLabel}
+            </p>
+            <p className="site-footer__source-line">{en.footer.sourceLine}</p>
+            <a
+              className="site-footer__source-link"
+              href={en.footer.dataLinkHref}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {en.footer.dataLinkLabel}
+            </a>
+          </aside>
+
+          <div className="site-footer__bottom">
+            <span className="site-footer__copyright">{en.footer.copyright}</span>
+            <nav className="site-footer__legal" aria-label={en.footer.colLegal}>
+              <Link to="/terms">{en.footer.terms}</Link>
+              <Link to="/privacy">{en.footer.privacy}</Link>
+            </nav>
           </div>
           <p className="site-footer__note">{en.footer.rights}</p>
         </div>
