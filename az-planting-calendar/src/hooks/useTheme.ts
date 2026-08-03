@@ -35,7 +35,11 @@ export function useTheme(): {
   }, []);
 
   const cycle = useCallback(() => {
-    setModeState((m) => nextThemeMode(m));
+    // Advance from what is actually STORED, not from React state. Anything that
+    // changes the preference outside React (another tab, devtools, an automated
+    // check writing localStorage) leaves this hook's state stale, and the next
+    // click then re-selects the theme already showing — the toggle appears dead.
+    setModeState(nextThemeMode(readThemeMode()));
   }, []);
 
   return { mode, resolved, cycle, setMode };
