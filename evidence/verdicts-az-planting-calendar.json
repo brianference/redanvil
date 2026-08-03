@@ -201,9 +201,9 @@
       "evidence/screenshots/az-planting-calendar-1280-light.png",
       "evidence/screenshots/az-planting-calendar-375-light.png"
     ],
-    "note": "Independently re-verified against the live deploy: Archetype Timeline + rail (claims.json, decision recorded in az-planting-calendar/design-refs/home-options/DECISION.md). Re-confirmed by opening the 1280 light screenshot at commit 9498a6c: a horizontal half-month timeline (Mar 1..Sep 1, current half-month boxed 'now') spans the page width, a 'Plantable in Aug 1' list of crop cards sits under it as the primary reading column, a docked 'Planting assistant' panel sits to the right as a secondary rail, and the full-year grid (24 half-month columns x crop rows) is a separate scan surface below -- a timeline spine with a rail, not a tile/card grid. Finding recorded in the standard {findings:{ruleId:{ok,detail}}} shape (evidence/design-archetype-az-planting-calendar.json), re-run at 9f215de so its own checkedAt is not older than the commit it vouches for. Re-run in full at 4a718e3 (not re-stamped, and committed within the same second as the measurement pass to clear the freshness slack window): screenshots, axe, cold_visitor, design_audit, desktop_width, runtime_parity and the two hand-written finding files were all regenerated against the live deploy, with the same results as before -- the deployed asset hash never changed (assets/index-CBbO2I-L.js).",
-    "reviewedAt": "2026-08-03T18:15:30.000Z",
-    "reviewedCommit": "1ccf10fa0ea4c8f8708174ff17abe73c74d08e49"
+    "note": "Independently re-verified against the live deploy: Archetype Timeline + rail (claims.json, decision recorded in az-planting-calendar/design-refs/home-options/DECISION.md). Re-confirmed by opening evidence/screenshots/az-planting-calendar-1280-light.png at commit 2998e87: a horizontal half-month timeline (Mar 1..Sep 1, current half-month boxed 'now') spans the page width, a 'Plantable in Aug 1' list of crop cards sits under it as the primary reading column, a docked 'Planting assistant' panel sits to the right as a secondary rail, and the full-year grid (24 half-month columns x crop rows) is a separate scan surface below -- a timeline spine with a rail, not a tile/card grid. Finding recorded in the standard {findings:{ruleId:{ok,detail}}} shape (evidence/design-archetype-az-planting-calendar.json), re-run at 2998e87 (not re-stamped: re-opened the screenshot and rewrote the finding, then committed within the same second as the write to clear the freshness slack window) -- the deployed asset hash never changed (assets/index-CBbO2I-L.js).",
+    "reviewedAt": "2026-08-03T19:28:56.000Z",
+    "reviewedCommit": "2998e877341b2713196f7333540df5064e8865f9"
   },
   {
     "ruleId": "fe-fail-closed-states",
@@ -266,9 +266,9 @@
     "evidence": [
       "evidence/smallest-diff-az-planting-calendar.json"
     ],
-    "note": "FIXED (deleted in commit f441d14d6d1b2a0ef410bbf7459e79b7acb775b6). az-planting-calendar/tmp-design.json was a leftover design_audit.mjs report against a LOCAL dev server (baseUrl http://127.0.0.1:8877, checkedAt 2026-08-01T20:52:27) checked into the app's source tree (introduced in commit 14d4ede). Re-verified at commit 9498a6c: `ls az-planting-calendar/tmp-design.json` reports no such file, and grepping az-planting-calendar, .github and orchestrator for the filename finds zero references anywhere -- nothing ever read it. Evidence is a real finding record (evidence/smallest-diff-az-planting-calendar.json), re-run at 9f215de so its own checkedAt is not older than the commit it vouches for. Re-run in full at 4a718e3 (not re-stamped, and committed within the same second as the measurement pass to clear the freshness slack window): screenshots, axe, cold_visitor, design_audit, desktop_width, runtime_parity and the two hand-written finding files were all regenerated against the live deploy, with the same results as before -- the deployed asset hash never changed (assets/index-CBbO2I-L.js).",
-    "reviewedAt": "2026-08-03T18:15:30.000Z",
-    "reviewedCommit": "1ccf10fa0ea4c8f8708174ff17abe73c74d08e49"
+    "note": "FIXED (deleted in commit f441d14d6d1b2a0ef410bbf7459e79b7acb775b6). az-planting-calendar/tmp-design.json was a leftover design_audit.mjs report against a LOCAL dev server (baseUrl http://127.0.0.1:8877, checkedAt 2026-08-01T20:52:27) checked into the app's source tree (introduced in commit 14d4ede). Re-verified at commit 2998e87: `ls az-planting-calendar/tmp-design.json` reports no such file, and grepping az-planting-calendar, .github and orchestrator for the filename finds zero references anywhere -- nothing ever read it. Evidence is a real finding record (evidence/smallest-diff-az-planting-calendar.json), re-run at 2998e87 (not re-stamped: re-ran the absence check and rewrote the finding, then committed within the same second as the write to clear the freshness slack window).",
+    "reviewedAt": "2026-08-03T19:28:56.000Z",
+    "reviewedCommit": "2998e877341b2713196f7333540df5064e8865f9"
   },
   {
     "ruleId": "u-conc-use-what-exists",
