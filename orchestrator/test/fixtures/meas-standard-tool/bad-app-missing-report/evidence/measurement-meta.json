@@ -14,5 +14,24 @@
         "report": "evidence/axe/does-not-exist-light.json"
       }
     ]
+  },
+  "meas-standard-tool": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T19:18:51.224Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T19:18:51.224Z"
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-standard-tool\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T19:18:51.224Z"
+    }
   }
 }
