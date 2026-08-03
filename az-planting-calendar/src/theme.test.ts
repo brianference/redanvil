@@ -8,10 +8,13 @@ import { applyThemeMode, nextThemeMode, readThemeMode } from './theme';
 describe('theme', () => {
   const store = new Map<string, string>();
   const attrs = new Map<string, string>();
+  /** Simulates the OS dark-mode preference so the default can be tested against it. */
+  let matchMediaDark = false;
 
   beforeEach(() => {
     store.clear();
     attrs.clear();
+    matchMediaDark = false;
 
     vi.stubGlobal('localStorage', {
       getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
@@ -37,7 +40,7 @@ describe('theme', () => {
 
     vi.stubGlobal('window', {
       matchMedia: () => ({
-        matches: false,
+        matches: matchMediaDark,
         addEventListener: () => undefined,
         removeEventListener: () => undefined
       })
@@ -64,6 +67,15 @@ describe('theme', () => {
     expect(store.get('theme')).toBe('dark');
     expect(attrs.get('data-theme')).toBe('dark');
     expect(readThemeMode()).toBe('dark');
+  });
+
+  it('defaults to light when nothing is stored, even if the OS prefers dark', () => {
+    // Regression: the default was `system`, so a phone set to dark got a dark
+    // first paint before the visitor had chosen anything. Fails against that.
+    matchMediaDark = true;
+    expect(readThemeMode()).toBe('light');
+    expect(applyThemeMode(readThemeMode())).toBe('light');
+    expect(attrs.get('data-theme')).toBe('light');
   });
 
   it('persists system preference (never leaves storage null after apply)', () => {

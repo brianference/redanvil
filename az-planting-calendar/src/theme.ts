@@ -19,7 +19,13 @@ export function resolveTheme(mode: ThemeMode): 'light' | 'dark' {
 }
 
 /**
- * Read theme preference from storage (default system).
+ * Read theme preference from storage.
+ *
+ * Defaults to `light`, NOT `system`. Defaulting to `system` meant a visitor
+ * whose phone was set to dark got a dark first paint before ever choosing a
+ * theme; light is this app's intended default appearance. A visitor who wants
+ * to follow the OS can still select `system` from the theme control, and that
+ * choice persists.
  */
 export function readThemeMode(): ThemeMode {
   try {
@@ -28,7 +34,7 @@ export function readThemeMode(): ThemeMode {
   } catch {
     /* private mode */
   }
-  return 'system';
+  return 'light';
 }
 
 /**
