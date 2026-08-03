@@ -395,18 +395,18 @@
     "engine": null,
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-03T21:18:21.208Z"
+        "ok": true,
+        "at": "2026-08-03T23:29:33.550Z"
       },
       {
-        "ok": false,
-        "at": "2026-08-03T21:18:21.209Z"
+        "ok": true,
+        "at": "2026-08-03T23:29:33.550Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-standard-tool\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-03T21:18:21.209Z"
+      "recordedAt": "2026-08-03T23:29:33.550Z"
     }
   },
   "meas-engine-named": {

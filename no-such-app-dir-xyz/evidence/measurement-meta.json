@@ -1,0 +1,21 @@
+{
+  "meas-standard-tool": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T23:29:52.345Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T23:29:52.345Z"
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-standard-tool\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T23:29:52.345Z"
+    }
+  }
+}

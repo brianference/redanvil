@@ -252,7 +252,7 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-03T21:47:41.007Z",
+        "at": "2026-08-03T23:29:41.978Z",
         "metrics": {
           "inkCoverage": 0.458984375,
           "detailEnergy": 188.8609034439758,
@@ -264,7 +264,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-03T21:47:41.007Z",
+        "at": "2026-08-03T23:29:41.978Z",
         "metrics": {
           "inkCoverage": 0.458984375,
           "detailEnergy": 188.8609034439758,
@@ -276,7 +276,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-03T21:47:41.485Z",
+        "at": "2026-08-03T23:29:42.283Z",
         "metrics": {
           "inkCoverage": 0.375,
           "detailEnergy": 188.80813895337675,
@@ -288,7 +288,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-03T21:47:41.485Z",
+        "at": "2026-08-03T23:29:42.283Z",
         "metrics": {
           "inkCoverage": 0.375,
           "detailEnergy": 188.80813895337675,
@@ -300,7 +300,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-03T21:47:41.968Z",
+        "at": "2026-08-03T23:29:42.587Z",
         "metrics": {
           "inkCoverage": 0.3701171875,
           "detailEnergy": 160.98443392176873,
@@ -312,7 +312,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-03T21:47:41.968Z",
+        "at": "2026-08-03T23:29:42.587Z",
         "metrics": {
           "inkCoverage": 0.3701171875,
           "detailEnergy": 160.98443392176873,
@@ -323,11 +323,11 @@
         }
       }
     ],
-    "source": "public\\favicon.svg, public\\favicon-32.png, public\\apple-touch-icon.png",
+    "source": "az-planting-calendar\\public\\favicon.svg, az-planting-calendar\\public\\favicon-32.png, az-planting-calendar\\public\\apple-touch-icon.png",
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\fe-favicon-legible\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-03T21:47:41.968Z"
+      "recordedAt": "2026-08-03T23:29:42.587Z"
     }
   },
   "meas-known-bad": {
@@ -392,18 +392,18 @@
     "engine": null,
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-03T21:48:37.154Z"
+        "ok": true,
+        "at": "2026-08-03T23:29:33.440Z"
       },
       {
-        "ok": false,
-        "at": "2026-08-03T21:48:37.155Z"
+        "ok": true,
+        "at": "2026-08-03T23:29:33.441Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-standard-tool\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-03T21:48:37.155Z"
+      "recordedAt": "2026-08-03T23:29:33.441Z"
     }
   },
   "meas-engine-named": {
