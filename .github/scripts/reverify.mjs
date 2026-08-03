@@ -264,16 +264,57 @@ for (const app of apps) {
   console.log(`    ok  ${app.slug} a11y-contrast provenance`);
 }
 
-// --- 4. stamp verdicts to HEAD ----------------------------------------------
+/**
+ * The newest commit that changed what this app RENDERS.
+ *
+ * Verdicts used to be stamped to repo HEAD, which made them stale on every
+ * unrelated commit — including the evidence commit this very script makes at
+ * step 4b. Step 3 only regenerates evidence for the seven rules in its own
+ * measurement suite, so any judge-tier rule with hand-written evidence had its
+ * reviewedCommit advanced without its evidence being re-produced, and failed
+ * automatically on every pass. Six re-judgements in one session never converged.
+ *
+ * A verdict reviews an APP, so it is pinned to the last commit that could have
+ * changed that app: its own directory plus the shared design system, with
+ * evidence/results/verdicts excluded because writing evidence is not a change to
+ * the subject under review.
+ *
+ * Still falsifiable, and this is the point: touch the app's source and this
+ * returns a NEWER commit, so evidence that predates it is correctly rejected.
+ *
+ * @param {string} appDir Application directory.
+ * @returns {string} Commit sha, or HEAD when nothing matches.
+ */
+function lastSourceCommit(appDir) {
+  const r = run('git', [
+    'log',
+    '--format=%H',
+    '-n',
+    '1',
+    '--',
+    appDir,
+    'design-system',
+    `:(exclude)${appDir}/evidence`,
+    `:(exclude)${appDir}/results`,
+    `:(exclude)${appDir}/verdicts`,
+    ':(exclude)*measurement-meta.json',
+    ':(exclude)*coverage-state.json'
+  ]);
+  const sha = r.out.split('\n').map((s) => s.trim()).filter(Boolean)[0];
+  return sha !== undefined && /^[0-9a-f]{40}$/.test(sha) ? sha : head;
+}
+
+// --- 4. stamp verdicts to the app's last SOURCE commit ----------------------
 // Only now: a report produced BEFORE the commit it vouches for is rejected, and
 // rightly — re-stamping is not re-measuring.
-step(4, 'stamp verdicts to HEAD');
+step(4, "stamp verdicts to each app's last source commit");
 for (const app of apps) {
   const p = `evidence/verdicts-${app.slug}.json`;
   const list = JSON.parse(readFileSync(p, 'utf8'));
+  const stampTo = lastSourceCommit(app.dir);
   let rederived = 0;
   for (const v of list) {
-    v.reviewedCommit = head;
+    v.reviewedCommit = stampTo;
     // Advancing reviewedCommit while preserving the recorded outcome is exactly
     // the "re-stamping is not re-measuring" failure this step warns about, just
     // in the other field. fe-required-pages kept a `passed: false` recorded when
@@ -293,7 +334,8 @@ for (const app of apps) {
   }
   writeFileSync(p, `${JSON.stringify(list, null, 2)}\n`);
   console.log(
-    `    ${app.slug}: ${list.length} verdicts at ${head.slice(0, 12)}` +
+    `    ${app.slug}: ${list.length} verdicts at ${stampTo.slice(0, 12)}` +
+      (stampTo === head ? ' (== HEAD)' : ' (last source commit, HEAD is newer)') +
       (rederived > 0 ? ` (${rederived} re-derived from freshly measured evidence)` : '')
   );
 }
