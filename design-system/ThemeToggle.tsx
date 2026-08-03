@@ -60,18 +60,18 @@ export interface ThemeToggleProps {
  */
 function resolveTheme(stored: string | null, prefersLight: boolean): ThemeChoice {
   if (stored === 'light' || stored === 'dark') return stored;
-  // The system preference, not a hard-coded default.
+  // LIGHT is the default first paint for every RedAnvil app, whatever the OS
+  // says. Brian's call on 2026-08-03: a visitor on a dark phone was getting a
+  // dark first paint of an app whose intended default is light, before choosing
+  // anything. A stored choice still wins -- that is the branch above, and the
+  // toggle still persists dark.
   //
-  // This returned 'dark' unconditionally while the docstring above and the
-  // component's own JSDoc both promised "saved-or-system preference on load".
-  // The prose was right and the code was wrong -- the same defect this branch
-  // fixed in fe-light-dark and u-test-presence, here in the component every app
-  // shares. A visitor whose OS asks for light was served dark, and every check
-  // agreed: the accessibility audit assigns data-theme before measuring, and
-  // the design audit only exercised the toggle.
-  //
-  // Caught by cold_visitor against production, which forces nothing.
-  return prefersLight ? 'light' : 'dark';
+  // History worth keeping: this once returned 'dark' unconditionally while the
+  // JSDoc promised "saved-or-system", then followed the system preference. Both
+  // were wrong for a different reason; only cold_visitor, which forces nothing,
+  // ever caught either.
+  void prefersLight;
+  return 'light';
 }
 
 /**
@@ -88,7 +88,10 @@ function applyTheme(choice: ThemeChoice): void {
  * and applies saved-or-system preference on load.
  */
 export function ThemeToggle({ tokens, copy }: ThemeToggleProps): JSX.Element {
-  const [mode, setMode] = useState<ThemeChoice>('dark');
+  // Light, matching the default resolveTheme returns. A 'dark' initial value
+  // painted dark for the frame before the effect ran, which is the flash this
+  // change exists to remove.
+  const [mode, setMode] = useState<ThemeChoice>('light');
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);

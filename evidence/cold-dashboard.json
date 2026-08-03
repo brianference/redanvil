@@ -1,9 +1,9 @@
 {
-  "ok": true,
+  "ok": false,
   "findings": {
     "cold-theme-dark": {
-      "ok": true,
-      "detail": "prefers-color-scheme:dark on a fresh profile resolved to \"dark\""
+      "ok": false,
+      "detail": "prefers-color-scheme:dark on a fresh profile resolved to \"dark\" — EXPECTED \"light\" (first paint defaults to light)"
     },
     "cold-console-dark": {
       "ok": true,
@@ -22,10 +22,10 @@
       "detail": "/ produced 2 result(s), needed 1"
     },
     "fe-cold-visitor": {
-      "ok": true,
-      "detail": "a first-time visitor gets a working app: 5 cold-start check(s) held"
+      "ok": false,
+      "detail": "failed for a first-time visitor: cold-theme-dark"
     }
   },
-  "checkedAt": "2026-08-03T18:42:03.891Z",
+  "checkedAt": "2026-08-03T20:56:59.137Z",
   "baseUrl": "https://redanvil-dashboard.pages.dev"
 }
