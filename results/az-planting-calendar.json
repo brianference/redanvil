@@ -4,7 +4,7 @@
   "finalScore": 0,
   "threshold": 90,
   "passed": false,
-  "evaluated": 67,
+  "evaluated": 91,
   "total": 91,
   "rules": [
     {
@@ -73,7 +73,7 @@
     },
     {
       "ruleId": "fe-result-in-viewport",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "fe-resource-links",
@@ -221,7 +221,7 @@
     },
     {
       "ruleId": "proc-artifact-verified",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "lg-shipped",
@@ -261,7 +261,7 @@
     },
     {
       "ruleId": "meas-known-bad",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-two-run",
@@ -278,6 +278,102 @@
     {
       "ruleId": "meas-engine-named",
       "passed": true
+    },
+    {
+      "ruleId": "fe-a11y-contrast",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-desktop-width",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cold-visitor",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-product-completeness",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-visual-review-recorded",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-premium-nav",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-required-pages",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-no-attribution",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-responsive-375",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-touch-targets",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-type-floor",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-noncolor-state",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-safe-areas",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cross-link",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-seo-og",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-design-archetype",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-fail-closed-states",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-pages-compose",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-idiomatic",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-no-speculative-abstraction",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-smallest-diff",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-use-what-exists",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-adequacy",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-behavioral",
+      "passed": true
     }
   ],
   "iterations": [
@@ -285,52 +381,27 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "fe-a11y-contrast",
-        "fe-premium-nav",
-        "fe-required-pages",
-        "fe-no-attribution",
-        "fe-responsive-375",
-        "fe-product-completeness",
-        "fe-visual-review-recorded",
-        "fe-cold-visitor",
-        "fe-touch-targets",
-        "fe-type-floor",
-        "fe-desktop-width",
-        "proc-artifact-verified",
+        "fe-result-in-viewport",
         "lg-shipped",
-        "lg-result-reproduces",
-        "meas-known-bad"
+        "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-03T00:14:44.731Z",
+  "finishedAt": "2026-08-03T18:22:21.735Z",
   "provenance": {
-    "commit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "commit": "c48b8dd8860a3ddd2ca7c0812d93dddc32a91ea5",
     "dirty": true,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "4a9944f354e40cad344d3e11fb79e821ee988bcd92cd7c37cd434b065ed5be18",
-    "notApplicable": [],
-    "staleVerdicts": [
-      "fe-a11y-contrast",
-      "fe-cold-visitor",
-      "fe-cross-link",
-      "fe-design-archetype",
-      "fe-desktop-width",
-      "fe-no-attribution",
-      "fe-noncolor-state",
-      "fe-premium-nav",
-      "fe-product-completeness",
-      "fe-required-pages",
-      "fe-responsive-375",
-      "fe-safe-areas",
-      "fe-seo-og",
-      "fe-touch-targets",
-      "fe-type-floor",
-      "fe-visual-review-recorded"
+    "verdictsHash": "dc03602c0edfe702a8a9d5de4ebbee6397e7363e5b727b9178bb3e5d570b461c",
+    "notApplicable": [
+      "proc-pr-title-ticket",
+      "u-claims-covered",
+      "u-test-presence"
     ],
-    "generatedAt": "2026-08-03T00:14:44.798Z"
+    "staleVerdicts": [],
+    "generatedAt": "2026-08-03T18:22:21.801Z"
   }
 }
