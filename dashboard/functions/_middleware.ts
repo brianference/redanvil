@@ -32,7 +32,14 @@ export async function onRequest(context: PagesEventContext): Promise<Response> {
 
   if (url.pathname.startsWith('/api/')) {
     const type = response.headers.get('content-type') ?? '';
-    if (!type.includes('application/json')) {
+    // Only the SPA-shell mask: status 200 with an HTML body is Pages' asset
+    // server answering an unmatched path, never a real Function response.
+    // Matching on "not JSON" instead turned every non-JSON /api/* response
+    // into a 404 — a genuine 500 with an HTML error body read as "no such
+    // endpoint" (a real failure hidden as a clean answer), a 204 with no
+    // content-type became 404, and any legitimate non-JSON endpoint (CSV,
+    // image, text/plain) would have too.
+    if (response.status === 200 && type.includes('text/html')) {
       return new Response(JSON.stringify({ error: `no such endpoint: ${url.pathname}` }), {
         status: 404,
         headers: {
