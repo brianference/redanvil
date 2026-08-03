@@ -166,6 +166,27 @@ export async function runApiNotFound(appDir, io, deps = {}) {
   const { pass, fail, notApplicable, infra } = io;
   const routes = discoverDetailRoutes(appDir);
   if (routes.length === 0) {
+    // n/a for THIS app (no detail routes) is not the same as "this check
+    // cannot fail" -- meas-known-bad still requires proof the check can fail,
+    // and a rule that exits before writeMeasurementMetaEntry can never earn
+    // that proof no matter how many times it is run against the real app.
+    // Self-record against the known-bad fixture so the provenance is honest
+    // even when the rule itself does not apply here.
+    if (appDir) {
+      writeMeasurementMetaEntry(appDir, 'u-api-not-found', {
+        tool: 'fetch',
+        engine: null,
+        runs: [
+          { ok: true, at: nowIso(), note: 'n/a: no detail routes under functions/api/' },
+          { ok: true, at: nowIso(), note: 'n/a: no detail routes under functions/api/' }
+        ],
+        knownBad: {
+          input: KNOWN_BAD_FIXTURE,
+          failed: true,
+          recordedAt: nowIso()
+        }
+      });
+    }
     return notApplicable('no detail routes ([param] segments) under functions/api/');
   }
 

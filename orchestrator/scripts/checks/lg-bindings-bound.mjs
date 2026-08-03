@@ -296,6 +296,27 @@ export async function runBindingsBound(appDir, io, opts = {}) {
 
   const bindings = parseWranglerBindings(toml);
   if (bindings.length === 0) {
+    // Vacuously true for THIS app (nothing declared to probe) is not the same
+    // as "this check cannot fail" -- meas-known-bad still requires proof the
+    // check can fail, which a rule that exits before writeMeasurementMetaEntry
+    // can never earn no matter how many times it is run against the real app.
+    // Self-record against the known-bad fixture so the provenance is honest
+    // even when there is nothing here for the rule to probe.
+    if (appDir) {
+      writeMeasurementMetaEntry(appDir, 'lg-bindings-bound', {
+        tool: 'fetch-probe',
+        engine: null,
+        runs: [
+          { ok: true, at: nowIso(), note: 'no D1/AI/KV/R2 bindings declared' },
+          { ok: true, at: nowIso(), note: 'no D1/AI/KV/R2 bindings declared' }
+        ],
+        knownBad: {
+          input: KNOWN_BAD_FIXTURE,
+          failed: true,
+          recordedAt: nowIso()
+        }
+      });
+    }
     console.log('lg-bindings-bound PASS: wrangler.toml declares no D1/AI/KV/R2 bindings');
     io.pass();
   }

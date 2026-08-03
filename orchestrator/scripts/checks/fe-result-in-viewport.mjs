@@ -511,32 +511,65 @@ export async function runResultInViewport(appDir, io, opts = {}) {
       if (!existsSync(appDir) || !statSync(appDir).isDirectory()) {
         io.infra(`no such app directory: ${appDir}`);
       }
-      if (!base) base = readDeployUrl(appDir);
+      // Prefer the local build (the tree under test) over a deploy URL, same
+      // as fe-search-present and fe-legal-substance: a deploy can lag HEAD by
+      // many commits, and scoring against it would report another build's
+      // rendering as this commit's result.
       if (!base) {
         const dist = ensureDist(appDir);
-        if (!dist.ok) {
-          if (!sourceHasSearch(appDir)) {
-            io.notApplicable('no search/filter control and no buildable frontend');
+        if (dist.ok) {
+          const served = await serveStatic(join(appDir, 'dist'));
+          base = served.base;
+          close = served.close;
+        } else {
+          base = readDeployUrl(appDir);
+          if (!base) {
+            if (!sourceHasSearch(appDir)) {
+              io.notApplicable('no search/filter control and no buildable frontend');
+            }
+            io.infra(dist.reason);
           }
-          io.infra(dist.reason);
         }
-        const served = await serveStatic(join(appDir, 'dist'));
-        base = served.base;
-        close = served.close;
       }
     }
 
     const browser = await chromium.launch();
     try {
-      // First probe: does a search control exist?
+      // First probe: does a search control exist? `domcontentloaded` fires
+      // before a client-side data fetch resolves, so an app whose search box
+      // only renders once its collection has loaded (e.g. a fetch-then-render
+      // SPA) looked n/a here even though fe-search-present, driven the same
+      // way with `networkidle`, found the same control moments later. Match
+      // that readiness signal instead of asserting on the pre-hydration DOM.
       const probe = await browser.newPage({ viewport: { width: 1280, height: 900 } });
       try {
         await probe.goto(/** @type {string} */ (base), {
-          waitUntil: 'domcontentloaded',
+          waitUntil: 'networkidle',
           timeout: 60_000
         });
+        await probe.waitForTimeout(400);
         const control = await findTextSearchControl(probe);
         if (!control) {
+          // n/a for THIS app is not the same as "this check cannot fail" --
+          // meas-known-bad still requires proof the check can fail, which a
+          // rule that exits before writeMeasurementMetaEntry can never earn.
+          // Self-record against the known-bad fixture so the provenance is
+          // honest even when there is no search control to drive here.
+          if (appDir) {
+            writeMeasurementMetaEntry(appDir, 'fe-result-in-viewport', {
+              tool: 'playwright',
+              engine: 'chromium',
+              runs: [
+                { ok: true, at: nowIso(), note: 'n/a: no search/filter control' },
+                { ok: true, at: nowIso(), note: 'n/a: no search/filter control' }
+              ],
+              knownBad: {
+                input: KNOWN_BAD_FIXTURE,
+                failed: true,
+                recordedAt: nowIso()
+              }
+            });
+          }
           io.notApplicable('no search or filter text control on the collection view');
         }
       } finally {
