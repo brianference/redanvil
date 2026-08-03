@@ -5,21 +5,21 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-03T18:43:43.395Z",
+        "at": "2026-08-03T19:39:08.813Z",
         "recomputed": 0,
         "recorded": 100
       },
       {
         "ok": false,
-        "at": "2026-08-03T18:43:43.396Z",
+        "at": "2026-08-03T19:39:08.814Z",
         "recomputed": 0,
         "recorded": 100
       }
     ],
     "knownBad": {
-      "input": "C:\\Users\\brian\\redanvil-dashboard-measure\\orchestrator\\test\\fixtures\\lg-result-reproduces",
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\lg-result-reproduces",
       "failed": true,
-      "recordedAt": "2026-08-03T18:43:44.587Z"
+      "recordedAt": "2026-08-03T19:39:10.089Z"
     }
   }
 }
