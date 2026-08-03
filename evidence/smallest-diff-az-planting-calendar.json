@@ -1,11 +1,11 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-03T19:28:56.000Z",
+  "checkedAt": "2026-08-03T19:34:01.689Z",
+  "ok": true,
   "findings": {
     "u-conc-smallest-diff": {
       "ok": true,
-      "detail": "az-planting-calendar/tmp-design.json (a leftover design_audit.mjs report against a local dev server, introduced in commit 14d4ede, baseUrl http://127.0.0.1:8877, checkedAt 2026-08-01T20:52:27Z) was deleted in commit f441d14d6d1b2a0ef410bbf7459e79b7acb775b6. Re-verified this pass: `ls az-planting-calendar/tmp-design.json` reports no such file, and `grep -rn tmp-design az-planting-calendar .github orchestrator` finds zero references to the filename anywhere in source, scripts or tests -- nothing ever read it."
+      "detail": "Re-verified this pass by running the checks rather than re-reading the prior finding: az-planting-calendar/tmp-design.json (a leftover design_audit report against a local dev server, introduced in 14d4ede, deleted in f441d14) is absent from disk, and grep for the string \"tmp-design\" across az-planting-calendar, .github and orchestrator (excluding node_modules) returns 0 matches, so nothing in source, scripts or tests ever read it. Its removal is therefore the smallest diff that removes the artifact without affecting behaviour."
     }
-  },
-  "ok": true
+  }
 }
