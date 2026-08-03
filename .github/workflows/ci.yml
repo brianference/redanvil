@@ -19,6 +19,15 @@ jobs:
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: 20
+      # `npm test` now runs the pytest lane as well as vitest. Without an
+      # interpreter and the two Python deps, run_pytest.mjs exits 1 by design —
+      # "could not run the tests" must never read as "the tests passed" — so CI
+      # has to actually provide them rather than let the lane be skipped.
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.13'
+      - name: Install Python test deps
+        run: python -m pip install -r orchestrator/python/requirements.txt
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint

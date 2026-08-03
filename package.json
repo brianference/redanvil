@@ -16,13 +16,15 @@
     "typecheck": "tsc -p orchestrator/tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "format:check": "prettier --check .",
-    "test": "vitest run",
+    "test": "npm run test:vitest && npm run test:pytest",
     "gate": "tsx orchestrator/src/cli.ts gate",
     "api-judge": "tsx orchestrator/src/cli.ts api-judge",
     "loop": "tsx orchestrator/src/cli.ts loop",
     "rubric": "tsx orchestrator/src/cli.ts rubric",
     "reverify": "node .github/scripts/reverify.mjs",
-    "meets-the-bar": "node .github/scripts/meets_the_bar.mjs"
+    "meets-the-bar": "node .github/scripts/meets_the_bar.mjs",
+    "test:vitest": "vitest run",
+    "test:pytest": "node .github/scripts/run_pytest.mjs orchestrator"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -59,3 +59,8 @@ az-planting-calendar/evidence/*.png
 # fixture is re-runnable on a fresh checkout (see fe-result-in-viewport-api).
 !known-bad-fixtures/fe-result-in-viewport-api/bad-app/dist/
 !known-bad-fixtures/fe-result-in-viewport-api/bad-app/dist/**
+
+# Python bytecode from the pytest lane. Wiring pytest into `npm test` made
+# these appear on every local run.
+__pycache__/
+*.pyc
