@@ -1,0 +1,370 @@
+{
+  "baseUrl": "https://az-planting-calendar.pages.dev",
+  "checkedAt": "2026-08-03T04:01:26.424Z",
+  "method": "For each route/width, find .assistant--floating (the fixed \"Ask the calendar\" launcher) and report any leaf text elements whose getBoundingClientRect() intersects it.",
+  "results": [
+    {
+      "width": 375,
+      "route": "/",
+      "fabPresent": false
+    },
+    {
+      "width": 375,
+      "route": "/about",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 740,
+        "left": 200.359375,
+        "right": 359,
+        "bottom": 784
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "H2",
+          "text": "What the app does"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "route": "/contact",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 740,
+        "left": 200.359375,
+        "right": 359,
+        "bottom": 784
+      },
+      "overlapCount": 2,
+      "overlaps": [
+        {
+          "tag": "H2",
+          "text": "How to reach the maintainer"
+        },
+        {
+          "tag": "P",
+          "text": "Open an issue on the public RedAnvil GitHub repository that hosts this app (gith"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "route": "/terms",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 740,
+        "left": 200.359375,
+        "right": 359,
+        "bottom": 784
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "H2",
+          "text": "Acceptance and eligibility"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "route": "/privacy",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 740,
+        "left": 200.359375,
+        "right": 359,
+        "bottom": 784
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "H2",
+          "text": "Who we are and how to reach us"
+        }
+      ]
+    },
+    {
+      "width": 375,
+      "route": "/year-grid",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 740,
+        "left": 200.359375,
+        "right": 359,
+        "bottom": 784
+      },
+      "overlapCount": 0,
+      "overlaps": []
+    },
+    {
+      "width": 375,
+      "route": "/no-such-page",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 740,
+        "left": 200.359375,
+        "right": 359,
+        "bottom": 784
+      },
+      "overlapCount": 0,
+      "overlaps": []
+    },
+    {
+      "width": 768,
+      "route": "/",
+      "fabPresent": false
+    },
+    {
+      "width": 768,
+      "route": "/about",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 593.359375,
+        "right": 752,
+        "bottom": 884
+      },
+      "overlapCount": 2,
+      "overlaps": [
+        {
+          "tag": "H2",
+          "text": "Coverage boundary: Maricopa County low desert only"
+        },
+        {
+          "tag": "P",
+          "text": "This calendar’s planting windows apply only to the Maricopa County low desert. T"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "route": "/contact",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 593.359375,
+        "right": 752,
+        "bottom": 884
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "P",
+          "text": "If a crop shows the wrong half-month, the wrong seed versus transplant method, o"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "route": "/terms",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 593.359375,
+        "right": 752,
+        "bottom": 884
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "H2",
+          "text": "What the service is"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "route": "/privacy",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 593.359375,
+        "right": 752,
+        "bottom": 884
+      },
+      "overlapCount": 0,
+      "overlaps": []
+    },
+    {
+      "width": 768,
+      "route": "/year-grid",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 593.359375,
+        "right": 752,
+        "bottom": 884
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "P",
+          "text": "Not affiliated with the University of Arizona. For home garden planning only."
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "route": "/no-such-page",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 593.359375,
+        "right": 752,
+        "bottom": 884
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "P",
+          "text": "Not affiliated with the University of Arizona. For home garden planning only."
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "route": "/",
+      "fabPresent": false
+    },
+    {
+      "width": 1280,
+      "route": "/about",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 1105.359375,
+        "right": 1264,
+        "bottom": 884
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "P",
+          "text": "This calendar’s planting windows apply only to the Maricopa County low desert. T"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "route": "/contact",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 1105.359375,
+        "right": 1264,
+        "bottom": 884
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "LI",
+          "text": "A URL to the University of Arizona Cooperative Extension page or publication you"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "route": "/terms",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 1105.359375,
+        "right": 1264,
+        "bottom": 884
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "P",
+          "text": "AZ Planting Calendar is an informational web application that shows which vegeta"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "route": "/privacy",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 1105.359375,
+        "right": 1264,
+        "bottom": 884
+      },
+      "overlapCount": 0,
+      "overlaps": []
+    },
+    {
+      "width": 1280,
+      "route": "/year-grid",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 1105.359375,
+        "right": 1264,
+        "bottom": 884
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "P",
+          "text": "Not affiliated with the University of Arizona. For home garden planning only."
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "route": "/no-such-page",
+      "fabPresent": true,
+      "visible": true,
+      "fabPosition": "fixed",
+      "fabRect": {
+        "top": 840,
+        "left": 1105.359375,
+        "right": 1264,
+        "bottom": 884
+      },
+      "overlapCount": 1,
+      "overlaps": [
+        {
+          "tag": "P",
+          "text": "Not affiliated with the University of Arizona. For home garden planning only."
+        }
+      ]
+    }
+  ]
+}
