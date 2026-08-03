@@ -396,17 +396,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-03T19:03:50.847Z"
+        "at": "2026-08-03T19:12:25.519Z"
       },
       {
         "ok": true,
-        "at": "2026-08-03T19:03:50.848Z"
+        "at": "2026-08-03T19:12:25.520Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-standard-tool\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-03T19:03:50.848Z"
+      "recordedAt": "2026-08-03T19:12:25.520Z"
     }
   },
   "meas-engine-named": {
@@ -495,12 +495,12 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-03T18:41:56.500Z",
+        "at": "2026-08-03T18:41:56.419Z",
         "report": "evidence/axe/dashboard-dark.json"
       },
       {
         "ok": true,
-        "at": "2026-08-03T18:41:58.900Z",
+        "at": "2026-08-03T18:41:58.761Z",
         "report": "evidence/axe/dashboard-light.json"
       }
     ]
