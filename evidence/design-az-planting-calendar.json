@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-03T20:19:32.563Z",
+  "checkedAt": "2026-08-03T20:23:42.687Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -39,7 +39,7 @@
       "detail": "title \"AZ Planting Calendar — what to plant now in Cave Creek\", description present, og:image present"
     },
     "fe-light-dark": {
-      "ok": false,
+      "ok": true,
       "detail": "landmark paint changes between themes (3 regions); toggle ok"
     },
     "fe-design-archetype": {
@@ -56,5 +56,5 @@
     }
   },
   "consoleErrors": [],
-  "ok": false
+  "ok": true
 }

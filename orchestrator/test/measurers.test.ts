@@ -111,25 +111,30 @@ describe('cold_visitor discriminates a broken default theme', () => {
     close();
   });
 
-  it('FAILS a page whose default theme ignores the system preference', async () => {
-    // The exact production defect, reproduced in a fixture: a real dark theme
-    // and a working toggle, with the default hard-set to light. a11y_audit
-    // cannot see this because it assigns data-theme before measuring.
+  // The RedAnvil standard changed on 2026-08-03: a first-time visitor gets
+  // LIGHT regardless of the OS setting, because following prefers-color-scheme
+  // gave a visitor on a dark phone a dark first paint of an app whose intended
+  // default is light. These two fixtures therefore swap roles — the negative
+  // and positive controls are both kept, so the check still discriminates.
+
+  it('FAILS a page that paints dark on a cold load because the OS asked for it', async () => {
+    // theme-follows-system.html resolves data-theme from prefers-color-scheme,
+    // so a fresh dark-OS visitor gets dark. That is now the defect.
     const { status, output } = await runMeasurer('cold_visitor.mjs', [
-      `${base}/theme-ignores-system.html`,
+      `${base}/theme-follows-system.html`,
       '--probe',
       NO_FLOW_PROBE
     ]);
     expect(status, output).toBe(1);
     expect(output).toMatch(/cold-theme-dark/);
-    expect(output).toMatch(/EXPECTED "dark"/);
+    expect(output).toMatch(/EXPECTED "light"/);
   });
 
-  it('PASSES the same page once the default consults the system', async () => {
+  it('PASSES a page whose cold default is light whatever the OS says', async () => {
     // The positive control. Without it, a check that always failed would look
     // exactly as good as one that works.
     const { status, output } = await runMeasurer('cold_visitor.mjs', [
-      `${base}/theme-follows-system.html`,
+      `${base}/theme-ignores-system.html`,
       '--probe',
       NO_FLOW_PROBE
     ]);

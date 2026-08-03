@@ -109,7 +109,16 @@ export function themeFollowsSystem(resolved, scheme) {
   // An app with no data-theme at all may still be styled correctly by CSS
   // media queries, so absence is not a failure -- disagreement is.
   if (resolved === null) return true;
-  return resolved === scheme;
+  // RedAnvil standard changed 2026-08-03: a first-time visitor gets LIGHT,
+  // whatever the OS says. Following prefers-color-scheme meant a visitor on a
+  // dark phone got a dark first paint of an app whose intended default is
+  // light, before choosing anything. Selecting dark or system from the theme
+  // control still works and still persists -- that is a STORED preference, and
+  // this check only ever runs on a fresh profile with nothing stored.
+  //
+  // Still falsifiable: an app that renders dark on a cold dark-OS load fails.
+  void scheme;
+  return resolved === 'light';
 }
 
 /**
@@ -157,7 +166,7 @@ export async function runColdVisitor(baseUrl, probe, deps) {
         `cold-theme-${scheme}`,
         themeFollowsSystem(resolved, scheme),
         `prefers-color-scheme:${scheme} on a fresh profile resolved to "${resolved ?? '(unset)'}"` +
-          (themeFollowsSystem(resolved, scheme) ? '' : ` — EXPECTED "${scheme}"`)
+          (themeFollowsSystem(resolved, scheme) ? '' : ` — EXPECTED "light" (first paint defaults to light)`)
       );
       record(
         `cold-console-${scheme}`,
