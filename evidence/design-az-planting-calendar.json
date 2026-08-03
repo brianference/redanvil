@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-03T04:49:07.816Z",
+  "checkedAt": "2026-08-03T05:23:39.655Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -41,6 +41,10 @@
     "fe-light-dark": {
       "ok": true,
       "detail": "landmark paint changes between themes (3 regions); toggle ok"
+    },
+    "fe-design-archetype": {
+      "ok": true,
+      "detail": "claimed \"Timeline + rail\"; widest block 1440px of 1440px, gutters 0/0"
     },
     "fe-required-pages": {
       "ok": true,

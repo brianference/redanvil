@@ -1,0 +1,11 @@
+{
+  "baseUrl": "https://az-planting-calendar.pages.dev",
+  "checkedAt": "2026-08-03T05:18:35.594Z",
+  "findings": {
+    "fe-design-archetype": {
+      "ok": true,
+      "detail": "Timeline + rail (decision recorded in az-planting-calendar/design-refs/home-options/DECISION.md). Confirmed by opening evidence/screenshots/az-planting-calendar-1280-light.png at this HEAD: a horizontal half-month timeline (Mar 1 .. Sep 1 labels, current half-month boxed 'now') spans the page width above a 'Plantable in Aug 1' list of crop cards (name, seed/transplant badge, days-to-harvest, source link) as the primary reading column, with a docked 'Planting assistant' panel to the right as a secondary rail, and a separate full-year grid (24 half-month columns x crop rows) below -- a timeline spine with a rail, not a tile/card grid or a single hero card."
+    }
+  },
+  "ok": true
+}

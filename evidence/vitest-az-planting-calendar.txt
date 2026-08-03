@@ -1,24 +1,28 @@
 
+> az-planting-calendar@1.0.0 test
+> vitest run
+
+
 [1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/brian/RedAnvil/az-planting-calendar[39m
 
- [32m✓[39m functions/lib/db.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 12[2mms[22m[39m
- [32m✓[39m functions/lib/zones.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 13[2mms[22m[39m
- [32m✓[39m functions/lib/rateLimit.test.ts [2m([22m[2m12 tests[22m[2m)[22m[90m 11[2mms[22m[39m
- [32m✓[39m src/theme.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 4[2mms[22m[39m
- [32m✓[39m functions/lib/dates.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 8[2mms[22m[39m
- [32m✓[39m src/lib/halfMonth.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 26[2mms[22m[39m
- [32m✓[39m src/lib/schemas.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 14[2mms[22m[39m
- [32m✓[39m functions/lib/gridMath.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 5[2mms[22m[39m
- [32m✓[39m functions/api/health.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m functions/lib/db.test.ts [2m([22m[2m10 tests[22m[2m)[22m[90m 10[2mms[22m[39m
+ [32m✓[39m functions/lib/rateLimit.test.ts [2m([22m[2m12 tests[22m[2m)[22m[90m 9[2mms[22m[39m
+ [32m✓[39m functions/lib/zones.test.ts [2m([22m[2m14 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m src/theme.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 3[2mms[22m[39m
+ [32m✓[39m functions/lib/dates.test.ts [2m([22m[2m8 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m functions/lib/gridMath.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 4[2mms[22m[39m
+ [32m✓[39m src/lib/halfMonth.test.ts [2m([22m[2m11 tests[22m[2m)[22m[90m 23[2mms[22m[39m
+ [32m✓[39m functions/api/crops/[id].test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 8[2mms[22m[39m
  [32m✓[39m functions/api/zone.test.ts [2m([22m[2m2 tests[22m[2m)[22m[90m 9[2mms[22m[39m
- [32m✓[39m functions/api/crops/[id].test.ts [2m([22m[2m4 tests[22m[2m)[22m[90m 14[2mms[22m[39m
- [32m✓[39m functions/api/assistant-shape.test.ts [2m([22m[2m22 tests[22m[2m)[22m[90m 30[2mms[22m[39m
- [32m✓[39m functions/api/grid.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 18[2mms[22m[39m
- [32m✓[39m functions/api/plantable.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 30[2mms[22m[39m
- [32m✓[39m src/lib/coverage.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 6[2mms[22m[39m
+ [32m✓[39m src/lib/schemas.test.ts [2m([22m[2m9 tests[22m[2m)[22m[90m 12[2mms[22m[39m
+ [32m✓[39m functions/api/assistant-shape.test.ts [2m([22m[2m22 tests[22m[2m)[22m[90m 27[2mms[22m[39m
+ [32m✓[39m functions/api/health.test.ts [2m([22m[2m1 test[22m[2m)[22m[90m 7[2mms[22m[39m
+ [32m✓[39m functions/api/grid.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+ [32m✓[39m functions/api/plantable.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 29[2mms[22m[39m
+ [32m✓[39m src/lib/coverage.test.ts [2m([22m[2m5 tests[22m[2m)[22m[90m 5[2mms[22m[39m
 
 [2m Test Files [22m [1m[32m15 passed[39m[22m[90m (15)[39m
 [2m      Tests [22m [1m[32m114 passed[39m[22m[90m (114)[39m
-[2m   Start at [22m 21:14:07
-[2m   Duration [22m 1.79s[2m (transform 1.92s, setup 0ms, collect 4.90s, tests 206ms, environment 3ms, prepare 6.25s)[22m
+[2m   Start at [22m 22:06:06
+[2m   Duration [22m 916ms[2m (transform 965ms, setup 0ms, collect 2.40s, tests 179ms, environment 3ms, prepare 2.78s)[22m
 
