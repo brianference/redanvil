@@ -9,7 +9,7 @@
     ],
     "note": "REGRESSION, re-measured on the now-8-route set (the previous PASS covered only 6 routes, before /examples existed): design_audit against https://redanvil.pages.dev finds the /examples filter chips (All | Data tools | Mobile | Travel) under 44px at 375. Confirmed by opening evidence/screenshots/app-builder-examples-375-light.png -- the chip row directly under the \"2 shipped\" count reads visually compact, consistent with the measured shortfall. Task #43 (examples page redesign) is still pending; this page has not yet been through the 375 pass the rest of the app has.",
     "reviewedAt": "2026-08-02T23:20:22.674Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -26,7 +26,7 @@
     ],
     "note": "REGRESSION, re-measured on the now-8-route set (the previous PASS covered only 6 routes, before /examples existed): design_audit against https://redanvil.pages.dev finds a 14px body node on /examples (the \"Maricopa · low desert\" / \"Travel · fares\" / \"4,162 airports\" eyebrow labels), under the 16px floor. Confirmed by opening evidence/screenshots/app-builder-examples-375-light.png: the small-caps kicker line above each app card title renders visibly smaller than the surrounding body copy.",
     "reviewedAt": "2026-08-02T23:20:22.674Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -43,7 +43,7 @@
     ],
     "note": "REGRESSION, re-measured on the now-8-route set (the previous PASS covered only 6 routes, before /examples existed): design_audit against https://redanvil.pages.dev finds real horizontal overflow on /examples and /saved, worst at the /examples \"How it was built\" panel -- .ex-card__panel +72px, blockquote +96px wide vs the 375 viewport -- plus smaller overflow through the ancestor chain (#root, .ra-shell, .ra-main-col, main) down to a +4px overflow on /saved. This is a real DOM scrollWidth measurement (not the theme-paint color hack that produced a false positive elsewhere), and /examples is the newest, not-yet-375-passed route.",
     "reviewedAt": "2026-08-02T23:20:22.674Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -59,7 +59,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: header sticky on all 6 route(s), padding-top 0px",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -75,7 +75,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: 6 header link(s) [App Builder, Dashboard, Examples, Saved, About, Contact], aria-current on \"App Builder\"",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -91,7 +91,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: active nav item: weight 650, gradient background true, aria-current present true",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -107,7 +107,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: no attribution text",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -123,7 +123,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: cross-site link present",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -139,7 +139,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: title \"RedAnvil — Forge apps from a prompt\", description present, og:image present",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -155,7 +155,7 @@
     ],
     "note": "evidence/design-app-builder.json against https://redanvil.pages.dev: /about 200 \"About RedAnvil\" 362w/7§; /contact 200 \"Contact\" 265w/5§; /terms 200 \"Terms and Conditions\" 1462w/16§; /privacy 200 \"Privacy Policy\" 1605w/16§; /saved 200 \"Saved builds\" 34w/0§; /examples 200 \"Examples\" 503w/7§; /no-such-page 200 \"Page not found\" 30w/0§",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -171,7 +171,7 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: 0 console/page error(s) across the measured loads",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -187,7 +187,7 @@
     ],
     "note": "cold_visitor against production: a first-time visitor gets a working app: 5 cold-start check(s) held",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -204,7 +204,7 @@
     ],
     "note": "axe-core 4.12.1 against production: 0 colour-contrast violations in dark and light.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -222,7 +222,7 @@
     ],
     "note": "Helpers stay short and plain after the prd split: generate.ts composes section builders instead of inlining them, job.ts keeps slug and entity helpers as small pure functions, and the extracted Header reads as straightforward JSX with no dense one-liners.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src/lib",
       "app-builder/src/components/shell"
@@ -238,7 +238,7 @@
     ],
     "note": "The prd and shell splits were driven by a measured size cap and a real second consumer, not by anticipated reuse. No interface was introduced with a single implementation for future flexibility.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src/lib",
       "app-builder/src/components/shell"
@@ -254,7 +254,7 @@
     ],
     "note": "The header split reuses the existing Breadcrumbs component, i18n bundle and theme tokens rather than adding copies, and the nav work introduced no new dependency.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src/components"
     ]
@@ -269,7 +269,7 @@
     ],
     "note": "The prd and shell refactors are pure structural moves. generatePrd output was verified byte-identical across five varied inputs by running the pre-split and post-split modules side by side, so the diff adds no behaviour of its own.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src/lib",
       "app-builder/src/components"
@@ -285,7 +285,7 @@
     ],
     "note": "Handlers that read a request body run it through a schema before use; JSON.parse alone is not treated as validation anywhere under functions/.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/functions"
     ]
@@ -301,7 +301,7 @@
     ],
     "note": "This app ships no authentication surface, so there is no guard to stub: functions/lib holds only http and env helpers. Confirmed no auth-named function anywhere under functions/ returns an unconditional truthy value and no TODO-auth marker exists.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/functions"
     ]
@@ -316,7 +316,7 @@
     ],
     "note": "The refactor is covered by a characterization test snapshotting real generatePrd output for varied inputs, and the shell by a test querying header links by role. Both assert behaviour that breaks on regression rather than mere presence.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src"
     ]
@@ -331,7 +331,7 @@
     ],
     "note": "Tests assert rendered behaviour (header exposes named links by role, active route marked) and real output content, not implementation details or call counts.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src"
     ]
@@ -347,7 +347,7 @@
     ],
     "note": "Page.tsx is a composition of named components (Header, MobileDrawer, Footer, Breadcrumbs) rather than a monolithic shell, and pages supply title, subtitle and children into that shell.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src/components"
     ]
@@ -362,7 +362,7 @@
     ],
     "note": "The composer renders explicit loading, empty and error states. A failed submit surfaces an error rather than an empty success, and the empty thread says so in words instead of rendering blank.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src"
     ]
@@ -376,7 +376,7 @@
     ],
     "note": "desktop_width re-measured against production at 1440 and 1920; every route >= 80% painted width.",
     "reviewedAt": "2026-07-31T06:34:16.325Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
@@ -391,7 +391,7 @@
       "evidence/e2e-app-builder.json"
     ],
     "note": "evidence/e2e-app-builder.json against the measured build: chat → wizard → Forge PRD completed against https://redanvil.pages.dev: /api/submit returned 200 and the PRD rendered, with 5 further route(s) verified. The core feature produces real output end to end.",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
     "scope": [
       "app-builder/src",
@@ -411,7 +411,7 @@
     ],
     "note": "Archetype: Command canvas, recorded in claims.json and confirmed by opening evidence/screenshots/app-builder-1280-dark.png and evidence/screenshots/app-builder-1280-light.png before recording anything (both files actually opened and viewed, not inferred from source): the home route is a two-pane split -- a persistent composer (\"Describe your app\", the actual work) against a How-it-works/template picker, not a generic centred column. design_audit.mjs --claims measured the widest block at 1306 of 1440px (91%) with equal 67px gutters, so the anti-column check (requires <72% width AND equal gutters) does not fire either way, but the archetype label itself is a genuine structural read, not one picked to pass a check.",
     "reviewedAt": "2026-08-02T23:20:22.674Z",
-    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "reviewedCommit": "a65172d29b567729e84a8eaec4a5804804d77bf2",
     "scope": [
       "app-builder/src",
       "app-builder/public",
