@@ -25,11 +25,37 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+import { hasApiOrPages } from './u-api-no-spa-mask.mjs';
+import {
+  pickFreePort,
+  killProcessTree,
+  waitForReady,
+  spawnWranglerPagesDev
+} from '../../../.github/scripts/runtime_parity.mjs';
 
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
 /** Real, resolvable known-bad fixture: result list rendered far below the fold. */
 const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'result-in-viewport', 'below-fold.html');
+/**
+ * Real, resolvable known-bad fixture for the wrangler-boot path: a real
+ * Pages Functions backend (functions/api/items.ts, genuinely working) paired
+ * with a frontend whose search handler fetches but never applies the result
+ * to the DOM. Proves the check still fails once it can reach a real API --
+ * not just whenever the API is unreachable. Run directly as an appDir:
+ *   node fe-result-in-viewport.mjs known-bad-fixtures/fe-result-in-viewport-api/bad-app
+ */
+const KNOWN_BAD_API_FIXTURE = join(
+  here,
+  '..',
+  '..',
+  '..',
+  'known-bad-fixtures',
+  'fe-result-in-viewport-api',
+  'bad-app'
+);
+/** How long to wait for wrangler pages dev to answer before giving up. */
+const WRANGLER_READINESS_MS = 90_000;
 
 /** Viewports the result must be visible in. */
 export const VIEWPORTS = Object.freeze([
@@ -154,6 +180,123 @@ function serveStatic(root) {
       });
     });
   });
+}
+
+/**
+ * First hashed JS/CSS asset referenced from dist/index.html, so a served
+ * runtime can be checked against the exact build on disk.
+ *
+ * @param {string} distDir Absolute dist root.
+ * @returns {string | null} Root-relative asset path (e.g. `/assets/index-abc.js`), or null.
+ */
+export function firstHashedAsset(distDir) {
+  const indexPath = join(distDir, 'index.html');
+  if (!existsSync(indexPath)) return null;
+  const html = readFileSync(indexPath, 'utf8');
+  const m = /(?:src|href)="(\/[^"]+\.(?:js|css))"/.exec(html);
+  return m ? (m[1] ?? null) : null;
+}
+
+/**
+ * Kill whatever process is LISTENING on `port`, identified by the port
+ * itself rather than by matching a process name. `wrangler pages dev` spawns
+ * `npx` (a shim on Windows) which spawns `workerd`; killing the shim's PID
+ * does not reliably reap every workerd child in this environment, so a
+ * process can outlive `killProcessTree` and keep the port bound, ready to
+ * silently answer a later run with a stale build. Matching by port (not by
+ * "workerd"/"wrangler" in the process name) avoids killing an unrelated
+ * runtime a concurrent check or agent still needs.
+ *
+ * Best-effort: failures are swallowed, since this runs as cleanup after the
+ * primary `killProcessTree` already attempted the same thing.
+ *
+ * @param {number} port
+ * @returns {void}
+ */
+export function killByPort(port) {
+  try {
+    if (process.platform === 'win32') {
+      const out = spawnSync('netstat', ['-ano'], { encoding: 'utf8' }).stdout ?? '';
+      const pids = new Set();
+      for (const line of out.split('\n')) {
+        if (line.includes(`:${port} `) && /LISTENING/.test(line)) {
+          const pid = line.trim().split(/\s+/).pop();
+          if (pid && /^\d+$/.test(pid)) pids.add(pid);
+        }
+      }
+      for (const pid of pids) {
+        spawnSync('taskkill', ['/pid', pid, '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+      }
+    } else {
+      const out = spawnSync('lsof', ['-ti', `tcp:${port}`], { encoding: 'utf8' }).stdout ?? '';
+      for (const pid of out.split('\n').map((l) => l.trim()).filter(Boolean)) {
+        spawnSync('kill', ['-9', pid], { stdio: 'ignore' });
+      }
+    }
+  } catch {
+    // Best-effort cleanup; the primary killProcessTree already ran.
+  }
+}
+
+/**
+ * Boot the app's real Cloudflare Pages runtime (Functions included) via
+ * `wrangler pages dev`, instead of a bare static file server. A static server
+ * cannot execute Pages Functions, so an app whose search hits `/api/*` gets
+ * every call answered by the SPA fallback (index.html, 200) -- the frontend's
+ * fetch resolves against HTML, search never updates the DOM, and this check
+ * FAILs for a reason that has nothing to do with the app.
+ *
+ * `pickFreePort` binds a fresh OS-assigned port per run, so this never reuses
+ * a fixed port a stale process could still be holding. The child is always
+ * killed by its own PID/process-tree in `close()`, never by matching a
+ * process name (which would risk killing an unrelated wrangler/workerd
+ * instance from a concurrent check or agent). After readiness, the served
+ * build's hashed asset is compared byte-for-byte against the local dist file
+ * on disk -- a leaked prior instance answering on the same port would serve
+ * an older build, and that must surface as an infra failure, not a silent
+ * pass/fail on the wrong app.
+ *
+ * @param {string} appDir App root (must already have dist/ built).
+ * @returns {Promise<{ base: string, close: () => Promise<void> } | { error: string }>}
+ */
+export async function serveWrangler(appDir) {
+  const port = await pickFreePort();
+  const { child, output } = spawnWranglerPagesDev(appDir, port);
+  const close = async () => {
+    if (child.pid !== undefined) killProcessTree(child.pid);
+    // Belt-and-suspenders: killProcessTree does not reliably reap every
+    // workerd child spawned via the npx/npm .cmd shim in this environment.
+    // A leaked instance would otherwise keep the port bound and answer a
+    // later run with a stale build.
+    killByPort(port);
+  };
+  const ready = await waitForReady(port, WRANGLER_READINESS_MS);
+  if (!ready) {
+    await close();
+    return { error: `wrangler pages dev never became ready:\n${output.text.slice(-800)}` };
+  }
+  const base = `http://127.0.0.1:${port}`;
+  const asset = firstHashedAsset(join(appDir, 'dist'));
+  if (asset) {
+    const onDisk = readFileSync(join(appDir, 'dist', asset.replace(/^\//, '')));
+    let served;
+    try {
+      const res = await fetch(`${base}${asset}`);
+      served = Buffer.from(await res.arrayBuffer());
+    } catch (err) {
+      await close();
+      return { error: `could not fetch ${asset} from the booted runtime: ${err instanceof Error ? err.message : String(err)}` };
+    }
+    if (!served.equals(onDisk)) {
+      await close();
+      return {
+        error:
+          `served ${asset} does not match the local dist build -- a stale wrangler/workerd ` +
+          `instance may be answering on this port with an older build`
+      };
+    }
+  }
+  return { base, close };
 }
 
 /**
@@ -518,9 +661,25 @@ export async function runResultInViewport(appDir, io, opts = {}) {
       if (!base) {
         const dist = ensureDist(appDir);
         if (dist.ok) {
-          const served = await serveStatic(join(appDir, 'dist'));
-          base = served.base;
-          close = served.close;
+          // A static file server cannot execute Pages Functions -- an app
+          // whose search hits /api/* would get every call answered by the
+          // SPA fallback (index.html, 200), and search would look broken for
+          // a reason that has nothing to do with the app. Boot the real
+          // runtime only when the app actually has a Functions surface; a
+          // static app keeps the fast serveStatic path.
+          if (hasApiOrPages(appDir) && existsSync(join(appDir, 'wrangler.toml'))) {
+            const served = await serveWrangler(appDir);
+            if ('error' in served) {
+              io.infra(served.error);
+            } else {
+              base = served.base;
+              close = served.close;
+            }
+          } else {
+            const served = await serveStatic(join(appDir, 'dist'));
+            base = served.base;
+            close = served.close;
+          }
         } else {
           base = readDeployUrl(appDir);
           if (!base) {

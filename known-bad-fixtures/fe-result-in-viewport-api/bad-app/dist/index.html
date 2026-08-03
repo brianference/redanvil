@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>fe-result-in-viewport-api known-bad fixture</title>
+  </head>
+  <body>
+    <main>
+      <input type="search" aria-label="search items" id="q" />
+      <ul id="results">
+        <li>Apple</li>
+        <li>Banana</li>
+        <li>Carrot</li>
+      </ul>
+    </main>
+    <script>
+      // The bug: this fetches a real, working API (proving the backend is
+      // fine) but never writes the response into the DOM, so the results
+      // list never changes no matter what is typed. This is the exact
+      // defect fe-result-in-viewport must still catch once it boots a real
+      // wrangler runtime instead of failing for the wrong reason (no
+      // backend at all).
+      document.getElementById('q').addEventListener('input', () => {
+        fetch('/api/items').then((r) => r.json());
+        // Intentionally never touches #results.
+      });
+    </script>
+  </body>
+</html>

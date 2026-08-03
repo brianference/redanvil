@@ -54,3 +54,8 @@ tmp-sources/
 # (hyg-no-binaries allowlists only public|assets|static|images|screenshots).
 az-planting-calendar/evidence/spec-*/**
 az-planting-calendar/evidence/*.png
+
+# Known-bad fixture content, not build output -- must be committed so the
+# fixture is re-runnable on a fresh checkout (see fe-result-in-viewport-api).
+!known-bad-fixtures/fe-result-in-viewport-api/bad-app/dist/
+!known-bad-fixtures/fe-result-in-viewport-api/bad-app/dist/**
