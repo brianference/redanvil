@@ -29,6 +29,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { APPS } from './apps.mjs';
+import { waiversForApp } from './meets_the_bar.mjs';
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
@@ -202,6 +203,22 @@ for (const app of apps) {
     const r = script(name, rest);
     const label = `${app.slug} ${name.replace('.mjs', '')}`;
     if (r.code !== 0) {
+      // A measurer that only found WAIVED defects must not hard-stop the run.
+      // Otherwise a recorded, dated, accepted defect keeps the gate from ever
+      // producing a result, the stored finalScore stays 0, and lg-shipped fails
+      // on a score that nothing can raise — the whole point of the waiver is to
+      // let an unrelated release proceed, and a hard stop here defeats it.
+      // The finding is still printed, and meets_the_bar still reports it WAIVED.
+      const failedHere = [...r.out.matchAll(/FAIL\s+([a-z0-9-]+)/gi)].map((m) => m[1]);
+      const waivedHere = waiversForApp(process.cwd(), app.slug);
+      const unwaived = failedHere.filter((id) => !waivedHere.has(id));
+      if (failedHere.length > 0 && unwaived.length === 0) {
+        console.error(r.out.split('\n').slice(-8).join('\n'));
+        console.log(
+          `    WAIVED ${label} — only accepted defects failed: ${failedHere.join(', ')}`
+        );
+        continue;
+      }
       console.error(r.out.split('\n').slice(-12).join('\n'));
       fail(`${label} failed — fix the finding, do not re-stamp over it`);
     }
