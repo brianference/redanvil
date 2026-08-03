@@ -39,7 +39,14 @@ export function useTheme(): {
     // changes the preference outside React (another tab, devtools, an automated
     // check writing localStorage) leaves this hook's state stale, and the next
     // click then re-selects the theme already showing — the toggle appears dead.
-    setModeState(nextThemeMode(readThemeMode()));
+    const next = nextThemeMode(readThemeMode());
+    // Apply eagerly rather than relying on the [mode] effect. When storage has
+    // drifted from React state, `next` can equal the current state value, and
+    // setting state to the value it already holds does not re-render — so the
+    // effect never fires and the DOM keeps the stale theme. Applying here makes
+    // the click take effect regardless.
+    setResolved(applyThemeMode(next));
+    setModeState(next);
   }, []);
 
   return { mode, resolved, cycle, setMode };
