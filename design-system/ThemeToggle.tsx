@@ -105,12 +105,18 @@ export function ThemeToggle({ tokens, copy }: ThemeToggleProps): JSX.Element {
   }, []);
 
   const toggle = useCallback(() => {
-    setMode((prev) => {
-      const next: ThemeChoice = prev === 'dark' ? 'light' : 'dark';
-      applyTheme(next);
-      localStorage.setItem(STORAGE_KEY, next);
-      return next;
-    });
+    // Derive from what is actually PAINTED, not from React state. Anything that
+    // changes the theme outside React — another tab, devtools, an automated
+    // check writing data-theme before it measures — leaves this state stale, and
+    // the next press then re-selects the theme already showing. Worse, setting
+    // state to the value it already holds does not re-render, so applyTheme
+    // never runs and the click does nothing at all.
+    const current: ThemeChoice =
+      document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    const next: ThemeChoice = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem(STORAGE_KEY, next);
+    setMode(next);
   }, []);
 
   const isDark = mode === 'dark';

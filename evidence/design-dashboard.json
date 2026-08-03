@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil-dashboard.pages.dev",
-  "checkedAt": "2026-08-03T20:56:39.761Z",
+  "checkedAt": "2026-08-03T21:05:48.239Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -39,7 +39,7 @@
       "detail": "title \"RedAnvil Dashboard — build runs\", description present, og:image present"
     },
     "fe-light-dark": {
-      "ok": true,
+      "ok": false,
       "detail": "landmark paint changes between themes (2 regions); toggle ok"
     },
     "fe-design-archetype": {
@@ -56,5 +56,5 @@
     }
   },
   "consoleErrors": [],
-  "ok": true
+  "ok": false
 }
