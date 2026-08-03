@@ -396,17 +396,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-03T19:19:30.314Z"
+        "at": "2026-08-03T19:22:51.775Z"
       },
       {
         "ok": true,
-        "at": "2026-08-03T19:19:30.315Z"
+        "at": "2026-08-03T19:22:51.776Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-standard-tool\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-03T19:19:30.315Z"
+      "recordedAt": "2026-08-03T19:22:51.776Z"
     }
   },
   "meas-engine-named": {
