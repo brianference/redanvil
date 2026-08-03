@@ -47,7 +47,10 @@ declare module '../../.github/scripts/meets_the_bar.mjs' {
   export function parseResultShape(raw: unknown): ParsedResult | null;
   export function scoreBarReasons(
     result: ParsedResult | null,
-    opts?: { threshold?: number }
+    // `waivedRules` arrived with the release-waiver work; the shim was not
+    // updated, so callers that pass it were type errors against a function that
+    // reads it.
+    opts?: { threshold?: number; waivedRules?: string[] }
   ): string[];
   export function freshnessReasons(
     repoRoot: string,

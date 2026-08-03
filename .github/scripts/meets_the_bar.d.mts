@@ -46,7 +46,9 @@ export declare function newestSourceCommit(repoRoot: string, appDir: string): st
 export declare function parseResultShape(raw: unknown): ParsedResult | null;
 export declare function scoreBarReasons(
   result: ParsedResult | null,
-  opts?: { threshold?: number }
+  // `waivedRules` arrived with the release-waiver work and this declaration was
+  // not updated, so passing it was a type error against a function that reads it.
+  opts?: { threshold?: number; waivedRules?: string[] }
 ): string[];
 export declare function freshnessReasons(
   repoRoot: string,

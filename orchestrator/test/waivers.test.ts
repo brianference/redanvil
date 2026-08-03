@@ -42,7 +42,10 @@ describe('release waivers', () => {
       rules: [
         { ruleId: 'fe-touch-targets', passed: false },
         { ruleId: 'u-api-not-found', passed: false }
-      ]
+      ],
+      // parseResultShape always emits this field, null included, so a fixture
+      // without it is a shape the function is never handed in practice.
+      provenance: null
     };
     const reasons = scoreBarReasons(result, { waivedRules: ['fe-touch-targets'] });
     expect(reasons.join(' ')).toContain('u-api-not-found');
