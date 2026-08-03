@@ -25,6 +25,10 @@ import {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const CHECK_SCRIPT = join(here, 'check.mjs');
+/** Real, resolvable known-bad fixture: an appDir with an empty
+ * measurement-meta.json, so meas-known-bad run against it always fails
+ * (every RULES_REQUIRING_KNOWN_BAD entry is missing). */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'meas-known-bad', 'bad-app');
 
 /**
  * Some checks only accept a fixture through a named flag (`--fixture`,
@@ -159,13 +163,22 @@ export function evaluateKnownBad(meta, requiredRuleIds, implMtimeMs, rerun, reso
         );
       }
     }
-    if (typeof kb.input !== 'string' || kb.input.length === 0) continue;
     if (typeof rerun !== 'function') continue;
     // A rerun was requested: the recorded input MUST resolve to a real,
     // re-runnable fixture. An unresolvable path (missing file, or prose like
     // "a fixture with dead links" instead of a path) proves nothing and must
     // fail -- it is indistinguishable, without this check, from a fixture
-    // that ran and correctly failed.
+    // that ran and correctly failed. Absent input is the same failure, not a
+    // milder one: `continue`-ing past a missing `kb.input` here used to skip
+    // the entire rerun proof and let the entry pass with zero failures, which
+    // is worse than prose -- prose at least fails the resolve step below.
+    if (typeof kb.input !== 'string' || kb.input.length === 0) {
+      failures.push(
+        `${ruleId}: knownBad.input is missing — a description of a bad case is not a fixture; ` +
+          'G1 requires a real, re-runnable path'
+      );
+      continue;
+    }
     const resolved = typeof resolveInput === 'function' ? resolveInput(kb.input) : kb.input;
     if (!resolved) {
       failures.push(
@@ -228,7 +241,12 @@ export function runMeasKnownBad(appDir, io, deps = {}) {
     runs: [
       { ok, at: nowIso() },
       { ok, at: nowIso() }
-    ]
+    ],
+    knownBad: {
+      input: KNOWN_BAD_FIXTURE,
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
 
   if (!ok) {

@@ -3,11 +3,12 @@ import { parseArgs } from 'node:util';
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateFile } from './commands/validate';
 import { rubricSummary } from './commands/rubric';
 import { scaffoldFromJobFile } from './commands/scaffold';
 import { gateApp } from './commands/gate';
+import type { GateReport } from './commands/gate';
 import type { Outcome } from './gate/score';
 import { collectProvenance } from './gate/provenance';
 import { parseVerdicts } from './schemas/verdicts';
@@ -90,6 +91,29 @@ function reportStaleVerdicts(stale: StaleVerdict[]): void {
     console.error(`  ${s.ruleId}: ${s.reason}${files}`);
   }
   console.error('');
+}
+
+/**
+ * Rule ids excluded from scoring for a `gate` result file: every rule a check
+ * itself reported as not-applicable, plus any `--na` waiver. This is
+ * `report.notApplicable`, never the raw `--na` flag value alone.
+ *
+ * Extracted as its own function because the two are easy to confuse and once
+ * were: `report.notApplicable` is what the gate actually decided (and what the
+ * console `n/a: ...` line already prints), while the CLI-arg-only list is only
+ * what the caller asked to waive before any check ran. A det check that
+ * reports its own subject absent (e.g. proc-pr-title-ticket with no
+ * GITHUB_TOKEN) is not in the caller's list, so writing that list here
+ * silently dropped every such rule from provenance.notApplicable — present in
+ * neither `rules[]` (it never produced an outcome) nor `notApplicable` (this
+ * bug) — which read to `lg-result-reproduces` as an invented gap in the
+ * result rather than the legitimate n/a it was.
+ *
+ * @param report - The gate report whose notApplicable set decides this.
+ * @returns The rule ids to write to `provenance.notApplicable`.
+ */
+export function resultNotApplicable(report: Pick<GateReport, 'notApplicable'>): string[] {
+  return report.notApplicable;
 }
 
 /**
@@ -374,7 +398,7 @@ async function main(): Promise<number> {
         deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
         verdictsRaw,
         staleVerdicts: staleVerdicts.map((s) => s.ruleId),
-        notApplicable
+        notApplicable: resultNotApplicable(report)
       });
     }
     // Exit non-zero when score fails OR when the finish line (isDone) fails.
@@ -464,7 +488,9 @@ async function main(): Promise<number> {
         deployUrl: typeof values.deploy === 'string' ? values.deploy : null,
         verdictsRaw,
         staleVerdicts: staleVerdicts.map((s) => s.ruleId),
-        notApplicable
+        // Same fix as the `gate` command above: `final` is the last gate
+        // pass's own GateReport, so its notApplicable is the full set.
+        notApplicable: resultNotApplicable(final)
       });
     }
     return result.passed && loopDone.done ? 0 : 1;
@@ -474,9 +500,16 @@ async function main(): Promise<number> {
   return 2;
 }
 
-main()
-  .then((code) => process.exit(code))
-  .catch((err: unknown) => {
-    console.error(err);
-    process.exit(1);
-  });
+// Only run when invoked as the entrypoint (`node cli.ts ...` / `npx tsx cli.ts
+// ...`), never on import. Without this guard, importing this module for its
+// exported pure helpers (e.g. in a unit test) parsed process.argv as if it
+// were a real CLI invocation and called process.exit(), killing the test
+// runner -- the same class of defect the check scripts already guard against.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  main()
+    .then((code) => process.exit(code))
+    .catch((err: unknown) => {
+      console.error(err);
+      process.exit(1);
+    });
+}

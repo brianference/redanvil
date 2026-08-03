@@ -20,9 +20,19 @@
  * reality, not the Cloudflare API.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Real, resolvable known-bad fixture: a wrangler.toml declaring an `AI`
+ * binding plus a fixture-server.mjs that starts a genuinely live local HTTP
+ * server answering every request with the same 503 body a deployed
+ * Cloudflare Pages Function emits when its AI binding is unconfigured.
+ */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'lg-bindings-bound', 'bad-app');
 
 /** How long a probe may take. */
 const FETCH_TIMEOUT_MS = 15_000;
@@ -371,7 +381,7 @@ export async function runBindingsBound(appDir, io, opts = {}) {
         { ok: result.ok, at: nowIso(), base }
       ],
       knownBad: {
-        input: 'deployed endpoint returning binding unavailable / 503 missing AI',
+        input: KNOWN_BAD_FIXTURE,
         failed: true,
         recordedAt: nowIso()
       }
@@ -392,7 +402,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const argv = process.argv.slice(2);
   const ui = argv.indexOf('--url');
   const fixtureUrl = argv.indexOf('--fixture-url');
-  const url =
+  let url =
     ui === -1 ? (fixtureUrl === -1 ? null : argv[fixtureUrl + 1]) : argv[ui + 1];
   const appDir =
     argv.find(
@@ -404,6 +414,17 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   if (!appDir) {
     console.error('usage: node lg-bindings-bound.mjs <appDir> [--url URL]');
     process.exit(2);
+  }
+  // Known-bad fixtures carry a fixture-server.mjs next to their wrangler.toml:
+  // it starts a REAL local HTTP server for the duration of this run so the
+  // probe below classifies an actual live response, not a canned string. No
+  // real app carries this file, so it never activates outside a known-bad
+  // rerun, and an explicit --url/--fixture-url always wins.
+  const fixtureServerPath = join(appDir, 'fixture-server.mjs');
+  if (!url && existsSync(fixtureServerPath)) {
+    const mod = await import(pathToFileURL(fixtureServerPath).href);
+    const started = await mod.start();
+    url = started.url;
   }
   runBindingsBound(appDir, {
     pass: () => process.exit(0),

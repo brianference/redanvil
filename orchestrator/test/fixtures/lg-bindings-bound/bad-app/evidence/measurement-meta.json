@@ -1,0 +1,23 @@
+{
+  "lg-bindings-bound": {
+    "tool": "fetch-probe",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:38.801Z",
+        "base": "http://127.0.0.1:61902"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:38.801Z",
+        "base": "http://127.0.0.1:61902"
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\lg-bindings-bound\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T04:36:38.801Z"
+    }
+  }
+}

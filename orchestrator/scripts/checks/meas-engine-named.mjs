@@ -9,13 +9,19 @@
  * project labelled "mobile" is not Chromium. Two harnesses with the same label
  * are not necessarily the same browser. Unknown engine fails closed.
  */
-import { pathToFileURL } from 'node:url';
+import { dirname, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   readMeasurementMeta,
   writeMeasurementMetaEntry,
   BROWSER_DRIVEN_RULES,
   nowIso
 } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: fe-light-dark recorded with
+ * engine: null, so meas-engine-named run against it always fails. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'meas-engine-named', 'bad-app');
 
 /** Engines Playwright (and this repo) actually name. */
 const KNOWN_ENGINES = new Set(['chromium', 'webkit', 'firefox']);
@@ -77,7 +83,12 @@ export function runMeasEngineNamed(appDir, io, deps = {}) {
     runs: [
       { ok, at: nowIso() },
       { ok, at: nowIso() }
-    ]
+    ],
+    knownBad: {
+      input: KNOWN_BAD_FIXTURE,
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
   if (!ok) {
     return fail(`meas-engine-named failed:\n` + failures.map((f) => `  ${f}`).join('\n'));

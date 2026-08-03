@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { loadRubric } from '../src/rubric/index';
+import { computeScore } from '../src/gate/score';
 import { APP_CHECKS } from '../src/commands/gate';
 import { requireGateResultMeetsBar } from '../scripts/checks/lg-shipped.mjs';
 
@@ -396,6 +397,16 @@ describe('lg-shipped condition 5 does not pin itself on its own prior failure', 
     // The next run's condition 5 used to read that same file, see its own past
     // failure in the rules list, and fail again citing it -- pinned forever,
     // since the only way to clear it required lg-shipped to have already passed.
+    //
+    // A second hole hid behind that one: filtering the rules LIST fixed the
+    // "N rules failed" half of scoreBarReasons, but finalScore was still read
+    // verbatim from the stored file, and computeScore() zeroes finalScore to 0
+    // the instant ANY blocker fails -- lg-shipped included. The fixture's
+    // finalScore is therefore whatever real computeScore() actually produces
+    // for this rule set (0, since lg-shipped is severity:'blocker'), never a
+    // hand-picked 100 -- that combination is one computeScore() can never
+    // emit, and a test built on it proves nothing about the recompute path
+    // requireGateResultMeetsBar now has to exercise.
     const app = makeAppDir();
     const slug = app.split(/[/\\]/).pop() ?? 'example';
     mkdirSync(join(app, 'results'), { recursive: true });
@@ -403,12 +414,13 @@ describe('lg-shipped condition 5 does not pin itself on its own prior failure', 
       .filter((r) => r.id !== 'lg-shipped')
       .map((r) => ({ ruleId: r.id, passed: true }));
     rules.push({ ruleId: 'lg-shipped', passed: false });
+    const { score: realFinalScore } = computeScore(rules, loadRubric());
     writeFileSync(
       join(app, 'results', `${slug}.json`),
       JSON.stringify({
         kind: 'results',
         slug,
-        finalScore: 100,
+        finalScore: realFinalScore,
         threshold: 90,
         rules,
         provenance: { commit: 'a'.repeat(40), notApplicable: [] }
@@ -422,22 +434,26 @@ describe('lg-shipped condition 5 does not pin itself on its own prior failure', 
   });
 
   it('still FAILS when a DIFFERENT rule is recorded as failing (known-bad: not blanket-exempt)', () => {
+    // Same real-computeScore discipline as above: lg-shipped AND one other
+    // real blocker (u-typing-strict) both fail, so the honest finalScore is 0
+    // -- not a hand-authored 100 that computeScore could never produce for a
+    // failing blocker. After lg-shipped is excluded and the score recomputed,
+    // u-typing-strict is still a recorded failing blocker, so the recompute
+    // must still land at 0 and condition 5 must still refuse.
     const app = makeAppDir();
     const slug = app.split(/[/\\]/).pop() ?? 'example';
     mkdirSync(join(app, 'results'), { recursive: true });
     const rules = loadRubric()
       .filter((r) => r.id !== 'lg-shipped')
-      .map((r, i) => ({ ruleId: r.id, passed: i !== 0 })); // fail exactly one real rule
+      .map((r) => ({ ruleId: r.id, passed: r.id !== 'u-typing-strict' }));
     rules.push({ ruleId: 'lg-shipped', passed: false });
+    const { score: realFinalScore } = computeScore(rules, loadRubric());
     writeFileSync(
       join(app, 'results', `${slug}.json`),
       JSON.stringify({
         kind: 'results',
         slug,
-        // finalScore stays at 100 (as if only pass/fail counted, not weighted)
-        // so the failure asserted below is isolated to the failing-rules half
-        // of scoreBarReasons, not the threshold half.
-        finalScore: 100,
+        finalScore: realFinalScore,
         threshold: 90,
         rules,
         provenance: { commit: 'a'.repeat(40), notApplicable: [] }

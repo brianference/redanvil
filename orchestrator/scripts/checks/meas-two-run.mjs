@@ -7,7 +7,8 @@
  *
  * Disagreement is a FAIL, not a retry-until-green. Missing data fails closed.
  */
-import { pathToFileURL } from 'node:url';
+import { dirname, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   readMeasurementMeta,
   writeMeasurementMetaEntry,
@@ -16,6 +17,11 @@ import {
   runsAreDuplicate,
   nowIso
 } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: fe-light-dark recorded with only one
+ * run, so meas-two-run run against it always fails. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'meas-two-run', 'bad-app');
 
 /**
  * @typedef {{
@@ -87,7 +93,12 @@ export function runMeasTwoRun(appDir, io, deps = {}) {
     runs: [
       { ok, at: nowIso() },
       { ok, at: nowIso() }
-    ]
+    ],
+    knownBad: {
+      input: KNOWN_BAD_FIXTURE,
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
   if (!ok) {
     return fail(`meas-two-run failed:\n` + failures.map((f) => `  ${f}`).join('\n'));

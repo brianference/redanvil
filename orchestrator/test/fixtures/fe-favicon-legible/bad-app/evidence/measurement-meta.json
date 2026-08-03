@@ -1,0 +1,38 @@
+{
+  "fe-favicon-legible": {
+    "tool": "playwright-canvas",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:17.439Z",
+        "metrics": {
+          "inkCoverage": 1,
+          "detailEnergy": 7.105427357601002e-15,
+          "contrastOnWhite": 0.8977582669118986,
+          "contrastOnDark": 0.09619290006524425,
+          "inkCount": 1024,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:17.439Z",
+        "metrics": {
+          "inkCoverage": 1,
+          "detailEnergy": 7.105427357601002e-15,
+          "contrastOnWhite": 0.8977582669118986,
+          "contrastOnDark": 0.09619290006524425,
+          "inkCount": 1024,
+          "pixelCount": 1024
+        }
+      }
+    ],
+    "source": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\fe-favicon-legible\\bad-app\\public\\favicon.png",
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\fe-favicon-legible\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T04:36:17.439Z"
+    }
+  }
+}

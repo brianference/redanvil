@@ -1,0 +1,35 @@
+{
+  "fe-light-dark": {
+    "tool": "playwright",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-01-01T00:00:01.000Z"
+      }
+    ]
+  },
+  "meas-engine-named": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:26.158Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:26.159Z"
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-engine-named\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T04:36:26.159Z"
+    }
+  }
+}

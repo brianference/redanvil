@@ -29,12 +29,16 @@
  * Do NOT lower these so a current app passes — if an app fails, that is a finding.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, extname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, extname, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 const require = createRequire(import.meta.url);
+const here = dirname(fileURLToPath(import.meta.url));
+
+/** Real, resolvable known-bad fixture: a solid-square favicon with no detail. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'fe-favicon-legible', 'bad-app');
 
 /** Alpha channel above this counts as ink. */
 export const INK_ALPHA = 128;
@@ -422,7 +426,7 @@ export async function runFaviconLegible(appDir, io, deps = {}) {
     runs,
     source: results.map((r) => r.source).join(', '),
     knownBad: {
-      input: 'solid-square or empty favicon failing ink/detail floors',
+      input: KNOWN_BAD_FIXTURE,
       failed: true,
       recordedAt: nowIso()
     }

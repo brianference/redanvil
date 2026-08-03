@@ -683,6 +683,32 @@ describe('G1–G5 measurement provenance', () => {
     console.log('meas-known-bad known-bad (prose input):', failures.join('; '));
   });
 
+  it('G1 FAILS when knownBad.input is entirely absent, not prose (known-bad)', () => {
+    // Absent is a different failure mode than prose: `typeof kb.input` is
+    // `'undefined'`, not a non-empty string, so the old code's
+    // `if (typeof kb.input !== 'string' ...) continue;` skipped straight past
+    // this entry -- no resolve attempt, no rerun, no failure pushed -- and the
+    // entry PASSED with zero failures whenever `failed:true` and a fresh
+    // `recordedAt` were also present. That is worse than prose, which at
+    // least fails the resolve step. A rerun was requested here (a rerun
+    // function is supplied), so a missing input must fail exactly like an
+    // unresolvable one.
+    let rerunCalled = false;
+    const failures = evaluateKnownBad(
+      { 'u-build-succeeds': { knownBad: { failed: true, recordedAt: new Date().toISOString() } } },
+      ['u-build-succeeds'],
+      () => Date.now(),
+      () => {
+        rerunCalled = true;
+        return 1;
+      },
+      () => null
+    );
+    expect(failures.some((f) => /knownBad\.input is missing/i.test(f))).toBe(true);
+    expect(rerunCalled).toBe(false);
+    console.log('meas-known-bad known-bad (absent input):', failures.join('; '));
+  });
+
   it('G1 PASSES when knownBad.input resolves and the rerun exits non-zero (known-good)', () => {
     const app = makeAppDir();
     write(app, 'fixtures/real.html', '<html></html>');

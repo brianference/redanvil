@@ -1,0 +1,35 @@
+{
+  "fe-a11y-contrast": {
+    "tool": "hand-rolled-getComputedStyle",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-01-01T00:00:00.000Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-01-01T00:00:01.000Z"
+      }
+    ]
+  },
+  "meas-standard-tool": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:26.107Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:26.107Z"
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-standard-tool\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T04:36:26.107Z"
+    }
+  }
+}

@@ -36,6 +36,7 @@ import {
   resolveResultPath,
   scoreBarReasons
 } from '../../../.github/scripts/meets_the_bar.mjs';
+import { recomputeScore } from './lg-result-reproduces.mjs';
 
 /** How long a production fetch may take before it is treated as infra failure. */
 const FETCH_TIMEOUT_MS = 20_000;
@@ -224,12 +225,50 @@ export function requireGateResultMeetsBar(appDir, io) {
   // lg-shipped is not the recorded failure -- which requires lg-shipped to
   // have already passed, the same circularity. lg-shipped judges every OTHER
   // rule's recorded outcome, never its own past verdict.
-  const effectiveResult =
-    result === null
-      ? null
-      : { ...result, rules: result.rules.filter((r) => r.ruleId !== 'lg-shipped') };
+  //
+  // Filtering `rules` alone is not enough: `scoreBarReasons` also checks
+  // `finalScore`, and that field is copied verbatim from the stored file, not
+  // recomputed here. lg-shipped is `severity:'blocker'` in the rubric, so
+  // computeScore() zeroes the ENTIRE score to 0 the moment lg-shipped fails —
+  // that 0 gets written into results/<slug>.json, and reading it back
+  // unmodified reproduces the exact same circularity one field over: a past
+  // lg-shipped failure pins finalScore at 0 forever, and condition 5 then
+  // fails citing that stale 0 even after the rules list has been cleaned up.
+  // So the score must be RECOMPUTED from the other rules' recorded outcomes
+  // with lg-shipped excluded from the rubric set entirely (not just from the
+  // outcomes), via the one real implementation in gate/score.ts — never a
+  // second, parallel scoring formula here.
+  if (result === null) {
+    const reasons = scoreBarReasons(null, { threshold: DEFAULT_THRESHOLD });
+    io.fail(
+      `gate result for ${slug} is below the finish line: ${reasons.join('; ')}. ` +
+        `Fix: node .github/scripts/reverify.mjs --app ${slug}`
+    );
+  }
+
+  const rulesWithoutSelf = result.rules.filter((r) => r.ruleId !== 'lg-shipped');
+  const outcomes = rulesWithoutSelf.map((r) => ({ ruleId: r.ruleId, passed: r.passed === true }));
+  const recordedNotApplicable = Array.isArray(raw?.provenance?.notApplicable)
+    ? raw.provenance.notApplicable
+    : [];
+  // 'lg-shipped' excluded by rule id, same mechanism the score helper already
+  // uses for lane/rule waivers — this removes it from computeScore's rubric
+  // set, not just its outcome, so it cannot zero the score as an unrecorded
+  // fail-closed blocker either.
+  const notApplicable = [...new Set([...recordedNotApplicable, 'lg-shipped'])];
+
+  let recomputed;
+  try {
+    recomputed = recomputeScore(outcomes, notApplicable);
+  } catch (err) {
+    io.fail(
+      `could not recompute score excluding lg-shipped: ${err instanceof Error ? err.message : err}`
+    );
+  }
+
+  const effectiveResult = { ...result, finalScore: recomputed.score, rules: rulesWithoutSelf };
   const reasons = scoreBarReasons(effectiveResult, {
-    threshold: result?.threshold ?? DEFAULT_THRESHOLD
+    threshold: result.threshold ?? DEFAULT_THRESHOLD
   });
   if (reasons.length > 0) {
     io.fail(

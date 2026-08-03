@@ -8,13 +8,19 @@
  * A hand-rolled colour parser produced four different wrong answers in one
  * session. Hand-rolled tools fail; axe-core is the standard.
  */
-import { pathToFileURL } from 'node:url';
+import { dirname, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   readMeasurementMeta,
   writeMeasurementMetaEntry,
   AXE_REQUIRED_RULES,
   nowIso
 } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: fe-a11y-contrast recorded with a
+ * hand-rolled tool, so meas-standard-tool run against it always fails. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'meas-standard-tool', 'bad-app');
 
 /**
  * @typedef {{
@@ -98,7 +104,12 @@ export function runMeasStandardTool(appDir, io, deps = {}) {
     runs: [
       { ok, at: nowIso() },
       { ok, at: nowIso() }
-    ]
+    ],
+    knownBad: {
+      input: KNOWN_BAD_FIXTURE,
+      failed: true,
+      recordedAt: nowIso()
+    }
   });
   if (!ok) {
     return fail(`meas-standard-tool failed:\n` + failures.map((f) => `  ${f}`).join('\n'));

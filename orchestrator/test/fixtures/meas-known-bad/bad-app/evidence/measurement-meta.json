@@ -1,0 +1,21 @@
+{
+  "meas-known-bad": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:35.042Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:35.043Z"
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-known-bad\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T04:36:35.043Z"
+    }
+  }
+}

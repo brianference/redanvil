@@ -5,19 +5,19 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-03T00:08:14.363Z",
+        "at": "2026-08-03T04:58:36.001Z",
         "landmarks": 5
       },
       {
         "ok": false,
-        "at": "2026-08-03T00:08:15.887Z",
+        "at": "2026-08-03T04:58:37.531Z",
         "landmarks": 5
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\theme-paint\\hardcoded-hero.html",
       "failed": true,
-      "recordedAt": "2026-08-03T00:08:15.887Z"
+      "recordedAt": "2026-08-03T04:58:37.531Z"
     }
   },
   "fe-search-present": {
@@ -26,17 +26,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-03T00:08:13.223Z"
+        "at": "2026-08-03T04:58:34.598Z"
       },
       {
         "ok": true,
-        "at": "2026-08-03T00:08:16.751Z"
+        "at": "2026-08-03T04:58:38.124Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\search-present\\dead-search.html",
       "failed": true,
-      "recordedAt": "2026-08-03T00:08:16.751Z"
+      "recordedAt": "2026-08-03T04:58:38.124Z"
     }
   }
 }

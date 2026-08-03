@@ -1,0 +1,31 @@
+{
+  "fe-light-dark": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-01-01T00:00:00.000Z"
+      }
+    ]
+  },
+  "meas-two-run": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:25.998Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T04:36:25.998Z"
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-two-run\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T04:36:25.998Z"
+    }
+  }
+}
