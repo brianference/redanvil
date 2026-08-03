@@ -4,7 +4,7 @@
   "finalScore": 0,
   "threshold": 90,
   "passed": false,
-  "evaluated": 91,
+  "evaluated": 67,
   "total": 91,
   "rules": [
     {
@@ -73,7 +73,7 @@
     },
     {
       "ruleId": "fe-result-in-viewport",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-resource-links",
@@ -217,7 +217,7 @@
     },
     {
       "ruleId": "proc-conventional-commits",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "proc-artifact-verified",
@@ -261,7 +261,7 @@
     },
     {
       "ruleId": "meas-known-bad",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-two-run",
@@ -273,106 +273,10 @@
     },
     {
       "ruleId": "meas-standard-tool",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-engine-named",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-a11y-contrast",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-desktop-width",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-cold-visitor",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-product-completeness",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-visual-review-recorded",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-premium-nav",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-required-pages",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-no-attribution",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-responsive-375",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-touch-targets",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-type-floor",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-noncolor-state",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-safe-areas",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-cross-link",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-seo-og",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-design-archetype",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-fail-closed-states",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-pages-compose",
-      "passed": true
-    },
-    {
-      "ruleId": "u-conc-idiomatic",
-      "passed": true
-    },
-    {
-      "ruleId": "u-conc-no-speculative-abstraction",
-      "passed": true
-    },
-    {
-      "ruleId": "u-conc-smallest-diff",
-      "passed": true
-    },
-    {
-      "ruleId": "u-conc-use-what-exists",
-      "passed": true
-    },
-    {
-      "ruleId": "u-test-adequacy",
-      "passed": true
-    },
-    {
-      "ruleId": "u-test-behavioral",
       "passed": true
     }
   ],
@@ -381,27 +285,39 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "fe-result-in-viewport",
+        "fe-a11y-contrast",
+        "fe-premium-nav",
+        "fe-required-pages",
+        "fe-no-attribution",
+        "fe-responsive-375",
+        "fe-product-completeness",
+        "fe-visual-review-recorded",
+        "fe-cold-visitor",
+        "fe-touch-targets",
+        "fe-type-floor",
+        "fe-desktop-width",
         "lg-shipped",
-        "lg-result-reproduces"
+        "lg-result-reproduces",
+        "meas-known-bad",
+        "meas-standard-tool"
       ]
     }
   ],
-  "deployUrl": null,
-  "finishedAt": "2026-08-03T18:22:21.735Z",
+  "deployUrl": "https://az-planting-calendar.pages.dev",
+  "finishedAt": "2026-08-03T19:39:49.595Z",
   "provenance": {
-    "commit": "c48b8dd8860a3ddd2ca7c0812d93dddc32a91ea5",
-    "dirty": true,
+    "commit": "1e3fdc6237be566634b9698ebc9206d235316a0c",
+    "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "dc03602c0edfe702a8a9d5de4ebbee6397e7363e5b727b9178bb3e5d570b461c",
+    "verdictsHash": null,
     "notApplicable": [
       "proc-pr-title-ticket",
       "u-claims-covered",
       "u-test-presence"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-03T18:22:21.801Z"
+    "generatedAt": "2026-08-03T19:39:49.681Z"
   }
 }
