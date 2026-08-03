@@ -22,6 +22,9 @@ import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const SCORE_HELPER = join(here, 'lg-result-reproduces-score.mts');
 const RUBRIC_IDS_HELPER = join(here, 'lg-rubric-ids.mts');
+/** Real, resolvable known-bad fixture: an appDir whose results/latest.json
+ * invents a rule id, so lg-result-reproduces run against it always fails. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'lg-result-reproduces');
 
 /**
  * @typedef {{
@@ -262,19 +265,19 @@ export function evaluateReproduction(result, recomputed, head, sourceDiff) {
       : []
   );
   // notApplicable may list lanes or rule ids; only exact rule-id exclusion here.
+  // `rubricIds` here is already na-filtered by recomputeScore (fed the same
+  // notApplicable list), so anything left in it is a rule the result SHOULD
+  // have scored. Missing one is a real gap regardless of what `result.total`
+  // claims -- a result can omit a scored rule outright (not list it n/a, just
+  // not include it) and a total that happens to match its own truncated rule
+  // list proves nothing about rubric coverage. This used to be gated behind a
+  // `result.total === rules.length` condition whose body was comments only,
+  // so a silently dropped rubric rule never failed the check.
   const missing = [...rubricIds].filter((id) => !resultIds.has(id) && !na.has(id)).sort();
-  // A result may legitimately omit some rules if they were n/a by lane. We only
-  // fail when the result claims a total that does not match its rule list, or
-  // when it invents ids. Full set equality is enforced when provenance lists
-  // notApplicable as rule ids only and total equals rubric size - na.
-  if (typeof result.total === 'number' && result.total === rules.length) {
-    // When total matches rules.length, every scored rule is listed -- missing
-    // rubric ids beyond notApplicable are still gaps if total claims full coverage.
-    if (missing.length > 0 && result.total >= rubricIds.size - na.size) {
-      // Soft: only flag if the gap is large and total claims near-full rubric.
-      // Hard fail for invented already done; for missing, require when evaluated
-      // set is the claimed total and provenance says nothing about n/a for them.
-    }
+  if (missing.length > 0) {
+    failures.push(
+      `missing scored rubric rule id(s) — not in result.rules and not notApplicable: ${missing.join(', ')}`
+    );
   }
 
   return failures;
@@ -317,39 +320,60 @@ export function runResultReproduces(appDir, io, deps = {}) {
   const na = Array.isArray(result?.provenance?.notApplicable)
     ? result.provenance.notApplicable
     : [];
+  const outcomes = rules.map((r) => ({ ruleId: r.ruleId, passed: r.passed === true }));
   const recompute = deps.recompute ?? recomputeScore;
-  let recomputed;
+
+  // Two INDEPENDENT invocations of the score helper (two real subprocess
+  // spawns), not one result written down twice. computeScore is meant to be
+  // deterministic; spawning it twice both proves that and gives G2 a genuine
+  // second run to compare instead of a duplicated object with two timestamps.
+  let firstRun;
+  let secondRun;
   try {
-    recomputed = recompute(
-      rules.map((r) => ({ ruleId: r.ruleId, passed: r.passed === true })),
-      na
-    );
+    firstRun = recompute(outcomes, na);
+    secondRun = recompute(outcomes, na);
   } catch (err) {
     return fail(`could not recompute score: ${err instanceof Error ? err.message : err}`);
   }
+  const at1 = nowIso();
+  const at2 = nowIso();
+
+  if (firstRun.score !== secondRun.score) {
+    writeMeasurementMetaEntry(appDir, 'lg-result-reproduces', {
+      tool: 'computeScore',
+      engine: null,
+      runs: [
+        { ok: false, at: at1, recomputed: firstRun.score, recorded: result.finalScore },
+        { ok: false, at: at2, recomputed: secondRun.score, recorded: result.finalScore }
+      ],
+      knownBad: {
+        input: KNOWN_BAD_FIXTURE,
+        failed: true,
+        recordedAt: nowIso()
+      }
+    });
+    return fail(
+      `computeScore is non-deterministic: two independent runs on the same outcomes returned ` +
+        `${firstRun.score} and ${secondRun.score} — cannot trust either`
+    );
+  }
+  const recomputed = firstRun;
 
   const head = deps.head !== undefined ? deps.head : headCommit(appDir);
   const failures = evaluateReproduction(result, recomputed, head, (from, to) =>
     sourceChangesBetween(appDir, from, to)
   );
 
-  // Invented ids are always fatal; also fail when recomputed score mismatches.
-  // Missing-set: require every result rule id ∈ rubric (done) and that
-  // computeScore was fed the same set the result claims.
-  if (typeof result.finalScore === 'number' && result.finalScore !== recomputed.score) {
-    // already in failures
-  }
-
   const ok = failures.length === 0;
   writeMeasurementMetaEntry(appDir, 'lg-result-reproduces', {
     tool: 'computeScore',
     engine: null,
     runs: [
-      { ok, at: nowIso(), recomputed: recomputed.score, recorded: result.finalScore },
-      { ok, at: nowIso(), recomputed: recomputed.score, recorded: result.finalScore }
+      { ok, at: at1, recomputed: firstRun.score, recorded: result.finalScore },
+      { ok, at: at2, recomputed: secondRun.score, recorded: result.finalScore }
     ],
     knownBad: {
-      input: 'results JSON whose finalScore does not match recompute',
+      input: KNOWN_BAD_FIXTURE,
       failed: true,
       recordedAt: nowIso()
     }

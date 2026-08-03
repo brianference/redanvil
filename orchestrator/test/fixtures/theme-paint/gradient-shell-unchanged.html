@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Gradient-shell fixture, gradient never changes — must FAIL fe-light-dark</title>
+    <style>
+      /* Same shell-div-with-background-image structure as the real
+         dashboard/app-builder pattern, but the gradient is IDENTICAL in both
+         themes -- a genuine "attribute flips, paint does not" defect. This
+         must still FAIL after the backgroundImage walk fix, or that fix made
+         the check unable to fail at all. */
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background-color: transparent;
+        font-family: system-ui, sans-serif;
+        color: #111118;
+      }
+      .ra-shell {
+        min-height: 100vh;
+        background-color: transparent;
+        /* Intentionally the SAME gradient in both themes. */
+        background-image: radial-gradient(circle at top, #eef1f8, #cfd6e8);
+      }
+      html[data-theme='dark'] body {
+        color: #f5f5f7;
+      }
+      header {
+        background-color: transparent;
+        padding: 16px 24px;
+      }
+      .hero {
+        background-color: transparent;
+        min-height: 280px;
+        padding: 48px 24px;
+      }
+      main section.content {
+        background-color: transparent;
+        padding: 24px;
+        min-height: 120px;
+      }
+      footer {
+        background-color: transparent;
+        padding: 16px 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ra-shell">
+      <header>Brand</header>
+      <main>
+        <section class="hero">
+          <h1>Gradient hero, never changes</h1>
+          <p>Paint lives on background-image, but the gradient is identical in both themes.</p>
+        </section>
+        <section class="content">
+          <p>Content region, also transparent background-color.</p>
+        </section>
+      </main>
+      <footer>Footer</footer>
+    </div>
+    <script>
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('theme') || 'light'
+      );
+    </script>
+  </body>
+</html>

@@ -8,6 +8,10 @@
   "entities": [],
   "threshold": 90,
   "features": [],
+  "design": {
+    "_why": "Recorded retroactively by opening evidence/screenshots/dashboard-1280-dark.png and evidence/screenshots/dashboard-1280-light.png (both files actually opened and viewed, not inferred from source): the home route is a KPI band (Total runs / Passed / Avg score) above a list of run records with status badges, which is Metric board (numbers first, reading beats navigating), not one of the three archetypes exempt from the anti-column check. Re-open those two PNGs to check this call. Confirmed NOT a centred column by a separate machine measurement (design_audit.mjs --claims against production, evidence/design-dashboard.json): widest block 1306 of 1440px (91%), equal 67px gutters -- wide enough that the anti-column rule (requires <72% width AND equal gutters to fire) would not trigger regardless of archetype name.",
+    "archetype": "Metric board"
+  },
   "coldVisitorProbe": {
     "path": "/",
     "expectSelector": ".ra-run-card",

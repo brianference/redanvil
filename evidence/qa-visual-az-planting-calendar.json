@@ -1,87 +1,63 @@
 {
-  "slug": "az-planting-calendar",
-  "url": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-02T21:27:34.266Z",
   "verdict": "pass",
   "findings": [],
-  "measurements": [
-    {
-      "route": "/",
-      "theme": "light",
-      "viewportWidth": 375,
-      "viewportHeight": 844,
-      "primaryResultY": 171,
-      "primaryResultHeight": 50,
-      "brandMarkHeight": 56,
-      "headerHeight": 127,
-      "heroHeight": 243,
-      "truncatedElementCount": 0,
-      "primaryActionAboveFold": true
-    },
-    {
-      "route": "/",
-      "theme": "dark",
-      "viewportWidth": 375,
-      "viewportHeight": 844,
-      "primaryResultY": 171,
-      "primaryResultHeight": 50,
-      "brandMarkHeight": 56,
-      "headerHeight": 127,
-      "heroHeight": 243,
-      "truncatedElementCount": 0,
-      "primaryActionAboveFold": true
-    },
-    {
-      "route": "/",
-      "theme": "light",
-      "viewportWidth": 768,
-      "viewportHeight": 1000,
-      "primaryResultY": 209,
-      "primaryResultHeight": 50,
-      "brandMarkHeight": 96,
-      "headerHeight": 165,
-      "heroHeight": 226,
-      "truncatedElementCount": 0,
-      "primaryActionAboveFold": true
-    },
-    {
-      "route": "/",
-      "theme": "dark",
-      "viewportWidth": 768,
-      "viewportHeight": 1000,
-      "primaryResultY": 209,
-      "primaryResultHeight": 50,
-      "brandMarkHeight": 96,
-      "headerHeight": 165,
-      "heroHeight": 226,
-      "truncatedElementCount": 0,
-      "primaryActionAboveFold": true
-    },
-    {
-      "route": "/",
-      "theme": "light",
-      "viewportWidth": 1280,
-      "viewportHeight": 900,
-      "primaryResultY": 131,
-      "primaryResultHeight": 50,
-      "brandMarkHeight": 96,
-      "headerHeight": 356,
-      "heroHeight": 232,
-      "truncatedElementCount": 0,
-      "primaryActionAboveFold": true
-    },
-    {
-      "route": "/",
-      "theme": "dark",
-      "viewportWidth": 1280,
-      "viewportHeight": 900,
-      "primaryResultY": 131,
-      "primaryResultHeight": 50,
-      "brandMarkHeight": 96,
-      "headerHeight": 356,
-      "heroHeight": 232,
-      "truncatedElementCount": 0,
-      "primaryActionAboveFold": true
-    }
-  ]
+  "measurements": {
+    "observations": [
+      {
+        "viewportWidth": 375,
+        "viewportHeight": 844,
+        "primaryResultY": 121.5625,
+        "primaryResultHeight": 112,
+        "brandMarkHeight": 56,
+        "headerHeight": 126.5625,
+        "heroHeight": 243.296875,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "dark"
+      },
+      {
+        "viewportWidth": 375,
+        "viewportHeight": 844,
+        "primaryResultY": 121.5625,
+        "primaryResultHeight": 112,
+        "brandMarkHeight": 56,
+        "headerHeight": 126.5625,
+        "heroHeight": 243.296875,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "light"
+      },
+      {
+        "viewportWidth": 1280,
+        "viewportHeight": 900,
+        "primaryResultY": 82,
+        "primaryResultHeight": 112,
+        "brandMarkHeight": 96,
+        "headerHeight": 356.375,
+        "heroHeight": 231.78125,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "dark"
+      },
+      {
+        "viewportWidth": 1280,
+        "viewportHeight": 900,
+        "primaryResultY": 82,
+        "primaryResultHeight": 112,
+        "brandMarkHeight": 96,
+        "headerHeight": 356.375,
+        "heroHeight": 231.78125,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "light"
+      }
+    ],
+    "failReasons": []
+  },
+  "writtenAt": "2026-08-02T23:12:41.689Z",
+  "slug": "az-planting-calendar"
 }

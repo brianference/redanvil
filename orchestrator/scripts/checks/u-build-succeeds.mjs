@@ -9,10 +9,14 @@
  * u-plat-runtime-parity boots wrangler, which is a different command.
  */
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: a package.json build script that exits 1. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'u-build-succeeds', 'bad-app');
 
 /**
  * @typedef {{
@@ -85,7 +89,7 @@ export function runBuildSucceeds(appDir, io, deps = {}) {
       { ok: result.ok, at: nowIso(), status: result.status }
     ],
     knownBad: {
-      input: 'package.json build script that exits 1',
+      input: KNOWN_BAD_FIXTURE,
       failed: true,
       recordedAt: nowIso()
     }

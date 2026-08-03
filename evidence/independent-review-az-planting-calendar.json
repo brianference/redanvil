@@ -1,0 +1,82 @@
+{
+  "slug": "az-planting-calendar",
+  "verdict": "fail",
+  "reviewer": "grok-4.5 via grok CLI, fresh context (session 5e06b2f2-1596-4184-8df3-d352fe6291cd) -- independent of the authoring agent (Claude)",
+  "commit": "8d625b2060242a88ff138f60bcbff954ba283342",
+  "reviewedAt": "2026-08-02T23:14:01.000Z",
+  "reviewedRange": "origin/master..HEAD",
+  "reviewedPaths": [
+    "orchestrator/scripts/checks",
+    "orchestrator/src",
+    ".github/scripts",
+    "az-planting-calendar"
+  ],
+  "diffHash": "ff620f0a23b8ac66aa82be878e458b966c4d4abbfa9341e0ba655833b9ae736f",
+  "verifiedBy": "claude (opened every cited file:line and confirmed or refuted each finding before recording; none were refuted)",
+  "findings": [
+    {
+      "title": "meas-two-run defeated by duplicated single-run records",
+      "citation": "orchestrator/scripts/checks/fe-brand-mark-size.mjs:377",
+      "detail": "writeMeasurementMetaEntry is called with runs: [{ ok: result.ok, at: nowIso() }, { ok: result.ok, at: nowIso() }] -- one computed `result.ok` duplicated with two timestamps, not two independent runs. meas-two-run.mjs (evaluateTwoRun) only checks runs.length>=2 and runsAgree(runs); a duplicated single value always agrees with itself. Same pattern confirmed at fe-breadcrumbs.mjs:499-501, fe-light-dark.mjs:449-451 (comment at line 443-445 explicitly documents the duplication as intentional), fe-search-present.mjs:783-786, fe-result-in-viewport.mjs:561-563, fe-resource-links.mjs:551-553, lg-result-reproduces.mjs:346-347, u-api-not-found.mjs:186-187, meas-known-bad.mjs:170-172. G2 (meas-two-run) is satisfiable by every browser-driven rule in the codebase without ever running an independent second measurement.",
+      "citationVerified": true,
+      "passed": false
+    },
+    {
+      "title": "meas-known-bad's rerun gate is satisfied by an unresolvable path, not a run",
+      "citation": "orchestrator/scripts/checks/meas-known-bad.mjs:159",
+      "detail": "rerun(ruleId, input): `if (!abs) return 1;` -- when knownBad.input does not resolve under process.cwd() or appDir, the function returns 1 (\"did not pass\") WITHOUT spawning anything, and evaluateKnownBad (meas-known-bad.mjs:113-120) only fails when the rerun code is 0. A missing/unresolvable path is therefore indistinguishable from a correctly-failing known-bad fixture. Verified live: fe-brand-mark-size.mjs:387 records knownBad.input = 'fixtures/brand-mark-size/small.html' (app-relative), but the real fixture lives at orchestrator/test/fixtures/brand-mark-size/small.html; az-planting-calendar/fixtures/brand-mark-size/small.html does not exist, and 'fixtures/brand-mark-size/small.html' does not exist relative to repo root either -- so this specific knownBad entry has never actually been executed by meas-known-bad, yet it satisfies G1.",
+      "citationVerified": true,
+      "passed": false
+    },
+    {
+      "title": "knownBad entries recorded as prose, not paths -- G1 proof never runs",
+      "citation": "orchestrator/scripts/checks/fe-result-in-viewport.mjs:566",
+      "detail": "knownBad.input is a sentence, not a file path: 'fixture with result list far below the fold' (fe-result-in-viewport.mjs:566), 'fixture with dead external URL (real 404)' (fe-resource-links.mjs:556), 'results JSON whose finalScore does not match recompute' (lg-result-reproduces.mjs:350), 'detail route that returns 200 for a bogus id' (u-api-not-found.mjs:189). None of these resolve via existsSync under cwd or appDir, so per the finding above every one of them silently satisfies meas-known-bad's rerun gate via the `!abs -> return 1` branch without a fixture ever being run. Combined with finding #2, G1 (meas-known-bad) is currently vacuous for at least these four rules plus fe-brand-mark-size, fe-breadcrumbs, and proc-design-options.",
+      "citationVerified": true,
+      "passed": false
+    },
+    {
+      "title": "lg-result-reproduces' missing-rubric-rule branch is a dead no-op",
+      "citation": "orchestrator/scripts/checks/lg-result-reproduces.mjs:273",
+      "detail": "`if (missing.length > 0 && result.total >= rubricIds.size - na.size) { /* comments only, no push to failures */ }` -- the `missing` array (rubric rule ids that are neither in the result nor listed notApplicable) is computed and then the branch that could act on it contains only comments, never `failures.push(...)`. Confirmed by reading lines 255-280 directly: `failures` is never mutated inside this block. A results JSON can omit a scored rubric rule outright (not list it n/a, just not include it) and lg-result-reproduces will not flag it, as long as invented ids are absent.",
+      "citationVerified": true,
+      "passed": false
+    },
+    {
+      "title": "lg-shipped condition 5 reads its own prior failure and cannot self-clear",
+      "citation": "orchestrator/scripts/checks/lg-shipped.mjs:218",
+      "detail": "requireGateResultMeetsBar (lg-shipped.mjs:210-227) calls scoreBarReasons(result, {threshold}) against the stored results/<slug>.json and fails if finalScore<threshold or any recorded rule has passed===false. Verified against the actual file on disk: results/az-planting-calendar.json currently has finalScore:0, threshold:90, and exactly one rule with passed===false out of 82 -- ruleId 'lg-shipped' itself (confirmed via `j.rules.filter(r=>r.passed===false)` => ['lg-shipped']). Running lg-shipped.mjs right now reads this same file and fails again citing its own prior recorded failure and the stale score-0, with no mechanism in this function to exclude its own prior verdict from the zero-failed-rules check it performs on itself. The check can only clear once some OTHER path overwrites the stored result with a run where lg-shipped is not itself the recorded failure -- which requires lg-shipped to have already passed in that run, i.e. the same circularity.",
+      "citationVerified": true,
+      "passed": false
+    },
+    {
+      "title": "fe-assistant-present's grounding proof is a weak regex, satisfiable without touching data",
+      "citation": "orchestrator/scripts/checks/fe-assistant-present.mjs:42-48",
+      "detail": "assessAssistantEndpoint (line 142) requires MODEL_CALL to match AND at least one GROUNDS_DATA pattern (line 154, .some()). GROUNDS_DATA includes bare `/\\bfilters?\\b/` and `/SYSTEM_PROMPT|systemPrompt|system:\\s*['\"`]/` (lines 45 and 48) alongside the real DB-access patterns. A model-calling endpoint with a variable literally named `filters` or a `SYSTEM_PROMPT` constant, and no database access at all, would satisfy this check. NOTE: verified az-planting-calendar/functions/api/assistant.ts is NOT currently exploiting this gap -- it does call getWindowsForHalf/listCrops against env.DB (assistant.ts:238-266) for real grounding. The defect is in the check's soundness (it would pass a stubbed assistant on a future or different app), not a live false-positive on this specific app today.",
+      "citationVerified": true,
+      "passed": false
+    },
+    {
+      "title": "meets_the_bar.mjs never supplies independentReviewOk to isDone",
+      "citation": ".github/scripts/meets_the_bar.mjs:600-610",
+      "detail": "The isDone() call inside decideApp/scoreBarReasons (the function backing the pre-push hook and CI's apps-meet-the-bar job) passes only { evidenceStale, screenshotsPresent } as opts -- independentReviewOk, qaVisualOk and userRefuseOk are never read or supplied here (confirmed by grepping the whole file: zero occurrences of independentReviewOk). Since this repo's isDone/coverage.mjs treats an unsupplied opt as 'unmeasured', not 'pass', F5 is currently unreachable (always fails/unmeasured) through the actual push-time and CI enforcement path regardless of what any evidence/independent-review-*.json file says -- this file was reportedly wired to be read by productJudgement.mjs's independentReviewOk(), but meets_the_bar.mjs does not appear to call that reader for this key at the point I inspected. Worth re-checking after the just-landed wiring change lands, since I read this before that change was described to me.",
+      "citationVerified": true,
+      "passed": false
+    },
+    {
+      "title": "SQL is parameterized -- no string-concatenation injection found",
+      "citation": "az-planting-calendar/functions/lib/db.ts:256",
+      "detail": "Reviewed getWindowsForHalf, listCrops, resolveZone, listZones, getCropsByIds (IN (...) built from a fixed-count '?' placeholder list, bound via .bind(...ids)), and getWindowsForCropMethod. All request-derived values (zip, crop query, half_month, method, ids) go through .prepare(...).bind(...). Template literals (`${ZONE_SELECT}`, `${WINDOW_SELECT}`, `${WINDOW_HALF_BOUNDS}`, `${WINDOW_MONTH_OVERLAP}`) interpolate only fixed module-level string constants (db.ts:75-76, 212-219, 220-225, 400-403) that contain no request input -- verified by reading each constant's definition. No SQL injection vector in this diff.",
+      "citationVerified": true,
+      "passed": true
+    },
+    {
+      "title": "API middleware fails closed on unmatched /api/* routes",
+      "citation": "az-planting-calendar/functions/_middleware.ts:23",
+      "detail": "Unmatched /api/* paths whose response content-type is not application/json now return errorJson(...,404) instead of falling through to the SPA's index.html 200 (the code's own comment at lines 15-20 documents that this was previously broken -- Pages answers unmatched paths with index.html at 200, so a naive `response.status===404` guard never fired). Verified the current condition at line 23 checks the content-type of the actual response, not response.status, which correctly distinguishes a real JSON 404 from the SPA shell. Rate limiting (functions/lib/rateLimit.ts) maps a missing CF-Connecting-IP to a shared bucket rather than bypassing the limit. No always-true auth/permission guard found in the touched middleware or assistant paths.",
+      "citationVerified": true,
+      "passed": true
+    }
+  ],
+  "notes": "verdict is 'fail' because 7 of 9 findings are confirmed real defects (all in gate/check infrastructure under orchestrator/scripts/checks/** and .github/scripts, not az-planting-calendar's application code). The two SQL/middleware findings clear cleanly. Do not treat this as a pass to unblock push."
+}

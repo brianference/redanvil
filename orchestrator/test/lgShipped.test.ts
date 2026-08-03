@@ -26,6 +26,7 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { loadRubric } from '../src/rubric/index';
 import { APP_CHECKS } from '../src/commands/gate';
+import { requireGateResultMeetsBar } from '../scripts/checks/lg-shipped.mjs';
 
 const CHECK_SCRIPT = fileURLToPath(
   new URL('../scripts/checks/lg-shipped.mjs', import.meta.url)
@@ -376,6 +377,78 @@ describe('lg-shipped known-answer failures', () => {
     const { status, output } = runCheckSync(app);
     expect(status, output).toBe(1);
     expect(output).toMatch(/GitHub/i);
+  });
+});
+
+describe('lg-shipped condition 5 does not pin itself on its own prior failure', () => {
+  /**
+   * Capture whether requireGateResultMeetsBar calls io.fail.
+   * @returns Fail-capture io and the reasons object.
+   */
+  function captureFailIo(): { io: { fail: (m?: string) => void }; failed: { msg: string | null } } {
+    const failed: { msg: string | null } = { msg: null };
+    return { io: { fail: (m) => { failed.msg = m ?? ''; } }, failed };
+  }
+
+  it('does NOT pin forever when the stored result records lg-shipped: false from a prior run', () => {
+    // Root cause: a run where lg-shipped itself failed (e.g. an earlier
+    // unpushed-commit run) writes `lg-shipped: false` into results/<slug>.json.
+    // The next run's condition 5 used to read that same file, see its own past
+    // failure in the rules list, and fail again citing it -- pinned forever,
+    // since the only way to clear it required lg-shipped to have already passed.
+    const app = makeAppDir();
+    const slug = app.split(/[/\\]/).pop() ?? 'example';
+    mkdirSync(join(app, 'results'), { recursive: true });
+    const rules = loadRubric()
+      .filter((r) => r.id !== 'lg-shipped')
+      .map((r) => ({ ruleId: r.id, passed: true }));
+    rules.push({ ruleId: 'lg-shipped', passed: false });
+    writeFileSync(
+      join(app, 'results', `${slug}.json`),
+      JSON.stringify({
+        kind: 'results',
+        slug,
+        finalScore: 100,
+        threshold: 90,
+        rules,
+        provenance: { commit: 'a'.repeat(40), notApplicable: [] }
+      }),
+      'utf8'
+    );
+
+    const { io, failed } = captureFailIo();
+    requireGateResultMeetsBar(app, io);
+    expect(failed.msg, failed.msg ?? '').toBeNull();
+  });
+
+  it('still FAILS when a DIFFERENT rule is recorded as failing (known-bad: not blanket-exempt)', () => {
+    const app = makeAppDir();
+    const slug = app.split(/[/\\]/).pop() ?? 'example';
+    mkdirSync(join(app, 'results'), { recursive: true });
+    const rules = loadRubric()
+      .filter((r) => r.id !== 'lg-shipped')
+      .map((r, i) => ({ ruleId: r.id, passed: i !== 0 })); // fail exactly one real rule
+    rules.push({ ruleId: 'lg-shipped', passed: false });
+    writeFileSync(
+      join(app, 'results', `${slug}.json`),
+      JSON.stringify({
+        kind: 'results',
+        slug,
+        // finalScore stays at 100 (as if only pass/fail counted, not weighted)
+        // so the failure asserted below is isolated to the failing-rules half
+        // of scoreBarReasons, not the threshold half.
+        finalScore: 100,
+        threshold: 90,
+        rules,
+        provenance: { commit: 'a'.repeat(40), notApplicable: [] }
+      }),
+      'utf8'
+    );
+
+    const { io, failed } = captureFailIo();
+    requireGateResultMeetsBar(app, io);
+    expect(failed.msg).not.toBeNull();
+    console.log('lg-shipped condition 5 known-bad (other rule still failing):', failed.msg);
   });
 });
 

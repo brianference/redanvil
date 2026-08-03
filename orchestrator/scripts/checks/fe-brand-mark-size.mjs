@@ -18,13 +18,16 @@
  */
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { join, extname, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, extname, resolve, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 const require = createRequire(import.meta.url);
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: a header mark rendered too small. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'brand-mark-size', 'small.html');
 
 /** Minimum rendered height (px) at desktop viewport. */
 export const MIN_HEIGHT_1280 = 48;
@@ -361,41 +364,63 @@ export async function runBrandMarkSize(appDir, io, opts = {}) {
         }
       };
 
-      const at1280 = await measureAt(1280);
-      const at375 = await measureAt(375);
-      const measured = {
-        found: at1280.found && at375.found,
-        height1280: at1280.height,
-        height375: at375.height
+      // Two INDEPENDENT full measurement passes (fresh pages, fresh renders),
+      // not one result written down twice. The previous version duplicated a
+      // single `result.ok` with two timestamps, which manufactured the
+      // two-run agreement G2 looks for without a second render ever happening.
+      const measureOnce = async () => {
+        const at1280 = await measureAt(1280);
+        const at375 = await measureAt(375);
+        const measured = {
+          found: at1280.found && at375.found,
+          height1280: at1280.height,
+          height375: at375.height
+        };
+        return { at1280, at375, result: evaluateMarkHeights(measured) };
       };
-      const result = evaluateMarkHeights(measured);
+
+      // Timestamp each run the instant it finishes, not both together at write
+      // time: two nowIso() calls back-to-back can land in the same
+      // millisecond, which makes a genuinely independent second run
+      // byte-identical to the first and trips runsAreDuplicate() as if it were
+      // one measurement written down twice.
+      const run1 = await measureOnce();
+      const at1 = nowIso();
+      const run2 = await measureOnce();
+      const at2 = nowIso();
 
       if (appDir) {
         writeMeasurementMetaEntry(appDir, 'fe-brand-mark-size', {
           tool: 'playwright',
           engine: 'chromium',
           runs: [
-            { ok: result.ok, at: nowIso() },
-            { ok: result.ok, at: nowIso() }
+            { ok: run1.result.ok, at: at1, height1280: run1.at1280.height, height375: run1.at375.height },
+            { ok: run2.result.ok, at: at2, height1280: run2.at1280.height, height375: run2.at375.height }
           ],
           heights: {
-            h1280: at1280.height,
-            h375: at375.height,
-            selector: at1280.selector ?? at375.selector
+            h1280: run1.at1280.height,
+            h375: run1.at375.height,
+            selector: run1.at1280.selector ?? run1.at375.selector
           },
           knownBad: {
-            input: 'fixtures/brand-mark-size/small.html',
+            input: KNOWN_BAD_FIXTURE,
             failed: true,
             recordedAt: nowIso()
           }
         });
       }
 
-      if (!result.ok) {
-        io.fail(result.failures.join('\n'));
+      if (run1.result.ok !== run2.result.ok) {
+        io.fail(
+          `two independent runs of fe-brand-mark-size disagree (run1=${run1.result.ok}, run2=${run2.result.ok}) — reporting neither`
+        );
+      }
+
+      if (!run1.result.ok) {
+        io.fail(run1.result.failures.join('\n'));
       }
       console.log(
-        `fe-brand-mark-size PASS: mark height ${at1280.height}px@1280 / ${at375.height}px@375`
+        `fe-brand-mark-size PASS: mark height ${run1.at1280.height}px@1280 / ${run1.at375.height}px@375`
       );
       io.pass();
     } finally {

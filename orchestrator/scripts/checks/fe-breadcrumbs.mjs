@@ -15,13 +15,16 @@
  */
 import { createServer } from 'node:http';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve, extname, basename } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, resolve, extname, basename, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 const require = createRequire(import.meta.url);
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture dir: an inner route with no breadcrumb nav. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'breadcrumbs');
 
 /** Route path tokens that count as home-only (not inner). */
 const HOME_PATHS = new Set(['/', '', '/index', '/home']);
@@ -479,35 +482,47 @@ export async function runBreadcrumbs(appDir, io, opts = {}) {
     } catch {
       // Pure HTML fixture evaluation without Playwright when every target is a file.
       if (opts.fixtureDir) {
-        /** @type {string[]} */
-        const failures = [];
-        for (const route of targets) {
-          const name =
-            route === '/' ? 'index.html' : `${route.replace(/^\//, '').replace(/\//g, '__')}.html`;
-          const file = join(/** @type {string} */ (opts.fixtureDir), name);
-          if (!existsSync(file)) {
-            failures.push(`${route}: fixture file missing (${name})`);
-            continue;
+        // Two INDEPENDENT evaluation passes (fresh file reads), not one
+        // result written down twice.
+        const evaluateOnce = () => {
+          /** @type {string[]} */
+          const fails = [];
+          for (const route of targets) {
+            const name =
+              route === '/' ? 'index.html' : `${route.replace(/^\//, '').replace(/\//g, '__')}.html`;
+            const file = join(/** @type {string} */ (opts.fixtureDir), name);
+            if (!existsSync(file)) {
+              fails.push(`${route}: fixture file missing (${name})`);
+              continue;
+            }
+            const ev = evaluateBreadcrumbHtml(readFileSync(file, 'utf8'));
+            if (!ev.ok) fails.push(`${route}: ${ev.reason}`);
           }
-          const ev = evaluateBreadcrumbHtml(readFileSync(file, 'utf8'));
-          if (!ev.ok) failures.push(`${route}: ${ev.reason}`);
-        }
+          return fails;
+        };
+        const failures1 = evaluateOnce();
+        const at1 = nowIso();
+        const failures2 = evaluateOnce();
+        const at2 = nowIso();
         if (appDir) {
           writeMeasurementMetaEntry(appDir, 'fe-breadcrumbs', {
             tool: 'html-fixture',
             engine: null,
             runs: [
-              { ok: failures.length === 0, at: nowIso() },
-              { ok: failures.length === 0, at: nowIso() }
+              { ok: failures1.length === 0, at: at1 },
+              { ok: failures2.length === 0, at: at2 }
             ],
             knownBad: {
-              input: 'fixtures/breadcrumbs/bad-about.html',
+              input: KNOWN_BAD_FIXTURE,
               failed: true,
               recordedAt: nowIso()
             }
           });
         }
-        if (failures.length > 0) io.fail(failures.join('\n'));
+        if ((failures1.length === 0) !== (failures2.length === 0)) {
+          io.fail('two independent evaluations of fe-breadcrumbs (fixture mode) disagree — reporting neither');
+        }
+        if (failures1.length > 0) io.fail(failures1.join('\n'));
         console.log(`fe-breadcrumbs PASS: ${targets.length} inner route(s) have breadcrumbs`);
         io.pass();
       }
@@ -516,39 +531,63 @@ export async function runBreadcrumbs(appDir, io, opts = {}) {
 
     const browser = await chromium.launch();
     try {
-      /** @type {string[]} */
-      const failures = [];
-      const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-      for (const route of targets) {
-        const path = materialiseRoute(route);
-        const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
+      // Two INDEPENDENT navigation passes (fresh page, fresh navigations),
+      // not one result written down twice.
+      const driveOnce = async () => {
+        /** @type {string[]} */
+        const fails = [];
+        const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
         try {
-          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 });
-          await page.waitForTimeout(150);
-          const result = await page.evaluate(evaluateBreadcrumbInPage);
-          if (!result.ok) {
-            failures.push(`${path}: ${result.reason}`);
+          for (const route of targets) {
+            const path = materialiseRoute(route);
+            const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
+            try {
+              await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+              await page.waitForTimeout(150);
+              const result = await page.evaluate(evaluateBreadcrumbInPage);
+              if (!result.ok) {
+                fails.push(`${path}: ${result.reason}`);
+              }
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : String(err);
+              fails.push(`${path}: navigation failed — ${msg.slice(0, 120)}`);
+            }
           }
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          failures.push(`${path}: navigation failed — ${msg.slice(0, 120)}`);
+        } finally {
+          await page.close();
         }
-      }
+        return fails;
+      };
+
+      // Timestamp each run the instant it finishes, not both together at write
+      // time: two nowIso() calls back-to-back can land in the same
+      // millisecond, which makes a genuinely independent second run
+      // byte-identical to the first and trips runsAreDuplicate() as if it were
+      // one measurement written down twice.
+      const failures1 = await driveOnce();
+      const at1 = nowIso();
+      const failures2 = await driveOnce();
+      const at2 = nowIso();
+      const failures = failures1;
 
       if (appDir) {
         writeMeasurementMetaEntry(appDir, 'fe-breadcrumbs', {
           tool: 'playwright',
           engine: 'chromium',
           runs: [
-            { ok: failures.length === 0, at: nowIso() },
-            { ok: failures.length === 0, at: nowIso() }
+            { ok: failures1.length === 0, at: at1 },
+            { ok: failures2.length === 0, at: at2 }
           ],
           knownBad: {
-            input: 'fixtures/breadcrumbs/bad-about.html',
+            input: KNOWN_BAD_FIXTURE,
             failed: true,
             recordedAt: nowIso()
           }
         });
+      }
+
+      if ((failures1.length === 0) !== (failures2.length === 0)) {
+        io.fail('two independent runs of fe-breadcrumbs disagree — reporting neither');
       }
 
       if (failures.length > 0) {

@@ -1,0 +1,25 @@
+{
+  "u-api-no-spa-mask": {
+    "tool": "fetch",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T00:15:21.179Z",
+        "path": "/api/__definitely_absent_4764b25906e70446",
+        "status": 200
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T00:15:21.180Z",
+        "path": "/api/__definitely_absent_4764b25906e70446",
+        "status": 200
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\known-bad-fixtures\\u-api-no-spa-mask\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T00:15:21.180Z"
+    }
+  }
+}

@@ -215,7 +215,20 @@ export function requireGateResultMeetsBar(appDir, io) {
   }
 
   const result = parseResultShape(raw);
-  const reasons = scoreBarReasons(result, {
+  // Exclude lg-shipped's OWN previously recorded verdict before checking for
+  // failing rules. Without this, a run where lg-shipped itself failed (an
+  // earlier unpushed-commit, missing-result, or hash-mismatch run) writes
+  // `lg-shipped: false` into the very results file this function reads next
+  // time, and the check fails again citing its own prior failure. It can then
+  // only clear once some OTHER path overwrites the result with a run where
+  // lg-shipped is not the recorded failure -- which requires lg-shipped to
+  // have already passed, the same circularity. lg-shipped judges every OTHER
+  // rule's recorded outcome, never its own past verdict.
+  const effectiveResult =
+    result === null
+      ? null
+      : { ...result, rules: result.rules.filter((r) => r.ruleId !== 'lg-shipped') };
+  const reasons = scoreBarReasons(effectiveResult, {
     threshold: result?.threshold ?? DEFAULT_THRESHOLD
   });
   if (reasons.length > 0) {
@@ -333,9 +346,30 @@ export async function runLgShipped(appDir, io) {
   }
   if (ahead.length > 0) {
     const count = ahead.split('\n').filter(Boolean).length;
-    io.fail(
-      `${count} unpushed commit(s) on ${branch} — remote does not contain what was gated`
-    );
+    // Condition 2 is unprovable from inside a pre-push hook: it asks whether the
+    // commits are on the remote, and the push that would put them there is the
+    // very thing being gated. Enforced literally it deadlocks -- the hook refuses
+    // the push because HEAD is unpushed, forever. That is not a high bar, it is
+    // an unsatisfiable one, and the only way out is --no-verify, which teaches
+    // people to bypass the whole gate.
+    //
+    // So the hook (and ONLY the hook) sets REDANVIL_PRE_PUSH=1, which downgrades
+    // this single condition to a note. Nothing else relaxes: 1 (origin is a real
+    // GitHub remote), 3 (production returns 200), 4 (the deployed asset hash
+    // matches the local dist) and 5 (the app's own gate meets the finish line)
+    // all still run, and together they still prove the live site is serving the
+    // built code. CI does not set the variable, so there the full five-condition
+    // form is enforced against a remote that genuinely does contain the commits.
+    if (process.env.REDANVIL_PRE_PUSH === '1') {
+      console.log(
+        `lg-shipped: ${count} unpushed commit(s) on ${branch} — deferred, this push is what ships them ` +
+          `(conditions 1, 3, 4 and 5 still enforced; CI re-checks all five against the remote)`
+      );
+    } else {
+      io.fail(
+        `${count} unpushed commit(s) on ${branch} — remote does not contain what was gated`
+      );
+    }
   }
 
   // --- 3. Production URL returns 200 ---------------------------------------

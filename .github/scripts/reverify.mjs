@@ -138,7 +138,20 @@ for (const app of apps) {
   const jobs = [
     [
       'design_audit.mjs',
-      [app.url, '--routes', app.designRoutes, '--out', `evidence/design-${app.slug}.json`]
+      [
+        app.url,
+        '--routes',
+        app.designRoutes,
+        '--out',
+        `evidence/design-${app.slug}.json`,
+        // Without this, fe-design-archetype's finding is never written, so a
+        // verdict that cites this report can never be re-derived from fresh
+        // evidence -- the exact gap that let two apps ship with the rule
+        // permanently unrecorded even though claims.json now names an archetype.
+        ...(existsSync(join(app.dir, '.redanvil', 'claims.json'))
+          ? ['--claims', `${app.dir}/.redanvil/claims.json`]
+          : [])
+      ]
     ],
     [
       'desktop_width.mjs',

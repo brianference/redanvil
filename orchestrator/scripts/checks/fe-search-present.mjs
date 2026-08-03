@@ -24,8 +24,8 @@
  */
 import { createServer } from 'node:http';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, resolve, extname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, relative, resolve, extname, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
@@ -38,6 +38,9 @@ import {
 } from '../../../.github/scripts/runtime_parity.mjs';
 
 const require = createRequire(import.meta.url);
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: search input present but never narrows. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'search-present', 'dead-search.html');
 
 /** Filename tokens that mark a collection/list surface. */
 const COLLECTION_FILE =
@@ -755,36 +758,58 @@ export async function runSearchPresent(appDir, io, opts = {}) {
 
     const browser = await chromium.launch();
     try {
-      const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-      await page.goto(base, { waitUntil: 'networkidle', timeout: 60_000 });
+      // Two INDEPENDENT drive passes (fresh page, fresh navigation, fresh
+      // typing), not one result written down twice.
+      const driveOnce = async () => {
+        const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+        try {
+          await page.goto(base, { waitUntil: 'networkidle', timeout: 60_000 });
+          const ui = await proveSearchNarrows(page);
+          /** @type {string[]} */
+          const apiFailures = [];
+          // API probe: only when the app itself treats q/search/query as a search param.
+          // Always-probing every list endpoint would fail honest client-side-only search.
+          if (ui.ok && apiSearch.uses && apiPaths.length > 0 && base && !opts.fixture) {
+            const param = apiSearch.param ?? 'q';
+            const term = ui.query;
+            const fails = await probeApiSearch(base, apiPaths, param, term);
+            apiFailures.push(...fails);
+          }
+          return { ui, apiFailures, ok: ui.ok && apiFailures.length === 0 };
+        } finally {
+          await page.close();
+        }
+      };
 
-      const ui = await proveSearchNarrows(page);
-      /** @type {string[]} */
-      const apiFailures = [];
-      // API probe: only when the app itself treats q/search/query as a search param.
-      // Always-probing every list endpoint would fail honest client-side-only search.
-      if (ui.ok && apiSearch.uses && apiPaths.length > 0 && base && !opts.fixture) {
-        const param = apiSearch.param ?? 'q';
-        const term = ui.query;
-        const fails = await probeApiSearch(base, apiPaths, param, term);
-        apiFailures.push(...fails);
-      }
+      // Timestamp each run the instant it finishes, not both together at write
+      // time: two nowIso() calls back-to-back can land in the same
+      // millisecond, which makes a genuinely independent second run
+      // byte-identical to the first and trips runsAreDuplicate() as if it were
+      // one measurement written down twice.
+      const run1 = await driveOnce();
+      const at1 = nowIso();
+      const run2 = await driveOnce();
+      const at2 = nowIso();
+      const { ui, apiFailures } = run1;
 
-      // Extra: if the user hits a production URL and the client never declared
-      // search params but common collection endpoints still look "searchable"
-      // only via ignored q= — we do not invent that requirement. UI proof is
-      // the load-bearing half.
-
-      const ok = ui.ok && apiFailures.length === 0;
       if (appDir) {
         writeMeasurementMetaEntry(appDir, 'fe-search-present', {
           tool: 'playwright',
           engine: 'chromium',
           runs: [
-            { ok, at: nowIso() },
-            { ok, at: nowIso() }
-          ]
+            { ok: run1.ok, at: at1 },
+            { ok: run2.ok, at: at2 }
+          ],
+          knownBad: {
+            input: KNOWN_BAD_FIXTURE,
+            failed: true,
+            recordedAt: nowIso()
+          }
         });
+      }
+
+      if (run1.ok !== run2.ok) {
+        io.fail('two independent runs of fe-search-present disagree — reporting neither');
       }
 
       if (!ui.ok) {

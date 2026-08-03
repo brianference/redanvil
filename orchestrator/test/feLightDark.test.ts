@@ -92,4 +92,25 @@ describe('fe-light-dark known-answer fixtures', () => {
     expect(out, out).toMatch(/PASS/);
     expect(code, out).toBe(0);
   }, 120_000);
+
+  // Real defect: dashboard and app-builder paint their theme via a
+  // `background-image` gradient on a full-viewport shell div (`.ra-shell`),
+  // with `background-color` left transparent on every ancestor up through
+  // <html>. A colour-only walk-up climbs straight past the gradient and
+  // reads both themes as identical rgba(0,0,0,0) -- a guaranteed false FAIL
+  // reproduced against the real apps before this fixture pair was added.
+  it('PASSES a background-image-themed shell (gradient differs between themes)', async () => {
+    const { code, out } = await runFixture('gradient-shell-changes.html');
+    expect(out, out).toMatch(/PASS/);
+    expect(code, out).toBe(0);
+  }, 120_000);
+
+  it('FAILS a background-image-themed shell whose gradient never actually changes', async () => {
+    // Same shell-div structure, but the gradient is identical in both
+    // themes -- proves the background-image fix did not make the check
+    // unable to fail.
+    const { code, out } = await runFixture('gradient-shell-unchanged.html');
+    expect(out, out).toMatch(/FAIL|unchanged/i);
+    expect(code, out).toBe(1);
+  }, 120_000);
 });

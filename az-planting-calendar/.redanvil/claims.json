@@ -14,6 +14,10 @@
   "threshold": 90,
   "features": [],
   "deployUrl": "https://az-planting-calendar.pages.dev",
+  "design": {
+    "_why": "archetype per az-planting-calendar/design-refs/home-options/DECISION.md (chosen by the user 2026-08-02): Option 3 -- Timeline + rail, a horizontal half-month timeline hero with the year grid and assistant rail as secondary surfaces, not one of the three archetypes exempt from the anti-column check (Focus hero / Guided flow / Editorial). Adding this field is what lets design_audit.mjs actually measure fe-design-archetype -- without it the rule's block is skipped entirely and the report cannot back a passing verdict, regardless of what evidence a verdict cites.",
+    "archetype": "Timeline + rail"
+  },
   "coldVisitorProbe": {
     "path": "/",
     "expectSelector": "main",

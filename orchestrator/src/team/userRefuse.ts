@@ -241,15 +241,24 @@ export function writeRefusalReport(rootDir: string, report: RefusalReport): stri
  * @returns Parsed report, or null when absent.
  */
 export function readRefusalReport(rootDir: string, slug: string): RefusalReport | null {
-  const abs = join(rootDir, 'evidence', `refusal-${slug}.json`);
-  if (!existsSync(abs)) return null;
-  try {
-    const raw = JSON.parse(readFileSync(abs, 'utf8')) as RefusalReport;
-    if (raw.verdict !== 'accept' && raw.verdict !== 'refuse') return null;
-    return raw;
-  } catch {
-    return null;
+  // See readQaVisualReport: root-level evidence/ is the convention verdicts and
+  // screenshots already use, so accept both rather than silently reporting a
+  // report that exists as missing. App dir first.
+  const candidates = [
+    join(rootDir, 'evidence', `refusal-${slug}.json`),
+    join(rootDir, '..', 'evidence', `refusal-${slug}.json`)
+  ];
+  for (const abs of candidates) {
+    if (!existsSync(abs)) continue;
+    try {
+      const raw = JSON.parse(readFileSync(abs, 'utf8')) as RefusalReport;
+      if (raw.verdict !== 'accept' && raw.verdict !== 'refuse') continue;
+      return raw;
+    } catch {
+      continue;
+    }
   }
+  return null;
 }
 
 /**

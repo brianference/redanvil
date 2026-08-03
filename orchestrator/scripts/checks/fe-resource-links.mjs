@@ -17,13 +17,16 @@
  */
 import { createServer } from 'node:http';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve, extname, basename } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, resolve, extname, basename, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 const require = createRequire(import.meta.url);
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture dir: an item detail page with a dead external link. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'resource-links', 'bad');
 
 /** Browser UA -- almanac.com (and similar) reject bare curl/node agents with 403. */
 export const BROWSER_UA =
@@ -501,63 +504,100 @@ export async function runResourceLinks(appDir, io, opts = {}) {
       io.infra('playwright is not installed — cannot crawl item detail routes');
     }
 
+    // Probe results are shared across both runs -- an external URL's liveness
+    // does not depend on which of our two independent crawls asked about it,
+    // and re-fetching every link twice would double real network traffic for
+    // no additional information. What must be independent is the CRAWL: two
+    // fresh pages, two fresh sets of navigations, not one result written down
+    // twice.
     /** @type {Map<string, { ok: boolean, status: number | null, error?: string }>} */
     const cache = new Map();
-    /** @type {string[]} */
-    const failures = [];
-    let pagesChecked = 0;
 
     const browser = await chromium.launch();
-    try {
+    /**
+     * @returns {Promise<{ failures: string[], pagesChecked: number }>}
+     */
+    const crawlOnce = async () => {
+      /** @type {string[]} */
+      const fails = [];
+      let checked = 0;
       const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-      // Cap how many detail pages we open so a 500-item catalog cannot hang CI;
-      // still enough to catch systemic missing links.
-      const sample = targets.slice(0, 30);
-      for (const route of sample) {
-        const path = materialiseRoute(route);
-        const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
-        try {
-          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 });
-          await page.waitForTimeout(200);
-          const links = await page.evaluate(collectExternalLinksInPage);
-          pagesChecked += 1;
-          if (links.length === 0) {
-            failures.push(
-              `${path}: no external link (different host) — domain items must link to a real guide or source`
-            );
-            continue;
-          }
-          for (const { href } of links) {
-            const result = await probeExternalLink(href, cache);
-            if (!result.ok) {
-              const status =
-                result.status === null ? result.error ?? 'network error' : `HTTP ${result.status}`;
-              failures.push(`${path}: dead link ${href} (${status})`);
+      try {
+        // Cap how many detail pages we open so a 500-item catalog cannot hang
+        // CI; still enough to catch systemic missing links.
+        const sample = targets.slice(0, 30);
+        for (const route of sample) {
+          const path = materialiseRoute(route);
+          const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
+          try {
+            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+            await page.waitForTimeout(200);
+            const links = await page.evaluate(collectExternalLinksInPage);
+            checked += 1;
+            if (links.length === 0) {
+              fails.push(
+                `${path}: no external link (different host) — domain items must link to a real guide or source`
+              );
+              continue;
             }
+            for (const { href } of links) {
+              const result = await probeExternalLink(href, cache);
+              if (!result.ok) {
+                const status =
+                  result.status === null ? result.error ?? 'network error' : `HTTP ${result.status}`;
+                fails.push(`${path}: dead link ${href} (${status})`);
+              }
+            }
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            fails.push(`${path}: navigation failed — ${msg.slice(0, 120)}`);
           }
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          failures.push(`${path}: navigation failed — ${msg.slice(0, 120)}`);
         }
+      } finally {
+        await page.close();
       }
+      return { failures: fails, pagesChecked: checked };
+    };
+
+    // Timestamp each run the instant it finishes, not both together at write
+    // time: two nowIso() calls back-to-back can land in the same millisecond,
+    // which makes a genuinely independent second run byte-identical to the
+    // first and trips runsAreDuplicate() as if it were one measurement
+    // written down twice.
+    let run1;
+    let at1;
+    let run2;
+    let at2;
+    try {
+      run1 = await crawlOnce();
+      at1 = nowIso();
+      run2 = await crawlOnce();
+      at2 = nowIso();
     } finally {
       await browser.close();
     }
+    const { failures, pagesChecked } = run1;
+    const ok1 = run1.failures.length === 0;
+    const ok2 = run2.failures.length === 0;
 
     if (appDir) {
       writeMeasurementMetaEntry(appDir, 'fe-resource-links', {
         tool: 'playwright+fetch',
         engine: 'chromium',
         runs: [
-          { ok: failures.length === 0, at: nowIso() },
-          { ok: failures.length === 0, at: nowIso() }
+          { ok: ok1, at: at1 },
+          { ok: ok2, at: at2 }
         ],
         knownBad: {
-          input: 'fixture with dead external URL (real 404)',
+          input: KNOWN_BAD_FIXTURE,
           failed: true,
           recordedAt: nowIso()
         }
       });
+    }
+
+    if (ok1 !== ok2) {
+      io.fail('two independent runs of fe-resource-links disagree — reporting neither');
     }
 
     if (failures.length > 0) {

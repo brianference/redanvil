@@ -4,8 +4,8 @@
   "finalScore": 0,
   "threshold": 90,
   "passed": false,
-  "evaluated": 73,
-  "total": 82,
+  "evaluated": 67,
+  "total": 91,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -25,6 +25,10 @@
     },
     {
       "ruleId": "u-test-runners",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-coverage-ratchet",
       "passed": true
     },
     {
@@ -213,11 +217,11 @@
     },
     {
       "ruleId": "proc-conventional-commits",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "proc-artifact-verified",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "lg-shipped",
@@ -253,11 +257,11 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-known-bad",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-two-run",
@@ -274,66 +278,6 @@
     {
       "ruleId": "meas-engine-named",
       "passed": true
-    },
-    {
-      "ruleId": "fe-a11y-contrast",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-desktop-width",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-cold-visitor",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-product-completeness",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-visual-review-recorded",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-premium-nav",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-required-pages",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-no-attribution",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-responsive-375",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-touch-targets",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-type-floor",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-noncolor-state",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-safe-areas",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-cross-link",
-      "passed": true
-    },
-    {
-      "ruleId": "fe-seo-og",
-      "passed": true
     }
   ],
   "iterations": [
@@ -341,23 +285,52 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "lg-shipped"
+        "fe-a11y-contrast",
+        "fe-premium-nav",
+        "fe-required-pages",
+        "fe-no-attribution",
+        "fe-responsive-375",
+        "fe-product-completeness",
+        "fe-visual-review-recorded",
+        "fe-cold-visitor",
+        "fe-touch-targets",
+        "fe-type-floor",
+        "fe-desktop-width",
+        "proc-artifact-verified",
+        "lg-shipped",
+        "lg-result-reproduces",
+        "meas-known-bad"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-02T22:58:52.221Z",
+  "finishedAt": "2026-08-03T00:14:44.731Z",
   "provenance": {
-    "commit": "50ef0c039ff736170b751a720570f31b8ccc932e",
-    "dirty": false,
+    "commit": "8d625b2060242a88ff138f60bcbff954ba283342",
+    "dirty": true,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "ba474c52108157abcf9448f8a6620cecce1ae79d0aca4749689c7167d7c35c84",
-    "notApplicable": [
-      "process"
+    "verdictsHash": "4a9944f354e40cad344d3e11fb79e821ee988bcd92cd7c37cd434b065ed5be18",
+    "notApplicable": [],
+    "staleVerdicts": [
+      "fe-a11y-contrast",
+      "fe-cold-visitor",
+      "fe-cross-link",
+      "fe-design-archetype",
+      "fe-desktop-width",
+      "fe-no-attribution",
+      "fe-noncolor-state",
+      "fe-premium-nav",
+      "fe-product-completeness",
+      "fe-required-pages",
+      "fe-responsive-375",
+      "fe-safe-areas",
+      "fe-seo-og",
+      "fe-touch-targets",
+      "fe-type-floor",
+      "fe-visual-review-recorded"
     ],
-    "staleVerdicts": [],
-    "generatedAt": "2026-08-02T22:58:52.275Z"
+    "generatedAt": "2026-08-03T00:14:44.798Z"
   }
 }

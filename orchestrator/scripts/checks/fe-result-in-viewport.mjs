@@ -20,13 +20,16 @@
  */
 import { createServer } from 'node:http';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve, extname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, resolve, extname, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 const require = createRequire(import.meta.url);
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: result list rendered far below the fold. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'result-in-viewport', 'below-fold.html');
 
 /** Viewports the result must be visible in. */
 export const VIEWPORTS = Object.freeze([
@@ -540,34 +543,55 @@ export async function runResultInViewport(appDir, io, opts = {}) {
         await probe.close();
       }
 
-      /** @type {string[]} */
-      const failures = [];
-      /** @type {{ width: number, nearestY?: number }[]} */
-      const passes = [];
-
-      for (const vp of VIEWPORTS) {
-        const r = await proveAtViewport(browser, /** @type {string} */ (base), vp);
-        if (!r.ok) {
-          failures.push(`@${vp.width}x${vp.height}: ${r.reason ?? 'result not in first viewport'}`);
-        } else {
-          passes.push({ width: vp.width, nearestY: r.nearestY });
+      // Two INDEPENDENT drive passes across all viewports (fresh pages, fresh
+      // searches), not one result written down twice.
+      const driveOnce = async () => {
+        /** @type {string[]} */
+        const fails = [];
+        /** @type {{ width: number, nearestY?: number }[]} */
+        const oks = [];
+        for (const vp of VIEWPORTS) {
+          const r = await proveAtViewport(browser, /** @type {string} */ (base), vp);
+          if (!r.ok) {
+            fails.push(`@${vp.width}x${vp.height}: ${r.reason ?? 'result not in first viewport'}`);
+          } else {
+            oks.push({ width: vp.width, nearestY: r.nearestY });
+          }
         }
-      }
+        return { failures: fails, passes: oks };
+      };
+
+      // Timestamp each run the instant it finishes, not both together at write
+      // time: two nowIso() calls back-to-back can land in the same
+      // millisecond, which makes a genuinely independent second run
+      // byte-identical to the first and trips runsAreDuplicate() as if it were
+      // one measurement written down twice.
+      const run1 = await driveOnce();
+      const at1 = nowIso();
+      const run2 = await driveOnce();
+      const at2 = nowIso();
+      const { failures, passes } = run1;
+      const ok1 = run1.failures.length === 0;
+      const ok2 = run2.failures.length === 0;
 
       if (appDir) {
         writeMeasurementMetaEntry(appDir, 'fe-result-in-viewport', {
           tool: 'playwright',
           engine: 'chromium',
           runs: [
-            { ok: failures.length === 0, at: nowIso() },
-            { ok: failures.length === 0, at: nowIso() }
+            { ok: ok1, at: at1 },
+            { ok: ok2, at: at2 }
           ],
           knownBad: {
-            input: 'fixture with result list far below the fold',
+            input: KNOWN_BAD_FIXTURE,
             failed: true,
             recordedAt: nowIso()
           }
         });
+      }
+
+      if (ok1 !== ok2) {
+        io.fail('two independent runs of fe-result-in-viewport disagree — reporting neither');
       }
 
       if (failures.length > 0) {

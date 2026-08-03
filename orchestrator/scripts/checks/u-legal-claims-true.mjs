@@ -14,9 +14,13 @@
  * undisclosed tracker is worse.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative, extname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, relative, extname, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: Privacy denies cookies while code sets one. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'u-legal-claims-true', 'bad-app');
 
 /**
  * @typedef {{
@@ -341,7 +345,7 @@ export function runLegalClaimsTrue(appDir, io) {
       { ok, at: nowIso() }
     ],
     knownBad: {
-      input: 'privacy page that denies cookies while code sets document.cookie',
+      input: KNOWN_BAD_FIXTURE,
       failed: true,
       recordedAt: nowIso()
     }

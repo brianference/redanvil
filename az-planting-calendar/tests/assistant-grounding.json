@@ -1,0 +1,7 @@
+{
+  "_why": "Live grounding proof for fe-assistant-present. The message matches the assistant's own SYSTEM_PROMPT worked example verbatim ('early August' => half_month 14, functions/api/assistant.ts), so the model's filter extraction is not itself under test here -- what IS under test is whether the crops the assistant returns for that filter are the app's REAL D1 rows. crossCheckPath queries the same half-month independently through /api/plantable, which runs its own getWindowsForHalf/getCropsByIds D1 query. Verified live on 2026-08-02 against https://az-planting-calendar.pages.dev: both endpoints returned the exact same 7-crop set (Beans Snap, Blackeyed Peas, Carrots, Corn Sweet, Pumpkin, Squash Winter, Tomatoes) for half_month 14 / date=2026-08-01. A model with only general knowledge, or a stub returning a plausible fixed list, cannot reproduce this app's actual row set on demand.",
+  "message": "What can I plant during early August?",
+  "crossCheckPath": "/api/plantable?date=2026-08-01",
+  "assistantField": "crops[].name",
+  "crossCheckField": "items[].crop.name"
+}

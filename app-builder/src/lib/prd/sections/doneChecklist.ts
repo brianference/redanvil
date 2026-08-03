@@ -62,7 +62,8 @@ export const DONE_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
       { id: "C6", mustBeTrue: "No overlap or clipping at 375px", evidence: "the screenshot" },
       { id: "C7", mustBeTrue: "Zero console errors", evidence: "console log from the real load" },
       { id: "C8", mustBeTrue: "Inner and detail pages show breadcrumbs", evidence: "live `nav` named breadcrumb + parent link" },
-      { id: "C9", mustBeTrue: "The chosen design was picked from three distinct options", evidence: "`design-refs/design-options/` (≥3) + `DECISION.md`" }
+      { id: "C9", mustBeTrue: "The chosen design was picked from three distinct options", evidence: "`design-refs/design-options/` (≥3) + `DECISION.md`" },
+      { id: "C10", mustBeTrue: "A control's result renders where the person is looking", evidence: "measured y of nearest changed element inside the first viewport at 375 and 1280" }
     ]
   },
   {
@@ -78,7 +79,8 @@ export const DONE_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
       { id: "D7", mustBeTrue: "The mark reads at 32px", evidence: "the **downscaled** image, opened" },
       { id: "D8", mustBeTrue: "Terms and Privacy meet the reference standard", evidence: "word/h2 floors + required topic coverage" },
       { id: "D9", mustBeTrue: "Structured data and canonical URL", evidence: "valid JSON-LD + absolute `rel=canonical` on home" },
-      { id: "D10", mustBeTrue: "The brand mark renders at a real size", evidence: "measured header mark height at 1280 and 375" }
+      { id: "D10", mustBeTrue: "The brand mark renders at a real size", evidence: "measured header mark height at 1280 and 375" },
+      { id: "D11", mustBeTrue: "Domain items link to real, resolving external resources", evidence: "live crawl of item detail routes + HEAD/GET of every external link (2xx/3xx, browser UA)" }
     ]
   },
   {

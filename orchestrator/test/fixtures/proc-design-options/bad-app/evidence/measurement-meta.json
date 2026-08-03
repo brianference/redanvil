@@ -1,0 +1,21 @@
+{
+  "proc-design-options": {
+    "tool": "static-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T00:14:27.346Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T00:14:27.347Z"
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\proc-design-options\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T00:14:27.347Z"
+    }
+  }
+}

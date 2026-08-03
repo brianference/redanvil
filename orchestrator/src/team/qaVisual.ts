@@ -255,15 +255,27 @@ export function writeQaVisualReport(rootDir: string, report: QaVisualReport): st
  * @returns Parsed report, or null when absent / unreadable.
  */
 export function readQaVisualReport(rootDir: string, slug: string): QaVisualReport | null {
-  const abs = join(rootDir, 'evidence', `qa-visual-${slug}.json`);
-  if (!existsSync(abs)) return null;
-  try {
-    const raw = JSON.parse(readFileSync(abs, 'utf8')) as QaVisualReport;
-    if (raw.verdict !== 'pass' && raw.verdict !== 'fail') return null;
-    return raw;
-  } catch {
-    return null;
+  // Two conventions coexist in this repo: verdicts-<slug>.json and the
+  // screenshot set live under the REPO root's evidence/, while this reader was
+  // written against the APP dir. A report written to the documented-looking
+  // place was then reported "missing", which reads as "the QA never ran" rather
+  // than "it ran and I looked in the wrong folder" -- a silent false negative on
+  // a fail-closed rule. Resolve both, app dir first.
+  const candidates = [
+    join(rootDir, 'evidence', `qa-visual-${slug}.json`),
+    join(rootDir, '..', 'evidence', `qa-visual-${slug}.json`)
+  ];
+  for (const abs of candidates) {
+    if (!existsSync(abs)) continue;
+    try {
+      const raw = JSON.parse(readFileSync(abs, 'utf8')) as QaVisualReport;
+      if (raw.verdict !== 'pass' && raw.verdict !== 'fail') continue;
+      return raw;
+    } catch {
+      continue;
+    }
   }
+  return null;
 }
 
 /**

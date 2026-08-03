@@ -131,6 +131,24 @@ export function runsAgree(runs) {
 }
 
 /**
+ * True when every recorded run is byte-for-byte identical to the first --
+ * including its timestamp. That is one measurement written down twice, not
+ * two independent runs, and it always "agrees with itself" trivially.
+ *
+ * A genuine second run takes real wall-clock time (spawning a browser,
+ * navigating, re-invoking a subprocess): identical `at` timestamps across
+ * every field is the fingerprint of `runs: [x, x]` rather than two calls.
+ *
+ * @param {ReadonlyArray<object> | undefined} runs
+ * @returns {boolean}
+ */
+export function runsAreDuplicate(runs) {
+  if (!Array.isArray(runs) || runs.length < 2) return false;
+  const first = JSON.stringify(runs[0]);
+  return runs.every((r) => JSON.stringify(r) === first);
+}
+
+/**
  * File mtime in ms, or null when missing.
  *
  * @param {string} file Absolute path.

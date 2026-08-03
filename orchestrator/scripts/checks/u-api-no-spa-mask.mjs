@@ -11,8 +11,8 @@
  * look alive.
  */
 import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
 import {
   pickFreePort,
@@ -22,6 +22,15 @@ import {
   ensureBuild
 } from '../../../.github/scripts/runtime_parity.mjs';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/**
+ * Real, resolvable known-bad fixture: an SPA fallback masking every absent
+ * /api/* path. Lives OUTSIDE orchestrator/ -- see the matching comment in
+ * u-api-not-found.mjs: wrangler pages dev's Functions loader silently finds
+ * nothing when run under orchestrator/'s tsconfig.json ancestry.
+ */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', '..', 'known-bad-fixtures', 'u-api-no-spa-mask', 'bad-app');
 
 const READINESS_MS = 90_000;
 const REQUEST_MS = 15_000;
@@ -211,7 +220,7 @@ export async function runApiNoSpaMask(appDir, io, deps = {}) {
       { ok, at: nowIso(), path, status }
     ],
     knownBad: {
-      input: 'API path that returns SPA index.html at 200',
+      input: KNOWN_BAD_FIXTURE,
       failed: true,
       recordedAt: nowIso()
     }

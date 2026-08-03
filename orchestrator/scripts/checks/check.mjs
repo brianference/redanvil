@@ -1148,8 +1148,19 @@ switch (ruleId) {
     break;
   }
   case 'fe-assistant-present': {
-    // Apps with domain data ship a model-backed assistant grounded in that data.
-    runAssistantPresent(appDir, { pass, fail, notApplicable });
+    // Apps with domain data ship a model-backed assistant grounded in that
+    // data — proven statically, and (when a deploy URL and a
+    // tests/assistant-grounding.json fixture exist) live against the
+    // deployed backend's own API responses.
+    await runAssistantPresent(appDir, {
+      pass,
+      fail,
+      notApplicable,
+      infra: (m) => {
+        if (m) console.error(`infra: ${m}`);
+        process.exit(2);
+      }
+    });
     break;
   }
   case 'fe-brand-mark': {

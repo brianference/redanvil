@@ -15,9 +15,13 @@
  *   - no unwritten markers (TBD, Fill this in, TODO) in DECISION.md
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, extname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, extname, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: a frontend app with no design-refs at all. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'proc-design-options', 'bad-app');
 
 /** Minimum distinct option artifacts required. */
 export const MIN_OPTIONS = 3;
@@ -285,7 +289,7 @@ export function runDesignOptions(appDir, io) {
         { ok, at: nowIso() }
       ],
       knownBad: {
-        input: 'app with no design-refs/design-options or empty DECISION.md',
+        input: KNOWN_BAD_FIXTURE,
         failed: true,
         recordedAt: nowIso()
       }

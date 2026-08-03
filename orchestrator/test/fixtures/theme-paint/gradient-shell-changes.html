@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <title>Gradient-shell fixture — must PASS fe-light-dark</title>
+    <style>
+      /* Reproduces the dashboard/app-builder pattern: every ancestor's
+         background-color is left transparent, and the actual themed paint
+         is a background-image gradient on a wrapper. A colour-only walk-up
+         climbs straight past this and reads both themes as identical
+         (rgba(0,0,0,0) all the way to <html>) -- the bug this fixture pins. */
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background-color: transparent;
+        font-family: system-ui, sans-serif;
+        color: #111118;
+      }
+      .ra-shell {
+        min-height: 100vh;
+        background-color: transparent;
+        background-image: radial-gradient(circle at top, #eef1f8, #cfd6e8);
+      }
+      html[data-theme='dark'] .ra-shell {
+        background-image: radial-gradient(circle at top, #1a2230, #05070c);
+      }
+      html[data-theme='dark'] body {
+        color: #f5f5f7;
+      }
+      header {
+        background-color: transparent;
+        padding: 16px 24px;
+      }
+      .hero {
+        background-color: transparent;
+        min-height: 280px;
+        padding: 48px 24px;
+      }
+      main section.content {
+        background-color: transparent;
+        padding: 24px;
+        min-height: 120px;
+      }
+      footer {
+        background-color: transparent;
+        padding: 16px 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ra-shell">
+      <header>Brand</header>
+      <main>
+        <section class="hero">
+          <h1>Gradient hero</h1>
+          <p>Paint lives on background-image, not background-color.</p>
+        </section>
+        <section class="content">
+          <p>Content region, also transparent background-color.</p>
+        </section>
+      </main>
+      <footer>Footer</footer>
+    </div>
+    <script>
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('theme') || 'light'
+      );
+    </script>
+  </body>
+</html>

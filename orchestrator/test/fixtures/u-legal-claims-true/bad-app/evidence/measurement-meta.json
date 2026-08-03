@@ -1,0 +1,21 @@
+{
+  "u-legal-claims-true": {
+    "tool": "static-bidirectional",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T00:14:11.442Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T00:14:11.442Z"
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\u-legal-claims-true\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T00:14:11.442Z"
+    }
+  }
+}

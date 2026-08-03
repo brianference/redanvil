@@ -13,6 +13,7 @@ import {
   writeMeasurementMetaEntry,
   BROWSER_DRIVEN_RULES,
   runsAgree,
+  runsAreDuplicate,
   nowIso
 } from '../lib/measurement-meta.mjs';
 
@@ -45,6 +46,13 @@ export function evaluateTwoRun(meta, browserRules = [...BROWSER_DRIVEN_RULES]) {
       failures.push(`${ruleId}: needs at least two recorded runs, found ${Array.isArray(runs) ? runs.length : 0}`);
       continue;
     }
+    if (runsAreDuplicate(runs)) {
+      failures.push(
+        `${ruleId}: the two recorded runs are byte-identical (including timestamps) — ` +
+          'that is one measurement written down twice, not two independent runs'
+      );
+      continue;
+    }
     if (!runsAgree(runs)) {
       failures.push(
         `${ruleId}: two runs disagree (${JSON.stringify(runs.map((r) => r?.ok))}) — disagreement is a fail, not a retry`
@@ -67,6 +75,12 @@ export function runMeasTwoRun(appDir, io, deps = {}) {
   const meta = readMeasurementMeta(appDir);
   const failures = evaluateTwoRun(meta, deps.browserRules ?? [...BROWSER_DRIVEN_RULES]);
   const ok = failures.length === 0;
+  // meas-two-run's own verdict is a deterministic scan of already-recorded
+  // meta (not a browser render or network probe), so recomputing it twice
+  // cannot diverge the way a real second render could -- unlike the
+  // fabricated duplicates this check exists to catch, there is no
+  // information being hidden here. Two entries keeps the shape meas-recheck-
+  // flattering expects if this check itself ever flips fail-to-pass.
   writeMeasurementMetaEntry(appDir, 'meas-two-run', {
     tool: 'meta-scan',
     engine: null,

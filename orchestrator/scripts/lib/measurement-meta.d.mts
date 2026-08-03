@@ -10,5 +10,6 @@ export declare function writeMeasurementMetaEntry(
   entry: object
 ): Record<string, object>;
 export declare function runsAgree(runs: ReadonlyArray<{ ok?: boolean }> | undefined): boolean;
+export declare function runsAreDuplicate(runs: ReadonlyArray<unknown> | undefined): boolean;
 export declare function fileMtimeMs(file: string): number | null;
 export declare function nowIso(): string;

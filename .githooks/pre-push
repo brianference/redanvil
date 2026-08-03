@@ -24,6 +24,14 @@ cd "$REPO_ROOT" || exit 1
 
 NODE=${NODE:-node}
 CHECKER=".github/scripts/meets_the_bar.mjs"
+
+# lg-shipped asks "is HEAD on the remote?", which cannot be true yet inside the
+# hook that is deciding whether to put it there. Left literal it deadlocks and
+# the only escape is --no-verify. This flag defers that ONE condition; origin,
+# production-200, deployed-hash-matches-dist and the score gate still apply, and
+# CI never sets it, so the remote is checked for real there.
+REDANVIL_PRE_PUSH=1
+export REDANVIL_PRE_PUSH
 if [ ! -f "$CHECKER" ]; then
   echo "pre-push: missing $CHECKER — cannot enforce the finish line" >&2
   exit 1

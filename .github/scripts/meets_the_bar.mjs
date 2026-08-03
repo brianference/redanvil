@@ -24,6 +24,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { APPS, appBySlug } from './apps.mjs';
 import { isDone } from '../../orchestrator/src/gate/done.mjs';
+import { loadProductJudgement } from '../../orchestrator/src/team/productJudgement.mjs';
 
 /** Default gate threshold — matches the loop-gate bar. */
 export const DEFAULT_THRESHOLD = 90;
@@ -605,7 +606,12 @@ export function evaluateApp(repoRoot, app, opts = {}) {
       },
       {
         evidenceStale: freshness.length > 0 || visual.length > 0,
-        screenshotsPresent
+        screenshotsPresent,
+        // Without these, isDone saw them as "not supplied" and the QA-visual,
+        // user-refuse, C2, C10, F5 and A6 rows were unreachable -- enforced in
+        // appearance, impossible to satisfy in fact. They stay fail-closed:
+        // loadProductJudgement returns false / null when evidence is absent.
+        ...loadProductJudgement(join(repoRoot, app.dir), slug)
       }
     );
     if (!done.done) {

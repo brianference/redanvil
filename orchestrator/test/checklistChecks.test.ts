@@ -46,9 +46,11 @@ import {
 } from '../scripts/checks/lg-result-reproduces.mjs';
 import {
   evaluateKnownBad,
-  runMeasKnownBad
+  runMeasKnownBad,
+  resolveKnownBadInput
 } from '../scripts/checks/meas-known-bad.mjs';
 import { evaluateTwoRun, runMeasTwoRun } from '../scripts/checks/meas-two-run.mjs';
+import { runsAreDuplicate } from '../scripts/lib/measurement-meta.mjs';
 import {
   evaluateFlattering,
   runMeasRecheckFlattering
@@ -566,6 +568,36 @@ describe('F4 lg-result-reproduces', () => {
     const failures = evaluateReproduction(goodResult, recomputed, HEAD, () => null);
     expect(failures.some((f) => /does not match HEAD/.test(f))).toBe(true);
   });
+
+  it('FAILS when a scored rubric rule is silently missing from result.rules (known-bad)', () => {
+    // The dead no-op this used to be: `missing` was computed and never pushed
+    // to failures, so a result could omit a scored rule outright (not list it
+    // n/a, just not include it) and reproduce cleanly.
+    const failures = evaluateReproduction(
+      {
+        finalScore: 100,
+        rules: [{ ruleId: 'u-test-presence', passed: true }],
+        provenance: { commit: 'c'.repeat(40), notApplicable: [] }
+      },
+      { score: 100, rubricIds: ['u-test-presence', 'u-typing-strict'] },
+      'c'.repeat(40)
+    );
+    expect(failures.some((f) => /missing scored rubric rule/i.test(f))).toBe(true);
+    console.log('lg-result-reproduces known-bad (missing rule):', failures.join('; '));
+  });
+
+  it('PASSES when the missing rubric rule is listed notApplicable (known-good)', () => {
+    const failures = evaluateReproduction(
+      {
+        finalScore: 100,
+        rules: [{ ruleId: 'u-test-presence', passed: true }],
+        provenance: { commit: 'c'.repeat(40), notApplicable: ['u-typing-strict'] }
+      },
+      { score: 100, rubricIds: ['u-test-presence', 'u-typing-strict'] },
+      'c'.repeat(40)
+    );
+    expect(failures.some((f) => /missing scored rubric rule/i.test(f))).toBe(false);
+  });
 });
 
 describe('G1–G5 measurement provenance', () => {
@@ -614,6 +646,96 @@ describe('G1–G5 measurement provenance', () => {
     expect(r.code).toBe(0);
   });
 
+  it('G1 FAILS when knownBad.input does not resolve to a file (known-bad)', () => {
+    // The rerun gate used to return 1 ("did not pass") for an unresolvable
+    // path without spawning anything, which read identically to a fixture
+    // that ran and correctly failed. It must fail instead.
+    let rerunCalled = false;
+    const failures = evaluateKnownBad(
+      { 'u-build-succeeds': { knownBad: { input: 'no/such/path.html', failed: true, recordedAt: new Date().toISOString() } } },
+      ['u-build-succeeds'],
+      () => Date.now(),
+      () => {
+        rerunCalled = true;
+        return 1;
+      },
+      () => null // resolver: never resolves
+    );
+    expect(failures.some((f) => /does not resolve to a file/i.test(f))).toBe(true);
+    expect(rerunCalled).toBe(false);
+    console.log('meas-known-bad known-bad (unresolvable path):', failures.join('; '));
+  });
+
+  it('G1 FAILS when knownBad.input is prose, not a path (known-bad)', () => {
+    // A sentence describing a bad case never resolves via existsSync, so it
+    // hits the same unresolvable-path failure -- the G1 proof never ran.
+    const app = makeAppDir();
+    const prose = 'a fixture with dead external URL (real 404)';
+    expect(resolveKnownBadInput(app, prose)).toBeNull();
+    const failures = evaluateKnownBad(
+      { 'fe-resource-links': { knownBad: { input: prose, failed: true, recordedAt: new Date().toISOString() } } },
+      ['fe-resource-links'],
+      () => Date.now(),
+      () => 1,
+      (input) => resolveKnownBadInput(app, input)
+    );
+    expect(failures.some((f) => /does not resolve to a file/i.test(f))).toBe(true);
+    console.log('meas-known-bad known-bad (prose input):', failures.join('; '));
+  });
+
+  it('G1 PASSES when knownBad.input resolves and the rerun exits non-zero (known-good)', () => {
+    const app = makeAppDir();
+    write(app, 'fixtures/real.html', '<html></html>');
+    const failures = evaluateKnownBad(
+      { 'u-build-succeeds': { knownBad: { input: 'fixtures/real.html', failed: true, recordedAt: new Date().toISOString() } } },
+      ['u-build-succeeds'],
+      () => Date.now(),
+      () => 1, // fixture correctly fails
+      (input) => resolveKnownBadInput(app, input)
+    );
+    expect(failures).toEqual([]);
+  });
+
+  it('G1 FAILS when the resolved fixture exits 0 (known-bad: check cannot fail)', () => {
+    const app = makeAppDir();
+    write(app, 'fixtures/real.html', '<html></html>');
+    const failures = evaluateKnownBad(
+      { 'u-build-succeeds': { knownBad: { input: 'fixtures/real.html', failed: true, recordedAt: new Date().toISOString() } } },
+      ['u-build-succeeds'],
+      () => Date.now(),
+      () => 0, // fixture wrongly passes
+      (input) => resolveKnownBadInput(app, input)
+    );
+    expect(failures.some((f) => /exited 0/.test(f))).toBe(true);
+  });
+
+  it('G2 FAILS when two runs are byte-identical duplicates (known-bad)', () => {
+    // The exact defect: `runs: [x, x]` -- one result written down twice,
+    // including the timestamp -- always "agrees with itself" and used to
+    // satisfy meas-two-run without a second independent render ever happening.
+    const duplicated = { ok: true, at: '2026-08-02T00:00:00.000Z' };
+    expect(runsAreDuplicate([duplicated, { ...duplicated }])).toBe(true);
+    const failures = evaluateTwoRun(
+      {
+        'fe-light-dark': { runs: [duplicated, { ...duplicated }] },
+        'fe-search-present': { runs: [{ ok: true, at: 'a' }, { ok: true, at: 'b' }] },
+        'fe-favicon-legible': { runs: [{ ok: true, at: 'a' }, { ok: true, at: 'b' }] }
+      },
+      ['fe-light-dark', 'fe-search-present', 'fe-favicon-legible']
+    );
+    expect(failures.some((f) => /byte-identical/i.test(f))).toBe(true);
+    console.log('meas-two-run known-bad (duplicated run):', failures.find((f) => /byte-identical/i.test(f)));
+  });
+
+  it('runsAreDuplicate is false for two genuinely different runs', () => {
+    expect(
+      runsAreDuplicate([
+        { ok: true, at: '2026-08-02T00:00:00.000Z' },
+        { ok: true, at: '2026-08-02T00:00:01.500Z' }
+      ])
+    ).toBe(false);
+  });
+
   it('G2 FAILS when runs disagree (known-bad)', () => {
     const failures = evaluateTwoRun(
       {
@@ -629,17 +751,26 @@ describe('G1–G5 measurement provenance', () => {
 
   it('G2 PASSES when two runs agree (known-good)', async () => {
     const app = makeAppDir();
+    // Two DISTINCT timestamps per rule: a real second run happens at a later
+    // moment than the first, even when the two measurements agree. Two run
+    // objects that are byte-identical (including `at`) are what
+    // runsAreDuplicate() exists to catch -- using that shape here would test
+    // "one run written down twice" and call it "known-good".
+    const twoRealRuns = (offsetMs: number) => [
+      { ok: true, at: new Date(1_700_000_000_000 + offsetMs).toISOString() },
+      { ok: true, at: new Date(1_700_000_000_000 + offsetMs + 250).toISOString() }
+    ];
     write(
       app,
       'evidence/measurement-meta.json',
       JSON.stringify({
-        'fe-light-dark': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
-        'fe-search-present': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
-        'fe-favicon-legible': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
-        'fe-breadcrumbs': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
-        'fe-brand-mark-size': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
-        'fe-result-in-viewport': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
-        'fe-resource-links': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
+        'fe-light-dark': { engine: 'chromium', runs: twoRealRuns(0) },
+        'fe-search-present': { engine: 'chromium', runs: twoRealRuns(1000) },
+        'fe-favicon-legible': { engine: 'chromium', runs: twoRealRuns(2000) },
+        'fe-breadcrumbs': { engine: 'chromium', runs: twoRealRuns(3000) },
+        'fe-brand-mark-size': { engine: 'chromium', runs: twoRealRuns(4000) },
+        'fe-result-in-viewport': { engine: 'chromium', runs: twoRealRuns(5000) },
+        'fe-resource-links': { engine: 'chromium', runs: twoRealRuns(6000) }
       })
     );
     const r = await runCaptured((io) => runMeasTwoRun(app, io));

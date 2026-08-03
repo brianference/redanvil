@@ -1,0 +1,23 @@
+{
+  "u-build-succeeds": {
+    "tool": "npm-run-build",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-03T00:14:07.467Z",
+        "status": 1
+      },
+      {
+        "ok": false,
+        "at": "2026-08-03T00:14:07.468Z",
+        "status": 1
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\u-build-succeeds\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-03T00:14:07.468Z"
+    }
+  }
+}

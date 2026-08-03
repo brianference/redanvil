@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil-dashboard.pages.dev",
-  "checkedAt": "2026-08-01T01:26:26.032Z",
+  "checkedAt": "2026-08-02T23:18:29.256Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -12,7 +12,7 @@
     },
     "fe-responsive-375": {
       "ok": true,
-      "detail": "no horizontal overflow at 375 on 6 route(s)"
+      "detail": "no page or element overflow/clip at 375 on 6 route(s) (H>1px V>2px)"
     },
     "fe-safe-areas": {
       "ok": true,
@@ -40,7 +40,11 @@
     },
     "fe-light-dark": {
       "ok": true,
-      "detail": "default under prefers-color-scheme:dark resolved to \"dark\"; toggle dark -> light, stored \"light\", survived reload as light"
+      "detail": "landmark paint changes between themes (2 regions); toggle ok"
+    },
+    "fe-design-archetype": {
+      "ok": true,
+      "detail": "claimed \"Metric board\"; widest block 1306px of 1440px, gutters 67/67"
     },
     "fe-required-pages": {
       "ok": true,

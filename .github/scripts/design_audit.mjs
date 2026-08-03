@@ -464,6 +464,16 @@ try {
         const s = getComputedStyle(el);
         const r = el.getBoundingClientRect();
         if (r.width < 2 || r.height < 2) return null;
+        // A fully transparent background paints nothing, which is not evidence
+        // this element "did not switch theme" -- it is evidence the element was
+        // never asked to carry a background at all. Most apps theme a wrapper
+        // div or <body>, not <html> itself, so <html> reads transparent in BOTH
+        // themes on every app that does this and toRgba's canvas round-trip
+        // drops the alpha channel, so a transparent read comes back as opaque
+        // black indistinguishable from a real stuck-dark background. That
+        // false-flagged fe-light-dark on two apps whose screenshots show a
+        // correctly repainting page. Skip samples with no paint to judge.
+        if (s.backgroundColor === 'rgba(0, 0, 0, 0)') return null;
         const rgba = toRgba(s.backgroundColor);
         return { name, ...rgba };
       };

@@ -10,8 +10,8 @@
  * 404 passes. Reuses the runtime_parity wrangler harness for the live boot.
  */
 import { existsSync, readdirSync } from 'node:fs';
-import { join, relative, sep, extname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, relative, sep, extname, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import {
   pickFreePort,
   killProcessTree,
@@ -20,6 +20,18 @@ import {
   ensureBuild
 } from '../../../.github/scripts/runtime_parity.mjs';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/**
+ * Real, resolvable known-bad fixture: a detail route that returns 200 for a
+ * bogus id. Lives OUTSIDE orchestrator/ (not under orchestrator/test/fixtures)
+ * because wrangler pages dev's Pages Functions loader silently finds zero
+ * functions ("No Functions. Shimming...") when its cwd sits under a directory
+ * whose nearest ancestor `tsconfig.json` is orchestrator/tsconfig.json --
+ * confirmed by A/B: the identical fixture boots functions correctly at the
+ * repo root or inside a real app dir, and fails one level under orchestrator/.
+ */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', '..', 'known-bad-fixtures', 'u-api-not-found', 'bad-app');
 
 /** Sentinel path segment that must not match a real record. */
 export const BOGUS_ID = '__no_such_id__';
@@ -165,35 +177,51 @@ export async function runApiNotFound(appDir, io, deps = {}) {
     return fail(session.error);
   }
 
+  // Two INDEPENDENT passes over every route (two real HTTP round-trips per
+  // route to the live server), not one status written down twice.
   /** @type {string[]} */
-  const failures = [];
+  const failures1 = [];
+  /** @type {string[]} */
+  const failures2 = [];
   try {
     for (const route of routes) {
       const path = fillBogus(route);
-      const status = await request(session.baseUrl, path);
-      const reason = evaluateNotFoundStatus(status);
-      if (reason) failures.push(`  ${path} — ${reason}`);
+      const status1 = await request(session.baseUrl, path);
+      const reason1 = evaluateNotFoundStatus(status1);
+      if (reason1) failures1.push(`  ${path} — ${reason1}`);
+    }
+    for (const route of routes) {
+      const path = fillBogus(route);
+      const status2 = await request(session.baseUrl, path);
+      const reason2 = evaluateNotFoundStatus(status2);
+      if (reason2) failures2.push(`  ${path} — ${reason2}`);
     }
   } finally {
     session.cleanup();
   }
 
-  const ok = failures.length === 0;
+  const failures = failures1;
+  const ok1 = failures1.length === 0;
+  const ok2 = failures2.length === 0;
   writeMeasurementMetaEntry(appDir, 'u-api-not-found', {
     tool: 'fetch',
     engine: null,
     runs: [
-      { ok, at: nowIso() },
-      { ok, at: nowIso() }
+      { ok: ok1, at: nowIso() },
+      { ok: ok2, at: nowIso() }
     ],
     knownBad: {
-      input: 'detail route that returns 200 for a bogus id',
+      input: KNOWN_BAD_FIXTURE,
       failed: true,
       recordedAt: nowIso()
     }
   });
 
-  if (!ok) {
+  if (ok1 !== ok2) {
+    return fail('two independent runs of u-api-not-found disagree — reporting neither');
+  }
+
+  if (!ok1) {
     return fail(
       `${failures.length} detail route(s) did not return 404 for a bogus id:\n` +
         failures.join('\n')

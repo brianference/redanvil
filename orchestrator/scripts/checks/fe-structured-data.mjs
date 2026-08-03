@@ -13,9 +13,13 @@
  * <link rel="canonical"> whose href is an absolute http(s) URL, on home.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: a page missing JSON-LD structured data. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'structured-data', 'bad.html');
 
 /**
  * @typedef {{
@@ -369,7 +373,7 @@ export function runStructuredData(appDir, io, opts = {}) {
         { ok: result.ok, at: nowIso(), type: result.jsonLdType ?? null }
       ],
       knownBad: {
-        input: 'fixtures/structured-data/bad.html',
+        input: KNOWN_BAD_FIXTURE,
         failed: true,
         recordedAt: nowIso()
       }

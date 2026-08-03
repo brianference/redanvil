@@ -11,25 +11,7 @@
     ],
     "note": "axe-core 4.12.1 against https://redanvil-dashboard.pages.dev on this build: 0 colour-contrast violation nodes and 0 other violation types in BOTH themes. Resolved backgrounds confirm the audit really switched theme (dark rgb(11,11,15), light rgb(246,247,251)).",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
-    "scope": [
-      "dashboard/src",
-      "dashboard/public",
-      "dashboard/index.html"
-    ]
-  },
-  {
-    "ruleId": "fe-light-dark",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-dashboard.json",
-      "evidence/screenshots/db-1280-dark.png",
-      "evidence/screenshots/db-1280-light.png"
-    ],
-    "note": "Measured by design_audit.mjs on production: dark -> light, stored \"light\", survived reload as light",
-    "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -47,7 +29,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: 4 header link(s) [App Builder, Runs, About, Contact], aria-current on \"Runs\"",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -65,7 +47,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: /about 200 \"About\"; /contact 200 \"Contact\"; /terms 200 \"Terms\"; /privacy 200 \"Privacy\"",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -82,7 +64,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: no attribution text",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -100,7 +82,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: no horizontal overflow at 375",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -117,7 +99,7 @@
     ],
     "note": "The dashboard's core feature is showing real gate runs, and it does: the index renders a run card carrying measured values from the committed results feed (score 100, 46/46 rules, 1 iteration) rather than an empty shell, plus KPI tiles derived from the same data. Runtime parity passes on the real Workers runtime (/ 200 and /api/health 200), so this is a booting app and not just static assets.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -139,7 +121,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: 0 console/page error(s) across the measured loads",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -156,7 +138,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: title \"RedAnvil Dashboard — build runs\", description present, og:image present",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -173,7 +155,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: cross-site link present",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -190,7 +172,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: 13 interactive elements at 375, 0 under 44px",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -207,7 +189,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: minimum body font 16px at 375, 0 node(s) under 16px",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -225,7 +207,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: active nav item: weight 650, gradient background true, aria-current present true",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -242,7 +224,7 @@
     ],
     "note": "Measured by design_audit.mjs on production: header position sticky, padding-top 0px",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -259,7 +241,7 @@
     ],
     "note": "RunCard and the shell components read as short, plain composition: helpers like formatRelativeTime and the meta assembly are small pure expressions, with no dense one-liners.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src"
     ]
@@ -274,7 +256,7 @@
     ],
     "note": "Components exist because a page renders them. No interface was introduced with a single implementation, and the shell split mirrors the app builder because both apps genuinely need the same shell, not because reuse was anticipated.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src"
     ]
@@ -289,7 +271,7 @@
     ],
     "note": "The shell reuses the existing theme tokens and i18n bundle rather than adding copies, and the run feed is read from the committed results artifact instead of a new data layer. No new dependency was added.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src"
     ]
@@ -303,7 +285,7 @@
     ],
     "note": "The change in this build is a single font-size token on the run meta line, made because a measurement showed it under the blocker floor. Nothing else was touched.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src"
     ]
@@ -317,7 +299,7 @@
     ],
     "note": "This app ships no authentication surface, so there is no guard to stub: functions/ contains only the health endpoint. No auth-named function returns an unconditional truthy value and there is no TODO-auth marker.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/functions"
     ]
@@ -331,7 +313,7 @@
     ],
     "note": "Tests query the header's primary links by role and name and assert the active route, which breaks if the shell regresses, rather than asserting mere presence.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src"
     ]
@@ -345,7 +327,7 @@
     ],
     "note": "Assertions are on rendered behaviour (named links exposed by role, active route marked) rather than implementation details or call counts.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src"
     ]
@@ -361,7 +343,7 @@
     ],
     "note": "Page.tsx composes named shell components (Header, MobileDrawer, Footer) and pages supply title, subtitle and children; RunList is composed of RunCard and StatusBadge rather than one monolithic render.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src"
     ]
@@ -376,7 +358,7 @@
     ],
     "note": "The run list and detail views render explicit loading, empty and error states; a failed feed fetch surfaces an error rather than rendering as a clean empty list.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src"
     ]
@@ -390,7 +372,7 @@
     ],
     "note": "Measured on production by desktop_width.mjs at 1440 AND 1920: every route's main content occupies 93% of the viewport, against an 80% minimum. Two widths on purpose — a rem cap reads as 90% at 1600 and 75% at 1920, which is how this shipped narrow four times before the rule existed.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a0752feaf5fd20297fbb075f868470d4cb8a390b",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
     "scope": [
       "dashboard/src",
       "dashboard/public",
@@ -406,6 +388,20 @@
     ],
     "note": "cold_visitor against https://redanvil-dashboard.pages.dev: a first-time visitor gets a working app: 5 cold-start check(s) held",
     "reviewedAt": "2026-08-01T01:29:32.535Z",
-    "reviewedCommit": "baceea901776b4fbe06ebee3df754d0d4298aa8e"
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342"
+  },
+  {
+    "ruleId": "fe-design-archetype",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-dashboard.json",
+      "evidence/screenshots/dashboard-1280-dark.png",
+      "evidence/screenshots/dashboard-1280-light.png",
+      "dashboard/.redanvil/claims.json"
+    ],
+    "note": "Archetype: Metric board, recorded in claims.json and confirmed by opening evidence/screenshots/dashboard-1280-dark.png and evidence/screenshots/dashboard-1280-light.png before recording anything (both files actually opened and viewed, not inferred from source): the home route is a KPI band (Total runs / Passed / Avg score) above a list of run records with status badges -- numbers first, reading beats navigating, not a tile grid or a centred column. design_audit.mjs --claims measured the widest block at 1306 of 1440px (91%) with equal 67px gutters -- wide enough that the anti-column check (requires <72% width AND equal gutters to flag) does not fire either way, but the archetype itself is a genuine structural read of the rendered page, not picked to pass a check.",
+    "reviewedAt": "2026-08-02T23:18:29.256Z",
+    "reviewedCommit": "8d625b2060242a88ff138f60bcbff954ba283342"
   }
 ]

@@ -21,13 +21,16 @@
  */
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { join, extname, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, extname, resolve, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
 
 const require = createRequire(import.meta.url);
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: a hero whose dark tokens never change with theme. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'theme-paint', 'hardcoded-hero.html');
 
 /** Max per-channel delta (0–255) still treated as "same paint". */
 export const SAME_PAINT_CHANNEL_DELTA = 18;
@@ -232,6 +235,9 @@ function sampleLandmarksInPage() {
     return { r: data[0], g: data[1], b: data[2], a: data[3] };
   };
 
+  /** True for a real (non-'none', non-empty) CSS background-image value. */
+  const hasBgImage = (img) => typeof img === 'string' && img !== 'none' && img.trim().length > 0;
+
   /** @param {Element | null} el @param {string} name */
   const sample = (el, name) => {
     if (el === null) return null;
@@ -239,16 +245,27 @@ function sampleLandmarksInPage() {
     const rect = el.getBoundingClientRect();
     if (style.display === 'none' || style.visibility === 'hidden') return null;
     if (rect.width < 2 || rect.height < 2) return null;
-    // Prefer background-color; if transparent, walk up for a non-transparent paint.
+    // Prefer background-color; if transparent AND this element has no
+    // background-image either, walk up for a non-transparent paint. A themed
+    // background-image (e.g. a radial-gradient hero) IS the paint even when
+    // background-color stays transparent on every ancestor up to <html> --
+    // stopping the walk here instead of climbing straight past it was a
+    // guaranteed false FAIL for any app that themes via background-image
+    // rather than background-color (dashboard, app-builder: a `.ra-shell`
+    // wrapper painted by `background-image: radial-gradient(...)` with every
+    // ancestor's background-color left transparent).
     let node = el;
     let css = style.backgroundColor;
     let rgba = toRgba(css);
-    while (rgba.a === 0 && node.parentElement) {
+    let bgImage = style.backgroundImage;
+    while (rgba.a === 0 && !hasBgImage(bgImage) && node.parentElement) {
       node = node.parentElement;
-      css = getComputedStyle(node).backgroundColor;
+      const parentStyle = getComputedStyle(node);
+      css = parentStyle.backgroundColor;
       rgba = toRgba(css);
+      bgImage = parentStyle.backgroundImage;
     }
-    return { name, css, ...rgba };
+    return { name, css, ...rgba, bgImage: hasBgImage(bgImage) ? bgImage : null };
   };
 
   /** @type {Array<{ name: string, css: string, r: number, g: number, b: number, a: number }>} */
@@ -293,9 +310,38 @@ function sampleLandmarksInPage() {
     if (s) out.push(s);
     i += 1;
   }
+  /**
+   * The element that actually carries the page's base-layer paint.
+   *
+   * `<html>` has no parent to walk up to, so when neither it nor `<body>`
+   * paints itself directly -- the common pattern of a single full-viewport
+   * "shell" div (`background-image` via inline style, e.g. `.ra-shell`)
+   * nested a level or two under `<body>` -- sampling `document.documentElement`
+   * literally can never see it, and the root baseline reads as unpainted in
+   * BOTH themes even though the whole visible page changed. Descend through
+   * single-meaningful-child wrappers (bounded depth, same as a person's eye
+   * would) to find the element a viewer actually sees as the background.
+   *
+   * @returns {Element}
+   */
+  const rootPaintElement = () => {
+    /** @type {Element} */
+    let node = document.documentElement;
+    for (let depth = 0; depth < 4; depth += 1) {
+      const style = getComputedStyle(node);
+      if (toRgba(style.backgroundColor).a > 0 || hasBgImage(style.backgroundImage)) return node;
+      const children = Array.from(node.children).filter((c) => {
+        const cs = getComputedStyle(c);
+        return cs.display !== 'none' && cs.position !== 'fixed' && cs.position !== 'absolute';
+      });
+      if (children.length !== 1) return node;
+      node = children[0];
+    }
+    return node;
+  };
   // Always include the document root as a baseline (catches a page that only
   // flips the attribute and leaves body paint alone).
-  const root = sample(document.documentElement, 'html') ?? sample(document.body, 'body');
+  const root = sample(rootPaintElement(), 'html') ?? sample(document.body, 'body');
   if (root) out.push(root);
   return out;
 }
@@ -334,10 +380,27 @@ async function sampleTheme(page, theme) {
 }
 
 /**
+ * True when two sampled landmarks paint the same, accounting for
+ * background-image as well as the resolved colour. Two reads with identical
+ * colour AND identical background-image string are the same paint; a
+ * background-image that differs is a real change even when the colour walked
+ * up to the same transparent-ancestor fallback in both themes (a themed
+ * gradient with every background-color left transparent).
+ *
+ * @param {{r:number,g:number,b:number,a?:number,bgImage?:string|null}} a
+ * @param {{r:number,g:number,b:number,a?:number,bgImage?:string|null}} b
+ * @returns {boolean}
+ */
+export function samePaintIncludingImage(a, b) {
+  if (!effectivelySamePaint(a, b)) return false;
+  return (a.bgImage ?? null) === (b.bgImage ?? null);
+}
+
+/**
  * Compare light vs dark landmark paints; return failure messages.
  *
- * @param {Array<{ name: string, css: string, r: number, g: number, b: number, a: number }>} light
- * @param {Array<{ name: string, css: string, r: number, g: number, b: number, a: number }>} dark
+ * @param {Array<{ name: string, css: string, r: number, g: number, b: number, a: number, bgImage?: string | null }>} light
+ * @param {Array<{ name: string, css: string, r: number, g: number, b: number, a: number, bgImage?: string | null }>} dark
  * @returns {string[]}
  */
 export function paintDiffFailures(light, dark) {
@@ -354,7 +417,7 @@ export function paintDiffFailures(light, dark) {
   for (const L of light) {
     const D = darkByName.get(L.name);
     if (!D) continue;
-    if (effectivelySamePaint(L, D)) {
+    if (samePaintIncludingImage(L, D)) {
       failures.push(
         `${L.name}: background effectively unchanged between themes ` +
           `(light rgba(${L.r},${L.g},${L.b},${L.a}) / ${L.css} vs ` +
@@ -367,7 +430,7 @@ export function paintDiffFailures(light, dark) {
   if (failures.length === 0) {
     const anyChange = light.some((L) => {
       const D = darkByName.get(L.name);
-      return D !== undefined && !effectivelySamePaint(L, D);
+      return D !== undefined && !samePaintIncludingImage(L, D);
     });
     if (!anyChange) {
       failures.push(
@@ -421,44 +484,77 @@ export async function runLightDark(appDir, io, opts = {}) {
 
     const browser = await chromium.launch();
     try {
-      const page = await browser.newPage({
-        viewport: { width: 1280, height: 900 },
-        colorScheme: 'light'
-      });
-      await page.goto(base, { waitUntil: 'networkidle', timeout: 60_000 });
-      const light = await sampleTheme(page, 'light');
-      await page.close();
+      // Two INDEPENDENT light+dark sampling passes (fresh pages, fresh
+      // navigations, fresh canvas reads), not one result written down twice.
+      const sampleOnce = async () => {
+        const page = await browser.newPage({
+          viewport: { width: 1280, height: 900 },
+          colorScheme: 'light'
+        });
+        let light;
+        try {
+          await page.goto(base, { waitUntil: 'networkidle', timeout: 60_000 });
+          light = await sampleTheme(page, 'light');
+        } finally {
+          await page.close();
+        }
 
-      const page2 = await browser.newPage({
-        viewport: { width: 1280, height: 900 },
-        colorScheme: 'dark'
-      });
-      await page2.goto(base, { waitUntil: 'networkidle', timeout: 60_000 });
-      const dark = await sampleTheme(page2, 'dark');
-      await page2.close();
+        const page2 = await browser.newPage({
+          viewport: { width: 1280, height: 900 },
+          colorScheme: 'dark'
+        });
+        let dark;
+        try {
+          await page2.goto(base, { waitUntil: 'networkidle', timeout: 60_000 });
+          dark = await sampleTheme(page2, 'dark');
+        } finally {
+          await page2.close();
+        }
 
-      const failures = paintDiffFailures(light, dark);
-      const ok = failures.length === 0;
-      // Two agreeing runs: the light sample and dark sample pair is one
-      // measurement; we record the same outcome twice so G2 can require
-      // agreement without inventing a flattering retry loop.
+        const failures = paintDiffFailures(light, dark);
+        return { light, dark, failures };
+      };
+
+      // Timestamp each run the instant it finishes, not both together at write
+      // time: two nowIso() calls back-to-back can land in the same
+      // millisecond, which makes a genuinely independent second run
+      // byte-identical to the first and trips runsAreDuplicate() as if it were
+      // one measurement written down twice.
+      const run1 = await sampleOnce();
+      const at1 = nowIso();
+      const run2 = await sampleOnce();
+      const at2 = nowIso();
+      const ok1 = run1.failures.length === 0;
+      const ok2 = run2.failures.length === 0;
+
       if (appDir) {
         writeMeasurementMetaEntry(appDir, 'fe-light-dark', {
           tool: 'playwright-canvas',
           engine: 'chromium',
           runs: [
-            { ok, at: nowIso(), landmarks: light.length },
-            { ok, at: nowIso(), landmarks: light.length }
-          ]
+            { ok: ok1, at: at1, landmarks: run1.light.length },
+            { ok: ok2, at: at2, landmarks: run2.light.length }
+          ],
+          knownBad: {
+            input: KNOWN_BAD_FIXTURE,
+            failed: true,
+            recordedAt: nowIso()
+          }
         });
       }
+
+      if (ok1 !== ok2) {
+        io.fail('two independent runs of fe-light-dark disagree — reporting neither');
+      }
+
+      const failures = run1.failures;
       if (failures.length > 0) {
         io.fail(
           `fe-light-dark FAIL: theme paint does not change for every landmark region\n  ${failures.join('\n  ')}`
         );
       }
       console.log(
-        `fe-light-dark PASS: ${light.length} landmark region(s) change paint between light and dark`
+        `fe-light-dark PASS: ${run1.light.length} landmark region(s) change paint between light and dark`
       );
       io.pass();
     } finally {

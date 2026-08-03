@@ -1,0 +1,421 @@
+{
+  "fe-search-present": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-02T23:38:33.661Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-02T23:38:33.661Z"
+      }
+    ]
+  },
+  "fe-brand-mark-size": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:35.161Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:35.161Z"
+      }
+    ],
+    "heights": {
+      "h1280": 112,
+      "h375": 112,
+      "selector": "img.ra-logo-light"
+    },
+    "knownBad": {
+      "input": "fixtures/brand-mark-size/small.html",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:38:35.161Z"
+    }
+  },
+  "fe-breadcrumbs": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:37.345Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:37.345Z"
+      }
+    ],
+    "knownBad": {
+      "input": "fixtures/breadcrumbs/bad-about.html",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:38:37.345Z"
+    }
+  },
+  "fe-resource-links": {
+    "tool": "playwright+fetch",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:40.173Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:40.173Z"
+      }
+    ],
+    "knownBad": {
+      "input": "fixture with dead external URL (real 404)",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:38:40.173Z"
+    }
+  },
+  "fe-legal-substance": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:41.706Z",
+        "summary": "terms 1498w/16h2; privacy 1664w/16h2"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:41.706Z",
+        "summary": "terms 1498w/16h2; privacy 1664w/16h2"
+      }
+    ],
+    "knownBad": {
+      "input": "fixture short legal stub missing floors and topics",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:38:41.706Z"
+    }
+  },
+  "fe-structured-data": {
+    "tool": "static-head-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-02T23:38:42.063Z",
+        "type": "WebApplication"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-02T23:38:42.063Z",
+        "type": "WebApplication"
+      }
+    ],
+    "knownBad": {
+      "input": "fixtures/structured-data/bad.html",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:38:42.063Z"
+    }
+  },
+  "proc-design-options": {
+    "tool": "static-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:42.159Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:42.160Z"
+      }
+    ],
+    "knownBad": {
+      "input": "app with no design-refs/design-options or empty DECISION.md",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:38:42.160Z"
+    }
+  },
+  "u-api-real-output": {
+    "tool": "fetch",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:50.929Z",
+        "routes": 6
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:50.930Z",
+        "routes": 6
+      }
+    ],
+    "knownBad": {
+      "input": "API route with no example or empty placeholder response",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:38:50.930Z"
+    }
+  },
+  "lg-bindings-bound": {
+    "tool": "fetch-probe",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:56.439Z",
+        "base": "https://redanvil.pages.dev"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T23:38:56.440Z",
+        "base": "https://redanvil.pages.dev"
+      }
+    ],
+    "knownBad": {
+      "input": "deployed endpoint returning binding unavailable / 503 missing AI",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:38:56.440Z"
+    }
+  },
+  "fe-light-dark": {
+    "tool": "playwright-canvas",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-03T00:03:41.134Z",
+        "landmarks": 7
+      },
+      {
+        "ok": true,
+        "at": "2026-08-03T00:03:42.753Z",
+        "landmarks": 7
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\theme-paint\\hardcoded-hero.html",
+      "failed": true,
+      "recordedAt": "2026-08-03T00:03:42.753Z"
+    }
+  },
+  "u-build-succeeds": {
+    "tool": "npm-run-build",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T23:39:02.060Z",
+        "status": 0
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T23:39:02.060Z",
+        "status": 0
+      }
+    ],
+    "knownBad": {
+      "input": "package.json build script that exits 1",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:39:02.060Z"
+    }
+  },
+  "u-api-not-found": {
+    "tool": "fetch",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T23:39:05.461Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T23:39:05.462Z"
+      }
+    ],
+    "knownBad": {
+      "input": "detail route that returns 200 for a bogus id",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:39:05.462Z"
+    }
+  },
+  "u-api-no-spa-mask": {
+    "tool": "fetch",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:08.926Z",
+        "path": "/api/__definitely_absent_abc3a8a8c6da66f0",
+        "status": 200
+      },
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:08.927Z",
+        "path": "/api/__definitely_absent_abc3a8a8c6da66f0",
+        "status": 200
+      }
+    ],
+    "knownBad": {
+      "input": "API path that returns SPA index.html at 200",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:39:08.927Z"
+    }
+  },
+  "u-legal-claims-true": {
+    "tool": "static-bidirectional",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:09.047Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:09.047Z"
+      }
+    ],
+    "knownBad": {
+      "input": "privacy page that denies cookies while code sets document.cookie",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:39:09.047Z"
+    }
+  },
+  "fe-favicon-legible": {
+    "tool": "playwright-canvas",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:09.745Z",
+        "metrics": {
+          "inkCoverage": 1,
+          "detailEnergy": 37.063507468266366,
+          "contrastOnWhite": 0.9755536683164217,
+          "contrastOnDark": 0.01839749866072124,
+          "inkCount": 1024,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:09.745Z",
+        "metrics": {
+          "inkCoverage": 1,
+          "detailEnergy": 37.063507468266366,
+          "contrastOnWhite": 0.9755536683164217,
+          "contrastOnDark": 0.01839749866072124,
+          "inkCount": 1024,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:10.097Z",
+        "metrics": {
+          "inkCoverage": 1,
+          "detailEnergy": 36.48193495026798,
+          "contrastOnWhite": 0.975877987069261,
+          "contrastOnDark": 0.018073179907881952,
+          "inkCount": 1024,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:10.097Z",
+        "metrics": {
+          "inkCoverage": 1,
+          "detailEnergy": 36.48193495026798,
+          "contrastOnWhite": 0.975877987069261,
+          "contrastOnDark": 0.018073179907881952,
+          "inkCount": 1024,
+          "pixelCount": 1024
+        }
+      }
+    ],
+    "source": "public\\favicon-96.png, public\\apple-180.png",
+    "knownBad": {
+      "input": "solid-square or empty favicon failing ink/detail floors",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:39:10.097Z"
+    }
+  },
+  "lg-result-reproduces": {
+    "tool": "computeScore",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:12.244Z",
+        "recomputed": 0,
+        "recorded": 95
+      },
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:12.244Z",
+        "recomputed": 0,
+        "recorded": 95
+      }
+    ],
+    "knownBad": {
+      "input": "results JSON whose finalScore does not match recompute",
+      "failed": true,
+      "recordedAt": "2026-08-02T23:39:12.244Z"
+    }
+  },
+  "meas-known-bad": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:12.342Z"
+      }
+    ]
+  },
+  "meas-two-run": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:12.435Z"
+      }
+    ]
+  },
+  "meas-recheck-flattering": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-02T23:39:12.532Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-02T23:39:12.533Z"
+      }
+    ]
+  },
+  "meas-standard-tool": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:12.634Z"
+      }
+    ]
+  },
+  "meas-engine-named": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-02T23:39:12.730Z"
+      }
+    ]
+  }
+}

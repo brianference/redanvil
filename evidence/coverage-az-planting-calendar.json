@@ -1,0 +1,13 @@
+{
+  "linesPct": 67.58,
+  "statementsPct": 67.58,
+  "functionsPct": 65.88,
+  "branchesPct": 83.57,
+  "linesTotal": 1447,
+  "linesCovered": 978,
+  "command": "npm run test:coverage",
+  "source": "az-planting-calendar/coverage/coverage-summary.json (total.lines.pct)",
+  "highWaterPct": 67.58,
+  "highWaterSource": "az-planting-calendar/.redanvil/coverage-state.json",
+  "checkedAt": "2026-08-02T23:29:12.826Z"
+}

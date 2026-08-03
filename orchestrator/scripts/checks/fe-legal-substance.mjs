@@ -22,11 +22,15 @@
  */
 import { createServer } from 'node:http';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve, extname, basename } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, resolve, extname, basename, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture dir: short terms.html + privacy.html missing floors/topics. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'fe-legal-substance', 'bad');
 
 const require = createRequire(import.meta.url);
 
@@ -520,7 +524,7 @@ function recordProvenance(appDir, ok, summary) {
       { ok, at: nowIso(), summary }
     ],
     knownBad: {
-      input: 'fixture short legal stub missing floors and topics',
+      input: KNOWN_BAD_FIXTURE,
       failed: true,
       recordedAt: nowIso()
     }
@@ -557,7 +561,7 @@ export async function runLegalSubstance(appDir, io, opts = {}) {
           { ok: result.ok, at: nowIso(), summary: result.summary }
         ],
         knownBad: {
-          input: 'fixture short legal stub missing floors and topics',
+          input: KNOWN_BAD_FIXTURE,
           failed: true,
           recordedAt: nowIso()
         }

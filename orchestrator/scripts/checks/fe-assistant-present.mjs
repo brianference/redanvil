@@ -38,16 +38,27 @@ const UI_AFFORDANCE = [
 const MODEL_CALL =
   /\b(?:env\.)?AI\.run\s*\(|\bai\.run\s*\(|Workers\s*AI|@cf\/[\w./-]+/i;
 
-/** Grounding in app data: DB access, domain filter object, or loaded context. */
+/**
+ * Grounding in app data: a REAL D1/database touch in the endpoint file.
+ *
+ * An independent review (evidence/independent-review-az-planting-calendar.json,
+ * finding "fe-assistant-present's grounding proof is a weak regex") showed the
+ * previous set was satisfiable without ever reading data: a bare word boundary
+ * match on "filters" matched a variable literally named filters, and a match
+ * on "SYSTEM_PROMPT" or "systemPrompt" matched any LLM system-prompt constant
+ * regardless of what it did. The codebase's own PASS fixture
+ * (feAssistantPresent.test.ts) proved the gap — its "grounded" endpoint
+ * returned only `{ query: {}, summary: '...' }` and never touched `env.DB` at
+ * all, yet passed on the bare words "query:" and "summary:" alone. Every
+ * pattern here now requires an actual D1 binding reference or a prepared SQL
+ * statement — nothing a stub can spell its way past without a real database
+ * call.
+ */
 const GROUNDS_DATA = [
   /\benv\.DB\b/,
   /\bDB\.prepare\s*\(/,
   /\.prepare\s*\(\s*['"`](?:SELECT|WITH)/i,
-  /\bquery\s*:\s*/,
-  /\bsummary\s*:\s*/,
-  /\bfilters?\b/,
-  /ground(?:ed|ing)|from (?:the )?(?:database|catalog|stored|app data)/i,
-  /SYSTEM_PROMPT|systemPrompt|system:\s*['"`]/
+  /\bD1Database\b/
 ];
 
 /** Explicit stub / canned shapes that must fail even if a file exists. */
@@ -164,13 +175,260 @@ export function assessAssistantEndpoint(endpointText) {
   return { ok: true };
 }
 
+/** How long a live grounding probe may take. */
+const LIVE_FETCH_TIMEOUT_MS = 20_000;
+
+/**
+ * Read the deployed production URL from claims, if recorded.
+ *
+ * A local copy rather than a cross-file import (same choice lg-bindings-bound.mjs
+ * made) so this check has no dependency on another check's internals.
+ *
+ * @param {string} appDir App root.
+ * @returns {string | null}
+ */
+export function readDeployUrl(appDir) {
+  const claimsPath = join(appDir, '.redanvil', 'claims.json');
+  if (!existsSync(claimsPath)) return null;
+  try {
+    const data = JSON.parse(readFileSync(claimsPath, 'utf8'));
+    if (typeof data.deployUrl === 'string' && data.deployUrl.trim()) {
+      return data.deployUrl.trim().replace(/\/$/, '');
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+/**
+ * Optional per-app live-grounding fixture: `tests/assistant-grounding.json`.
+ *
+ * This check runs across apps with unrelated domain models (flights, crops,
+ * scholarships), so it cannot hardcode any one app's query schema. A fixture
+ * declares a real NL message plus an independent, already-shipped API route
+ * that must agree with the assistant's answer for the SAME query — the proof
+ * the independent review asked for: "cross-check response against a live
+ * /api/plantable or /api/crops call rather than against a hardcoded
+ * expectation." Missing fixture or missing deploy URL means the live half is
+ * not run (nothing to check against), never that it is faked as passing.
+ *
+ * @param {string} appDir App root.
+ * @returns {{message:string, crossCheckPath:string, assistantField:string, crossCheckField:string} | null}
+ */
+export function readGroundingFixture(appDir) {
+  const p = join(appDir, 'tests', 'assistant-grounding.json');
+  if (!existsSync(p)) return null;
+  try {
+    const data = JSON.parse(readFileSync(p, 'utf8'));
+    if (
+      typeof data.message === 'string' &&
+      typeof data.crossCheckPath === 'string' &&
+      typeof data.assistantField === 'string' &&
+      typeof data.crossCheckField === 'string'
+    ) {
+      return data;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+/**
+ * Pull a list of string values out of JSON using one array hop plus a dotted
+ * field path, e.g. "items[].crop.name" or "crops[].name". Not a general
+ * JSONPath implementation — just enough for the shapes these fixtures need.
+ *
+ * @param {unknown} value Parsed JSON.
+ * @param {string} path e.g. "items[].crop.name".
+ * @returns {string[]} Extracted string values (non-string entries dropped).
+ */
+export function extractFieldList(value, path) {
+  const arrowIdx = path.indexOf('[]');
+  if (arrowIdx === -1) return [];
+  const arrayPath = path
+    .slice(0, arrowIdx)
+    .split('.')
+    .filter(Boolean);
+  const fieldPath = path
+    .slice(arrowIdx + 2)
+    .replace(/^\./, '')
+    .split('.')
+    .filter(Boolean);
+
+  /** @type {unknown} */
+  let arr = value;
+  for (const key of arrayPath) {
+    if (arr === null || typeof arr !== 'object') return [];
+    arr = /** @type {Record<string, unknown>} */ (arr)[key];
+  }
+  if (!Array.isArray(arr)) return [];
+
+  const out = [];
+  for (const item of arr) {
+    /** @type {unknown} */
+    let cur = item;
+    for (const key of fieldPath) {
+      if (cur === null || typeof cur !== 'object') {
+        cur = undefined;
+        break;
+      }
+      cur = /** @type {Record<string, unknown>} */ (cur)[key];
+    }
+    if (typeof cur === 'string') out.push(cur);
+  }
+  return out;
+}
+
+/**
+ * Run the live grounding proof against a deployed assistant.
+ *
+ * FAILS — never silently skips — on a non-2xx assistant response, an
+ * unparsable body, an empty extracted answer, or an answer whose data does
+ * not exactly match what the app's own API independently returns for the
+ * same query. This is deliberate: a missing Workers AI binding once made
+ * every assistant call answer 503 in production for two months while every
+ * other check passed (see lg-bindings-bound.mjs's own docstring for the same
+ * incident class). A network-level failure to reach the deploy at all is
+ * reported as infra, distinct from the app answering something wrong.
+ *
+ * @param {string} base Deployed origin, no trailing slash.
+ * @param {{message:string, crossCheckPath:string, assistantField:string, crossCheckField:string}} fixture
+ * @param {typeof fetch} [fetchImpl] Injectable for tests.
+ * @returns {Promise<{ok:boolean, infra?:boolean, why?:string}>}
+ */
+export async function verifyLiveGrounding(base, fixture, fetchImpl = fetch) {
+  const assistantController = new AbortController();
+  const assistantTimer = setTimeout(() => assistantController.abort(), LIVE_FETCH_TIMEOUT_MS);
+  let assistantRes;
+  let assistantText;
+  try {
+    assistantRes = await fetchImpl(`${base}/api/assistant`, {
+      method: 'POST',
+      signal: assistantController.signal,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: fixture.message })
+    });
+    assistantText = await assistantRes.text();
+  } catch (err) {
+    return {
+      ok: false,
+      infra: true,
+      why: `could not reach ${base}/api/assistant: ${err instanceof Error ? err.message : String(err)}`
+    };
+  } finally {
+    clearTimeout(assistantTimer);
+  }
+
+  if (!assistantRes.ok) {
+    return {
+      ok: false,
+      why:
+        `assistant endpoint answered HTTP ${assistantRes.status} for "${fixture.message}" ` +
+        `instead of grounded data: ${assistantText.slice(0, 300)}`
+    };
+  }
+
+  let assistantBody;
+  try {
+    assistantBody = JSON.parse(assistantText);
+  } catch {
+    return { ok: false, why: `assistant response is not JSON: ${assistantText.slice(0, 200)}` };
+  }
+
+  const assistantValues = extractFieldList(assistantBody, fixture.assistantField)
+    .map((s) => s.trim().toLowerCase())
+    .sort();
+  if (assistantValues.length === 0) {
+    return {
+      ok: false,
+      why:
+        `assistant response has no values at "${fixture.assistantField}" — nothing to ` +
+        `cross-check: ${assistantText.slice(0, 300)}`
+    };
+  }
+
+  const crossController = new AbortController();
+  const crossTimer = setTimeout(() => crossController.abort(), LIVE_FETCH_TIMEOUT_MS);
+  let crossRes;
+  let crossText;
+  try {
+    crossRes = await fetchImpl(`${base}${fixture.crossCheckPath}`, {
+      signal: crossController.signal
+    });
+    crossText = await crossRes.text();
+  } catch (err) {
+    return {
+      ok: false,
+      infra: true,
+      why: `could not reach ${base}${fixture.crossCheckPath}: ${err instanceof Error ? err.message : String(err)}`
+    };
+  } finally {
+    clearTimeout(crossTimer);
+  }
+
+  if (!crossRes.ok) {
+    return {
+      ok: false,
+      why:
+        `cross-check route ${fixture.crossCheckPath} answered HTTP ${crossRes.status} — ` +
+        `cannot verify grounding: ${crossText.slice(0, 300)}`
+    };
+  }
+
+  let crossBody;
+  try {
+    crossBody = JSON.parse(crossText);
+  } catch {
+    return { ok: false, why: `cross-check response is not JSON: ${crossText.slice(0, 200)}` };
+  }
+
+  const crossValues = extractFieldList(crossBody, fixture.crossCheckField).map((s) =>
+    s.trim().toLowerCase()
+  );
+  if (crossValues.length === 0) {
+    return {
+      ok: false,
+      why: `cross-check route returned no values at "${fixture.crossCheckField}" — cannot verify grounding`
+    };
+  }
+  const crossSet = new Set(crossValues);
+
+  // Exact set match, both directions. A generic model (or a stub returning a
+  // plausible fixed list) cannot reproduce this app's real row set on demand;
+  // a real grounded answer can neither invent an extra row nor drop a real one.
+  const invented = assistantValues.filter((v) => !crossSet.has(v));
+  if (invented.length > 0) {
+    return {
+      ok: false,
+      why:
+        `assistant returned ${invented.length} value(s) absent from the app's own ` +
+        `${fixture.crossCheckPath} data for the same query — not grounded in real data: ` +
+        `${JSON.stringify(invented.slice(0, 10))}`
+    };
+  }
+  const assistantSet = new Set(assistantValues);
+  const omitted = [...crossSet].filter((v) => !assistantSet.has(v));
+  if (omitted.length > 0) {
+    return {
+      ok: false,
+      why:
+        `assistant omitted ${omitted.length} value(s) the app's own ${fixture.crossCheckPath} ` +
+        `data says belong in the same result: ${JSON.stringify(omitted.slice(0, 10))}`
+    };
+  }
+
+  return { ok: true };
+}
+
 /**
  * Run the check.
  *
  * @param {string} appDir App directory.
- * @param {{pass:()=>never, fail:(m?:string)=>never, notApplicable:(w?:string)=>never}} io
+ * @param {{pass:()=>never, fail:(m?:string)=>never, notApplicable:(w?:string)=>never, infra?:(m?:string)=>never}} io
  */
-export function runAssistantPresent(appDir, io) {
+export async function runAssistantPresent(appDir, io) {
   if (!hasQueryableDomainData(appDir)) {
     io.notApplicable('no queryable domain data (no D1 domain schema / domain SELECT)');
   }
@@ -212,8 +470,31 @@ export function runAssistantPresent(appDir, io) {
     );
   }
 
+  // Static analysis proves the SOURCE calls a model and touches the database.
+  // It cannot prove the DEPLOYED answer is actually derived from real rows —
+  // that needs a live round trip. Run it whenever both a deploy URL and a
+  // fixture exist; when either is absent the live half is unmeasured, not
+  // faked as passing (mirrors lg-shipped/lg-bindings-bound's own infra rule).
+  const deployUrl = readDeployUrl(appDir);
+  const fixture = readGroundingFixture(appDir);
+  if (deployUrl && fixture) {
+    const live = await verifyLiveGrounding(deployUrl, fixture);
+    if (!live.ok) {
+      if (live.infra && io.infra) {
+        io.infra(live.why);
+      }
+      io.fail(`live grounding proof failed against ${deployUrl}: ${live.why}`);
+    }
+    console.log(
+      `assistant present (${relative(appDir, endpoints[0] ?? '')}); model-backed, statically ` +
+        `grounded, and LIVE-verified against ${deployUrl}/api/assistant`
+    );
+    io.pass();
+  }
+
   console.log(
-    `assistant present (${relative(appDir, endpoints[0] ?? '')}); model-backed and grounded`
+    `assistant present (${relative(appDir, endpoints[0] ?? '')}); model-backed and grounded ` +
+      '(static only — no deploy URL and/or tests/assistant-grounding.json fixture yet)'
   );
   io.pass();
 }
@@ -233,6 +514,13 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     notApplicable: (w) => {
       if (w) console.error(`n/a: ${w}`);
       process.exit(3);
+    },
+    infra: (m) => {
+      if (m) console.error(`infra: ${m}`);
+      process.exit(2);
     }
+  }).catch((err) => {
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(2);
   });
 }

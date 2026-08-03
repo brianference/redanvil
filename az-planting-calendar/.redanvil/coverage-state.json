@@ -1,0 +1,5 @@
+{
+  "_why": "Coverage ratchet state. highWaterPct is the best overall line coverage this app has ever measured and may never decrease. Tracked on purpose - its git history proves nobody lowered the bar.",
+  "baseCommit": "8d625b2060242a88ff138f60bcbff954ba283342",
+  "highWaterPct": 67.58
+}

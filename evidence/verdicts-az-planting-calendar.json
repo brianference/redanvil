@@ -180,8 +180,10 @@
     "evidence": [
       "evidence/screenshots/az-planting-calendar-1280-dark.png",
       "evidence/screenshots/az-planting-calendar-375-light.png",
-      "az-planting-calendar/design-refs/home-options/DECISION.md"
+      "az-planting-calendar/design-refs/home-options/DECISION.md",
+      "evidence/design-az-planting-calendar.json"
     ],
-    "note": "Archetype: Timeline + rail (chosen from three structurally distinct home options; see DECISION.md). Confirmed by opening both screenshots, not inferred from source. 1280 dark shows the horizontal half-month rail with the current half-month chip marked \"now\", a Plantable list keyed to it, and the full-year grid as a separate scan surface below -- a timeline spine with a rail, not a tile grid. 375 light collapses the header to Filters / theme / Menu, keeps the rail horizontally scrollable and the year grid in its own overflow container; page body does not scroll sideways. Light theme renders light throughout (no dark hero inside a light page)."
+    "note": "Archetype: Timeline + rail (chosen from three structurally distinct home options; see DECISION.md). Confirmed by opening both screenshots, not inferred from source. 1280 dark shows the horizontal half-month rail with the current half-month chip marked \"now\", a Plantable list keyed to it, and the full-year grid as a separate scan surface below -- a timeline spine with a rail, not a tile grid. 375 light collapses the header to Filters / theme / Menu, keeps the rail horizontally scrollable and the year grid in its own overflow container; page body does not scroll sideways. Light theme renders light throughout (no dark hero inside a light page).",
+    "reviewedAt": "2026-08-02T23:01:05.912Z"
   }
 ]

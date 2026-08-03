@@ -27,6 +27,28 @@ const here = dirname(fileURLToPath(import.meta.url));
 const CHECK_SCRIPT = join(here, 'check.mjs');
 
 /**
+ * Some checks only accept a fixture through a named flag (`--fixture`,
+ * `--fixture-dir`) rather than as a bare positional argument -- their first
+ * positional argument is `<appDir>`. Passing a fixture path positionally to
+ * one of these silently ran the check against a non-existent "app directory"
+ * (an infra exit, not a proof of the check failing on bad input) and that
+ * infra exit was then read as a passing known-bad rerun. Route each rule's
+ * fixture through the flag its own CLI actually expects.
+ *
+ * @type {Record<string, '--fixture' | '--fixture-dir'>}
+ */
+const FIXTURE_FLAG_BY_RULE = Object.freeze({
+  'fe-brand-mark-size': '--fixture',
+  'fe-light-dark': '--fixture',
+  'fe-search-present': '--fixture',
+  'fe-result-in-viewport': '--fixture',
+  'fe-structured-data': '--fixture',
+  'fe-breadcrumbs': '--fixture-dir',
+  'fe-resource-links': '--fixture-dir',
+  'fe-legal-substance': '--fixture-dir'
+});
+
+/**
  * @typedef {{
  *   pass: () => never,
  *   fail: (m?: string) => never,
@@ -58,7 +80,7 @@ export function checkImplPath(ruleId) {
  * Re-run a known-bad fixture and return the exit code.
  *
  * @param {string} ruleId
- * @param {string} inputPath Absolute or relative fixture path.
+ * @param {string} inputPath Absolute or relative fixture path (already resolved to disk).
  * @param {{ spawn?: typeof spawnSync }} [deps]
  * @returns {number}
  */
@@ -66,8 +88,11 @@ export function runKnownBadFixture(ruleId, inputPath, deps = {}) {
   const spawn = deps.spawn ?? spawnSync;
   // Prefer the dedicated script when present so fixtures can pass special args.
   const dedicated = join(here, `${ruleId}.mjs`);
+  const flag = FIXTURE_FLAG_BY_RULE[ruleId];
   const args = existsSync(dedicated)
-    ? [dedicated, inputPath]
+    ? flag
+      ? [dedicated, flag, inputPath]
+      : [dedicated, inputPath]
     : [CHECK_SCRIPT, ruleId, inputPath];
   const r = spawn(process.execPath, args, {
     encoding: 'utf8',
@@ -77,15 +102,39 @@ export function runKnownBadFixture(ruleId, inputPath, deps = {}) {
 }
 
 /**
+ * Resolve a recorded knownBad.input to a real file on disk, or null.
+ *
+ * A prose description ("a fixture with dead links") will never resolve --
+ * that IS the failure mode this exists to catch, not a special case of it.
+ *
+ * @param {string} appDir App root.
+ * @param {string} input Recorded path (absolute or app-relative).
+ * @returns {string | null}
+ */
+export function resolveKnownBadInput(appDir, input) {
+  if (typeof input !== 'string' || input.trim().length === 0) return null;
+  if (existsSync(input)) return input;
+  const underApp = join(appDir, input);
+  if (existsSync(underApp)) return underApp;
+  return null;
+}
+
+/**
  * Evaluate G1 against a meta object (pure; unit-testable).
  *
  * @param {Record<string, object>} meta
  * @param {string[]} requiredRuleIds
  * @param {(id: string) => number | null} implMtimeMs
- * @param {(id: string, input: string) => number} [rerun] Optional live re-run.
+ * @param {(id: string, resolvedInput: string) => number} [rerun] Optional live
+ *   re-run. Called ONLY once `resolveInput` has confirmed the path exists.
+ * @param {(input: string) => string | null} [resolveInput] Resolve a recorded
+ *   path to a real file, or null when it does not resolve (prose or a typo).
+ *   Required whenever `rerun` is provided -- without it every input passes
+ *   `rerun` as an opaque string and an unresolvable path silently proves
+ *   nothing while reading as a legitimate failing run.
  * @returns {string[]} Failure reasons.
  */
-export function evaluateKnownBad(meta, requiredRuleIds, implMtimeMs, rerun) {
+export function evaluateKnownBad(meta, requiredRuleIds, implMtimeMs, rerun, resolveInput) {
   /** @type {string[]} */
   const failures = [];
   for (const ruleId of requiredRuleIds) {
@@ -110,13 +159,26 @@ export function evaluateKnownBad(meta, requiredRuleIds, implMtimeMs, rerun) {
         );
       }
     }
-    if (typeof kb.input === 'string' && kb.input.length > 0 && typeof rerun === 'function') {
-      const code = rerun(ruleId, kb.input);
-      if (code === 0) {
-        failures.push(
-          `${ruleId}: known-bad fixture ${kb.input} exited 0 (must fail to prove the check can fail)`
-        );
-      }
+    if (typeof kb.input !== 'string' || kb.input.length === 0) continue;
+    if (typeof rerun !== 'function') continue;
+    // A rerun was requested: the recorded input MUST resolve to a real,
+    // re-runnable fixture. An unresolvable path (missing file, or prose like
+    // "a fixture with dead links" instead of a path) proves nothing and must
+    // fail -- it is indistinguishable, without this check, from a fixture
+    // that ran and correctly failed.
+    const resolved = typeof resolveInput === 'function' ? resolveInput(kb.input) : kb.input;
+    if (!resolved) {
+      failures.push(
+        `${ruleId}: knownBad.input ${JSON.stringify(kb.input)} does not resolve to a file on disk — ` +
+          'a description of a bad case is not a fixture; G1 requires a real, re-runnable path'
+      );
+      continue;
+    }
+    const code = rerun(ruleId, resolved);
+    if (code === 0) {
+      failures.push(
+        `${ruleId}: known-bad fixture ${kb.input} exited 0 (must fail to prove the check can fail)`
+      );
     }
   }
   return failures;
@@ -146,24 +208,20 @@ export function runMeasKnownBad(appDir, io, deps = {}) {
     return p ? fileMtimeMs(p) : null;
   };
 
-  // Only re-run when the fixture path exists on disk (absolute or under appDir).
+  // Resolution is ALWAYS applied when a rerun is requested -- resolveInput
+  // decides whether a fixture is real; evaluateKnownBad fails closed when it
+  // is not, rather than treating "did not resolve" the same as "ran and
+  // failed" (an unresolvable path used to satisfy this gate for free).
+  const resolveInput = (input) => resolveKnownBadInput(appDir, input);
   const rerun =
     deps.rerun === false
       ? undefined
-      : (ruleId, input) => {
-          const abs = existsSync(input)
-            ? input
-            : existsSync(join(appDir, input))
-              ? join(appDir, input)
-              : null;
-          if (!abs) return 1; // missing fixture counts as "did not pass"
-          return runKnownBadFixture(ruleId, abs, { spawn: deps.spawn });
-        };
+      : (ruleId, resolvedInput) => runKnownBadFixture(ruleId, resolvedInput, { spawn: deps.spawn });
 
-  const failures = evaluateKnownBad(meta, required, implMtime, rerun);
+  const failures = evaluateKnownBad(meta, required, implMtime, rerun, resolveInput);
 
   const ok = failures.length === 0;
-  // Self-entry for this check: knownBad is the empty-meta case (proven in tests).
+  // Self-entry for this check: a deterministic scan of already-recorded meta.
   writeMeasurementMetaEntry(appDir, 'meas-known-bad', {
     tool: 'meta-scan',
     engine: null,

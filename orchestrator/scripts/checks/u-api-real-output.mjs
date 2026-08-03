@@ -28,8 +28,8 @@
  * rather than being asked to imagine it.
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { join, relative, sep, extname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, relative, sep, extname, dirname } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import {
   pickFreePort,
   killProcessTree,
@@ -38,6 +38,10 @@ import {
   ensureBuild
 } from '../../../.github/scripts/runtime_parity.mjs';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+
+const here = dirname(fileURLToPath(import.meta.url));
+/** Real, resolvable known-bad fixture: an API route with no declared example. */
+const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'u-api-real-output', 'bad-app');
 
 /** Where the per-route examples live. */
 export const EXAMPLES_FILE = join('tests', 'api-examples.json');
@@ -421,7 +425,7 @@ export async function runApiRealOutput(appDir, io, deps = {}) {
       { ok, at: nowIso(), routes: captured.results.length }
     ],
     knownBad: {
-      input: 'API route with no example or empty placeholder response',
+      input: KNOWN_BAD_FIXTURE,
       failed: true,
       recordedAt: nowIso()
     }

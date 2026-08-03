@@ -8,6 +8,10 @@
   "entities": [],
   "threshold": 90,
   "features": [],
+  "design": {
+    "_why": "Recorded retroactively by opening evidence/screenshots/app-builder-1280-dark.png and evidence/screenshots/app-builder-1280-light.png (both files actually opened and viewed, not inferred from source): the home route is a two-pane split -- a persistent composer (the work: describe your app, send) against a template/example picker -- which is a creation-tool shell, i.e. Command canvas, not one of the three archetypes exempt from the anti-column check. Re-open those two PNGs to check this call. Confirmed NOT a centred column by a separate machine measurement (design_audit.mjs --claims against production, evidence/design-app-builder.json): widest block 1306 of 1440px (91%), equal 67px gutters -- wide enough that the anti-column rule (requires <72% width AND equal gutters to fire) would not trigger regardless of archetype name.",
+    "archetype": "Command canvas"
+  },
   "coldVisitorProbe": {
     "control": "send description",
     "fill": {
