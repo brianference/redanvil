@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil-dashboard.pages.dev",
-  "checkedAt": "2026-08-03T17:34:26.521Z",
+  "checkedAt": "2026-08-03T18:41:45.774Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -48,7 +48,7 @@
     },
     "fe-required-pages": {
       "ok": true,
-      "detail": "/about 200 \"About\" 337w/6§; /contact 200 \"Contact\" 213w/5§; /terms 200 \"Terms\" 1494w/16§; /privacy 200 \"Privacy\" 1543w/16§; /no-such-page 200 \"Page not found\" 32w/0§"
+      "detail": "/about 200 \"About\" 337w/6§; /contact 200 \"Contact\" 213w/5§; /terms 200 \"Terms\" 1495w/16§; /privacy 200 \"Privacy\" 1559w/16§; /no-such-page 200 \"Page not found\" 32w/0§"
     },
     "fe-visual-review-recorded": {
       "ok": true,

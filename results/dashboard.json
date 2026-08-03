@@ -1,11 +1,11 @@
 {
   "kind": "results",
   "slug": "dashboard",
-  "finalScore": 96,
+  "finalScore": 0,
   "threshold": 90,
-  "passed": true,
-  "evaluated": 62,
-  "total": 63,
+  "passed": false,
+  "evaluated": 81,
+  "total": 81,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -21,6 +21,10 @@
     },
     {
       "ruleId": "u-test-presence",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-runners",
       "passed": true
     },
     {
@@ -48,7 +52,51 @@
       "passed": true
     },
     {
+      "ruleId": "fe-search-present",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-brand-mark",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-brand-mark-size",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-breadcrumbs",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-result-in-viewport",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-resource-links",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-legal-substance",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-structured-data",
+      "passed": true
+    },
+    {
+      "ruleId": "proc-design-options",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-prior-art",
+      "passed": true
+    },
+    {
       "ruleId": "u-integration-scan",
+      "passed": true
+    },
+    {
+      "ruleId": "u-competitor-scan",
       "passed": true
     },
     {
@@ -161,14 +209,66 @@
     },
     {
       "ruleId": "proc-conventional-commits",
+      "passed": false
+    },
+    {
+      "ruleId": "proc-artifact-verified",
       "passed": true
     },
     {
-      "ruleId": "fe-a11y-contrast",
+      "ruleId": "lg-shipped",
+      "passed": false
+    },
+    {
+      "ruleId": "lg-bindings-bound",
       "passed": true
     },
     {
       "ruleId": "fe-light-dark",
+      "passed": true
+    },
+    {
+      "ruleId": "u-build-succeeds",
+      "passed": true
+    },
+    {
+      "ruleId": "u-api-no-spa-mask",
+      "passed": true
+    },
+    {
+      "ruleId": "u-legal-claims-true",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-favicon-legible",
+      "passed": true
+    },
+    {
+      "ruleId": "lg-result-reproduces",
+      "passed": false
+    },
+    {
+      "ruleId": "meas-known-bad",
+      "passed": true
+    },
+    {
+      "ruleId": "meas-two-run",
+      "passed": true
+    },
+    {
+      "ruleId": "meas-recheck-flattering",
+      "passed": true
+    },
+    {
+      "ruleId": "meas-standard-tool",
+      "passed": true
+    },
+    {
+      "ruleId": "meas-engine-named",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-a11y-contrast",
       "passed": true
     },
     {
@@ -258,28 +358,40 @@
     {
       "ruleId": "fe-cold-visitor",
       "passed": true
+    },
+    {
+      "ruleId": "fe-design-archetype",
+      "passed": true
     }
   ],
   "iterations": [
     {
       "index": 1,
-      "score": 96,
-      "blockers": []
+      "score": 0,
+      "blockers": [
+        "lg-shipped",
+        "lg-result-reproduces"
+      ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-01T01:30:00.930Z",
+  "finishedAt": "2026-08-03T18:44:22.267Z",
   "provenance": {
-    "commit": "baceea901776b4fbe06ebee3df754d0d4298aa8e",
+    "commit": "3fd8c16d837c21dc81967b917c015692b9c3c922",
     "dirty": false,
-    "rubricHash": "e64fba891e2da5c4317c82c62dc5d4615123a70949cfe9135b78748938b5da7c",
-    "rubricRuleCount": 68,
+    "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
+    "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "b0209da280eac1b1a746eb6ee63cabd08edc68dbd66e101135dd4b2448c9cb72",
+    "verdictsHash": "62993a09af8cb024bb7bb48b37404a0df3454b06119e6a68179bf4012ae77eaa",
     "notApplicable": [
-      "process"
+      "fe-assistant-present",
+      "proc-pr-title-ticket",
+      "process",
+      "u-api-not-found",
+      "u-claims-covered",
+      "u-plat-migrations"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-01T01:30:00.991Z"
+    "generatedAt": "2026-08-03T18:44:22.348Z"
   }
 }
