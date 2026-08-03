@@ -4,8 +4,8 @@
   "finalScore": 0,
   "threshold": 90,
   "passed": false,
-  "evaluated": 67,
-  "total": 91,
+  "evaluated": 83,
+  "total": 83,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -261,7 +261,7 @@
     },
     {
       "ruleId": "meas-known-bad",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-two-run",
@@ -278,6 +278,102 @@
     {
       "ruleId": "meas-engine-named",
       "passed": true
+    },
+    {
+      "ruleId": "fe-a11y-contrast",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-desktop-width",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cold-visitor",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-product-completeness",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-visual-review-recorded",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-premium-nav",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-required-pages",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-no-attribution",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-responsive-375",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-touch-targets",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-type-floor",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-noncolor-state",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-safe-areas",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cross-link",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-seo-og",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-design-archetype",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-fail-closed-states",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-pages-compose",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-idiomatic",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-no-speculative-abstraction",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-smallest-diff",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-use-what-exists",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-adequacy",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-behavioral",
+      "passed": true
     }
   ],
   "iterations": [
@@ -285,39 +381,27 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "fe-a11y-contrast",
-        "fe-premium-nav",
-        "fe-required-pages",
-        "fe-no-attribution",
-        "fe-responsive-375",
-        "fe-product-completeness",
-        "fe-visual-review-recorded",
-        "fe-cold-visitor",
-        "fe-touch-targets",
-        "fe-type-floor",
-        "fe-desktop-width",
         "lg-shipped",
-        "lg-result-reproduces",
-        "meas-known-bad",
-        "meas-standard-tool"
+        "lg-result-reproduces"
       ]
     }
   ],
-  "deployUrl": "https://az-planting-calendar.pages.dev",
-  "finishedAt": "2026-08-03T19:39:49.595Z",
+  "deployUrl": null,
+  "finishedAt": "2026-08-03T19:47:17.086Z",
   "provenance": {
-    "commit": "1e3fdc6237be566634b9698ebc9206d235316a0c",
+    "commit": "aee25d2e5849e85d77dfa1e322e81639f062e3ca",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": null,
+    "verdictsHash": "bd0dfc71ddc0910d71f835ababa2edc33a5e511926825d12be8c1428e6fd7ef7",
     "notApplicable": [
       "proc-pr-title-ticket",
+      "process",
       "u-claims-covered",
       "u-test-presence"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-03T19:39:49.681Z"
+    "generatedAt": "2026-08-03T19:47:17.183Z"
   }
 }

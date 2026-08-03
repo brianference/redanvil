@@ -68,6 +68,10 @@ describe('promoting a worktree run', () => {
   // failed. These cover the promotion path and, more importantly, every case
   // where it must refuse.
 
+  // 20s, not the 5s default: this drives real `git worktree` + merge through the
+  // filesystem, which on Windows under the full parallel suite exceeded 5s and
+  // timed out. It passes 4/4 in isolation — the assertions were never the
+  // problem, the budget was. Raising a too-tight I/O budget, not weakening a check.
   it('merges a finished run into the base branch', async () => {
     const { repoDir, worktreeDir, cleanup } = await repoWithWorktree();
     await mkdir(join(worktreeDir, 'src'), { recursive: true });
@@ -93,7 +97,7 @@ describe('promoting a worktree run', () => {
     }).stdout.trim().split(' ');
     expect(parents.length).toBe(3);
     await cleanup();
-  });
+  }, 20_000);
 
   it('REFUSES when the base repository is dirty', async () => {
     // Merging into a tree with uncommitted work buries it in a merge commit
