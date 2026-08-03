@@ -54,12 +54,31 @@ export function applyThemeMode(mode: ThemeMode): 'light' | 'dark' {
 }
 
 /**
- * Cycle system → light → dark → system.
+ * Cycle system → light → dark → system, skipping any step that would not
+ * change what the user actually sees.
+ *
+ * On a device whose OS is set to dark, `system` and `dark` resolve to the same
+ * appearance, so the plain cycle produced a click that changed nothing — the
+ * control looked broken. Skipping the indistinguishable step keeps every mode
+ * reachable while guaranteeing each press repaints.
  *
  * @param current - Current mode.
+ * @returns The next mode whose resolved appearance differs from the current one.
  */
 export function nextThemeMode(current: ThemeMode): ThemeMode {
-  if (current === 'system') return 'light';
-  if (current === 'light') return 'dark';
-  return 'system';
+  const order: ThemeMode[] = ['system', 'light', 'dark'];
+  const step = (m: ThemeMode): ThemeMode => {
+    if (m === 'system') return 'light';
+    if (m === 'light') return 'dark';
+    return 'system';
+  };
+  const currentResolved = resolveTheme(current);
+  let candidate = step(current);
+  // At most one skip is ever needed: of the three modes, only one can be
+  // indistinguishable from the current appearance.
+  for (let i = 0; i < order.length; i += 1) {
+    if (resolveTheme(candidate) !== currentResolved) return candidate;
+    candidate = step(candidate);
+  }
+  return candidate;
 }

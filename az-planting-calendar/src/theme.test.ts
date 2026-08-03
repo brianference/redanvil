@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { applyThemeMode, nextThemeMode, readThemeMode } from './theme';
+import { applyThemeMode, nextThemeMode, readThemeMode, resolveTheme } from './theme';
 
 /**
  * Theme storage + cycle behaviour (localStorage key `theme`).
@@ -51,10 +51,20 @@ describe('theme', () => {
     vi.unstubAllGlobals();
   });
 
-  it('cycles system → light → dark → system', () => {
-    expect(nextThemeMode('system')).toBe('light');
+  it('cycles forward, skipping the step that would look identical', () => {
+    // Base order is system → light → dark → system, but a step is skipped when
+    // it resolves to the appearance already showing, so every press repaints.
+    // OS light (the default stub): `system` already looks light, so light is
+    // skipped and the cycle reads as a plain light/dark switch.
+    expect(resolveTheme('system')).toBe('light');
+    expect(nextThemeMode('system')).toBe('dark');
     expect(nextThemeMode('light')).toBe('dark');
     expect(nextThemeMode('dark')).toBe('system');
+
+    // OS dark: now `system` looks dark, so it is the skipped step instead.
+    matchMediaDark = true;
+    expect(nextThemeMode('dark')).toBe('light');
+    expect(nextThemeMode('light')).toBe('dark');
   });
 
   it('persists light and dark to localStorage and sets data-theme', () => {
@@ -67,6 +77,17 @@ describe('theme', () => {
     expect(store.get('theme')).toBe('dark');
     expect(attrs.get('data-theme')).toBe('dark');
     expect(readThemeMode()).toBe('dark');
+  });
+
+  it('never advances to a mode that looks identical to the current one', () => {
+    // On a dark-OS device, `system` and `dark` paint the same, so the plain
+    // system → light → dark → system cycle produced a click that changed
+    // nothing. Fails against that cycle.
+    matchMediaDark = true;
+    expect(resolveTheme('system')).toBe('dark');
+    const next = nextThemeMode('dark');
+    expect(resolveTheme(next)).not.toBe('dark');
+    expect(next).toBe('light');
   });
 
   it('defaults to light when nothing is stored, even if the OS prefers dark', () => {
