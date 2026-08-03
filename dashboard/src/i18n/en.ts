@@ -50,7 +50,10 @@ export const en = {
       kpiPassed: 'Passed',
       kpiAvgScore: 'Avg score',
       recentHeading: 'Recent builds',
-      recentMeta: (count: number): string => (count === 1 ? '1 shown' : `${count} shown`)
+      recentMeta: (count: number): string => (count === 1 ? '1 shown' : `${count} shown`),
+      searchLabel: 'Search runs',
+      searchPlaceholder: 'Search runs by slug…',
+      searchNoMatches: (query: string): string => `No runs match "${query}".`
     },
     about: {
       title: 'About',
@@ -172,7 +175,7 @@ export const en = {
         },
         {
           heading: 'Indemnity',
-          body: 'You agree to defend and hold harmless RedAnvil and its maintainers from claims, damages, losses, and expenses (including reasonable legal fees) arising from your misuse of the site, your misrepresentation of listed scores, or your breach of these terms, to the extent permitted by applicable law.'
+          body: 'You agree to indemnify, defend, and hold harmless RedAnvil and its maintainers from claims, damages, losses, and expenses (including reasonable legal fees) arising from your misuse of the site, your misrepresentation of listed scores, or your breach of these terms, to the extent permitted by applicable law.'
         },
         {
           heading: 'Availability and changes to the service',
@@ -234,8 +237,8 @@ export const en = {
           ]
         },
         {
-          heading: 'Why information is processed',
-          body: 'We process the limited data above only to run the features the site actually provides:',
+          heading: 'Why we process this information',
+          body: 'This is why we process the limited data above — only to run the features the site actually provides:',
           items: [
             'Render public run history so anyone can inspect how RedAnvil\'s own builds scored against the gate',
             'Remember light or dark theme on the same browser after you toggle it',
@@ -269,13 +272,13 @@ export const en = {
           body: 'Theme preference remains on your device until you clear site data or remove the theme key. Published run results remain in the public repository until maintainers update, rewrite, or remove the feed files; there is no automatic per-visitor expiry job in the dashboard app because there is no per-visitor store. Cloudflare edge or access logs, if any, follow Cloudflare\'s retention practices, which this repository does not control. GitHub retains repository history and access logs under GitHub\'s policies. If you want a specific public run row corrected or removed from the project feed, open a GitHub issue titled "Privacy request" or a normal bug report with the slug; maintainers may edit the public feed for accuracy or abuse. Clearing your own browser storage is how you delete the theme preference.'
         },
         {
-          heading: 'What you can request and how',
-          body: 'Depending on where you live, you may have rights to access, correct, delete, port, or object to certain processing of personal data. For this dashboard those rights mainly concern the minimal data described above, not an account profile we never created. Exercise them by opening https://github.com/brianference/redanvil/issues with "Privacy request" in the title. There is no SLA; response depends on maintainer availability.',
+          heading: 'Your rights and how to make a data subject request',
+          body: 'Depending on where you live, you may have rights to access, correct, delete, port, or object to certain processing of personal data. For this dashboard those rights mainly concern the minimal data described above, not an account profile we never created. To request access, correction, deletion, or export, open https://github.com/brianference/redanvil/issues with "Privacy request" in the title. There is no SLA; response depends on maintainer availability.',
           items: [
-            'Access: public run pages and the public JSON feed are already world-readable; theme data lives only in your browser',
+            'Request access: public run pages and the public JSON feed are already world-readable; theme data lives only in your browser',
             'Correction: report a wrong public run display with the slug so maintainers can fix the published feed if the error is real',
-            'Deletion: clear localStorage for theme; request feed-row edits via GitHub when the concern is published project data; host-log deletion is subject to Cloudflare or GitHub practices',
-            'Portability: copy public run URLs or download the public JSON feed yourself from GitHub',
+            'Request deletion: clear localStorage for theme; request feed-row edits via GitHub when the concern is published project data; host-log deletion is subject to Cloudflare or GitHub practices',
+            'Request export: copy public run URLs or download the public JSON feed yourself from GitHub',
             'Objection: stop using the site; there is no marketing list to opt out of'
           ]
         },

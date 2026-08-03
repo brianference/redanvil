@@ -1,6 +1,8 @@
+import { useMemo, useState } from 'react';
 import { KpiStrip } from '../components/KpiStrip';
 import { Page } from '../components/Page';
 import { RunList } from '../components/RunList';
+import { matchesRunQuery, RunSearch } from '../components/RunSearch';
 import { en } from '../i18n/en';
 import { summarize } from '../lib/summary';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
@@ -17,6 +19,12 @@ export function Home(): JSX.Element {
   });
   const state = useRuns();
   const title = en.pages.home.title;
+  const [query, setQuery] = useState('');
+  const allRuns = state.status === 'ready' ? state.runs : [];
+  const filteredRuns = useMemo(
+    () => allRuns.filter((run) => matchesRunQuery(run.slug, query)),
+    [allRuns, query]
+  );
 
   if (state.status === 'loading') {
     return (
@@ -51,7 +59,14 @@ export function Home(): JSX.Element {
   return (
     <Page title={title}>
       <KpiStrip summary={stats} />
-      <RunList runs={state.runs} />
+      <RunSearch value={query} onChange={setQuery} />
+      {filteredRuns.length === 0 && query.trim().length > 0 ? (
+        <p role="status" style={{ color: theme.color.muted }}>
+          {en.pages.home.searchNoMatches(query.trim())}
+        </p>
+      ) : (
+        <RunList runs={filteredRuns} />
+      )}
     </Page>
   );
 }

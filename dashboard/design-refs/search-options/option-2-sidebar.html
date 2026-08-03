@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Option 2 — Sidebar filter panel</title>
+<style>
+  :root {
+    --bg: #0b0b0f; --surface: #15151d; --surface-2: #1c1c26; --text: #f5f5f7;
+    --muted: #8b8b93; --accent: #d33b40; --border: #26263049;
+  }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px; display: flex; gap: 20px; }
+  .sidebar { width: 220px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; height: fit-content; }
+  .sidebar input {
+    width: 100%; min-height: 44px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text); padding: 0 12px; font-size: 15px; box-sizing: border-box;
+  }
+  .sidebar h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; color: var(--muted); }
+  .main { flex: 1; min-width: 0; }
+  .kpi { display: flex; gap: 12px; margin-bottom: 20px; }
+  .kpi div { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .kpi b { display: block; font-size: 22px; }
+  .kpi span { color: var(--muted); font-size: 13px; }
+  .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .list li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  h3 { margin: 0 0 4px; }
+  .caption { text-align: center; color: var(--muted); font-size: 12px; margin-top: 24px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="sidebar">
+      <h4>Filter</h4>
+      <label for="q" style="display:none">Search runs</label>
+      <input id="q" type="search" placeholder="Search runs…" aria-label="Search runs" />
+    </aside>
+    <div class="main">
+      <div class="kpi">
+        <div><b>3</b><span>Total runs</span></div>
+        <div><b>2</b><span>Passed</span></div>
+        <div><b>67</b><span>Avg score</span></div>
+      </div>
+      <ul class="list">
+        <li><h3>app-builder</h3><span>96 · 63/63 rules</span></li>
+        <li><h3>az-planting-calendar</h3><span>91 · 62/62 rules</span></li>
+        <li><h3>dashboard</h3><span>0 · 79/79 rules</span></li>
+      </ul>
+    </div>
+  </div>
+  <p class="caption">Option 2 — a persistent left sidebar panel holds search (and room for future filters), list on the right.</p>
+</body>
+</html>
