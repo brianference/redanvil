@@ -107,6 +107,8 @@ Applies to every row above.
 | G3 | A flattering first result was re-checked | every new measurement in one session was wrong on first run, always in the flattering direction |
 | G4 | The tool is the standard one | axe-core for contrast, never a hand-rolled parser |
 | G5 | The engine is named before comparing | `devices['iPhone 13']` is **WebKit**, not Chromium |
+| G6 | A new meta-rule was run against a fixture that **provably fails it**, and the non-zero exit code was read | a fixture path that merely *resolves* is not a fixture that *ran* -- `meas-known-bad` once returned pass on an unresolvable path, so prose describing a failing case satisfied the check with nothing executed |
+| G7 | A "two run" record holds two genuinely independent measurements | `meas-two-run` counted one computed value written twice as two runs agreeing; a check that cannot fail carries no information. Fixing this can create a new false failure: capturing both timestamps at write time makes a fast measurement byte-identical, which then fails the very check meant to catch a duplicate -- timestamps must be captured as each run completes, not backfilled afterward |
 
 ## The one-line test
 

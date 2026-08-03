@@ -287,3 +287,24 @@ Report each with real output:
 - `unimplementedRows()` still `[]`.
 
 Build the mechanism only. Do not run it against a real app in this pass.
+
+## 7. What running it for real proved wrong
+
+RA-175 shipped this spec. Running the resulting team the same day surfaced three
+coordination failures at the scheduling layer, above the tree isolation this spec
+already required -- full reasoning and the fix for each is in
+`docs/PLAN-autonomous-app-team.md` Part 8:
+
+- Two roles idled waiting on each other's not-yet-written artifact, because
+  `owns` declares output but nothing declares input. Add `dependsOn: string[]`
+  to the role registry and topologically sort dispatch per iteration.
+- `reverify` deadlocked against a tree it could not clear, documented in
+  `0440921`. The immediate cause (stale hand-named evidence paths) is fixed; the
+  general case -- two agents sharing one physical tree can dirty it for each
+  other -- is not. The PM must never assign two roles to the same tree in one
+  iteration.
+- Two roles wrote to the same shared artifact path (`evidence/measurement-meta.json`
+  is exactly this shape) and the second promote silently dropped the first
+  role's entry. A shared-writable path must be declared as such and merged by
+  key on promote; an undeclared collision fails the same way an unowned row
+  does -- print it, do not let it happen silently.

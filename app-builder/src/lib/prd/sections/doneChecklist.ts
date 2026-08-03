@@ -114,7 +114,9 @@ export const DONE_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
       { id: "G2", mustBeTrue: "Two runs of the same measurement agree", evidence: "if they disagree, report neither until you know which is wrong" },
       { id: "G3", mustBeTrue: "A flattering first result was re-checked", evidence: "every new measurement in one session was wrong on first run, always in the flattering direction" },
       { id: "G4", mustBeTrue: "The tool is the standard one", evidence: "axe-core for contrast, never a hand-rolled parser" },
-      { id: "G5", mustBeTrue: "The engine is named before comparing", evidence: "`devices['iPhone 13']` is **WebKit**, not Chromium" }
+      { id: "G5", mustBeTrue: "The engine is named before comparing", evidence: "`devices['iPhone 13']` is **WebKit**, not Chromium" },
+      { id: "G6", mustBeTrue: "A new meta-rule was run against a fixture that **provably fails it**, and the non-zero exit code was read", evidence: "a fixture path that merely *resolves* is not a fixture that *ran* -- `meas-known-bad` once returned pass on an unresolvable path, so prose describing a failing case satisfied the check with nothing executed" },
+      { id: "G7", mustBeTrue: "A \"two run\" record holds two genuinely independent measurements", evidence: "`meas-two-run` counted one computed value written twice as two runs agreeing; a check that cannot fail carries no information. Fixing this can create a new false failure: capturing both timestamps at write time makes a fast measurement byte-identical, which then fails the very check meant to catch a duplicate -- timestamps must be captured as each run completes, not backfilled afterward" }
     ]
   }
 ];

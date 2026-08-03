@@ -180,6 +180,20 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
   G5: {
     rules: ['meas-engine-named'],
     note: 'Browser-driven measurements must name their engine (chromium|webkit|firefox).'
+  },
+  G6: {
+    rules: ['meas-known-bad'],
+    note:
+      'Same check as G1, on the facet that broke: a fixture path must resolve AND execute with a ' +
+      'non-zero exit, not merely be a string that parses. `meas-known-bad` returned pass on an ' +
+      'unresolvable path before RA-178.'
+  },
+  G7: {
+    rules: ['meas-two-run'],
+    note:
+      'Same check as G2, on the facet that broke: the two runs must be genuinely independent ' +
+      'measurements, not one value serialised twice with one timestamp duplicated. `meas-two-run` ' +
+      'accepted byte-identical records as agreement before RA-178.'
   }
 });
 

@@ -281,3 +281,60 @@ saving does not come out of quality.
 The loop does not stop on cost and does not stop on iteration count. It exits by
 finishing. A row that will not move gets reassigned or decomposed, never
 abandoned, and no bar is ever lowered to converge.
+
+---
+
+## Part 8 — What the first real run proved wrong (2026-08-02)
+
+RA-175 landed the role registry, worktree enforcement, and the two refusal gates
+this plan called for. Running the team for real the same day surfaced three
+coordination failures the design had not accounted for. None of them is a rule a
+gate check can catch, because none is about content -- they are about
+scheduling and shared state between agents, the exact class this plan assumed
+worktree isolation alone would remove.
+
+**Two agents idled waiting on each other.** The registry's `owns` declaration
+says what a role produces, but nothing says what it needs first. When the row
+assignment step dispatches every unmet-row owner in one parallel batch, a role
+whose input is another role's not-yet-written artifact (a tester waiting on a
+ranked feature list, a QA role waiting on a deploy the engineer has not
+finished) has nothing to read and nothing useful to do, and the PM has no signal
+that either is blocked rather than working. Fix: add `dependsOn: string[]` (role
+ids) to each role definition in `src/team/roles.ts`, and have the PM
+topologically sort the roles it assigns per iteration -- a role is not dispatched
+until every role it depends on has its declared artifact on disk for this
+iteration. A cycle in `dependsOn` is a hard error at startup, not a runtime
+stall.
+
+**`reverify` refused on a tree a different agent had dirtied.** The specific
+form of this hit today is in `0440921` (`AZ-9 fix(evidence): cite the paths
+reverify actually regenerates`): reverify refuses to run against a dirty
+working tree, evidence has to be committed to clear that tree, committing
+advances HEAD, and any evidence file reverify itself does not rewrite is now
+permanently older than the commit it is supposed to vouch for -- a structural
+deadlock, not a stale file. That fix narrowed the immediate cause (evidence
+pointed at hand-named files nobody regenerates) but not the general one: any two
+agents sharing one physical tree can dirty it for each other regardless of whose
+evidence is stale. The PM must never assign two roles to the same tree in the
+same iteration, and a role's promote step must confirm the tree it is about to
+commit is the one it wrote -- not merely that the tree happens to be clean when
+it looks.
+
+**One file, two writers.** Per-role worktrees make source conflicts rare, but
+several roles legitimately write into the same shared artifact --
+`evidence/measurement-meta.json` is exactly this shape, and today's working
+tree independently had that file (and its known-bad-fixture copies) modified in
+more than one place at once. A last-write-wins promote silently drops the first
+writer's entry, and the row that role owned reverts to unmeasured with no error
+anywhere. Fix: `assignUnmetRows` must treat "artifact path" as shared-writable
+only when a role explicitly declares it as such, and promotion of a
+shared-writable path must merge by key (the rule id) rather than overwrite the
+whole file. A role writing to a path another concurrently-assigned role also
+declares, without either declaring it shared, is the same class of error as an
+unowned row: print it and fail, rather than let the second commit silently win.
+
+The lesson underneath all three: worktree isolation solves the source-tree
+collision this repo hit in July (`docs/claude-grok-teamwork.md`), but a team of
+nine-to-twelve roles reintroduces coordination failure at the scheduling layer,
+above the tree. The fix is not more isolation -- it is making dependency and
+shared state explicit in the role registry instead of assumed.

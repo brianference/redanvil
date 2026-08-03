@@ -3,6 +3,58 @@
 Changelog for the RedAnvil design system and the gate that scores it. Newest first.
 Append an entry after every design run per the mobile-ux continuous-improvement protocol.
 
+## 2026-08-02 — seven measurement checks that could not fail (RA-178)
+
+Not a design run — a measurement audit, logged here because it changes what "the gate
+passed" is allowed to mean for every design rule above. An independent fresh-context
+review plus the fixes it triggered found seven checks in the gate's own measurement
+layer that had been green since the day they were written, because each one had a path
+to a pass that required nothing real to happen:
+
+- `meas-two-run` (G2) held one computed value written twice as `runs[]`, and the
+  validator only checked `length>=2` plus agreement — a duplicate always agrees with
+  itself. It was vacuous across all six rules it covers.
+- `meas-known-bad` (G1) returned pass on an unresolvable fixture path, so prose
+  describing a bad case ("results JSON whose finalScore does not match recompute")
+  satisfied the rule without a fixture ever executing.
+- `meets_the_bar` called `isDone()` without four of its options
+  (`qaVisualOk`/`userRefuseOk`/`independentReviewOk`/`coverageHighWater`), which made
+  checklist rows C2, C10, F5 and A6 unreachable — enforced in appearance, impossible
+  in fact.
+- `lg-shipped` (condition 5) read its own prior failure back and could never clear;
+  condition 2 (HEAD pushed) deadlocked the very first push by construction.
+- `lg-result-reproduces` required `provenance === HEAD`, which is unsatisfiable inside
+  a reverify pass (stamping verdicts and committing evidence are two different
+  commits), and its "missing scored rule" branch computed the answer and never used it.
+- `fe-assistant-present` accepted the bare word "filters" in a response as proof of
+  database grounding — the repo's own passing fixture had zero DB access behind it.
+- `fe-light-dark` (C3) read only `backgroundColor`, so a hero painted with a
+  `background` gradient walked past it to a transparent `html` and false-FAILED.
+
+Cost: unknown how many prior gate runs certified apps against these six-plus rules
+with no real signal behind them — the honest number is "every one until today." The
+fix is real: 637 tests pass from the repo root, tsc and eslint clean, real QA-visual
+and user-refuse harnesses now exist (validated against known-bad first), and coverage
+sits at a measured 67.58%, not a round number.
+
+What changed, and what to carry forward:
+
+- **A check that cannot fail carries no information.** Before trusting any new gate
+  rule, name the input that would make it FAIL and produce that input — a passing
+  known-bad fixture is not optional evidence, it is the only evidence. See the new
+  hard rule in the global `CLAUDE.md` and `docs/DONE-CHECKLIST.md` rows G6/G7.
+- **A fix for this class of bug can create a new false failure.** The six two-run
+  fixes recorded both timestamps at write time, so a fast measurement produced
+  byte-identical records and four of six then failed the run meant to prove them
+  fixed. Timestamps must be captured as each run actually completes (0.6s–7.7s real
+  spreads observed), never backfilled together afterward.
+- **`fe-light-dark` now reads `backgroundImage` in addition to `backgroundColor`**, and
+  checks the actual painted element rather than assuming `html`/`body` carries the
+  surface color — folded into the `playwright-qa` skill (rule 10) so the next app's
+  theme check does not repeat this.
+- 16 knownBad fixtures are still owed across other rules; this pass fixed the
+  mechanism, not every instance of a missing fixture.
+
 ## 2026-07-21 — Measure everything + 10-option design exploration (enforced)
 
 Observation: the gate wired only 5 deterministic checks, so the real app-builder gate
