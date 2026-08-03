@@ -1,11 +1,11 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-03T19:40:38.184Z",
+  "checkedAt": "2026-08-03T20:37:08.655Z",
   "ok": true,
   "findings": {
     "u-conc-smallest-diff": {
       "ok": true,
-      "detail": "Re-verified this pass by running the checks rather than re-reading the prior finding: az-planting-calendar/tmp-design.json (a leftover design_audit report against a local dev server, introduced in 14d4ede, deleted in f441d14) is absent from disk, and grep for the string \"tmp-design\" across az-planting-calendar, .github and orchestrator (excluding node_modules) returns 0 matches, so nothing in source, scripts or tests ever read it. Its removal is therefore the smallest diff that removes the artifact without affecting behaviour."
+      "detail": "Re-verified this pass by running the checks: az-planting-calendar/tmp-design.json (leftover design_audit report against a local dev server, added in 14d4ede, deleted in f441d14) is absent from disk, and grep for \"tmp-design\" across az-planting-calendar, .github and orchestrator excluding node_modules returns 0 matches, so nothing in source, scripts or tests ever read it."
     }
   }
 }
