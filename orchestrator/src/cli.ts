@@ -16,6 +16,7 @@ import { gitChangeProbe } from './gate/freshness';
 import type { StaleVerdict } from './gate/freshness';
 import { indexOutcomes } from './gate/score';
 import { runLoopCommand } from './commands/loop';
+import { runPmCommand } from './commands/pm';
 import { isDone } from './gate/done';
 import { loadProductJudgementOpts } from './team/finishOpts';
 
@@ -179,7 +180,8 @@ const KNOWN_FLAGS = new Set([
   'no-isolate',
   'promote',
   'min-coverage',
-  'claims'
+  'claims',
+  'result'
 ]);
 
 async function main(): Promise<number> {
@@ -244,6 +246,31 @@ async function main(): Promise<number> {
   if (command === 'rubric') {
     console.log(rubricSummary());
     return 0;
+  }
+
+  if (command === 'pm') {
+    // The PM role, reachable at last. team/pm.ts and team/assign.ts had real
+    // logic and passing tests with zero callers; this is the entry point that
+    // makes them run against a real gate result instead of only against fixtures.
+    const slug = positionals[1];
+    if (!slug) {
+      console.error('usage: redanvil pm <slug> [--result results/<slug>.json]');
+      return 2;
+    }
+    const resultPath =
+      typeof values.result === 'string' && values.result.length > 0
+        ? values.result
+        : `results/${slug}.json`;
+    if (!resultPath) {
+      console.error('usage: redanvil pm <slug> [--result results/<slug>.json]');
+      return 2;
+    }
+    try {
+      return runPmCommand({ resultPath });
+    } catch (err) {
+      console.error(`pm failed: ${err instanceof Error ? err.message : String(err)}`);
+      return 2;
+    }
   }
 
   if (command === 'scaffold') {
@@ -496,7 +523,7 @@ async function main(): Promise<number> {
     return result.passed && loopDone.done ? 0 : 1;
   }
 
-  console.error('usage: redanvil <validate|rubric|scaffold|gate|loop> [args]');
+  console.error('usage: redanvil <validate|rubric|scaffold|gate|loop|pm> [args]');
   return 2;
 }
 

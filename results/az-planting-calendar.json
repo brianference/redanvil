@@ -387,14 +387,14 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-03T20:55:27.076Z",
+  "finishedAt": "2026-08-03T21:48:37.325Z",
   "provenance": {
-    "commit": "8aff5d30587735f4b766eacd3847c74cc1ab2766",
+    "commit": "5e00ba0afcebfdacee2658de854ea07a227c6a9a",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "a6a7420b1fd29ae025467b17f67e8152fbcf30dc6af40825a35e5437cce0939f",
+    "verdictsHash": "0ac39ce14ed695f47b130fa62bf6f6eed3e5feb27e5a19527e1cff2cde55362b",
     "notApplicable": [
       "proc-pr-title-ticket",
       "process",
@@ -402,6 +402,6 @@
       "u-test-presence"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-03T20:55:27.204Z"
+    "generatedAt": "2026-08-03T21:48:37.407Z"
   }
 }

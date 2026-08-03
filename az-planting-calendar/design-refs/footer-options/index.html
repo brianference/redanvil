@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AZ Planting Calendar — footer options</title>
+<style>
+  :root{
+    --l-bg:#eef1f4; --l-surface:#fff; --l-text:#0f1720; --l-muted:#5b6673; --l-border:#d5dbe2; --l-accent:#1c6b3f;
+    --d-bg:#0a0e12; --d-surface:#121820; --d-text:#eef2f6; --d-muted:#94a3b2; --d-border:#25303c; --d-accent:#4ade80;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#191f26;color:#e7edf3;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  header.pg{padding:26px 24px 6px}
+  h1{font-size:19px;margin:0 0 4px}
+  .sub{color:#93a1af;font-size:13px;max-width:70ch}
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;padding:22px 24px 40px}
+  @media (max-width:1100px){.grid{grid-template-columns:1fr}}
+  .col{border:1px solid #2b3540;border-radius:12px;overflow:hidden;background:#10161d}
+  .colhead{padding:12px 14px;background:#161d26;border-bottom:1px solid #2b3540}
+  .colhead h2{margin:0;font-size:14px;letter-spacing:.02em}
+  .colhead p{margin:5px 0 0;font-size:12px;color:#8e9bab;line-height:1.45}
+  .phones{display:flex;gap:14px;padding:14px;flex-wrap:wrap;justify-content:center}
+  .phone{width:330px;border-radius:14px;overflow:hidden;border:1px solid #2b3540}
+  .cap{font-size:11px;color:#8e9bab;text-align:center;padding:6px 0 0}
+
+  /* ---------- shared footer primitives ---------- */
+  .ft{padding:26px 20px 22px;font-size:14px}
+  .ft a{text-decoration:none;display:block}
+  .eyebrow{font-size:11px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;margin:0 0 10px}
+  .brandrow{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+  .mark{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:14px;flex:none}
+  .bname{font-weight:800;font-size:15px;letter-spacing:-.01em}
+  .tag{font-size:12.5px;line-height:1.5;margin:0}
+  .rule{height:1px;margin:16px 0}
+  .fine{font-size:11.5px;line-height:1.55;margin:0}
+
+  .light{background:var(--l-bg);color:var(--l-text)}
+  .light a{color:var(--l-text)} .light .eyebrow{color:var(--l-muted)}
+  .light .tag,.light .fine{color:var(--l-muted)} .light .rule{background:var(--l-border)}
+  .light .mark{background:var(--l-accent);color:#fff}
+  .dark{background:var(--d-bg);color:var(--d-text)}
+  .dark a{color:var(--d-text)} .dark .eyebrow{color:var(--d-muted)}
+  .dark .tag,.dark .fine{color:var(--d-muted)} .dark .rule{background:var(--d-border)}
+  .dark .mark{background:var(--d-accent);color:#06210f}
+
+  /* ---------- A: utility bar ---------- */
+  .a-links{display:flex;flex-wrap:wrap;gap:7px 0;margin:14px 0 0}
+  .a-links a{font-size:13.5px;font-weight:600;padding:9px 12px;border-radius:8px;flex:0 0 50%}
+  .light .a-links a{background:transparent}
+  .a-src{display:flex;align-items:center;gap:8px;margin-top:14px;padding:11px 12px;border-radius:9px;font-size:12.5px;font-weight:600}
+  .light .a-src{background:var(--l-surface);border:1px solid var(--l-border)}
+  .dark .a-src{background:var(--d-surface);border:1px solid var(--d-border)}
+  .a-legal{display:flex;gap:16px;margin-top:14px}
+  .a-legal a{font-size:12.5px;font-weight:600}
+
+  /* ---------- B: editorial two-column ---------- */
+  .b-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px}
+  .b-cols a{font-size:13.5px;padding:7px 0;font-weight:500}
+  .b-cite{margin-top:16px;padding:12px 13px;border-radius:10px;font-size:12px;line-height:1.55}
+  .light .b-cite{background:var(--l-surface);border-left:3px solid var(--l-accent)}
+  .dark .b-cite{background:var(--d-surface);border-left:3px solid var(--d-accent)}
+  .b-cite strong{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;margin-bottom:4px}
+  .light .b-cite strong{color:var(--l-accent)} .dark .b-cite strong{color:var(--d-accent)}
+  .b-bottom{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+  .b-bottom a{font-size:12.5px;font-weight:600}
+  .b-legal{display:flex;gap:14px}
+
+  /* ---------- C: stacked cards ---------- */
+  .c-card{border-radius:11px;padding:13px 14px;margin-top:11px}
+  .light .c-card{background:var(--l-surface);border:1px solid var(--l-border)}
+  .dark .c-card{background:var(--d-surface);border:1px solid var(--d-border)}
+  .c-card .eyebrow{margin-bottom:8px}
+  .c-inline{display:flex;flex-wrap:wrap;gap:6px}
+  .c-inline a{font-size:13px;font-weight:600;padding:7px 11px;border-radius:999px;flex:none}
+  .light .c-inline a{background:var(--l-bg);border:1px solid var(--l-border)}
+  .dark .c-inline a{background:#0a0e12;border:1px solid var(--d-border)}
+  .c-pdf{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;font-weight:600;padding:2px 0}
+  .c-pdf small{font-weight:500;font-size:11px;display:block;margin-top:2px}
+  .light .c-pdf small{color:var(--l-muted)} .dark .c-pdf small{color:var(--d-muted)}
+</style>
+</head>
+<body>
+
+<header class="pg">
+  <h1>Footer — three premium variations</h1>
+  <p class="sub">All three remove the duplicated <em>About</em> (a section headed “ABOUT” containing a link named “About”) and the repeated <em>Contact</em>. Section labels now describe a <strong>group</strong>, never repeat a destination. Each column is a structurally different layout, not a recolour — pick a layout, or mix (“A’s source card, B’s columns”).</p>
+</header>
+
+<div class="grid">
+
+  <!-- ================= A ================= -->
+  <div class="col">
+    <div class="colhead">
+      <h2>A — Utility bar</h2>
+      <p>Lowest height. Two-up link grid, no section headers at all, source pinned as one card. Best if the footer should get out of the way.</p>
+    </div>
+    <div class="phones">
+      <div>
+        <div class="phone">
+          <div class="ft light">
+            <div class="brandrow"><div class="mark">🌵</div><div class="bname">AZ Planting Calendar</div></div>
+            <p class="tag">Half-month planting windows for Maricopa County low desert.</p>
+            <nav class="a-links">
+              <a href="#">Home</a><a href="#">Year grid</a>
+              <a href="#">Plantable now</a><a href="#">About</a>
+              <a href="#">Contact</a>
+            </nav>
+            <a class="a-src" href="#">📄 az1005 · extension.arizona.edu</a>
+            <div class="rule"></div>
+            <div class="a-legal"><a href="#">Terms</a><a href="#">Privacy</a></div>
+            <p class="fine" style="margin-top:12px">Not affiliated with the University of Arizona. Home garden planning only.</p>
+          </div>
+        </div>
+        <div class="cap">light</div>
+      </div>
+      <div>
+        <div class="phone">
+          <div class="ft dark">
+            <div class="brandrow"><div class="mark">🌵</div><div class="bname">AZ Planting Calendar</div></div>
+            <p class="tag">Half-month planting windows for Maricopa County low desert.</p>
+            <nav class="a-links">
+              <a href="#">Home</a><a href="#">Year grid</a>
+              <a href="#">Plantable now</a><a href="#">About</a>
+              <a href="#">Contact</a>
+            </nav>
+            <a class="a-src" href="#">📄 az1005 · extension.arizona.edu</a>
+            <div class="rule"></div>
+            <div class="a-legal"><a href="#">Terms</a><a href="#">Privacy</a></div>
+            <p class="fine" style="margin-top:12px">Not affiliated with the University of Arizona. Home garden planning only.</p>
+          </div>
+        </div>
+        <div class="cap">dark</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= B ================= -->
+  <div class="col">
+    <div class="colhead">
+      <h2>B — Editorial two-column</h2>
+      <p>Named groups (<em>Explore</em> / <em>Resources</em>) so no header repeats a link. Data provenance promoted to a cited block — the most trust-forward option.</p>
+    </div>
+    <div class="phones">
+      <div>
+        <div class="phone">
+          <div class="ft light">
+            <div class="brandrow"><div class="mark">🌵</div><div class="bname">AZ Planting Calendar</div></div>
+            <p class="tag">Know what to plant, and exactly when.</p>
+            <div class="b-cols">
+              <nav><p class="eyebrow">Explore</p><a href="#">Home</a><a href="#">Year grid</a><a href="#">Plantable now</a></nav>
+              <nav><p class="eyebrow">Resources</p><a href="#">About</a><a href="#">Contact</a></nav>
+            </div>
+            <div class="b-cite"><strong>Source</strong>UA Cooperative Extension az1005 · NOAA 1991–2020 frost normals</div>
+            <div class="rule"></div>
+            <div class="b-bottom">
+              <span class="fine">© 2026</span>
+              <span class="b-legal"><a href="#">Terms</a><a href="#">Privacy</a></span>
+            </div>
+            <p class="fine" style="margin-top:10px">Not affiliated with the University of Arizona.</p>
+          </div>
+        </div>
+        <div class="cap">light</div>
+      </div>
+      <div>
+        <div class="phone">
+          <div class="ft dark">
+            <div class="brandrow"><div class="mark">🌵</div><div class="bname">AZ Planting Calendar</div></div>
+            <p class="tag">Know what to plant, and exactly when.</p>
+            <div class="b-cols">
+              <nav><p class="eyebrow">Explore</p><a href="#">Home</a><a href="#">Year grid</a><a href="#">Plantable now</a></nav>
+              <nav><p class="eyebrow">Resources</p><a href="#">About</a><a href="#">Contact</a></nav>
+            </div>
+            <div class="b-cite"><strong>Source</strong>UA Cooperative Extension az1005 · NOAA 1991–2020 frost normals</div>
+            <div class="rule"></div>
+            <div class="b-bottom">
+              <span class="fine">© 2026</span>
+              <span class="b-legal"><a href="#">Terms</a><a href="#">Privacy</a></span>
+            </div>
+            <p class="fine" style="margin-top:10px">Not affiliated with the University of Arizona.</p>
+          </div>
+        </div>
+        <div class="cap">dark</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= C ================= -->
+  <div class="col">
+    <div class="colhead">
+      <h2>C — Stacked cards</h2>
+      <p>Each group is a surfaced card; navigation becomes pill chips. Largest touch targets and the clearest scan on a phone.</p>
+    </div>
+    <div class="phones">
+      <div>
+        <div class="phone">
+          <div class="ft light">
+            <div class="brandrow"><div class="mark">🌵</div><div class="bname">AZ Planting Calendar</div></div>
+            <p class="tag">Maricopa County low desert · zone 9b</p>
+            <div class="c-card">
+              <p class="eyebrow">Explore</p>
+              <div class="c-inline"><a href="#">Home</a><a href="#">Year grid</a><a href="#">Plantable now</a></div>
+            </div>
+            <div class="c-card">
+              <p class="eyebrow">Resources</p>
+              <div class="c-inline"><a href="#">About</a><a href="#">Contact</a></div>
+              <a class="c-pdf" href="#" style="margin-top:10px">az1005 PDF <small>extension.arizona.edu</small></a>
+            </div>
+            <div class="c-card">
+              <p class="eyebrow">Legal</p>
+              <div class="c-inline"><a href="#">Terms</a><a href="#">Privacy</a></div>
+            </div>
+            <p class="fine" style="margin-top:14px">Not affiliated with the University of Arizona. Home garden planning only.</p>
+          </div>
+        </div>
+        <div class="cap">light</div>
+      </div>
+      <div>
+        <div class="phone">
+          <div class="ft dark">
+            <div class="brandrow"><div class="mark">🌵</div><div class="bname">AZ Planting Calendar</div></div>
+            <p class="tag">Maricopa County low desert · zone 9b</p>
+            <div class="c-card">
+              <p class="eyebrow">Explore</p>
+              <div class="c-inline"><a href="#">Home</a><a href="#">Year grid</a><a href="#">Plantable now</a></div>
+            </div>
+            <div class="c-card">
+              <p class="eyebrow">Resources</p>
+              <div class="c-inline"><a href="#">About</a><a href="#">Contact</a></div>
+              <a class="c-pdf" href="#" style="margin-top:10px">az1005 PDF <small>extension.arizona.edu</small></a>
+            </div>
+            <div class="c-card">
+              <p class="eyebrow">Legal</p>
+              <div class="c-inline"><a href="#">Terms</a><a href="#">Privacy</a></div>
+            </div>
+            <p class="fine" style="margin-top:14px">Not affiliated with the University of Arizona. Home garden planning only.</p>
+          </div>
+        </div>
+        <div class="cap">dark</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

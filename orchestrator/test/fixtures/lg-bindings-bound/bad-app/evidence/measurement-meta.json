@@ -5,19 +5,19 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-03T21:18:02.069Z",
-        "base": "http://127.0.0.1:55065"
+        "at": "2026-08-03T21:48:17.888Z",
+        "base": "http://127.0.0.1:64838"
       },
       {
         "ok": false,
-        "at": "2026-08-03T21:18:02.069Z",
-        "base": "http://127.0.0.1:55065"
+        "at": "2026-08-03T21:48:17.888Z",
+        "base": "http://127.0.0.1:64838"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\lg-bindings-bound\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-03T21:18:02.069Z"
+      "recordedAt": "2026-08-03T21:48:17.888Z"
     }
   }
 }
