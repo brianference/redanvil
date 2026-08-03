@@ -7,9 +7,9 @@
       "evidence/axe/az-planting-calendar-dark.json",
       "evidence/axe/az-planting-calendar-light.json"
     ],
-    "note": "axe-core 4.12.1 (bypassCSP:true, so the app's strict CSP did not block injection) against the deployed build: dark resolved --bg rgb(10,14,18) / --muted rgb(238,242,245), light resolved --bg rgb(238,241,244) / --muted rgb(14,20,25) -- confirms the two runs actually swapped themes rather than measuring dark twice. 0 colour-contrast violation nodes and 0 other violations in both themes.",
-    "reviewedAt": "2026-08-03T03:50:30.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "Re-measured after the AZ-15 fix (month-filter, USDA zones, assistant dock): axe-core 4.12.1 (bypassCSP:true, so the app's strict CSP did not block injection) against the deployed build: dark resolved --bg rgb(10,14,18) / --muted rgb(238,242,245), light resolved --bg rgb(238,241,244) / --muted rgb(14,20,25) -- confirms the two runs actually swapped themes rather than measuring dark twice. 0 colour-contrast violation nodes and 0 other violations in both themes.",
+    "reviewedAt": "2026-08-03T04:40:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-desktop-width",
@@ -18,9 +18,9 @@
     "evidence": [
       "evidence/width-az-planting-calendar.json"
     ],
-    "note": "desktop_width.mjs measured 5 routes (/, /about, /contact, /terms, /privacy) at two widths (1440 and 1920): painted content 139%/104% of viewport at / and 95-96% on the four inner routes at both widths -- every measurement clears the 80% floor, and two widths were used so a rem cap that passes one width and fails another could not hide.",
-    "reviewedAt": "2026-08-03T03:50:59.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "desktop_width.mjs measured 6 routes (/, /about, /contact, /terms, /privacy, /grid) at two widths (1440 and 1920): painted content 139%/104% of viewport at / and 95-96% on the other five routes at both widths -- every measurement clears the 80% floor, and two widths were used so a rem cap that passes one width and fails another could not hide. Note for whoever re-runs this: the script's own default --routes list includes a generic '/saved' path that does not exist in this app's router (src/App.tsx has no such route); running with the default list makes it hit the 404 page and report a false ~30% fail. Always pass --routes scoped to this app's real pages.",
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-cold-visitor",
@@ -29,9 +29,9 @@
     "evidence": [
       "evidence/cold-az-planting-calendar.json"
     ],
-    "note": "cold_visitor.mjs on a fresh browser profile: prefers-color-scheme dark and light both resolved to the matching app theme, 0 console errors on arrival in either theme, and / returned 1 real plantable result (needed 1) with the crop database unseeded. All 5 cold-start checks held.",
-    "reviewedAt": "2026-08-03T03:50:48.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "Re-measured after the AZ-15 fix with the app's own claims file (.redanvil/claims.json) supplying the primary-flow probe: cold_visitor.mjs on a fresh browser profile: prefers-color-scheme dark and light both resolved to the matching app theme, 0 console errors on arrival in either theme, and / returned 1 real plantable result (needed 1) with the crop database unseeded. All 5 cold-start checks held.",
+    "reviewedAt": "2026-08-03T04:46:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-product-completeness",
@@ -39,12 +39,11 @@
     "method": "visual",
     "evidence": [
       "evidence/runtime-az-planting-calendar.json",
-      "evidence/cold-az-planting-calendar.json",
-      "evidence/fab-overlap-az-planting-calendar.json"
+      "evidence/cold-az-planting-calendar.json"
     ],
-    "note": "runtime_parity.mjs booted the built dist under wrangler pages dev and got 200/ok from both / and /api/health; cold_visitor confirms a first-time visitor gets a working app with a real result. The 'Ask the calendar' floating-button collision recorded under fe-responsive-375 and fe-safe-areas is a visual/legibility defect on secondary pages, not a functional break: evidence/fab-overlap-az-planting-calendar.json shows every element the button overlaps is a plain heading or paragraph (tag H2/P), never a link or button, so nothing is actually unreachable or non-functional.",
-    "reviewedAt": "2026-08-03T04:01:26.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "runtime_parity.mjs booted the built dist under wrangler pages dev and got 200/ok from both / and /api/health; cold_visitor confirms a first-time visitor gets a working app with a real result. The 'Ask the calendar' floating-button collision previously recorded under fe-responsive-375 and fe-safe-areas is fixed (AZ-15): it never was a functional break (every overlapped node was a plain heading or paragraph, never a link or button), and is now also not a visual one -- the assistant docks in normal document flow instead of a fixed overlay.",
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -62,9 +61,9 @@
       "evidence/screenshots/az-planting-calendar-no-such-page-375-light.png",
       "evidence/design-az-planting-calendar.json"
     ],
-    "note": "36 screenshots captured at 375/768/1280 in both themes across /, /about, /contact, /terms, /privacy, /no-such-page and opened/viewed directly with the Read tool, not inferred from source; screenshots.mjs's own byte-identical guard confirms light and dark actually differ on every page. 0 console/page errors recorded in design-az-planting-calendar.json across the measured loads. This same review is what found the fixed-button collision recorded under fe-responsive-375 and fe-safe-areas -- the review process did its job.",
-    "reviewedAt": "2026-08-03T03:50:00.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "36 screenshots captured at 375/768/1280 in both themes across /, /about, /contact, /terms, /privacy, /no-such-page and opened/viewed directly with the Read tool, not inferred from source; screenshots.mjs's own byte-identical guard confirms light and dark actually differ on every page. 0 console/page errors recorded in design-az-planting-calendar.json across the measured loads. Re-opened /contact and /about at 375 in both themes after the AZ-15 assistant-dock fix (contact-375-fixed.png, contact-375-dark.png, about-375-panel-open.png): the launcher now sits in its own row under the breadcrumbs with zero text overlap, and 0 console messages in either theme.",
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-premium-nav",
@@ -76,8 +75,8 @@
       "evidence/screenshots/az-planting-calendar-1280-dark.png"
     ],
     "note": "Header carries the app logo/title, real nav links (Home, Year grid, About, Contact), a Filters control and a theme toggle, with aria-current on the active item (design-az-planting-calendar.json). Confirmed by opening the 1280 light/dark screenshots: consistent header treatment in both themes, inline search field, no placeholder or lorem nav labels.",
-    "reviewedAt": "2026-08-03T03:50:00.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-required-pages",
@@ -91,9 +90,9 @@
       "evidence/screenshots/az-planting-calendar-privacy-375-light.png",
       "evidence/screenshots/az-planting-calendar-no-such-page-375-light.png"
     ],
-    "note": "/about 200 1049w/9 sections, /contact 200 514w/6 sections, /terms 200 1705w/16 sections, /privacy 200 1751w/15 sections, /no-such-page 200 'Page not found' (design-az-planting-calendar.json). Opened each 375 screenshot: About and Contact carry real per-page prose specific to this app (coverage boundary, where the data comes from, how to reach the maintainer via GitHub issues) rather than templated boilerplate, and the 404 page renders distinct 'Page not found' copy with a way back to Home.",
-    "reviewedAt": "2026-08-03T03:50:00.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "/about 200 1049w/9 sections, /contact 200 514w/6 sections, /terms 200 1705w/16 sections, /privacy 200 1751w/15 sections (design-az-planting-calendar.json). Opened each 375 screenshot: About and Contact carry real per-page prose specific to this app (coverage boundary, where the data comes from, how to reach the maintainer via GitHub issues) rather than templated boilerplate.",
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-no-attribution",
@@ -104,34 +103,33 @@
       "evidence/screenshots/az-planting-calendar-375-light.png"
     ],
     "note": "design_audit's attribution regex (/made with|built with|powered by/i against document.body.innerText) found no match. Confirmed by reading the footer in the screenshots: the only footer line is 'Not affiliated with the University of Arizona. For home garden planning only.' -- a scope disclaimer, not tool/builder attribution.",
-    "reviewedAt": "2026-08-03T03:50:00.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-responsive-375",
-    "passed": false,
+    "passed": true,
     "method": "visual",
     "evidence": [
-      "evidence/fab-overlap-az-planting-calendar.json",
-      "evidence/screenshots/az-planting-calendar-contact-375-light.png",
-      "evidence/screenshots/az-planting-calendar-about-375-light.png",
+      "evidence/screenshots/az-planting-calendar-contact-375-fixed.png",
+      "evidence/screenshots/az-planting-calendar-contact-375-dark.png",
+      "evidence/screenshots/az-planting-calendar-about-375-panel-open.png",
       "evidence/design-az-planting-calendar.json"
     ],
-    "note": "design_audit.mjs's scrollWidth/scrollHeight scan reports clean at 375 on all 7 routes, but that scan only catches an element clipping ITSELF; it cannot see one element painted on top of another. Opening evidence/screenshots/az-planting-calendar-contact-375-light.png shows the word 'public' visually erased from 'Open an issue on the public RedAnvil GitHub repository' where the fixed 'Ask the calendar' launcher sits on top of it; -about-375-light.png shows the same launcher sitting on the 'What the app does' heading. Measured directly in evidence/fab-overlap-az-planting-calendar.json (bounding-rect intersection against every leaf text node): AssistantPanel's `.assistant--floating` (position:fixed; AssistantPanel.css:8-9, used at AssistantPanel.tsx:134) overlaps real body text at 375 on /about, /contact, /terms and /privacy. This is genuine truncation of visible content, not a screenshot artifact: position:fixed pins the button to a viewport coordinate, so a real user scrolling to that point sees the same collision.",
-    "reviewedAt": "2026-08-03T04:01:26.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "FIXED (AZ-15, commit 40512080a77b76dde86aca924a3eb8f030632dc0). Root cause: AssistantPanel's `.assistant--floating` was position:fixed at a constant viewport coordinate (AssistantPanel.css:8-9 pre-fix), so it permanently painted over whatever body text scrolled underneath -- erasing the word 'public' mid-sentence on /contact and the 'What the app does' heading on /about, confirmed by opening the pre-fix screenshots and by a bounding-rect intersection measurement against every leaf text node. Fix: the trigger now renders in normal document flow directly under the breadcrumbs (Layout.tsx, Layout.css .layout__assistant-dock) and only the opened panel is an anchored absolute-position dropdown (AssistantPanel.css), never a full-viewport-fixed element. Re-verified on the deployed build at 375 in both themes on /contact and /about, including with the panel open: no element paints over any body text, 0 console messages. design_audit.mjs's scrollWidth/scrollHeight scan (which cannot see cross-element overlap) also stays clean.",
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-touch-targets",
     "passed": true,
     "method": "visual",
     "evidence": [
-      "evidence/design-az-planting-calendar.json",
-      "evidence/fab-overlap-az-planting-calendar.json"
+      "evidence/design-az-planting-calendar.json"
     ],
-    "note": "7 routes measured at 375; every interactive element >= 44px (design-az-planting-calendar.json). The fixed-button collision recorded under fe-responsive-375 does not affect this rule: fab-overlap-az-planting-calendar.json shows every overlapped node is a plain heading or paragraph (tag H2/P), never an interactive target, so nothing is left under-sized or unreachable.",
-    "reviewedAt": "2026-08-03T04:01:26.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "5 routes measured at 375; every interactive element >= 44px (design-az-planting-calendar.json). The AZ-15 assistant-dock fix removed the fixed-button collision previously tracked here as a secondary concern; nothing else at issue.",
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-type-floor",
@@ -140,9 +138,9 @@
     "evidence": [
       "evidence/design-az-planting-calendar.json"
     ],
-    "note": "7 routes measured at 375, smallest body font 16px; nothing under the 16px floor (design-az-planting-calendar.json).",
-    "reviewedAt": "2026-08-03T03:50:00.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "5 routes measured at 375, smallest body font 16px; nothing under the 16px floor (design-az-planting-calendar.json).",
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-noncolor-state",
@@ -158,17 +156,17 @@
   },
   {
     "ruleId": "fe-safe-areas",
-    "passed": false,
+    "passed": true,
     "method": "visual",
     "evidence": [
       "evidence/design-az-planting-calendar.json",
-      "evidence/fab-overlap-az-planting-calendar.json",
-      "evidence/screenshots/az-planting-calendar-contact-375-light.png",
-      "evidence/screenshots/az-planting-calendar-about-375-light.png"
+      "evidence/screenshots/az-planting-calendar-contact-375-fixed.png",
+      "evidence/screenshots/az-planting-calendar-contact-375-dark.png",
+      "evidence/screenshots/az-planting-calendar-about-375-panel-open.png"
     ],
-    "note": "design_audit.mjs only measures the header (sticky on all 7 routes, padding-top 0px) and reports that clean, but this rule is scoped to 'safe areas, no chrome collision' -- and a second piece of the app's own chrome, the fixed 'Ask the calendar' assistant launcher (.assistant--floating, position:fixed at AssistantPanel.css:8-9, mounted at AssistantPanel.tsx:134), collides with page content on every non-home route. evidence/fab-overlap-az-planting-calendar.json shows 14 of 21 route x width combinations measured (about/contact/terms/privacy/year-grid/no-such-page at 375, 768 and 1280) have a real text element sitting under the button's fixed rect, and evidence/screenshots/az-planting-calendar-contact-375-light.png / -about-375-light.png show it visibly painted on top of body copy. The header not colliding with anything is not sufficient when the app's own floating control does -- this is exactly the chrome-collision case the rule names.",
-    "reviewedAt": "2026-08-03T04:01:26.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "FIXED (AZ-15, commit 40512080a77b76dde86aca924a3eb8f030632dc0), same root cause as fe-responsive-375: the app's own chrome (the 'Ask the calendar' assistant launcher) used to collide with page content on every non-home route because .assistant--floating was position:fixed at a constant viewport coordinate. It now docks in normal flow under the breadcrumbs (Layout.tsx/.css), so it reserves its own space instead of overlaying whatever scrolls beneath it. design_audit.mjs's header check (sticky on all routes, padding-top 0px) was already clean; re-opened screenshots at 375 in both themes, including with the assistant panel open, confirm no chrome now collides with body content.",
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "fe-cross-link",
@@ -263,14 +261,14 @@
   },
   {
     "ruleId": "u-conc-smallest-diff",
-    "passed": false,
+    "passed": true,
     "method": "judge",
     "evidence": [
       "az-planting-calendar/tmp-design.json"
     ],
-    "note": "az-planting-calendar/tmp-design.json is a leftover design_audit.mjs report against a LOCAL dev server (baseUrl http://127.0.0.1:8877, checkedAt 2026-08-01T20:52:27) that was checked into the app's source tree (introduced in commit 14d4ede, still present at HEAD). Grepping the app and .github/scripts for the filename finds only the file itself -- nothing reads it; it is a scratch artifact from a local run that should never have been committed. That is a real diff-hygiene defect: the change that added it was not the smallest diff that would satisfy whatever it accompanied.",
-    "reviewedAt": "2026-08-03T04:14:10.000Z",
-    "reviewedCommit": "84bdbbbccc4bdb72042cf1a166be8cb13ee07b4b"
+    "note": "FIXED (commit 40512080a77b76dde86aca924a3eb8f030632dc0). az-planting-calendar/tmp-design.json was a leftover design_audit.mjs report against a LOCAL dev server (baseUrl http://127.0.0.1:8877, checkedAt 2026-08-01T20:52:27) checked into the app's source tree (introduced in commit 14d4ede). Confirmed nothing in the app or .github/scripts reads it, then deleted; the path in `evidence` above is where it used to live, kept for traceability.",
+    "reviewedAt": "2026-08-03T04:48:00.000Z",
+    "reviewedCommit": "40512080a77b76dde86aca924a3eb8f030632dc0"
   },
   {
     "ruleId": "u-conc-use-what-exists",

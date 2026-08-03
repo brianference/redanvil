@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-03T04:31:40.930Z",
+  "checkedAt": "2026-08-03T04:50:45.532Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -63,6 +63,17 @@
       "ok": true
     },
     {
+      "route": "/grid",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 95,
+      "contentBox": {
+        "left": 32,
+        "right": 1408
+      },
+      "ok": true
+    },
+    {
       "route": "/",
       "width": 1920,
       "status": 200,
@@ -108,6 +119,17 @@
     },
     {
       "route": "/privacy",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 96,
+      "contentBox": {
+        "left": 32,
+        "right": 1888
+      },
+      "ok": true
+    },
+    {
+      "route": "/grid",
       "width": 1920,
       "status": 200,
       "contentPct": 96,
