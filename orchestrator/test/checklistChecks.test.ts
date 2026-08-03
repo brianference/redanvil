@@ -853,6 +853,71 @@ describe('G1–G5 measurement provenance', () => {
     expect(r.code).toBe(0);
   });
 
+  it('G4 FAILS when tool is axe-core but the cited report does not exist (known-bad)', () => {
+    const failures = evaluateStandardTool(
+      {
+        'fe-a11y-contrast': {
+          tool: 'axe-core',
+          engine: 'chromium',
+          runs: [{ ok: true, at: '2026-08-03T00:00:00.000Z', report: 'evidence/axe/does-not-exist.json' }]
+        }
+      },
+      ['fe-a11y-contrast'],
+      here
+    );
+    expect(failures.some((f) => /does not exist/i.test(f))).toBe(true);
+    console.log('meas-standard-tool missing-report known-bad:', failures[0]);
+  });
+
+  it('G4 FAILS when a run pre-dates the report it cites (known-bad) — a tool string alone cannot pass', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'evidence/axe/dashboard-dark.json',
+      JSON.stringify({ checkedAt: '2026-08-03T18:41:56.418Z', contrastViolationNodes: 0 })
+    );
+    const failures = evaluateStandardTool(
+      {
+        'fe-a11y-contrast': {
+          tool: 'axe-core',
+          engine: 'chromium',
+          runs: [
+            // Recorded 5+ minutes BEFORE the report's own checkedAt — the exact
+            // shape that let a fabricated-looking-real entry pass unconditionally.
+            { ok: true, at: '2026-08-03T18:36:21.972Z', report: 'evidence/axe/dashboard-dark.json' }
+          ]
+        }
+      },
+      ['fe-a11y-contrast'],
+      app
+    );
+    expect(failures.some((f) => /PRE-DATES/i.test(f))).toBe(true);
+    console.log('meas-standard-tool stale-report known-bad:', failures[0]);
+  });
+
+  it('G4 PASSES when a run is recorded at or after the report it cites (known-good)', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'evidence/axe/dashboard-dark.json',
+      JSON.stringify({ checkedAt: '2026-08-03T18:41:56.418Z', contrastViolationNodes: 0 })
+    );
+    const failures = evaluateStandardTool(
+      {
+        'fe-a11y-contrast': {
+          tool: 'axe-core',
+          engine: 'chromium',
+          runs: [
+            { ok: true, at: '2026-08-03T18:41:57.000Z', report: 'evidence/axe/dashboard-dark.json' }
+          ]
+        }
+      },
+      ['fe-a11y-contrast'],
+      app
+    );
+    expect(failures).toEqual([]);
+  });
+
   it('G5 FAILS when engine is missing (known-bad)', () => {
     const failures = evaluateEngineNamed(
       {

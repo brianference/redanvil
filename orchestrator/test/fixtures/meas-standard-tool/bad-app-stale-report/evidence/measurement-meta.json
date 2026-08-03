@@ -1,0 +1,18 @@
+{
+  "fe-a11y-contrast": {
+    "tool": "axe-core",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-03T18:36:21.972Z",
+        "report": "evidence/axe/dashboard-dark.json"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-03T18:36:24.184Z",
+        "report": "evidence/axe/dashboard-dark.json"
+      }
+    ]
+  }
+}

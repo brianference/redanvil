@@ -5,21 +5,21 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-03T04:36:16.749Z",
-        "path": "/api/__definitely_absent_07827cf44dca06cc",
+        "at": "2026-08-03T19:05:23.136Z",
+        "path": "/api/__definitely_absent_29a0b7d809cab65e",
         "status": 200
       },
       {
         "ok": false,
-        "at": "2026-08-03T04:36:16.750Z",
-        "path": "/api/__definitely_absent_07827cf44dca06cc",
+        "at": "2026-08-03T19:05:23.137Z",
+        "path": "/api/__definitely_absent_29a0b7d809cab65e",
         "status": 200
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\known-bad-fixtures\\u-api-no-spa-mask\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-03T04:36:16.750Z"
+      "recordedAt": "2026-08-03T19:05:23.137Z"
     }
   }
 }
