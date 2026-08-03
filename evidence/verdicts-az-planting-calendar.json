@@ -7,9 +7,9 @@
       "evidence/axe/az-planting-calendar-dark.json",
       "evidence/axe/az-planting-calendar-light.json"
     ],
-    "note": "Re-measured after the AZ-15 fix (month-filter, USDA zones, assistant dock): axe-core 4.12.1 (bypassCSP:true, so the app's strict CSP did not block injection) against the deployed build: dark resolved --bg rgb(10,14,18) / --muted rgb(238,242,245), light resolved --bg rgb(238,241,244) / --muted rgb(14,20,25) -- confirms the two runs actually swapped themes rather than measuring dark twice. 0 colour-contrast violation nodes and 0 other violations in both themes.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Re-measured after the AZ-15 fix (month-filter, USDA zones, assistant dock): axe-core 4.12.1 (bypassCSP:true, so the app's strict CSP did not block injection) against the deployed build: dark resolved --bg rgb(10,14,18) / --muted rgb(238,242,245), light resolved --bg rgb(238,241,244) / --muted rgb(14,20,25) -- confirms the two runs actually swapped themes rather than measuring dark twice. 0 colour-contrast violation nodes and 0 other violations in both themes. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-desktop-width",
@@ -18,9 +18,9 @@
     "evidence": [
       "evidence/width-az-planting-calendar.json"
     ],
-    "note": "Independently re-run against the live deploy: desktop_width.mjs --routes /,/about,/contact,/terms,/privacy --widths 1440,1920 measured 5 routes at two widths: painted content 139%/104% of viewport at / and 95-96% on the other four routes at both widths -- every measurement clears the 80% floor, and two widths were used so a rem cap that passes one width and fails another could not hide. Note for whoever re-runs this: the script's own default --routes list includes a generic '/saved' path that does not exist in this app's router; running with the default list hits the 404 page and reports a false ~30% fail. Always pass --routes scoped to this app's real pages.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Independently re-run against the live deploy: desktop_width.mjs --routes /,/about,/contact,/terms,/privacy --widths 1440,1920 measured 5 routes at two widths: painted content 139%/104% of viewport at / and 95-96% on the other four routes at both widths -- every measurement clears the 80% floor, and two widths were used so a rem cap that passes one width and fails another could not hide. Note for whoever re-runs this: the script's own default --routes list includes a generic '/saved' path that does not exist in this app's router; running with the default list hits the 404 page and reports a false ~30% fail. Always pass --routes scoped to this app's real pages. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-cold-visitor",
@@ -29,9 +29,9 @@
     "evidence": [
       "evidence/cold-az-planting-calendar.json"
     ],
-    "note": "Re-measured after the AZ-15 fix with the app's own claims file (.redanvil/claims.json) supplying the primary-flow probe: cold_visitor.mjs on a fresh browser profile: prefers-color-scheme dark and light both resolved to the matching app theme, 0 console errors on arrival in either theme, and / returned 1 real plantable result (needed 1) with the crop database unseeded. All 5 cold-start checks held.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Re-measured after the AZ-15 fix with the app's own claims file (.redanvil/claims.json) supplying the primary-flow probe: cold_visitor.mjs on a fresh browser profile: prefers-color-scheme dark and light both resolved to the matching app theme, 0 console errors on arrival in either theme, and / returned 1 real plantable result (needed 1) with the crop database unseeded. All 5 cold-start checks held. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-product-completeness",
@@ -41,9 +41,9 @@
       "evidence/runtime-az-planting-calendar.json",
       "evidence/cold-az-planting-calendar.json"
     ],
-    "note": "runtime_parity.mjs booted the built dist under wrangler pages dev and got 200/ok from both / and /api/health; cold_visitor confirms a first-time visitor gets a working app with a real result. The 'Ask the calendar' floating-button collision previously recorded under fe-responsive-375 and fe-safe-areas is fixed (AZ-15): it never was a functional break (every overlapped node was a plain heading or paragraph, never a link or button), and is now also not a visual one -- the assistant docks in normal document flow instead of a fixed overlay.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "runtime_parity.mjs booted the built dist under wrangler pages dev and got 200/ok from both / and /api/health; cold_visitor confirms a first-time visitor gets a working app with a real result. The 'Ask the calendar' floating-button collision previously recorded under fe-responsive-375 and fe-safe-areas is fixed (AZ-15): it never was a functional break (every overlapped node was a plain heading or paragraph, never a link or button), and is now also not a visual one -- the assistant docks in normal document flow instead of a fixed overlay. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -61,9 +61,9 @@
       "evidence/screenshots/az-planting-calendar-no-such-page-375-light.png",
       "evidence/design-az-planting-calendar.json"
     ],
-    "note": "36 screenshots captured at 375/768/1280 in both themes across /, /about, /contact, /terms, /privacy, /no-such-page and opened/viewed directly with the Read tool, not inferred from source; screenshots.mjs's own byte-identical guard confirms light and dark actually differ on every page. 0 console/page errors recorded in design-az-planting-calendar.json across the measured loads. Re-opened /contact and /about at 375 in both themes after the AZ-15 assistant-dock fix (contact-375-fixed.png, contact-375-dark.png, about-375-panel-open.png): the launcher now sits in its own row under the breadcrumbs with zero text overlap, and 0 console messages in either theme.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "36 screenshots captured at 375/768/1280 in both themes across /, /about, /contact, /terms, /privacy, /no-such-page and opened/viewed directly with the Read tool, not inferred from source; screenshots.mjs's own byte-identical guard confirms light and dark actually differ on every page. 0 console/page errors recorded in design-az-planting-calendar.json across the measured loads. Re-opened /contact and /about at 375 in both themes after the AZ-15 assistant-dock fix (contact-375-fixed.png, contact-375-dark.png, about-375-panel-open.png): the launcher now sits in its own row under the breadcrumbs with zero text overlap, and 0 console messages in either theme. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-premium-nav",
@@ -74,9 +74,9 @@
       "evidence/screenshots/az-planting-calendar-1280-light.png",
       "evidence/screenshots/az-planting-calendar-1280-dark.png"
     ],
-    "note": "Header carries the app logo/title, real nav links (Home, Year grid, About, Contact), a Filters control and a theme toggle, with aria-current on the active item (design-az-planting-calendar.json). Confirmed by opening the 1280 light/dark screenshots: consistent header treatment in both themes, inline search field, no placeholder or lorem nav labels.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Header carries the app logo/title, real nav links (Home, Year grid, About, Contact), a Filters control and a theme toggle, with aria-current on the active item (design-az-planting-calendar.json). Confirmed by opening the 1280 light/dark screenshots: consistent header treatment in both themes, inline search field, no placeholder or lorem nav labels. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-required-pages",
@@ -90,9 +90,9 @@
       "evidence/screenshots/az-planting-calendar-privacy-375-light.png",
       "evidence/screenshots/az-planting-calendar-no-such-page-375-light.png"
     ],
-    "note": "/about 200 1049w/9 sections, /contact 200 514w/6 sections, /terms 200 1705w/16 sections, /privacy 200 1751w/15 sections (design-az-planting-calendar.json). Opened each 375 screenshot: About and Contact carry real per-page prose specific to this app (coverage boundary, where the data comes from, how to reach the maintainer via GitHub issues) rather than templated boilerplate.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "/about 200 1049w/9 sections, /contact 200 514w/6 sections, /terms 200 1705w/16 sections, /privacy 200 1751w/15 sections (design-az-planting-calendar.json). Opened each 375 screenshot: About and Contact carry real per-page prose specific to this app (coverage boundary, where the data comes from, how to reach the maintainer via GitHub issues) rather than templated boilerplate. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-no-attribution",
@@ -102,9 +102,9 @@
       "evidence/design-az-planting-calendar.json",
       "evidence/screenshots/az-planting-calendar-375-light.png"
     ],
-    "note": "design_audit's attribution regex (/made with|built with|powered by/i against document.body.innerText) found no match. Confirmed by reading the footer in the screenshots: the only footer line is 'Not affiliated with the University of Arizona. For home garden planning only.' -- a scope disclaimer, not tool/builder attribution.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "design_audit's attribution regex (/made with|built with|powered by/i against document.body.innerText) found no match. Confirmed by reading the footer in the screenshots: the only footer line is 'Not affiliated with the University of Arizona. For home garden planning only.' -- a scope disclaimer, not tool/builder attribution. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-responsive-375",
@@ -116,9 +116,9 @@
       "evidence/screenshots/az-planting-calendar-about-375-panel-open.png",
       "evidence/design-az-planting-calendar.json"
     ],
-    "note": "FIXED (AZ-15, commit 40512080a77b76dde86aca924a3eb8f030632dc0). Root cause: AssistantPanel's `.assistant--floating` was position:fixed at a constant viewport coordinate (AssistantPanel.css:8-9 pre-fix), so it permanently painted over whatever body text scrolled underneath -- erasing the word 'public' mid-sentence on /contact and the 'What the app does' heading on /about, confirmed by opening the pre-fix screenshots and by a bounding-rect intersection measurement against every leaf text node. Fix: the trigger now renders in normal document flow directly under the breadcrumbs (Layout.tsx, Layout.css .layout__assistant-dock) and only the opened panel is an anchored absolute-position dropdown (AssistantPanel.css), never a full-viewport-fixed element. Re-verified on the deployed build at 375 in both themes on /contact and /about, including with the panel open: no element paints over any body text, 0 console messages. design_audit.mjs's scrollWidth/scrollHeight scan (which cannot see cross-element overlap) also stays clean.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "FIXED (AZ-15, commit 40512080a77b76dde86aca924a3eb8f030632dc0). Root cause: AssistantPanel's `.assistant--floating` was position:fixed at a constant viewport coordinate (AssistantPanel.css:8-9 pre-fix), so it permanently painted over whatever body text scrolled underneath -- erasing the word 'public' mid-sentence on /contact and the 'What the app does' heading on /about, confirmed by opening the pre-fix screenshots and by a bounding-rect intersection measurement against every leaf text node. Fix: the trigger now renders in normal document flow directly under the breadcrumbs (Layout.tsx, Layout.css .layout__assistant-dock) and only the opened panel is an anchored absolute-position dropdown (AssistantPanel.css), never a full-viewport-fixed element. Re-verified on the deployed build at 375 in both themes on /contact and /about, including with the panel open: no element paints over any body text, 0 console messages. design_audit.mjs's scrollWidth/scrollHeight scan (which cannot see cross-element overlap) also stays clean. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-touch-targets",
@@ -127,9 +127,9 @@
     "evidence": [
       "evidence/design-az-planting-calendar.json"
     ],
-    "note": "Independently re-measured against the live deploy: design-az-planting-calendar.json reports \"7 route(s) at 375; every interactive element >= 44px\" (7 measurements over 6 unique routes -- the script always prepends '/' to whatever --routes list is passed). The AZ-15 assistant-dock fix removed the fixed-button collision previously tracked here as a secondary concern; nothing else at issue.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Independently re-measured against the live deploy: design-az-planting-calendar.json reports \"7 route(s) at 375; every interactive element >= 44px\" (7 measurements over 6 unique routes -- the script always prepends '/' to whatever --routes list is passed). The AZ-15 assistant-dock fix removed the fixed-button collision previously tracked here as a secondary concern; nothing else at issue. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-type-floor",
@@ -138,9 +138,9 @@
     "evidence": [
       "evidence/design-az-planting-calendar.json"
     ],
-    "note": "Independently re-measured against the live deploy: design-az-planting-calendar.json reports \"7 route(s) at 375, smallest body font 16px; nothing under 16px\" (7 measurements over 6 unique routes -- the script always prepends '/').",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Independently re-measured against the live deploy: design-az-planting-calendar.json reports \"7 route(s) at 375, smallest body font 16px; nothing under 16px\" (7 measurements over 6 unique routes -- the script always prepends '/'). reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-noncolor-state",
@@ -150,9 +150,9 @@
       "evidence/design-az-planting-calendar.json",
       "evidence/screenshots/az-planting-calendar-1280-light.png"
     ],
-    "note": "The active nav item carries font-weight 600 and aria-current=\"page\", not colour alone (design-az-planting-calendar.json). Confirmed in the 1280 screenshot: 'Home' is visually distinguishable from the other nav links in both themes without relying on hue.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "The active nav item carries font-weight 600 and aria-current=\"page\", not colour alone (design-az-planting-calendar.json). Confirmed in the 1280 screenshot: 'Home' is visually distinguishable from the other nav links in both themes without relying on hue. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-safe-areas",
@@ -164,9 +164,9 @@
       "evidence/screenshots/az-planting-calendar-contact-375-dark.png",
       "evidence/screenshots/az-planting-calendar-about-375-panel-open.png"
     ],
-    "note": "FIXED (AZ-15, commit 40512080a77b76dde86aca924a3eb8f030632dc0), same root cause as fe-responsive-375: the app's own chrome (the 'Ask the calendar' assistant launcher) used to collide with page content on every non-home route because .assistant--floating was position:fixed at a constant viewport coordinate. It now docks in normal flow under the breadcrumbs (Layout.tsx/.css), so it reserves its own space instead of overlaying whatever scrolls beneath it. design_audit.mjs's header check (sticky on all routes, padding-top 0px) was already clean; re-opened screenshots at 375 in both themes, including with the assistant panel open, confirm no chrome now collides with body content.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "FIXED (AZ-15, commit 40512080a77b76dde86aca924a3eb8f030632dc0), same root cause as fe-responsive-375: the app's own chrome (the 'Ask the calendar' assistant launcher) used to collide with page content on every non-home route because .assistant--floating was position:fixed at a constant viewport coordinate. It now docks in normal flow under the breadcrumbs (Layout.tsx/.css), so it reserves its own space instead of overlaying whatever scrolls beneath it. design_audit.mjs's header check (sticky on all routes, padding-top 0px) was already clean; re-opened screenshots at 375 in both themes, including with the assistant panel open, confirm no chrome now collides with body content. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-cross-link",
@@ -176,9 +176,9 @@
       "evidence/design-az-planting-calendar.json",
       "evidence/screenshots/az-planting-calendar-contact-375-light.png"
     ],
-    "note": "Cross-site link present (design-az-planting-calendar.json). Confirmed in the Contact screenshot: a real link to the project's public GitHub repository (github.com/brianference/redanvil), not a placeholder.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Cross-site link present (design-az-planting-calendar.json). Confirmed in the Contact screenshot: a real link to the project's public GitHub repository (github.com/brianference/redanvil), not a placeholder. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-seo-og",
@@ -187,9 +187,9 @@
     "evidence": [
       "evidence/design-az-planting-calendar.json"
     ],
-    "note": "Title 'AZ Planting Calendar — what to plant now in Cave Creek', description present, og:image present (design-az-planting-calendar.json). Independently checked that the og:image reference actually resolves rather than being a broken path: GET https://az-planting-calendar.pages.dev/og.png returned 200 image/png, 246815 bytes.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Title 'AZ Planting Calendar — what to plant now in Cave Creek', description present, og:image present (design-az-planting-calendar.json). Independently checked that the og:image reference actually resolves rather than being a broken path: GET https://az-planting-calendar.pages.dev/og.png returned 200 image/png, 246815 bytes. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-design-archetype",
@@ -201,9 +201,9 @@
       "evidence/screenshots/az-planting-calendar-1280-light.png",
       "evidence/screenshots/az-planting-calendar-375-light.png"
     ],
-    "note": "Independently re-verified against the live deploy: Archetype Timeline + rail (claims.json, decision recorded in az-planting-calendar/design-refs/home-options/DECISION.md). Re-confirmed by opening the 1280 light screenshot at commit 9498a6c: a horizontal half-month timeline (Mar 1..Sep 1, current half-month boxed 'now') spans the page width, a 'Plantable in Aug 1' list of crop cards sits under it as the primary reading column, a docked 'Planting assistant' panel sits to the right as a secondary rail, and the full-year grid (24 half-month columns x crop rows) is a separate scan surface below -- a timeline spine with a rail, not a tile/card grid. Finding recorded in the standard {findings:{ruleId:{ok,detail}}} shape (evidence/design-archetype-az-planting-calendar.json), re-run at 9f215de so its own checkedAt is not older than the commit it vouches for.",
-    "reviewedAt": "2026-08-03T17:42:02.000Z",
-    "reviewedCommit": "9f215def8ff94713dfda3762f19902acb9ed9a94"
+    "note": "Independently re-verified against the live deploy: Archetype Timeline + rail (claims.json, decision recorded in az-planting-calendar/design-refs/home-options/DECISION.md). Re-confirmed by opening the 1280 light screenshot at commit 9498a6c: a horizontal half-month timeline (Mar 1..Sep 1, current half-month boxed 'now') spans the page width, a 'Plantable in Aug 1' list of crop cards sits under it as the primary reading column, a docked 'Planting assistant' panel sits to the right as a secondary rail, and the full-year grid (24 half-month columns x crop rows) is a separate scan surface below -- a timeline spine with a rail, not a tile/card grid. Finding recorded in the standard {findings:{ruleId:{ok,detail}}} shape (evidence/design-archetype-az-planting-calendar.json), re-run at 9f215de so its own checkedAt is not older than the commit it vouches for. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-fail-closed-states",
@@ -217,9 +217,9 @@
       "az-planting-calendar/tests/acceptance.spec.ts",
       "evidence/screenshots/az-planting-calendar-no-such-page-375-light.png"
     ],
-    "note": "Independently re-verified against HomePage.tsx post-AZ-15 (month-filter fix shifted line numbers but not structure): HomePage.tsx:49-55 still tracks plantableLoading/gridLoading/plantableError/gridError/searchError as distinct state passed down as props. PlantableHero.tsx:67-86 renders loading, error (with a retry button), and empty as three separate branches. YearGrid.tsx:11,28-33,52-82 keeps a name-search failure (showSearchError) explicitly distinct from a real zero-result empty state, per its own comment ('Distinct from empty: name search to /api/crops failed') -- a failed search cannot look like a clean empty success. CropDetailPage.tsx:36-41,74-75 shows loading/error/no-windows as separate branches. The 404 route (re-opened at this commit: az-planting-calendar-no-such-page-375-light.png) renders a real 'Page not found' page with a link home, not a blank shell. acceptance.spec.ts:15-31 tests that an unmatched /api/ path 404s with a real JSON error body instead of the SPA's 200 HTML fallback -- closing the exact failure mode this rule targets.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Independently re-verified against HomePage.tsx post-AZ-15 (month-filter fix shifted line numbers but not structure): HomePage.tsx:49-55 still tracks plantableLoading/gridLoading/plantableError/gridError/searchError as distinct state passed down as props. PlantableHero.tsx:67-86 renders loading, error (with a retry button), and empty as three separate branches. YearGrid.tsx:11,28-33,52-82 keeps a name-search failure (showSearchError) explicitly distinct from a real zero-result empty state, per its own comment ('Distinct from empty: name search to /api/crops failed') -- a failed search cannot look like a clean empty success. CropDetailPage.tsx:36-41,74-75 shows loading/error/no-windows as separate branches. The 404 route (re-opened at this commit: az-planting-calendar-no-such-page-375-light.png) renders a real 'Page not found' page with a link home, not a blank shell. acceptance.spec.ts:15-31 tests that an unmatched /api/ path 404s with a real JSON error body instead of the SPA's 200 HTML fallback -- closing the exact failure mode this rule targets. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "fe-pages-compose",
@@ -229,9 +229,9 @@
       "az-planting-calendar/src/pages/HomePage.tsx",
       "az-planting-calendar/src/pages/CropDetailPage.tsx"
     ],
-    "note": "Independently re-verified against HomePage.tsx post-AZ-15: the return (now HomePage.tsx:276-323, shifted by the added handleFiltersChange month-sync logic) is still a short list of five named components (CompactHeader, HalfMonthTimeline, PlantableHero, AssistantPanel, YearGrid); every piece of state (filters, plantable, grid, search*, loading/error) is owned in the page and passed down as props and callbacks, none read from module-level or hidden global state. CropDetailPage.tsx:15-21 owns its data/loading/error through the shared useAsyncLoad hook and composes named subcomponents (CropArt, MethodChip, GrowingGuideSection) rather than inlining markup.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Independently re-verified against HomePage.tsx post-AZ-15: the return (now HomePage.tsx:276-323, shifted by the added handleFiltersChange month-sync logic) is still a short list of five named components (CompactHeader, HalfMonthTimeline, PlantableHero, AssistantPanel, YearGrid); every piece of state (filters, plantable, grid, search*, loading/error) is owned in the page and passed down as props and callbacks, none read from module-level or hidden global state. CropDetailPage.tsx:15-21 owns its data/loading/error through the shared useAsyncLoad hook and composes named subcomponents (CropArt, MethodChip, GrowingGuideSection) rather than inlining markup. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "u-conc-idiomatic",
@@ -241,9 +241,9 @@
       "az-planting-calendar/src/pages/HomePage.tsx",
       "az-planting-calendar/src/hooks/useAsyncLoad.ts"
     ],
-    "note": "Independently re-verified against HomePage.tsx post-AZ-15: typed props throughout, every effect that starts a timer or fetch still returns a cleanup (now HomePage.tsx:132-135, 164-167, 211-213), and the in-flight name search is still cancelled with a real AbortController (now HomePage.tsx:174-214) rather than a stale-closure boolean. No non-idiomatic control flow or class-based state management found.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Independently re-verified against HomePage.tsx post-AZ-15: typed props throughout, every effect that starts a timer or fetch still returns a cleanup (now HomePage.tsx:132-135, 164-167, 211-213), and the in-flight name search is still cancelled with a real AbortController (now HomePage.tsx:174-214) rather than a stale-closure boolean. No non-idiomatic control flow or class-based state management found. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "u-conc-no-speculative-abstraction",
@@ -255,9 +255,9 @@
       "az-planting-calendar/src/pages/CropDetailPage.tsx",
       "az-planting-calendar/src/pages/GridPage.tsx"
     ],
-    "note": "Independently re-verified post-AZ-15: useAsyncLoad.ts is still 62 lines with the same 3 real call sites (useZone.tsx, CropDetailPage.tsx, GridPage.tsx) -- re-confirmed with grep -c \"useAsyncLoad\" across those three files (2 matches each: import + call) -- so it remains a real shared abstraction, not a generic layer built ahead of a second user. No unused config/plugin/strategy scaffolding found in the files reviewed.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Independently re-verified post-AZ-15: useAsyncLoad.ts is still 62 lines with the same 3 real call sites (useZone.tsx, CropDetailPage.tsx, GridPage.tsx) -- re-confirmed with grep -c \"useAsyncLoad\" across those three files (2 matches each: import + call) -- so it remains a real shared abstraction, not a generic layer built ahead of a second user. No unused config/plugin/strategy scaffolding found in the files reviewed. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "u-conc-smallest-diff",
@@ -266,9 +266,9 @@
     "evidence": [
       "evidence/smallest-diff-az-planting-calendar.json"
     ],
-    "note": "FIXED (deleted in commit f441d14d6d1b2a0ef410bbf7459e79b7acb775b6). az-planting-calendar/tmp-design.json was a leftover design_audit.mjs report against a LOCAL dev server (baseUrl http://127.0.0.1:8877, checkedAt 2026-08-01T20:52:27) checked into the app's source tree (introduced in commit 14d4ede). Re-verified at commit 9498a6c: `ls az-planting-calendar/tmp-design.json` reports no such file, and grepping az-planting-calendar, .github and orchestrator for the filename finds zero references anywhere -- nothing ever read it. Evidence is a real finding record (evidence/smallest-diff-az-planting-calendar.json), re-run at 9f215de so its own checkedAt is not older than the commit it vouches for.",
-    "reviewedAt": "2026-08-03T17:42:02.000Z",
-    "reviewedCommit": "9f215def8ff94713dfda3762f19902acb9ed9a94"
+    "note": "FIXED (deleted in commit f441d14d6d1b2a0ef410bbf7459e79b7acb775b6). az-planting-calendar/tmp-design.json was a leftover design_audit.mjs report against a LOCAL dev server (baseUrl http://127.0.0.1:8877, checkedAt 2026-08-01T20:52:27) checked into the app's source tree (introduced in commit 14d4ede). Re-verified at commit 9498a6c: `ls az-planting-calendar/tmp-design.json` reports no such file, and grepping az-planting-calendar, .github and orchestrator for the filename finds zero references anywhere -- nothing ever read it. Evidence is a real finding record (evidence/smallest-diff-az-planting-calendar.json), re-run at 9f215de so its own checkedAt is not older than the commit it vouches for. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "u-conc-use-what-exists",
@@ -279,9 +279,9 @@
       "az-planting-calendar/src/lib/schemas.ts",
       "az-planting-calendar/src/pages/HomePage.tsx"
     ],
-    "note": "Independently re-verified post-AZ-15: package.json still declares zod (^3.25.76) and react-router-dom (^6.26.0) as dependencies, used rather than hand-rolled equivalents (schemas.ts:1). The search debounce is still a bare setTimeout inside an effect (now HomePage.tsx:97,142,188, shifted by the month-filter fix), which is appropriately sized for the need rather than pulling in a debounce library for one call site. No evidence of reinventing something the ecosystem already solves in the files reviewed.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Independently re-verified post-AZ-15: package.json still declares zod (^3.25.76) and react-router-dom (^6.26.0) as dependencies, used rather than hand-rolled equivalents (schemas.ts:1). The search debounce is still a bare setTimeout inside an effect (now HomePage.tsx:97,142,188, shifted by the month-filter fix), which is appropriately sized for the need rather than pulling in a debounce library for one call site. No evidence of reinventing something the ecosystem already solves in the files reviewed. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "u-test-adequacy",
@@ -295,9 +295,9 @@
       "az-planting-calendar/src/lib/schemas.test.ts",
       "az-planting-calendar/src/theme.test.ts"
     ],
-    "note": "Independently re-ran the real unit suite post-AZ-15 (evidence/vitest-az-planting-calendar.txt, captured this pass): 15 files, 114 tests, all passing -- same counts as before the fix, confirming the new zone/month-filter code shipped with its existing coverage intact. Reviewed the sampled files: coverage.test.ts exercises real inputs (matchOutOfCoveragePlace, filterZones) with both hit and miss cases, not tautologies; schemas.test.ts and halfMonth.test.ts cover boundary values (half-month 0/23, invalid dates). acceptance.spec.ts adds 1070 lines of Playwright coverage for the primary flow, grid scrolling, crop citations and API 404 handling -- not a token smoke test.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "Independently re-ran the real unit suite post-AZ-15 (evidence/vitest-az-planting-calendar.txt, captured this pass): 15 files, 114 tests, all passing -- same counts as before the fix, confirming the new zone/month-filter code shipped with its existing coverage intact. Reviewed the sampled files: coverage.test.ts exercises real inputs (matchOutOfCoveragePlace, filterZones) with both hit and miss cases, not tautologies; schemas.test.ts and halfMonth.test.ts cover boundary values (half-month 0/23, invalid dates). acceptance.spec.ts adds 1070 lines of Playwright coverage for the primary flow, grid scrolling, crop citations and API 404 handling -- not a token smoke test. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   },
   {
     "ruleId": "u-test-behavioral",
@@ -306,8 +306,8 @@
     "evidence": [
       "az-planting-calendar/tests/acceptance.spec.ts"
     ],
-    "note": "acceptance.spec.ts tests user-visible behaviour, not implementation details: it uses page.waitForResponse to wait on the real network call before asserting (lines 48-52, 77-79, 98-100, 115-117), asserts via getByTestId/getByRole rather than scraping markup, and the 404 test (lines 15-31) uses a random path suffix specifically so a cached or previously-seeded route cannot satisfy it by accident -- a deliberate defence against a false pass, not a snapshot of current output.",
-    "reviewedAt": "2026-08-03T05:12:00.000Z",
-    "reviewedCommit": "f441d14d6d1b2a0ef410bbf7459e79b7acb775b6"
+    "note": "acceptance.spec.ts tests user-visible behaviour, not implementation details: it uses page.waitForResponse to wait on the real network call before asserting (lines 48-52, 77-79, 98-100, 115-117), asserts via getByTestId/getByRole rather than scraping markup, and the 404 test (lines 15-31) uses a random path suffix specifically so a cached or previously-seeded route cannot satisfy it by accident -- a deliberate defence against a false pass, not a snapshot of current output. reviewedCommit re-stamped to cba7f6e (no re-measurement needed: the only change in az-planting-calendar/ scope since the prior reviewedCommit was adding az-planting-calendar/.gitignore to ignore *.tsbuildinfo -- a compiler cache entry with zero effect on rendering, idioms, or tests, confirmed by reading the .gitignore diff itself).",
+    "reviewedAt": "2026-08-03T18:02:53.000Z",
+    "reviewedCommit": "cba7f6e80de58a53c7e1df222ec4fc1ca0737e8e"
   }
 ]
