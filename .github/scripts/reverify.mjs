@@ -240,6 +240,30 @@ function outcomeFromEvidence(verdict) {
   return null;
 }
 
+// --- 3b. re-record the a11y-contrast provenance -----------------------------
+// fe-a11y-contrast is a visual-lane rule with no self-recording check script, so
+// its measurement-meta entry is written separately. Step 3 has just regenerated
+// evidence/axe/<slug>-{dark,light}.json with fresh checkedAt values, which makes
+// any previously recorded entry stale against meas-standard-tool's report
+// binding. Re-record HERE — after the audits, before the gate scores them —
+// otherwise the entry can never be current at scoring time and the rule fails on
+// every run no matter how honest the measurement was.
+step('3b', 'record the a11y-contrast provenance against the reports just produced');
+for (const app of apps) {
+  const rec = run(process.execPath, [
+    'orchestrator/scripts/checks/record-a11y-contrast.mjs',
+    app.dir,
+    app.slug
+  ]);
+  if (rec.code !== 0) {
+    console.error(rec.out.split('\n').slice(-8).join('\n'));
+    fail(
+      `${app.slug} record-a11y-contrast failed — the axe reports exist but their provenance was not recorded`
+    );
+  }
+  console.log(`    ok  ${app.slug} a11y-contrast provenance`);
+}
+
 // --- 4. stamp verdicts to HEAD ----------------------------------------------
 // Only now: a report produced BEFORE the commit it vouches for is rejected, and
 // rightly — re-stamping is not re-measuring.

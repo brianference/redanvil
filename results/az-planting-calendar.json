@@ -69,7 +69,7 @@
     },
     {
       "ruleId": "fe-breadcrumbs",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "fe-result-in-viewport",
@@ -265,7 +265,7 @@
     },
     {
       "ruleId": "meas-two-run",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-recheck-flattering",
@@ -381,20 +381,21 @@
       "index": 1,
       "score": 0,
       "blockers": [
+        "fe-breadcrumbs",
         "lg-shipped",
         "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-03T19:47:17.086Z",
+  "finishedAt": "2026-08-03T20:43:38.948Z",
   "provenance": {
-    "commit": "aee25d2e5849e85d77dfa1e322e81639f062e3ca",
+    "commit": "98b5064fa22fc64c3518f8f7f09933ad98d34c9b",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "bd0dfc71ddc0910d71f835ababa2edc33a5e511926825d12be8c1428e6fd7ef7",
+    "verdictsHash": "b7a4a5d29698e9944a96af2f37569381f00519720fd1373319cc5e326c22d31a",
     "notApplicable": [
       "proc-pr-title-ticket",
       "process",
@@ -402,6 +403,6 @@
       "u-test-presence"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-03T19:47:17.183Z"
+    "generatedAt": "2026-08-03T20:43:39.029Z"
   }
 }
