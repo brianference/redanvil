@@ -5,17 +5,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-04T07:42:41.092Z"
+        "at": "2026-08-04T07:46:50.224Z"
       },
       {
         "ok": false,
-        "at": "2026-08-04T07:42:41.093Z"
+        "at": "2026-08-04T07:46:50.224Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\known-bad-fixtures\\u-api-not-found\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-04T07:42:41.093Z"
+      "recordedAt": "2026-08-04T07:46:50.224Z"
     },
     "notApplicable": false,
     "reason": null,

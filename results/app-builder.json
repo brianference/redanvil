@@ -387,9 +387,9 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-04T06:27:09.191Z",
+  "finishedAt": "2026-08-04T07:47:31.906Z",
   "provenance": {
-    "commit": "a83b2e2a5ee2750d51422e97ca9f1db3955891fe",
+    "commit": "f02d4aef47837caab24d2b45c6447e0616f9d05f",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
@@ -404,6 +404,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-04T06:27:09.251Z"
+    "generatedAt": "2026-08-04T07:47:31.976Z"
   }
 }
