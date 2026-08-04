@@ -5,17 +5,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-04T08:58:29.036Z"
+        "at": "2026-08-04T15:59:47.590Z"
       },
       {
         "ok": false,
-        "at": "2026-08-04T08:58:29.037Z"
+        "at": "2026-08-04T15:59:47.590Z"
       }
     ],
     "knownBad": {
-      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\proc-design-options\\bad-app",
+      "input": "C:\\Users\\brian\\RedAnvil-fix-prov\\orchestrator\\test\\fixtures\\proc-design-options\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-04T08:58:29.037Z"
+      "recordedAt": "2026-08-04T15:59:47.590Z"
     }
   }
 }
