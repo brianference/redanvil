@@ -38,6 +38,7 @@ import { tmpdir } from 'node:os';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { APPS, appBySlug } from './apps.mjs';
 
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -61,14 +62,6 @@ const EXPECTED_CROP_NAME = 'Tomatoes';
 const VIEWPORTS = [
   { width: 375, height: 812, label: '375 mobile' },
   { width: 1280, height: 900, label: '1280 desktop' }
-];
-
-/** Legal/about routes a stranger should be able to reach from the footer. */
-const FOOTER_ROUTES = [
-  { path: '/about', linkName: 'About', headingText: 'About this calendar' },
-  { path: '/terms', linkName: 'Terms of use', headingText: 'Terms of use' },
-  { path: '/privacy', linkName: 'Privacy', headingText: 'Privacy' },
-  { path: '/contact', linkName: 'Contact', headingText: 'Contact' }
 ];
 
 /** Text patterns that mean placeholder/unfinished content leaked to production. */
@@ -161,12 +154,46 @@ function topIsInFold(box, viewportHeight) {
 }
 
 /**
+ * Resolve stranger expectations for a gated app slug. Fail closed when the
+ * slug is unknown or the declaration is incomplete -- never invent defaults
+ * from another app.
+ *
+ * @param {string} slug App slug from --slug.
+ * @returns {import('./apps.mjs').StrangerExpectations}
+ */
+export function strangerExpectationsForSlug(slug) {
+  const app = appBySlug(slug);
+  if (app === undefined) {
+    throw new Error(
+      `unknown app slug "${slug}" -- known: ${APPS.map((a) => a.slug).join(', ')}. ` +
+        `user-refuse refuses to invent another app's expectations.`
+    );
+  }
+  const stranger = app.stranger;
+  if (
+    stranger === undefined ||
+    typeof stranger.purposeSentence !== 'string' ||
+    stranger.purposeSentence.trim() === '' ||
+    !Array.isArray(stranger.requiredPages) ||
+    stranger.requiredPages.length === 0
+  ) {
+    throw new Error(
+      `app "${slug}" has no stranger expectations in apps.mjs (purposeSentence + requiredPages). ` +
+        `Declare them from that app's real footer links and page headings -- do not reuse another app.`
+    );
+  }
+  return stranger;
+}
+
+/**
  * Walk the deployed app as a first-time stranger at one viewport width.
  * Fresh browser context every call -- no seeded storage, no forced theme.
  *
  * @param {import('playwright').Browser} browser
  * @param {string} baseUrl
  * @param {{ width: number, height: number, label: string }} viewport
+ * @param {readonly import('./apps.mjs').StrangerRequiredPage[]} requiredPages
+ *   Per-app footer routes (path, link name, heading) from apps.mjs.
  * @returns {Promise<{
  *   label: string,
  *   purposeClear: boolean,
@@ -183,7 +210,7 @@ function topIsInFold(box, viewportHeight) {
  *   consoleErrors: string[]
  * }>}
  */
-async function walkAsStranger(browser, baseUrl, viewport) {
+async function walkAsStranger(browser, baseUrl, viewport, requiredPages) {
   const ctx = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
   await ctx.setDefaultTimeout(15_000);
   const page = await ctx.newPage();
@@ -259,9 +286,11 @@ async function walkAsStranger(browser, baseUrl, viewport) {
   const brandMarkHeight = markBox !== null ? markBox.height : null;
 
   // --- Are the legal/about pages actually reachable from here? ---
+  // requiredPages comes from apps.mjs for THIS slug only -- never a global list
+  // from another product (that mis-measurement is why this was parameterized).
   const footer = page.getByRole('contentinfo');
   const legalPageFailures = [];
-  for (const route of FOOTER_ROUTES) {
+  for (const route of requiredPages) {
     const link = footer.getByRole('link', { name: route.linkName });
     const linkCount = await link.count();
     if (linkCount === 0) {
@@ -270,7 +299,7 @@ async function walkAsStranger(browser, baseUrl, viewport) {
     }
     const resp = await page.goto(new URL(route.path, baseUrl).href, { waitUntil: 'networkidle' });
     const status = resp?.status() ?? 0;
-    const heading = page.getByRole('heading', { name: route.headingText });
+    const heading = page.getByRole('heading', { name: route.headingText, exact: true });
     const headingPresent = (await heading.count()) > 0;
     const bodyText = (await page.locator('body').innerText()) ?? '';
     const wordCount = bodyText.trim().split(/\s+/).filter(Boolean).length;
@@ -325,12 +354,16 @@ async function walkAsStranger(browser, baseUrl, viewport) {
  * still hit it.
  *
  * @param {Awaited<ReturnType<typeof walkAsStranger>>[]} runs
+ * @param {string} purposeSentence Per-app purpose from apps.mjs stranger.purposeSentence.
  * @returns {{
  *   view: import('../../orchestrator/src/team/userRefuse').StrangerView,
  *   notes: string[]
  * }}
  */
-export function mergeIntoStrangerView(runs) {
+export function mergeIntoStrangerView(runs, purposeSentence) {
+  if (typeof purposeSentence !== 'string' || purposeSentence.trim() === '') {
+    throw new Error('mergeIntoStrangerView requires a non-empty purposeSentence for this app');
+  }
   const notes = [];
   for (const r of runs) {
     notes.push(
@@ -362,8 +395,7 @@ export function mergeIntoStrangerView(runs) {
   const brandMarkHeight = brandMarkHeights.length > 0 ? Math.min(...brandMarkHeights) : undefined;
 
   const view = {
-    appDescription:
-      'Arizona low-desert planting calendar: search a crop and see when to plant it (seed or transplant) for Cave Creek / Maricopa County.',
+    appDescription: purposeSentence,
     url: '(see caller)',
     purposeAccomplished,
     primaryResultY: offScreenRun.resultY,
@@ -391,6 +423,19 @@ export async function main() {
     return EXIT_INFRA;
   }
 
+  /** @type {import('./apps.mjs').StrangerExpectations} */
+  let expectations;
+  try {
+    expectations = strangerExpectationsForSlug(opts.slug);
+  } catch (err) {
+    console.error(`user-refuse INFRA: ${String(err.message ?? err)}`);
+    return EXIT_INFRA;
+  }
+  console.log(
+    `stranger expectations for ${opts.slug}: ${expectations.requiredPages.length} required pages, ` +
+      `purpose="${expectations.purposeSentence.slice(0, 80)}${expectations.purposeSentence.length > 80 ? '…' : ''}"`
+  );
+
   try {
     const { badVerdict, goodVerdict } = validateMeasurer();
     console.log(`measurer validated: known-bad -> ${badVerdict}, known-good -> ${goodVerdict}`);
@@ -412,7 +457,7 @@ export async function main() {
   try {
     runs = [];
     for (const vp of VIEWPORTS) {
-      const r = await walkAsStranger(browser, opts.baseUrl, vp);
+      const r = await walkAsStranger(browser, opts.baseUrl, vp, expectations.requiredPages);
       runs.push(r);
       console.log(
         `${vp.label}: purposeClear=${r.purposeClear} searchDiscoverable=${r.searchDiscoverable} ` +
@@ -432,7 +477,7 @@ export async function main() {
   }
   await browser.close();
 
-  const { view } = mergeIntoStrangerView(runs);
+  const { view } = mergeIntoStrangerView(runs, expectations.purposeSentence);
   view.url = opts.baseUrl;
 
   const tmp = join(tmpdir(), `user-refuse-payload-${randomBytes(6).toString('hex')}.json`);
