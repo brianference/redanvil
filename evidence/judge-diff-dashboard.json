@@ -1,45 +1,45 @@
 {
   "kind": "independent-diff-review",
   "slug": "dashboard",
-  "commit": "02c871c42eed7b7346f22ab8bdf1154a75cff1bf",
-  "reviewedAt": "2026-08-04T05:10:39.764Z",
+  "commit": "63ec980d76d564ddb8b7156a4b2ff3c9f416aeb5",
+  "reviewedAt": "2026-08-04T05:48:50.836Z",
   "diffHash": "8596eb3e6eda3c8749b6abf3bfa4ee178a27578671a6559124606300c288f66e",
   "completed": true,
   "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "design archetype is a claim, not code proof",
-      "citation": "dashboard/.redanvil/claims.json:12",
-      "detail": "The diff only adds a retroactive `design.archetype: \"Metric board\"` narrative that cites screenshots and design_audit.mjs output. Those PNG/JSON artifacts are not present as binary or content changes in the visible diff, so the anti-column / widest-block measurements cannot be re-checked from this patch alone.",
+      "title": "Design claim is retrospective prose, not measured in-diff",
+      "citation": "dashboard/.redanvil/claims.json:11",
+      "detail": "The design.archetype 'Metric board' and anti-column justification cite external PNGs and design_audit.mjs output (evidence/design-dashboard.json) that are not added or changed in this diff. A claim that evidence was opened cannot be verified from the unified diff; FAIL closed on the measurement assertion.",
       "passed": false
     },
     {
-      "title": "coverage high-water unchanged with new base",
+      "title": "coverage-state baseCommit bump without proof",
       "citation": "dashboard/.redanvil/coverage-state.json:2",
-      "detail": "baseCommit moves to 97aa587… while highWaterPct stays 91.66. The diff does not show a re-run result or coverage delta for the new base, so the retained high-water mark is unverified for this commit.",
+      "detail": "baseCommit moved to 97aa587... with highWaterPct still 91.66. Diff does not show how that commit was validated or that coverage still meets the water mark; status-only metadata change.",
       "passed": false
     },
     {
-      "title": "derive-assets depends on unshown public mark",
-      "citation": "dashboard/design-refs/logos/derive-assets.mjs:19",
-      "detail": "Script resizes `public/logo-mark.png` into favicon-96.png and apple-180.png. The visible hunk only adds the script; it does not include regenerated binary assets or proof they were committed and serve transparent (non-solid) ink for fe-favicon-legible.",
+      "title": "RunDetailView extraction is testable",
+      "citation": "dashboard/src/pages/RunDetail.tsx:315",
+      "detail": "RunDetailView is exported with injectable slug/state; RunDetail still wires useParams/useRuns/useDocumentMeta and renders the view. Tests for loading/error/missing-slug/not-found appear in the truncated portion — structure of the refactor is sound for unit testing.",
+      "passed": true
+    },
+    {
+      "title": "Favicon re-derive script alone does not prove assets shipped",
+      "citation": "dashboard/design-refs/logos/derive-assets.mjs:26",
+      "detail": "Script resizes logo-mark.png to favicon-96.png and apple-180.png with transparent background. Diff snippet does not include binary public/ asset changes; cannot verify favicon legibility improvement from the script alone.",
       "passed": false
     },
     {
-      "title": "search-options decision refs missing HTML",
-      "citation": "dashboard/design-refs/search-options/DECISION.md:6",
-      "detail": "DECISION.md names option-1-toolbar.html, option-2-sidebar.html, option-3-header.html as pre-React mockups. Those files are not in the truncated visible diff, so the claimed three-option design process is not evidenced here.",
-      "passed": false
-    },
-    {
-      "title": "RunDetailView tests are partial view only",
-      "citation": "dashboard/src/pages/RunDetail.tsx:317",
-      "detail": "Export of RunDetailView for injectible loading/error/missing/not-found branches is a real structure improvement, and the snippet shows unit expectations for those strings. Full test file and other product changes (search toolbar, SOURCES fetch path, INTEGRATIONS, brand assets, routes) sit in the truncated middle and cannot be verified as correct or complete from the visible portion alone.",
-      "passed": false
+      "title": "Prior-art docs present in diff",
+      "citation": "dashboard/COMPETITORS.md:1",
+      "detail": "COMPETITORS.md and SOURCES.md are new and non-empty with structure, gaps, and citations. Existence of prior-art files is verified in-diff; factual accuracy of external URLs is not re-checked here.",
+      "passed": true
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{ \\\"foundNothingExplicit\\\": false, \\\"findings\\\": [ { \\\"title\\\": \\\"diff truncated — cannot fully verify\\\", \\\"citation\\\": \\\"prompt_0.txt:1\\\", \\\"detail\\\": \\\"The user message truncates the unified diff with “[middle truncated — full text in the offloaded file]…”. Without reading the offloaded file, most of the change set is invisible, so any PASS claim about the full commit cannot be verified. Fail-closed: incomplete evidence is not a pass.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"design archetype is a claim, not code proof\\\", \\\"citation\\\": \\\"dashboard/.redanvil/claims.json:12\\\", \\\"detail\\\": \\\"The diff only adds a retroactive `design.archetype: \\\\\\\"Metric board\\\\\\\"` narrative that cites screenshots and design_audit.mjs output. Those PNG/JSON artifacts are not present as binary or content changes in the visible diff, so the anti-column / widest-block measurements cannot be re-checked from this patch alone.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"coverage high-water unchanged with new base\\\", \\\"citation\\\": \\\"dashboard/.redanvil/coverage-state.json:2\\\", \\\"detail\\\": \\\"baseCommit moves to 97aa587… while highWaterPct stays 91.66. The diff does not show a re-run result or coverage delta for the new base, so the retained high-water mark is unverified for this commit.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"derive-assets depends on unshown public mark\\\", \\\"citation\\\": \\\"dashboard/design-refs/logos/derive-assets.mjs:19\\\", \\\"detail\\\": \\\"Script resizes `public/logo-mark.png` into favicon-96.png and apple-180.png. The visible hunk only adds the script; it does not include regenerated binary assets or proof they were committed and serve transparent (non-solid) ink for fe-favicon-legible.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"search-options decision refs missing HTML\\\", \\\"citation\\\": \\\"dashboard/design-refs/search-options/DECISION.md:6\\\", \\\"detail\\\": \\\"DECISION.md names option-1-toolbar.html, option-2-sidebar.html, option-3-header.html as pre-React mockups. Those files are not in the truncated visible diff, so the claimed three-option design process is not evidenced here.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"RunDetailView tests are partial view only\\\", \\\"citation\\\": \\\"dashboard/src/pages/RunDetail.tsx:317\\\", \\\"detail\\\": \\\"Export of RunDetailView for injectible loading/error/missing/not-found branches is a real structure improvement, and the snippet shows unit expectations for those strings. Full test file and other product changes (search toolbar, SOURCES fetch path, INTEGRATIONS, brand assets, routes) sit in the truncated middle and cannot be verified as correct or complete from the visible portion alone.\\\", \\\"passed\\\": false } ] }\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"06ce6eca-d309-4c35-ab06-f178c20d0dd5\",\n  \"requestId\": \"dfae5988-dc41-4edc-b4b6-b5333a6075bb\",\n  \"thought\": \"The user wants me to review a git diff as an independent code judge. They say \\\"Do not use tools\\\" and the full unified diff is in the message, but then there's a note that the full request was offloade...\",\n  \"usage\": {\n    \"input_tokens\": 28248,\n    \"cache_read_input_tokens\": 2816,\n    \"output_tokens\": 757,\n    \"reasoning_tokens\": 129,\n    \"total_tokens\": 31821\n  },\n  \"num_turns\": 1,\n  \"total_cost_usd\": 0.0618828,\n  \"total_cost_usd_ticks\": 618828000,\n  \"modelUsage\": {\n    \"grok-4.5-build\": {\n      \"inputTokens\": 28248,\n      \"outputTokens\": 757,\n      \"cacheReadInputTokens\": 2816,\n      \"modelCalls\": 1,\n      \"costUSD\": 0.0618828\n    }\n  },\n  \"structuredOutput\": {\n    \"foundNothingExplicit\": false,\n    \"findings\": [\n      {\n        \"title\": \"diff truncated — cannot fully verify\",\n        \"citation\": \"prompt_0.txt:1\",\n        \"detail\": \"The user message truncates the unified diff with “[middle truncated — full text in the offloaded file]…”. Without reading the offloaded file, most of the change set is invisible, so any PASS claim about the full commit cannot be verified. Fail-closed: incomplete evidence is not a pass.\",\n        \"passed\": false\n      },\n ",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{ \\\"foundNothingExplicit\\\": false, \\\"findings\\\": [ { \\\"title\\\": \\\"Truncated diff cannot fully verify\\\", \\\"citation\\\": \\\"dashboard/.redanvil/claims.json:8\\\", \\\"detail\\\": \\\"Diff in the message was truncated mid-file. Judging only from the provided fragments: claims.json design.archetype, COMPETITORS.md/SOURCES.md, logo derive script, and RunDetailView extract with unit tests. Cannot verify screenshot evidence, INTEGRATIONS.md, public asset binaries, Home search implementation, or that production measurement files exist from this diff alone.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"Design claim is retrospective prose, not measured in-diff\\\", \\\"citation\\\": \\\"dashboard/.redanvil/claims.json:11\\\", \\\"detail\\\": \\\"The design.archetype 'Metric board' and anti-column justification cite external PNGs and design_audit.mjs output (evidence/design-dashboard.json) that are not added or changed in this diff. A claim that evidence was opened cannot be verified from the unified diff; FAIL closed on the measurement assertion.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"coverage-state baseCommit bump without proof\\\", \\\"citation\\\": \\\"dashboard/.redanvil/coverage-state.json:2\\\", \\\"detail\\\": \\\"baseCommit moved to 97aa587... with highWaterPct still 91.66. Diff does not show how that commit was validated or that coverage still meets the water mark; status-only metadata change.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"RunDetailView extraction is testable\\\", \\\"citation\\\": \\\"dashboard/src/pages/RunDetail.tsx:315\\\", \\\"detail\\\": \\\"RunDetailView is exported with injectable slug/state; RunDetail still wires useParams/useRuns/useDocumentMeta and renders the view. Tests for loading/error/missing-slug/not-found appear in the truncated portion — structure of the refactor is sound for unit testing.\\\", \\\"passed\\\": true }, { \\\"title\\\": \\\"Favicon re-derive script alone does not prove assets shipped\\\", \\\"citation\\\": \\\"dashboard/design-refs/logos/derive-assets.mjs:26\\\", \\\"detail\\\": \\\"Script resizes logo-mark.png to favicon-96.png and apple-180.png with transparent background. Diff snippet does not include binary public/ asset changes; cannot verify favicon legibility improvement from the script alone.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"Prior-art docs present in diff\\\", \\\"citation\\\": \\\"dashboard/COMPETITORS.md:1\\\", \\\"detail\\\": \\\"COMPETITORS.md and SOURCES.md are new and non-empty with structure, gaps, and citations. Existence of prior-art files is verified in-diff; factual accuracy of external URLs is not re-checked here.\\\", \\\"passed\\\": true } ] }\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"22e1b6f1-653b-4976-b887-444b0ffbbcf0\",\n  \"requestId\": \"70bd5951-467c-4ffb-89c0-027666ce6692\",\n  \"thought\": \"The user wants me to review a git diff as an independent code judge. They said \\\"Do not use tools\\\" in the query, but then there's an offloaded file with the full prompt. Let me check - the system remin...\",\n  \"usage\": {\n    \"input_tokens\": 28505,\n    \"cache_read_input_tokens\": 2560,\n    \"output_tokens\": 754,\n    \"reasoning_tokens\": 164,\n    \"total_tokens\": 31819\n  },\n  \"num_turns\": 1,\n  \"total_cost_usd\": 0.062302,\n  \"total_cost_usd_ticks\": 623020000,\n  \"modelUsage\": {\n    \"grok-4.5-build\": {\n      \"inputTokens\": 28505,\n      \"outputTokens\": 754,\n      \"cacheReadInputTokens\": 2560,\n      \"modelCalls\": 1,\n      \"costUSD\": 0.062302\n    }\n  },\n  \"structuredOutput\": {\n    \"foundNothingExplicit\": false,\n    \"findings\": [\n      {\n        \"title\": \"Truncated diff cannot fully verify\",\n        \"citation\": \"dashboard/.redanvil/claims.json:8\",\n        \"detail\": \"Diff in the message was truncated mid-file. Judging only from the provided fragments: claims.json design.archetype, COMPETITORS.md/SOURCES.md, logo derive script, and RunDetailView extract with unit tests. Cannot verify screenshot evidence, INTEGRATIONS.md, public asset binaries, Home search implementation, or that production measurement files exist from this diff alone.\",\n        \"passed\": false\n      },\n      {\n       ",
   "mode": "grok",
   "chunkCount": 1,
   "coverageChars": 69763,
