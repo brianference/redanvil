@@ -53,7 +53,7 @@
     },
     {
       "ruleId": "fe-search-present",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-brand-mark",
@@ -369,16 +369,15 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "fe-search-present",
         "lg-shipped",
         "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-04T00:56:57.146Z",
+  "finishedAt": "2026-08-04T01:02:59.554Z",
   "provenance": {
-    "commit": "8106ebf518053542c16210365980f0dcdb4b2a1e",
+    "commit": "dbefe70357921d0713eafd1e1173d6f0aac075ea",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
@@ -393,6 +392,6 @@
       "u-plat-migrations"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-04T00:56:57.204Z"
+    "generatedAt": "2026-08-04T01:02:59.612Z"
   }
 }
