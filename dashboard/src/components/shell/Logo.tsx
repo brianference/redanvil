@@ -14,5 +14,12 @@ export interface LogoProps {
  * Site logo: single transparent lockup for both themes (no theme-swap, no grey box).
  */
 export function Logo({ height = LOGO_HEIGHT }: LogoProps): JSX.Element {
-  return <SharedLogo href={APP_URL} ariaLabel={en.app.logoAlt} height={height} />;
+  return (
+    <SharedLogo
+      href={APP_URL}
+      ariaLabel={en.app.logoAlt}
+      height={height}
+      markMeasure="mark"
+    />
+  );
 }

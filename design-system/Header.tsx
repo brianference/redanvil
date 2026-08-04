@@ -54,6 +54,16 @@ export interface HeaderProps {
   items: readonly NavItem[];
   /** Whether a given item key is the current page. */
   isActive: (key: string) => boolean;
+  /**
+   * Optional qa-visual test id on the sticky header landmark
+   * (e.g. "compact-header"). Omitted when the app does not instrument.
+   */
+  testId?: string;
+  /**
+   * Optional qa-visual data-measure on the sticky header
+   * (e.g. "header"). Omitted when the app does not instrument.
+   */
+  measure?: string;
 }
 
 /**
@@ -71,10 +81,17 @@ export function Header({
   logo,
   themeToggle,
   items,
-  isActive
+  isActive,
+  testId,
+  measure
 }: HeaderProps): JSX.Element {
   return (
-    <header ref={headerRef} style={barStyle}>
+    <header
+      ref={headerRef}
+      style={barStyle}
+      {...(testId !== undefined ? { 'data-testid': testId } : {})}
+      {...(measure !== undefined ? { 'data-measure': measure } : {})}
+    >
       <div
         style={{
           width: '100%',

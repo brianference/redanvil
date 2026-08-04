@@ -51,7 +51,7 @@ export function RunSearch({ value, onChange }: RunSearchProps): JSX.Element {
   }
 
   return (
-    <div style={toolbarStyle}>
+    <div style={toolbarStyle} data-testid="live-search">
       <label htmlFor="run-search" style={{ display: 'none' }}>
         {en.pages.home.searchLabel}
       </label>
@@ -64,6 +64,7 @@ export function RunSearch({ value, onChange }: RunSearchProps): JSX.Element {
         placeholder={en.pages.home.searchPlaceholder}
         aria-label={en.pages.home.searchLabel}
         style={inputStyle}
+        data-testid="filter-search"
       />
     </div>
   );

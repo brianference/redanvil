@@ -57,6 +57,8 @@ export function Header({
       themeToggle={<ThemeToggle />}
       items={headerNavItems()}
       isActive={(key) => isNavActive(location.pathname, key)}
+      testId="compact-header"
+      measure="header"
     />
   );
 }
