@@ -9,6 +9,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
+  aggregateChunkReviews,
   buildIndependentReviewGrokArgs,
   buildRefutePrompt,
   collectDiff,
@@ -16,10 +17,17 @@ import {
   hashDiff,
   headParents,
   independentReviewOkFromReport,
+  isScopeTruncationFinding,
   JUDGE_DIFF_JSON_SCHEMA,
+  JUDGE_PROMPT_DIFF_BUDGET,
+  MAX_DIFF_REVIEW_CHUNKS,
   parseJudgeJson,
   readJudgeDiffReport,
   runIndependentDiffReview,
+  splitDiffByFile,
+  splitDiffIntoChunks,
+  splitOversizedFileSection,
+  type DiffChunk,
   type IndependentReviewReport
 } from '../src/loop/independentReview';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
@@ -536,3 +544,555 @@ describe('empty-diff explicit fail-closed state', () => {
     expect(evaluateReviewOk(report)).toBe(false);
   });
 });
+
+/**
+ * Build a minimal unified-diff file section of approximately `bodyChars` size.
+ *
+ * @param path - File path in the diff header.
+ * @param bodyChars - Approximate size of +lines body.
+ */
+function fakeFileDiff(path: string, bodyChars: number): string {
+  const header = `diff --git a/${path} b/${path}\nindex 1111111..2222222 100644\n--- a/${path}\n+++ b/${path}\n@@ -1,1 +1,1 @@\n`;
+  const line = `+${'x'.repeat(60)}\n`;
+  let body = '';
+  while (body.length < bodyChars) body += line;
+  return header + body;
+}
+
+describe('splitDiffByFile / splitDiffIntoChunks (file boundaries)', () => {
+  it('splits on file boundaries and never mid-line', () => {
+    const a = fakeFileDiff('src/a.ts', 200);
+    const b = fakeFileDiff('src/b.ts', 200);
+    const diff = a + b;
+    const sections = splitDiffByFile(diff);
+    expect(sections).toHaveLength(2);
+    expect(sections[0]?.path).toBe('src/a.ts');
+    expect(sections[1]?.path).toBe('src/b.ts');
+    expect((sections[0]?.text ?? '') + (sections[1]?.text ?? '')).toBe(diff);
+    expect(sections[0]?.text.startsWith('diff --git ')).toBe(true);
+    expect(sections[1]?.text.startsWith('diff --git ')).toBe(true);
+  });
+
+  it('packs multiple small files into one chunk under budget', () => {
+    const diff =
+      fakeFileDiff('one.ts', 100) +
+      fakeFileDiff('two.ts', 100) +
+      fakeFileDiff('three.ts', 100);
+    const split = splitDiffIntoChunks(diff, 50_000, 10);
+    expect(split.chunks).toHaveLength(1);
+    expect(split.coverageChars).toBe(diff.length);
+    expect(split.diffChars).toBe(diff.length);
+    expect(split.chunkLimitExceeded).toBe(false);
+    expect(split.chunks[0]?.text).toBe(diff);
+    expect(split.chunks[0]?.splitFile).toBe(false);
+  });
+
+  it('keeps whole files in separate chunks when packing would exceed budget', () => {
+    // Each file ~40k; budget 50k ⇒ one file per chunk, not mid-file.
+    const f1 = fakeFileDiff('big1.ts', 40_000);
+    const f2 = fakeFileDiff('big2.ts', 40_000);
+    const f3 = fakeFileDiff('big3.ts', 40_000);
+    const diff = f1 + f2 + f3;
+    const budget = 50_000;
+    const split = splitDiffIntoChunks(diff, budget, 10);
+    expect(split.chunks.length).toBe(3);
+    expect(split.chunks.every((c) => c.splitFile === false)).toBe(true);
+    expect(split.chunks.every((c) => c.coverageChars <= budget)).toBe(true);
+    expect(split.coverageChars).toBe(diff.length);
+    // Each chunk is exactly one file section.
+    expect(split.chunks[0]?.text).toBe(f1);
+    expect(split.chunks[1]?.text).toBe(f2);
+    expect(split.chunks[2]?.text).toBe(f3);
+  });
+
+  it('splits an oversized single file on line boundaries and records splitFiles', () => {
+    const budget = 5_000;
+    const huge = fakeFileDiff('huge.ts', 12_000);
+    expect(huge.length).toBeGreaterThan(budget);
+    const split = splitDiffIntoChunks(huge, budget, 20);
+    expect(split.chunks.length).toBeGreaterThan(1);
+    expect(split.splitFiles).toContain('huge.ts');
+    expect(split.chunks.every((c) => c.splitFile === true)).toBe(true);
+    expect(split.chunks.every((c) => c.coverageChars <= budget)).toBe(true);
+    expect(split.coverageChars).toBe(huge.length);
+    // Reassembly equals original — no silent gap.
+    expect(split.chunks.map((c) => c.text).join('')).toBe(huge);
+    // No mid-line cut: each non-final piece ends with newline (line-bounded).
+    for (let i = 0; i < split.chunks.length - 1; i++) {
+      expect(split.chunks[i]?.text.endsWith('\n')).toBe(true);
+    }
+  });
+
+  it('splitOversizedFileSection coverage sums to the section length', () => {
+    const section = { path: 'x.ts', text: fakeFileDiff('x.ts', 8_000) };
+    const parts = splitOversizedFileSection(section, 3_000);
+    expect(parts.length).toBeGreaterThan(1);
+    expect(parts.reduce((s, p) => s + p.coverageChars, 0)).toBe(section.text.length);
+    expect(parts.map((p) => p.text).join('')).toBe(section.text);
+  });
+
+  it('marks chunkLimitExceeded when more chunks than the bound (incomplete, not pass)', () => {
+    const files = Array.from({ length: 6 }, (_, i) =>
+      fakeFileDiff(`f${i}.ts`, 4_000)
+    );
+    const diff = files.join('');
+    const split = splitDiffIntoChunks(diff, 5_000, 3);
+    expect(split.chunkLimitExceeded).toBe(true);
+    expect(split.chunks).toHaveLength(3);
+    expect(split.coverageChars).toBeLessThan(diff.length);
+  });
+
+  it('single-chunk path still embeds truncation notice when over budget in prompt', () => {
+    // Safety net for callers that pass an over-budget string without splitting.
+    const over = 'y'.repeat(JUDGE_PROMPT_DIFF_BUDGET + 500);
+    const prompt = buildRefutePrompt('demo', 'deadbeef', over);
+    expect(prompt).toContain(
+      `[diff truncated at ${JUDGE_PROMPT_DIFF_BUDGET} chars for the judge prompt]`
+    );
+    expect(prompt).not.toContain(over); // full over-budget body must not appear
+  });
+
+  it('exposes MAX_DIFF_REVIEW_CHUNKS as a finite sane bound', () => {
+    expect(MAX_DIFF_REVIEW_CHUNKS).toBeGreaterThan(1);
+    expect(MAX_DIFF_REVIEW_CHUNKS).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('aggregateChunkReviews', () => {
+  /**
+   * Minimal planned chunks + matching clean results for a synthetic diff.
+   */
+  function cleanPair(diffChars: number, n: number): {
+    chunks: DiffChunk[];
+    results: Array<{
+      index: number;
+      coverageChars: number;
+      completed: boolean;
+      foundNothingExplicit: boolean;
+      findings: IndependentReviewReport['findings'];
+      rawExcerpt: string;
+    }>;
+  } {
+    const each = Math.floor(diffChars / n);
+    const chunks: DiffChunk[] = [];
+    const results: Array<{
+      index: number;
+      coverageChars: number;
+      completed: boolean;
+      foundNothingExplicit: boolean;
+      findings: IndependentReviewReport['findings'];
+      rawExcerpt: string;
+    }> = [];
+    let covered = 0;
+    for (let i = 0; i < n; i++) {
+      const cov = i === n - 1 ? diffChars - covered : each;
+      covered += cov;
+      chunks.push({
+        index: i,
+        text: 'x'.repeat(cov),
+        coverageChars: cov,
+        splitFile: false
+      });
+      results.push({
+        index: i,
+        coverageChars: cov,
+        completed: true,
+        foundNothingExplicit: true,
+        findings: [],
+        rawExcerpt: `ok-${i}`
+      });
+    }
+    return { chunks, results };
+  }
+
+  it('ok when every chunk completed, coverage full, and all findings passed', () => {
+    const { chunks, results } = cleanPair(10_000, 3);
+    const agg = aggregateChunkReviews({
+      diffChars: 10_000,
+      chunks,
+      results,
+      chunkLimitExceeded: false,
+      splitFiles: []
+    });
+    expect(agg.completed).toBe(true);
+    expect(agg.ok).toBe(true);
+    expect(agg.coverageComplete).toBe(true);
+    expect(agg.coverageChars).toBe(10_000);
+    expect(agg.chunkCount).toBe(3);
+    expect(agg.foundNothingExplicit).toBe(true);
+  });
+
+  it('unions findings across chunks', () => {
+    const { chunks, results } = cleanPair(1000, 2);
+    results[0] = {
+      ...results[0]!,
+      foundNothingExplicit: false,
+      findings: [
+        {
+          title: 'defect a',
+          citation: 'a.ts:1',
+          detail: 'bad',
+          passed: false
+        }
+      ]
+    };
+    results[1] = {
+      ...results[1]!,
+      foundNothingExplicit: false,
+      findings: [
+        {
+          title: 'verified b',
+          citation: 'b.ts:2',
+          detail: 'ok',
+          passed: true
+        }
+      ]
+    };
+    const agg = aggregateChunkReviews({
+      diffChars: 1000,
+      chunks,
+      results,
+      chunkLimitExceeded: false,
+      splitFiles: []
+    });
+    expect(agg.findings.map((f) => f.title)).toEqual(
+      expect.arrayContaining(['defect a', 'verified b'])
+    );
+    expect(agg.completed).toBe(true);
+    expect(agg.ok).toBe(false);
+  });
+
+  it('AGGREGATE is completed false / ok false when one chunk is unparseable', () => {
+    // The case that matters: partial coverage must never read as a clean review.
+    const { chunks, results } = cleanPair(2000, 2);
+    results[1] = {
+      index: 1,
+      coverageChars: results[1]!.coverageChars,
+      completed: false,
+      foundNothingExplicit: false,
+      findings: [
+        {
+          title: 'unparseable judge output',
+          citation: 'orchestrator/src/loop/independentReview.ts:1',
+          detail: 'chunk 2/2 did not return JSON — cannot verify; fail closed',
+          passed: false
+        }
+      ],
+      rawExcerpt: 'NOT JSON AT ALL'
+    };
+    const agg = aggregateChunkReviews({
+      diffChars: 2000,
+      chunks,
+      results,
+      chunkLimitExceeded: false,
+      splitFiles: []
+    });
+    expect(agg.completed).toBe(false);
+    expect(agg.ok).toBe(false);
+    expect(agg.findings.some((f) => f.title === 'unparseable judge output')).toBe(
+      true
+    );
+  });
+
+  it('coverage shortfall fails the aggregate', () => {
+    const { chunks, results } = cleanPair(1000, 2);
+    // Lie about coverage on purpose — sum 800 !== 1000.
+    results[0] = { ...results[0]!, coverageChars: 400 };
+    results[1] = { ...results[1]!, coverageChars: 400 };
+    const agg = aggregateChunkReviews({
+      diffChars: 1000,
+      chunks,
+      results,
+      chunkLimitExceeded: false,
+      splitFiles: []
+    });
+    expect(agg.coverageComplete).toBe(false);
+    expect(agg.completed).toBe(false);
+    expect(agg.ok).toBe(false);
+    expect(agg.findings.some((f) => f.title === 'diff coverage shortfall')).toBe(
+      true
+    );
+  });
+
+  it('chunk limit exceeded is explicit incomplete, not a pass', () => {
+    const { chunks, results } = cleanPair(3000, 2);
+    const agg = aggregateChunkReviews({
+      diffChars: 5000, // more diff than the limited chunks cover
+      chunks,
+      results,
+      chunkLimitExceeded: true,
+      splitFiles: []
+    });
+    expect(agg.completed).toBe(false);
+    expect(agg.ok).toBe(false);
+    expect(agg.findings.some((f) => f.title === 'diff chunk limit exceeded')).toBe(
+      true
+    );
+  });
+
+  it('records oversized file split as an explicit (passed) finding, not a silent cut', () => {
+    const { chunks, results } = cleanPair(1000, 2);
+    chunks[0] = {
+      ...chunks[0]!,
+      splitFile: true,
+      splitFilePath: 'huge.ts',
+      splitPart: 1,
+      splitParts: 2
+    };
+    chunks[1] = {
+      ...chunks[1]!,
+      splitFile: true,
+      splitFilePath: 'huge.ts',
+      splitPart: 2,
+      splitParts: 2
+    };
+    const agg = aggregateChunkReviews({
+      diffChars: 1000,
+      chunks,
+      results,
+      chunkLimitExceeded: false,
+      splitFiles: ['huge.ts']
+    });
+    const meta = agg.findings.find((f) => f.title === 'oversized file split for review');
+    expect(meta).toBeDefined();
+    expect(meta?.passed).toBe(true);
+    expect(meta?.detail).toMatch(/split/i);
+    expect(meta?.citation).toBe('huge.ts:1');
+  });
+
+  it('drops scope-truncation findings when coverage is complete (full review ran)', () => {
+    const { chunks, results } = cleanPair(2000, 2);
+    results[0] = {
+      ...results[0]!,
+      foundNothingExplicit: false,
+      findings: [
+        {
+          title: 'diff truncated; cannot verify full change set',
+          citation: 'x.ts:1',
+          detail: 'The provided unified diff was truncated mid-file',
+          passed: false
+        },
+        {
+          title: 'hardcoded secret',
+          citation: 'x.ts:2',
+          detail: 'API key in source',
+          passed: false
+        }
+      ]
+    };
+    const agg = aggregateChunkReviews({
+      diffChars: 2000,
+      chunks,
+      results,
+      chunkLimitExceeded: false,
+      splitFiles: []
+    });
+    expect(agg.coverageComplete).toBe(true);
+    expect(agg.findings.some((f) => /diff truncated/i.test(f.title))).toBe(false);
+    expect(agg.findings.some((f) => f.title === 'hardcoded secret')).toBe(true);
+    expect(agg.ok).toBe(false);
+  });
+
+  it('KEEPS scope-truncation findings when coverage is incomplete (judge truly blind)', () => {
+    const { chunks, results } = cleanPair(1000, 1);
+    results[0] = {
+      ...results[0]!,
+      coverageChars: 500, // shortfall
+      foundNothingExplicit: false,
+      findings: [
+        {
+          title: 'diff truncated; cannot verify full change set',
+          citation: 'x.ts:1',
+          detail: 'diff truncated at 120000 chars for the judge prompt',
+          passed: false
+        }
+      ]
+    };
+    const agg = aggregateChunkReviews({
+      diffChars: 1000,
+      chunks,
+      results,
+      chunkLimitExceeded: false,
+      splitFiles: []
+    });
+    expect(agg.coverageComplete).toBe(false);
+    expect(agg.completed).toBe(false);
+    expect(agg.findings.some((f) => /diff truncated/i.test(f.title))).toBe(true);
+  });
+
+  it('isScopeTruncationFinding classifies the known refusal shapes', () => {
+    expect(
+      isScopeTruncationFinding({
+        title: 'diff truncated; cannot verify full change set',
+        citation: 'a:1',
+        detail: 'judge saw truncated prompt',
+        passed: false
+      })
+    ).toBe(true);
+    expect(
+      isScopeTruncationFinding({
+        title: 'hardcoded hero paint',
+        citation: 'theme.css:1',
+        detail: 'hero stays black in light mode',
+        passed: false
+      })
+    ).toBe(false);
+  });
+});
+
+describe('runIndependentDiffReview multi-chunk via reviewChunk hook', () => {
+  it('reviews every chunk and reports full coverage (no diff-truncated finding)', () => {
+    const dir = initGitRepo('redanvil-chunk-hook-');
+    try {
+      // Several mid-size files + tiny budget ⇒ multiple file-boundary chunks.
+      const names: string[] = [];
+      for (let i = 0; i < 4; i++) {
+        const name = `f${i}.txt`;
+        writeFileSync(join(dir, name), `${'line\n'.repeat(80)}`);
+        names.push(name);
+      }
+      git(dir, ['add', ...names]);
+      git(dir, ['commit', '-qm', 'base']);
+      for (let i = 0; i < 4; i++) {
+        writeFileSync(join(dir, `f${i}.txt`), `${'changed\n'.repeat(80)}`);
+      }
+
+      let calls = 0;
+      const seenPrompts: string[] = [];
+      const report = runIndependentDiffReview({
+        dir,
+        outPath: join(dir, 'evidence', 'judge-diff-chunk.json'),
+        // ~1.5k forces one file per chunk for the ~2k+ file diffs above.
+        diffBudget: 1_500,
+        reviewChunk: ({ prompt }) => {
+          calls += 1;
+          seenPrompts.push(prompt);
+          return {
+            stdout: JSON.stringify({
+              foundNothingExplicit: true,
+              findings: []
+            })
+          };
+        }
+      });
+      expect(calls).toBeGreaterThan(1);
+      expect(report.chunkCount).toBe(calls);
+      expect(report.completed).toBe(true);
+      expect(report.ok).toBe(true);
+      expect(report.coverageComplete).toBe(true);
+      expect(report.coverageChars).toBe(report.diffChars);
+      expect(report.findings.some((f) => /diff truncated/i.test(f.title))).toBe(
+        false
+      );
+      expect(report.findings.some((f) => /diff truncated/i.test(f.detail))).toBe(
+        false
+      );
+      // Multi-chunk prompts carry chunk scope; never the old single-pass truncate note.
+      expect(seenPrompts.some((p) => /Chunk scope/i.test(p))).toBe(true);
+      expect(
+        seenPrompts.some((p) => /diff truncated at .* chars for the judge prompt/.test(p))
+      ).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('simulates unparseable chunk output → aggregate completed false / ok false', () => {
+    const dir = initGitRepo('redanvil-chunk-unparse-');
+    try {
+      writeFileSync(join(dir, 'a.txt'), 'a\n');
+      git(dir, ['add', 'a.txt']);
+      git(dir, ['commit', '-qm', 'init']);
+      writeFileSync(join(dir, 'a.txt'), 'b\n');
+
+      const report = runIndependentDiffReview({
+        dir,
+        outPath: join(dir, 'evidence', 'judge-diff-unparse.json'),
+        reviewChunk: () => ({ stdout: 'this is not json and not a review' })
+      });
+      expect(report.completed).toBe(false);
+      expect(report.ok).toBe(false);
+      expect(
+        report.findings.some(
+          (f) => f.title === 'unparseable judge output' && f.passed === false
+        )
+      ).toBe(true);
+      expect(evaluateReviewOk(report)).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('one of many chunks unparseable fails the whole review (partial ≠ clean)', () => {
+    const dir = initGitRepo('redanvil-chunk-partial-');
+    try {
+      const names: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        const name = `p${i}.txt`;
+        writeFileSync(join(dir, name), `${'base\n'.repeat(100)}`);
+        names.push(name);
+      }
+      git(dir, ['add', ...names]);
+      git(dir, ['commit', '-qm', 'init']);
+      for (let i = 0; i < 3; i++) {
+        writeFileSync(join(dir, `p${i}.txt`), `${'new\n'.repeat(100)}`);
+      }
+
+      let n = 0;
+      const report = runIndependentDiffReview({
+        dir,
+        outPath: join(dir, 'evidence', 'judge-diff-partial.json'),
+        diffBudget: 1_500,
+        reviewChunk: () => {
+          n += 1;
+          // Chunk 1 clean; chunk 2 garbage — aggregate must not pass.
+          if (n === 1) {
+            return {
+              stdout: JSON.stringify({ foundNothingExplicit: true, findings: [] })
+            };
+          }
+          return { stdout: `garbage turn ${n}` };
+        }
+      });
+      expect(n).toBeGreaterThan(1);
+      expect(report.completed).toBe(false);
+      expect(report.ok).toBe(false);
+      expect(report.findings.some((f) => f.title === 'unparseable judge output')).toBe(
+        true
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('dashboard-shaped single chunk (fits budget) still completes as one review', () => {
+    const dir = initGitRepo('redanvil-chunk-single-');
+    try {
+      writeFileSync(join(dir, 'small.txt'), 'hello\n');
+      git(dir, ['add', 'small.txt']);
+      git(dir, ['commit', '-qm', 'init']);
+      writeFileSync(join(dir, 'small.txt'), 'hello world\n');
+
+      let calls = 0;
+      const report = runIndependentDiffReview({
+        dir,
+        outPath: join(dir, 'evidence', 'judge-diff-single.json'),
+        reviewChunk: () => {
+          calls += 1;
+          return {
+            stdout: JSON.stringify({ foundNothingExplicit: true, findings: [] })
+          };
+        }
+      });
+      expect(calls).toBe(1);
+      expect(report.chunkCount).toBe(1);
+      expect(report.completed).toBe(true);
+      expect(report.ok).toBe(true);
+      expect(report.coverageChars).toBe(report.diffChars);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+

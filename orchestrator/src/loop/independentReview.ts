@@ -60,6 +60,23 @@ export interface IndependentReviewReport {
   rawExcerpt: string;
   /** How the review was produced. */
   mode: IndependentReviewMode;
+  /**
+   * How many judge prompts ran over the split diff. Proof of multi-chunk review
+   * for release-sized diffs; 1 when the whole patch fits one budget window.
+   */
+  chunkCount?: number;
+  /**
+   * Sum of original-diff character lengths covered by reviewed chunks.
+   * Must equal `diffChars` for a complete review (no silent gap).
+   */
+  coverageChars?: number;
+  /** Character length of the full unified diff that was split for review. */
+  diffChars?: number;
+  /**
+   * True when coverageChars === diffChars and every planned chunk was reviewed.
+   * A shortfall fails the aggregate (partial coverage is never a clean pass).
+   */
+  coverageComplete?: boolean;
 }
 
 /** One refute finding from the independent judge. */
@@ -84,9 +101,10 @@ export interface IndependentReviewOptions {
   /**
    * When set, skip the live grok CLI and use this fixture report body.
    * Tests only — production never sets this.
+   * Applies to the whole review (no per-chunk live calls).
    */
   fixtureReport?: Partial<IndependentReviewReport>;
-  /** Per-run timeout for the grok CLI (ms). */
+  /** Per-chunk timeout for the grok CLI (ms). */
   timeoutMs?: number;
   /** Base vs head for the diff. Defaults to merge-base with main/master..HEAD. */
   diffRange?: string;
@@ -95,6 +113,105 @@ export interface IndependentReviewOptions {
    * Ignored when `diffRange` is unset.
    */
   diffPaths?: string[];
+  /**
+   * Test-only hook: review one chunk without spawning grok. Return raw stdout
+   * for parseJudgeJson (or garbage to simulate unparseable). Production never
+   * sets this — one blind / unparseable chunk must fail the aggregate.
+   */
+  reviewChunk?: (args: {
+    chunk: DiffChunk;
+    index: number;
+    total: number;
+    prompt: string;
+  }) => { stdout: string };
+  /**
+   * Test-only: override the per-chunk character budget (default
+   * JUDGE_PROMPT_DIFF_BUDGET). Production never sets this.
+   */
+  diffBudget?: number;
+  /**
+   * Test-only: override MAX_DIFF_REVIEW_CHUNKS. Production never sets this.
+   */
+  maxChunks?: number;
+}
+
+/**
+ * Per-prompt cap for the unified diff embedded in the judge message.
+ * Release-sized diffs exceed this; they are split into chunks rather than
+ * raising the cap (843KB will not fit one context).
+ */
+export const JUDGE_PROMPT_DIFF_BUDGET = 120_000;
+
+/**
+ * Hard ceiling on how many judge invocations one review may spawn. Hitting
+ * the bound is an explicit incomplete result, not a pass.
+ */
+export const MAX_DIFF_REVIEW_CHUNKS = 40;
+
+/** One file-scoped section of a unified diff (never mid-hunk). */
+export interface DiffFileSection {
+  /** Path from `diff --git a/X b/X`, or a placeholder when unparseable. */
+  path: string;
+  /** Exact slice of the original diff for this file (coverage source of truth). */
+  text: string;
+}
+
+/** One self-contained patch handed to a single judge invocation. */
+export interface DiffChunk {
+  /** 0-based index in the planned chunk list. */
+  index: number;
+  /** Patch text for the prompt (file-boundary pack, or mid-file piece). */
+  text: string;
+  /** Character length contributed toward full-diff coverage. */
+  coverageChars: number;
+  /**
+   * True when this piece is a mid-file split of a single file whose own diff
+   * exceeded the budget (the only allowed non-file-boundary split).
+   */
+  splitFile: boolean;
+  /** Path of the oversized file when splitFile is true. */
+  splitFilePath?: string;
+  /** 1-based part number within a split file (when splitFile). */
+  splitPart?: number;
+  /** Total parts for that oversized file (when splitFile). */
+  splitParts?: number;
+}
+
+/** Result of splitting a unified diff for multi-chunk review. */
+export interface DiffSplitResult {
+  chunks: DiffChunk[];
+  /** Full diff character length (must match sum of chunk coverage when complete). */
+  diffChars: number;
+  /** Sum of coverageChars across returned chunks. */
+  coverageChars: number;
+  /** True when more content exists than MAX_DIFF_REVIEW_CHUNKS can hold. */
+  chunkLimitExceeded: boolean;
+  /** Paths that required an inside-file split because they alone exceed budget. */
+  splitFiles: string[];
+}
+
+/** One chunk's judge outcome before aggregation. */
+export interface ChunkReviewResult {
+  index: number;
+  coverageChars: number;
+  /** True when this chunk's stdout parsed as a findings body. */
+  completed: boolean;
+  foundNothingExplicit: boolean;
+  findings: IndependentFinding[];
+  rawExcerpt: string;
+}
+
+/** Aggregate of every chunk review — the report over the WHOLE diff. */
+export interface AggregatedChunkReview {
+  completed: boolean;
+  ok: boolean;
+  foundNothingExplicit: boolean;
+  findings: IndependentFinding[];
+  chunkCount: number;
+  coverageChars: number;
+  diffChars: number;
+  coverageComplete: boolean;
+  rawExcerpt: string;
 }
 
 /**
@@ -226,18 +343,463 @@ export function hashDiff(diff: string): string {
 }
 
 /**
+ * Extract the b/ path from a `diff --git a/... b/...` header line.
+ *
+ * @param sectionText - File section starting with diff --git (ideally).
+ * @returns Path string for citations / split notices.
+ */
+export function diffSectionPath(sectionText: string): string {
+  const firstLine = sectionText.split(/\r?\n/, 1)[0] ?? '';
+  const m = /^diff --git a\/(.+?) b\/(.+)$/.exec(firstLine);
+  if (m?.[2]) return m[2];
+  // Rename / copy headers sometimes differ; fall back to ---/+++ paths.
+  const plus = /^\+\+\+ [ab]\/(.+)$/m.exec(sectionText);
+  if (plus?.[1]) return plus[1];
+  return '(unknown)';
+}
+
+/**
+ * Split a unified diff on FILE boundaries only (never mid-hunk, never mid-line).
+ * Each section is an exact slice of the original so coverage can sum to length.
+ *
+ * @param diff - Full unified diff text.
+ * @returns File sections in order of appearance.
+ */
+export function splitDiffByFile(diff: string): DiffFileSection[] {
+  if (diff.length === 0) return [];
+
+  const headerRe = /^diff --git /gm;
+  const starts: number[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = headerRe.exec(diff)) !== null) {
+    starts.push(match.index);
+  }
+
+  if (starts.length === 0) {
+    // No standard headers (rare) — whole body is one section; never invent cuts.
+    return [{ path: '(unknown)', text: diff }];
+  }
+
+  const sections: DiffFileSection[] = [];
+  // Preamble before the first file header (e.g. empty) — keep bytes for coverage.
+  if (starts[0]! > 0) {
+    const preamble = diff.slice(0, starts[0]);
+    sections.push({ path: '(preamble)', text: preamble });
+  }
+  for (let i = 0; i < starts.length; i++) {
+    const start = starts[i]!;
+    const end = i + 1 < starts.length ? starts[i + 1]! : diff.length;
+    const text = diff.slice(start, end);
+    sections.push({ path: diffSectionPath(text), text });
+  }
+  return sections;
+}
+
+/**
+ * Split one oversized file section into line-bounded pieces under budget.
+ * Mid-file split is only used when a single file's own diff exceeds the budget.
+ *
+ * @param section - File section whose text.length > budget.
+ * @param budget - Per-chunk character budget.
+ * @returns Pieces whose coverage sums to section.text.length.
+ */
+export function splitOversizedFileSection(
+  section: DiffFileSection,
+  budget: number
+): Array<{ text: string; coverageChars: number }> {
+  const text = section.text;
+  if (text.length <= budget) {
+    return [{ text, coverageChars: text.length }];
+  }
+  if (budget <= 0) {
+    // Degenerate budget: still return full coverage in one piece (caller fails).
+    return [{ text, coverageChars: text.length }];
+  }
+
+  const pieces: Array<{ text: string; coverageChars: number }> = [];
+  let offset = 0;
+  while (offset < text.length) {
+    if (text.length - offset <= budget) {
+      const rest = text.slice(offset);
+      pieces.push({ text: rest, coverageChars: rest.length });
+      break;
+    }
+    // Prefer a line break at or before budget; never cut mid-line when avoidable.
+    let cut = offset + budget;
+    const window = text.slice(offset, cut);
+    const lastNl = window.lastIndexOf('\n');
+    if (lastNl >= 0) {
+      cut = offset + lastNl + 1; // include the newline
+    } else {
+      // Single line longer than budget — unavoidable mid-line split.
+      cut = offset + budget;
+    }
+    // Always advance at least one char so a zero-width cut cannot loop forever.
+    if (cut <= offset) cut = offset + 1;
+    const piece = text.slice(offset, cut);
+    pieces.push({ text: piece, coverageChars: piece.length });
+    offset = cut;
+  }
+  return pieces;
+}
+
+/**
+ * Pack file sections into judge-sized chunks. Whole files stay together when
+ * they fit; only an oversized single file is split inside its own section.
+ *
+ * Coverage is exact original-diff character counts. A chunk-count ceiling
+ * leaves remaining content unreviewed (`chunkLimitExceeded`) rather than
+ * silently dropping it as a pass.
+ *
+ * @param diff - Full unified diff.
+ * @param budget - Max chars of original diff per chunk (default 120_000).
+ * @param maxChunks - Hard ceiling on chunk count (default MAX_DIFF_REVIEW_CHUNKS).
+ * @returns Planned chunks plus coverage / limit metadata.
+ */
+export function splitDiffIntoChunks(
+  diff: string,
+  budget: number = JUDGE_PROMPT_DIFF_BUDGET,
+  maxChunks: number = MAX_DIFF_REVIEW_CHUNKS
+): DiffSplitResult {
+  const diffChars = diff.length;
+  if (diffChars === 0) {
+    return {
+      chunks: [],
+      diffChars: 0,
+      coverageChars: 0,
+      chunkLimitExceeded: false,
+      splitFiles: []
+    };
+  }
+
+  const sections = splitDiffByFile(diff);
+  const planned: DiffChunk[] = [];
+  const splitFiles: string[] = [];
+  let packText = '';
+  let packCoverage = 0;
+
+  /**
+   * Flush the current multi-file pack as one chunk (if non-empty).
+   */
+  const flushPack = (): void => {
+    if (packCoverage === 0 && packText.length === 0) return;
+    planned.push({
+      index: planned.length,
+      text: packText,
+      coverageChars: packCoverage,
+      splitFile: false
+    });
+    packText = '';
+    packCoverage = 0;
+  };
+
+  for (const section of sections) {
+    if (section.text.length > budget) {
+      flushPack();
+      if (!splitFiles.includes(section.path)) splitFiles.push(section.path);
+      const parts = splitOversizedFileSection(section, budget);
+      for (let p = 0; p < parts.length; p++) {
+        const part = parts[p]!;
+        planned.push({
+          index: planned.length,
+          text: part.text,
+          coverageChars: part.coverageChars,
+          splitFile: true,
+          splitFilePath: section.path,
+          splitPart: p + 1,
+          splitParts: parts.length
+        });
+      }
+      continue;
+    }
+    // Pack consecutive whole files while under budget (file boundaries only).
+    if (packCoverage > 0 && packCoverage + section.text.length > budget) {
+      flushPack();
+    }
+    packText += section.text;
+    packCoverage += section.text.length;
+  }
+  flushPack();
+
+  // Re-index after planning (stable 0..n-1).
+  for (let i = 0; i < planned.length; i++) {
+    planned[i] = { ...planned[i]!, index: i };
+  }
+
+  if (planned.length <= maxChunks) {
+    const coverageChars = planned.reduce((s, c) => s + c.coverageChars, 0);
+    return {
+      chunks: planned,
+      diffChars,
+      coverageChars,
+      chunkLimitExceeded: false,
+      splitFiles
+    };
+  }
+
+  // Bound hit: return only the first maxChunks; remainder is an explicit gap.
+  const limited = planned.slice(0, maxChunks).map((c, i) => ({ ...c, index: i }));
+  const coverageChars = limited.reduce((s, c) => s + c.coverageChars, 0);
+  return {
+    chunks: limited,
+    diffChars,
+    coverageChars,
+    chunkLimitExceeded: true,
+    splitFiles
+  };
+}
+
+/**
+ * Aggregate per-chunk judge results into one report over the WHOLE diff.
+ *
+ * Rules (fail closed):
+ * - findings = union across chunks (+ meta findings for split files / limits)
+ * - completed = every chunk completed AND coverage equals full diff length AND
+ *   chunk limit was not hit
+ * - ok = completed AND every finding has passed === true (empty findings need
+ *   foundNothingExplicit from every chunk)
+ * - One unparseable / incomplete chunk ⇒ completed false / ok false
+ * - Coverage shortfall ⇒ completed false / ok false (proof of no silent gap)
+ *
+ * @param input - Diff size, planned chunks, and per-chunk outcomes.
+ * @returns Aggregate for IndependentReviewReport fields.
+ */
+export function aggregateChunkReviews(input: {
+  diffChars: number;
+  chunks: DiffChunk[];
+  results: ChunkReviewResult[];
+  chunkLimitExceeded: boolean;
+  splitFiles: string[];
+}): AggregatedChunkReview {
+  const { diffChars, chunks, results, chunkLimitExceeded, splitFiles } = input;
+  const findings: IndependentFinding[] = [];
+  const rawParts: string[] = [];
+
+  // Meta: mid-file splits are explicit — never silent cuts.
+  for (const path of splitFiles) {
+    const partsForPath = chunks.filter((c) => c.splitFile && c.splitFilePath === path);
+    const partCount = partsForPath.length > 0 ? partsForPath.length : 0;
+    findings.push({
+      title: 'oversized file split for review',
+      citation: `${path}:1`,
+      detail:
+        `File "${path}" exceeded the ${JUDGE_PROMPT_DIFF_BUDGET}-char judge budget ` +
+        `and was split into ${partCount} mid-file chunks so every byte could be ` +
+        `reviewed. This is not a product defect; it records that the file was split ` +
+        `rather than silently truncated.`,
+      passed: true
+    });
+  }
+
+  if (chunkLimitExceeded) {
+    findings.push({
+      title: 'diff chunk limit exceeded',
+      citation: 'orchestrator/src/loop/independentReview.ts:splitDiffIntoChunks',
+      detail:
+        `Review hit MAX_DIFF_REVIEW_CHUNKS (${MAX_DIFF_REVIEW_CHUNKS}); remaining ` +
+        `diff content was not judged. Explicit incomplete result — not a pass.`,
+      passed: false
+    });
+  }
+
+  let allChunksCompleted = true;
+  let allFoundNothing = true;
+  let coverageChars = 0;
+
+  // Every planned chunk must have a result; a missing result is a blind chunk.
+  if (results.length !== chunks.length) {
+    allChunksCompleted = false;
+    findings.push({
+      title: 'missing chunk review result',
+      citation: 'orchestrator/src/loop/independentReview.ts:aggregateChunkReviews',
+      detail:
+        `Expected ${chunks.length} chunk results, got ${results.length} — ` +
+        `partial coverage must never read as a clean review.`,
+      passed: false
+    });
+  }
+
+  const byIndex = new Map(results.map((r) => [r.index, r]));
+  for (const chunk of chunks) {
+    const r = byIndex.get(chunk.index);
+    if (r === undefined) {
+      allChunksCompleted = false;
+      allFoundNothing = false;
+      continue;
+    }
+    coverageChars += r.coverageChars;
+    rawParts.push(`--- chunk ${r.index + 1}/${chunks.length} ---\n${r.rawExcerpt}`);
+    if (!r.completed) {
+      allChunksCompleted = false;
+      allFoundNothing = false;
+      // Prefer the chunk's own unparseable finding when present.
+      if (r.findings.length > 0) {
+        findings.push(...r.findings);
+      } else {
+        findings.push({
+          title: 'unparseable judge output',
+          citation: 'orchestrator/src/loop/independentReview.ts:1',
+          detail: `chunk ${r.index + 1}/${chunks.length} did not return JSON — cannot verify; fail closed`,
+          passed: false
+        });
+      }
+      continue;
+    }
+    if (!r.foundNothingExplicit) allFoundNothing = false;
+    findings.push(...r.findings);
+  }
+
+  const coverageComplete =
+    coverageChars === diffChars && !chunkLimitExceeded && results.length === chunks.length;
+  if (!coverageComplete && coverageChars !== diffChars) {
+    findings.push({
+      title: 'diff coverage shortfall',
+      citation: 'orchestrator/src/loop/independentReview.ts:aggregateChunkReviews',
+      detail:
+        `Summed chunk coverage (${coverageChars}) !== full diff length (${diffChars}). ` +
+        `A coverage shortfall means the diff was not fully reviewed.`,
+      passed: false
+    });
+  }
+
+  // When every original-diff byte was reviewed, drop findings that only refuse
+  // because the model saw one chunk (or invented truncation). The old single-
+  // prompt path correctly emitted "diff truncated; cannot verify full change
+  // set" when we cut at 120k — that refusal stays whenever coverage is incomplete.
+  // With full coverage it is noise, not a product defect.
+  const productFindings = coverageComplete
+    ? findings.filter((f) => !isScopeTruncationFinding(f))
+    : findings;
+
+  const completed = allChunksCompleted && coverageComplete && !chunkLimitExceeded;
+  const foundNothingExplicit =
+    completed &&
+    allFoundNothing &&
+    productFindings.every((f) => f.passed === true) &&
+    results.every((r) => r.completed && r.foundNothingExplicit) &&
+    results.every((r) => r.findings.length === 0);
+
+  // ok: every chunk completed AND every finding passed (including meta).
+  const anyBlocker = productFindings.some((f) => f.passed === false);
+  const ok =
+    completed &&
+    !anyBlocker &&
+    (productFindings.length === 0 ? foundNothingExplicit : true);
+
+  return {
+    completed,
+    ok,
+    foundNothingExplicit,
+    findings: productFindings,
+    chunkCount: chunks.length,
+    coverageChars,
+    diffChars,
+    coverageComplete,
+    rawExcerpt: rawParts.join('\n').slice(0, 32_000)
+  };
+}
+
+/**
+ * True when a finding only complains that the judge prompt was truncated or
+ * that this chunk is not the whole release — not a product defect in the diff.
+ *
+ * @param f - Finding from a chunk judge.
+ * @returns Whether to drop it once full-diff coverage is proven.
+ */
+export function isScopeTruncationFinding(f: IndependentFinding): boolean {
+  const text = `${f.title}\n${f.detail}`.toLowerCase();
+  // Keep real mid-file product issues; only drop "I cannot see the rest" refusals.
+  // Require a truncation/scope signal — avoid dropping unrelated "cannot verify X".
+  const hasTruncationSignal =
+    /truncat/.test(text) ||
+    /incomplete review scope/.test(text) ||
+    /full change set/.test(text);
+  if (!hasTruncationSignal) return false;
+  const patterns = [
+    /diff truncated/,
+    /truncated at \d+ chars for the judge prompt/,
+    /incomplete review scope/,
+    /chunk truncation/,
+    /cannot verify full change set/,
+    /truncated mid-(file|hunk|chunk)/,
+    /mid-(file|hunk|chunk) truncated/,
+    /chunk mid-truncated/,
+    /mid-truncated/,
+    /middle truncated/,
+    /provided (unified )?diff was truncated/,
+    /only (the )?visible portions? can be judged/,
+    /judge payload/,
+    /in the (provided|judge) (chunk|payload|input)/,
+    /truncated in (the )?payload/,
+    /cannot be verified from this chunk/,
+    /not fully (present|provided|visible) in this chunk/,
+    /prompt truncated/,
+    /full offload/,
+    /offloaded prompt/,
+    /orchestrator truncation marker/,
+    /reading full offload/
+  ];
+  return patterns.some((re) => re.test(text));
+}
+
+/**
  * Build the refute prompt. The judge receives the DIFF, not a summary.
+ *
+ * Keeps the 120_000-char truncation notice for the single-chunk safety path
+ * (do not raise the cap). Callers should pass already-budgeted chunks so the
+ * truncation branch is only a last-resort guard, never the release-diff plan.
  *
  * @param slug - App slug.
  * @param commit - HEAD commit.
- * @param diff - Full unified diff.
+ * @param diff - Unified diff (full or one chunk).
+ * @param meta - Optional multi-chunk context for the judge header.
  * @returns Prompt text.
  */
-export function buildRefutePrompt(slug: string, commit: string, diff: string): string {
+export function buildRefutePrompt(
+  slug: string,
+  commit: string,
+  diff: string,
+  meta?: {
+    chunkIndex: number;
+    chunkTotal: number;
+    coverageChars: number;
+    diffChars: number;
+    splitFile?: boolean;
+    splitFilePath?: string;
+    splitPart?: number;
+    splitParts?: number;
+  }
+): string {
   const clipped =
-    diff.length > 120_000
-      ? `${diff.slice(0, 120_000)}\n\n[diff truncated at 120000 chars for the judge prompt]`
+    diff.length > JUDGE_PROMPT_DIFF_BUDGET
+      ? `${diff.slice(0, JUDGE_PROMPT_DIFF_BUDGET)}\n\n[diff truncated at ${JUDGE_PROMPT_DIFF_BUDGET} chars for the judge prompt]`
       : diff;
+
+  const chunkHeader =
+    meta !== undefined && meta.chunkTotal > 1
+      ? [
+          ``,
+          `## Chunk scope`,
+          ``,
+          `This is chunk ${meta.chunkIndex + 1} of ${meta.chunkTotal} for the full`,
+          `release diff (${meta.diffChars} chars total). Review ONLY the patch in`,
+          `this message. Other chunks are reviewed separately; findings are unioned.`,
+          meta.splitFile
+            ? `NOTE: file "${meta.splitFilePath ?? '(unknown)'}" exceeded the per-prompt ` +
+              `budget and was split — this is part ${meta.splitPart ?? '?'} of ` +
+              `${meta.splitParts ?? '?'} for that file (not a silent truncation).`
+            : `This chunk is packed on file boundaries (no mid-hunk cuts).`,
+          ``,
+          `IMPORTANT: Do NOT emit a finding titled or about "diff truncated",`,
+          `"incomplete review scope", "chunk truncation", or "cannot verify full`,
+          `change set" solely because this is one chunk of many. The orchestrator`,
+          `already reviews every chunk and aggregates coverage. Only report real`,
+          `defects visible in THIS patch. If a file in this chunk is complete here,`,
+          `judge it fully; do not invent truncation.`,
+          ``
+        ].join('\n')
+      : '';
+
   return `You are an INDEPENDENT code judge. You did NOT write this code.
 
 Review the REAL git diff for \`${slug}\` at commit ${commit}.
@@ -246,7 +808,7 @@ the diff, and FAIL anything you cannot verify.
 
 PASS is the claim that needs proof, not FAIL. If you cannot verify a change,
 it does not pass.
-
+${chunkHeader}
 ## Do not use tools
 
 The full unified diff is already in this message. Do not call tools, do not
@@ -581,6 +1143,66 @@ function emptyDiffReport(base: {
   };
 }
 
+/**
+ * Invoke grok once for a single chunk's prompt file.
+ *
+ * @param dir - App cwd for the CLI.
+ * @param prompt - Full refute prompt text.
+ * @param timeoutMs - Per-chunk spawn timeout.
+ * @returns stdout text, or an error marker when the binary cannot run.
+ */
+function invokeGrokForChunk(
+  dir: string,
+  prompt: string,
+  timeoutMs: number
+): { stdout: string; unavailable: boolean; detail: string } {
+  const taskDir = mkdtempSync(join(tmpdir(), 'redanvil-judge-diff-'));
+  const promptFile = join(taskDir, 'REFUTE_TASK.md');
+  writeFileSync(promptFile, prompt, 'utf8');
+
+  const grokArgv = buildIndependentReviewGrokArgs({
+    cwd: dir,
+    promptFile,
+    sessionId: randomUUID()
+  });
+  // grok is a .cmd shim on Windows — needs a shell. Node's shell:true joins
+  // argv without quoting, so multi-word args must be quoteForCmd'd first.
+  const useShell = process.platform === 'win32';
+  const finalArgv = useShell ? grokArgv.map(quoteForCmd) : grokArgv;
+
+  try {
+    const grok = spawnSync('grok', finalArgv, {
+      encoding: 'utf8',
+      timeout: timeoutMs,
+      maxBuffer: 16 * 1024 * 1024,
+      shell: useShell,
+      // Same allowlist as harness runGrok / lg-grok-no-secrets — not a denylist.
+      env: scrubbedEnv([])
+    });
+    if (grok.error || grok.status === null) {
+      return {
+        stdout: String(grok.stderr ?? grok.stdout ?? ''),
+        unavailable: true,
+        detail:
+          'grok CLI could not be run — independent review is required before done; ' +
+          (grok.error instanceof Error ? grok.error.message : 'non-zero or missing binary')
+      };
+    }
+    const stdout = typeof grok.stdout === 'string' ? grok.stdout : String(grok.stdout ?? '');
+    const stderr = typeof grok.stderr === 'string' ? grok.stderr : String(grok.stderr ?? '');
+    // Prefer stdout (JSON envelope). stderr is diagnostic only — concat only as
+    // a fallback when stdout is empty so parseJudgeJson can still fail closed.
+    const raw = stdout.trim().length > 0 ? stdout : `${stdout}\n${stderr}`;
+    return { stdout: raw, unavailable: false, detail: '' };
+  } finally {
+    try {
+      rmSync(taskDir, { recursive: true, force: true });
+    } catch {
+      /* temp dir may hold locked handles; harmless */
+    }
+  }
+}
+
 export function runIndependentDiffReview(opts: IndependentReviewOptions): IndependentReviewReport {
   const dir = resolve(opts.dir);
   const repo = opts.repoRoot ?? gitRoot(dir) ?? dir;
@@ -604,6 +1226,7 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
   }
 
   if (opts.fixtureReport) {
+    const split = splitDiffIntoChunks(diff);
     const report: IndependentReviewReport = {
       kind: 'independent-diff-review',
       slug,
@@ -615,7 +1238,11 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
       foundNothingExplicit: opts.fixtureReport.foundNothingExplicit ?? true,
       findings: opts.fixtureReport.findings ?? [],
       rawExcerpt: opts.fixtureReport.rawExcerpt ?? 'fixture',
-      mode: 'fixture'
+      mode: 'fixture',
+      chunkCount: opts.fixtureReport.chunkCount ?? split.chunks.length,
+      coverageChars: opts.fixtureReport.coverageChars ?? split.diffChars,
+      diffChars: opts.fixtureReport.diffChars ?? split.diffChars,
+      coverageComplete: opts.fixtureReport.coverageComplete ?? true
     };
     // Recompute ok from findings when not forced.
     if (opts.fixtureReport.ok === undefined) {
@@ -625,99 +1252,151 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
     return report;
   }
 
-  const prompt = buildRefutePrompt(slug, commit, diff);
-  // Prompt (full unified diff) lives in a file: inlining it via -p blows past
-  // the Windows command-line limit and Node's shell:true path re-splits prose
-  // unless every arg is quoteForCmd'd (see independent_judge.mjs).
-  const taskDir = mkdtempSync(join(tmpdir(), 'redanvil-judge-diff-'));
-  const promptFile = join(taskDir, 'REFUTE_TASK.md');
-  writeFileSync(promptFile, prompt, 'utf8');
+  // Split on file boundaries so every byte of a release-sized diff is judged.
+  // Never raise the per-prompt cap — 843KB will not fit one context.
+  const split = splitDiffIntoChunks(
+    diff,
+    opts.diffBudget ?? JUDGE_PROMPT_DIFF_BUDGET,
+    opts.maxChunks ?? MAX_DIFF_REVIEW_CHUNKS
+  );
+  const timeoutMs = opts.timeoutMs ?? 600_000;
+  const chunkResults: ChunkReviewResult[] = [];
+  let unavailableDetail: string | null = null;
 
-  const grokArgv = buildIndependentReviewGrokArgs({
-    cwd: dir,
-    promptFile,
-    sessionId: randomUUID()
-  });
-  // grok is a .cmd shim on Windows — needs a shell. Node's shell:true joins
-  // argv without quoting, so multi-word args must be quoteForCmd'd first.
-  const useShell = process.platform === 'win32';
-  const finalArgv = useShell ? grokArgv.map(quoteForCmd) : grokArgv;
-
-  let grok: ReturnType<typeof spawnSync>;
-  try {
-    grok = spawnSync('grok', finalArgv, {
-      encoding: 'utf8',
-      timeout: opts.timeoutMs ?? 600_000,
-      maxBuffer: 16 * 1024 * 1024,
-      shell: useShell,
-      // Same allowlist as harness runGrok / lg-grok-no-secrets — not a denylist.
-      env: scrubbedEnv([])
+  for (const chunk of split.chunks) {
+    const prompt = buildRefutePrompt(slug, commit, chunk.text, {
+      chunkIndex: chunk.index,
+      chunkTotal: split.chunks.length,
+      coverageChars: chunk.coverageChars,
+      diffChars: split.diffChars,
+      splitFile: chunk.splitFile,
+      splitFilePath: chunk.splitFilePath,
+      splitPart: chunk.splitPart,
+      splitParts: chunk.splitParts
     });
-  } finally {
-    try {
-      rmSync(taskDir, { recursive: true, force: true });
-    } catch {
-      /* temp dir may hold locked handles; harmless */
+
+    let raw: string;
+    if (opts.reviewChunk) {
+      raw = opts.reviewChunk({
+        chunk,
+        index: chunk.index,
+        total: split.chunks.length,
+        prompt
+      }).stdout;
+    } else {
+      const invoked = invokeGrokForChunk(dir, prompt, timeoutMs);
+      if (invoked.unavailable) {
+        unavailableDetail = invoked.detail;
+        chunkResults.push({
+          index: chunk.index,
+          coverageChars: chunk.coverageChars,
+          completed: false,
+          foundNothingExplicit: false,
+          findings: [
+            {
+              title: 'judge unavailable',
+              citation: 'orchestrator/src/loop/independentReview.ts:1',
+              detail: `${invoked.detail} (chunk ${chunk.index + 1}/${split.chunks.length})`,
+              passed: false
+            }
+          ],
+          rawExcerpt: invoked.stdout.slice(0, 2000)
+        });
+        // Still walk remaining chunks' coverage accounting via short-circuit:
+        // one unavailable chunk already fails the aggregate; mark the rest incomplete.
+        for (let j = chunk.index + 1; j < split.chunks.length; j++) {
+          const rest = split.chunks[j]!;
+          chunkResults.push({
+            index: rest.index,
+            coverageChars: rest.coverageChars,
+            completed: false,
+            foundNothingExplicit: false,
+            findings: [
+              {
+                title: 'judge unavailable',
+                citation: 'orchestrator/src/loop/independentReview.ts:1',
+                detail: `skipped after unavailable chunk ${chunk.index + 1} — ${invoked.detail}`,
+                passed: false
+              }
+            ],
+            rawExcerpt: ''
+          });
+        }
+        break;
+      }
+      raw = invoked.stdout;
+    }
+
+    // One retry on unparseable live output — multi-chunk reviews amplify
+    // transient CLI/schema failures, and a single flaky chunk would otherwise
+    // discard an otherwise full review (fail-closed still applies if retry fails).
+    let parsed = parseJudgeJson(raw);
+    if (parsed === null && !opts.reviewChunk) {
+      const retry = invokeGrokForChunk(dir, prompt, timeoutMs);
+      if (!retry.unavailable) {
+        raw = retry.stdout;
+        parsed = parseJudgeJson(raw);
+      }
+    }
+    if (parsed === null) {
+      chunkResults.push({
+        index: chunk.index,
+        coverageChars: chunk.coverageChars,
+        completed: false,
+        foundNothingExplicit: false,
+        findings: [
+          {
+            title: 'unparseable judge output',
+            citation: 'orchestrator/src/loop/independentReview.ts:1',
+            detail:
+              `chunk ${chunk.index + 1}/${split.chunks.length} did not return JSON — ` +
+              `cannot verify; fail closed`,
+            passed: false
+          }
+        ],
+        rawExcerpt: raw.slice(0, 4000)
+      });
+    } else {
+      chunkResults.push({
+        index: chunk.index,
+        coverageChars: chunk.coverageChars,
+        completed: true,
+        foundNothingExplicit: parsed.foundNothingExplicit === true,
+        findings: parsed.findings,
+        rawExcerpt: raw.slice(0, 4000)
+      });
     }
   }
 
-  if (grok.error || grok.status === null) {
-    const report: IndependentReviewReport = {
-      kind: 'independent-diff-review',
-      slug,
-      commit,
-      reviewedAt,
-      diffHash,
-      completed: false,
-      ok: false,
-      foundNothingExplicit: false,
-      findings: [
-        {
-          title: 'judge unavailable',
-          citation: 'orchestrator/src/loop/independentReview.ts:1',
-          detail:
-            'grok CLI could not be run — independent review is required before done; ' +
-            (grok.error instanceof Error ? grok.error.message : 'non-zero or missing binary'),
-          passed: false
-        }
-      ],
-      rawExcerpt: String(grok.stderr ?? grok.stdout ?? '').slice(0, 2000),
-      mode: 'unavailable'
-    };
-    writeReport(outPath, report);
-    return report;
-  }
+  const aggregated = aggregateChunkReviews({
+    diffChars: split.diffChars,
+    chunks: split.chunks,
+    results: chunkResults,
+    chunkLimitExceeded: split.chunkLimitExceeded,
+    splitFiles: split.splitFiles
+  });
 
-  // Prefer stdout (JSON envelope). stderr is diagnostic only — concat only as
-  // a fallback when stdout is empty so parseJudgeJson can still fail closed.
-  const stdout = typeof grok.stdout === 'string' ? grok.stdout : String(grok.stdout ?? '');
-  const stderr = typeof grok.stderr === 'string' ? grok.stderr : String(grok.stderr ?? '');
-  const raw = stdout.trim().length > 0 ? stdout : `${stdout}\n${stderr}`;
-  const parsed = parseJudgeJson(raw);
+  const mode: IndependentReviewMode =
+    unavailableDetail !== null ? 'unavailable' : 'grok';
+
   const report: IndependentReviewReport = {
     kind: 'independent-diff-review',
     slug,
     commit,
     reviewedAt,
     diffHash,
-    completed: parsed !== null,
+    completed: aggregated.completed,
     ok: false,
-    foundNothingExplicit: parsed?.foundNothingExplicit === true,
-    findings: parsed?.findings ?? [],
-    // Keep enough of multi-turn schema output for audit (each turn appends a body).
-    rawExcerpt: raw.slice(0, 32_000),
-    mode: 'grok'
+    foundNothingExplicit: aggregated.foundNothingExplicit,
+    findings: aggregated.findings,
+    rawExcerpt: aggregated.rawExcerpt,
+    mode,
+    chunkCount: aggregated.chunkCount,
+    coverageChars: aggregated.coverageChars,
+    diffChars: aggregated.diffChars,
+    coverageComplete: aggregated.coverageComplete
   };
-  if (parsed === null) {
-    report.findings = [
-      {
-        title: 'unparseable judge output',
-        citation: 'orchestrator/src/loop/independentReview.ts:1',
-        detail: 'judge did not return JSON — cannot verify; fail closed',
-        passed: false
-      }
-    ];
-  }
+  // Re-evaluate so ok never drifts from completed + findings rules.
   report.ok = evaluateReviewOk(report);
   writeReport(outPath, report);
   return report;

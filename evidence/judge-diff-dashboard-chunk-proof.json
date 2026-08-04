@@ -1,0 +1,17 @@
+{
+  "kind": "independent-diff-review",
+  "slug": "dashboard",
+  "commit": "02c871c42eed7b7346f22ab8bdf1154a75cff1bf",
+  "reviewedAt": "2026-08-04T05:17:27.843Z",
+  "diffHash": "8596eb3e6eda3c8749b6abf3bfa4ee178a27578671a6559124606300c288f66e",
+  "completed": true,
+  "ok": true,
+  "foundNothingExplicit": true,
+  "findings": [],
+  "rawExcerpt": "--- chunk 1/1 ---\n{\"foundNothingExplicit\":true,\"findings\":[]}",
+  "mode": "grok",
+  "chunkCount": 1,
+  "coverageChars": 69763,
+  "diffChars": 69763,
+  "coverageComplete": true
+}

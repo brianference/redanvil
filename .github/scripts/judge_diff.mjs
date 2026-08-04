@@ -154,14 +154,25 @@ mkdirSync(dirname(outPath), { recursive: true });
 // what is shipping, so the range is what the push would publish, path-scoped to
 // the app so one app's judge is not handed the other apps' changes.
 //
-// No upstream ref (nothing pushed yet, or a detached branch) falls back to the
-// previous behaviour rather than inventing a range.
-const upstream = (() => {
-  const r = run('git', ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'], {
+// Base ref resolution order:
+//   1. --diff-range (explicit)
+//   2. @{upstream} when configured
+//   3. origin/master or origin/main when present (feature/worktree branches
+//      often have no upstream but still need the release-sized range)
+//   4. otherwise fall back to HEAD-only (prior behaviour)
+const explicitRange = flag('diff-range', undefined);
+const releaseBase = (() => {
+  if (explicitRange !== undefined) return null; // range fully specified
+  const up = run('git', ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'], {
     cwd: repoRoot
   });
-  const name = (r.stdout ?? '').trim();
-  return r.code === 0 && name.length > 0 ? name : null;
+  const upName = (up.stdout ?? '').trim();
+  if (up.code === 0 && upName.length > 0) return upName;
+  for (const cand of ['origin/master', 'origin/main']) {
+    const c = run('git', ['rev-parse', '--verify', cand], { cwd: repoRoot });
+    if (c.code === 0 && (c.stdout ?? '').trim().length > 0) return cand;
+  }
+  return null;
 })();
 
 const helperArgs = [
@@ -176,18 +187,24 @@ const helperArgs = [
   '--timeout',
   String(timeoutSec * 1000)
 ];
-if (upstream !== null) {
+if (explicitRange !== undefined) {
+  helperArgs.push('--diff-range', explicitRange, '--diff-paths', `:(top)${slug}`);
+} else if (releaseBase !== null) {
   // `:(top)` makes the pathspec repo-root relative. The judge runs INSIDE the
   // app directory, so a bare slug resolved to <app>/<app> and produced a
   // ZERO-byte diff -- measured: 0 bytes bare, 843464 bytes with :(top). The
   // judge then spent every finding on the only file it could see, its own
   // evidence artifact, and reported "Empty product diff".
-  helperArgs.push('--diff-range', `${upstream}..HEAD`, '--diff-paths', `:(top)${slug}`);
+  helperArgs.push('--diff-range', `${releaseBase}..HEAD`, '--diff-paths', `:(top)${slug}`);
 }
 
+// Outer timeout must cover N sequential chunk reviews (release diffs can need
+// many 120k windows). Per-chunk timeout is still `timeoutSec`; this bound is
+// only a process watchdog — never truncate the diff to "fit" one prompt.
+const maxChunksWatchdog = 40;
 const res = run('npx', helperArgs, {
   env: scrubbed,
-  timeout: (timeoutSec + 30) * 1000,
+  timeout: (timeoutSec * maxChunksWatchdog + 60) * 1000,
   cwd: REPO_ROOT,
   shell: process.platform === 'win32'
 });
@@ -229,9 +246,15 @@ if (!existsSync(outPath)) {
 
 const findings = Array.isArray(report.findings) ? report.findings : [];
 const failing = findings.filter((f) => f && f.passed === false);
+const chunkCount = report.chunkCount ?? '?';
+const coverageChars = report.coverageChars ?? '?';
+const diffChars = report.diffChars ?? '?';
+const coverageComplete = report.coverageComplete;
 console.log(
   `judge_diff: completed=${report.completed} ok=${report.ok} ` +
     `findings=${findings.length} failing=${failing.length} ` +
+    `chunks=${chunkCount} coverage=${coverageChars}/${diffChars} ` +
+    `coverageComplete=${coverageComplete} ` +
     `commit=${String(report.commit ?? '').slice(0, 12)} ` +
     `report=${outPath}`
 );
