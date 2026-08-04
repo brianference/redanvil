@@ -101,6 +101,8 @@ function headCommit(dir) {
  */
 function evaluateJudgeDiffOk(report) {
   if (report.completed !== true) return false;
+  // empty-diff / nothingToReview: no judge ran — never F5 pass (not "clean").
+  if (report.mode === 'empty-diff' || report.nothingToReview === true) return false;
   const findings = Array.isArray(report.findings) ? report.findings : null;
   if (findings === null) return false;
   const blockers = findings.filter(
