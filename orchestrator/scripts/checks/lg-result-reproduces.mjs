@@ -163,7 +163,14 @@ const EVIDENCE_ONLY = [
   /(^|[/\\])evidence[/\\]/,
   /(^|[/\\])results[/\\]/,
   /(^|[/\\])verdicts[/\\]/,
-  /(^|[/\\])measurement-meta\.json$/
+  /(^|[/\\])measurement-meta\.json$/,
+  // The gate's own bookkeeping. coverage-state.json records the ratchet's
+  // baseCommit and is REWRITTEN by every gate run, so treating it as source made
+  // each app's measurement invalidate the next one's: three apps could never be
+  // fresh at the same moment and the round never converged. It is gate state,
+  // exactly like evidence, not code that the measurement describes. The
+  // ratchet's git history still proves nobody lowered highWaterPct.
+  /(^|[/\\])\.redanvil[/\\]coverage-state\.json$/
 ];
 
 /**
