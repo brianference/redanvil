@@ -19,13 +19,13 @@
     },
     "cold-primary-flow": {
       "ok": true,
-      "detail": "/ produced 2 result(s), needed 1"
+      "detail": "/ produced 3 result(s), needed 1"
     },
     "fe-cold-visitor": {
       "ok": true,
       "detail": "a first-time visitor gets a working app: 5 cold-start check(s) held"
     }
   },
-  "checkedAt": "2026-08-04T07:52:42.266Z",
+  "checkedAt": "2026-08-04T08:36:10.673Z",
   "baseUrl": "https://redanvil-dashboard.pages.dev"
 }
