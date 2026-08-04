@@ -1,0 +1,66 @@
+{
+  "verdict": "fail",
+  "findings": [],
+  "measurements": {
+    "observations": [
+      {
+        "viewportWidth": 375,
+        "viewportHeight": 844,
+        "primaryResultY": 291,
+        "primaryResultHeight": 769.9375,
+        "brandMarkHeight": 112,
+        "headerHeight": 129,
+        "heroHeight": 629.984375,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": false,
+        "route": "/",
+        "theme": "dark"
+      },
+      {
+        "viewportWidth": 375,
+        "viewportHeight": 844,
+        "primaryResultY": 291,
+        "primaryResultHeight": 769.9375,
+        "brandMarkHeight": 112,
+        "headerHeight": 129,
+        "heroHeight": 629.984375,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": false,
+        "route": "/",
+        "theme": "light"
+      },
+      {
+        "viewportWidth": 1280,
+        "viewportHeight": 900,
+        "primaryResultY": 262,
+        "primaryResultHeight": 671.5625,
+        "brandMarkHeight": 112,
+        "headerHeight": 129,
+        "heroHeight": 393.59375,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "dark"
+      },
+      {
+        "viewportWidth": 1280,
+        "viewportHeight": 900,
+        "primaryResultY": 262,
+        "primaryResultHeight": 671.5625,
+        "brandMarkHeight": 112,
+        "headerHeight": 129,
+        "heroHeight": 393.59375,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "light"
+      }
+    ],
+    "failReasons": [
+      "/ 375x844 dark: primary action is not above the fold",
+      "/ 375x844 light: primary action is not above the fold"
+    ]
+  },
+  "writtenAt": "2026-08-04T05:18:27.998Z",
+  "slug": "app-builder"
+}

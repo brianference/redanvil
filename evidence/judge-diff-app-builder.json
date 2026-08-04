@@ -1,0 +1,20 @@
+{
+  "kind": "independent-diff-review",
+  "slug": "app-builder",
+  "commit": "c157d0c1dfdf51dd788ffefb4aa58b273bfc4403",
+  "reviewedAt": "2026-08-04T04:18:17.466Z",
+  "diffHash": "6ff3aa9a373c5806df89cfaa9acd9d6842c50755d62dddf5ad48885be6adefa7",
+  "completed": false,
+  "ok": false,
+  "foundNothingExplicit": false,
+  "findings": [
+    {
+      "title": "unparseable judge output",
+      "citation": "orchestrator/src/loop/independentReview.ts:1",
+      "detail": "judge did not return JSON — cannot verify; fail closed",
+      "passed": false
+    }
+  ],
+  "rawExcerpt": "\nerror: unexpected argument 'an' found\n\nUsage: grok [OPTIONS] [PROMPT] [COMMAND]\n\nFor more information, try '--help'.\n",
+  "mode": "grok"
+}

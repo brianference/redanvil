@@ -1,0 +1,18 @@
+{
+  "verdict": "refuse",
+  "complaints": [
+    {
+      "text": "could not accomplish the app's stated purpose end to end",
+      "suggestedOwner": "engineer"
+    }
+  ],
+  "purposeAccomplished": false,
+  "answers": {
+    "primaryResultOffScreen": false,
+    "advertisedBroken": false,
+    "looksBuggy": false,
+    "looksFinished": false
+  },
+  "writtenAt": "2026-08-04T05:16:58.077Z",
+  "slug": "app-builder"
+}
