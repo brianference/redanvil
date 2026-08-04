@@ -1,24 +1,14 @@
 /**
  * Thin wrapper: supplies app-builder nav, logo, and labels to the shared drawer.
  */
-import type { RefObject } from 'react';
 import { useLocation } from 'react-router-dom';
 import { MobileDrawer as SharedMobileDrawer } from '../../../../design-system/MobileDrawer';
+import type { PageDrawerProps } from '../../../../design-system/Page';
 import { en } from '../../i18n/en';
+import { DRAWER_LOGO_HEIGHT } from './constants';
 import { Logo } from './Logo';
 import { drawerNavItems, isNavActive } from './NavLinks';
 import { iconButtonStyle } from './styles';
-
-export interface MobileDrawerProps {
-  /** Whether the drawer is open. */
-  open: boolean;
-  /** Ref for the drawer aside (focus trap). */
-  drawerRef: RefObject<HTMLElement>;
-  /** Ref for the close control (initial focus when opened). */
-  closeBtnRef: RefObject<HTMLButtonElement>;
-  /** Close the drawer. */
-  onClose: () => void;
-}
 
 /**
  * Mobile side drawer with backdrop: brand, close control, and overflow nav.
@@ -28,7 +18,7 @@ export function MobileDrawer({
   drawerRef,
   closeBtnRef,
   onClose
-}: MobileDrawerProps): JSX.Element {
+}: PageDrawerProps): JSX.Element {
   const location = useLocation();
   return (
     <SharedMobileDrawer
@@ -36,7 +26,7 @@ export function MobileDrawer({
       drawerRef={drawerRef}
       closeBtnRef={closeBtnRef}
       onClose={onClose}
-      logo={<Logo height={48} />}
+      logo={<Logo height={DRAWER_LOGO_HEIGHT} />}
       items={drawerNavItems()}
       isActive={(key) => isNavActive(location.pathname, key)}
       navLabel={en.app.primaryNav}

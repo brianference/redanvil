@@ -33,6 +33,43 @@ export interface FooterTokens {
   fontSmall: number;
 }
 
+/** Localised labels for the shared company + legal footer columns. */
+export interface CompanyLegalCopy {
+  company: string;
+  legal: string;
+  about: string;
+  contact: string;
+  terms: string;
+  privacy: string;
+}
+
+/**
+ * Company and legal footer columns (About / Contact / Terms / Privacy).
+ *
+ * Product columns differ per app; these four routes and headings do not.
+ *
+ * @param copy - Localised headings and link labels.
+ * @returns Two FooterColumn entries for company and legal.
+ */
+export function companyLegalColumns(copy: CompanyLegalCopy): FooterColumn[] {
+  return [
+    {
+      heading: copy.company,
+      links: [
+        { label: copy.about, href: '/about' },
+        { label: copy.contact, href: '/contact' }
+      ]
+    },
+    {
+      heading: copy.legal,
+      links: [
+        { label: copy.terms, href: '/terms' },
+        { label: copy.privacy, href: '/privacy' }
+      ]
+    }
+  ];
+}
+
 export interface FooterProps {
   /** Palette and spacing. */
   tokens: FooterTokens;

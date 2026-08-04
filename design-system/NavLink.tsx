@@ -61,3 +61,24 @@ export function NavLink({ item, active, onNavigate }: NavLinkProps): JSX.Element
     </a>
   );
 }
+
+/**
+ * Append a GitHub overflow item to primary header nav for the mobile drawer.
+ *
+ * Both RedAnvil shells keep GitHub out of the sticky bar and in the drawer.
+ *
+ * @param items - Primary header nav items.
+ * @param label - Localised GitHub link label.
+ * @param href - Absolute GitHub repository URL.
+ * @returns Primary items plus the external GitHub entry.
+ */
+export function withGithubNav(
+  items: readonly NavItem[],
+  label: string,
+  href: string
+): NavItem[] {
+  return [
+    ...items,
+    { key: 'github', label, to: null, href, external: true }
+  ];
+}
