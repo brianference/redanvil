@@ -20,6 +20,7 @@
  * for visual verdicts.
  */
 import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
@@ -184,6 +185,28 @@ export function evaluateStandardTool(meta, axeRules = [...AXE_REQUIRED_RULES], r
  * @param {{ axeRules?: string[], requireAxeEntries?: boolean }} [deps]
  * @returns {void}
  */
+/**
+ * Repository root for `appDir`, or `appDir` itself when git cannot answer.
+ *
+ * Falling back to appDir keeps the failure honest: an unresolvable root means
+ * cited paths do not resolve and the rule fails, rather than being skipped.
+ *
+ * @param {string} appDir App directory.
+ * @returns {string} Absolute repo root, or appDir.
+ */
+function resolveRepoRoot(appDir) {
+  try {
+    const root = execFileSync('git', ['rev-parse', '--show-toplevel'], {
+      cwd: appDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+    return root.length > 0 ? root : appDir;
+  } catch {
+    return appDir;
+  }
+}
+
 export function runMeasStandardTool(appDir, io, deps = {}) {
   const { pass, fail } = io;
   const meta = readMeasurementMeta(appDir);
@@ -191,7 +214,23 @@ export function runMeasStandardTool(appDir, io, deps = {}) {
   // app forever. Spec still wants the assertion when contrast IS measured.
   // Default: if no contrast-related meta exists at all, still require the
   // axe-required rules to be present (fail closed for the scored visual rule).
-  const failures = evaluateStandardTool(meta, deps.axeRules ?? [...AXE_REQUIRED_RULES]);
+  // Cited report paths are repo-root-relative (evidence/axe/<slug>-dark.json)
+  // and the reports live at the repo root, not inside the app. evaluateStandardTool
+  // defaults repoRoot to process.cwd(), which is only correct when the check is
+  // run from the root by hand. The gate runs it as `check.mjs <rule> .` with cwd
+  // set to the APP directory, so every cited path resolved to
+  // <app>/evidence/axe/... , which does not exist -- and the rule reported FAIL
+  // on three shipped apps whose reports were present the whole time. Standalone
+  // it passed, so the two runs disagreed and neither was trustworthy.
+  //
+  // Resolve the root the way check.mjs already does for workflows rather than
+  // inventing a second convention. A genuinely missing report still fails: the
+  // path is resolved, not skipped.
+  const failures = evaluateStandardTool(
+    meta,
+    deps.axeRules ?? [...AXE_REQUIRED_RULES],
+    deps.repoRoot ?? resolveRepoRoot(appDir)
+  );
   const ok = failures.length === 0;
   writeMeasurementMetaEntry(appDir, 'meas-standard-tool', {
     tool: 'meta-scan',

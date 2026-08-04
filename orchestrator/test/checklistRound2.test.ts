@@ -23,6 +23,7 @@ import { loadRubric } from '../src/rubric/index';
 import { APP_CHECKS } from '../src/commands/gate';
 import {
   evaluateDesignOptions,
+  resolveOptionsDir,
   runDesignOptions
 } from '../scripts/checks/proc-design-options.mjs';
 import {
@@ -322,6 +323,52 @@ describe('C9 proc-design-options', () => {
     );
     const r = await runCaptured((io) => runDesignOptions(app, io));
     expect(r.code).toBe(0);
+  });
+
+  it('PASSES when a finished options dir sorts AFTER an abandoned one', async () => {
+    // The regression this exists for: resolveOptionsDir took the alphabetically
+    // first design-refs/*options* directory. az-planting-calendar has
+    // footer-options (one file, no DECISION.md -- an exploration that was
+    // started and dropped) plus header-options and home-options, each with three
+    // distinct option HTMLs and a DECISION.md. "footer" sorts first, so the rule
+    // reported "1 option artifact(s); need >= 3" against an app that had done
+    // the step twice. Alphabetical order decided the verdict.
+    const app = makeAppDir();
+    write(app, 'src/App.tsx', 'export default function A(){return null}');
+    write(app, 'design-refs/aaa-abandoned-options/index.html', '<html><body>stub</body></html>');
+    write(app, 'design-refs/home-options/option-a.html', '<html><body>A tile grid</body></html>');
+    write(app, 'design-refs/home-options/option-b.html', '<html><body>B timeline</body></html>');
+    write(app, 'design-refs/home-options/option-c.html', '<html><body>C hero card</body></html>');
+    write(
+      app,
+      'design-refs/home-options/DECISION.md',
+      [
+        '# Design decision',
+        '',
+        'Chosen: option B (timeline chronicle).',
+        '',
+        'Why: the primary user job is scanning a history of events, so a timeline layout wins on scan speed.',
+        '',
+        'Structural distinctness: A is a tile grid, B is a vertical timeline chronicle, C is a single hero-card focus -- three different layout architectures, not recolors.'
+      ].join('\n')
+    );
+    expect(resolveOptionsDir(app)).toMatch(/home-options$/);
+    const r = await runCaptured((io) => runDesignOptions(app, io));
+    expect(r.code).toBe(0);
+  });
+
+  it('still FAILS when NO options dir qualifies, however many exist (known-bad)', async () => {
+    // The other direction, so the fix above cannot become a rule that passes on
+    // the mere presence of directories: three *options* dirs, none of which has
+    // both three artifacts and a DECISION.md, must still fail.
+    const app = makeAppDir();
+    write(app, 'src/App.tsx', 'export default function A(){return null}');
+    write(app, 'design-refs/aaa-options/index.html', '<html><body>stub</body></html>');
+    write(app, 'design-refs/bbb-options/only-one.html', '<html><body>one</body></html>');
+    write(app, 'design-refs/ccc-options/DECISION.md', '# Chosen: nothing\n\nWhy: unwritten.');
+    const r = evaluateDesignOptions(app);
+    expect(r.status).toBe('fail');
+    console.log('proc-design-options no-dir-qualifies known-bad:', r.messages[0]);
   });
 
   it('fails through check.mjs on known-bad', () => {

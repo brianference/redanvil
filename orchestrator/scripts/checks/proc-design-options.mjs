@@ -95,7 +95,22 @@ export function resolveOptionsDir(appDir) {
     .filter((e) => e.isDirectory() && /options/i.test(e.name))
     .map((e) => join(refs, e.name))
     .sort();
-  return named[0] ?? null;
+  // Taking named[0] made the verdict depend on alphabetical order. az-planting-calendar
+  // has footer-options (1 file, no DECISION.md — an exploration that was started
+  // and not finished), header-options and home-options (20 and 18 files, each
+  // with a DECISION.md and three distinct option HTMLs). `footer-options` sorts
+  // first, so the rule reported "1 option artifact, need >= 3" about an app that
+  // had completed the step twice over. That is the same false negative the
+  // any-*options* fallback above was added to stop, one layer down.
+  //
+  // Prefer a directory that actually satisfies the bar. The bar itself is
+  // unchanged: >= 3 artifacts AND a DECISION.md, both still checked by the
+  // caller. When nothing qualifies, fall back to the first so the failure
+  // message names a real directory instead of reporting none at all.
+  const qualifying = named.find(
+    (d) => existsSync(join(d, 'DECISION.md')) && listOptionArtifacts(d).length >= MIN_OPTIONS
+  );
+  return qualifying ?? named[0] ?? null;
 }
 
 /**
