@@ -175,6 +175,15 @@ const releaseBase = (() => {
   return null;
 })();
 
+// Paths the judge must see for THIS app: the app itself plus the shared code it
+// is built from. Scoping to the app directory alone handed the judge half of a
+// refactor -- the shell de-duplication moved code INTO /design-system, the judge
+// could not see where it went, and five of its findings were 'unverified' or
+// 'not in diff' rather than real defects. A reviewer that cannot see the other
+// side of a move cannot judge the move.
+const SHARED_REVIEW_PATHS = [':(top)design-system'];
+const reviewPaths = [`:(top)${slug}`, ...SHARED_REVIEW_PATHS].join(',');
+
 const helperArgs = [
   '--yes',
   'tsx',
@@ -188,14 +197,14 @@ const helperArgs = [
   String(timeoutSec * 1000)
 ];
 if (explicitRange !== undefined) {
-  helperArgs.push('--diff-range', explicitRange, '--diff-paths', `:(top)${slug}`);
+  helperArgs.push('--diff-range', explicitRange, '--diff-paths', reviewPaths);
 } else if (releaseBase !== null) {
   // `:(top)` makes the pathspec repo-root relative. The judge runs INSIDE the
   // app directory, so a bare slug resolved to <app>/<app> and produced a
   // ZERO-byte diff -- measured: 0 bytes bare, 843464 bytes with :(top). The
   // judge then spent every finding on the only file it could see, its own
   // evidence artifact, and reported "Empty product diff".
-  helperArgs.push('--diff-range', `${releaseBase}..HEAD`, '--diff-paths', `:(top)${slug}`);
+  helperArgs.push('--diff-range', `${releaseBase}..HEAD`, '--diff-paths', reviewPaths);
 }
 
 // Outer timeout must cover N sequential chunk reviews (release diffs can need
