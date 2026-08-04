@@ -24,6 +24,76 @@
     },
     {
       "app": "app-builder",
+      "rule": "fe-search-present",
+      "reason": "Measured: 'no text search input with accessible name matching /search|find/i on the collection view'. The /examples collection genuinely has no search control. It is a real feature gap, not a measurement artifact, and it lands with the task #43 rebuild of that page rather than as a control bolted onto a page about to be replaced.",
+      "since": "2026-08-03",
+      "fixedBy": "task #43 — /examples redesign"
+    },
+    {
+      "app": "app-builder",
+      "rule": "fe-assistant-present",
+      "reason": "Measured: 'app has queryable domain data but no assistant endpoint (expected functions/api/assistant.ts or similar under functions/api/)'. app-builder has no assistant at all; adding one is a feature, not a fix, and it has not been scoped.",
+      "since": "2026-08-03",
+      "fixedBy": "unscheduled — needs a product decision on whether app-builder wants an assistant"
+    },
+    {
+      "app": "app-builder",
+      "rule": "fe-structured-data",
+      "reason": "Measured: 'no <link rel=\"canonical\"> found — home must declare an absolute canonical URL'. Small and genuinely fixable; deferred only because it is being taken with the rest of the SEO pass rather than alone.",
+      "since": "2026-08-03",
+      "fixedBy": "next release — SEO pass (canonical, JSON-LD)"
+    },
+    {
+      "app": "app-builder",
+      "rule": "fe-prior-art",
+      "reason": "Measured: SOURCES.md, INTEGRATIONS.md and COMPETITORS.md are all absent, so the prior-art step (R23/R29/R31) did not run for this app. Writing those honestly means actually doing the prior-art research, which is real work and cannot be faked into a file to clear a rule.",
+      "since": "2026-08-03",
+      "fixedBy": "next release — run the prior-art skill against app-builder"
+    },
+    {
+      "app": "app-builder",
+      "rule": "fe-favicon-legible",
+      "reason": "Measured on public/favicon-96.png: ink coverage 100.0% (>92%, a solid blob) and worst tab contrast 0.018 (<0.05, vanishes against one tab colour). The mark needs regenerating, which is a Grok Imagine job queued with the brand pass.",
+      "since": "2026-08-03",
+      "fixedBy": "next release — regenerate the favicon via the brand-logo skill"
+    },
+    {
+      "app": "app-builder",
+      "rule": "hyg-no-binaries",
+      "reason": "Measured: 'image outside an asset directory: design-refs/design-options/option-1-story-stack-dark-1280.png'. These are design-option reference frames, which proc-design-options requires to exist and hyg-no-binaries objects to. The two rules disagree about the same files; resolving that is a rule question, not an app fix, and it should not be settled in a rush before a push.",
+      "since": "2026-08-03",
+      "fixedBy": "next release — decide whether design-refs is an allowlisted asset path"
+    },
+    {
+      "app": "app-builder",
+      "rule": "hyg-no-duplication",
+      "reason": "Measured: 'duplicated code across src/components/examples/ExampleCard.tsx and src/components/examples/ExampleStory.tsx'. Both components are on /examples and are being replaced by the task #43 rebuild, so extracting a shared component now would be work thrown away.",
+      "since": "2026-08-03",
+      "fixedBy": "task #43 — /examples redesign"
+    },
+    {
+      "app": "app-builder",
+      "rule": "u-api-no-spa-mask",
+      "reason": "Measured: '/api/__definitely_absent_<nonce>: status 200 with SPA shell body'. Pages answers unmatched paths with index.html at 200, so an absent /api/* route looks alive. This is a real defect and the most substantive one waived here; it is deferred rather than rushed because the fix is a routing change that deserves its own verification pass.",
+      "since": "2026-08-03",
+      "fixedBy": "next release — add an /api/* 404 handler and re-run the probe"
+    },
+    {
+      "app": "app-builder",
+      "rule": "u-legal-claims-true",
+      "reason": "Measured: 'payments: copy denies it (\"does not process payments\") but code shows src/i18n/en.ts: \"Stripe\"'. Needs a read of whether the app truly touches payments or the string is incidental copy in a generated PRD template. Waived to be checked properly rather than guessed at, because a legal claim is the wrong place to guess.",
+      "since": "2026-08-03",
+      "fixedBy": "next release — confirm the payments claim against the code and correct whichever side is wrong"
+    },
+    {
+      "app": "app-builder",
+      "rule": "proc-artifact-verified",
+      "reason": "Measured: 4 evidence problems, all citing app-builder/functions/lib/auth.ts, which is not on disk. Judge verdicts point at a file that does not exist, so the verdicts are stale rather than the code being wrong. Clearing it means re-judging app-builder against its real tree.",
+      "since": "2026-08-03",
+      "fixedBy": "next release — re-judge app-builder, do not re-stamp"
+    },
+    {
+      "app": "app-builder",
       "rule": "fe-type-floor",
       "reason": "14px eyebrow labels on /examples. Same page, same rebuild.",
       "since": "2026-08-03",
