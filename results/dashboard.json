@@ -249,7 +249,7 @@
     },
     {
       "ruleId": "meas-known-bad",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-two-run",
@@ -261,7 +261,7 @@
     },
     {
       "ruleId": "meas-standard-tool",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-engine-named",
@@ -377,14 +377,14 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-03T21:18:21.369Z",
+  "finishedAt": "2026-08-04T00:49:21.014Z",
   "provenance": {
-    "commit": "ca0400cd3efe7b566a956aab3797eec329ff811d",
+    "commit": "4b2764e398f6a242e6b3d643ef6ea4bc43dfd09b",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "2f8ee18305e141bbc59e5ce0c158da186a1661c02cb83bd06f20c9a62bfc66cc",
+    "verdictsHash": "2a0c93dc48f1b7dfaa2728296c67b81c2088b6f99427ab31b62afe2941cbd42d",
     "notApplicable": [
       "fe-assistant-present",
       "proc-pr-title-ticket",
@@ -394,6 +394,6 @@
       "u-plat-migrations"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-03T21:18:21.453Z"
+    "generatedAt": "2026-08-04T00:49:21.073Z"
   }
 }
