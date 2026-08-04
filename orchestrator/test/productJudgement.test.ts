@@ -9,12 +9,13 @@
  * like ordinary enforcement.
  *
  * Both directions are pinned: absent evidence must fail closed, and present
- * evidence must actually be found.
+ * evidence must actually be found. independentReviewOk is also commit-pinned.
  */
 import { describe, it, expect, afterEach } from 'vitest';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import {
   qaVisualOk,
   userRefuseOk,
@@ -25,10 +26,53 @@ import {
 
 const made: string[] = [];
 
+/**
+ * Init a tiny git repo under dir and return its HEAD SHA.
+ *
+ * @param dir - Empty directory to turn into a repo.
+ * @returns Full HEAD commit.
+ */
+function gitInitWithHead(dir: string): string {
+  spawnSync('git', ['init', '-q'], { cwd: dir });
+  spawnSync('git', ['config', 'user.email', 't@t'], { cwd: dir });
+  spawnSync('git', ['config', 'user.name', 't'], { cwd: dir });
+  writeFileSync(join(dir, 'seed.txt'), 'seed\n');
+  spawnSync('git', ['add', 'seed.txt'], { cwd: dir });
+  spawnSync('git', ['commit', '-qm', 'init'], { cwd: dir });
+  return spawnSync('git', ['rev-parse', 'HEAD'], {
+    cwd: dir,
+    encoding: 'utf8'
+  }).stdout.trim();
+}
+
+/**
+ * A clean judge-diff body pinned to `commit`.
+ *
+ * @param commit - SHA the review claims to cover.
+ * @param overrides - Fields to overlay (ok, findings, …).
+ */
+function judgeDiffPass(commit: string, overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'independent-diff-review',
+    slug: 'the-app',
+    commit,
+    reviewedAt: new Date().toISOString(),
+    diffHash: 'a'.repeat(64),
+    completed: true,
+    ok: true,
+    foundNothingExplicit: true,
+    findings: [],
+    rawExcerpt: 'test',
+    mode: 'fixture',
+    ...overrides
+  };
+}
+
 /** An app dir with an evidence/ folder, optionally with files written into it. */
 function appWith(files: Record<string, unknown> = {}, atRoot = false): string {
   const repo = mkdtempSync(join(tmpdir(), 'pj-'));
   made.push(repo);
+  gitInitWithHead(repo);
   const app = join(repo, 'the-app');
   mkdirSync(join(app, 'evidence'), { recursive: true });
   mkdirSync(join(repo, 'evidence'), { recursive: true });
@@ -40,6 +84,35 @@ function appWith(files: Record<string, unknown> = {}, atRoot = false): string {
     );
   }
   return app;
+}
+
+/**
+ * App under a git repo; returns { app, head }.
+ *
+ * @param files - Evidence file name → body (body may be a fn of head).
+ */
+/** Evidence body or a factory that receives the repo HEAD SHA. */
+type EvidenceBody = unknown | ((head: string) => unknown);
+
+function appWithGit(
+  files: Record<string, EvidenceBody> = {},
+  atRoot = false
+): { app: string; head: string } {
+  const repo = mkdtempSync(join(tmpdir(), 'pj-'));
+  made.push(repo);
+  const head = gitInitWithHead(repo);
+  const app = join(repo, 'the-app');
+  mkdirSync(join(app, 'evidence'), { recursive: true });
+  mkdirSync(join(repo, 'evidence'), { recursive: true });
+  for (const [name, body] of Object.entries(files)) {
+    const resolved = typeof body === 'function' ? (body as (h: string) => unknown)(head) : body;
+    writeFileSync(
+      join(atRoot ? repo : app, 'evidence', name),
+      JSON.stringify(resolved),
+      'utf8'
+    );
+  }
+  return { app, head };
 }
 
 afterEach(() => {
@@ -69,14 +142,27 @@ describe('product judgement fails closed on absent evidence', () => {
   });
 
   it('a fail / refuse verdict does not pass', () => {
-    const app = appWith({
+    const { app, head } = appWithGit({
       'qa-visual-the-app.json': { verdict: 'fail' },
       'refusal-the-app.json': { verdict: 'refuse' },
-      'independent-review-the-app.json': { verdict: 'fail', reviewer: 'grok' }
+      'judge-diff-the-app.json': (h: string) =>
+        judgeDiffPass(h, {
+          ok: false,
+          foundNothingExplicit: false,
+          findings: [
+            {
+              title: 'blocker',
+              citation: 'x.ts:1',
+              detail: 'bad',
+              passed: false
+            }
+          ]
+        })
     });
     expect(qaVisualOk(app, 'the-app')).toBe(false);
     expect(userRefuseOk(app, 'the-app')).toBe(false);
     expect(independentReviewOk(app, 'the-app')).toBe(false);
+    expect(head.length).toBeGreaterThan(6);
   });
 
   it('malformed JSON does not pass', () => {
@@ -85,23 +171,21 @@ describe('product judgement fails closed on absent evidence', () => {
     expect(qaVisualOk(app, 'the-app')).toBe(false);
   });
 
-  it('an unsigned independent review does not pass', () => {
-    // No reviewer named means nothing establishes it was not a self-review.
-    const app = appWith({ 'independent-review-the-app.json': { verdict: 'pass' } });
-    expect(independentReviewOk(app, 'the-app')).toBe(false);
-    const blank = appWith({
-      'independent-review-the-app.json': { verdict: 'pass', reviewer: '   ' }
+  it('a judge-diff without completed/ok does not pass', () => {
+    const { app } = appWithGit({
+      'judge-diff-the-app.json': (h: string) =>
+        judgeDiffPass(h, { completed: false, ok: false, foundNothingExplicit: false })
     });
-    expect(independentReviewOk(blank, 'the-app')).toBe(false);
+    expect(independentReviewOk(app, 'the-app')).toBe(false);
   });
 });
 
 describe('product judgement finds evidence that is actually there', () => {
   it('passes on real accepting evidence in the app dir', () => {
-    const app = appWith({
+    const { app } = appWithGit({
       'qa-visual-the-app.json': { verdict: 'pass' },
       'refusal-the-app.json': { verdict: 'accept' },
-      'independent-review-the-app.json': { verdict: 'pass', reviewer: 'grok-4.5' },
+      'judge-diff-the-app.json': (h: string) => judgeDiffPass(h),
       'coverage-the-app.json': { linesPct: 84.2 }
     });
     expect(loadProductJudgement(app, 'the-app')).toEqual({

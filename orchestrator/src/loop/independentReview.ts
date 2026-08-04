@@ -100,7 +100,7 @@ function gitRoot(dir: string): string | null {
  * @param dir - Git directory.
  * @returns Full SHA.
  */
-function headCommit(dir: string): string | null {
+export function headCommit(dir: string): string | null {
   try {
     return execFileSync('git', ['rev-parse', 'HEAD'], {
       cwd: dir,
@@ -423,4 +423,68 @@ export function loadIndependentReview(
   } catch {
     return null;
   }
+}
+
+/**
+ * Read evidence/judge-diff-<slug>.json from the app dir or repo-root evidence/.
+ *
+ * Fail-closed: missing, unreadable, wrong kind, or malformed → null.
+ * Does not check commit or ok — callers use independentReviewOkFromReport.
+ *
+ * @param rootDir - App or repo root.
+ * @param slug - App slug used in the evidence file name.
+ * @returns Parsed report, or null.
+ */
+export function readJudgeDiffReport(
+  rootDir: string,
+  slug: string
+): IndependentReviewReport | null {
+  // Same dual-path convention as qa-visual / refusal: app evidence/ first,
+  // then parent (repo root) evidence/.
+  const candidates = [
+    join(rootDir, 'evidence', `judge-diff-${slug}.json`),
+    join(rootDir, '..', 'evidence', `judge-diff-${slug}.json`)
+  ];
+  for (const abs of candidates) {
+    if (!existsSync(abs)) continue;
+    try {
+      const raw = JSON.parse(readFileSync(abs, 'utf8')) as IndependentReviewReport;
+      if (raw.kind !== 'independent-diff-review') continue;
+      if (typeof raw.commit !== 'string' || raw.commit.length === 0) continue;
+      if (!Array.isArray(raw.findings)) continue;
+      return raw;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+/**
+ * Whether isDone may treat the independent judge-over-diff step as satisfied.
+ *
+ * Fail-closed on every path:
+ * - missing / unparseable report → false
+ * - reviewed commit ≠ expected (stale or wrong tree) → false
+ * - incomplete review, or findings that did not pass → false
+ * - empty findings without foundNothingExplicit → false
+ * - report.ok not explicitly true → false (hand-stamped silence is not a pass)
+ *
+ * Re-evaluates findings rather than trusting a hand-authored `ok: true`.
+ *
+ * @param report - Loaded report, or null when missing.
+ * @param expectedCommit - HEAD (or gated commit) the report must be pinned to.
+ * @returns True only when the review clearly passed for this commit.
+ */
+export function independentReviewOkFromReport(
+  report: IndependentReviewReport | null,
+  expectedCommit: string | null
+): boolean {
+  if (report === null) return false;
+  if (expectedCommit === null || expectedCommit.length === 0) return false;
+  if (report.commit !== expectedCommit) return false;
+  if (report.completed !== true) return false;
+  if (report.ok !== true) return false;
+  // Recompute: a hand-authored ok:true with unresolved findings must not pass.
+  return evaluateReviewOk(report);
 }

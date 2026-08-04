@@ -146,8 +146,8 @@ export async function runLoopCommand(opts: LoopCommandOptions): Promise<LoopRun>
           rules: promoteRules
         },
         {
-          independentReviewOk: result.independentReviewOk,
-          ...loadProductJudgementOpts(worktreeDir, promoteSlug)
+          ...loadProductJudgementOpts(worktreeDir, promoteSlug),
+          independentReviewOk: result.independentReviewOk
         }
       );
       const green =
@@ -342,8 +342,8 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
   const done = isDone(
     { finalScore: loop.finalScore, threshold: opts.threshold, rules },
     {
-      independentReviewOk,
-      ...loadProductJudgementOpts(opts.dir, basename(resolve(opts.dir)))
+      ...loadProductJudgementOpts(opts.dir, basename(resolve(opts.dir))),
+      independentReviewOk
     }
   );
   if (!done.done && loop.passed) {

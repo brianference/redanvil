@@ -1,0 +1,210 @@
+#!/usr/bin/env node
+/**
+ * Produce evidence/judge-diff-<slug>.json for the independent judge-over-diff
+ * finish-line row (F5 / isDone.independentReviewOk).
+ *
+ * Modeled on independent_judge.mjs (disposable worktree, scrubbed env, grok
+ * as the independent reviewer) but reviews the DIFF, not a fixed rule list.
+ * The decision + report shape live in ONE place:
+ *   orchestrator/src/loop/independentReview.ts
+ * This driver never hand-authors a passing report — it runs the reviewer and
+ * records what came back, findings and all.
+ *
+ * Usage:
+ *   node judge_diff.mjs <appDir> [--out evidence/judge-diff-<slug>.json]
+ *                                [--timeout 600] [--repo-root <path>]
+ *
+ * Exit 0 when a report was written and the review completed (ok may still be
+ * false — unresolved findings are recorded, not papered over).
+ * Exit 1 when the reviewer could not be run or did not complete.
+ * Exit 2 on usage error.
+ */
+import { writeFileSync, existsSync, mkdtempSync, rmSync, mkdirSync } from 'node:fs';
+import { join, basename, resolve, dirname } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = join(here, '..', '..');
+const HELPER = join(REPO_ROOT, 'orchestrator', 'scripts', 'team', 'judge-diff-run.mts');
+
+const args = process.argv.slice(2);
+const appDirArg = args[0];
+if (appDirArg === undefined || appDirArg.startsWith('--')) {
+  console.error(
+    'usage: node judge_diff.mjs <appDir> [--out f.json] [--timeout 600] [--repo-root path]'
+  );
+  process.exit(2);
+}
+
+/**
+ * Read a `--name value` flag.
+ *
+ * @param {string} name
+ * @param {string | undefined} fallback
+ * @returns {string | undefined}
+ */
+const flag = (name, fallback) => {
+  const i = args.indexOf(`--${name}`);
+  return i === -1 ? fallback : args[i + 1];
+};
+
+const appDir = resolve(appDirArg);
+const slug = basename(appDir);
+const repoRoot = resolve(flag('repo-root', REPO_ROOT));
+const outPath = resolve(
+  flag('out', join(repoRoot, 'evidence', `judge-diff-${slug}.json`))
+);
+const timeoutSec = Number(flag('timeout', '600'));
+
+/**
+ * Run a command, returning {code, stdout, stderr}.
+ *
+ * @param {string} cmd
+ * @param {string[]} cmdArgs
+ * @param {import('node:child_process').SpawnSyncOptions} [opts]
+ */
+const run = (cmd, cmdArgs, opts = {}) => {
+  const r = spawnSync(cmd, cmdArgs, {
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+    ...opts
+  });
+  return { code: r.status ?? 1, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+};
+
+const head = run('git', ['rev-parse', 'HEAD'], { cwd: appDir }).stdout.trim();
+if (head.length === 0) {
+  console.error('judge_diff FAIL: not a git repository (or HEAD unreadable)');
+  process.exit(1);
+}
+
+// Disposable worktree: the reviewer gets a clean checkout of HEAD so nothing
+// it does can reach the working tree, matching independent_judge.mjs.
+const wt = mkdtempSync(join(tmpdir(), 'redanvil-judge-diff-'));
+const worktreePath = join(wt, 'tree');
+const added = run('git', ['worktree', 'add', '--detach', worktreePath, head], {
+  cwd: repoRoot
+});
+if (added.code !== 0) {
+  console.error(`judge_diff FAIL: could not create worktree\n${added.stderr}`);
+  process.exit(1);
+}
+
+/**
+ * Remove the worktree. Junctions are unlinked first (same hazard as
+ * independent_judge.mjs): `git worktree remove` must not follow a junction
+ * into a real node_modules.
+ */
+function cleanup() {
+  const nm = join(worktreePath, 'node_modules');
+  if (existsSync(nm) && process.platform === 'win32') {
+    run('cmd', ['/c', 'rmdir', nm]);
+  }
+  run('git', ['worktree', 'remove', '--force', worktreePath], { cwd: repoRoot });
+  run('git', ['worktree', 'prune'], { cwd: repoRoot });
+  try {
+    rmSync(wt, { recursive: true, force: true });
+  } catch {
+    /* temp dir may hold locked handles; harmless */
+  }
+}
+
+// Review the app path inside the worktree when it exists there; otherwise the
+// worktree root (monorepo app dirs like dashboard/, app-builder/).
+const appRel = appDir.startsWith(repoRoot)
+  ? appDir.slice(repoRoot.length).replace(/^[/\\]/, '')
+  : '';
+const reviewDir =
+  appRel.length > 0 && existsSync(join(worktreePath, appRel))
+    ? join(worktreePath, appRel)
+    : worktreePath;
+
+console.log(`judge_diff: ${slug} @ ${head.slice(0, 12)} (worktree ${reviewDir})`);
+
+// Credentials must not reach the independent reviewer.
+const scrubbed = { ...process.env };
+for (const k of Object.keys(scrubbed)) {
+  if (/TOKEN|KEY|SECRET|PASSWORD|CREDENTIAL/i.test(k)) delete scrubbed[k];
+}
+
+// Call the ONE decision implementation via tsx — never reimplement ok/findings
+// logic here. Out path is absolute under the real repo so the evidence file
+// lands where loadProductJudgementOpts / productJudgement look for it.
+mkdirSync(dirname(outPath), { recursive: true });
+
+const helperArgs = [
+  '--yes',
+  'tsx',
+  HELPER,
+  reviewDir,
+  '--out',
+  outPath,
+  '--repo-root',
+  repoRoot,
+  '--timeout',
+  String(timeoutSec * 1000)
+];
+
+const res = run('npx', helperArgs, {
+  env: scrubbed,
+  timeout: (timeoutSec + 30) * 1000,
+  cwd: REPO_ROOT,
+  shell: process.platform === 'win32'
+});
+
+cleanup();
+
+if (res.code !== 0 && res.stdout.trim().length === 0) {
+  console.error(
+    `judge_diff FAIL: helper exited ${res.code} with no output.\n` +
+      `${res.stderr.slice(0, 800)}\n` +
+      `A judge that could not be run must NOT be recorded as agreement.`
+  );
+  process.exit(1);
+}
+
+/** @type {Record<string, unknown> | null} */
+let report = null;
+try {
+  const line = res.stdout.trim().split(/\r?\n/).filter(Boolean).pop() ?? '';
+  report = JSON.parse(line);
+} catch {
+  report = null;
+}
+
+if (report === null || typeof report !== 'object') {
+  console.error(
+    'judge_diff FAIL: could not parse IndependentReviewReport from helper output. ' +
+      'Unparseable is not the same as a clean review.'
+  );
+  if (res.stderr) console.error(res.stderr.slice(0, 800));
+  process.exit(1);
+}
+
+// Ensure the file is on disk at outPath (helper writes it; re-write if needed
+// so a partial helper path still leaves an auditable artifact).
+if (!existsSync(outPath)) {
+  writeFileSync(outPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+}
+
+const findings = Array.isArray(report.findings) ? report.findings : [];
+const failing = findings.filter((f) => f && f.passed === false);
+console.log(
+  `judge_diff: completed=${report.completed} ok=${report.ok} ` +
+    `findings=${findings.length} failing=${failing.length} ` +
+    `commit=${String(report.commit ?? '').slice(0, 12)} ` +
+    `report=${outPath}`
+);
+for (const f of failing) {
+  console.log(`  FAIL  ${f.title} (${f.citation})`);
+  if (f.detail) console.log(`        ${String(f.detail).slice(0, 200)}`);
+}
+
+if (report.completed !== true) {
+  process.exit(1);
+}
+// Exit 0 with a written report even when ok is false — the gate reads the
+// file and fails closed on unresolved findings. That is not a rubber stamp.
+process.exit(0);
