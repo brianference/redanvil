@@ -16,6 +16,11 @@ export interface StrangerRequiredPage {
 export interface StrangerExpectations {
   /** What the app is for -- fed to StrangerView.appDescription. */
   purposeSentence: string;
+  /**
+   * Query a stranger would type into the primary search/filter for THIS app
+   * (a real crop, run slug, etc. from that app's domain -- never another app's).
+   */
+  searchQuery: string;
   /** Footer-linked pages that must load with real substance. */
   requiredPages: readonly StrangerRequiredPage[];
 }

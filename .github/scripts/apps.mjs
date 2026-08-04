@@ -11,7 +11,8 @@
  *
  * @typedef {{
  *   purposeSentence: string,
- *   requiredPages: readonly StrangerRequiredPage[]
+ *   requiredPages: readonly StrangerRequiredPage[],
+ *   searchQuery: string
  * }} StrangerExpectations
  *
  * @typedef {{
@@ -39,9 +40,12 @@ export const APPS = Object.freeze([
     wizard: true,
     na: 'process',
     // Copied from app-builder/src/i18n: footer labels + page h1 titles (LegalPage).
+    // searchQuery: a domain word a stranger types into example/prompt search when
+    // present (examples catalog uses marketplace makers prompts).
     stranger: Object.freeze({
       purposeSentence:
         'RedAnvil turns a plain-language prompt into a complete, downloadable product requirements document (PRD) you can hand to a coding agent.',
+      searchQuery: 'marketplace',
       requiredPages: Object.freeze([
         Object.freeze({ path: '/about', linkName: 'About', headingText: 'About RedAnvil' }),
         Object.freeze({ path: '/terms', linkName: 'Terms', headingText: 'Terms and Conditions' }),
@@ -67,9 +71,12 @@ export const APPS = Object.freeze([
     na: 'process',
     // Copied from az-planting-calendar/src/i18n/en.ts: footer.* link labels +
     // about/terms/privacy/contact page titles (rendered as the page h1).
+    // searchQuery: real crop name in the shipped az1005 catalog (API returns
+    // "Tomatoes" for q=Tomato).
     stranger: Object.freeze({
       purposeSentence:
         'Arizona low-desert planting calendar: search a crop and see when to plant it (seed or transplant) for Cave Creek / Maricopa County.',
+      searchQuery: 'Tomato',
       requiredPages: Object.freeze([
         Object.freeze({ path: '/about', linkName: 'About', headingText: 'About this calendar' }),
         Object.freeze({
@@ -93,9 +100,12 @@ export const APPS = Object.freeze([
     na: 'process',
     // Copied from dashboard/src/i18n/en.ts: app.footer* link labels + pages.*.title
     // (Page shell h1). Not az-planting-calendar copy.
+    // searchQuery: a real run slug on the public feed (results/all.json shows
+    // "dashboard" and "app-builder") -- what a stranger types after reading the list.
     stranger: Object.freeze({
       purposeSentence:
         'RedAnvil forges full-stack web apps behind an automated quality gate. This site is the public, read-only dashboard for RedAnvil\'s own build run results.',
+      searchQuery: 'dashboard',
       requiredPages: Object.freeze([
         Object.freeze({ path: '/about', linkName: 'About', headingText: 'About' }),
         Object.freeze({ path: '/terms', linkName: 'Terms', headingText: 'Terms' }),
