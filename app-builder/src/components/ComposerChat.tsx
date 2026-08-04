@@ -63,8 +63,10 @@ export function ComposerChat({
             These were two speech bubbles labelled "RedAnvil", which read as a
             conversation the user had already had — reported as "it is unclear
             that the left are instructions, they look like chat bubbles". A
-            numbered list says what to do; a bubble implies someone said it. */}
-        <section aria-labelledby="how-heading" style={howPanelStyle}>
+            numbered list says what to do; a bubble implies someone said it.
+            data-measure=hero marks this primary onboarding band for qa-visual
+            (same role as dashboard's KPI strip) — no visible style change. */}
+        <section aria-labelledby="how-heading" style={howPanelStyle} data-measure="hero">
           <h2 id="how-heading" style={howHeadingStyle}>
             {copy.howHeading}
           </h2>
@@ -122,7 +124,7 @@ export function ComposerChat({
         )}
       </div>
 
-      <div className="ra-chat-composer">
+      <div className="ra-chat-composer" data-testid="wizard-composer">
         {/* Above the composer, not below it. A template is an alternative to
             typing a description, so it has to be visible BEFORE the user starts
             typing one — under the panel it only ever got read after the work it

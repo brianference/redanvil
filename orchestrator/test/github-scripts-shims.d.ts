@@ -99,6 +99,7 @@ declare module '../../.github/scripts/meets_the_bar.mjs' {
 }
 
 declare module '../../.github/scripts/apps.mjs' {
+  export type CoreFlow = 'search' | 'wizard';
   export interface GatedApp {
     slug: string;
     dir: string;
@@ -107,8 +108,10 @@ declare module '../../.github/scripts/apps.mjs' {
     widthRoutes: string | null;
     e2e: boolean;
     wizard: boolean;
+    coreFlow: CoreFlow;
     na: string;
   }
   export const APPS: readonly GatedApp[];
   export function appBySlug(slug: string): GatedApp | undefined;
+  export function coreFlowForSlug(slug: string): CoreFlow;
 }

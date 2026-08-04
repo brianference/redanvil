@@ -69,7 +69,11 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
   const saving = saveState.status === 'loading';
 
   return (
-    <section className="ra-content-col" aria-label={copy.sectionLabel}>
+    <section
+      className="ra-content-col"
+      aria-label={copy.sectionLabel}
+      data-testid="prd-result"
+    >
       <div style={heroStyle}>
         <p style={readyBadgeStyle}>
           <span aria-hidden="true">✓ </span>

@@ -1,24 +1,32 @@
 #!/usr/bin/env node
 /**
  * Real QA-visual measurement harness: drives the deployed app, exercises the
- * primary control (search), measures where the result actually renders, and
- * writes evidence/qa-visual-<slug>.json via the ONE decision + report
- * implementation in orchestrator/src/team/qaVisual.ts (never reimplemented
- * here -- a hand-rolled copy is exactly how two "identical" checks disagree).
+ * primary control (search OR wizard forge), measures where the result actually
+ * renders, and writes evidence/qa-visual-<slug>.json via the ONE decision +
+ * report implementation in orchestrator/src/team/qaVisual.ts (never
+ * reimplemented here -- a hand-rolled copy is exactly how two "identical"
+ * checks disagree).
  *
- * Search models (discovered from the live page, not hard-coded per slug):
- *   - api-submit: `search-submit` present -- type query, wait for API
- *     response, click submit (az-planting-calendar /api/crops).
- *   - client-filter: no submit control -- type into filter-search and wait
- *     for the rendered result set to settle on a state that differs from the
- *     pre-query baseline (dashboard). Never wait on a network event that
- *     will not fire; never treat "could not measure" as pass.
+ * Core flow is declared per app in apps.mjs (`coreFlow: 'search' | 'wizard'`):
+ *   - search (default for most apps):
+ *       api-submit: `search-submit` present -- type query, wait for API
+ *         response, click submit (az-planting-calendar /api/crops).
+ *       client-filter: no submit control -- type into filter-search and wait
+ *         for the rendered result set to settle (dashboard).
+ *   - wizard (app-builder): drive chat → wizard → Forge PRD via the shared
+ *       drive_wizard_forge.mjs (same steps as e2e_smoke_app_builder). A real
+ *       visible PRD is the primary result. A forge that does not produce a
+ *       result fails closed (exit 1), never "measured fine".
+ *
+ * Never wait on a network event that will not fire; never treat "could not
+ * measure" as pass. Do not add a fake search control to a wizard app.
  *
  * Usage:
  *   node qa_visual.mjs <baseUrl> <slug> [--route /] [--query tomato] [--root dir]
  *
  * Exit 0 = qa-visual report is a real pass AND the self-check held.
- * Exit 1 = qa-visual report failed (including search that does not narrow).
+ * Exit 1 = qa-visual report failed (including search that does not narrow /
+ *          wizard that does not produce a PRD).
  * Exit 2 = infrastructure (playwright missing, tsx helper failed, bad args).
  *
  * Reuses the theme-seeding pattern from screenshots.mjs (the app resolves
@@ -33,6 +41,8 @@ import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { appBySlug, coreFlowForSlug } from './apps.mjs';
+import { driveWizardForge } from './drive_wizard_forge.mjs';
 
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -284,17 +294,17 @@ async function measurePrimaryResultBox(page) {
 /**
  * Measure one (width, theme) observation against the live app.
  *
- * Search model is discovered from the page: a `search-submit` control means
+ * Core flow comes from apps.mjs (`coreFlow`). For search apps, the search
+ * model is still discovered from the page: a `search-submit` control means
  * API/submit search (az-planting-calendar); its absence means client-side
- * filter (dashboard). Declaring this in apps.mjs would work but would drift
- * if an app changes architecture without a harness update -- the DOM is the
- * ground truth the visitor experiences.
+ * filter (dashboard). For wizard apps, drive_wizard_forge.mjs runs the same
+ * chat → Forge PRD path as e2e_smoke_app_builder.
  *
  * @param {import('playwright').Browser} browser
- * @param {{ baseUrl: string, route: string, width: number, theme: 'dark'|'light', query: string }} opts
+ * @param {{ baseUrl: string, route: string, width: number, theme: 'dark'|'light', query: string, coreFlow: 'search'|'wizard' }} opts
  * @returns {Promise<{ metrics: import('../../orchestrator/src/team/qaVisual').QaVisualMetrics, truncatedElements: unknown[], apiStatus: number|string|null, consoleErrors: string[], searchMode: string, searchNarrowed: boolean }>}
  */
-async function measureObservation(browser, { baseUrl, route, width, theme, query }) {
+async function measureObservation(browser, { baseUrl, route, width, theme, query, coreFlow }) {
   const height = HEIGHT_FOR_WIDTH[width] ?? 900;
   const page = await browser.newPage({
     viewport: { width, height },
@@ -316,7 +326,13 @@ async function measureObservation(browser, { baseUrl, route, width, theme, query
 
     await page.goto(new URL(route, baseUrl).href, { waitUntil: 'networkidle' });
     await page.getByTestId('compact-header').waitFor({ state: 'visible' });
-    await page.getByTestId('filter-search').waitFor({ state: 'visible' });
+
+    if (coreFlow === 'wizard') {
+      // Primary control is the composer, not filter-search (app has no search).
+      await page.getByRole('textbox', { name: /describe your app/i }).waitFor({ state: 'visible' });
+    } else {
+      await page.getByTestId('filter-search').waitFor({ state: 'visible' });
+    }
 
     // --- Default cold-state measurements, before any interaction ---
     const headerHeight = (await page.locator('[data-measure="header"]').boundingBox())?.height ?? 0;
@@ -328,66 +344,124 @@ async function measureObservation(browser, { baseUrl, route, width, theme, query
     ).first();
     const heroHeight = (await heroLocator.boundingBox())?.height ?? 0;
 
-    const searchControlBox = await page.getByTestId('live-search').boundingBox();
-    const primaryActionAboveFold =
-      searchControlBox !== null && searchControlBox.y < height && searchControlBox.y + searchControlBox.height > 0;
+    let primaryActionAboveFold = false;
+    if (coreFlow === 'wizard') {
+      // Composer is the primary action; fall back to instrumented testid.
+      const composer =
+        (await page.getByTestId('wizard-composer').count()) > 0
+          ? page.getByTestId('wizard-composer')
+          : page.getByRole('textbox', { name: /describe your app/i });
+      const composerBox = await composer.first().boundingBox();
+      primaryActionAboveFold =
+        composerBox !== null &&
+        composerBox.y < height &&
+        composerBox.y + composerBox.height > 0;
+    } else {
+      const searchControlBox = await page.getByTestId('live-search').boundingBox();
+      primaryActionAboveFold =
+        searchControlBox !== null &&
+        searchControlBox.y < height &&
+        searchControlBox.y + searchControlBox.height > 0;
+    }
 
     const truncatedElements = await page.evaluate(TRUNCATION_SOURCE);
     const truncatedElementCount = truncatedElements.length;
-
-    // Discover search architecture from the live DOM, not from a slug table.
-    const hasSearchSubmit = (await page.getByTestId('search-submit').count()) > 0;
-    const searchMode = hasSearchSubmit ? 'api-submit' : 'client-filter';
 
     let apiStatus = null;
     let searchNarrowed = false;
     let primaryResultY = null;
     let primaryResultHeight = 0;
+    let searchMode = 'client-filter';
 
-    if (searchMode === 'api-submit') {
-      // --- API / submit model (az-planting-calendar): keep prior behaviour ---
-      const encoded = encodeURIComponent(query);
-      const responseWait = page.waitForResponse(
-        (r) => r.url().includes('/api/crops') && r.url().includes(`q=${encoded}`)
-      );
-      await page.getByTestId('filter-search').fill(query);
-      const apiResponse = await responseWait;
-      apiStatus = apiResponse.status();
+    if (coreFlow === 'wizard') {
+      // --- Wizard forge (app-builder): shared driver, same steps as e2e ---
+      searchMode = 'wizard-forge';
+      const forge = await driveWizardForge(page, { prompt: query });
+      apiStatus = forge.submitStatus ?? (forge.submitOk ? 200 : 'wizard-forge-failed');
+      searchNarrowed = forge.prdVisible === true;
 
-      await Promise.race([
-        page.locator('#search-result-count').waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {}),
-        page.getByTestId('search-live-error').waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {})
-      ]);
-      await page.getByTestId('search-submit').click();
-      // A successful API round-trip plus a visible result panel counts as
-      // exercise of search; the pure decision still fails closed if y is null.
-      searchNarrowed = true;
+      if (!searchNarrowed) {
+        // Fail closed: no invented y when forge did not produce a visible PRD.
+        primaryResultY = null;
+        primaryResultHeight = 0;
+        if (forge.error) {
+          consoleErrors.push(`wizard-forge: ${forge.error}`.slice(0, 200));
+        }
+      } else {
+        // Prefer the instrumented PRD region; fall back to download control box.
+        const prdLocator = page.getByTestId('prd-result');
+        if ((await prdLocator.count()) > 0) {
+          const box = await waitForStableBoundingBox(prdLocator.first());
+          if (box) {
+            primaryResultY = box.y;
+            primaryResultHeight = box.height;
+          }
+        }
+        if (primaryResultY === null) {
+          const download = page
+            .getByRole('link', { name: /download \.md/i })
+            .or(page.getByRole('button', { name: /download \.md/i }));
+          if ((await download.count()) > 0) {
+            const box = await waitForStableBoundingBox(download.first());
+            if (box) {
+              primaryResultY = box.y;
+              primaryResultHeight = box.height;
+            }
+          }
+        }
+        // PRD visible by role but no measurable box still fails the pure
+        // decision (primaryResultY null) -- never invent a y.
+      }
+    } else {
+      // Discover search architecture from the live DOM, not from a slug table.
+      const hasSearchSubmit = (await page.getByTestId('search-submit').count()) > 0;
+      searchMode = hasSearchSubmit ? 'api-submit' : 'client-filter';
 
-      const resultsLocator = page.getByTestId('search-results');
-      if ((await resultsLocator.count()) > 0) {
-        const box = await waitForStableBoundingBox(resultsLocator);
-        if (box) {
+      if (searchMode === 'api-submit') {
+        // --- API / submit model (az-planting-calendar): keep prior behaviour ---
+        const encoded = encodeURIComponent(query);
+        const responseWait = page.waitForResponse(
+          (r) => r.url().includes('/api/crops') && r.url().includes(`q=${encoded}`)
+        );
+        await page.getByTestId('filter-search').fill(query);
+        const apiResponse = await responseWait;
+        apiStatus = apiResponse.status();
+
+        await Promise.race([
+          page.locator('#search-result-count').waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {}),
+          page.getByTestId('search-live-error').waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {})
+        ]);
+        await page.getByTestId('search-submit').click();
+        // A successful API round-trip plus a visible result panel counts as
+        // exercise of search; the pure decision still fails closed if y is null.
+        searchNarrowed = true;
+
+        const resultsLocator = page.getByTestId('search-results');
+        if ((await resultsLocator.count()) > 0) {
+          const box = await waitForStableBoundingBox(resultsLocator);
+          if (box) {
+            primaryResultY = box.y;
+            primaryResultHeight = box.height;
+          }
+        }
+      } else {
+        // --- Client-side filter model (dashboard): type and wait on results ---
+        const baseline = await captureResultSignature(page);
+        await page.getByTestId('filter-search').fill(query);
+        const settled = await waitForSettledResultChange(page, baseline);
+        searchNarrowed = settled.changed;
+        apiStatus = 'client-filter';
+
+        if (!searchNarrowed) {
+          // Fail closed on product grounds: primary result stays missing so the
+          // pure decision reports fail. Do not invent a measured y.
+          primaryResultY = null;
+          primaryResultHeight = 0;
+        } else {
+          const box = await measurePrimaryResultBox(page);
           primaryResultY = box.y;
           primaryResultHeight = box.height;
         }
-      }
-    } else {
-      // --- Client-side filter model (dashboard): type and wait on results ---
-      const baseline = await captureResultSignature(page);
-      await page.getByTestId('filter-search').fill(query);
-      const settled = await waitForSettledResultChange(page, baseline);
-      searchNarrowed = settled.changed;
-      apiStatus = 'client-filter';
-
-      if (!searchNarrowed) {
-        // Fail closed on product grounds: primary result stays missing so the
-        // pure decision reports fail. Do not invent a measured y.
-        primaryResultY = null;
-        primaryResultHeight = 0;
-      } else {
-        const box = await measurePrimaryResultBox(page);
-        primaryResultY = box.y;
-        primaryResultHeight = box.height;
       }
     }
 
@@ -479,6 +553,24 @@ export async function main() {
       `knownGood -> ${selfcheckResult.goodVerdict} (expected pass)`
   );
 
+  /** @type {'search'|'wizard'} */
+  let coreFlow;
+  try {
+    coreFlow = coreFlowForSlug(opts.slug);
+  } catch (err) {
+    console.error(`qa-visual INFRA: ${String(err.message ?? err)}`);
+    return 2;
+  }
+  console.log(`coreFlow for ${opts.slug}: ${coreFlow}`);
+
+  // Default query for search apps stays the CLI default ('tomato'); for wizard
+  // apps use the per-app stranger forge prompt when the caller left the default.
+  let query = opts.query;
+  if (coreFlow === 'wizard' && (query === 'tomato' || query === '')) {
+    const app = appBySlug(opts.slug);
+    if (app?.stranger?.searchQuery) query = app.stranger.searchQuery;
+  }
+
   const browser = await chromium.launch();
   const observations = [];
   const debugByObservation = [];
@@ -490,7 +582,8 @@ export async function main() {
           route: opts.route,
           width,
           theme,
-          query: opts.query
+          query,
+          coreFlow
         });
         observations.push(result.metrics);
         debugByObservation.push({ width, theme, ...result });
@@ -504,7 +597,9 @@ export async function main() {
         );
         if (!result.searchNarrowed) {
           console.log(
-            '  search did not change the rendered result set -- fail closed (not measured as fine)'
+            coreFlow === 'wizard'
+              ? '  wizard forge did not produce a visible PRD -- fail closed (not measured as fine)'
+              : '  search did not change the rendered result set -- fail closed (not measured as fine)'
           );
         }
         if (result.consoleErrors.length > 0) {

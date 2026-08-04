@@ -19,16 +19,19 @@
  * decideUserRefuse / buildRefusalReport / writeRefusalReport -- the one
  * decision implementation, not a reimplementation of it.
  *
- * Search models (discovered from the live page, same convention as
- * qa_visual.mjs -- not hard-coded per slug):
- *   - api-submit: `search-submit` present -- type query, click submit, require
- *     at least one visible matching result item (az-planting-calendar /api/crops).
- *   - client-filter: no submit control -- type into filter-search and wait
- *     for the rendered result set to settle with at least one real result item
- *     still visible (dashboard). Emptying the list ("No runs match …") is NOT
- *     a working search -- itemCount must stay > 0. Never wait on a network
- *     event that will not fire; never treat "could not measure" or a zero-hit
- *     empty state as accept; never measure an empty-state message as resultY.
+ * Core flow is declared per app in apps.mjs (`coreFlow: 'search' | 'wizard'`):
+ *   - search (discovered from the live page, same as qa_visual.mjs):
+ *       api-submit: `search-submit` present -- type query, click submit, require
+ *         at least one visible matching result item (az-planting-calendar).
+ *       client-filter: no submit -- type into filter-search and wait for the
+ *         result set to settle with itemCount >= 1 (dashboard). Emptying the
+ *         list is NOT a working search.
+ *   - wizard (app-builder): drive chat → Forge PRD via drive_wizard_forge.mjs
+ *       (same steps as e2e_smoke_app_builder). A visible PRD is purpose done.
+ *       A forge that does not produce a result is refuse, never accept.
+ * Never wait on a network event that will not fire; never treat "could not
+ * measure" or a zero-hit empty state as accept; never add a fake search
+ * control to a wizard app.
  *
  * Before trusting a single measurement of the real site, the measurer is
  * validated against userRefuse.ts's own fixtures: knownBadBelowFoldStrangerView
@@ -49,7 +52,8 @@ import { tmpdir } from 'node:os';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { APPS, appBySlug } from './apps.mjs';
+import { APPS, appBySlug, coreFlowForSlug } from './apps.mjs';
+import { driveWizardForge } from './drive_wizard_forge.mjs';
 
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -377,17 +381,18 @@ export function strangerExpectationsForSlug(slug) {
  * Walk the deployed app as a first-time stranger at one viewport width.
  * Fresh browser context every call -- no seeded storage, no forced theme.
  *
- * Search model is discovered from the live DOM (same as qa_visual.mjs): a
- * `search-submit` control means API/submit search; its absence means
- * client-side filter. Declaring this in apps.mjs would drift if an app
- * changes architecture -- the DOM is what the visitor experiences.
+ * Core flow comes from apps.mjs. For search apps, the model is still
+ * discovered from the live DOM (same as qa_visual.mjs). For wizard apps,
+ * drive_wizard_forge.mjs exercises chat → Forge PRD.
  *
  * @param {import('playwright').Browser} browser
  * @param {string} baseUrl
  * @param {{ width: number, height: number, label: string }} viewport
  * @param {readonly import('./apps.mjs').StrangerRequiredPage[]} requiredPages
  *   Per-app footer routes (path, link name, heading) from apps.mjs.
- * @param {string} query Search string the stranger types into the primary control.
+ * @param {string} query Text the stranger types into the primary control
+ *   (search query for search apps; forge prompt for wizard apps).
+ * @param {'search'|'wizard'} coreFlow Primary product flow from apps.mjs.
  * @returns {Promise<{
  *   label: string,
  *   purposeClear: boolean,
@@ -405,7 +410,7 @@ export function strangerExpectationsForSlug(slug) {
  *   consoleErrors: string[]
  * }>}
  */
-async function walkAsStranger(browser, baseUrl, viewport, requiredPages, query) {
+async function walkAsStranger(browser, baseUrl, viewport, requiredPages, query, coreFlow) {
   const ctx = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
   await ctx.setDefaultTimeout(15_000);
   const page = await ctx.newPage();
@@ -418,14 +423,23 @@ async function walkAsStranger(browser, baseUrl, viewport, requiredPages, query) 
 
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
 
-  // Wait for the primary control when the app instruments it -- dashboard
-  // hides search until the runs feed is ready, so networkidle alone is not
-  // enough to know the list is interactive.
+  // Wait for the primary control for THIS flow. Search apps: filter-search
+  // (dashboard hides it until the feed is ready). Wizard apps: composer.
   const filterSearch = page.getByTestId('filter-search');
-  try {
-    await filterSearch.waitFor({ state: 'visible', timeout: 15_000 });
-  } catch {
-    // No filter-search (or never became visible) -- purpose/search checks fail closed below.
+  if (coreFlow === 'wizard') {
+    try {
+      await page
+        .getByRole('textbox', { name: /describe your app/i })
+        .waitFor({ state: 'visible', timeout: 15_000 });
+    } catch {
+      // Composer never became visible -- purpose/flow checks fail closed below.
+    }
+  } else {
+    try {
+      await filterSearch.waitFor({ state: 'visible', timeout: 15_000 });
+    } catch {
+      // No filter-search -- purpose/search checks fail closed below.
+    }
   }
 
   // --- Is it obvious within one screen what this is and who it's for? ---
@@ -447,101 +461,145 @@ async function walkAsStranger(browser, baseUrl, viewport, requiredPages, query) 
     topIsInFold(headingBox, viewport.height) &&
     headingText.trim().length > 0;
 
-  // --- Is the primary action (search / filter) discoverable without scrolling? ---
-  // Prefer the shared filter-search testid; fall back to live-search chrome.
-  const searchControl =
-    (await filterSearch.count()) > 0 ? filterSearch.first() : page.getByTestId('live-search').first();
-  const searchBoxVisible = (await searchControl.count()) > 0;
-  const searchBox = searchBoxVisible ? await searchControl.boundingBox() : null;
-  const searchDiscoverable = topIsInFold(searchBox, viewport.height);
+  // --- Is the primary action discoverable without scrolling? ---
+  // Search: filter-search / live-search. Wizard: composer (no fake search).
+  let searchDiscoverable = false;
+  let searchBoxVisible = false;
+  if (coreFlow === 'wizard') {
+    const composer =
+      (await page.getByTestId('wizard-composer').count()) > 0
+        ? page.getByTestId('wizard-composer').first()
+        : page.getByRole('textbox', { name: /describe your app/i }).first();
+    searchBoxVisible = (await composer.count()) > 0;
+    const composerBox = searchBoxVisible ? await composer.boundingBox() : null;
+    searchDiscoverable = topIsInFold(composerBox, viewport.height);
+  } else {
+    const searchControl =
+      (await filterSearch.count()) > 0 ? filterSearch.first() : page.getByTestId('live-search').first();
+    searchBoxVisible = (await searchControl.count()) > 0;
+    const searchBox = searchBoxVisible ? await searchControl.boundingBox() : null;
+    searchDiscoverable = topIsInFold(searchBox, viewport.height);
+  }
 
   // --- Does the primary action produce a visible result where they're looking? ---
-  // Discover architecture from the live DOM (mirrors qa_visual.mjs).
-  const hasSearchSubmit = (await page.getByTestId('search-submit').count()) > 0;
-  const searchMode = hasSearchSubmit ? 'api-submit' : 'client-filter';
-
+  let searchMode = coreFlow === 'wizard' ? 'wizard-forge' : 'client-filter';
   let searchWorked = false;
   let resultY = null;
 
-  if (searchBoxVisible && searchMode === 'api-submit') {
-    // API / submit model (az-planting-calendar): type, submit, require at
-    // least one real result item whose text matches the query. Zero hits
-    // (empty list / "no crops") is search NOT working -- never measure y.
-    await filterSearch.fill(query);
-    const submit = page.getByTestId('search-submit').first();
-    try {
-      await submit.click();
-    } catch {
-      // fall through -- count element wait below will fail closed
-    }
-    const countEl = page.getByTestId('search-result-count');
-    try {
-      await countEl.first().waitFor({ state: 'visible', timeout: 10_000 });
-      // The count text echoes the QUERY back ("1 crop matches Tomato"), not
-      // the matched crop's name -- the real evidence that the right crop
-      // surfaced is the rendered result item's own name text.
-      const resultItems = page.getByTestId('search-result-item');
-      const itemCount = await resultItems.count();
-      const itemTexts = [];
-      for (let i = 0; i < itemCount; i += 1) {
-        itemTexts.push((await resultItems.nth(i).textContent()) ?? '');
+  if (coreFlow === 'wizard') {
+    // Wizard forge: shared driver (same steps as e2e_smoke_app_builder).
+    // A real visible PRD is the core flow working. No PRD => refuse.
+    const forge = await driveWizardForge(page, { prompt: query });
+    if (!forge.prdVisible) {
+      searchWorked = false;
+      resultY = null;
+      if (forge.error) consoleErrors.push(`wizard-forge: ${forge.error}`.slice(0, 160));
+    } else {
+      const prdLocator = page.getByTestId('prd-result');
+      if ((await prdLocator.count()) > 0) {
+        const box = await waitForStableBoundingBox(prdLocator.first());
+        resultY = box !== null ? box.y : null;
       }
-      const matched = resultItemsMatchQuery(query, itemTexts);
-      if (matched && itemCount >= 1) {
-        // Prefer the first matching result item y; fall back to the count bar.
-        let y = null;
+      if (resultY === null) {
+        const download = page
+          .getByRole('link', { name: /download \.md/i })
+          .or(page.getByRole('button', { name: /download \.md/i }));
+        if ((await download.count()) > 0) {
+          const box = await waitForStableBoundingBox(download.first());
+          resultY = box !== null ? box.y : null;
+        }
+      }
+      searchWorked = resultY !== null && Number.isFinite(resultY);
+      // Visible by role but unmeasurable y still fails closed (no invented y).
+      if (!searchWorked) {
+        resultY = null;
+      }
+    }
+  } else if (searchBoxVisible) {
+    // Discover architecture from the live DOM (mirrors qa_visual.mjs).
+    const hasSearchSubmit = (await page.getByTestId('search-submit').count()) > 0;
+    searchMode = hasSearchSubmit ? 'api-submit' : 'client-filter';
+
+    if (searchMode === 'api-submit') {
+      // API / submit model (az-planting-calendar): type, submit, require at
+      // least one real result item whose text matches the query. Zero hits
+      // (empty list / "no crops") is search NOT working -- never measure y.
+      await filterSearch.fill(query);
+      const submit = page.getByTestId('search-submit').first();
+      try {
+        await submit.click();
+      } catch {
+        // fall through -- count element wait below will fail closed
+      }
+      const countEl = page.getByTestId('search-result-count');
+      try {
+        await countEl.first().waitFor({ state: 'visible', timeout: 10_000 });
+        // The count text echoes the QUERY back ("1 crop matches Tomato"), not
+        // the matched crop's name -- the real evidence that the right crop
+        // surfaced is the rendered result item's own name text.
+        const resultItems = page.getByTestId('search-result-item');
+        const itemCount = await resultItems.count();
+        const itemTexts = [];
         for (let i = 0; i < itemCount; i += 1) {
-          if (resultItemsMatchQuery(query, [itemTexts[i] ?? ''])) {
-            const itemBox = await resultItems.nth(i).boundingBox();
-            if (itemBox !== null) {
-              y = itemBox.y;
-              break;
+          itemTexts.push((await resultItems.nth(i).textContent()) ?? '');
+        }
+        const matched = resultItemsMatchQuery(query, itemTexts);
+        if (matched && itemCount >= 1) {
+          // Prefer the first matching result item y; fall back to the count bar.
+          let y = null;
+          for (let i = 0; i < itemCount; i += 1) {
+            if (resultItemsMatchQuery(query, [itemTexts[i] ?? ''])) {
+              const itemBox = await resultItems.nth(i).boundingBox();
+              if (itemBox !== null) {
+                y = itemBox.y;
+                break;
+              }
             }
           }
+          if (y === null) {
+            const box = await countEl.first().boundingBox();
+            y = box !== null ? box.y : null;
+          }
+          resultY = y;
+          searchWorked = resultY !== null && Number.isFinite(resultY);
+        } else {
+          // Zero hits or no text match: refuse. Do not measure empty-state y.
+          searchWorked = false;
+          resultY = null;
         }
-        if (y === null) {
-          const box = await countEl.first().boundingBox();
-          y = box !== null ? box.y : null;
-        }
-        resultY = y;
-        searchWorked = resultY !== null && Number.isFinite(resultY);
-      } else {
-        // Zero hits or no text match: refuse. Do not measure empty-state y.
+      } catch {
         searchWorked = false;
         resultY = null;
       }
-    } catch {
-      searchWorked = false;
-      resultY = null;
-    }
-  } else if (searchBoxVisible && searchMode === 'client-filter') {
-    // Client-side filter model (dashboard): type and wait for the result set
-    // to settle. "Changed" alone is not enough -- a filter that empties the
-    // list (No runs match "Tomato") is search NOT working. Require itemCount
-    // >= 1 and never measure an empty-state status as primary result y.
-    const baseline = await captureResultSignature(page);
-    await filterSearch.fill(query);
-    const settled = await waitForSettledResultChange(page, baseline);
-    if (!hasRealMatchingResults(settled)) {
-      searchWorked = false;
-      resultY = null;
     } else {
-      // Confirm at least one visible item text matches the query (stranger
-      // typed a slug substring and still sees a real row).
-      const itemTexts = await page.evaluate(() => {
-        const root = document.querySelector('[data-testid="search-results"]');
-        if (!root) return [];
-        return [...root.querySelectorAll(
-          'li, [role="option"], .live-search__item, [data-testid="search-result-item"], a[href^="/run/"]'
-        )].map((el) => (el.textContent ?? '').trim());
-      });
-      if (!resultItemsMatchQuery(query, itemTexts)) {
+      // Client-side filter model (dashboard): type and wait for the result set
+      // to settle. "Changed" alone is not enough -- a filter that empties the
+      // list (No runs match "Tomato") is search NOT working. Require itemCount
+      // >= 1 and never measure an empty-state status as primary result y.
+      const baseline = await captureResultSignature(page);
+      await filterSearch.fill(query);
+      const settled = await waitForSettledResultChange(page, baseline);
+      if (!hasRealMatchingResults(settled)) {
         searchWorked = false;
         resultY = null;
       } else {
-        const box = await measurePrimaryResultBox(page);
-        resultY = box.y;
-        searchWorked = resultY !== null && Number.isFinite(resultY);
+        // Confirm at least one visible item text matches the query (stranger
+        // typed a slug substring and still sees a real row).
+        const itemTexts = await page.evaluate(() => {
+          const root = document.querySelector('[data-testid="search-results"]');
+          if (!root) return [];
+          return [...root.querySelectorAll(
+            'li, [role="option"], .live-search__item, [data-testid="search-result-item"], a[href^="/run/"]'
+          )].map((el) => (el.textContent ?? '').trim());
+        });
+        if (!resultItemsMatchQuery(query, itemTexts)) {
+          searchWorked = false;
+          resultY = null;
+        } else {
+          const box = await measurePrimaryResultBox(page);
+          resultY = box.y;
+          searchWorked = resultY !== null && Number.isFinite(resultY);
+        }
       }
     }
   }
@@ -713,8 +771,18 @@ export async function main() {
     return EXIT_INFRA;
   }
 
+  /** @type {'search'|'wizard'} */
+  let coreFlow;
+  try {
+    coreFlow = coreFlowForSlug(opts.slug);
+  } catch (err) {
+    console.error(`user-refuse INFRA: ${String(err.message ?? err)}`);
+    return EXIT_INFRA;
+  }
+
   console.log(
-    `stranger expectations for ${opts.slug}: ${expectations.requiredPages.length} required pages, ` +
+    `stranger expectations for ${opts.slug}: coreFlow=${coreFlow}, ` +
+      `${expectations.requiredPages.length} required pages, ` +
       `searchQuery="${searchQuery}", ` +
       `purpose="${expectations.purposeSentence.slice(0, 80)}${expectations.purposeSentence.length > 80 ? '…' : ''}"`
   );
@@ -735,7 +803,11 @@ export async function main() {
     return EXIT_INFRA;
   }
 
-  console.log(`search query: "${searchQuery}"`);
+  console.log(
+    coreFlow === 'wizard'
+      ? `forge prompt: "${searchQuery.slice(0, 80)}${searchQuery.length > 80 ? '…' : ''}"`
+      : `search query: "${searchQuery}"`
+  );
 
   const browser = await chromium.launch();
   let runs;
@@ -747,7 +819,8 @@ export async function main() {
         opts.baseUrl,
         vp,
         expectations.requiredPages,
-        searchQuery
+        searchQuery,
+        coreFlow
       );
       runs.push(r);
       console.log(
@@ -760,7 +833,9 @@ export async function main() {
       );
       if (!r.searchWorked) {
         console.log(
-          '  search did not leave at least one real matching result visible -- fail closed (empty state is not a result)'
+          coreFlow === 'wizard'
+            ? '  wizard forge did not leave a visible PRD result -- fail closed (not measured as fine)'
+            : '  search did not leave at least one real matching result visible -- fail closed (empty state is not a result)'
         );
       }
       if (r.legalPageFailures.length > 0) {
