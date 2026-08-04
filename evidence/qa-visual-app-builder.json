@@ -1,5 +1,5 @@
 {
-  "verdict": "fail",
+  "verdict": "pass",
   "findings": [],
   "measurements": {
     "observations": [
@@ -10,9 +10,9 @@
         "primaryResultHeight": 769.9375,
         "brandMarkHeight": 112,
         "headerHeight": 129,
-        "heroHeight": 629.984375,
+        "heroHeight": 592.984375,
         "truncatedElementCount": 0,
-        "primaryActionAboveFold": false,
+        "primaryActionAboveFold": true,
         "route": "/",
         "theme": "dark"
       },
@@ -23,9 +23,9 @@
         "primaryResultHeight": 769.9375,
         "brandMarkHeight": 112,
         "headerHeight": 129,
-        "heroHeight": 629.984375,
+        "heroHeight": 592.984375,
         "truncatedElementCount": 0,
-        "primaryActionAboveFold": false,
+        "primaryActionAboveFold": true,
         "route": "/",
         "theme": "light"
       },
@@ -36,7 +36,7 @@
         "primaryResultHeight": 671.5625,
         "brandMarkHeight": 112,
         "headerHeight": 129,
-        "heroHeight": 393.59375,
+        "heroHeight": 377.59375,
         "truncatedElementCount": 0,
         "primaryActionAboveFold": true,
         "route": "/",
@@ -49,18 +49,15 @@
         "primaryResultHeight": 671.5625,
         "brandMarkHeight": 112,
         "headerHeight": 129,
-        "heroHeight": 393.59375,
+        "heroHeight": 377.59375,
         "truncatedElementCount": 0,
         "primaryActionAboveFold": true,
         "route": "/",
         "theme": "light"
       }
     ],
-    "failReasons": [
-      "/ 375x844 dark: primary action is not above the fold",
-      "/ 375x844 light: primary action is not above the fold"
-    ]
+    "failReasons": []
   },
-  "writtenAt": "2026-08-04T05:18:27.998Z",
+  "writtenAt": "2026-08-04T05:28:42.262Z",
   "slug": "app-builder"
 }

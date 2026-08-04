@@ -1,18 +1,13 @@
 {
-  "verdict": "refuse",
-  "complaints": [
-    {
-      "text": "could not accomplish the app's stated purpose end to end",
-      "suggestedOwner": "engineer"
-    }
-  ],
-  "purposeAccomplished": false,
+  "verdict": "accept",
+  "complaints": [],
+  "purposeAccomplished": true,
   "answers": {
     "primaryResultOffScreen": false,
     "advertisedBroken": false,
     "looksBuggy": false,
-    "looksFinished": false
+    "looksFinished": true
   },
-  "writtenAt": "2026-08-04T05:16:58.077Z",
+  "writtenAt": "2026-08-04T05:27:37.437Z",
   "slug": "app-builder"
 }
