@@ -15,6 +15,11 @@ import { basename, join, resolve } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { quoteForCmd, scrubbedEnv } from '../process/run';
+import {
+  allFailingFindingsAccepted,
+  type AcceptedFinding
+} from '../gate/acceptedFindings.mjs';
+import { reviewPinCommit } from '../git/newestSourceCommit.mjs';
 
 /**
  * How the independent review was produced.
@@ -1207,7 +1212,9 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
   const dir = resolve(opts.dir);
   const repo = opts.repoRoot ?? gitRoot(dir) ?? dir;
   const slug = basename(dir);
-  const commit = headCommit(dir) ?? 'unknown';
+  // Pin to the app's newest SOURCE commit (not repo HEAD). Evidence-only commits
+  // the gate itself makes must not force a re-review; a real source edit must.
+  const commit = reviewPinCommit(dir) ?? headCommit(dir) ?? 'unknown';
   const diff = collectDiff(dir, opts.diffRange, opts.diffPaths);
   const diffHash = hashDiff(diff);
   const reviewedAt = new Date().toISOString();
@@ -1495,30 +1502,58 @@ export function readJudgeDiffReport(
 }
 
 /**
+ * Options for release-path acceptance of individual failing findings.
+ */
+export interface IndependentReviewOkOpts {
+  /** App slug the acceptances are scoped to (defaults to report.slug). */
+  app?: string;
+  /**
+   * Per-finding acceptances from `.redanvil/known-issues.json`.
+   * Each must name one app, one finding (title+citation), one commit.
+   * Wildcards / 'all' are rejected by the loader and never match here.
+   */
+  acceptedFindings?: ReadonlyArray<AcceptedFinding>;
+}
+
+/**
  * Whether isDone may treat the independent judge-over-diff step as satisfied.
  *
  * Fail-closed on every path:
  * - missing / unparseable report → false
  * - reviewed commit ≠ expected (stale or wrong tree) → false
- * - incomplete review, or findings that did not pass → false
+ * - incomplete review / empty-diff → false
  * - empty findings without foundNothingExplicit → false
- * - report.ok not explicitly true → false (hand-stamped silence is not a pass)
+ * - failing findings not each listed as accepted at this commit → false
  *
- * Re-evaluates findings rather than trusting a hand-authored `ok: true`.
+ * Clean path: re-evaluates findings rather than trusting a hand-authored `ok`.
+ * Acceptance path: every failing finding must be individually listed for the
+ * app at the reviewed commit. A waiver records a decision; it does not hide
+ * the defect (callers still print the findings).
  *
  * @param report - Loaded report, or null when missing.
- * @param expectedCommit - HEAD (or gated commit) the report must be pinned to.
- * @returns True only when the review clearly passed for this commit.
+ * @param expectedCommit - App's newest SOURCE commit the report must match.
+ * @param opts - Optional per-finding acceptances for this release.
+ * @returns True only when the review is clean, or every failure is accepted.
  */
 export function independentReviewOkFromReport(
   report: IndependentReviewReport | null,
-  expectedCommit: string | null
+  expectedCommit: string | null,
+  opts: IndependentReviewOkOpts = {}
 ): boolean {
   if (report === null) return false;
   if (expectedCommit === null || expectedCommit.length === 0) return false;
   if (report.commit !== expectedCommit) return false;
   if (report.completed !== true) return false;
-  if (report.ok !== true) return false;
-  // Recompute: a hand-authored ok:true with unresolved findings must not pass.
-  return evaluateReviewOk(report);
+  // empty-diff / nothingToReview: no judge ran — never F5 pass.
+  if (report.mode === 'empty-diff' || report.nothingToReview === true) return false;
+
+  // Clean path: recompute from findings (hand-stamped ok:true with blockers fails).
+  if (evaluateReviewOk(report)) return true;
+
+  // Acceptance path: every failing finding individually accepted at this commit.
+  const blockers = report.findings.filter((f) => f.passed === false);
+  if (blockers.length === 0) return false;
+  const app = opts.app ?? report.slug;
+  const accepted = opts.acceptedFindings ?? [];
+  return allFailingFindingsAccepted(report, accepted, app);
 }

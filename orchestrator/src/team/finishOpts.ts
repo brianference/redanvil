@@ -2,15 +2,17 @@
  * Load product-judgement opts for isDone from evidence on disk.
  *
  * qaVisualOk, userRefuseOk and independentReviewOk are fail-closed when the
- * files are absent (SPEC §3, §3b, §6). independentReviewOk is also pinned to
- * HEAD: a report for a different commit is not evidence for this gate.
+ * files are absent (SPEC §3, §3b, §6). independentReviewOk is pinned to the
+ * app's newest SOURCE commit (not repo HEAD): a report for a different source
+ * tree is not evidence for this gate; an evidence-only commit does not age it.
  */
 
 import {
-  headCommit,
   independentReviewOkFromReport,
   readJudgeDiffReport
 } from '../loop/independentReview';
+import { loadAcceptedFindings } from '../gate/acceptedFindings.mjs';
+import { gitRoot, reviewPinCommit } from '../git/newestSourceCommit.mjs';
 import { qaVisualOkFromReport, readQaVisualReport } from './qaVisual';
 import { readRefusalReport, userRefuseOkFromReport } from './userRefuse';
 
@@ -20,7 +22,10 @@ import { readRefusalReport, userRefuseOkFromReport } from './userRefuse';
 export interface ProductJudgementOpts {
   qaVisualOk: boolean;
   userRefuseOk: boolean;
-  /** Independent judge-over-diff at HEAD; false when missing or stale. */
+  /**
+   * Independent judge-over-diff at the app's newest source commit; false when
+   * missing, stale, incomplete, or carrying unaccepted failing findings.
+   */
   independentReviewOk: boolean;
 }
 
@@ -33,13 +38,16 @@ export interface ProductJudgementOpts {
  * @returns Opts that pass only when each report accepts (fail-closed).
  */
 export function loadProductJudgementOpts(appDir: string, slug: string): ProductJudgementOpts {
-  const expectedCommit = headCommit(appDir);
+  const expectedCommit = reviewPinCommit(appDir);
+  const report = readJudgeDiffReport(appDir, slug);
+  const root = gitRoot(appDir);
+  const accepted = root !== null ? loadAcceptedFindings(root, slug) : [];
   return {
     qaVisualOk: qaVisualOkFromReport(readQaVisualReport(appDir, slug)),
     userRefuseOk: userRefuseOkFromReport(readRefusalReport(appDir, slug)),
-    independentReviewOk: independentReviewOkFromReport(
-      readJudgeDiffReport(appDir, slug),
-      expectedCommit
-    )
+    independentReviewOk: independentReviewOkFromReport(report, expectedCommit, {
+      app: slug,
+      acceptedFindings: accepted
+    })
   };
 }

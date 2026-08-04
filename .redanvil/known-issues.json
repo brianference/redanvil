@@ -7,13 +7,25 @@
     "what happens when shared-file changes pull every app into the push range.",
     "",
     "RULES FOR THIS FILE:",
-    "  - Every entry names ONE app and ONE rule. No wildcards, no 'all'.",
+    "  - Every entry names ONE app and ONE rule (waivers) or ONE finding",
+    "    (acceptedFindings: title + citation). No wildcards, no 'all'.",
     "  - Every entry states why it is accepted and what will fix it.",
     "  - `since` is the date it was first accepted. An entry that keeps being",
     "    renewed is a decision to look at, not a fact of life.",
     "  - lg-shipped is NOT waivable. Ship proof is the one thing a release cannot",
-    "    take on credit; enforced in code, not by convention."
+    "    take on credit; enforced in code, not by convention.",
+    "",
+    "acceptedFindings (F5 independent judge-diff):",
+    "  - Each entry names ONE app, ONE finding (title + citation), the reviewed",
+    "    commit, a date, and why it is accepted for this release.",
+    "  - independentReviewOk is true only when the report exists, is complete,",
+    "    is pinned to the app's newest SOURCE commit, AND every failing finding",
+    "    is individually listed here at that commit.",
+    "  - A missing/stale/incomplete report still fails regardless of this list.",
+    "  - An entry whose commit does not match the current review does not apply.",
+    "  - Blankets, wildcards, and 'all' are rejected in code and never match."
   ],
+  "acceptedFindings": [],
   "waivers": [
     {
       "app": "app-builder",

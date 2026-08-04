@@ -24,7 +24,12 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { APPS, appBySlug } from './apps.mjs';
 import { isDone } from '../../orchestrator/src/gate/done.mjs';
-import { loadProductJudgement } from '../../orchestrator/src/team/productJudgement.mjs';
+import {
+  listAcceptedFailingFindings,
+  loadAcceptedFindings
+} from '../../orchestrator/src/gate/acceptedFindings.mjs';
+import { newestSourceCommit as newestSourceCommitShared } from '../../orchestrator/src/git/newestSourceCommit.mjs';
+import { loadProductJudgement, readJudgeDiffForApp } from '../../orchestrator/src/team/productJudgement.mjs';
 
 /** Default gate threshold — matches the loop-gate bar. */
 export const DEFAULT_THRESHOLD = 90;
@@ -197,28 +202,16 @@ export function isAncestor(repoRoot, commit, head = 'HEAD') {
 /**
  * Newest commit that touches app source (not gate-output paths under the app).
  *
+ * Single implementation lives in orchestrator/src/git/newestSourceCommit.mjs —
+ * re-exported here so F5, visual freshness, and results freshness share one
+ * definition of "source moved".
+ *
  * @param {string} repoRoot Repository root.
  * @param {string} appDir App directory relative to repo root.
  * @returns {string | null}
  */
 export function newestSourceCommit(repoRoot, appDir) {
-  // Gate outputs under the app (coverage-state, local evidence) must not count
-  // as "source moved" or every re-measure would look like a source edit.
-  const out = gitOut(repoRoot, [
-    'log',
-    '-1',
-    '--format=%H',
-    '--',
-    appDir,
-    `:(exclude)${appDir}/.redanvil/coverage-state.json`,
-    `:(exclude)${appDir}/evidence`,
-    `:(exclude)${appDir}/results`,
-    `:(exclude)${appDir}/dist`,
-    `:(exclude)${appDir}/coverage`,
-    `:(exclude)${appDir}/test-results`,
-    `:(exclude)${appDir}/node_modules`
-  ]);
-  return out && out.length > 0 ? out : null;
+  return newestSourceCommitShared(repoRoot, appDir);
 }
 
 /**
@@ -717,6 +710,21 @@ export function evaluateApp(repoRoot, app, opts = {}) {
         (w?.fixedBy ? ` [fixed by: ${w.fixedBy}]` : '') +
         (w?.since ? ` (since ${w.since})` : '')
     );
+  }
+
+  // F5 accepted findings: still printed as failures (with WAIVED), never hidden.
+  // independentReviewOk may be true so the row does not block, but the defect
+  // stays visible — same shape as rule waivers above.
+  const judgeReport = readJudgeDiffForApp(join(repoRoot, app.dir), slug);
+  if (judgeReport !== null) {
+    const accepted = loadAcceptedFindings(repoRoot, slug);
+    for (const f of listAcceptedFailingFindings(judgeReport, accepted, slug)) {
+      console.log(
+        `  WAIVED  ${slug}/F5 "${f.title}" @ ${f.citation} — ${f.reason}` +
+          (f.fixedBy ? ` [fixed by: ${f.fixedBy}]` : '') +
+          (f.since ? ` (since ${f.since})` : '')
+      );
+    }
   }
 
   // Always surface freshness/visual detail even when isDone already collapsed them.
