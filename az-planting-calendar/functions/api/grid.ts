@@ -2,7 +2,7 @@ import { FilterQuerySchema } from '../../src/lib/schemas';
 import type { AppContext } from '../lib/env';
 import { getAllCrops, getAllWindows } from '../lib/db';
 import { json, optionsResponse } from '../lib/http';
-import { expandHalfMonthRange } from '../lib/gridMath';
+import { expandHalfMonthRange } from '../lib/dates';
 import { queryValidationError, resolveZoneOrError } from '../lib/queryErrors';
 
 /**

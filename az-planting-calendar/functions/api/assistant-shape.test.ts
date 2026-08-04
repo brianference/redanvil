@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CropRow, WindowWithSource } from '../lib/db';
+import { AssistantFiltersSchema } from '../../src/lib/schemas';
 import {
-  AssistantFiltersSchema,
   buildAnswer,
   extractJsonObject,
   groundFilters,

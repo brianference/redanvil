@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import type { AppContext } from '../lib/env';
 import {
   getCropsByIds,
@@ -20,6 +19,11 @@ import {
   checkAndConsumeRateLimit,
   clientKeyFromRequest
 } from '../lib/rateLimit';
+import {
+  AssistantFiltersSchema,
+  AssistantRequestSchema,
+  type AssistantFilters
+} from '../../src/lib/schemas';
 
 /**
  * Workers AI model for turning a gardening sentence into filter values only.
@@ -53,22 +57,6 @@ export function modelText(result: ModelResult): string {
   if (typeof chat === 'string' && chat.trim() !== '') return chat;
   return typeof result.response === 'string' ? result.response : '';
 }
-
-const AssistantBodySchema = z.object({
-  message: z.string().trim().min(1).max(500),
-  zone: z.string().trim().min(1).max(80).optional()
-});
-
-/** Filters the model is allowed to emit (never used as SQL text). */
-export const AssistantFiltersSchema = z
-  .object({
-    half_month: z.number().int().min(0).max(23).optional(),
-    method: z.enum(['S', 'T']).optional(),
-    crop: z.string().trim().min(1).max(100).optional()
-  })
-  .strict();
-
-export type AssistantFilters = z.infer<typeof AssistantFiltersSchema>;
 
 const SYSTEM_PROMPT = `You convert a low-desert gardening question into filter values for AZ Planting Calendar.
 Return ONLY a single JSON object, no markdown, no commentary, no prose answers.
@@ -355,7 +343,7 @@ export async function onRequestPost(context: AppContext): Promise<Response> {
     return errorJson(request, 'Assistant binding unavailable (AI missing)', 503);
   }
 
-  const parsedBody = await readJsonBody(request, AssistantBodySchema, 'Invalid message');
+  const parsedBody = await readJsonBody(request, AssistantRequestSchema, 'Invalid message');
   if (isErrorResponse(parsedBody)) return parsedBody;
 
   let rawText: string;

@@ -19,6 +19,41 @@
   line-height: 1.35;
 }
 
+.zone-selector__status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--type-sm);
+}
+
+.zone-selector__error {
+  padding: var(--space-3);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  color: var(--text);
+}
+
+.zone-selector__error p {
+  margin: 0 0 var(--space-2);
+  font-size: var(--type-sm);
+  line-height: 1.4;
+}
+
+.zone-selector__error p:last-child {
+  margin-bottom: 0;
+}
+
+.zone-selector__retry {
+  min-height: var(--touch);
+  margin-top: var(--space-2);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 600;
+}
+
 .zone-selector__controls {
   position: relative;
   min-width: 0;

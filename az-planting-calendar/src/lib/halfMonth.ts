@@ -101,16 +101,6 @@ export function expandHalfMonthRange(start: number, end: number): number[] {
 }
 
 /**
- * Calendar month (0..11) that contains a half-month index.
- *
- * @param half - Half-month 0..23.
- */
-export function halfMonthToMonth(half: number): number {
-  assertHalf(half);
-  return Math.floor(half / 2);
-}
-
-/**
  * Representative local calendar date (YYYY-MM-DD) for a half-month index.
  * Early half → day 1; late half → day 15. Year is supplied by the caller.
  *
