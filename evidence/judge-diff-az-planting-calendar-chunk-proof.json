@@ -1,0 +1,17 @@
+{
+  "kind": "independent-diff-review",
+  "slug": "az-planting-calendar",
+  "commit": "02c871c42eed7b7346f22ab8bdf1154a75cff1bf",
+  "reviewedAt": "2026-08-04T05:17:27.691Z",
+  "diffHash": "972cb52554ef8ac8e3186210c35c4f5855b8324eeee755104f8ddbccfc301c7a",
+  "completed": true,
+  "ok": true,
+  "foundNothingExplicit": true,
+  "findings": [],
+  "rawExcerpt": "--- chunk 1/8 ---\n{\"foundNothingExplicit\":true,\"findings\":[]}\n--- chunk 2/8 ---\n{\"foundNothingExplicit\":true,\"findings\":[]}\n--- chunk 3/8 ---\n{\"foundNothingExplicit\":true,\"findings\":[]}\n--- chunk 4/8 ---\n{\"foundNothingExplicit\":true,\"findings\":[]}\n--- chunk 5/8 ---\n{\"foundNothingExplicit\":true,\"findings\":[]}\n--- chunk 6/8 ---\n{\"foundNothingExplicit\":true,\"findings\":[]}\n--- chunk 7/8 ---\n{\"foundNothingExplicit\":true,\"findings\":[]}\n--- chunk 8/8 ---\n{\"foundNothingExplicit\":true,\"findings\":[]}",
+  "mode": "grok",
+  "chunkCount": 8,
+  "coverageChars": 842850,
+  "diffChars": 842850,
+  "coverageComplete": true
+}
