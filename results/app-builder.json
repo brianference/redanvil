@@ -21,11 +21,11 @@
     },
     {
       "ruleId": "u-test-presence",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-test-runners",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-test-coverage-ratchet",
@@ -261,7 +261,7 @@
     },
     {
       "ruleId": "meas-standard-tool",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-engine-named",
@@ -369,8 +369,6 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "u-test-presence",
-        "u-test-runners",
         "u-api-no-spa-mask",
         "fe-search-present",
         "fe-assistant-present",
@@ -389,14 +387,14 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-03T22:26:01.449Z",
+  "finishedAt": "2026-08-04T01:06:28.159Z",
   "provenance": {
-    "commit": "5604c7787bee63cc2302f3d80ad1435960814d01",
+    "commit": "c97a317d8159ee7405132eec083b31dc27e17a78",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "b8605998e2dd4f15306685e7deaca7d8a37f451916023f97c2e6a601b5caa1d0",
+    "verdictsHash": "62e59f0574d453800bc75c2fe99afd7fef17caed96bd5ab883b933a5441e55d7",
     "notApplicable": [
       "fe-result-in-viewport",
       "proc-pr-title-ticket",
@@ -406,6 +404,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-03T22:26:01.534Z"
+    "generatedAt": "2026-08-04T01:06:28.214Z"
   }
 }
