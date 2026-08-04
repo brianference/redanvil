@@ -5,7 +5,7 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-04T07:28:01.349Z",
+        "at": "2026-08-04T07:35:32.965Z",
         "metrics": {
           "inkCoverage": 1,
           "detailEnergy": 7.105427357601002e-15,
@@ -17,7 +17,7 @@
       },
       {
         "ok": false,
-        "at": "2026-08-04T07:28:01.349Z",
+        "at": "2026-08-04T07:35:32.966Z",
         "metrics": {
           "inkCoverage": 1,
           "detailEnergy": 7.105427357601002e-15,
@@ -32,7 +32,7 @@
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\fe-favicon-legible\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-04T07:28:01.349Z"
+      "recordedAt": "2026-08-04T07:35:32.966Z"
     }
   }
 }
