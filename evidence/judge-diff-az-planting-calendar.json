@@ -1,0 +1,20 @@
+{
+  "kind": "independent-diff-review",
+  "slug": "az-planting-calendar",
+  "commit": "ae2d115c395f2aca013737b0e7e2de72e7ccc805",
+  "reviewedAt": "2026-08-04T04:10:15.514Z",
+  "diffHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "completed": false,
+  "ok": false,
+  "foundNothingExplicit": false,
+  "findings": [
+    {
+      "title": "unparseable judge output",
+      "citation": "orchestrator/src/loop/independentReview.ts:1",
+      "detail": "judge did not return JSON — cannot verify; fail closed",
+      "passed": false
+    }
+  ],
+  "rawExcerpt": "\nerror: unexpected argument 'an' found\n\nUsage: grok [OPTIONS] [PROMPT] [COMMAND]\n\nFor more information, try '--help'.\n",
+  "mode": "grok"
+}

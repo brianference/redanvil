@@ -21,5 +21,30 @@
       "failed": true,
       "recordedAt": "2026-08-04T03:47:36.760Z"
     }
+  },
+  "u-api-not-found": {
+    "tool": "fetch",
+    "engine": null,
+    "notApplicable": false,
+    "reason": null,
+    "mode": "absent-api-path",
+    "path": "/api/__definitely_absent_f3342bde7eb5b8ed",
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-04T04:09:02.299Z",
+        "path": "/api/__definitely_absent_f3342bde7eb5b8ed"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-04T04:09:02.299Z",
+        "path": "/api/__definitely_absent_f3342bde7eb5b8ed"
+      }
+    ],
+    "knownBad": {
+      "input": "C:\\Users\\brian\\RedAnvil\\known-bad-fixtures\\u-api-not-found\\bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-04T04:09:02.299Z"
+    }
   }
 }
