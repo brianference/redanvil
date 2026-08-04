@@ -355,14 +355,14 @@
     "engine": null,
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-04T07:46:46.605Z",
+        "ok": true,
+        "at": "2026-08-04T07:47:45.517Z",
         "recomputed": 0,
         "recorded": 0
       },
       {
-        "ok": false,
-        "at": "2026-08-04T07:46:46.605Z",
+        "ok": true,
+        "at": "2026-08-04T07:47:45.518Z",
         "recomputed": 0,
         "recorded": 0
       }
@@ -370,7 +370,7 @@
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\lg-result-reproduces",
       "failed": true,
-      "recordedAt": "2026-08-04T07:46:47.724Z"
+      "recordedAt": "2026-08-04T07:47:46.606Z"
     }
   },
   "meas-known-bad": {
