@@ -53,7 +53,7 @@ export function Header({
         menuClose: en.app.menuClose,
         menuOpen: en.app.menuOpen
       }}
-      logo={<Logo />}
+      logo={<Logo measurable />}
       themeToggle={<ThemeToggle />}
       items={headerNavItems()}
       isActive={(key) => isNavActive(location.pathname, key)}

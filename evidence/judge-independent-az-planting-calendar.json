@@ -1,6 +1,6 @@
 {
   "source": "independent judge (grok, disposable worktree, no access to the verdict file)",
-  "reviewedCommit": "c4f1a689d252d4c013d933c3c5d9b96401d7a4ad",
+  "reviewedCommit": "09ca9eb3371722240d02182b91c219d2fbbde6a8",
   "app": "az-planting-calendar",
   "rulesRequested": [
     "u-conc-idiomatic",
@@ -17,7 +17,7 @@
   "why": "Judge verdicts are otherwise written by the same agent that wrote the code. This run exists to produce dissent that self-review structurally cannot.",
   "result": {
     "rulesJudged": 10,
-    "failed": 5,
+    "failed": 3,
     "citationsMissingOnDisk": 0
   },
   "adjudication": "UNADJUDICATED — each FAIL must be verified by hand before it is treated as real, and each one that turns out to be wrong must be recorded as wrong.",
@@ -28,39 +28,38 @@
       "evidence": [
         "az-planting-calendar/src/pages/HomePage.tsx",
         "az-planting-calendar/src/lib/halfMonth.ts",
-        "az-planting-calendar/functions/api/crops.ts",
-        "az-planting-calendar/functions/lib/http.ts",
+        "az-planting-calendar/functions/api/plantable.ts",
+        "az-planting-calendar/functions/api/grid.ts",
         "az-planting-calendar/src/components/YearGrid.tsx"
       ],
-      "note": "Checked HomePage effects and filter parsing (HomePage.tsx:48-131, 189-210), halfMonth helpers (halfMonth.ts:44-49, 60-68), crops query safeParse (crops.ts:12-18), and readJsonBody (http.ts:81-98). Logic is short plain branches and Zod parse calls; YearGrid cell mark mapping (YearGrid.tsx:69-84) is nested but readable at a glance without a decode comment.",
+      "note": "HomePage uses short plain effects and halfMonthInWindow/monthToHalfMonths (HomePage.tsx:109-114, 263-270, 16-18). halfMonth helpers are single-expression branches (halfMonth.ts:44-49, 60-68). plantable/grid are Zod safeParse then thin handlers (plantable.ts:19-28, grid.ts:18-27). YearGrid cell mark mapping (YearGrid.tsx:107-122) is nested ternaries but readable at a glance without a decode comment.",
       "missingEvidence": []
     },
     {
       "ruleId": "u-conc-no-speculative-abstraction",
       "passed": false,
       "evidence": [
-        "az-planting-calendar/functions/lib/db.ts",
         "az-planting-calendar/src/lib/api.ts",
         "az-planting-calendar/src/lib/halfMonth.ts",
         "az-planting-calendar/src/lib/halfMonth.test.ts",
-        "az-planting-calendar/functions/api/assistant.ts"
+        "az-planting-calendar/functions/lib/gridMath.ts",
+        "az-planting-calendar/functions/api/grid.ts"
       ],
-      "note": "getAssistantCropData (db.ts:325-353) and CropWindowSummary (db.ts:309-318) have zero production callers — leftover 'assistant knowledge base' layer while production grounding uses groundFilters (assistant.ts:226-294). fetchHealth (api.ts:58-61) is exported with no UI/caller. halfMonthInWindow / halfMonthToMonth / monthToHalfMonths (halfMonth.ts:60-123) are only referenced from halfMonth.test.ts, not production pages.",
+      "note": "fetchHealth (api.ts:65-67) is exported with zero production callers (only definition site in the app tree). halfMonthToMonth (halfMonth.ts:108-111) has no production caller — only halfMonth.test.ts:68-70. functions/lib/gridMath.ts is a single-function module reimplementing expandHalfMonthRange already exported from halfMonth.ts:90-101; grid.ts:5,45 imports the Worker copy instead of the shared helper — an extra layer with no distinct responsibility.",
       "missingEvidence": []
     },
     {
       "ruleId": "u-conc-use-what-exists",
       "passed": false,
       "evidence": [
-        "az-planting-calendar/src/pages/HomePage.tsx",
         "az-planting-calendar/src/lib/halfMonth.ts",
-        "az-planting-calendar/src/lib/schemas.ts",
-        "az-planting-calendar/functions/api/plantable.ts",
+        "az-planting-calendar/functions/lib/gridMath.ts",
         "az-planting-calendar/functions/api/grid.ts",
+        "az-planting-calendar/src/lib/schemas.ts",
         "az-planting-calendar/functions/api/assistant.ts",
-        "az-planting-calendar/functions/api/crops.ts"
+        "az-planting-calendar/functions/lib/dates.ts"
       ],
-      "note": "HomePage hand-inlines windowOverlapsHalves (HomePage.tsx:215-224, used at 61-64) instead of halfMonthInWindow (halfMonth.ts:60-68), the tested helper for the same wrap logic. PlantableQuerySchema/FilterQuerySchema (schemas.ts:117-131) exist and are unit-tested but plantable.ts:19-42 and grid.ts:14-31 reimplement query validation by hand; only crops.ts:12-18 uses the Zod schemas. AssistantBodySchema (assistant.ts:52-54) duplicates AssistantRequestSchema (schemas.ts:152-154); AssistantFiltersSchema is defined twice (schemas.ts:158-163 vs assistant.ts:57-63).",
+      "note": "expandHalfMonthRange is implemented twice (halfMonth.ts:90-101 and gridMath.ts:7-16); grid.ts:5,45 uses the local copy while dates.ts already re-exports halfMonth for Workers. AssistantBodySchema (assistant.ts:57-60) duplicates AssistantRequestSchema (schemas.ts:239-242) and is not imported from schemas. AssistantFiltersSchema is defined twice (schemas.ts:246-250 vs assistant.ts:63-69); assistant-shape tests import the local one (assistant-shape.test.ts:4).",
       "missingEvidence": []
     },
     {
@@ -72,21 +71,23 @@
         "az-planting-calendar/src/pages/HomePage.tsx",
         "az-planting-calendar/src/components/AssistantPanel.tsx"
       ],
-      "note": "Git was not run (task forbids it). Judged product surface: App.tsx:14-28 routes are home, crop detail, legal, 404; functions/api covers health/zone/plantable/grid/crops/assistant only — no drive-by auth, CRUD entities, or unrelated services beyond the planting-calendar ticket.",
+      "note": "Git was not run (task forbids it). Product surface is scoped to the planting calendar ticket: App.tsx:17-28 routes are home, grid, crop detail, legal, 404; functions/api covers health/zone/zones/plantable/grid/crops/assistant only — no drive-by auth, unrelated CRUD, or extra product domains.",
       "missingEvidence": []
     },
     {
       "ruleId": "u-val-input-validation",
-      "passed": false,
+      "passed": true,
       "evidence": [
         "az-planting-calendar/functions/api/plantable.ts",
         "az-planting-calendar/functions/api/grid.ts",
-        "az-planting-calendar/src/lib/schemas.ts",
         "az-planting-calendar/functions/api/crops.ts",
+        "az-planting-calendar/functions/api/zones.ts",
         "az-planting-calendar/functions/api/assistant.ts",
-        "az-planting-calendar/functions/lib/http.ts"
+        "az-planting-calendar/src/lib/schemas.ts",
+        "az-planting-calendar/functions/lib/http.ts",
+        "az-planting-calendar/functions/api/crops/[id].ts"
       ],
-      "note": "Rule requires boundary validation with Zod. POST /api/assistant uses readJsonBody + AssistantBodySchema (assistant.ts:331-332, http.ts:81-98) and Zod-filters model output (assistant.ts:369-372). GET /api/crops uses CropsQuerySchema.safeParse (crops.ts:12-18). GET /api/plantable and GET /api/grid do not: plantable.ts:19-42 and grid.ts:14-31 hand-check method/date/month while PlantableQuerySchema and FilterQuerySchema already exist (schemas.ts:117-131) and are never imported by those handlers. Untrusted query params therefore reach business logic without the required schema library at those two boundaries.",
+      "note": "Boundary validation uses Zod: plantable PlantableQuerySchema.safeParse (plantable.ts:19-28), grid FilterQuerySchema (grid.ts:18-27), crops CropsQuerySchema (crops.ts:12-18), zones ZonesQuerySchema (zones.ts:14-19). POST assistant uses readJsonBody + schema then AssistantFiltersSchema.safeParse on model output (assistant.ts:358-399; http.ts:130-146). schemas.ts defines PlantableQuerySchema/FilterQuerySchema/CropsQuerySchema/AssistantRequestSchema (185-242). Path id for crop detail is presence-checked before DB lookup (crops/[id].ts:16-19).",
       "missingEvidence": []
     },
     {
@@ -95,25 +96,24 @@
       "evidence": [
         "az-planting-calendar/functions/api/assistant.ts",
         "az-planting-calendar/functions/_middleware.ts",
-        "az-planting-calendar/functions/lib/db.ts",
+        "az-planting-calendar/functions/lib/rateLimit.ts",
         "az-planting-calendar/functions/lib/http.ts"
       ],
-      "note": "No TODO/FIXME/stub security markers in app TS/TSX (only vitest stubGlobal in theme.test.ts). Assistant fails closed when AI/DB missing (assistant.ts:324-329), on model failure/empty (345-360), invalid JSON/filters (365-372), and empty grounded answer (376-378) — no bypass. Middleware forces non-JSON /api/* to 404 JSON ( _middleware.ts:20-25). D1 uses parameterized binds (db.ts:55-61, 95-99, 154-161).",
+      "note": "No TODO/FIXME/stub security markers in app TS/TSX (only vitest stubGlobal in theme.test.ts). Assistant fails closed when DB/AI missing (assistant.ts:332-356), on rate-limit check failure (344-351), model failure/empty (372-387), invalid JSON/filters (389-399), and empty grounded answer (403-405). Rate limit uses real D1 counters and fail-closed missing-IP bucket (rateLimit.ts:10-22). Middleware forces non-JSON /api/* to 404 JSON (_middleware.ts:23-28).",
       "missingEvidence": []
     },
     {
       "ruleId": "u-test-adequacy",
-      "passed": false,
+      "passed": true,
       "evidence": [
-        "az-planting-calendar/functions/api/assistant.ts",
         "az-planting-calendar/functions/api/assistant-shape.test.ts",
-        "az-planting-calendar/functions/api/plantable.ts",
-        "az-planting-calendar/functions/api/grid.ts",
-        "az-planting-calendar/src/pages/HomePage.tsx",
+        "az-planting-calendar/functions/api/plantable.test.ts",
+        "az-planting-calendar/functions/api/grid.test.ts",
+        "az-planting-calendar/functions/api/crops/[id].test.ts",
         "az-planting-calendar/tests/acceptance.spec.ts",
-        "az-planting-calendar/functions/lib/db.ts"
+        "az-planting-calendar/src/lib/schemas.test.ts"
       ],
-      "note": "groundFilters (assistant.ts:226-294) has half_month/crop/method/empty branches and is the production grounding path (assistant.ts:375) but assistant-shape.test.ts only covers modelText/extractJsonObject/filters/buildAnswer — no groundFilters assertion. plantable.ts:24-38 and grid.ts:17-30 400 branches have no route tests. HomePage search failure (HomePage.tsx:125-127) sets empty id set with no test; acceptance Crop search (acceptance.spec.ts:214-261) only covers success narrowing. getAssistantCropData (db.ts:325-353) has neither caller nor test.",
+      "note": "groundFilters production branches are asserted (assistant-shape.test.ts:192-317: half_month, method, crop, empty). plantable/grid 400 validation and q-narrowing behavior tested (plantable.test.ts:64-173, grid.test.ts:64-151). Crop guide present/null asserted (crops/[id].test.ts:107-136; acceptance.spec.ts:114-141). Search fail-closed UI asserted (acceptance.spec.ts:352-390). Query schema calendar-invalid dates and assistant message bounds covered (schemas.test.ts:93-141).",
       "missingEvidence": []
     },
     {
@@ -122,10 +122,11 @@
       "evidence": [
         "az-planting-calendar/tests/acceptance.spec.ts",
         "az-planting-calendar/functions/api/assistant-shape.test.ts",
-        "az-planting-calendar/src/lib/schemas.test.ts",
+        "az-planting-calendar/functions/api/plantable.test.ts",
+        "az-planting-calendar/src/lib/halfMonth.test.ts",
         "az-planting-calendar/functions/api/crops/[id].test.ts"
       ],
-      "note": "Acceptance asserts observable outcomes: plantable cards in viewport for a fixed date (acceptance.spec.ts:44-69), method filter changes marks/counts (113-155), month/search narrow grid rows with poll (157-183, 232-261), citation href (94-110), assistant empty body 400 and fail-closed UI (275-332). assistant-shape tests buildAnswer text for half-month/empty/crop (78-106). schemas.test.ts rejects bad inputs by behavior. crops/[id].test.ts asserts 400/404/200 bodies (40-97). No test-only dual of a production gate; suite does not lean on length>2 presence checks as the primary proof.",
+      "note": "Tests assert observable outcomes and error branches, not private structure: plantable cards/viewport for fixed date (acceptance.spec.ts:44-71), method filter changes counts/marks (156-199), search failure shows role=alert not empty grid (352-390), citation hrefs (96-128). groundFilters asserts crop sets and answer text (assistant-shape.test.ts:199-317). halfMonthInWindow wrap/non-wrap behavior (halfMonth.test.ts:31-57). crops/[id] asserts 400/404/200 bodies. Mocks sit at DB/API boundaries (vi.mock db in plantable/grid/assistant tests).",
       "missingEvidence": []
     },
     {
@@ -133,28 +134,31 @@
       "passed": true,
       "evidence": [
         "az-planting-calendar/src/pages/HomePage.tsx",
+        "az-planting-calendar/src/pages/GridPage.tsx",
         "az-planting-calendar/src/pages/AboutPage.tsx",
         "az-planting-calendar/src/pages/ContactPage.tsx",
         "az-planting-calendar/src/pages/TermsPage.tsx",
         "az-planting-calendar/src/pages/PrivacyPage.tsx",
         "az-planting-calendar/src/pages/CropDetailPage.tsx",
-        "az-planting-calendar/src/components/LegalPage.tsx",
-        "az-planting-calendar/src/components/Layout.tsx"
+        "az-planting-calendar/src/components/LegalPage.tsx"
       ],
-      "note": "Home success return is PlantableHero + Filters + YearGrid with state owned on the page (HomePage.tsx:157-172). About/Contact/Terms/Privacy are thin LegalPage wrappers (AboutPage.tsx:9-40, ContactPage.tsx:9-16, TermsPage.tsx:9-16, PrivacyPage.tsx:9-16; LegalPage.tsx:30-55). CropDetailPage owns loading/error/data and renders MethodChip for methods (CropDetailPage.tsx:14-122) without inline style objects. Layout composes chrome + Outlet + AssistantPanel (Layout.tsx:16-125).",
+      "note": "Home return is CompactHeader + HalfMonthTimeline + PlantableHero + AssistantPanel + YearGrid with state owned on the page (HomePage.tsx:276-323). GridPage owns filters/load and composes Filters + YearGrid (GridPage.tsx:45-68). About/Contact/Terms/Privacy are thin LegalPage wrappers (AboutPage.tsx:9-40, ContactPage.tsx:9-16, TermsPage.tsx:9-16; LegalPage.tsx:30-55). CropDetailPage owns load state and composes CropArt/MethodChip/GrowingGuideSection (CropDetailPage.tsx:30-121, 129-180) without inline style layout objects.",
       "missingEvidence": []
     },
     {
       "ruleId": "fe-fail-closed-states",
       "passed": false,
       "evidence": [
-        "az-planting-calendar/src/pages/HomePage.tsx",
+        "az-planting-calendar/src/hooks/useZone.tsx",
+        "az-planting-calendar/src/components/ZoneSelector.tsx",
+        "az-planting-calendar/src/components/Layout.tsx",
         "az-planting-calendar/src/components/PlantableHero.tsx",
         "az-planting-calendar/src/components/YearGrid.tsx",
+        "az-planting-calendar/src/components/LiveSearch.tsx",
         "az-planting-calendar/src/components/AssistantPanel.tsx",
         "az-planting-calendar/src/pages/CropDetailPage.tsx"
       ],
-      "note": "PlantableHero has loading/error/empty/success (PlantableHero.tsx:67-97); YearGrid has loading/error/empty (YearGrid.tsx:34-45); CropDetail has loading/error/empty windows (CropDetailPage.tsx:56-86); AssistantPanel treats empty answer as error and shows role=alert (AssistantPanel.tsx:44-58, 133-137). FAIL: crop search catch (HomePage.tsx:125-127) sets searchIds to new Set() on any fetch failure, so filteredGrid (HomePage.tsx:148-155) shows YearGrid empty success (YearGrid.tsx:44-45) with no error — a network/API failure is painted as 'no crops match'.",
+      "note": "PlantableHero has loading/error/empty/success (PlantableHero.tsx:67-97); YearGrid separates loading/error/searchError/empty/table (YearGrid.tsx:28-82); LiveSearch has error/loading/empty/results (LiveSearch.tsx:226-267); AssistantPanel treats empty answer as error with role=alert (AssistantPanel.tsx:109-123, 200-208); CropDetail has loading/error/guide-missing/no-windows (CropDetailPage.tsx:36-76, 129-136). FAIL: useZone computes error (useZone.tsx:66-68, 85) but ZoneSelector only destructures zone/zones/loading/setZone (ZoneSelector.tsx:30) and never renders error or retry — on /api/zones failure the control is only disabled when zones.length===0 (ZoneSelector.tsx:160) while Layout falls back to en.appTagline (Layout.tsx:39-41), so a zone-list failure paints as quiet empty chrome rather than an explicit error state.",
       "missingEvidence": []
     }
   ]
