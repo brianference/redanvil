@@ -170,6 +170,9 @@ export const APP_CHECKS: Check[] = [
   // Shipping: GitHub remote, pushed HEAD, live URL, deployed hash matches dist.
   // A green gate on a build that never left the machine is not "done".
   det('lg-shipped'),
+  // Unpushed backlog over the cadence threshold is a defect (blocker).
+  // Pre-push defers under REDANVIL_PRE_PUSH=1 so it cannot deadlock a push.
+  det('lg-push-cadence'),
   // Declared wrangler bindings must not symptom as missing on the live deploy.
   {
     ruleId: 'lg-bindings-bound',
