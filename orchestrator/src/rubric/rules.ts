@@ -245,6 +245,10 @@ export const RULES: Rule[] = [
   // part of the gate: GitHub remote, pushed HEAD, live production URL, and a
   // deployed bundle hash that matches local dist. See rules/loop-gate.md.
   rule('lg-shipped', 'loop-gate', 'blocker', 'det'),
+  // A large unpushed backlog is a defect: fail when HEAD is more than the
+  // cadence threshold ahead of its remote-tracking ref. Pre-push defers the
+  // fail (REDANVIL_PRE_PUSH=1) so the rule cannot deadlock the push it forces.
+  rule('lg-push-cadence', 'loop-gate', 'blocker', 'det'),
   // F4: a hand-authored results JSON is indistinguishable by shape — recompute.
   rule('lg-result-reproduces', 'loop-gate', 'blocker', 'det'),
   // E6: wrangler-declared bindings must not 503 as "binding unavailable" in deploy.

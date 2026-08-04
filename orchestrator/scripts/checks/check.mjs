@@ -25,6 +25,7 @@ import { runIntegrationScan } from './u-integration-scan.mjs';
 import { runCompetitorScan } from './u-competitor-scan.mjs';
 import { runProcPrTitleTicket } from './proc-pr-title-ticket.mjs';
 import { runLgShipped } from './lg-shipped.mjs';
+import { runLgPushCadence } from './lg-push-cadence.mjs';
 import { runSearchPresent } from './fe-search-present.mjs';
 import { runAssistantPresent } from './fe-assistant-present.mjs';
 import { runLightDark } from './fe-light-dark.mjs';
@@ -1124,6 +1125,13 @@ switch (ruleId) {
         process.exit(2);
       }
     });
+    break;
+  }
+  case 'lg-push-cadence': {
+    // Unpushed backlog over the threshold is a defect. Pre-push defers the
+    // fail (same REDANVIL_PRE_PUSH shape as lg-shipped condition 2) so the
+    // rule cannot deadlock the push it exists to force.
+    runLgPushCadence(appDir, { pass, fail, notApplicable });
     break;
   }
   case 'fe-search-present': {
