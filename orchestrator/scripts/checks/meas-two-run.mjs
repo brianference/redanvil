@@ -15,6 +15,7 @@ import {
   BROWSER_DRIVEN_RULES,
   runsAgree,
   runsAreDuplicate,
+  isNotApplicableMeta,
   nowIso
 } from '../lib/measurement-meta.mjs';
 
@@ -45,6 +46,12 @@ export function evaluateTwoRun(meta, browserRules = [...BROWSER_DRIVEN_RULES]) {
     const entry = meta[ruleId];
     if (!entry) {
       failures.push(`${ruleId}: no measurement-meta entry (nothing recorded two runs)`);
+      continue;
+    }
+    // Honest n/a: the rule did not apply, so there are no runs to agree. Do not
+    // demand two synthetic measurements. Still fail closed on missing entries
+    // and on byte-identical dual runs (including the old n/a fabrication).
+    if (isNotApplicableMeta(entry)) {
       continue;
     }
     const runs = entry.runs;

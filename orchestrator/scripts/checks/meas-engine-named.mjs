@@ -15,6 +15,7 @@ import {
   readMeasurementMeta,
   writeMeasurementMetaEntry,
   BROWSER_DRIVEN_RULES,
+  isNotApplicableMeta,
   nowIso
 } from '../lib/measurement-meta.mjs';
 
@@ -48,6 +49,20 @@ export function evaluateEngineNamed(meta, browserRules = [...BROWSER_DRIVEN_RULE
     const entry = meta[ruleId];
     if (!entry) {
       failures.push(`${ruleId}: no measurement-meta entry (engine unknown)`);
+      continue;
+    }
+    // Honest n/a still records the engine used for the probe when known; if a
+    // legacy n/a entry omitted engine, do not demand one for a rule that never
+    // applied. Prefer engine when present (isNotApplicableMeta does not clear it).
+    if (isNotApplicableMeta(entry)) {
+      const naEngine = entry.engine;
+      if (typeof naEngine === 'string' && naEngine.trim().length > 0) {
+        if (!KNOWN_ENGINES.has(naEngine.toLowerCase())) {
+          failures.push(
+            `${ruleId}: engine ${JSON.stringify(naEngine)} is not a known browser engine (chromium|webkit|firefox)`
+          );
+        }
+      }
       continue;
     }
     const engine = entry.engine;

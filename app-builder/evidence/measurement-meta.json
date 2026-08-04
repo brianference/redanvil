@@ -397,18 +397,18 @@
     "engine": null,
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-03T23:26:24.695Z"
+        "ok": true,
+        "at": "2026-08-04T01:14:02.381Z"
       },
       {
-        "ok": false,
-        "at": "2026-08-03T23:26:24.695Z"
+        "ok": true,
+        "at": "2026-08-04T01:14:02.382Z"
       }
     ],
     "knownBad": {
-      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-two-run\\bad-app",
+      "input": "C:\\Users\\brian\\RedAnvil-wt-tworun\\orchestrator\\test\\fixtures\\meas-two-run\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-03T23:26:24.695Z"
+      "recordedAt": "2026-08-04T01:14:02.382Z"
     }
   },
   "meas-recheck-flattering": {
@@ -487,18 +487,10 @@
   "fe-result-in-viewport": {
     "tool": "playwright",
     "engine": "chromium",
-    "runs": [
-      {
-        "ok": true,
-        "at": "2026-08-03T23:25:08.685Z",
-        "note": "n/a: no search/filter control"
-      },
-      {
-        "ok": true,
-        "at": "2026-08-03T23:25:08.685Z",
-        "note": "n/a: no search/filter control"
-      }
-    ],
+    "notApplicable": true,
+    "reason": "no search/filter control",
+    "recordedAt": "2026-08-03T23:25:08.685Z",
+    "runs": [],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\result-in-viewport\\below-fold.html",
       "failed": true,

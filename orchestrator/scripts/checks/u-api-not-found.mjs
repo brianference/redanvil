@@ -19,7 +19,11 @@ import {
   spawnWranglerPagesDev,
   ensureBuild
 } from '../../../.github/scripts/runtime_parity.mjs';
-import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+import {
+  writeMeasurementMetaEntry,
+  writeNotApplicableMeta,
+  nowIso
+} from '../lib/measurement-meta.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 /**
@@ -167,19 +171,14 @@ export async function runApiNotFound(appDir, io, deps = {}) {
   const routes = discoverDetailRoutes(appDir);
   if (routes.length === 0) {
     // n/a for THIS app (no detail routes) is not the same as "this check
-    // cannot fail" -- meas-known-bad still requires proof the check can fail,
-    // and a rule that exits before writeMeasurementMetaEntry can never earn
-    // that proof no matter how many times it is run against the real app.
-    // Self-record against the known-bad fixture so the provenance is honest
-    // even when the rule itself does not apply here.
+    // cannot fail" -- meas-known-bad still requires proof the check can fail.
+    // Record n/a honestly (no synthetic dual runs) and keep the knownBad
+    // pointer so provenance still proves the check can fail elsewhere.
     if (appDir) {
-      writeMeasurementMetaEntry(appDir, 'u-api-not-found', {
+      writeNotApplicableMeta(appDir, 'u-api-not-found', {
         tool: 'fetch',
         engine: null,
-        runs: [
-          { ok: true, at: nowIso(), note: 'n/a: no detail routes under functions/api/' },
-          { ok: true, at: nowIso(), note: 'n/a: no detail routes under functions/api/' }
-        ],
+        reason: 'no detail routes under functions/api/',
         knownBad: {
           input: KNOWN_BAD_FIXTURE,
           failed: true,
@@ -227,6 +226,8 @@ export async function runApiNotFound(appDir, io, deps = {}) {
   writeMeasurementMetaEntry(appDir, 'u-api-not-found', {
     tool: 'fetch',
     engine: null,
+    notApplicable: false,
+    reason: null,
     runs: [
       { ok: ok1, at: nowIso() },
       { ok: ok2, at: nowIso() }

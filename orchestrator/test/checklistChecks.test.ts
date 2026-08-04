@@ -50,7 +50,13 @@ import {
   resolveKnownBadInput
 } from '../scripts/checks/meas-known-bad.mjs';
 import { evaluateTwoRun, runMeasTwoRun } from '../scripts/checks/meas-two-run.mjs';
-import { runsAreDuplicate } from '../scripts/lib/measurement-meta.mjs';
+import {
+  runsAreDuplicate,
+  isNotApplicableMeta,
+  notApplicableMetaFields,
+  writeNotApplicableMeta,
+  readMeasurementMeta
+} from '../scripts/lib/measurement-meta.mjs';
 import {
   evaluateFlattering,
   runMeasRecheckFlattering
@@ -751,6 +757,94 @@ describe('G1–G5 measurement provenance', () => {
     );
     expect(failures.some((f) => /byte-identical/i.test(f))).toBe(true);
     console.log('meas-two-run known-bad (duplicated run):', failures.find((f) => /byte-identical/i.test(f)));
+  });
+
+  it('G2 treats an honest n/a entry as n/a, not as a failed two-run record', () => {
+    // n/a-records-honestly: a rule that did not apply must not invent two runs.
+    // meas-two-run skips the two-run requirement for a properly-recorded n/a
+    // entry (notApplicable:true + reason), while still failing byte-identical
+    // dual runs elsewhere.
+    const na = notApplicableMetaFields({
+      tool: 'playwright',
+      engine: 'chromium',
+      reason: 'no search/filter control'
+    });
+    expect(isNotApplicableMeta(na)).toBe(true);
+    expect(Array.isArray((na as { runs?: unknown }).runs)).toBe(true);
+    expect((na as { runs: unknown[] }).runs).toEqual([]);
+
+    const failures = evaluateTwoRun(
+      {
+        'fe-result-in-viewport': na,
+        'fe-light-dark': {
+          runs: [
+            { ok: true, at: '2026-08-02T00:00:00.000Z' },
+            { ok: true, at: '2026-08-02T00:00:01.000Z' }
+          ]
+        },
+        'fe-search-present': {
+          runs: [
+            { ok: true, at: '2026-08-02T00:00:00.000Z' },
+            { ok: true, at: '2026-08-02T00:00:01.000Z' }
+          ]
+        },
+        'fe-favicon-legible': {
+          runs: [
+            { ok: true, at: '2026-08-02T00:00:00.000Z' },
+            { ok: true, at: '2026-08-02T00:00:01.000Z' }
+          ]
+        }
+      },
+      ['fe-result-in-viewport', 'fe-light-dark', 'fe-search-present', 'fe-favicon-legible']
+    );
+    expect(failures).toEqual([]);
+    expect(failures.some((f) => /fe-result-in-viewport/.test(f))).toBe(false);
+  });
+
+  it('G2 still FAILS the old n/a fabrication (byte-identical dual runs with a note)', () => {
+    // The manufactured shape that tripped on app-builder: two ok:true runs
+    // with the same timestamp and an n/a note — NOT an honest notApplicable
+    // entry. meas-two-run must keep its teeth on that.
+    const fabricated = {
+      ok: true,
+      at: '2026-08-03T23:25:08.685Z',
+      note: 'n/a: no search/filter control'
+    };
+    const failures = evaluateTwoRun(
+      {
+        'fe-result-in-viewport': { runs: [fabricated, { ...fabricated }] }
+      },
+      ['fe-result-in-viewport']
+    );
+    expect(failures.some((f) => /byte-identical/i.test(f))).toBe(true);
+    expect(isNotApplicableMeta({ runs: [fabricated, { ...fabricated }] })).toBe(false);
+  });
+
+  it('writeNotApplicableMeta persists an honest n/a entry (n/a-records-honestly)', () => {
+    const app = makeAppDir();
+    writeNotApplicableMeta(app, 'fe-result-in-viewport', {
+      tool: 'playwright',
+      engine: 'chromium',
+      reason: 'no search/filter control',
+      knownBad: {
+        input: 'fixtures/below-fold.html',
+        failed: true,
+        recordedAt: '2026-08-03T00:00:00.000Z'
+      }
+    });
+    const meta = readMeasurementMeta(app);
+    const entry = meta['fe-result-in-viewport'] as {
+      notApplicable?: boolean;
+      reason?: string;
+      runs?: unknown[];
+      knownBad?: { failed?: boolean };
+    };
+    expect(isNotApplicableMeta(entry)).toBe(true);
+    expect(entry.reason).toBe('no search/filter control');
+    expect(entry.runs).toEqual([]);
+    expect(entry.knownBad?.failed).toBe(true);
+    // And evaluateTwoRun accepts that shape without demanding two runs.
+    expect(evaluateTwoRun(meta, ['fe-result-in-viewport'])).toEqual([]);
   });
 
   it('runsAreDuplicate is false for two genuinely different runs', () => {

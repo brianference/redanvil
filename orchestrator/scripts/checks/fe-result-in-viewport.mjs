@@ -24,7 +24,11 @@ import { join, resolve, extname, dirname } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
-import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+import {
+  writeMeasurementMetaEntry,
+  writeNotApplicableMeta,
+  nowIso
+} from '../lib/measurement-meta.mjs';
 import { hasApiOrPages } from './u-api-no-spa-mask.mjs';
 import {
   pickFreePort,
@@ -712,16 +716,13 @@ export async function runResultInViewport(appDir, io, opts = {}) {
           // n/a for THIS app is not the same as "this check cannot fail" --
           // meas-known-bad still requires proof the check can fail, which a
           // rule that exits before writeMeasurementMetaEntry can never earn.
-          // Self-record against the known-bad fixture so the provenance is
-          // honest even when there is no search control to drive here.
+          // Record n/a honestly (no synthetic dual runs) and keep the knownBad
+          // pointer so provenance still proves the check can fail elsewhere.
           if (appDir) {
-            writeMeasurementMetaEntry(appDir, 'fe-result-in-viewport', {
+            writeNotApplicableMeta(appDir, 'fe-result-in-viewport', {
               tool: 'playwright',
               engine: 'chromium',
-              runs: [
-                { ok: true, at: nowIso(), note: 'n/a: no search/filter control' },
-                { ok: true, at: nowIso(), note: 'n/a: no search/filter control' }
-              ],
+              reason: 'no search/filter control',
               knownBad: {
                 input: KNOWN_BAD_FIXTURE,
                 failed: true,
@@ -770,6 +771,9 @@ export async function runResultInViewport(appDir, io, opts = {}) {
         writeMeasurementMetaEntry(appDir, 'fe-result-in-viewport', {
           tool: 'playwright',
           engine: 'chromium',
+          // Clear any prior honest-n/a record once a real measurement ran.
+          notApplicable: false,
+          reason: null,
           runs: [
             { ok: ok1, at: at1 },
             { ok: ok2, at: at2 }
