@@ -89,7 +89,7 @@
     },
     {
       "ruleId": "proc-design-options",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "fe-prior-art",
@@ -387,14 +387,14 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-03T21:48:37.325Z",
+  "finishedAt": "2026-08-03T23:41:44.059Z",
   "provenance": {
-    "commit": "5e00ba0afcebfdacee2658de854ea07a227c6a9a",
+    "commit": "30823f34870d039a309e887d4cd0664079454fef",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "0ac39ce14ed695f47b130fa62bf6f6eed3e5feb27e5a19527e1cff2cde55362b",
+    "verdictsHash": "cfa80d0ff18d4f59ff4bd73b4739acae6b80d7669100e248f423dcc714fd652f",
     "notApplicable": [
       "proc-pr-title-ticket",
       "process",
@@ -402,6 +402,6 @@
       "u-test-presence"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-03T21:48:37.407Z"
+    "generatedAt": "2026-08-03T23:41:44.115Z"
   }
 }
