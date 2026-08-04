@@ -5,13 +5,13 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-04T01:12:11.093Z",
+        "at": "2026-08-04T01:20:34.784Z",
         "recomputed": 0,
         "recorded": 100
       },
       {
         "ok": false,
-        "at": "2026-08-04T01:12:11.094Z",
+        "at": "2026-08-04T01:20:34.784Z",
         "recomputed": 0,
         "recorded": 100
       }
@@ -19,7 +19,7 @@
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\lg-result-reproduces",
       "failed": true,
-      "recordedAt": "2026-08-04T01:12:12.174Z"
+      "recordedAt": "2026-08-04T01:20:35.777Z"
     }
   }
 }

@@ -5,17 +5,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-04T01:12:34.485Z"
+        "at": "2026-08-04T01:20:43.588Z"
       },
       {
         "ok": false,
-        "at": "2026-08-04T01:12:34.486Z"
+        "at": "2026-08-04T01:20:43.589Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-known-bad\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-04T01:12:34.486Z"
+      "recordedAt": "2026-08-04T01:20:43.589Z"
     }
   }
 }
