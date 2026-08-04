@@ -1,48 +1,66 @@
 {
   "kind": "independent-diff-review",
   "slug": "dashboard",
-  "commit": "63ec980d76d564ddb8b7156a4b2ff3c9f416aeb5",
-  "reviewedAt": "2026-08-04T05:48:50.836Z",
-  "diffHash": "8596eb3e6eda3c8749b6abf3bfa4ee178a27578671a6559124606300c288f66e",
+  "commit": "6185add97ab72f678510f798a55cd04474d77817",
+  "reviewedAt": "2026-08-04T08:32:15.716Z",
+  "diffHash": "39bd43d9c5ad32f186f04d6f2c57c84170ec1709c3d79cf87069648c143a3b53",
   "completed": true,
   "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "Design claim is retrospective prose, not measured in-diff",
-      "citation": "dashboard/.redanvil/claims.json:11",
-      "detail": "The design.archetype 'Metric board' and anti-column justification cite external PNGs and design_audit.mjs output (evidence/design-dashboard.json) that are not added or changed in this diff. A claim that evidence was opened cannot be verified from the unified diff; FAIL closed on the measurement assertion.",
+      "title": "Logo measurable mark API removed",
+      "citation": "dashboard/src/components/shell/Logo.tsx:8",
+      "detail": "The prior Logo wrapper supported opt-in `measurable` so only the header lockup got `markMeasure: 'mark'`; the deleted comment documented that marking every instance made `[data-measure=\"mark\"]` resolve to three nodes and hung qa-visual. The new `createLogo({ href, ariaLabel, defaultHeight })` call site has no measurable/markMeasure control. From this diff alone it is impossible to verify the header still has exactly one measured brand mark and that footer/drawer instances stay unmarked. FAIL — cannot verify; regression risk either way (zero marks or three).",
       "passed": false
     },
     {
-      "title": "coverage-state baseCommit bump without proof",
-      "citation": "dashboard/.redanvil/coverage-state.json:2",
-      "detail": "baseCommit moved to 97aa587... with highWaterPct still 91.66. Diff does not show how that commit was validated or that coverage still meets the water mark; status-only metadata change.",
+      "title": "Header qa-visual markers dropped",
+      "citation": "dashboard/src/components/shell/Header.tsx:48",
+      "detail": "Explicit `testId=\"compact-header\"` and `measure=\"header\"` were removed from SharedHeader. A comment claims markers default on the shared Header, but design-system Header is not in this diff, so the default values and that they still match harness selectors are unverified. PASS needs proof; absence of the props here without the default implementation is a FAIL.",
       "passed": false
     },
     {
-      "title": "RunDetailView extraction is testable",
-      "citation": "dashboard/src/pages/RunDetail.tsx:315",
-      "detail": "RunDetailView is exported with injectable slug/state; RunDetail still wires useParams/useRuns/useDocumentMeta and renders the view. Tests for loading/error/missing-slug/not-found appear in the truncated portion — structure of the refactor is sound for unit testing.",
-      "passed": true
-    },
-    {
-      "title": "Favicon re-derive script alone does not prove assets shipped",
-      "citation": "dashboard/design-refs/logos/derive-assets.mjs:26",
-      "detail": "Script resizes logo-mark.png to favicon-96.png and apple-180.png with transparent background. Diff snippet does not include binary public/ asset changes; cannot verify favicon legibility improvement from the script alone.",
+      "title": "NavLink export deleted without consumers",
+      "citation": "dashboard/src/components/shell/NavLinks.tsx:48",
+      "detail": "The exported `NavLink` component and `NavLinkProps` interface were deleted; only `drawerNavItems` now ends with `withGithubNav(...)`. No other files in the diff update imports of `NavLink` from this module. If anything still imported it, the tree breaks; if nothing did, the change is dead-code cleanup — neither is verified here. FAIL closed.",
       "passed": false
     },
     {
-      "title": "Prior-art docs present in diff",
-      "citation": "dashboard/COMPETITORS.md:1",
-      "detail": "COMPETITORS.md and SOURCES.md are new and non-empty with structure, gaps, and citations. Existence of prior-art files is verified in-diff; factual accuracy of external URLs is not re-checked here.",
+      "title": "companyLegalColumns behavior unverified",
+      "citation": "dashboard/src/components/shell/Footer.tsx:48",
+      "detail": "Company/About/Contact and Legal/Terms/Privacy columns were replaced by `...companyLegalColumns({...})`. Labels are passed correctly, but the helper (hrefs `/about`, `/contact`, `/terms`, `/privacy`, column shape, order) lives outside this diff and is not shown. Required legal footer links are not proven present from the dashboard side alone. FAIL — cannot verify.",
+      "passed": false
+    },
+    {
+      "title": "withGithubNav equivalence unverified",
+      "citation": "dashboard/src/components/shell/NavLinks.tsx:51",
+      "detail": "Drawer nav previously appended `{ key: 'github', label, to: null, href: GITHUB_URL, external: true }`. Now it relies on design-system `withGithubNav(headerNavItems(), en.app.navGitHub, GITHUB_URL)`. Key, external flag, and `to: null` are not visible in this diff. FAIL — cannot verify parity.",
+      "passed": false
+    },
+    {
+      "title": "PageHeaderProps / PageDrawerProps not in diff",
+      "citation": "dashboard/src/components/shell/Header.tsx:25",
+      "detail": "Local prop interfaces were replaced with `PageHeaderProps` and `PageDrawerProps` from design-system/Page. Call sites still use `menuOpen`/`headerRef`/`menuBtnRef`/`onToggleMenu` and `open`/`drawerRef`/`closeBtnRef`/`onClose`, but those type definitions are not in the diff. Contract match is unverified from this change set. FAIL closed.",
+      "passed": false
+    },
+    {
+      "title": "No tests for shell refactor",
+      "citation": "dashboard/src/components/shell/Logo.tsx:1",
+      "detail": "Diff only touches shell wrappers (Footer, Header, Logo, MobileDrawer, NavLinks, constants). No test, snapshot, or qa-visual fixture updates accompany removal of measurable Logo, header measure/testId props, NavLink export, or footer column helper. New behavior is unasserted. FAIL — change without proof of behavior.",
+      "passed": false
+    },
+    {
+      "title": "DRAWER_LOGO_HEIGHT constant extraction",
+      "citation": "dashboard/src/components/shell/constants.ts:14",
+      "detail": "Replaces magic `48` with named `DRAWER_LOGO_HEIGHT = 48` used by MobileDrawer. Value matches prior prop; no defect found in this hunk.",
       "passed": true
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{ \\\"foundNothingExplicit\\\": false, \\\"findings\\\": [ { \\\"title\\\": \\\"Truncated diff cannot fully verify\\\", \\\"citation\\\": \\\"dashboard/.redanvil/claims.json:8\\\", \\\"detail\\\": \\\"Diff in the message was truncated mid-file. Judging only from the provided fragments: claims.json design.archetype, COMPETITORS.md/SOURCES.md, logo derive script, and RunDetailView extract with unit tests. Cannot verify screenshot evidence, INTEGRATIONS.md, public asset binaries, Home search implementation, or that production measurement files exist from this diff alone.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"Design claim is retrospective prose, not measured in-diff\\\", \\\"citation\\\": \\\"dashboard/.redanvil/claims.json:11\\\", \\\"detail\\\": \\\"The design.archetype 'Metric board' and anti-column justification cite external PNGs and design_audit.mjs output (evidence/design-dashboard.json) that are not added or changed in this diff. A claim that evidence was opened cannot be verified from the unified diff; FAIL closed on the measurement assertion.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"coverage-state baseCommit bump without proof\\\", \\\"citation\\\": \\\"dashboard/.redanvil/coverage-state.json:2\\\", \\\"detail\\\": \\\"baseCommit moved to 97aa587... with highWaterPct still 91.66. Diff does not show how that commit was validated or that coverage still meets the water mark; status-only metadata change.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"RunDetailView extraction is testable\\\", \\\"citation\\\": \\\"dashboard/src/pages/RunDetail.tsx:315\\\", \\\"detail\\\": \\\"RunDetailView is exported with injectable slug/state; RunDetail still wires useParams/useRuns/useDocumentMeta and renders the view. Tests for loading/error/missing-slug/not-found appear in the truncated portion — structure of the refactor is sound for unit testing.\\\", \\\"passed\\\": true }, { \\\"title\\\": \\\"Favicon re-derive script alone does not prove assets shipped\\\", \\\"citation\\\": \\\"dashboard/design-refs/logos/derive-assets.mjs:26\\\", \\\"detail\\\": \\\"Script resizes logo-mark.png to favicon-96.png and apple-180.png with transparent background. Diff snippet does not include binary public/ asset changes; cannot verify favicon legibility improvement from the script alone.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"Prior-art docs present in diff\\\", \\\"citation\\\": \\\"dashboard/COMPETITORS.md:1\\\", \\\"detail\\\": \\\"COMPETITORS.md and SOURCES.md are new and non-empty with structure, gaps, and citations. Existence of prior-art files is verified in-diff; factual accuracy of external URLs is not re-checked here.\\\", \\\"passed\\\": true } ] }\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"22e1b6f1-653b-4976-b887-444b0ffbbcf0\",\n  \"requestId\": \"70bd5951-467c-4ffb-89c0-027666ce6692\",\n  \"thought\": \"The user wants me to review a git diff as an independent code judge. They said \\\"Do not use tools\\\" in the query, but then there's an offloaded file with the full prompt. Let me check - the system remin...\",\n  \"usage\": {\n    \"input_tokens\": 28505,\n    \"cache_read_input_tokens\": 2560,\n    \"output_tokens\": 754,\n    \"reasoning_tokens\": 164,\n    \"total_tokens\": 31819\n  },\n  \"num_turns\": 1,\n  \"total_cost_usd\": 0.062302,\n  \"total_cost_usd_ticks\": 623020000,\n  \"modelUsage\": {\n    \"grok-4.5-build\": {\n      \"inputTokens\": 28505,\n      \"outputTokens\": 754,\n      \"cacheReadInputTokens\": 2560,\n      \"modelCalls\": 1,\n      \"costUSD\": 0.062302\n    }\n  },\n  \"structuredOutput\": {\n    \"foundNothingExplicit\": false,\n    \"findings\": [\n      {\n        \"title\": \"Truncated diff cannot fully verify\",\n        \"citation\": \"dashboard/.redanvil/claims.json:8\",\n        \"detail\": \"Diff in the message was truncated mid-file. Judging only from the provided fragments: claims.json design.archetype, COMPETITORS.md/SOURCES.md, logo derive script, and RunDetailView extract with unit tests. Cannot verify screenshot evidence, INTEGRATIONS.md, public asset binaries, Home search implementation, or that production measurement files exist from this diff alone.\",\n        \"passed\": false\n      },\n      {\n       ",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"Logo measurable mark API removed\\\",\\n      \\\"citation\\\": \\\"dashboard/src/components/shell/Logo.tsx:8\\\",\\n      \\\"detail\\\": \\\"The prior Logo wrapper supported opt-in `measurable` so only the header lockup got `markMeasure: 'mark'`; the deleted comment documented that marking every instance made `[data-measure=\\\\\\\"mark\\\\\\\"]` resolve to three nodes and hung qa-visual. The new `createLogo({ href, ariaLabel, defaultHeight })` call site has no measurable/markMeasure control. From this diff alone it is impossible to verify the header still has exactly one measured brand mark and that footer/drawer instances stay unmarked. FAIL — cannot verify; regression risk either way (zero marks or three).\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Header qa-visual markers dropped\\\",\\n      \\\"citation\\\": \\\"dashboard/src/components/shell/Header.tsx:48\\\",\\n      \\\"detail\\\": \\\"Explicit `testId=\\\\\\\"compact-header\\\\\\\"` and `measure=\\\\\\\"header\\\\\\\"` were removed from SharedHeader. A comment claims markers default on the shared Header, but design-system Header is not in this diff, so the default values and that they still match harness selectors are unverified. PASS needs proof; absence of the props here without the default implementation is a FAIL.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"NavLink export deleted without consumers\\\",\\n      \\\"citation\\\": \\\"dashboard/src/components/shell/NavLinks.tsx:48\\\",\\n      \\\"detail\\\": \\\"The exported `NavLink` component and `NavLinkProps` interface were deleted; only `drawerNavItems` now ends with `withGithubNav(...)`. No other files in the diff update imports of `NavLink` from this module. If anything still imported it, the tree breaks; if nothing did, the change is dead-code cleanup — neither is verified here. FAIL closed.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"companyLegalColumns behavior unverified\\\",\\n      \\\"citation\\\": \\\"dashboard/src/components/shell/Footer.tsx:48\\\",\\n      \\\"detail\\\": \\\"Company/About/Contact and Legal/Terms/Privacy columns were replaced by `...companyLegalColumns({...})`. Labels are passed correctly, but the helper (hrefs `/about`, `/contact`, `/terms`, `/privacy`, column shape, order) lives outside this diff and is not shown. Required legal footer links are not proven present from the dashboard side alone. FAIL — cannot verify.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"withGithubNav equivalence unverified\\\",\\n      \\\"citation\\\": \\\"dashboard/src/components/shell/NavLinks.tsx:51\\\",\\n      \\\"detail\\\": \\\"Drawer nav previously appended `{ key: 'github', label, to: null, href: GITHUB_URL, external: true }`. Now it relies on design-system `withGithubNav(headerNavItems(), en.app.navGitHub, GITHUB_URL)`. Key, external flag, and `to: null` are not visible in this diff. FAIL — cannot verify parity.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"PageHeaderProps / PageDrawerProps not in diff\\\",\\n      \\\"citation\\\": \\\"dashboard/src/components/shell/Header.tsx:25\\\",\\n      \\\"detail\\\": \\\"Local prop interfaces were replaced with `PageHeaderProps` and `PageDrawerProps` from design-system/Page. Call sites still use `menuOpen`/`headerRef`/`menuBtnRef`/`onToggleMenu` and `open`/`drawerRef`/`closeBtnRef`/`onClose`, but those type definitions are not in the diff. Contract match is unverified from this change set. FAIL closed.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"No tests for shell refactor\\\",\\n      \\\"citation\\\": \\\"dashboard/src/components/shell/Logo.tsx:1\\\",\\n      \\\"detail\\\": \\\"Diff only touches shell wrappers (Footer, Header, Logo, MobileDrawer, NavLinks, constants). No test, snapshot, or qa-visual fixture updates accompany removal of measurable Logo, header measure/testId props, NavLink export, or footer column helper. New behavior is unasserted. FAIL — change without proof of behavior.\\\"",
   "mode": "grok",
   "chunkCount": 1,
-  "coverageChars": 69763,
-  "diffChars": 69763,
+  "coverageChars": 9256,
+  "diffChars": 9256,
   "coverageComplete": true
 }

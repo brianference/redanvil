@@ -28,524 +28,137 @@
   "acceptedFindings": [
     {
       "app": "az-planting-calendar",
-      "title": "Placeholder crop images with empty alt",
-      "citation": "az-planting-calendar/design-refs/home-options/option-3-timeline-rail/index.html:1",
+      "title": "Timestamp-only measurement restamp",
+      "citation": "az-planting-calendar/evidence/measurement-meta.json:460",
       "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Design mock uses empty alt on crop images and static placeholder counts; if this is only a design ref that is expected, but production UI cannot ship empty-alt decorative-or-content crop marks without real alt text. This",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 1ec2bf03249c (coverage 692/692, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Commit only rewrites run timestamps (dark 07:30:35Z → 08:29:52Z; light 07:30:39Z → 08:29:56Z). No application code, tests, or axe report bodies appear in the diff. Updating `at` while leaving the same",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     },
     {
       "app": "az-planting-calendar",
-      "title": "Touch targets fail WCAG minimum",
-      "citation": "az-planting-calendar/evidence/header-build-measure.json:30",
+      "title": "Referenced axe reports not in diff",
+      "citation": "az-planting-calendar/evidence/measurement-meta.json:461",
       "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: header-build-measure.json records repeated touchFails on mobile and desktop: many anchors (including source-link) are only 21px tall (well under the 44px WCAG 2.5.5 / mobile UX minimum). This is measured evidence of unde",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 1ec2bf03249c (coverage 692/692, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Meta still points at evidence/axe/az-planting-calendar-dark.json and evidence/axe/az-planting-calendar-light.json, but those report files are unchanged in this commit. Cannot verify axe results, viola",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     },
     {
       "app": "az-planting-calendar",
-      "title": "First timeline cell not above the fold",
-      "citation": "az-planting-calendar/evidence/header-build-measure.json:27",
+      "title": "No substantive product change to judge",
+      "citation": "az-planting-calendar/evidence/measurement-meta.json:457",
       "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Every measured frame reports firstTimelineCellVisible: false (light-375, dark-375, light-1280, dark-1280, drawer-open, paint viewports). Search and title are above the fold, but the primary calendar grid content is not v",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "Mobile header far taller than mockup budget",
-      "citation": "az-planting-calendar/evidence/header-build-measure.json:3",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Mockup budget headerHeight375 is 452 vs measured headerHeight 127 when drawer closed — that looks like an improvement — but light-375-drawer-open reports headerHeight 508, which exceeds the mockup header budget and pushe",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "paint field null on primary frames",
-      "citation": "az-planting-calendar/evidence/header-build-measure.json:98",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: light-375, dark-375, light-1280, dark-1280, and light-375-drawer-open all set paint: null. Only paint-1440 reports a ratio (~0.993). Theme/paint coverage is incomplete for the standard 375/1280 light/dark matrix; cannot ",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "resolveZone name match is non-deterministic and over-broad",
-      "citation": "functions/lib/db.ts:130",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: resolveZone falls through to `WHERE name LIKE ?` with `%q%` and `LIMIT 1` ordered only by name. A short city fragment (e.g. \"mesa\") can match multiple zones; the chosen row is whichever sorts first alphabetically, not th",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "listZones AZ/Arizona filter hardcodes name patterns only",
-      "citation": "functions/lib/db.ts:155",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: State search for `az`/`arizona` matches only fixed LIKE patterns on `name` (`% AZ %`, `%Arizona%`, etc.). Zones that store state only in other columns (or names that do not embed ` AZ ` / `Arizona`) will be omitted. Coun",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "WINDOW_MONTH_OVERLAP year-wrap logic is weak / possibly wrong",
-      "citation": "functions/lib/db.ts:401",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: For wrapping windows (`start_half_month > end_half_month`), the predicate ORs four half bounds without clearly relating them to the two halves of the requested month. Compared to the non-wrapping branches (which test ove",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "guideToApi has no return type",
-      "citation": "functions/lib/db.ts:355",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: guideToApi is exported without an explicit return type. Under TypeScript strict projects this is weaker API surface than the surrounding typed helpers; callers can drift. Minor, but the new public helper should declare i",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "feature-audit crawler does not exercise interaction-only controls",
-      "citation": "scripts/feature-audit.mjs:1",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: The crawl only scans static roles on listed routes; it does not open menus, expand dialogs, or change theme. Stale entries require whyNotCrawled, which is good fail-closed policy, but any control only reachable after int",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "viewport never applied in measure()",
-      "citation": "scripts/measure-chosen-design.mjs:24",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: measure() accepts width/height and the outer loop iterates 375/1280/1440/1920, but newContext() is called with no viewport and page.setViewportSize is never called. Every run captures the browser default size; searchCoun",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "theme not set via colorScheme/emulation",
-      "citation": "scripts/measure-chosen-design.mjs:26",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Theme is only forced via localStorage + data-theme after load. Playwright colorScheme is never set, so prefers-color-scheme media queries and any CSS that depends on them are not measured. Combined with fixed viewport om",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "fixed wait instead of ready signal",
-      "citation": "scripts/measure-chosen-design.mjs:48",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: await page.waitForTimeout(250) after theme flip is a fixed sleep, not a paint/layout ready signal. Metrics (axe, bounding boxes, truncation) can run before styles settle; protocol requires real ready signals.",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "touch target check weakens WCAG 44px",
-      "citation": "scripts/measure-header-build.mjs:86",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Code detects r.height < 44 || r.width < 44 then only reports if r.height < 40, and never requires width ≥ 44. Narrow or short controls can pass the probe while failing a real 44×44 touch target gate.",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "paintCoverage samples only opaque bg/text",
-      "citation": "scripts/measure-header-build.mjs:154",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Paint ratio counts elementFromPoint cells with non-transparent backgroundColor or non-empty text color. Gradient/image backgrounds, canvas, and SVG paint can be under-counted; transparent parents with painted children at",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "footer 2-col grid on mobile may hurt readability",
-      "citation": "src/styles (footer grid-template-columns: 1fr 1fr)",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: site-footer uses grid-template-columns: 1fr 1fr even on phone, with comment that lists are short. Legal/nav links stay min-height touch but columns stay narrow; risk of cramped labels or wrap. Not proven broken without s",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "topbar zone/nav visibility only at 900px+",
-      "citation": "CSS @media (min-width: 900px) .topbar__zone / .topbar__menu-btn",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Desktop topbar zone and nav show at min-width 900px; menu button hidden. Intermediate tablet widths (e.g. 768) may still rely on hamburger—acceptable if intentional, but chunk provides no evidence drawer remains accessib",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "measurement scripts are evidence producers not product tests",
-      "citation": "scripts/measure-chosen-design.mjs:1",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: These scripts write JSON/screenshots when run; the patch does not include committed measure JSON, screenshots, or CI wiring proving they ran green. Presence of measure scripts ≠ verified UX. Without artifacts in this chu",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "navClass signature mismatch",
-      "citation": "az-planting-calendar/src/components/Layout.tsx:60",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: PrimaryNavLinks is passed className={navClass}, but navClass was changed from ({ isActive }) => string to (isActive: boolean) => string. If PrimaryNavLinks still expects a NavLink-style className callback receiving { isA",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "Home hides chrome: assistant/theme/zone only off-home",
-      "citation": "az-planting-calendar/src/components/Layout.tsx:28",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Top bar, breadcrumbs, ZoneSelector, ThemeToggle, and AssistantPanel are gated with !isHome. Comment claims Home uses CompactHeader for brand/nav, but this patch does not prove home still exposes zone selection, theme tog",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "Cannot verify BrandLogo is real artwork",
-      "citation": "az-planting-calendar/src/components/Layout.tsx:32",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Layout comment claims BrandLogo uses public/brand-mark.png finalized artwork, but BrandLogo implementation and asset are not in this patch. Placeholder/emoji brand cannot be refuted or confirmed here — FAIL verification ",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "plantable-now hash link may miss SPA home",
-      "citation": "az-planting-calendar/src/components/Layout.tsx:95",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Footer uses <a href=\"/#plantable-now\"> instead of React Router Link. From non-home routes this does a full navigation to /#plantable-now which usually works; from SPA context it can still force reload depending on host. ",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "navOpen not closed on route change outside PrimaryNavLinks",
-      "citation": "az-planting-calendar/src/components/Layout.tsx:23",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: navOpen state only closes via onNavigate on PrimaryNavLinks. Browser back, breadcrumb, logo, or theme click leave menu open if PrimaryNavLinks was not the navigation path. If logo is BrandLogo without onNavigate hookup, ",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "Footer brand still Cave Creek-only while app expanded",
-      "citation": "az-planting-calendar/src/i18n/en.ts:230",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: footer.brandBlurb still says 'Free low-desert planting calendar for Cave Creek, Arizona 85331' while appTagline, plantable.subtitle, zone copy, and grid pageLede reframe coverage as Maricopa County low desert with multip",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "Assistant empty state still Cave Creek-only",
-      "citation": "az-planting-calendar/src/i18n/en.ts:268",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: assistant.empty is 'Type a question about what to plant in Cave Creek.' while assistant.subtitle and zone messaging describe Maricopa County low desert coverage generally. Same coverage-scope mismatch as the footer blurb",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "Light hero tokens flipped; cannot verify paint",
-      "citation": "az-planting-calendar/src/styles/tokens-or-index.css:74",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Light-theme hero tokens change from dark paint (#0e1419 bg, light text) to light surface (#f4f6f8 bg, #0e1419 text). Intent looks correct for light-mode hero, but this judge has only the CSS patch—no screenshots or compu",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "forceThemeMode can miss target mode",
-      "citation": "az-planting-calendar/tests/acceptance.spec.ts:forceThemeMode",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: forceThemeMode clicks the theme toggle at most 4 times and then asserts data-theme-mode equals the target. With three modes and nextThemeMode skipping indistinguishable steps, reaching a specific mode (especially system ",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "Theme tests do not cover invalid storage values",
-      "citation": "az-planting-calendar/src/theme.test.ts:71",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: readThemeMode default and applyThemeMode persistence are tested for light/dark/system, but there is no test for corrupt/unknown localStorage values (e.g. 'auto', empty string, or the prior key 'az-planting-theme'). STORA",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "Hero contrast check uses hand-rolled luma, not axe",
-      "citation": "az-planting-calendar/tests/acceptance.spec.ts:isDarkRgb",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: isDarkRgb parses only simple rgb/rgba() and uses a fixed luma < 40 threshold. getComputedStyle can return color(srgb ...), lab(), or named colors; those return false and can make lightHeroBg/darkHeroBg comparison vacuous",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "Wrangler AI binding added with no tests in this patch",
-      "citation": "az-planting-calendar/wrangler.toml:AI",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: wrangler.toml adds [ai] binding = \"AI\". This chunk shows no functions/** usage test, no env type update, and no acceptance coverage for any AI route. Cannot verify the binding is wired, typed, or used safely—fails closed",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "API 404 acceptance depends on middleware not shown",
-      "citation": "az-planting-calendar/tests/acceptance.spec.ts:API health",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: New tests require unmatched /api/* to return 404 JSON with error containing 'no such endpoint', and listed routes to return 200 JSON. The implementing middleware/functions code is not in this chunk; the tests document th",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "az-planting-calendar",
-      "title": "Viewport hero assertion weakened",
-      "citation": "az-planting-calendar/tests/acceptance.spec.ts:Plantable now hero",
-      "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 1ec2bf03249c (coverage 842850/842850, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Hero visibility-in-viewport was relaxed from strict beInViewport() to scrollIntoViewIfNeeded + ratio 0.01, and list viewport check was removed. That can pass when the plantable hero is almost entirely off-screen after la",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 1ec2bf03249c (coverage 692/692, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Entire unified diff is a 12-line hunk in measurement-meta.json only. Nothing about UI, API routes, brand, SOURCES/INTEGRATIONS/COMPETITORS, routes, or screenshots can be verified as fixed or present f",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     },
     {
       "app": "dashboard",
-      "title": "Design claim is retrospective prose, not measured in-diff",
-      "citation": "dashboard/.redanvil/claims.json:11",
-      "commit": "63ec980d76d564ddb8b7156a4b2ff3c9f416aeb5",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 63ec980d76d5 (coverage 69763/69763, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: The design.archetype 'Metric board' and anti-column justification cite external PNGs and design_audit.mjs output (evidence/design-dashboard.json) that are not added or changed in this diff. A claim that evidence was open",
+      "title": "Logo measurable mark API removed",
+      "citation": "dashboard/src/components/shell/Logo.tsx:8",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9256/9256, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: The prior Logo wrapper supported opt-in `measurable` so only the header lockup got `markMeasure: 'mark'`; the deleted comment documented that marking every instance made `[data-measure=\"mark\"]` resolv",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     },
     {
       "app": "dashboard",
-      "title": "coverage-state baseCommit bump without proof",
-      "citation": "dashboard/.redanvil/coverage-state.json:2",
-      "commit": "63ec980d76d564ddb8b7156a4b2ff3c9f416aeb5",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 63ec980d76d5 (coverage 69763/69763, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: baseCommit moved to 97aa587... with highWaterPct still 91.66. Diff does not show how that commit was validated or that coverage still meets the water mark; status-only metadata change.",
+      "title": "Header qa-visual markers dropped",
+      "citation": "dashboard/src/components/shell/Header.tsx:48",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9256/9256, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Explicit `testId=\"compact-header\"` and `measure=\"header\"` were removed from SharedHeader. A comment claims markers default on the shared Header, but design-system Header is not in this diff, so the de",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     },
     {
       "app": "dashboard",
-      "title": "Favicon re-derive script alone does not prove assets shipped",
-      "citation": "dashboard/design-refs/logos/derive-assets.mjs:26",
-      "commit": "63ec980d76d564ddb8b7156a4b2ff3c9f416aeb5",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at 63ec980d76d5 (coverage 69763/69763, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Script resizes logo-mark.png to favicon-96.png and apple-180.png with transparent background. Diff snippet does not include binary public/ asset changes; cannot verify favicon legibility improvement from the script alone",
+      "title": "NavLink export deleted without consumers",
+      "citation": "dashboard/src/components/shell/NavLinks.tsx:48",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9256/9256, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: The exported `NavLink` component and `NavLinkProps` interface were deleted; only `drawerNavItems` now ends with `withGithubNav(...)`. No other files in the diff update imports of `NavLink` from this m",
+      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
+    },
+    {
+      "app": "dashboard",
+      "title": "companyLegalColumns behavior unverified",
+      "citation": "dashboard/src/components/shell/Footer.tsx:48",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9256/9256, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Company/About/Contact and Legal/Terms/Privacy columns were replaced by `...companyLegalColumns({...})`. Labels are passed correctly, but the helper (hrefs `/about`, `/contact`, `/terms`, `/privacy`, c",
+      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
+    },
+    {
+      "app": "dashboard",
+      "title": "withGithubNav equivalence unverified",
+      "citation": "dashboard/src/components/shell/NavLinks.tsx:51",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9256/9256, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Drawer nav previously appended `{ key: 'github', label, to: null, href: GITHUB_URL, external: true }`. Now it relies on design-system `withGithubNav(headerNavItems(), en.app.navGitHub, GITHUB_URL)`. K",
+      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
+    },
+    {
+      "app": "dashboard",
+      "title": "PageHeaderProps / PageDrawerProps not in diff",
+      "citation": "dashboard/src/components/shell/Header.tsx:25",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9256/9256, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Local prop interfaces were replaced with `PageHeaderProps` and `PageDrawerProps` from design-system/Page. Call sites still use `menuOpen`/`headerRef`/`menuBtnRef`/`onToggleMenu` and `open`/`drawerRef`",
+      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
+    },
+    {
+      "app": "dashboard",
+      "title": "No tests for shell refactor",
+      "citation": "dashboard/src/components/shell/Logo.tsx:1",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9256/9256, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Diff only touches shell wrappers (Footer, Header, Logo, MobileDrawer, NavLinks, constants). No test, snapshot, or qa-visual fixture updates accompany removal of measurable Logo, header measure/testId ",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     },
     {
       "app": "app-builder",
-      "title": "unverified claims.json design archetype",
-      "citation": "app-builder/.redanvil/claims.json:11",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: The design block claims archetype 'Command canvas' and cites screenshot + design_audit.mjs evidence. This chunk only adds the JSON claim text; it does not include the referenced PNGs, design_audit output, or production m",
+      "title": "Logo measurable opt-in deleted",
+      "citation": "app-builder/src/components/shell/Logo.tsx:8",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9341/9341, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Replaced the Logo component (with opt-in measurable / markMeasure: 'mark') with createLogo({ href, ariaLabel, defaultHeight }) and dropped the documented single-instance rule. Prior comment stated hea",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     },
     {
       "app": "app-builder",
-      "title": "coverage ratchet baseCommit only advanced",
-      "citation": "app-builder/.redanvil/coverage-state.json:3",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: baseCommit is updated from 9c7c5c6… to a64b8db… while highWaterPct stays 94.37. No coverage report or test run is in this chunk to show the new base is valid or that coverage was re-measured. Ratchet state changes withou",
+      "title": "Header QA markers removed unproven",
+      "citation": "app-builder/src/components/shell/Header.tsx:48",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9341/9341, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Explicit testId=\"compact-header\" and measure=\"header\" were removed from SharedHeader. A comment claims qa-visual markers default on the shared Header, but SharedHeader is not in this diff, so defaults",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     },
     {
       "app": "app-builder",
-      "title": "capture-frames uses fixed sleep not ready signal",
-      "citation": "app-builder/design-refs/design-options/capture-frames.mjs:35",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: After goto(networkidle), the script uses page.waitForTimeout(400) before screenshot instead of waiting on a real ready signal (e.g. image load / decoded). Fixed sleeps are unreliable and can capture unloaded media; the c",
+      "title": "Exported NavLink removed without callers",
+      "citation": "app-builder/src/components/shell/NavLinks.tsx:51",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9341/9341, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Public NavLink wrapper and NavLinkProps were deleted; drawerNavItems now only returns withGithubNav(...). No other file in this diff updates imports of NavLink from NavLinks. If any consumer still imp",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     },
     {
       "app": "app-builder",
-      "title": "legal substance floor raised without content proof in chunk",
-      "citation": "app-builder/src/i18n/en.test.ts:92",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Test thresholds jump from >=3 sections / >=150 words to >=14 sections / >=1400 words for terms and privacy. This chunk only changes the test expectations and home/examples i18n keys; it does not show the expanded en.page",
+      "title": "PageHeaderProps / PageDrawerProps unverified",
+      "citation": "app-builder/src/components/shell/Header.tsx:25",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9341/9341, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Local HeaderProps and MobileDrawerProps were replaced by PageHeaderProps and PageDrawerProps from design-system/Page. Shape compatibility (menuOpen vs open, ref types, onToggleMenu vs onClose) is assu",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     },
     {
       "app": "app-builder",
-      "title": "examples i18n keys added without usage proof",
-      "citation": "app-builder/src/i18n/en.ts:64",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: New strings (statsLabel, filtersLabel, filterEmpty, shippedCount, forgeError*) appear in the locale bundle. This chunk does not show the Examples page or forge-error UI wiring those keys. Keys alone do not prove the card",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "DECISION.md is process record not product proof",
-      "citation": "app-builder/design-refs/design-options/DECISION.md:22",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: DECISION.md records Option 3 Card catalog as chosen and requires real gate numbers in 'What it does' breakdowns. A decision doc is not implementation; cannot treat this as evidence that the live examples page implements ",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "gallery references PNG assets not in this patch",
-      "citation": "app-builder/design-refs/design-options/gallery.html:118",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: gallery.html src attributes point at option-*-{light,dark}-{375,1280}.png frames. The capture script and gallery HTML are present; the binary PNGs are not shown in this text diff. Cannot verify screenshots exist or match",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "Internal PRD contradiction: entities listed but storage mode none",
-      "citation": "app-builder/src/lib/prd.characterization.fixtures/empty-entities-no-auth.json:1",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: The fixture PRD frontmatter and prose name domain entities UptimeCheck and StatusPage, user stories for browse/search/detail/CRUD, and API files uptime_checks.ts / status_pages.ts with list/create/get signatures, while s",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "Self-check claims DDL for entities while DDL is none",
-      "citation": "app-builder/src/lib/prd.characterization.fixtures/empty-entities-no-auth.json:1",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: PRD Self-Check marks \"DDL present for every entity (or explicit none)\" as passed, and separately grades 14/16, while §7.2 says no D1 domain schema and API surface has no domain CRUD — yet §7.2 also lists entity schemas, ",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "JSON fixture missing trailing newline",
-      "citation": "app-builder/src/lib/prd.characterization.fixtures/empty-entities-no-auth.json:1",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Diff marks \"No newline at end of file\". Minor style/tooling hygiene issue; many linters and POSIX text rules expect a final newline. Not a functional defect by itself but an avoidable noise in a characterization fixture.",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "Generated schema is generic title/description, not domain fields",
-      "citation": "app-builder/src/lib/prd.characterization.fixtures/long-prompt-many-entities.json:1",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: The characterization fixture's generated PRD DDL and schemas model every entity (shifts, employees, locations, swap_requests, overtime_logs) as generic title/description rows rather than domain fields implied by the prom",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "MVP scope contradicts itself within the same PRD body",
-      "citation": "app-builder/src/lib/prd.characterization.fixtures/long-prompt-many-entities.json:1",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Early sections state MVP is F1–F5 only (Introduction, Success Outcome, user stories), while the Initial build prompt and later checklist require F1–F7 features and F1–F13 tests. That internal inconsistency is explicit in",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "PRD self-check admits prompt fidelity failure",
-      "citation": "app-builder/src/lib/prd.characterization.fixtures/long-prompt-many-entities.json:1",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Section 14 marks prompt fidelity unchecked: unmatched requirements truncated mid-sentence (\"employee ro…\"). Grade 15/16 documents that the long multi-entity prompt was not fully captured. For a characterization fixture o",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "Fixture PRD truncates brand/title",
-      "citation": "app-builder/src/lib/prd.characterization.fixtures/mobile-no-auth-two-entities.json:1",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: The generated fixture still uses the broken truncated product name \"App to Remind You When Your\" (slug app-to-remind-you-when-your) derived from an incomplete title parse of the prompt about dog grooming reminders. That ",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "Pet example IDs reuse rem_ prefix",
-      "citation": "app-builder/src/lib/prd.characterization.fixtures/mobile-no-auth-two-entities.json:1",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: In the Pet API example contracts embedded in the fixture, response examples use id \"rem_01\" for pets (e.g. GET/POST /api/pets examples). That is a copy-paste defect from the Reminder examples; pet ids should use a pet_ (",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "Definition of Done only asserts emission, not substance",
-      "citation": "app-builder/src/lib/prd/sections/definition-of-done.ts:1",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: buildDefinitionOfDone() emits a large checklist including G7 (two-run measurements) and related fail-closed rules, and DEFINITION_OF_DONE_HEADING is only for a self-check that the block string appears. From this patch al",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "Standard features tests do not prove implementation",
-      "citation": "app-builder/src/lib/prd/sections/features.test.ts:30",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: New tests only assert that buildFeatures always emits MVP Search and filter and Ask the assistant features with GIVEN/WHEN/THEN acceptance and /api/assistant in integration tests. That verifies PRD feature generation str",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "Empty-entity standard features still claim domain search",
-      "citation": "app-builder/src/lib/prd/sections/features.test.ts:52",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: Test expects Search and filter and Ask the assistant even when entities are []. Without seeing buildFeatures, it is likely the names still include a domain entity or generic \"records\" label; if they do not, acceptance cr",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "result view idle state treated as forge error",
-      "citation": "app-builder/src/pages/Home.tsx:232",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: When view is 'result' and forgeResult.status is 'idle', the UI renders the same forge error banner and recovery actions as a real failure. Idle is not an error: after reset() sets status to 'idle' and returns to wizard, ",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "capability verify still points at search.spec.ts only",
-      "citation": "app-builder/src/lib/prd/sections/slices.ts:149",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: After adding isSearchFilter with its own verify command (collection-search.spec.ts), capability features still use `npx playwright test tests/search.spec.ts`. Capability slices are not the standard search feature; reusin",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "assistant grounding unit test is unverifiable as specified",
-      "citation": "app-builder/src/lib/prd/sections/features.ts:248",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: tests.unit lists `assistant_groundsInAppData_notGeneralKnowledge`. That name asserts product behavior (grounding in app data vs general knowledge) that a pure unit test cannot honestly prove without a mocked model plus f",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "primaryTable fallback may emit invalid verify paths",
-      "citation": "app-builder/src/lib/prd/sections/slices.ts:136",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: isSearchFilter verify uses `tests/${primaryTable || 'collection'}-search.spec.ts`. When primaryTable is empty, the command targets collection-search.spec.ts; when primaryTable is set to a multi-word or non-slug form else",
-      "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
-    },
-    {
-      "app": "app-builder",
-      "title": "Definition-of-Done self-check strength not fully visible in chunk",
-      "citation": "app-builder/src/lib/prd/selfCheck.ts:193",
-      "commit": "aa6b4df9e43989e4bdb4003c3c1b8820069bff0a",
-      "since": "2026-08-03",
-      "reason": "Recorded from the chunked whole-diff release review at aa6b4df9e439 (coverage 703239/703239, complete). Accepted for THIS release only, under the incremental-release policy: ship with the finding recorded, fix it next. Judge detail: hasDefinitionOfDone requires DEFINITION_OF_DONE_HEADING plus every DONE_CHECKLIST_SECTIONS row id as `**id**` in markdown. That is a solid anti-stub pattern. The patch then truncates mid-items list at gate; whether defin",
+      "title": "companyLegalColumns structure unverified",
+      "citation": "app-builder/src/components/shell/Footer.tsx:49",
+      "commit": "6185add97ab72f678510f798a55cd04474d77817",
+      "since": "2026-08-04",
+      "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9341/9341, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Company and Legal columns were inlined with fixed routes (/about, /contact, /terms, /privacy); now spread via companyLegalColumns({...labels}). Helper implementation is outside the diff, so hrefs, hea",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
     }
   ],
