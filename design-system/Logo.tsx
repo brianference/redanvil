@@ -13,18 +13,25 @@ export interface LogoProps {
   ariaLabel: string;
   /** Lockup height in pixels. */
   height: number;
+  /**
+   * Optional qa-visual data-measure on the brand lockup link
+   * (e.g. "mark"). Placed on the always-visible anchor so light/dark
+   * image swap does not hide the measure target. Omitted when unused.
+   */
+  markMeasure?: string;
 }
 
 /**
  * Site logo: two transparent lockups, one per theme (no grey box).
  * CSS classes own visibility — never an inline `display`.
  */
-export function Logo({ href, ariaLabel, height }: LogoProps): JSX.Element {
+export function Logo({ href, ariaLabel, height, markMeasure }: LogoProps): JSX.Element {
   return (
     <a
       href={href}
       aria-label={ariaLabel}
       style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}
+      {...(markMeasure !== undefined ? { 'data-measure': markMeasure } : {})}
     >
       {/* Two transparent lockups, one per theme. The single-image version was
           illegible in dark: the wordmark measured ~2:1 against the header. CSS

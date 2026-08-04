@@ -184,7 +184,12 @@ async function measureObservation(browser, { baseUrl, route, width, theme, query
     // --- Default cold-state measurements, before any interaction ---
     const headerHeight = (await page.locator('[data-measure="header"]').boundingBox())?.height ?? 0;
     const brandMarkHeight = (await page.locator('[data-measure="mark"]').boundingBox())?.height ?? 0;
-    const heroHeight = (await page.locator('[data-measure="timeline"]').boundingBox())?.height ?? 0;
+    // Hero region: az-planting-calendar names its primary band "timeline";
+    // other apps may use the honest name "hero". Prefer whichever is present.
+    const heroLocator = page.locator(
+      '[data-measure="timeline"], [data-measure="hero"]'
+    ).first();
+    const heroHeight = (await heroLocator.boundingBox())?.height ?? 0;
 
     const searchControlBox = await page.getByTestId('live-search').boundingBox();
     const primaryActionAboveFold =

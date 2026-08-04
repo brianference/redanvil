@@ -61,7 +61,12 @@ export function KpiStrip({ summary }: KpiStripProps): JSX.Element {
         : summary.avgScore.toFixed(1);
 
   return (
-    <div style={stripStyle} role="group" aria-label={en.pages.home.summaryLabel}>
+    <div
+      style={stripStyle}
+      role="group"
+      aria-label={en.pages.home.summaryLabel}
+      data-measure="hero"
+    >
       <div style={cardStyle}>
         <div style={valueStyle}>{summary.total}</div>
         <div style={labelStyle}>{en.pages.home.kpiTotal}</div>

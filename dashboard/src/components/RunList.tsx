@@ -245,7 +245,7 @@ export function RunList({ runs }: RunListProps): JSX.Element {
   }
 
   return (
-    <section aria-label={en.runList.listAria}>
+    <section aria-label={en.runList.listAria} data-testid="search-results">
       <div
         style={{
           display: 'flex',
