@@ -15,17 +15,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-04T08:41:46.349Z"
+        "at": "2026-08-04T08:46:05.245Z"
       },
       {
         "ok": false,
-        "at": "2026-08-04T08:41:46.350Z"
+        "at": "2026-08-04T08:46:05.246Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-recheck-flattering\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-04T08:41:46.350Z"
+      "recordedAt": "2026-08-04T08:46:05.246Z"
     }
   }
 }

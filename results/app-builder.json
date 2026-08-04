@@ -245,7 +245,7 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-known-bad",
@@ -380,19 +380,20 @@
         "fe-touch-targets",
         "fe-type-floor",
         "hyg-no-binaries",
-        "hyg-no-duplication"
+        "hyg-no-duplication",
+        "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-04T07:59:43.333Z",
+  "finishedAt": "2026-08-04T08:46:36.963Z",
   "provenance": {
-    "commit": "fc191f77bf298ed2c994477d4cf52e23292b4f6a",
+    "commit": "47cb3e5d5baf0f87c3cc24897de05697ce478c3b",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "7652eeea3358b29418a571d2abd61dac26bea026062201de8b4ba5b475089a5b",
+    "verdictsHash": "2c22b3192f3bdcfb52bbfffe56f1e87fef2ce57e64653b36bfeee8295e7ec8cf",
     "notApplicable": [
       "fe-result-in-viewport",
       "proc-pr-title-ticket",
@@ -402,6 +403,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-04T07:59:43.398Z"
+    "generatedAt": "2026-08-04T08:46:37.054Z"
   }
 }
