@@ -1,16 +1,24 @@
 #!/usr/bin/env node
 /**
  * Real QA-visual measurement harness: drives the deployed app, exercises the
- * primary control (crop search), measures where the result actually renders,
- * and writes evidence/qa-visual-<slug>.json via the ONE decision + report
+ * primary control (search), measures where the result actually renders, and
+ * writes evidence/qa-visual-<slug>.json via the ONE decision + report
  * implementation in orchestrator/src/team/qaVisual.ts (never reimplemented
  * here -- a hand-rolled copy is exactly how two "identical" checks disagree).
+ *
+ * Search models (discovered from the live page, not hard-coded per slug):
+ *   - api-submit: `search-submit` present -- type query, wait for API
+ *     response, click submit (az-planting-calendar /api/crops).
+ *   - client-filter: no submit control -- type into filter-search and wait
+ *     for the rendered result set to settle on a state that differs from the
+ *     pre-query baseline (dashboard). Never wait on a network event that
+ *     will not fire; never treat "could not measure" as pass.
  *
  * Usage:
  *   node qa_visual.mjs <baseUrl> <slug> [--route /] [--query tomato] [--root dir]
  *
  * Exit 0 = qa-visual report is a real pass AND the self-check held.
- * Exit 1 = qa-visual report failed, or the self-check proved the measurer broken.
+ * Exit 1 = qa-visual report failed (including search that does not narrow).
  * Exit 2 = infrastructure (playwright missing, tsx helper failed, bad args).
  *
  * Reuses the theme-seeding pattern from screenshots.mjs (the app resolves
@@ -151,11 +159,140 @@ async function waitForStableBoundingBox(locator, opts = {}) {
 }
 
 /**
+ * Snapshot of the rendered search result set for change detection.
+ *
+ * Client-side filters can briefly paint an empty intermediate state; callers
+ * must wait for this signature to both differ from baseline AND stay stable.
+ * Encodes presence, item count, and a short text digest -- not a network event.
+ *
+ * @param {import('playwright').Page} page
+ * @returns {Promise<{ present: boolean, itemCount: number, digest: string }>}
+ */
+async function captureResultSignature(page) {
+  return page.evaluate(() => {
+    const root = document.querySelector('[data-testid="search-results"]');
+    if (!root) {
+      // No-results UI (e.g. dashboard "No runs match …") replaces the list.
+      const statuses = [...document.querySelectorAll('[role="status"]')]
+        .map((el) => (el.textContent ?? '').trim())
+        .filter(Boolean);
+      return {
+        present: false,
+        itemCount: 0,
+        digest: `empty:${statuses.join('|').slice(0, 200)}`
+      };
+    }
+    const items = root.querySelectorAll(
+      'li, [role="option"], .live-search__item, [data-testid="search-result-item"]'
+    );
+    const itemCount = items.length;
+    const textSource =
+      itemCount > 0
+        ? [...items]
+            .map((el) => (el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 60))
+            .join('|')
+        : (root.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 200);
+    return {
+      present: true,
+      itemCount,
+      digest: `list:${itemCount}:${textSource.slice(0, 400)}`
+    };
+  });
+}
+
+/**
+ * Serialize a result signature for equality checks.
+ *
+ * @param {{ present: boolean, itemCount: number, digest: string }} sig
+ */
+function resultSignatureKey(sig) {
+  return `${sig.present}|${sig.itemCount}|${sig.digest}`;
+}
+
+/**
+ * Wait until the rendered result set differs from baseline and has stopped
+ * changing. Real-signal poll (signature convergence), not a fixed sleep.
+ *
+ * A filter that never narrows / never changes the DOM returns
+ * `{ changed: false }` so the caller can fail closed on product grounds
+ * (exit 1) rather than as infrastructure (exit 2).
+ *
+ * @param {import('playwright').Page} page
+ * @param {{ present: boolean, itemCount: number, digest: string }} baseline
+ * @param {{ intervalMs?: number, stableForMs?: number, timeoutMs?: number }} [opts]
+ * @returns {Promise<{ changed: boolean, signature: { present: boolean, itemCount: number, digest: string } }>}
+ */
+async function waitForSettledResultChange(page, baseline, opts = {}) {
+  const intervalMs = opts.intervalMs ?? 50;
+  const stableForMs = opts.stableForMs ?? 200;
+  const timeoutMs = opts.timeoutMs ?? 10_000;
+  const baselineKey = resultSignatureKey(baseline);
+  const start = Date.now();
+  let lastKey = null;
+  let lastSig = baseline;
+  let stableSince = null;
+
+  for (;;) {
+    const sig = await captureResultSignature(page);
+    const key = resultSignatureKey(sig);
+    if (key === lastKey) {
+      stableSince ??= Date.now();
+      if (Date.now() - stableSince >= stableForMs && key !== baselineKey) {
+        return { changed: true, signature: sig };
+      }
+    } else {
+      stableSince = null;
+      lastKey = key;
+      lastSig = sig;
+    }
+    if (Date.now() - start >= timeoutMs) {
+      return {
+        changed: resultSignatureKey(lastSig) !== baselineKey,
+        signature: lastSig
+      };
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
+
+/**
+ * Measure the primary result region's on-screen box after search.
+ *
+ * Prefer `[data-testid="search-results"]` when present; otherwise the nearest
+ * role=status that appeared for an empty filter (so empty-but-honest UX still
+ * yields a measurable primary result y rather than a silent null).
+ *
+ * @param {import('playwright').Page} page
+ * @returns {Promise<{ y: number|null, height: number }>}
+ */
+async function measurePrimaryResultBox(page) {
+  const resultsLocator = page.getByTestId('search-results');
+  if ((await resultsLocator.count()) > 0) {
+    const box = await waitForStableBoundingBox(resultsLocator);
+    if (box) return { y: box.y, height: box.height };
+    return { y: null, height: 0 };
+  }
+  // Empty-match status: visible response to the search action.
+  const statusLocator = page.locator('[role="status"]').filter({ hasText: /\S/ });
+  if ((await statusLocator.count()) > 0) {
+    const box = await waitForStableBoundingBox(statusLocator.first());
+    if (box) return { y: box.y, height: box.height };
+  }
+  return { y: null, height: 0 };
+}
+
+/**
  * Measure one (width, theme) observation against the live app.
+ *
+ * Search model is discovered from the page: a `search-submit` control means
+ * API/submit search (az-planting-calendar); its absence means client-side
+ * filter (dashboard). Declaring this in apps.mjs would work but would drift
+ * if an app changes architecture without a harness update -- the DOM is the
+ * ground truth the visitor experiences.
  *
  * @param {import('playwright').Browser} browser
  * @param {{ baseUrl: string, route: string, width: number, theme: 'dark'|'light', query: string }} opts
- * @returns {Promise<import('../../orchestrator/src/team/qaVisual').QaVisualMetrics>}
+ * @returns {Promise<{ metrics: import('../../orchestrator/src/team/qaVisual').QaVisualMetrics, truncatedElements: unknown[], apiStatus: number|string|null, consoleErrors: string[], searchMode: string, searchNarrowed: boolean }>}
  */
 async function measureObservation(browser, { baseUrl, route, width, theme, query }) {
   const height = HEIGHT_FOR_WIDTH[width] ?? 900;
@@ -198,26 +335,57 @@ async function measureObservation(browser, { baseUrl, route, width, theme, query
     const truncatedElements = await page.evaluate(TRUNCATION_SOURCE);
     const truncatedElementCount = truncatedElements.length;
 
-    // --- Exercise the primary control: type a query, press Search ---
-    const encoded = encodeURIComponent(query);
-    const responseWait = page.waitForResponse(
-      (r) => r.url().includes('/api/crops') && r.url().includes(`q=${encoded}`)
-    );
-    await page.getByTestId('filter-search').fill(query);
-    const apiResponse = await responseWait;
+    // Discover search architecture from the live DOM, not from a slug table.
+    const hasSearchSubmit = (await page.getByTestId('search-submit').count()) > 0;
+    const searchMode = hasSearchSubmit ? 'api-submit' : 'client-filter';
 
-    await Promise.race([
-      page.locator('#search-result-count').waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {}),
-      page.getByTestId('search-live-error').waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {})
-    ]);
-    await page.getByTestId('search-submit').click();
-
-    const resultsLocator = page.getByTestId('search-results');
+    let apiStatus = null;
+    let searchNarrowed = false;
     let primaryResultY = null;
     let primaryResultHeight = 0;
-    if ((await resultsLocator.count()) > 0) {
-      const box = await waitForStableBoundingBox(resultsLocator);
-      if (box) {
+
+    if (searchMode === 'api-submit') {
+      // --- API / submit model (az-planting-calendar): keep prior behaviour ---
+      const encoded = encodeURIComponent(query);
+      const responseWait = page.waitForResponse(
+        (r) => r.url().includes('/api/crops') && r.url().includes(`q=${encoded}`)
+      );
+      await page.getByTestId('filter-search').fill(query);
+      const apiResponse = await responseWait;
+      apiStatus = apiResponse.status();
+
+      await Promise.race([
+        page.locator('#search-result-count').waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {}),
+        page.getByTestId('search-live-error').waitFor({ state: 'visible', timeout: 10_000 }).catch(() => {})
+      ]);
+      await page.getByTestId('search-submit').click();
+      // A successful API round-trip plus a visible result panel counts as
+      // exercise of search; the pure decision still fails closed if y is null.
+      searchNarrowed = true;
+
+      const resultsLocator = page.getByTestId('search-results');
+      if ((await resultsLocator.count()) > 0) {
+        const box = await waitForStableBoundingBox(resultsLocator);
+        if (box) {
+          primaryResultY = box.y;
+          primaryResultHeight = box.height;
+        }
+      }
+    } else {
+      // --- Client-side filter model (dashboard): type and wait on results ---
+      const baseline = await captureResultSignature(page);
+      await page.getByTestId('filter-search').fill(query);
+      const settled = await waitForSettledResultChange(page, baseline);
+      searchNarrowed = settled.changed;
+      apiStatus = 'client-filter';
+
+      if (!searchNarrowed) {
+        // Fail closed on product grounds: primary result stays missing so the
+        // pure decision reports fail. Do not invent a measured y.
+        primaryResultY = null;
+        primaryResultHeight = 0;
+      } else {
+        const box = await measurePrimaryResultBox(page);
         primaryResultY = box.y;
         primaryResultHeight = box.height;
       }
@@ -238,8 +406,10 @@ async function measureObservation(browser, { baseUrl, route, width, theme, query
         theme
       },
       truncatedElements,
-      apiStatus: apiResponse.status(),
-      consoleErrors
+      apiStatus,
+      consoleErrors,
+      searchMode,
+      searchNarrowed
     };
   } finally {
     await page.close();
@@ -329,8 +499,14 @@ export async function main() {
             `primaryResultY=${result.metrics.primaryResultY} h=${result.metrics.primaryResultHeight} ` +
             `header=${result.metrics.headerHeight} mark=${result.metrics.brandMarkHeight} ` +
             `hero=${result.metrics.heroHeight} truncated=${result.metrics.truncatedElementCount} ` +
-            `actionAboveFold=${result.metrics.primaryActionAboveFold} apiStatus=${result.apiStatus}`
+            `actionAboveFold=${result.metrics.primaryActionAboveFold} apiStatus=${result.apiStatus} ` +
+            `searchMode=${result.searchMode} searchNarrowed=${result.searchNarrowed}`
         );
+        if (!result.searchNarrowed) {
+          console.log(
+            '  search did not change the rendered result set -- fail closed (not measured as fine)'
+          );
+        }
         if (result.consoleErrors.length > 0) {
           console.log(`  console errors: ${result.consoleErrors.join(' | ')}`);
         }
