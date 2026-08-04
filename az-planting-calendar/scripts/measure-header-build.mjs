@@ -15,6 +15,12 @@ const outDir = path.join(root, 'evidence', 'screenshots', 'header-build');
 const outJson = path.join(root, 'evidence', 'header-build-measure.json');
 const baseURL = process.env.BASE_URL ?? 'http://127.0.0.1:8788';
 
+/**
+ * WCAG / fe-touch-targets minimum control edge length (px).
+ * Single source of truth -- do not hardcode a second floor elsewhere in this file.
+ */
+const MIN_TOUCH_TARGET_PX = 44;
+
 /** Mockup option-3 numbers from design-refs/header-options/MEASUREMENT.json (drawer open). */
 const MOCKUP = {
   headerHeight375: 452,
@@ -30,7 +36,7 @@ const MOCKUP = {
  * @param {import('@playwright/test').Page} page
  */
 async function measure(page) {
-  return page.evaluate(() => {
+  return page.evaluate((minTouchPx) => {
     const header = document.querySelector('[data-testid="compact-header"]');
     const search = document.querySelector('[data-testid="filter-search"]');
     const mark = document.querySelector('.compact-header__mark');
@@ -81,16 +87,14 @@ async function measure(page) {
       if (style.display === 'none' || style.visibility === 'hidden') continue;
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) continue;
-      if (r.height < 44 || r.width < 44) {
-        // Text links in footer/nav may be height-ok via min-height; report only clear misses.
-        if (r.height < 40) {
-          touchFails.push({
-            tag: el.tagName,
-            testid: el.getAttribute('data-testid'),
-            h: Math.round(r.height),
-            w: Math.round(r.width)
-          });
-        }
+      // Fail any interactive control whose painted box is under the 44px floor on either edge.
+      if (r.height < minTouchPx || r.width < minTouchPx) {
+        touchFails.push({
+          tag: el.tagName,
+          testid: el.getAttribute('data-testid'),
+          h: Math.round(r.height),
+          w: Math.round(r.width)
+        });
       }
     }
 
@@ -128,9 +132,10 @@ async function measure(page) {
       drawerOpen: drawer ? !drawer.hasAttribute('hidden') : null,
       drawerAriaExpanded: drawerToggle?.getAttribute('aria-expanded') ?? null,
       truncatedCount,
-      touchFails: touchFails.slice(0, 12)
+      touchFails: touchFails.slice(0, 12),
+      minTouchTargetPx: minTouchPx
     };
-  });
+  }, MIN_TOUCH_TARGET_PX);
 }
 
 /**

@@ -12,6 +12,32 @@ const outDir = path.resolve('evidence/screenshots/chosen-design');
 fs.mkdirSync(outDir, { recursive: true });
 
 /**
+ * Wait until data-theme is applied and the document background has painted
+ * to the expected light/dark luma. No fixed sleeps -- the engine's resolved
+ * paint is the ready signal.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {'light' | 'dark'} theme
+ */
+async function waitForThemePainted(page, theme) {
+  await page.waitForFunction((t) => {
+    if (document.documentElement.getAttribute('data-theme') !== t) return false;
+    // Resolve body background through the canvas so the engine computes the colour
+    // (handles hex, rgb, color-mix, color(srgb...), etc.) -- never hand-parse CSS.
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return false;
+    ctx.fillStyle = getComputedStyle(document.body).backgroundColor;
+    ctx.fillRect(0, 0, 1, 1);
+    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    return t === 'dark' ? luma < 80 : luma >= 80;
+  }, theme);
+}
+
+/**
  * Measure one theme × viewport combination.
  *
  * @param {import('@playwright/test').Browser} browser
@@ -20,7 +46,11 @@ fs.mkdirSync(outDir, { recursive: true });
  * @param {number} height
  */
 async function measure(browser, theme, width, height) {
-  const context = await browser.newContext();
+  // Viewport must be set before theme/navigation so measurements describe the intended size.
+  const context = await browser.newContext({
+    viewport: { width, height },
+    colorScheme: theme === 'dark' ? 'dark' : 'light'
+  });
   const page = await context.newPage();
   await page.addInitScript((t) => {
     localStorage.setItem('theme', t);
@@ -44,7 +74,7 @@ async function measure(browser, theme, width, height) {
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem('theme', t);
   }, theme);
-  await page.waitForTimeout(250);
+  await waitForThemePainted(page, theme);
 
   const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
 

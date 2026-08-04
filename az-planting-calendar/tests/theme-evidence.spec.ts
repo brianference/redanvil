@@ -42,10 +42,11 @@ test.describe('Theme evidence (screenshots)', () => {
       .poll(async () => page.evaluate(() => localStorage.getItem('theme')))
       .toBe('light');
 
-    const lightHeroBg = await readHeroBg(page);
-    expect(isDarkRgb(lightHeroBg), `light hero should not be near-black, got ${lightHeroBg}`).toBe(
-      false
-    );
+    const lightHero = await samplePaintedSurface(page, 'half-month-timeline');
+    expect(
+      lightHero.dark,
+      `light hero should not be near-black, got luma=${lightHero.luma} from ${lightHero.css}`
+    ).toBe(false);
 
     for (const vp of viewports) {
       await page.setViewportSize({ width: vp.width, height: vp.height });
@@ -62,9 +63,13 @@ test.describe('Theme evidence (screenshots)', () => {
       .poll(async () => page.evaluate(() => localStorage.getItem('theme')))
       .toBe('dark');
 
-    const darkHeroBg = await readHeroBg(page);
-    expect(isDarkRgb(darkHeroBg), `dark hero should be dark, got ${darkHeroBg}`).toBe(true);
-    expect(lightHeroBg).not.toBe(darkHeroBg);
+    const darkHero = await samplePaintedSurface(page, 'half-month-timeline');
+    expect(
+      darkHero.dark,
+      `dark hero should be dark, got luma=${darkHero.luma} from ${darkHero.css}`
+    ).toBe(true);
+    expect(lightHero.css).not.toBe(darkHero.css);
+    expect(lightHero.luma).not.toBe(darkHero.luma);
 
     for (const vp of viewports) {
       await page.setViewportSize({ width: vp.width, height: vp.height });
@@ -103,28 +108,34 @@ async function forceThemeMode(
 }
 
 /**
- * Read computed background-color of the timeline hero (theme-sensitive surface).
+ * Sample a painted surface by letting the browser engine resolve its background
+ * colour to sRGB bytes via canvas (handles hex, rgb(), rgba(), color(srgb...),
+ * color-mix(), named colours). Never hand-parses CSS colour strings.
  *
  * @param page - Playwright page.
+ * @param testId - data-testid of the element to sample.
  */
-async function readHeroBg(page: import('@playwright/test').Page): Promise<string> {
-  return page.getByTestId('half-month-timeline').evaluate((el) => {
-    return getComputedStyle(el).backgroundColor;
+async function samplePaintedSurface(
+  page: import('@playwright/test').Page,
+  testId: string
+): Promise<{ dark: boolean; css: string; r: number; g: number; b: number; luma: number }> {
+  return page.getByTestId(testId).evaluate((el) => {
+    const css = getComputedStyle(el).backgroundColor;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 1;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) {
+      throw new Error('2d canvas context unavailable');
+    }
+    // Sentinel so a failed fillStyle assignment is detectable (engine keeps prior style).
+    ctx.fillStyle = 'rgb(1, 2, 3)';
+    ctx.fillStyle = css;
+    ctx.fillRect(0, 0, 1, 1);
+    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+    // Luma on engine-resolved sRGB bytes (not a regex over the CSS string).
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    // Light hero (~#f4f6f8) is high; dark hero (~#06090c) is low.
+    return { dark: luma < 40, css, r, g, b, luma };
   });
-}
-
-/**
- * Heuristic: treat near-black backgrounds as "dark".
- *
- * @param rgb - CSS color string from getComputedStyle.
- */
-function isDarkRgb(rgb: string): boolean {
-  const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-  if (!m) return false;
-  const r = Number(m[1]);
-  const g = Number(m[2]);
-  const b = Number(m[3]);
-  // Luma threshold: light hero (~#f4f6f8) is high; dark hero (~#06090c) is low.
-  const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luma < 40;
 }
