@@ -22,7 +22,9 @@ import { loadRubric } from '../src/rubric/index';
 import { APP_CHECKS } from '../src/commands/gate';
 import {
   evaluateNotFoundStatus,
+  evaluateAbsentApiNotFound,
   discoverDetailRoutes,
+  hasApiSurface,
   fillBogus
 } from '../scripts/checks/u-api-not-found.mjs';
 import {
@@ -249,6 +251,21 @@ describe('B3 u-api-not-found', () => {
     console.log('u-api-not-found known-bad (200):', evaluateNotFoundStatus(200));
   });
 
+  it('evaluateAbsentApiNotFound reuses SPA detection and requires 404', () => {
+    const spa = '<!doctype html><html><body><div id="root"></div></body></html>';
+    expect(evaluateAbsentApiNotFound(404, '{"error":"missing"}')).toBeNull();
+    expect(evaluateAbsentApiNotFound(200, spa)).toMatch(/SPA|200/i);
+    expect(looksLikeSpaShell(spa)).toBe(true);
+    // Shared detector with B5 — same failure class, not a second copy.
+    expect(evaluateSpaMask(200, spa)).toMatch(/SPA|200/i);
+    expect(evaluateAbsentApiNotFound(200, '{"ok":true}')).toMatch(/200/);
+    expect(evaluateAbsentApiNotFound(500, '{"error":"boom"}')).toMatch(/500/);
+    console.log(
+      'u-api-not-found absent SPA known-bad:',
+      evaluateAbsentApiNotFound(200, spa)
+    );
+  });
+
   it('discovers detail routes and fills bogus ids', () => {
     const app = makeAppDir();
     write(app, 'functions/api/crops/[id].ts', 'export async function onRequest() {}');
@@ -257,6 +274,29 @@ describe('B3 u-api-not-found', () => {
     expect(routes).toContain('/api/crops/[id]');
     expect(routes).not.toContain('/api/health');
     expect(fillBogus('/api/crops/[id]')).toBe('/api/crops/__no_such_id__');
+    expect(hasApiSurface(app)).toBe(true);
+  });
+
+  it('hasApiSurface is false with no functions/api and true with flat routes only', () => {
+    const empty = makeAppDir();
+    write(empty, 'src/App.tsx', 'export default function App(){return null}');
+    expect(hasApiSurface(empty)).toBe(false);
+    expect(discoverDetailRoutes(empty)).toEqual([]);
+
+    const flat = makeAppDir();
+    write(flat, 'functions/api/health.ts', 'export async function onRequest() {}');
+    write(flat, 'functions/api/health.test.ts', 'export {}');
+    expect(hasApiSurface(flat)).toBe(true);
+    expect(discoverDetailRoutes(flat)).toEqual([]);
+  });
+
+  it('n/a when the app has no API surface at all', async () => {
+    const app = makeAppDir();
+    write(app, 'src/App.tsx', 'export default function App(){return null}');
+    const r = await runCaptured((io) => runApiNotFound(app, io));
+    expect(r.code).toBe(3);
+    expect(r.msg).toMatch(/no API surface/i);
+    console.log('u-api-not-found no-api n/a:', r.msg);
   });
 
   it('FAILS when the runtime returns 200 for a bogus id (known-bad fixture server)', async () => {
@@ -287,7 +327,7 @@ describe('B3 u-api-not-found', () => {
     }
   });
 
-  it('PASSES when the runtime returns 404 (known-good)', async () => {
+  it('PASSES when the runtime returns 404 (known-good detail route)', async () => {
     const app = makeAppDir();
     write(app, 'functions/api/items/[id].ts', 'export async function onRequest() {}');
     write(app, 'wrangler.toml', 'name = "t"\n');
@@ -308,6 +348,73 @@ describe('B3 u-api-not-found', () => {
         })
       );
       expect(r.code).toBe(0);
+    } finally {
+      await new Promise<void>((r) => server.close(() => r()));
+    }
+  });
+
+  it('PASSES via absent-path probe when API surface has no detail routes (dashboard shape)', async () => {
+    const app = makeAppDir();
+    write(app, 'functions/api/health.ts', 'export async function onRequest() {}');
+    write(app, 'wrangler.toml', 'name = "t"\n');
+    expect(discoverDetailRoutes(app)).toEqual([]);
+    expect(hasApiSurface(app)).toBe(true);
+    const server = createServer((_req, res) => {
+      res.writeHead(404, { 'content-type': 'application/json' });
+      res.end('{"error":"not found"}');
+    });
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', () => r()));
+    const port = (server.address() as AddressInfo).port;
+    try {
+      const r = await runCaptured((io) =>
+        runApiNotFound(app, io, {
+          boot: async () => ({
+            baseUrl: `http://127.0.0.1:${port}`,
+            cleanup: () => {},
+            error: null
+          }),
+          path: '/api/__definitely_absent_test'
+        })
+      );
+      expect(r.code).toBe(0);
+      console.log('u-api-not-found flat-api absent-path pass exit:', r.code);
+    } finally {
+      await new Promise<void>((r) => server.close(() => r()));
+    }
+  });
+
+  it('FAILS when absent /api path returns SPA shell at 200 (not n/a, not pass)', async () => {
+    const app = makeAppDir();
+    // Same shape as known-bad-fixtures/u-api-no-spa-mask: API surface, no [param].
+    write(app, 'functions/api/health.ts', 'export async function onRequest() {}');
+    write(app, 'wrangler.toml', 'name = "t"\n');
+    write(
+      app,
+      'dist/index.html',
+      '<!doctype html><html><body><div id="root"></div></body></html>'
+    );
+    const spaBody =
+      '<!doctype html><html><body><div id="root"></div></body></html>';
+    const server = createServer((_req, res) => {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(spaBody);
+    });
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', () => r()));
+    const port = (server.address() as AddressInfo).port;
+    try {
+      const r = await runCaptured((io) =>
+        runApiNotFound(app, io, {
+          boot: async () => ({
+            baseUrl: `http://127.0.0.1:${port}`,
+            cleanup: () => {},
+            error: null
+          }),
+          path: '/api/__definitely_absent_test'
+        })
+      );
+      expect(r.code).toBe(1);
+      expect(r.msg).toMatch(/SPA|200/i);
+      console.log('u-api-not-found SPA-shell fail output:', r.msg.slice(0, 300));
     } finally {
       await new Promise<void>((r) => server.close(() => r()));
     }

@@ -55,12 +55,15 @@ when `package.json` has no `build` script. Do not substitute
 Boot the real runtime (reuse the harness in
 `.github/scripts/runtime_parity.mjs`) and assert:
 
-- a detail route with a bogus id (e.g. `/api/<collection>/__no_such_id__`)
-  returns **404**, not 200 and not 500;
-- discover collections from the app's own `functions/api/` tree rather than a
+- when detail (`[param]`) routes exist: each with a bogus id
+  (e.g. `/api/<collection>/__no_such_id__`) returns **404**, not 200 and not 500;
+- when the app has an API surface but no detail routes: a definitely-absent
+  `/api/__definitely_absent_<nonce>` path returns **404** (not a 200 SPA shell —
+  reuse SPA detection from `u-api-no-spa-mask`);
+- discover routes from the app's own `functions/api/` tree rather than a
   hardcoded list.
 
-n/a only when the app declares no detail routes.
+n/a only when the app has no API surface under `functions/api/` at all.
 
 ### B5 — an SPA fallback must not answer for `/api/*` -> rule `u-api-no-spa-mask`
 

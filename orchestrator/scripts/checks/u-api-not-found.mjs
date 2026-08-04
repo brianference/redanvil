@@ -1,13 +1,20 @@
 #!/usr/bin/env node
 /**
- * u-api-not-found — detail routes return 404 for a bogus id.
+ * u-api-not-found — not-found paths under /api/* return 404.
  *
  * Usage: node u-api-not-found.mjs <appDir>
- * Exit 0 = pass, 1 = fail, 2 = infra, 3 = n/a (no detail routes).
+ * Exit 0 = pass, 1 = fail, 2 = infra, 3 = n/a (no API surface at all).
  *
- * Discovers `[param]` routes under functions/api/ (not a hardcoded list) and
- * requests each with a sentinel id that must not exist. 200 or 500 fails;
- * 404 passes. Reuses the runtime_parity wrangler harness for the live boot.
+ * Two measurement modes (detail routes are the stronger check when present):
+ * 1. Detail routes: discover `[param]` routes under functions/api/ and request
+ *    each with a sentinel id that must not exist. 200 or 500 fails; 404 passes.
+ * 2. API surface without detail routes: probe a definitely-absent
+ *    `/api/__definitely_absent_<nonce>` path and require a real 404. A 200 that
+ *    carries the SPA shell is a FAIL (Cloudflare Pages often answers unmatched
+ *    paths with index.html at 200) — SPA detection is reused from
+ *    u-api-no-spa-mask, not reimplemented.
+ *
+ * n/a only when the app has no functions/api surface at all.
  */
 import { existsSync, readdirSync } from 'node:fs';
 import { join, relative, sep, extname, dirname } from 'node:path';
@@ -24,6 +31,12 @@ import {
   writeNotApplicableMeta,
   nowIso
 } from '../lib/measurement-meta.mjs';
+import {
+  evaluateSpaMask,
+  looksLikeSpaShell,
+  absentApiPath,
+  requestBody
+} from './u-api-no-spa-mask.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 /**
@@ -83,6 +96,40 @@ export function discoverDetailRoutes(appDir) {
 }
 
 /**
+ * True when the app has any non-test API route file under functions/api/.
+ * An app with only health.ts counts; an empty tree or tests-only does not.
+ *
+ * @param {string} appDir App root.
+ * @returns {boolean}
+ */
+export function hasApiSurface(appDir) {
+  const root = join(appDir, 'functions', 'api');
+  if (!existsSync(root)) return false;
+  let found = false;
+  /**
+   * @param {string} dir
+   */
+  const walk = (dir) => {
+    if (found) return;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (!entry.name.startsWith('_')) walk(full);
+        continue;
+      }
+      if (!['.ts', '.js', '.tsx', '.mjs'].includes(extname(entry.name))) continue;
+      const base = entry.name.slice(0, -extname(entry.name).length);
+      if (/\.(test|spec)$/.test(base)) continue;
+      if (entry.name.startsWith('_')) continue;
+      found = true;
+      return;
+    }
+  };
+  walk(root);
+  return found;
+}
+
+/**
  * Fill every `[param]` segment with the bogus sentinel.
  *
  * @param {string} route Route with `[id]` segments.
@@ -93,7 +140,7 @@ export function fillBogus(route) {
 }
 
 /**
- * Judge one status for a not-found probe.
+ * Judge one status for a not-found probe (detail-route mode).
  *
  * @param {number | null} status HTTP status.
  * @returns {string | null} Failure reason, or null when 404.
@@ -104,6 +151,26 @@ export function evaluateNotFoundStatus(status) {
   if (status === 200) return 'returned 200 for a bogus id (must be 404)';
   if (status >= 500) return `returned ${status} for a bogus id (must be 404, not 5xx)`;
   return `returned ${status} for a bogus id (must be 404)`;
+}
+
+/**
+ * Judge status + body for an absent /api/* probe (no-detail-route mode).
+ *
+ * Reuses u-api-no-spa-mask's evaluateSpaMask so a 200 SPA shell is never a
+ * pass. Then requires HTTP 404 specifically (B3: not-found paths return 404).
+ *
+ * @param {number | null} status
+ * @param {string} body
+ * @returns {string | null} Failure reason, or null when a real 404 without SPA shell.
+ */
+export function evaluateAbsentApiNotFound(status, body) {
+  // SPA / catch-all masking — same detection as B5, not a second copy.
+  const spaReason = evaluateSpaMask(status, body);
+  if (spaReason) return spaReason;
+  // evaluateSpaMask allows non-200 non-SPA statuses (405, 501, …); B3 needs 404.
+  if (status === 404) return null;
+  if (status === null) return 'no response from runtime';
+  return `returned ${status} for an absent /api path (must be 404)`;
 }
 
 /**
@@ -159,34 +226,115 @@ async function defaultBoot(appDir) {
 }
 
 /**
+ * Known-bad provenance shared by both measurement modes.
+ *
+ * @returns {{ input: string, failed: true, recordedAt: string }}
+ */
+function knownBadProvenance() {
+  return {
+    input: KNOWN_BAD_FIXTURE,
+    failed: true,
+    recordedAt: nowIso()
+  };
+}
+
+/**
+ * Probe a definitely-absent /api path when the app has API surface but no
+ * detail routes. Two independent HTTP round-trips (meas-two-run).
+ *
+ * @param {string} appDir
+ * @param {NotFoundIo} io
+ * @param {{
+ *   boot?: typeof defaultBoot,
+ *   requestBody?: typeof requestBody,
+ *   path?: string
+ * }} deps
+ * @returns {Promise<void>}
+ */
+async function probeAbsentApiPath(appDir, io, deps) {
+  const { pass, fail, notApplicable, infra } = io;
+  const boot = deps.boot ?? defaultBoot;
+  const request = deps.requestBody ?? requestBody;
+  const session = await boot(appDir);
+  if (session.error) {
+    if (infra) return infra(session.error);
+    return fail(session.error);
+  }
+  if (!session.baseUrl) {
+    return notApplicable('no runtime base URL');
+  }
+
+  const path = deps.path ?? absentApiPath();
+  /** @type {string | null} */
+  let reason1 = null;
+  /** @type {string | null} */
+  let reason2 = null;
+  try {
+    const got1 = await request(session.baseUrl, path);
+    reason1 = evaluateAbsentApiNotFound(got1.status, got1.body);
+    const got2 = await request(session.baseUrl, path);
+    reason2 = evaluateAbsentApiNotFound(got2.status, got2.body);
+  } finally {
+    session.cleanup();
+  }
+
+  const ok1 = reason1 === null;
+  const ok2 = reason2 === null;
+  writeMeasurementMetaEntry(appDir, 'u-api-not-found', {
+    tool: 'fetch',
+    engine: null,
+    notApplicable: false,
+    reason: null,
+    mode: 'absent-api-path',
+    path,
+    runs: [
+      { ok: ok1, at: nowIso(), path },
+      { ok: ok2, at: nowIso(), path }
+    ],
+    knownBad: knownBadProvenance()
+  });
+
+  if (ok1 !== ok2) {
+    return fail('two independent runs of u-api-not-found disagree — reporting neither');
+  }
+  if (!ok1) {
+    return fail(`absent API path did not return 404:\n  ${path} — ${reason1}`);
+  }
+  return pass();
+}
+
+/**
  * Decide u-api-not-found.
  *
  * @param {string} appDir App root.
  * @param {NotFoundIo} io Outcomes.
- * @param {{ boot?: typeof defaultBoot, request?: typeof requestStatus }} [deps]
+ * @param {{
+ *   boot?: typeof defaultBoot,
+ *   request?: typeof requestStatus,
+ *   requestBody?: typeof requestBody,
+ *   path?: string
+ * }} [deps]
  * @returns {Promise<void>}
  */
 export async function runApiNotFound(appDir, io, deps = {}) {
   const { pass, fail, notApplicable, infra } = io;
   const routes = discoverDetailRoutes(appDir);
+
   if (routes.length === 0) {
-    // n/a for THIS app (no detail routes) is not the same as "this check
-    // cannot fail" -- meas-known-bad still requires proof the check can fail.
-    // Record n/a honestly (no synthetic dual runs) and keep the knownBad
-    // pointer so provenance still proves the check can fail elsewhere.
-    if (appDir) {
-      writeNotApplicableMeta(appDir, 'u-api-not-found', {
-        tool: 'fetch',
-        engine: null,
-        reason: 'no detail routes under functions/api/',
-        knownBad: {
-          input: KNOWN_BAD_FIXTURE,
-          failed: true,
-          recordedAt: nowIso()
-        }
-      });
+    if (!hasApiSurface(appDir)) {
+      // n/a only when there is no API surface at all — not when the app has
+      // flat routes (e.g. /api/health) without [param] detail segments.
+      if (appDir) {
+        writeNotApplicableMeta(appDir, 'u-api-not-found', {
+          tool: 'fetch',
+          engine: null,
+          reason: 'no API surface under functions/api/',
+          knownBad: knownBadProvenance()
+        });
+      }
+      return notApplicable('no API surface under functions/api/');
     }
-    return notApplicable('no detail routes ([param] segments) under functions/api/');
+    return probeAbsentApiPath(appDir, io, deps);
   }
 
   const boot = deps.boot ?? defaultBoot;
@@ -228,15 +376,12 @@ export async function runApiNotFound(appDir, io, deps = {}) {
     engine: null,
     notApplicable: false,
     reason: null,
+    mode: 'detail-routes',
     runs: [
       { ok: ok1, at: nowIso() },
       { ok: ok2, at: nowIso() }
     ],
-    knownBad: {
-      input: KNOWN_BAD_FIXTURE,
-      failed: true,
-      recordedAt: nowIso()
-    }
+    knownBad: knownBadProvenance()
   });
 
   if (ok1 !== ok2) {
@@ -251,6 +396,9 @@ export async function runApiNotFound(appDir, io, deps = {}) {
   }
   return pass();
 }
+
+// Re-export SPA detector so callers/tests can assert the shared dependency.
+export { looksLikeSpaShell };
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const dir = process.argv[2];
