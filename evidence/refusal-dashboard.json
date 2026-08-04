@@ -1,0 +1,22 @@
+{
+  "verdict": "refuse",
+  "complaints": [
+    {
+      "text": "the search doesn't appear to work -- no result was visible",
+      "suggestedOwner": "qa-visual"
+    },
+    {
+      "text": "could not accomplish the app's stated purpose end to end",
+      "suggestedOwner": "engineer"
+    }
+  ],
+  "purposeAccomplished": false,
+  "answers": {
+    "primaryResultOffScreen": true,
+    "advertisedBroken": false,
+    "looksBuggy": false,
+    "looksFinished": false
+  },
+  "writtenAt": "2026-08-04T03:41:23.261Z",
+  "slug": "dashboard"
+}

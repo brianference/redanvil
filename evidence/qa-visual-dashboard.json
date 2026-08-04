@@ -1,0 +1,63 @@
+{
+  "verdict": "pass",
+  "findings": [],
+  "measurements": {
+    "observations": [
+      {
+        "viewportWidth": 375,
+        "viewportHeight": 844,
+        "primaryResultY": 411,
+        "primaryResultHeight": 21,
+        "brandMarkHeight": 112,
+        "headerHeight": 129,
+        "heroHeight": 85,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "dark"
+      },
+      {
+        "viewportWidth": 375,
+        "viewportHeight": 844,
+        "primaryResultY": 411,
+        "primaryResultHeight": 21,
+        "brandMarkHeight": 112,
+        "headerHeight": 129,
+        "heroHeight": 85,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "light"
+      },
+      {
+        "viewportWidth": 1280,
+        "viewportHeight": 900,
+        "primaryResultY": 404,
+        "primaryResultHeight": 21,
+        "brandMarkHeight": 112,
+        "headerHeight": 129,
+        "heroHeight": 66,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "dark"
+      },
+      {
+        "viewportWidth": 1280,
+        "viewportHeight": 900,
+        "primaryResultY": 404,
+        "primaryResultHeight": 21,
+        "brandMarkHeight": 112,
+        "headerHeight": 129,
+        "heroHeight": 66,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "light"
+      }
+    ],
+    "failReasons": []
+  },
+  "writtenAt": "2026-08-04T03:41:11.616Z",
+  "slug": "dashboard"
+}
