@@ -213,7 +213,7 @@
     },
     {
       "ruleId": "lg-shipped",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "lg-bindings-bound",
@@ -245,7 +245,7 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-known-bad",
@@ -381,14 +381,14 @@
         "fe-type-floor",
         "hyg-no-binaries",
         "hyg-no-duplication",
-        "lg-result-reproduces"
+        "lg-shipped"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-04T08:46:36.963Z",
+  "finishedAt": "2026-08-04T08:54:16.513Z",
   "provenance": {
-    "commit": "47cb3e5d5baf0f87c3cc24897de05697ce478c3b",
+    "commit": "1ac4556deeb25e1793c37ddde6153ae1e1225f4b",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
@@ -403,6 +403,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-04T08:46:37.054Z"
+    "generatedAt": "2026-08-04T08:54:16.586Z"
   }
 }

@@ -5,14 +5,14 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-04T08:49:38.993Z",
-        "base": "http://127.0.0.1:59668"
+        "at": "2026-08-04T08:53:57.889Z",
+        "base": "http://127.0.0.1:49997"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\lg-bindings-bound\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-04T08:49:38.993Z"
+      "recordedAt": "2026-08-04T08:53:57.889Z"
     },
     "notApplicable": false,
     "reason": null
