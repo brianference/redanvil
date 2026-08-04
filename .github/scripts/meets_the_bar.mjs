@@ -481,6 +481,13 @@ export function visualCoverageReasons(repoRoot, slug, appDir, verdictsPathOverri
       : [];
 
     if (v.passed === false) {
+      // A release-waived rule still FAILED and is still reported -- by the rule
+      // row above and by this line's WAIVED form. It just does not block this
+      // release, exactly as scoreBarReasons and lg-shipped already treat it.
+      // Without this the two evaluators disagreed about the same defect: three
+      // of app-builder's dated waivers cleared as rules and then blocked again
+      // one layer down as visual verdicts, which is not a second finding, it is
+      // the same one counted twice.
       reasons.push(`visual verdict ${ruleId} records passed === false`);
     }
 
@@ -649,19 +656,6 @@ export function evaluateApp(repoRoot, app, opts = {}) {
     freshness.push(...freshnessReasons(repoRoot, app.dir, provCommit, resultPath));
   }
 
-  /** @type {string[]} */
-  const visual = [];
-  if (!opts.skipVisual) {
-    visual.push(...visualCoverageReasons(repoRoot, slug, app.dir, opts.verdictsPath ?? null));
-  }
-
-  let screenshotsPresent = true;
-  if (!opts.skipScreenshots) {
-    const shots = screenshotPresence(repoRoot, slug);
-    screenshotsPresent = shots.present;
-    if (!shots.present) reasons.push(...shots.reasons);
-  }
-
   // Accepted-for-this-release defects. A waiver never hides a failure: the rule
   // still ran, still reports FAIL in the result file, and is printed below. It
   // only stops ONE app's known defect blocking every other app's finished work,
@@ -670,6 +664,32 @@ export function evaluateApp(repoRoot, app, opts = {}) {
   const failedIds = (result?.rules ?? []).filter((r) => r.passed === false).map((r) => r.ruleId);
   const waivedFailing = failedIds.filter((id) => waived.has(id));
   const blockingFailing = failedIds.filter((id) => !waived.has(id));
+
+  /** @type {string[]} */
+  const visual = [];
+  if (!opts.skipVisual) {
+    // Release-waived rules must not re-block here. The visual list feeds evidenceStale
+    // below, so a dated waiver that cleared as a RULE came straight back as
+    // "evidence is stale" one layer down -- the same defect counted twice by two
+    // evaluators that disagreed. app-builder's fe-touch-targets, fe-type-floor
+    // and fe-responsive-375 did exactly that. The finding is still printed; it
+    // just stops blocking, exactly as scoreBarReasons and lg-shipped treat it.
+    const allVisual = visualCoverageReasons(repoRoot, slug, app.dir, opts.verdictsPath ?? null);
+    for (const r of allVisual) {
+      if (reasonIsOnlyAboutWaived(r, waived, blockingFailing)) {
+        console.log(`    WAIVED ${slug}: ${r}`);
+        continue;
+      }
+      visual.push(r);
+    }
+  }
+
+  let screenshotsPresent = true;
+  if (!opts.skipScreenshots) {
+    const shots = screenshotPresence(repoRoot, slug);
+    screenshotsPresent = shots.present;
+    if (!shots.present) reasons.push(...shots.reasons);
+  }
 
   // Single definition of done — no parallel score logic for the finish line.
   if (result) {
