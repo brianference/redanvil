@@ -15,6 +15,12 @@
  *   searchQuery: string
  * }} StrangerExpectations
  *
+ * Primary product flow product-judgement harnesses exercise.
+ * - `search`: type into search/filter, judge a visible matching result (today's default).
+ * - `wizard`: chat → clarifying wizard → Forge PRD, judge a visible PRD result.
+ *
+ * @typedef {'search' | 'wizard'} CoreFlow
+ *
  * @typedef {{
  *   slug: string,
  *   dir: string,
@@ -23,6 +29,7 @@
  *   widthRoutes: string | null,
  *   e2e: boolean,
  *   wizard: boolean,
+ *   coreFlow: CoreFlow,
  *   na: string,
  *   stranger: StrangerExpectations
  * }} GatedApp
@@ -38,14 +45,18 @@ export const APPS = Object.freeze([
     widthRoutes: null,
     e2e: true,
     wizard: true,
+    // Core flow is the wizard forge, not search. fe-search-present is waived;
+    // qa_visual / user_refuse must drive chat → Forge PRD (see drive_wizard_forge.mjs).
+    coreFlow: 'wizard',
     na: 'process',
     // Copied from app-builder/src/i18n: footer labels + page h1 titles (LegalPage).
-    // searchQuery: a domain word a stranger types into example/prompt search when
-    // present (examples catalog uses marketplace makers prompts).
+    // searchQuery: for coreFlow=wizard this is the plain-language forge prompt a
+    // stranger types into the composer (same shape as e2e_smoke_app_builder).
     stranger: Object.freeze({
       purposeSentence:
         'RedAnvil turns a plain-language prompt into a complete, downloadable product requirements document (PRD) you can hand to a coding agent.',
-      searchQuery: 'marketplace',
+      searchQuery:
+        'an app to remind you when your dogs ears need cleaned, teeth cleaned, groomed, vet appointments etc',
       requiredPages: Object.freeze([
         Object.freeze({ path: '/about', linkName: 'About', headingText: 'About RedAnvil' }),
         Object.freeze({ path: '/terms', linkName: 'Terms', headingText: 'Terms and Conditions' }),
@@ -68,6 +79,7 @@ export const APPS = Object.freeze([
     widthRoutes: '/,/about,/contact,/terms,/privacy',
     e2e: false,
     wizard: false,
+    coreFlow: 'search',
     na: 'process',
     // Copied from az-planting-calendar/src/i18n/en.ts: footer.* link labels +
     // about/terms/privacy/contact page titles (rendered as the page h1).
@@ -97,6 +109,7 @@ export const APPS = Object.freeze([
     widthRoutes: '/,/about,/contact,/terms,/privacy',
     e2e: false,
     wizard: false,
+    coreFlow: 'search',
     na: 'process',
     // Copied from dashboard/src/i18n/en.ts: app.footer* link labels + pages.*.title
     // (Page shell h1). Not az-planting-calendar copy.
@@ -124,4 +137,27 @@ export const APPS = Object.freeze([
  */
 export function appBySlug(slug) {
   return APPS.find((a) => a.slug === slug);
+}
+
+/**
+ * Resolve the primary product flow for a gated app.
+ * Defaults to `search` only when the app is known and coreFlow is missing
+ * (legacy); unknown slugs throw so harnesses never invent a flow.
+ *
+ * @param {string} slug App slug.
+ * @returns {CoreFlow}
+ */
+export function coreFlowForSlug(slug) {
+  const app = appBySlug(slug);
+  if (app === undefined) {
+    throw new Error(
+      `unknown app slug "${slug}" -- known: ${APPS.map((a) => a.slug).join(', ')}`
+    );
+  }
+  if (app.coreFlow === 'wizard' || app.coreFlow === 'search') {
+    return app.coreFlow;
+  }
+  // Fail closed for a declared app that forgot coreFlow: wizard flag is the
+  // historical signal; otherwise search (prior default for every gated app).
+  return app.wizard === true ? 'wizard' : 'search';
 }

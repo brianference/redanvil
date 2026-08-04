@@ -19,6 +19,11 @@
  * This is the flow a real user hit a 400 on: chat composer -> wizard -> Forge PRD.
  * That regression would have been caught here long before production.
  *
+ * Product-judgement harnesses (qa_visual, user_refuse) reuse the same role-based
+ * steps via drive_wizard_forge.mjs — keep locators and step order in sync when
+ * either file changes. This script also asserts mid-flow gates (empty app type,
+ * empty features) that the forge driver does not re-test.
+ *
  * Usage: node .github/scripts/e2e_smoke_app_builder.mjs <baseUrl> [--trace out.zip]
  * Exit 0 = flow works end to end, 1 = a step failed, 2 = harness/usage error.
  */
