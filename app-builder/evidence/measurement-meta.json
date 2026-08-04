@@ -489,12 +489,12 @@
     "engine": "chromium",
     "notApplicable": true,
     "reason": "no search/filter control",
-    "recordedAt": "2026-08-04T07:58:15.180Z",
+    "recordedAt": "2026-08-04T08:03:01.634Z",
     "runs": [],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\result-in-viewport\\below-fold.html",
       "failed": true,
-      "recordedAt": "2026-08-04T07:58:15.180Z"
+      "recordedAt": "2026-08-04T08:03:01.634Z"
     }
   }
 }

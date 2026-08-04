@@ -321,6 +321,15 @@ export function reasonIsOnlyAboutWaived(reason, waived, blockingFailing) {
     return blockingFailing.length === 0;
   }
 
+  // The F1 checklist row restates the score bar in different words, so it
+  // survived the line above and kept refusing an app whose every failing rule
+  // was waived. Without this a waiver can never actually let a release through,
+  // which is the whole point of the mechanism. Same condition as the score bar:
+  // only when nothing UNWAIVED is failing.
+  if (reason.includes('Gate score') && reason.includes('score is below the threshold')) {
+    return blockingFailing.length === 0;
+  }
+
   // A checklist row naming a waived rule and no unwaived one.
   if (mentionsWaived) return !blockingFailing.some((id) => reason.includes(id));
   return false;
@@ -718,7 +727,23 @@ export function evaluateApp(repoRoot, app, opts = {}) {
       }
     );
     if (!done.done) {
+      // Rules the gate recorded as NOT APPLICABLE to this app. A checklist row
+      // that fails only because such a rule "was never recorded" is describing
+      // an absent subject, not an unmeasured one -- app-builder has no search
+      // control at all, so fe-result-in-viewport reports n/a with a reason and
+      // C10 then refused the release for never recording a control that does
+      // not exist. An unmeasured row for an APPLICABLE rule still fails closed.
+      // Read from the RAW result, not the parsed shape: parseResultShape keeps
+      // only provenance.commit and drops notApplicable, so checking the parsed
+      // object silently found nothing and this filter never fired.
+      const naList = raw?.provenance?.notApplicable;
+      const notApplicable = new Set(Array.isArray(naList) ? naList : []);
       for (const r of done.reasons) {
+        const unmeasured = /\(unmeasured\).*?([a-z0-9-]+) was never recorded/.exec(r);
+        if (unmeasured !== null && notApplicable.has(unmeasured[1])) {
+          console.log(`    N/A ${slug}: ${r}`);
+          continue;
+        }
         if (!reasons.includes(r) && !reasonIsOnlyAboutWaived(r, waived, blockingFailing)) {
           reasons.push(r);
         }
