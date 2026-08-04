@@ -245,7 +245,7 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-known-bad",
@@ -381,15 +381,14 @@
         "fe-type-floor",
         "hyg-no-binaries",
         "hyg-no-duplication",
-        "lg-shipped",
-        "lg-result-reproduces"
+        "lg-shipped"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-04T07:47:31.906Z",
+  "finishedAt": "2026-08-04T07:51:37.858Z",
   "provenance": {
-    "commit": "f02d4aef47837caab24d2b45c6447e0616f9d05f",
+    "commit": "c5f7dcd9703eef3d543ee6c2b5192eb47b3cb72d",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
@@ -404,6 +403,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-04T07:47:31.976Z"
+    "generatedAt": "2026-08-04T07:51:37.927Z"
   }
 }
