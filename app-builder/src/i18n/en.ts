@@ -78,7 +78,15 @@ export const en = {
       title: 'What app should we forge?',
       subtitle:
         'Describe the product in plain language. RedAnvil asks a few questions, then generates a downloadable PRD -- and a real logo and palette to build it in.',
-      bannerAlt: 'RedAnvil — forge apps from a prompt'
+      bannerAlt: 'RedAnvil — forge apps from a prompt',
+      /** Fallback when PRD generation fails without a typed message. */
+      forgeError: 'Could not forge the PRD from these answers.',
+      /** Return to the wizard to fix entities or the product name. */
+      forgeErrorBack: 'Back to wizard',
+      /** Abandon the session and start over from chat. */
+      forgeErrorNew: 'Start over',
+      /** Accessible label for the forge failure panel. */
+      forgeErrorLabel: 'PRD generation failed'
     },
     saved: {
       title: 'Saved builds',

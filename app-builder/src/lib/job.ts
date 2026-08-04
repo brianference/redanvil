@@ -1,4 +1,4 @@
-import { isTitleFragment, titleFromPrompt } from './prd/naming';
+import { deriveEntities, entityList, isTitleFragment, titleFromPrompt } from './prd/naming';
 
 /** How the app should persist domain data (wizard scope). */
 export type DataStorage = 'none' | 'simple' | 'relational';
@@ -96,8 +96,9 @@ export function isFeatureSelectionReady(answers: WizardAnswers): boolean {
 
 /**
  * Whether Forge PRD may run: prompt, app type, a non-empty feature pick when
- * the user has already made an explicit selection, and a non-fragment derived
- * product title (A6).
+ * the user has already made an explicit selection, a non-fragment derived
+ * product title (A6), and at least one domain entity either listed or
+ * derivable from the prompt (A1 — same fail-closed rule as generatePrd).
  *
  * @param answers - Wizard form values.
  * @returns True when the submit action may fire.
@@ -111,6 +112,12 @@ export function canForgePrd(answers: WizardAnswers): boolean {
   }
   // Gate when the derived title is still a sentence fragment (A6).
   if (isTitleFragment(titleFromPrompt(answers.prompt))) {
+    return false;
+  }
+  // Gate when neither wizard entities nor prompt-derived nouns exist (A1).
+  // Without this, "please make a thing" queues a job and generatePrd throws.
+  const listed = entityList(answers.entities);
+  if (listed.length === 0 && deriveEntities(answers.prompt).length === 0) {
     return false;
   }
   return true;

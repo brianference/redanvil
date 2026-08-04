@@ -258,8 +258,34 @@ export function generatePrd(
     'Each capability is delivered as a vertical slice (DB + API + UI + tests) so something works end-to-end after every slice, not only at the end of a horizontal phase plan.'
   ].join(' ');
 
-  const frontmatterEntities =
-    entityNames.length > 0 ? entityNames : selectionActive ? [] : derivedEntityNames;
+  // Prefer scoped entity names; with an explicit feature pick and no remaining
+  // entities, emit none (not the full derived list); legacy null selection keeps
+  // the full derived list.
+  let frontmatterEntities: string[];
+  if (entityNames.length > 0) {
+    frontmatterEntities = entityNames;
+  } else if (selectionActive) {
+    frontmatterEntities = [];
+  } else {
+    frontmatterEntities = derivedEntityNames;
+  }
+
+  // DDL body for §7.2 — empty domain + no auth gets a prose note; otherwise fenced SQL.
+  let ddlSectionMarkdown: string;
+  if (!hasDomainTables && !hasAuth) {
+    if (dataStorage === 'none') {
+      ddlSectionMarkdown =
+        '_No D1 domain schema for this build (data storage = none, auth off)._';
+    } else {
+      ddlSectionMarkdown = '_No D1 domain schema for the selected features (auth off)._';
+    }
+  } else {
+    ddlSectionMarkdown = `\`\`\`sql
+${ddlBlocks || '-- (auth tables only when hasAuth; no domain tables when storage is none)'}
+\`\`\`
+
+All queries are parameterized. Validate every input with Zod at the boundary.`;
+  }
 
   const referencesBlock =
     references.length > 0
@@ -322,17 +348,7 @@ ${buildFileTree(frontmatterEntities.length > 0 ? frontmatterEntities : derivedEn
 
 #### D1 schema (DDL)
 
-${
-  !hasDomainTables && !hasAuth
-    ? dataStorage === 'none'
-      ? '_No D1 domain schema for this build (data storage = none, auth off)._'
-      : '_No D1 domain schema for the selected features (auth off)._'
-    : `\`\`\`sql
-${ddlBlocks || '-- (auth tables only when hasAuth; no domain tables when storage is none)'}
-\`\`\`
-
-All queries are parameterized. Validate every input with Zod at the boundary.`
-}
+${ddlSectionMarkdown}
 
 #### API surface, Zod schemas, and examples
 

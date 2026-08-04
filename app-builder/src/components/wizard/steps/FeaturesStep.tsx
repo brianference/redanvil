@@ -48,7 +48,17 @@ export function resolveFeatureSelection(value: WizardAnswers): string[] {
     buildFeatureSuggestions(entityNames, value.hasAuth, value.prompt).map((s) => s.id)
   );
   const kept = value.selectedFeatureIds.filter((id) => validIds.has(id));
-  return kept.length > 0 || value.selectedFeatureIds.length === 0 ? kept : defaults;
+  // Three outcomes, same order as before:
+  // 1) Some selected ids still valid → keep them.
+  // 2) User deliberately cleared every checkbox → keep the empty pick.
+  // 3) Every prior id went stale after a Scope change → restore MVP defaults.
+  if (kept.length > 0) {
+    return kept;
+  }
+  if (value.selectedFeatureIds.length === 0) {
+    return kept;
+  }
+  return defaults;
 }
 
 /**

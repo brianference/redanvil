@@ -1,18 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Page } from '../components/Page';
 import { ComposerChat } from '../components/ComposerChat';
 import { TemplateGallery, type TemplateSelection } from '../components/TemplateGallery';
 import { Wizard, EMPTY_WIZARD_ANSWERS } from '../components/Wizard';
 import { PrdResult } from '../components/PrdResult';
-import { generatePrd, type Prd } from '../lib/prd';
+import { ErrorBanner } from '../components/Banner';
+import { buttonStyle } from '../components/ui';
+import { generatePrd, UnresolvedPrdError, type Prd } from '../lib/prd';
 import { estimate } from '../lib/estimate';
 import { countEntities, countScopeSignals, type BuildJob, type WizardAnswers } from '../lib/job';
-import { wizardInstanceKey } from '../lib/wizardSession';
 import { en } from '../i18n/en';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
+import { theme } from '../theme';
 
 /** Which builder surface is active on the home route. */
 type BuilderView = 'chat' | 'templates' | 'wizard' | 'result';
+
+/**
+ * Outcome of client-side PRD generation after a successful job submit.
+ * Mirrors Saved / SavedPrd / PrdResult: explicit error vs success (no silent throw).
+ */
+type ForgeResultState =
+  | { status: 'idle' }
+  | { status: 'error'; message: string }
+  | { status: 'success'; prd: Prd };
 
 /**
  * Home: conversational composer → optional templates → clarifying wizard → PRD.
@@ -21,7 +32,7 @@ type BuilderView = 'chat' | 'templates' | 'wizard' | 'result';
 export function Home(): JSX.Element {
   const [view, setView] = useState<BuilderView>('chat');
   const [answers, setAnswers] = useState<WizardAnswers>(EMPTY_WIZARD_ANSWERS);
-  const [prd, setPrd] = useState<Prd | null>(null);
+  const [forgeResult, setForgeResult] = useState<ForgeResultState>({ status: 'idle' });
   const [wizardStartStep, setWizardStartStep] = useState<1 | 2 | 3 | 4>(1);
   /**
    * Bumped only on intentional new-wizard-session events (chat send, template
@@ -101,7 +112,8 @@ export function Home(): JSX.Element {
 
   /**
    * After a successful job submit, generate the PRD from the latest answers
-   * and show the result screen.
+   * and show the result screen. UnresolvedPrdError (and any other throw) must
+   * surface as a real error panel — never an uncaught exception on the core path.
    */
   function handleJobReady(_job: BuildJob): void {
     const current = answersRef.current;
@@ -113,15 +125,35 @@ export function Home(): JSX.Element {
       entities: entityCount,
       scopeSignals: countScopeSignals(current)
     });
-    setPrd(generatePrd(current, cost));
-    setView('result');
+    try {
+      const prd = generatePrd(current, cost);
+      setForgeResult({ status: 'success', prd });
+      setView('result');
+    } catch (err) {
+      const message =
+        err instanceof UnresolvedPrdError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : copy.forgeError;
+      setForgeResult({ status: 'error', message });
+      setView('result');
+    }
+  }
+
+  /**
+   * Return to the wizard so the user can fix entities or the product name.
+   */
+  function backToWizard(): void {
+    setForgeResult({ status: 'idle' });
+    setView('wizard');
   }
 
   /**
    * Clear the PRD and answers; return to the chat home.
    */
   function reset(): void {
-    setPrd(null);
+    setForgeResult({ status: 'idle' });
     updateAnswers(EMPTY_WIZARD_ANSWERS);
     setWizardStartStep(1);
     bumpWizardSession();
@@ -133,9 +165,11 @@ export function Home(): JSX.Element {
       ? en.templates.title
       : view === 'wizard'
         ? en.wizard.formLabel
-        : view === 'result' && prd !== null
-          ? prd.title
-          : copy.title;
+        : view === 'result' && forgeResult.status === 'success'
+          ? forgeResult.prd.title
+          : view === 'result' && forgeResult.status === 'error'
+            ? copy.forgeErrorLabel
+            : copy.title;
 
   const pageSubtitle = view === 'chat' ? copy.subtitle : undefined;
 
@@ -166,7 +200,7 @@ export function Home(): JSX.Element {
 
       {view === 'wizard' && (
         <Wizard
-          key={wizardInstanceKey(wizardSessionId, wizardStartStep)}
+          key={`wizard-${wizardSessionId}-${wizardStartStep}`}
           value={answers}
           onChange={updateAnswers}
           onSubmit={handleJobReady}
@@ -174,7 +208,49 @@ export function Home(): JSX.Element {
         />
       )}
 
-      {view === 'result' && prd !== null && <PrdResult prd={prd} onReset={reset} />}
+      {view === 'result' && forgeResult.status === 'error' && (
+        <section style={forgeErrorRootStyle} aria-label={copy.forgeErrorLabel}>
+          <ErrorBanner message={forgeResult.message} />
+          <div style={forgeErrorActionsStyle}>
+            <button type="button" style={buttonStyle(true)} onClick={backToWizard}>
+              {copy.forgeErrorBack}
+            </button>
+            <button type="button" style={buttonStyle(false)} onClick={reset}>
+              {copy.forgeErrorNew}
+            </button>
+          </div>
+        </section>
+      )}
+
+      {view === 'result' && forgeResult.status === 'success' && (
+        <PrdResult prd={forgeResult.prd} onReset={reset} />
+      )}
+
+      {view === 'result' && forgeResult.status === 'idle' && (
+        <section style={forgeErrorRootStyle} aria-label={copy.forgeErrorLabel}>
+          <ErrorBanner message={copy.forgeError} />
+          <div style={forgeErrorActionsStyle}>
+            <button type="button" style={buttonStyle(true)} onClick={backToWizard}>
+              {copy.forgeErrorBack}
+            </button>
+            <button type="button" style={buttonStyle(false)} onClick={reset}>
+              {copy.forgeErrorNew}
+            </button>
+          </div>
+        </section>
+      )}
     </Page>
   );
 }
+
+const forgeErrorRootStyle: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.space.md
+};
+
+const forgeErrorActionsStyle: CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: theme.space.sm
+};

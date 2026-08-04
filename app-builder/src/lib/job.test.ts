@@ -95,8 +95,10 @@ describe('buildJob', () => {
 });
 
 describe('wizard readiness (canForgePrd)', () => {
+  // Prompt must derive domain nouns (or list entities) so readiness is not
+  // blocked by the A1 entity gate — "dog ears" alone yields zero entities.
   const base = {
-    prompt: 'an app to remind me to clean my dog ears',
+    prompt: 'Dog care reminders for owners who forget ear cleaning',
     appType: '',
     hasAuth: false,
     entities: '',
@@ -137,5 +139,36 @@ describe('wizard readiness (canForgePrd)', () => {
     expect(canForgePrd({ ...ready, selectedFeatureIds: ['F1'] })).toBe(true);
     // null means "not chosen yet", which is not the same as "chosen none".
     expect(canForgePrd({ ...ready, selectedFeatureIds: null })).toBe(true);
+  });
+
+  // Title-fragment branch (A6): prompt long enough for submit, but titleFromPrompt
+  // still yields a dangling/fragment title — Forge must refuse before generatePrd.
+  it('refuses to forge when the derived product title is still a sentence fragment', () => {
+    const fragmentPrompt = 'with the and of a for extra padding';
+    const ready = {
+      ...base,
+      prompt: fragmentPrompt,
+      appType: 'Mobile app',
+      // Explicit entity so only the title-fragment branch fails, not A1 entities.
+      entities: 'Item'
+    };
+    expect(isPromptReady(ready)).toBe(true);
+    expect(isAppTypeReady(ready)).toBe(true);
+    expect(canForgePrd(ready)).toBe(false);
+    // Control: a prompt that yields a real noun phrase still forges.
+    expect(canForgePrd({ ...base, appType: 'Mobile app' })).toBe(true);
+  });
+
+  it('refuses to forge when no entities are listed and none can be derived', () => {
+    const vague = {
+      ...base,
+      prompt: 'please make a thing',
+      appType: 'Mobile app',
+      entities: ''
+    };
+    expect(isPromptReady(vague)).toBe(true);
+    expect(canForgePrd(vague)).toBe(false);
+    // Naming an entity clears the gate even when the prompt has no nouns.
+    expect(canForgePrd({ ...vague, entities: 'Thing' })).toBe(true);
   });
 });
