@@ -9,9 +9,13 @@
  * second copy of the logic inside the checker would have re-created the same
  * drift, so both sides now call this.
  */
-import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  allFailingFindingsAccepted,
+  loadAcceptedFindings
+} from '../gate/acceptedFindings.mjs';
+import { gitRoot, reviewPinCommit } from '../git/newestSourceCommit.mjs';
 
 /**
  * Resolve an evidence file that may sit under the app dir or the repo root.
@@ -75,21 +79,19 @@ export function userRefuseOk(appDir, slug) {
 }
 
 /**
- * HEAD commit for commit-pin checks, or null when git is unavailable.
+ * Read a parseable judge-diff report for an app (no freshness / ok evaluation).
  *
- * @param {string} dir Directory inside a git work tree.
- * @returns {string | null}
+ * @param {string} appDir App root.
+ * @param {string} slug App slug.
+ * @returns {Record<string, unknown> | null}
  */
-function headCommit(dir) {
-  try {
-    return execFileSync('git', ['rev-parse', 'HEAD'], {
-      cwd: dir,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore']
-    }).trim();
-  } catch {
-    return null;
-  }
+export function readJudgeDiffForApp(appDir, slug) {
+  const r = readJson(resolveEvidenceFile(appDir, `judge-diff-${slug}.json`));
+  if (r === null) return null;
+  if (r.kind !== 'independent-diff-review') return null;
+  if (typeof r.commit !== 'string' || r.commit.length === 0) return null;
+  if (!Array.isArray(r.findings)) return null;
+  return r;
 }
 
 /**
@@ -114,26 +116,38 @@ function evaluateJudgeDiffOk(report) {
 }
 
 /**
- * Whether an independent judge reviewed the diff and found it clean.
+ * Whether an independent judge reviewed the diff and the result is acceptable
+ * for isDone (clean pass, or every failing finding individually accepted).
  *
- * Reads evidence/judge-diff-<slug>.json (the artifact runIndependentDiffReview
- * writes). Fail-closed: missing file, unparseable JSON, wrong kind, incomplete
- * review, unresolved findings, missing ok, or a commit that is not HEAD all
- * yield false. A review for a different commit is not evidence for this gate.
+ * Pin is the app's newest SOURCE commit (not repo HEAD): evidence-only commits
+ * that the gate itself makes must not age the review out. A real source edit
+ * under the app does.
+ *
+ * Fail-closed: missing file, unparseable JSON, wrong kind, incomplete review,
+ * empty-diff, stale source pin, or any failing finding not individually
+ * accepted at that commit all yield false. Wildcards / 'all' acceptances are
+ * rejected and never match.
  *
  * @param {string} appDir App root.
  * @param {string} slug App slug.
  * @returns {boolean}
  */
 export function independentReviewOk(appDir, slug) {
-  const r = readJson(resolveEvidenceFile(appDir, `judge-diff-${slug}.json`));
+  const r = readJudgeDiffForApp(appDir, slug);
   if (r === null) return false;
-  if (r.kind !== 'independent-diff-review') return false;
-  if (typeof r.commit !== 'string' || r.commit.length === 0) return false;
-  const head = headCommit(appDir);
-  if (head === null || r.commit !== head) return false;
-  if (r.ok !== true) return false;
-  return evaluateJudgeDiffOk(r);
+  const pin = reviewPinCommit(appDir);
+  if (pin === null || r.commit !== pin) return false;
+  if (r.completed !== true) return false;
+  if (r.mode === 'empty-diff' || r.nothingToReview === true) return false;
+
+  // Clean path: recompute from findings (hand-stamped ok:true with blockers fails).
+  if (evaluateJudgeDiffOk(r)) return true;
+
+  // Acceptance path: every failing finding listed for this app at this commit.
+  const root = gitRoot(appDir);
+  if (root === null) return false;
+  const accepted = loadAcceptedFindings(root, slug);
+  return allFailingFindingsAccepted(r, accepted, slug);
 }
 
 /**
