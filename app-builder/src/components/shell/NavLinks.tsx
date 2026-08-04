@@ -4,8 +4,7 @@
  * Shared `NavLink` markup lives in design-system; this file owns product IA
  * (Builder / Dashboard / Saved / About / Contact) and which path is current.
  */
-import { useLocation } from 'react-router-dom';
-import { NavLink as SharedNavLink, type NavItem } from '../../../../design-system/NavLink';
+import { type NavItem, withGithubNav } from '../../../../design-system/NavLink';
 import { en } from '../../i18n/en';
 import { DASHBOARD_URL, GITHUB_URL } from './constants';
 
@@ -50,29 +49,5 @@ export function headerNavItems(): NavItem[] {
  * @returns Ordered nav items for the mobile drawer.
  */
 export function drawerNavItems(): NavItem[] {
-  return [
-    ...headerNavItems(),
-    { key: 'github', label: en.app.navGitHub, to: null, href: GITHUB_URL, external: true }
-  ];
-}
-
-export interface NavLinkProps {
-  /** Nav item to render. */
-  item: NavItem;
-  /** Optional navigate handler (e.g. close mobile drawer). */
-  onNavigate?: () => void;
-}
-
-/**
- * One primary nav link with app-builder active-route rules.
- */
-export function NavLink({ item, onNavigate }: NavLinkProps): JSX.Element {
-  const location = useLocation();
-  return (
-    <SharedNavLink
-      item={item}
-      active={isNavActive(location.pathname, item.key)}
-      onNavigate={onNavigate}
-    />
-  );
+  return withGithubNav(headerNavItems(), en.app.navGitHub, GITHUB_URL);
 }

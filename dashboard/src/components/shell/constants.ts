@@ -10,6 +10,9 @@ export const GITHUB_URL = 'https://github.com/brianference/redanvil';
 /** Default logo lockup height in the sticky header (px). */
 export const LOGO_HEIGHT = 112;
 
+/** Logo lockup height in the mobile drawer head (px). */
+export const DRAWER_LOGO_HEIGHT = 48;
+
 /**
  * Minimum edge of a standalone tap target, px (WCAG 2.5.8 AA).
  *

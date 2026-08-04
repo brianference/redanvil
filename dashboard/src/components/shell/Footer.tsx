@@ -1,7 +1,11 @@
 /**
  * Thin wrapper: supplies dashboard product links and copy to the shared Footer.
  */
-import { Footer as SharedFooter, type FooterTokens } from '../../../../design-system/Footer';
+import {
+  Footer as SharedFooter,
+  companyLegalColumns,
+  type FooterTokens
+} from '../../../../design-system/Footer';
 import { en } from '../../i18n/en';
 import { theme } from '../../theme';
 import { APP_URL, DASHBOARD_URL, FOOTER_LOGO_HEIGHT, GITHUB_URL } from './constants';
@@ -41,20 +45,14 @@ export function Footer(): JSX.Element {
             { label: en.app.footerGitHub, href: GITHUB_URL }
           ]
         },
-        {
-          heading: en.app.footerCompany,
-          links: [
-            { label: en.app.footerAbout, href: '/about' },
-            { label: en.app.footerContact, href: '/contact' }
-          ]
-        },
-        {
-          heading: en.app.footerLegal,
-          links: [
-            { label: en.app.footerTerms, href: '/terms' },
-            { label: en.app.footerPrivacy, href: '/privacy' }
-          ]
-        }
+        ...companyLegalColumns({
+          company: en.app.footerCompany,
+          legal: en.app.footerLegal,
+          about: en.app.footerAbout,
+          contact: en.app.footerContact,
+          terms: en.app.footerTerms,
+          privacy: en.app.footerPrivacy
+        })
       ]}
       copyright={en.app.footerCopyright}
     />

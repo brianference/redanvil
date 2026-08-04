@@ -21,6 +21,31 @@ export interface LogoProps {
   markMeasure?: string;
 }
 
+/** Per-app lockup defaults bound by {@link createLogo}. */
+export interface AppLogoConfig {
+  /** Absolute or relative URL the lockup links to. */
+  href: string;
+  /** Accessible name for the link (images are decorative). */
+  ariaLabel: string;
+  /** Default lockup height in pixels (header size). */
+  defaultHeight: number;
+}
+
+/** Props for an app-bound Logo from {@link createLogo}. */
+export interface AppLogoProps {
+  /** Lockup height in pixels. Defaults to the app's header height. */
+  height?: number;
+  /**
+   * Tag this instance as the measurable brand mark for qa-visual.
+   *
+   * Opt-in per call site on purpose. Logo renders in the header, the footer and
+   * the mobile drawer, so marking every instance made `[data-measure="mark"]`
+   * resolve to three elements and the harness hung waiting on it. Exactly one
+   * instance — the header lockup — is the brand mark being measured.
+   */
+  measurable?: boolean;
+}
+
 /**
  * Site logo: two transparent lockups, one per theme (no grey box).
  * CSS classes own visibility — never an inline `display`.
@@ -59,4 +84,32 @@ export function Logo({ href, ariaLabel, height, markMeasure }: LogoProps): JSX.E
       />
     </a>
   );
+}
+
+/**
+ * Bind this app's href, alt text, and default height into a thin Logo wrapper.
+ *
+ * The measurable → markMeasure wiring is shared so apps do not re-copy the
+ * qa-visual opt-in. Each app still supplies its own i18n label and home URL.
+ *
+ * @param config - Per-app lockup defaults.
+ * @returns A Logo component with optional height and measurable props.
+ */
+export function createLogo(config: AppLogoConfig): (props: AppLogoProps) => JSX.Element {
+  /**
+   * Site logo for this app: single transparent lockup for both themes.
+   */
+  return function AppLogo({
+    height = config.defaultHeight,
+    measurable = false
+  }: AppLogoProps): JSX.Element {
+    return (
+      <Logo
+        href={config.href}
+        ariaLabel={config.ariaLabel}
+        height={height}
+        {...(measurable ? { markMeasure: 'mark' } : {})}
+      />
+    );
+  };
 }

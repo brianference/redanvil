@@ -55,16 +55,22 @@ export interface HeaderProps {
   /** Whether a given item key is the current page. */
   isActive: (key: string) => boolean;
   /**
-   * Optional qa-visual test id on the sticky header landmark
-   * (e.g. "compact-header"). Omitted when the app does not instrument.
+   * Optional qa-visual test id on the sticky header landmark.
+   * Defaults to "compact-header" (RedAnvil shell). Pass `null` to omit.
    */
-  testId?: string;
+  testId?: string | null;
   /**
-   * Optional qa-visual data-measure on the sticky header
-   * (e.g. "header"). Omitted when the app does not instrument.
+   * Optional qa-visual data-measure on the sticky header.
+   * Defaults to "header" (RedAnvil shell). Pass `null` to omit.
    */
-  measure?: string;
+  measure?: string | null;
 }
+
+/** Default qa-visual test id for the sticky header landmark. */
+export const HEADER_TEST_ID = 'compact-header';
+
+/** Default qa-visual data-measure for the sticky header. */
+export const HEADER_MEASURE = 'header';
 
 /**
  * Sticky site header: brand lockup, desktop primary nav, theme toggle, menu button.
@@ -82,15 +88,15 @@ export function Header({
   themeToggle,
   items,
   isActive,
-  testId,
-  measure
+  testId = HEADER_TEST_ID,
+  measure = HEADER_MEASURE
 }: HeaderProps): JSX.Element {
   return (
     <header
       ref={headerRef}
       style={barStyle}
-      {...(testId !== undefined ? { 'data-testid': testId } : {})}
-      {...(measure !== undefined ? { 'data-measure': measure } : {})}
+      {...(testId !== null ? { 'data-testid': testId } : {})}
+      {...(measure !== null ? { 'data-measure': measure } : {})}
     >
       <div
         style={{
