@@ -3,7 +3,7 @@
  * user-refuse -- play a hard-to-please stranger against the DEPLOYED app.
  *
  * Usage:
- *   node user_refuse.mjs <baseUrl> --slug <slug> [--root <repoRoot>]
+ *   node user_refuse.mjs <baseUrl> --slug <slug> [--root <repoRoot>] [--query q]
  *
  * Exit 0 = accept, 1 = refuse, 2 = infrastructure (measurer broken / could
  * not observe the app -- never a silent pass).
@@ -18,6 +18,17 @@
  * real URL and hands the measured StrangerView to a tsx helper that calls
  * decideUserRefuse / buildRefusalReport / writeRefusalReport -- the one
  * decision implementation, not a reimplementation of it.
+ *
+ * Search models (discovered from the live page, same convention as
+ * qa_visual.mjs -- not hard-coded per slug):
+ *   - api-submit: `search-submit` present -- type query, click submit, require
+ *     at least one visible matching result item (az-planting-calendar /api/crops).
+ *   - client-filter: no submit control -- type into filter-search and wait
+ *     for the rendered result set to settle with at least one real result item
+ *     still visible (dashboard). Emptying the list ("No runs match …") is NOT
+ *     a working search -- itemCount must stay > 0. Never wait on a network
+ *     event that will not fire; never treat "could not measure" or a zero-hit
+ *     empty state as accept; never measure an empty-state message as resultY.
  *
  * Before trusting a single measurement of the real site, the measurer is
  * validated against userRefuse.ts's own fixtures: knownBadBelowFoldStrangerView
@@ -36,7 +47,7 @@ import { mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { APPS, appBySlug } from './apps.mjs';
 
@@ -52,11 +63,6 @@ export const EXIT_ACCEPT = 0;
 export const EXIT_REFUSE = 1;
 /** Exit: could not run the check honestly. Never a silent accept. */
 export const EXIT_INFRA = 2;
-
-/** Real crop in the shipped az1005 dataset, used to drive the search box like a visitor would. */
-const SEARCH_QUERY = 'Tomato';
-/** Expected crop name a correct search for SEARCH_QUERY must surface. */
-const EXPECTED_CROP_NAME = 'Tomatoes';
 
 /** Viewports a stranger plausibly arrives on: phone, then desktop. */
 const VIEWPORTS = [
@@ -76,10 +82,12 @@ const PLACEHOLDER_PATTERNS = [
 ];
 
 /**
- * Parse `<baseUrl> [--slug s] [--root dir]`.
+ * Parse `<baseUrl> [--slug s] [--root dir] [--query q]`.
+ * `--query` overrides the per-app stranger.searchQuery from apps.mjs; when
+ * omitted the driver uses that declaration (never a cross-app default).
  *
  * @param {string[]} argv - Raw process arguments.
- * @returns {{ baseUrl: string, slug: string, root: string }} Parsed options.
+ * @returns {{ baseUrl: string, slug: string, root: string, query: string | null }} Parsed options.
  */
 export function parseArgs(argv) {
   const positional = argv.filter((a) => !a.startsWith('--'));
@@ -89,12 +97,17 @@ export function parseArgs(argv) {
   };
   const baseUrl = positional[0];
   if (baseUrl === undefined) {
-    throw new Error('usage: node user_refuse.mjs <baseUrl> --slug <slug> [--root <repoRoot>]');
+    throw new Error(
+      'usage: node user_refuse.mjs <baseUrl> --slug <slug> [--root <repoRoot>] [--query q]'
+    );
   }
+  // Absolute path: the tsx helper spawns with cwd=orchestrator/, so a relative
+  // `--root .` would otherwise write evidence under orchestrator/evidence/.
   return {
     baseUrl: baseUrl.replace(/\/+$/, ''),
     slug: flag('slug') ?? 'app',
-    root: flag('root') ?? REPO_ROOT
+    root: resolve(flag('root') ?? REPO_ROOT),
+    query: flag('query')
   };
 }
 
@@ -154,6 +167,179 @@ function topIsInFold(box, viewportHeight) {
 }
 
 /**
+ * Poll a locator's bounding box until it stops moving, or a ceiling elapses.
+ * Real-signal wait (rect convergence), not a fixed sleep -- same helper as
+ * qa_visual.mjs so both drivers agree on "settled".
+ *
+ * @param {import('playwright').Locator} locator
+ * @param {{ intervalMs?: number, stableForMs?: number, timeoutMs?: number }} [opts]
+ * @returns {Promise<{x:number,y:number,width:number,height:number}|null>}
+ */
+async function waitForStableBoundingBox(locator, opts = {}) {
+  const intervalMs = opts.intervalMs ?? 50;
+  const stableForMs = opts.stableForMs ?? 150;
+  const timeoutMs = opts.timeoutMs ?? 3000;
+  const start = Date.now();
+  let last = null;
+  let stableSince = null;
+  for (;;) {
+    const box = await locator.boundingBox();
+    if (box && last && Math.abs(box.y - last.y) < 0.5 && Math.abs(box.height - last.height) < 0.5) {
+      stableSince ??= Date.now();
+      if (Date.now() - stableSince >= stableForMs) return box;
+    } else {
+      stableSince = null;
+    }
+    last = box;
+    if (Date.now() - start >= timeoutMs) return last;
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
+
+/**
+ * Snapshot of the rendered search result set for change detection.
+ * Client-side filters can briefly paint an empty intermediate state; callers
+ * must wait for this signature to both differ from baseline AND stay stable.
+ * (Mirrored from qa_visual.mjs -- do not invent a second convention.)
+ *
+ * @param {import('playwright').Page} page
+ * @returns {Promise<{ present: boolean, itemCount: number, digest: string }>}
+ */
+async function captureResultSignature(page) {
+  return page.evaluate(() => {
+    const root = document.querySelector('[data-testid="search-results"]');
+    if (!root) {
+      const statuses = [...document.querySelectorAll('[role="status"]')]
+        .map((el) => (el.textContent ?? '').trim())
+        .filter(Boolean);
+      return {
+        present: false,
+        itemCount: 0,
+        digest: `empty:${statuses.join('|').slice(0, 200)}`
+      };
+    }
+    const items = root.querySelectorAll(
+      'li, [role="option"], .live-search__item, [data-testid="search-result-item"]'
+    );
+    const itemCount = items.length;
+    const textSource =
+      itemCount > 0
+        ? [...items]
+            .map((el) => (el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 60))
+            .join('|')
+        : (root.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 200);
+    return {
+      present: true,
+      itemCount,
+      digest: `list:${itemCount}:${textSource.slice(0, 400)}`
+    };
+  });
+}
+
+/**
+ * Serialize a result signature for equality checks.
+ *
+ * @param {{ present: boolean, itemCount: number, digest: string }} sig
+ */
+function resultSignatureKey(sig) {
+  return `${sig.present}|${sig.itemCount}|${sig.digest}`;
+}
+
+/**
+ * Wait until the rendered result set differs from baseline and has stopped
+ * changing. Real-signal poll (signature convergence), not a fixed sleep.
+ * A filter that never narrows returns `{ changed: false }` so the caller can
+ * fail closed on product grounds (exit 1), never as infrastructure.
+ *
+ * @param {import('playwright').Page} page
+ * @param {{ present: boolean, itemCount: number, digest: string }} baseline
+ * @param {{ intervalMs?: number, stableForMs?: number, timeoutMs?: number }} [opts]
+ * @returns {Promise<{ changed: boolean, signature: { present: boolean, itemCount: number, digest: string } }>}
+ */
+async function waitForSettledResultChange(page, baseline, opts = {}) {
+  const intervalMs = opts.intervalMs ?? 50;
+  const stableForMs = opts.stableForMs ?? 200;
+  const timeoutMs = opts.timeoutMs ?? 10_000;
+  const baselineKey = resultSignatureKey(baseline);
+  const start = Date.now();
+  let lastKey = null;
+  let lastSig = baseline;
+  let stableSince = null;
+
+  for (;;) {
+    const sig = await captureResultSignature(page);
+    const key = resultSignatureKey(sig);
+    if (key === lastKey) {
+      stableSince ??= Date.now();
+      if (Date.now() - stableSince >= stableForMs && key !== baselineKey) {
+        return { changed: true, signature: sig };
+      }
+    } else {
+      stableSince = null;
+      lastKey = key;
+      lastSig = sig;
+    }
+    if (Date.now() - start >= timeoutMs) {
+      return {
+        changed: resultSignatureKey(lastSig) !== baselineKey,
+        signature: lastSig
+      };
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+}
+
+/**
+ * Measure the primary REAL result region's on-screen box after search.
+ * Only `[data-testid="search-results"]` counts -- never an empty-state
+ * role=status ("No runs match …"), which is not a result a stranger can use.
+ *
+ * @param {import('playwright').Page} page
+ * @returns {Promise<{ y: number|null, height: number }>}
+ */
+async function measurePrimaryResultBox(page) {
+  const resultsLocator = page.getByTestId('search-results');
+  if ((await resultsLocator.count()) > 0) {
+    const box = await waitForStableBoundingBox(resultsLocator);
+    if (box) return { y: box.y, height: box.height };
+  }
+  return { y: null, height: 0 };
+}
+
+/**
+ * Whether a settled client-filter (or post-search) signature counts as a
+ * working search for a stranger. "Narrowed" must not mean "emptied": zero
+ * matching rows is a failed search, never an accept.
+ *
+ * @param {{ changed: boolean, signature: { itemCount: number } }} settled
+ * @returns {boolean}
+ */
+export function hasRealMatchingResults(settled) {
+  return (
+    settled !== null &&
+    settled !== undefined &&
+    settled.changed === true &&
+    Number.isFinite(settled.signature?.itemCount) &&
+    settled.signature.itemCount >= 1
+  );
+}
+
+/**
+ * Whether visible result item text includes the stranger's query (case-
+ * insensitive substring). Empty or whitespace-only items do not count.
+ *
+ * @param {string} query
+ * @param {string[]} itemTexts
+ * @returns {boolean}
+ */
+export function resultItemsMatchQuery(query, itemTexts) {
+  const q = (query ?? '').trim().toLowerCase();
+  if (q.length === 0) return false;
+  if (!Array.isArray(itemTexts) || itemTexts.length === 0) return false;
+  return itemTexts.some((t) => typeof t === 'string' && t.trim().toLowerCase().includes(q));
+}
+
+/**
  * Resolve stranger expectations for a gated app slug. Fail closed when the
  * slug is unknown or the declaration is incomplete -- never invent defaults
  * from another app.
@@ -174,12 +360,14 @@ export function strangerExpectationsForSlug(slug) {
     stranger === undefined ||
     typeof stranger.purposeSentence !== 'string' ||
     stranger.purposeSentence.trim() === '' ||
+    typeof stranger.searchQuery !== 'string' ||
+    stranger.searchQuery.trim() === '' ||
     !Array.isArray(stranger.requiredPages) ||
     stranger.requiredPages.length === 0
   ) {
     throw new Error(
-      `app "${slug}" has no stranger expectations in apps.mjs (purposeSentence + requiredPages). ` +
-        `Declare them from that app's real footer links and page headings -- do not reuse another app.`
+      `app "${slug}" has no stranger expectations in apps.mjs (purposeSentence + searchQuery + requiredPages). ` +
+        `Declare them from that app's real content -- do not reuse another app's query or copy.`
     );
   }
   return stranger;
@@ -189,16 +377,23 @@ export function strangerExpectationsForSlug(slug) {
  * Walk the deployed app as a first-time stranger at one viewport width.
  * Fresh browser context every call -- no seeded storage, no forced theme.
  *
+ * Search model is discovered from the live DOM (same as qa_visual.mjs): a
+ * `search-submit` control means API/submit search; its absence means
+ * client-side filter. Declaring this in apps.mjs would drift if an app
+ * changes architecture -- the DOM is what the visitor experiences.
+ *
  * @param {import('playwright').Browser} browser
  * @param {string} baseUrl
  * @param {{ width: number, height: number, label: string }} viewport
  * @param {readonly import('./apps.mjs').StrangerRequiredPage[]} requiredPages
  *   Per-app footer routes (path, link name, heading) from apps.mjs.
+ * @param {string} query Search string the stranger types into the primary control.
  * @returns {Promise<{
  *   label: string,
  *   purposeClear: boolean,
  *   searchDiscoverable: boolean,
  *   searchWorked: boolean,
+ *   searchMode: string,
  *   resultY: number | null,
  *   resultOffScreen: boolean,
  *   brandMarkHeight: number | null,
@@ -210,7 +405,7 @@ export function strangerExpectationsForSlug(slug) {
  *   consoleErrors: string[]
  * }>}
  */
-async function walkAsStranger(browser, baseUrl, viewport, requiredPages) {
+async function walkAsStranger(browser, baseUrl, viewport, requiredPages, query) {
   const ctx = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
   await ctx.setDefaultTimeout(15_000);
   const page = await ctx.newPage();
@@ -223,12 +418,28 @@ async function walkAsStranger(browser, baseUrl, viewport, requiredPages) {
 
   await page.goto(baseUrl, { waitUntil: 'networkidle' });
 
+  // Wait for the primary control when the app instruments it -- dashboard
+  // hides search until the runs feed is ready, so networkidle alone is not
+  // enough to know the list is interactive.
+  const filterSearch = page.getByTestId('filter-search');
+  try {
+    await filterSearch.waitFor({ state: 'visible', timeout: 15_000 });
+  } catch {
+    // No filter-search (or never became visible) -- purpose/search checks fail closed below.
+  }
+
   // --- Is it obvious within one screen what this is and who it's for? ---
-  // Real DOM checks, not a guess: the brand link and the plantable heading
-  // are the two elements that name the product and its purpose on first paint.
-  const brandLink = page.getByRole('link', { name: 'AZ Planting Calendar' });
-  const brandBox = (await brandLink.count()) > 0 ? await brandLink.first().boundingBox() : null;
-  const headingLocator = page.getByRole('heading', { level: 2 }).first();
+  // Shared instrumentation, not an app-specific brand string: the measurable
+  // mark (or compact header) names the product; the first real heading names
+  // the purpose band. Both must sit in the first viewport with non-empty text.
+  const markLocator = page.locator('[data-measure="mark"]').first();
+  let brandBox =
+    (await markLocator.count()) > 0 ? await markLocator.boundingBox() : null;
+  if (brandBox === null) {
+    const headerLocator = page.getByTestId('compact-header');
+    brandBox = (await headerLocator.count()) > 0 ? await headerLocator.first().boundingBox() : null;
+  }
+  const headingLocator = page.locator('h1, h2').filter({ hasText: /\S/ }).first();
   const headingBox = (await headingLocator.count()) > 0 ? await headingLocator.boundingBox() : null;
   const headingText = headingBox !== null ? (await headingLocator.textContent()) ?? '' : '';
   const purposeClear =
@@ -236,18 +447,28 @@ async function walkAsStranger(browser, baseUrl, viewport, requiredPages) {
     topIsInFold(headingBox, viewport.height) &&
     headingText.trim().length > 0;
 
-  // --- Is the primary action (crop search) discoverable without scrolling? ---
-  const searchInput = page.getByRole('combobox', { name: 'Search crops' });
-  const searchBoxVisible = (await searchInput.count()) > 0;
-  const searchBox = searchBoxVisible ? await searchInput.first().boundingBox() : null;
+  // --- Is the primary action (search / filter) discoverable without scrolling? ---
+  // Prefer the shared filter-search testid; fall back to live-search chrome.
+  const searchControl =
+    (await filterSearch.count()) > 0 ? filterSearch.first() : page.getByTestId('live-search').first();
+  const searchBoxVisible = (await searchControl.count()) > 0;
+  const searchBox = searchBoxVisible ? await searchControl.boundingBox() : null;
   const searchDiscoverable = topIsInFold(searchBox, viewport.height);
 
   // --- Does the primary action produce a visible result where they're looking? ---
+  // Discover architecture from the live DOM (mirrors qa_visual.mjs).
+  const hasSearchSubmit = (await page.getByTestId('search-submit').count()) > 0;
+  const searchMode = hasSearchSubmit ? 'api-submit' : 'client-filter';
+
   let searchWorked = false;
   let resultY = null;
-  if (searchBoxVisible) {
-    await searchInput.first().fill(SEARCH_QUERY);
-    const submit = page.getByRole('button', { name: 'Search' }).first();
+
+  if (searchBoxVisible && searchMode === 'api-submit') {
+    // API / submit model (az-planting-calendar): type, submit, require at
+    // least one real result item whose text matches the query. Zero hits
+    // (empty list / "no crops") is search NOT working -- never measure y.
+    await filterSearch.fill(query);
+    const submit = page.getByTestId('search-submit').first();
     try {
       await submit.click();
     } catch {
@@ -259,29 +480,76 @@ async function walkAsStranger(browser, baseUrl, viewport, requiredPages) {
       // The count text echoes the QUERY back ("1 crop matches Tomato"), not
       // the matched crop's name -- the real evidence that the right crop
       // surfaced is the rendered result item's own name text.
-      const box = await countEl.first().boundingBox();
-      resultY = box !== null ? box.y : null;
       const resultItems = page.getByTestId('search-result-item');
       const itemCount = await resultItems.count();
-      let matchesExpectedCrop = false;
+      const itemTexts = [];
       for (let i = 0; i < itemCount; i += 1) {
-        const itemText = (await resultItems.nth(i).textContent()) ?? '';
-        if (new RegExp(EXPECTED_CROP_NAME, 'i').test(itemText)) {
-          matchesExpectedCrop = true;
-          break;
-        }
+        itemTexts.push((await resultItems.nth(i).textContent()) ?? '');
       }
-      searchWorked = matchesExpectedCrop && itemCount > 0;
+      const matched = resultItemsMatchQuery(query, itemTexts);
+      if (matched && itemCount >= 1) {
+        // Prefer the first matching result item y; fall back to the count bar.
+        let y = null;
+        for (let i = 0; i < itemCount; i += 1) {
+          if (resultItemsMatchQuery(query, [itemTexts[i] ?? ''])) {
+            const itemBox = await resultItems.nth(i).boundingBox();
+            if (itemBox !== null) {
+              y = itemBox.y;
+              break;
+            }
+          }
+        }
+        if (y === null) {
+          const box = await countEl.first().boundingBox();
+          y = box !== null ? box.y : null;
+        }
+        resultY = y;
+        searchWorked = resultY !== null && Number.isFinite(resultY);
+      } else {
+        // Zero hits or no text match: refuse. Do not measure empty-state y.
+        searchWorked = false;
+        resultY = null;
+      }
     } catch {
       searchWorked = false;
       resultY = null;
     }
+  } else if (searchBoxVisible && searchMode === 'client-filter') {
+    // Client-side filter model (dashboard): type and wait for the result set
+    // to settle. "Changed" alone is not enough -- a filter that empties the
+    // list (No runs match "Tomato") is search NOT working. Require itemCount
+    // >= 1 and never measure an empty-state status as primary result y.
+    const baseline = await captureResultSignature(page);
+    await filterSearch.fill(query);
+    const settled = await waitForSettledResultChange(page, baseline);
+    if (!hasRealMatchingResults(settled)) {
+      searchWorked = false;
+      resultY = null;
+    } else {
+      // Confirm at least one visible item text matches the query (stranger
+      // typed a slug substring and still sees a real row).
+      const itemTexts = await page.evaluate(() => {
+        const root = document.querySelector('[data-testid="search-results"]');
+        if (!root) return [];
+        return [...root.querySelectorAll(
+          'li, [role="option"], .live-search__item, [data-testid="search-result-item"], a[href^="/run/"]'
+        )].map((el) => (el.textContent ?? '').trim());
+      });
+      if (!resultItemsMatchQuery(query, itemTexts)) {
+        searchWorked = false;
+        resultY = null;
+      } else {
+        const box = await measurePrimaryResultBox(page);
+        resultY = box.y;
+        searchWorked = resultY !== null && Number.isFinite(resultY);
+      }
+    }
   }
+
   const resultOffScreen =
     resultY === null || !Number.isFinite(resultY) || resultY >= viewport.height;
 
   // --- Brand mark render height (a stranger judges "is this finished" partly by this). ---
-  const markLocator = page.locator('[data-measure="mark"]').first();
   const markBox = (await markLocator.count()) > 0 ? await markLocator.boundingBox() : null;
   const brandMarkHeight = markBox !== null ? markBox.height : null;
 
@@ -335,6 +603,7 @@ async function walkAsStranger(browser, baseUrl, viewport, requiredPages) {
     purposeClear,
     searchDiscoverable,
     searchWorked,
+    searchMode,
     resultY,
     resultOffScreen,
     brandMarkHeight,
@@ -431,8 +700,22 @@ export async function main() {
     console.error(`user-refuse INFRA: ${String(err.message ?? err)}`);
     return EXIT_INFRA;
   }
+  // CLI --query wins for forced probes (e.g. known-bad empty match); otherwise
+  // the per-app stranger.searchQuery from apps.mjs is the only honest default.
+  const searchQuery =
+    typeof opts.query === 'string' && opts.query.trim() !== ''
+      ? opts.query.trim()
+      : expectations.searchQuery.trim();
+  if (searchQuery.length === 0) {
+    console.error(
+      `user-refuse INFRA: app "${opts.slug}" has an empty searchQuery -- declare a real domain query in apps.mjs`
+    );
+    return EXIT_INFRA;
+  }
+
   console.log(
     `stranger expectations for ${opts.slug}: ${expectations.requiredPages.length} required pages, ` +
+      `searchQuery="${searchQuery}", ` +
       `purpose="${expectations.purposeSentence.slice(0, 80)}${expectations.purposeSentence.length > 80 ? '…' : ''}"`
   );
 
@@ -452,20 +735,34 @@ export async function main() {
     return EXIT_INFRA;
   }
 
+  console.log(`search query: "${searchQuery}"`);
+
   const browser = await chromium.launch();
   let runs;
   try {
     runs = [];
     for (const vp of VIEWPORTS) {
-      const r = await walkAsStranger(browser, opts.baseUrl, vp, expectations.requiredPages);
+      const r = await walkAsStranger(
+        browser,
+        opts.baseUrl,
+        vp,
+        expectations.requiredPages,
+        searchQuery
+      );
       runs.push(r);
       console.log(
         `${vp.label}: purposeClear=${r.purposeClear} searchDiscoverable=${r.searchDiscoverable} ` +
-          `searchWorked=${r.searchWorked} resultY=${r.resultY ?? 'null'} offScreen=${r.resultOffScreen} ` +
+          `searchWorked=${r.searchWorked} searchMode=${r.searchMode} ` +
+          `resultY=${r.resultY ?? 'null'} offScreen=${r.resultOffScreen} ` +
           `brandMarkHeight=${r.brandMarkHeight ?? 'null'} legalPagesOk=${r.legalPagesOk} ` +
           `placeholder=${r.placeholderFound ?? 'none'} brokenImages=${r.brokenImageCount} ` +
           `consoleErrors=${r.consoleErrorCount}`
       );
+      if (!r.searchWorked) {
+        console.log(
+          '  search did not leave at least one real matching result visible -- fail closed (empty state is not a result)'
+        );
+      }
       if (r.legalPageFailures.length > 0) {
         for (const f of r.legalPageFailures) console.log(`  - ${f}`);
       }
