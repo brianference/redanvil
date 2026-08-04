@@ -29,6 +29,15 @@ import { reviewPinCommit } from '../git/newestSourceCommit.mjs';
  */
 export type IndependentReviewMode = 'grok' | 'fixture' | 'unavailable' | 'empty-diff';
 
+/**
+ * Raw judge output that means the reviewer could not be REACHED, as opposed to
+ * answering badly. Kept separate so a 402 or a 5xx is never misreported as a
+ * JSON bug -- it cost real time hunting one before the raw output showed
+ * 'API error (status 402 Payment Required): Grok Build usage balance exhausted'.
+ */
+const REVIEWER_UNREACHABLE_RE =
+  /Payment Required|balance exhausted|API error|status 4\d\d|status 5\d\d/i;
+
 /** Evidence shape written for the finish line / isDone. */
 export interface IndependentReviewReport {
   kind: 'independent-diff-review';
@@ -641,10 +650,20 @@ export function aggregateChunkReviews(input: {
       if (r.findings.length > 0) {
         findings.push(...r.findings);
       } else {
+        // Name the real cause. A reviewer that could not RUN is not a reviewer
+        // that answered badly, and calling a 402 'unparseable judge output' sent
+        // me hunting a JSON bug for a while before the raw output showed
+        // 'API error (status 402 Payment Required): Grok Build usage balance
+        // exhausted'. Both still fail closed -- the distinction is diagnostic,
+        // not permissive.
+        const raw = String(r.rawExcerpt ?? '');
+        const unavailable = REVIEWER_UNREACHABLE_RE.test(raw);
         findings.push({
-          title: 'unparseable judge output',
+          title: unavailable ? 'judge could not run' : 'unparseable judge output',
           citation: 'orchestrator/src/loop/independentReview.ts:1',
-          detail: `chunk ${r.index + 1}/${chunks.length} did not return JSON — cannot verify; fail closed`,
+          detail: unavailable
+            ? `chunk ${r.index + 1}/${chunks.length}: the reviewer could not be reached — ${raw.slice(0, 200)} — cannot verify; fail closed`
+            : `chunk ${r.index + 1}/${chunks.length} did not return JSON — cannot verify; fail closed`,
           passed: false
         });
       }
@@ -1353,11 +1372,17 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
         foundNothingExplicit: false,
         findings: [
           {
-            title: 'unparseable judge output',
+            // See the note at the aggregate site: a reviewer that could not RUN
+            // is not one that answered badly. Both fail closed.
+            title: REVIEWER_UNREACHABLE_RE.test(raw)
+              ? 'judge could not run'
+              : 'unparseable judge output',
             citation: 'orchestrator/src/loop/independentReview.ts:1',
-            detail:
-              `chunk ${chunk.index + 1}/${split.chunks.length} did not return JSON — ` +
-              `cannot verify; fail closed`,
+            detail: REVIEWER_UNREACHABLE_RE.test(raw)
+              ? `chunk ${chunk.index + 1}/${split.chunks.length}: the reviewer could not be reached — ` +
+                `${raw.slice(0, 200)} — cannot verify; fail closed`
+              : `chunk ${chunk.index + 1}/${split.chunks.length} did not return JSON — ` +
+                `cannot verify; fail closed`,
             passed: false
           }
         ],

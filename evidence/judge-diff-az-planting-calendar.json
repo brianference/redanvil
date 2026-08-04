@@ -1,36 +1,24 @@
 {
   "kind": "independent-diff-review",
   "slug": "az-planting-calendar",
-  "commit": "1ec2bf03249ce10e402fd120185043a69ad8625f",
-  "reviewedAt": "2026-08-04T08:31:45.103Z",
-  "diffHash": "c4c1334f9d8f00b789e6102e7c8a9f446da1c7266e0f755f46744bef5192f3fd",
-  "completed": true,
+  "commit": "794f0c3141350e1a518ffeb601bcabe7ad1fee06",
+  "reviewedAt": "2026-08-04T16:16:15.263Z",
+  "diffHash": "a738ed2ff3ba70727b83251b9a59619389e88b0eef9e25558c8b804f30df85b1",
+  "completed": false,
   "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "Timestamp-only measurement restamp",
-      "citation": "az-planting-calendar/evidence/measurement-meta.json:460",
-      "detail": "Commit only rewrites run timestamps (dark 07:30:35Z → 08:29:52Z; light 07:30:39Z → 08:29:56Z). No application code, tests, or axe report bodies appear in the diff. Updating `at` while leaving the same report paths and `ok: true` is not proof that measurements were re-run; the new times are unverifiable from this diff alone.",
-      "passed": false
-    },
-    {
-      "title": "Referenced axe reports not in diff",
-      "citation": "az-planting-calendar/evidence/measurement-meta.json:461",
-      "detail": "Meta still points at evidence/axe/az-planting-calendar-dark.json and evidence/axe/az-planting-calendar-light.json, but those report files are unchanged in this commit. Cannot verify axe results, violation counts, or that the stamped runs match real report content.",
-      "passed": false
-    },
-    {
-      "title": "No substantive product change to judge",
-      "citation": "az-planting-calendar/evidence/measurement-meta.json:457",
-      "detail": "Entire unified diff is a 12-line hunk in measurement-meta.json only. Nothing about UI, API routes, brand, SOURCES/INTEGRATIONS/COMPETITORS, routes, or screenshots can be verified as fixed or present from this commit. Any claim that the app improved at 1ec2bf0 fails for lack of evidence in the diff.",
+      "title": "unparseable judge output",
+      "citation": "orchestrator/src/loop/independentReview.ts:1",
+      "detail": "chunk 1/1 did not return JSON — cannot verify; fail closed",
       "passed": false
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"Timestamp-only measurement restamp\\\",\\n      \\\"citation\\\": \\\"az-planting-calendar/evidence/measurement-meta.json:460\\\",\\n      \\\"detail\\\": \\\"Commit only rewrites run timestamps (dark 07:30:35Z → 08:29:52Z; light 07:30:39Z → 08:29:56Z). No application code, tests, or axe report bodies appear in the diff. Updating `at` while leaving the same report paths and `ok: true` is not proof that measurements were re-run; the new times are unverifiable from this diff alone.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Referenced axe reports not in diff\\\",\\n      \\\"citation\\\": \\\"az-planting-calendar/evidence/measurement-meta.json:461\\\",\\n      \\\"detail\\\": \\\"Meta still points at evidence/axe/az-planting-calendar-dark.json and evidence/axe/az-planting-calendar-light.json, but those report files are unchanged in this commit. Cannot verify axe results, violation counts, or that the stamped runs match real report content.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"No substantive product change to judge\\\",\\n      \\\"citation\\\": \\\"az-planting-calendar/evidence/measurement-meta.json:457\\\",\\n      \\\"detail\\\": \\\"Entire unified diff is a 12-line hunk in measurement-meta.json only. Nothing about UI, API routes, brand, SOURCES/INTEGRATIONS/COMPETITORS, routes, or screenshots can be verified as fixed or present from this commit. Any claim that the app improved at 1ec2bf0 fails for lack of evidence in the diff.\\\",\\n      \\\"passed\\\": false\\n    }\\n  ]\\n}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"826fd937-89b8-4120-b1ae-9c78b1a6b891\",\n  \"requestId\": \"79b81fcd-cab6-41eb-8323-b990b598bf21\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff. They've explicitly said:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"timestamp-only meta update\\\",\\n      \\\"citation\\\": \\\"az-planting-calendar/evidence/measurement-meta.json:457\\\",\\n      \\\"detail\\\": \\\"Only timestamps updated in measurement runs; no actual axe reports changed or verified 2026-08-04T08:29:52.656Z and 2026-08-04T08:29:56.103Z reflect real re-measurements\\\",\\n      \\\"passed\\\": false\\n    }\\n  ]\\n}turn\\n\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings [\\n    {\\n      \\\"title\\\": \\\"timestamp-only meta update\\\",\\n      \\\"citation\\\": \\\"az-planting-calendar/evidence/measurement-meta.json:457\\\",\\n      \\\"detail\\\": \\\"Only timestamps updated in measurement runs; no actual axe reports changed or verified 2026-08-04T08:29:52.\",\n  \"usage\": {\n    \"input_tokens\": 22669,\n    \"cache_read_input_tokens\": 2560,\n    \"output_tokens\": 1555,\n    \"reasoning_tokens\": 1155,\n    \"total_tokens\": 26784\n  },\n  \"num_turns\": 1,\n  \"total_cost_usd\": 0.055436,\n  \"total_cost_usd_ticks\": 554360000,\n  \"modelUsage\": {\n    \"grok-4.5-build\": {\n      \"inputTokens\": 22669,\n      \"outputTokens\": 1555,\n      \"cacheReadInputTokens\": 2560,\n      \"modelCalls\": 1,\n      \"costUSD\": 0.055436\n    }\n  },\n  \"structuredOutput\": {\n    \"foundNothingExplicit\": false,\n    \"findings\": [\n      {\n        \"title\": \"Timestamp-only measurement restamp\",\n        \"citation\": \"az-planting-calendar/evidence/measurement-meta.json:460\",\n        \"detail\": \"Commit only rewrites run timestamps (dark 07:30:35Z → 08:29:52Z; light 07:30:39Z → 08:29:56Z). No application code, tests, or axe report bodies appear in the diff. Updating `at` while leaving the same report paths and `ok: true` is not proof that measurements were re-run; the new times are unverifiable from this diff alone.\",\n        \"passed\": false\n      },\n      {\n        \"title\": \"Referenced axe reports not in diff\",\n        \"citation\": \"az-planting-calendar/evidence/measurement-meta.json:461\",\n        \"detail\": \"Meta still points at evidence/axe/az-planting-calendar-dark.json and evidence/axe/az-planting-calendar-light.json, but those report files are unchanged in this commit. Cannot verify axe results, v",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\"type\":\"error\",\"message\":\"Internal error: {\\n  \\\"message\\\": \\\"API error (status 403 Forbidden): personal-team-blocked:spending-limit: You have run out of credits or need a Grok subscription. Add credits at https://grok.com/?_s=usage or upgrade at https://grok.com/supergrok.\\\",\\n  \\\"http_status\\\": 403\\n}\"}\n",
   "mode": "grok",
   "chunkCount": 1,
-  "coverageChars": 692,
-  "diffChars": 692,
+  "coverageChars": 34470,
+  "diffChars": 34470,
   "coverageComplete": true
 }

@@ -2,53 +2,23 @@
   "kind": "independent-diff-review",
   "slug": "app-builder",
   "commit": "6185add97ab72f678510f798a55cd04474d77817",
-  "reviewedAt": "2026-08-04T08:32:59.174Z",
-  "diffHash": "82e287aa2da299c1cdb3834f5f702fc62808b0a3f4c79063452fa86b98fc79cd",
-  "completed": true,
+  "reviewedAt": "2026-08-04T16:16:36.782Z",
+  "diffHash": "5c7c355030b74cd95d6ac391a4c738ede7eb77f657b452a2844bc596dd09f8d0",
+  "completed": false,
   "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "Logo measurable opt-in deleted",
-      "citation": "app-builder/src/components/shell/Logo.tsx:8",
-      "detail": "Replaced the Logo component (with opt-in measurable / markMeasure: 'mark') with createLogo({ href, ariaLabel, defaultHeight }) and dropped the documented single-instance rule. Prior comment stated header, footer, and drawer all render Logo and marking every instance made [data-measure=\"mark\"] resolve to three elements and hung the harness. This diff neither passes measurable into createLogo nor proves createLogo defaults to exactly one mark. Cannot verify brand-mark QA still works; treat as fail until createLogo and call sites are inspected.",
+      "title": "unparseable judge output",
+      "citation": "orchestrator/src/loop/independentReview.ts:1",
+      "detail": "chunk 1/1 did not return JSON — cannot verify; fail closed",
       "passed": false
-    },
-    {
-      "title": "Header QA markers removed unproven",
-      "citation": "app-builder/src/components/shell/Header.tsx:48",
-      "detail": "Explicit testId=\"compact-header\" and measure=\"header\" were removed from SharedHeader. A comment claims qa-visual markers default on the shared Header, but SharedHeader is not in this diff, so defaults are unverified. If defaults differ (or are off), compact-header / data-measure=\"header\" harnesses break. FAIL until shared Header defaults are confirmed.",
-      "passed": false
-    },
-    {
-      "title": "Exported NavLink removed without callers",
-      "citation": "app-builder/src/components/shell/NavLinks.tsx:51",
-      "detail": "Public NavLink wrapper and NavLinkProps were deleted; drawerNavItems now only returns withGithubNav(...). No other file in this diff updates imports of NavLink from NavLinks. If any consumer still imports { NavLink }, the tree fails typecheck. Behavior of withGithubNav vs the prior inline github item is also not shown. Cannot verify compile or drawer IA equivalence from this diff alone.",
-      "passed": false
-    },
-    {
-      "title": "PageHeaderProps / PageDrawerProps unverified",
-      "citation": "app-builder/src/components/shell/Header.tsx:25",
-      "detail": "Local HeaderProps and MobileDrawerProps were replaced by PageHeaderProps and PageDrawerProps from design-system/Page. Shape compatibility (menuOpen vs open, ref types, onToggleMenu vs onClose) is assumed, not shown. FAIL verification of type/API contract from this diff only.",
-      "passed": false
-    },
-    {
-      "title": "companyLegalColumns structure unverified",
-      "citation": "app-builder/src/components/shell/Footer.tsx:49",
-      "detail": "Company and Legal columns were inlined with fixed routes (/about, /contact, /terms, /privacy); now spread via companyLegalColumns({...labels}). Helper implementation is outside the diff, so hrefs, headings, and column order cannot be verified equal. If the helper uses different paths or omits a link, required legal/footer links regress.",
-      "passed": false
-    },
-    {
-      "title": "DRAWER_LOGO_HEIGHT only constant extract",
-      "citation": "app-builder/src/components/shell/constants.ts:14",
-      "detail": "DRAWER_LOGO_HEIGHT = 48 matches the previous hardcoded height={48} in MobileDrawer. Value preservation for that site is verifiable from the diff and is fine; not a defect.",
-      "passed": true
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\\"foundNothingExplicit\\\":false,\\\"findings\\\":[{\\\"title\\\":\\\"Logo measurable opt-in deleted\\\",\\\"citation\\\":\\\"app-builder/src/components/shell/Logo.tsx:8\\\",\\\"detail\\\":\\\"Replaced the Logo component (with opt-in measurable / markMeasure: 'mark') with createLogo({ href, ariaLabel, defaultHeight }) and dropped the documented single-instance rule. Prior comment stated header, footer, and drawer all render Logo and marking every instance made [data-measure=\\\\\\\"mark\\\\\\\"] resolve to three elements and hung the harness. This diff neither passes measurable into createLogo nor proves createLogo defaults to exactly one mark. Cannot verify brand-mark QA still works; treat as fail until createLogo and call sites are inspected.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Header QA markers removed unproven\\\",\\\"citation\\\":\\\"app-builder/src/components/shell/Header.tsx:48\\\",\\\"detail\\\":\\\"Explicit testId=\\\\\\\"compact-header\\\\\\\" and measure=\\\\\\\"header\\\\\\\" were removed from SharedHeader. A comment claims qa-visual markers default on the shared Header, but SharedHeader is not in this diff, so defaults are unverified. If defaults differ (or are off), compact-header / data-measure=\\\\\\\"header\\\\\\\" harnesses break. FAIL until shared Header defaults are confirmed.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Exported NavLink removed without callers\\\",\\\"citation\\\":\\\"app-builder/src/components/shell/NavLinks.tsx:51\\\",\\\"detail\\\":\\\"Public NavLink wrapper and NavLinkProps were deleted; drawerNavItems now only returns withGithubNav(...). No other file in this diff updates imports of NavLink from NavLinks. If any consumer still imports { NavLink }, the tree fails typecheck. Behavior of withGithubNav vs the prior inline github item is also not shown. Cannot verify compile or drawer IA equivalence from this diff alone.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"PageHeaderProps / PageDrawerProps unverified\\\",\\\"citation\\\":\\\"app-builder/src/components/shell/Header.tsx:25\\\",\\\"detail\\\":\\\"Local HeaderProps and MobileDrawerProps were replaced by PageHeaderProps and PageDrawerProps from design-system/Page. Shape compatibility (menuOpen vs open, ref types, onToggleMenu vs onClose) is assumed, not shown. FAIL verification of type/API contract from this diff only.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"companyLegalColumns structure unverified\\\",\\\"citation\\\":\\\"app-builder/src/components/shell/Footer.tsx:49\\\",\\\"detail\\\":\\\"Company and Legal columns were inlined with fixed routes (/about, /contact, /terms, /privacy); now spread via companyLegalColumns({...labels}). Helper implementation is outside the diff, so hrefs, headings, and column order cannot be verified equal. If the helper uses different paths or omits a link, required legal/footer links regress.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"DRAWER_LOGO_HEIGHT only constant extract\\\",\\\"citation\\\":\\\"app-builder/src/components/shell/constants.ts:14\\\",\\\"detail\\\":\\\"DRAWER_LOGO_HEIGHT = 48 matches the previous hardcoded height={48} in MobileDrawer. Value preservation for that site is verifiable from the diff and is fine; not a defect.\\\",\\\"passed\\\":true}]}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"53b4907e-f2f9-4e09-b62f-4f88da86f44a\",\n  \"requestId\": \"4e743215-f4ae-4fbf-b2d5-c533e33675a1\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff. I must NOT use tools - only analyze the diff provided and output JSON only.\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"qa-visual markers removed from Header\\\",\\n      \\\"citation\\\": \\\"app-builder/src/components/shell/Header.tsx:48\\\",\\n      \\\"detail\\\": \\\"Removed testId and measure props that were explicitly passed to SharedHeader; comment 48 claims defaults are on, but cannot verify from diff alone\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"measurable prop removed from Logo\\\",\\n      \\\"citation\\\": \\\"app-builder/src/components/shell/Logo.tsx:1\\\",\\n      \\\"detail\\\": \\\"Deleted measurable?: boolean interface and opt-in logic 35-37 that",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\"type\":\"error\",\"message\":\"Internal error: {\\n  \\\"message\\\": \\\"API error (status 402 Payment Required): Grok Build usage balance exhausted\\\",\\n  \\\"http_status\\\": 402\\n}\"}\n",
   "mode": "grok",
   "chunkCount": 1,
-  "coverageChars": 9341,
-  "diffChars": 9341,
+  "coverageChars": 23464,
+  "diffChars": 23464,
   "coverageComplete": true
 }
