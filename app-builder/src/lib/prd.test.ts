@@ -630,3 +630,53 @@ describe('fail-closed empty entities (A1)', () => {
     }
   });
 });
+
+describe('fail-closed unresolved title (A6)', () => {
+  it('throws UnresolvedPrdError with unresolved-title when the derived name is a fragment', () => {
+    // titleFromPrompt of this string is still a dangling fragment ("With"), and
+    // no appName is supplied — generatePrd must refuse rather than ship a title
+    // that ends mid-clause. Entities are set so the A1 branch is not the cause.
+    const fragmentPrompt = 'with the and of a for extra padding';
+    expect(() =>
+      generatePrd(
+        {
+          prompt: fragmentPrompt,
+          appType: 'web application',
+          hasAuth: false,
+          entities: 'Crop'
+        },
+        estimate({ features: 1, hasAuth: false, entities: 1 })
+      )
+    ).toThrow(UnresolvedPrdError);
+    try {
+      generatePrd(
+        {
+          prompt: fragmentPrompt,
+          appType: 'web application',
+          hasAuth: false,
+          entities: 'Crop'
+        },
+        estimate({ features: 1, hasAuth: false, entities: 1 })
+      );
+    } catch (err) {
+      expect(err).toBeInstanceOf(UnresolvedPrdError);
+      expect((err as UnresolvedPrdError).code).toBe('unresolved-title');
+      expect((err as UnresolvedPrdError).message).toMatch(/product name|fragment/i);
+    }
+  });
+
+  it('accepts the same fragment prompt when appName supplies a real product name', () => {
+    const prd = generatePrd(
+      {
+        prompt: 'with the and of a for extra padding',
+        appType: 'web application',
+        hasAuth: false,
+        entities: 'Crop',
+        appName: 'Desert Planting Calendar'
+      },
+      estimate({ features: 1, hasAuth: false, entities: 1 })
+    );
+    expect(prd.title).toBe('Desert Planting Calendar');
+    expect(prd.markdown).toContain('Desert Planting Calendar');
+  });
+});
