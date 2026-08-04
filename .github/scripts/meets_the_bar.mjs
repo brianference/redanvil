@@ -676,7 +676,15 @@ export function evaluateApp(repoRoot, app, opts = {}) {
     // just stops blocking, exactly as scoreBarReasons and lg-shipped treat it.
     const allVisual = visualCoverageReasons(repoRoot, slug, app.dir, opts.verdictsPath ?? null);
     for (const r of allVisual) {
-      if (reasonIsOnlyAboutWaived(r, waived, blockingFailing)) {
+      // Match the rule id STRUCTURALLY, not by substring. reasonIsOnlyAboutWaived
+      // cannot be reused here: this reason contains the text 'passed === false',
+      // which routes it into that helper's rules-list branch, and that branch
+      // answers 'blockingFailing.length === 0' -- false while lg-shipped is
+      // unwaived. The waived visual verdict then blocked anyway. Only a verdict
+      // line for a waived rule is filtered; a missing verdict or stale evidence
+      // reason is untouched and still blocks.
+      const m = /^visual verdict ([a-z0-9-]+) records passed === false$/.exec(r);
+      if (m !== null && waived.has(m[1])) {
         console.log(`    WAIVED ${slug}: ${r}`);
         continue;
       }
