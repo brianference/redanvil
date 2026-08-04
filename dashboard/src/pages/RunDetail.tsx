@@ -5,7 +5,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { en } from '../i18n/en';
 import { groupRulesByLane, type Run, type RunIteration, type RunRule } from '../lib/summary';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
-import { useRuns } from '../lib/useRuns';
+import { type RunsState, useRuns } from '../lib/useRuns';
 import { theme } from '../theme';
 
 /**
@@ -312,24 +312,20 @@ function BackToRunsLink(): JSX.Element {
   );
 }
 
-/**
- * Detail view for one run: header, iteration history, and full per-rule breakdown.
- * Loads the same feed as the list and selects by slug; fail-closed loading/error/empty.
- */
-export function RunDetail(): JSX.Element {
-  const { slug: rawSlug } = useParams<{ slug: string }>();
-  const slug = rawSlug !== undefined ? decodeURIComponent(rawSlug) : '';
-  const state = useRuns();
-  const title = slug.length > 0 ? slug : en.runDetail.missingSlug;
+export interface RunDetailViewProps {
+  /** Route slug (decoded). Empty string means missing-slug branch. */
+  slug: string;
+  /** Injected runs feed state (loading / error / ready). */
+  state: RunsState;
+}
 
-  useDocumentMeta({
-    title: `${title} · RedAnvil Dashboard`,
-    description:
-      slug.length > 0
-        ? `Build run detail for ${slug}: score, coverage, iterations, and per-rule breakdown.`
-        : 'RedAnvil build run detail.',
-    path: slug.length > 0 ? `/run/${encodeURIComponent(slug)}` : '/run'
-  });
+/**
+ * Pure detail view: loading, error, missing-slug, not-found, and ready body.
+ * Exported so unit tests can inject each branch without waiting on the live
+ * feed (same pattern as RunDetailBody).
+ */
+export function RunDetailView({ slug, state }: RunDetailViewProps): JSX.Element {
+  const title = slug.length > 0 ? slug : en.runDetail.missingSlug;
 
   if (state.status === 'loading') {
     return (
@@ -380,4 +376,26 @@ export function RunDetail(): JSX.Element {
       <RunDetailBody run={run} />
     </Page>
   );
+}
+
+/**
+ * Detail view for one run: header, iteration history, and full per-rule breakdown.
+ * Loads the same feed as the list and selects by slug; fail-closed loading/error/empty.
+ */
+export function RunDetail(): JSX.Element {
+  const { slug: rawSlug } = useParams<{ slug: string }>();
+  const slug = rawSlug !== undefined ? decodeURIComponent(rawSlug) : '';
+  const state = useRuns();
+  const title = slug.length > 0 ? slug : en.runDetail.missingSlug;
+
+  useDocumentMeta({
+    title: `${title} · RedAnvil Dashboard`,
+    description:
+      slug.length > 0
+        ? `Build run detail for ${slug}: score, coverage, iterations, and per-rule breakdown.`
+        : 'RedAnvil build run detail.',
+    path: slug.length > 0 ? `/run/${encodeURIComponent(slug)}` : '/run'
+  });
+
+  return <RunDetailView slug={slug} state={state} />;
 }

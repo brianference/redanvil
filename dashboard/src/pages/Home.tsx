@@ -6,20 +6,25 @@ import { matchesRunQuery, RunSearch } from '../components/RunSearch';
 import { en } from '../i18n/en';
 import { summarize } from '../lib/summary';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
-import { useRuns } from '../lib/useRuns';
+import { type RunsState, useRuns } from '../lib/useRuns';
 import { theme } from '../theme';
 
-/** Home page: KPI strip plus glanceable run cards, with explicit load/error/empty states. */
-export function Home(): JSX.Element {
-  useDocumentMeta({
-    title: 'RedAnvil Dashboard — build runs',
-    description:
-      'RedAnvil dashboard: a read-only view of build runs — slug, final score, pass/fail, iterations, and deploy URL.',
-    path: '/'
-  });
-  const state = useRuns();
+export interface HomeBodyProps {
+  /** Injected runs feed state (loading / error / ready). */
+  state: RunsState;
+  /** Controlled search query. */
+  query: string;
+  /** Called when the visitor types in the search field. */
+  onQueryChange: (value: string) => void;
+}
+
+/**
+ * Pure home body: KPI strip, search, run cards, and explicit load/error/empty
+ * states. Exported so unit tests can inject each branch without waiting on the
+ * live feed (same pattern as RunDetailBody).
+ */
+export function HomeBody({ state, query, onQueryChange }: HomeBodyProps): JSX.Element {
   const title = en.pages.home.title;
-  const [query, setQuery] = useState('');
   const allRuns = state.status === 'ready' ? state.runs : [];
   const filteredRuns = useMemo(
     () => allRuns.filter((run) => matchesRunQuery(run.slug, query)),
@@ -59,7 +64,7 @@ export function Home(): JSX.Element {
   return (
     <Page title={title}>
       <KpiStrip summary={stats} />
-      <RunSearch value={query} onChange={setQuery} />
+      <RunSearch value={query} onChange={onQueryChange} />
       {filteredRuns.length === 0 && query.trim().length > 0 ? (
         <p role="status" style={{ color: theme.color.muted }}>
           {en.pages.home.searchNoMatches(query.trim())}
@@ -69,4 +74,17 @@ export function Home(): JSX.Element {
       )}
     </Page>
   );
+}
+
+/** Home page: live feed via useRuns, controlled search, fail-closed branches. */
+export function Home(): JSX.Element {
+  useDocumentMeta({
+    title: 'RedAnvil Dashboard — build runs',
+    description:
+      'RedAnvil dashboard: a read-only view of build runs — slug, final score, pass/fail, iterations, and deploy URL.',
+    path: '/'
+  });
+  const state = useRuns();
+  const [query, setQuery] = useState('');
+  return <HomeBody state={state} query={query} onQueryChange={setQuery} />;
 }
