@@ -15,7 +15,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   readMeasurementMeta,
   writeMeasurementMetaEntry,
+  writeNotApplicableMeta,
   runsAgree,
+  isNotApplicableMeta,
   nowIso
 } from '../lib/measurement-meta.mjs';
 
@@ -77,6 +79,8 @@ export function evaluateFlattering(meta, prevRules) {
     if (prev.passed === true) continue;
     const entry = meta[prev.ruleId];
     if (!entry) continue; // no current measurement for this rule — not a flip we can see
+    // Honest n/a is not a fail→pass flip; the rule did not produce a pass.
+    if (isNotApplicableMeta(entry)) continue;
     const runs = entry.runs;
     if (!Array.isArray(runs) || runs.length === 0) continue;
     const currentPass = runs.every((r) => r?.ok === true);
@@ -112,13 +116,10 @@ export function runMeasRecheckFlattering(appDir, io, deps = {}) {
   if (prevRules === undefined) {
     const path = findPreviousResult(appDir);
     if (!path) {
-      writeMeasurementMetaEntry(appDir, 'meas-recheck-flattering', {
+      writeNotApplicableMeta(appDir, 'meas-recheck-flattering', {
         tool: 'meta-scan',
         engine: null,
-        runs: [
-          { ok: true, at: nowIso(), note: 'no previous result' },
-          { ok: true, at: nowIso(), note: 'no previous result' }
-        ],
+        reason: 'no previous results/<slug>.json — nothing to re-check',
         knownBad: {
           input: KNOWN_BAD_FIXTURE,
           failed: true,

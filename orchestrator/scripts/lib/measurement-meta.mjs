@@ -15,6 +15,15 @@
  *     "knownBad": { "input": "...", "failed": true, "recordedAt": "..." }
  *   }
  * }
+ *
+ * When a rule does not apply, record it honestly instead of inventing runs:
+ * {
+ *   "notApplicable": true,
+ *   "reason": "why the rule did not apply",
+ *   "recordedAt": "...",
+ *   "runs": [],
+ *   "knownBad": { ... }   // still required where G1 applies
+ * }
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -100,6 +109,8 @@ export function readMeasurementMeta(appDir) {
  * Merge one rule's entry into measurement-meta.json (creates dirs as needed).
  *
  * Existing keys for that rule are kept unless overwritten by `entry`.
+ * Pass an explicit value (including `null` or `[]`) to overwrite; omit a key
+ * to keep the previous value.
  *
  * @param {string} appDir App root.
  * @param {string} ruleId Rule id.
@@ -114,6 +125,83 @@ export function writeMeasurementMetaEntry(appDir, ruleId, entry) {
   mkdirSync(dirname(p), { recursive: true });
   writeFileSync(p, `${JSON.stringify(all, null, 2)}\n`, 'utf8');
   return all;
+}
+
+/**
+ * True when an entry honestly records that the rule did not apply to this app.
+ *
+ * Requires an explicit `notApplicable: true` plus a non-empty `reason`. Never
+ * inferred from free-text notes on fabricated run objects — that was the old
+ * shape that claimed two runs it never performed.
+ *
+ * @param {object | undefined | null} entry
+ * @returns {boolean}
+ */
+export function isNotApplicableMeta(entry) {
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+  if (/** @type {{ notApplicable?: unknown }} */ (entry).notApplicable !== true) return false;
+  const reason = /** @type {{ reason?: unknown }} */ (entry).reason;
+  return typeof reason === 'string' && reason.trim().length > 0;
+}
+
+/**
+ * Build fields for an honest not-applicable measurement-meta entry.
+ *
+ * Does not invent a `runs` array: n/a means the check never ran the measurement,
+ * so claiming two agreeing runs would be manufactured evidence. Callers that
+ * still need a knownBad proof attach it via `knownBad`.
+ *
+ * @param {{
+ *   tool: string,
+ *   engine?: string | null,
+ *   reason: string,
+ *   knownBad?: { input: string, failed: boolean, recordedAt?: string }
+ * }} opts
+ * @returns {object}
+ */
+export function notApplicableMetaFields(opts) {
+  const reason = typeof opts.reason === 'string' ? opts.reason.trim() : '';
+  if (!reason) {
+    throw new Error('notApplicableMetaFields requires a non-empty reason');
+  }
+  if (typeof opts.tool !== 'string' || opts.tool.trim().length === 0) {
+    throw new Error('notApplicableMetaFields requires a non-empty tool');
+  }
+  /** @type {Record<string, unknown>} */
+  const fields = {
+    tool: opts.tool,
+    engine: opts.engine ?? null,
+    notApplicable: true,
+    reason,
+    recordedAt: nowIso(),
+    // Explicit empty array so a prior dual-run fabrication is overwritten on merge.
+    runs: []
+  };
+  if (opts.knownBad && typeof opts.knownBad === 'object') {
+    fields.knownBad = {
+      input: opts.knownBad.input,
+      failed: opts.knownBad.failed === true,
+      recordedAt: opts.knownBad.recordedAt ?? nowIso()
+    };
+  }
+  return fields;
+}
+
+/**
+ * Write an honest not-applicable entry for a rule (creates dirs as needed).
+ *
+ * @param {string} appDir App root.
+ * @param {string} ruleId Rule id.
+ * @param {{
+ *   tool: string,
+ *   engine?: string | null,
+ *   reason: string,
+ *   knownBad?: { input: string, failed: boolean, recordedAt?: string }
+ * }} opts
+ * @returns {Record<string, object>} The full meta after write.
+ */
+export function writeNotApplicableMeta(appDir, ruleId, opts) {
+  return writeMeasurementMetaEntry(appDir, ruleId, notApplicableMetaFields(opts));
 }
 
 /**

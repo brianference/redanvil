@@ -9,6 +9,23 @@ export declare function writeMeasurementMetaEntry(
   ruleId: string,
   entry: object
 ): Record<string, object>;
+export declare function isNotApplicableMeta(entry: object | undefined | null): boolean;
+export declare function notApplicableMetaFields(opts: {
+  tool: string;
+  engine?: string | null;
+  reason: string;
+  knownBad?: { input: string; failed: boolean; recordedAt?: string };
+}): object;
+export declare function writeNotApplicableMeta(
+  appDir: string,
+  ruleId: string,
+  opts: {
+    tool: string;
+    engine?: string | null;
+    reason: string;
+    knownBad?: { input: string; failed: boolean; recordedAt?: string };
+  }
+): Record<string, object>;
 export declare function runsAgree(runs: ReadonlyArray<{ ok?: boolean }> | undefined): boolean;
 export declare function runsAreDuplicate(runs: ReadonlyArray<unknown> | undefined): boolean;
 export declare function fileMtimeMs(file: string): number | null;
