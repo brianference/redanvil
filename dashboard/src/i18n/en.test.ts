@@ -229,9 +229,15 @@ describe('Breadcrumbs', () => {
 
 describe('ThemeToggle', () => {
   it('renders a labeled theme control with glyph', () => {
+    // The control is labelled with the action it performs, so it names the
+    // theme it switches TO, not the one in effect. f7ef3e1 made light the
+    // default first paint for every app, so the first paint offers dark. This
+    // test asserted themeToLight and the sun, which was correct only while the
+    // default was dark -- it failed the moment the default flipped, on a
+    // component that was behaving exactly as intended.
     const html = renderToStaticMarkup(createElement(ThemeToggle));
-    expect(html).toContain(en.app.themeToLight);
+    expect(html).toContain(en.app.themeToDark);
     expect(html).toContain('aria-hidden="true"');
-    expect(html).toContain('☀');
+    expect(html).toContain('☾');
   });
 });
