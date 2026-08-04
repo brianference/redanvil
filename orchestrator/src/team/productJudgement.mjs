@@ -9,6 +9,7 @@
  * second copy of the logic inside the checker would have re-created the same
  * drift, so both sides now call this.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -74,21 +75,63 @@ export function userRefuseOk(appDir, slug) {
 }
 
 /**
+ * HEAD commit for commit-pin checks, or null when git is unavailable.
+ *
+ * @param {string} dir Directory inside a git work tree.
+ * @returns {string | null}
+ */
+function headCommit(dir) {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Re-evaluate a judge-diff report the same way independentReview.evaluateReviewOk
+ * does — never trust a hand-authored `ok: true` alone.
+ *
+ * @param {Record<string, unknown>} report Parsed judge-diff body.
+ * @returns {boolean}
+ */
+function evaluateJudgeDiffOk(report) {
+  if (report.completed !== true) return false;
+  const findings = Array.isArray(report.findings) ? report.findings : null;
+  if (findings === null) return false;
+  const blockers = findings.filter(
+    (f) => f !== null && typeof f === 'object' && /** @type {{passed?: unknown}} */ (f).passed === false
+  );
+  if (blockers.length > 0) return false;
+  if (findings.length === 0) return report.foundNothingExplicit === true;
+  return true;
+}
+
+/**
  * Whether an independent judge reviewed the diff and found it clean.
  *
- * The reviewer must not be the author: a self-review recorded here is not an
- * independent review, so `reviewer` has to be present and name something other
- * than the authoring agent.
+ * Reads evidence/judge-diff-<slug>.json (the artifact runIndependentDiffReview
+ * writes). Fail-closed: missing file, unparseable JSON, wrong kind, incomplete
+ * review, unresolved findings, missing ok, or a commit that is not HEAD all
+ * yield false. A review for a different commit is not evidence for this gate.
  *
  * @param {string} appDir App root.
  * @param {string} slug App slug.
  * @returns {boolean}
  */
 export function independentReviewOk(appDir, slug) {
-  const r = readJson(resolveEvidenceFile(appDir, `independent-review-${slug}.json`));
+  const r = readJson(resolveEvidenceFile(appDir, `judge-diff-${slug}.json`));
   if (r === null) return false;
-  if (typeof r.reviewer !== 'string' || r.reviewer.trim().length === 0) return false;
-  return r.verdict === 'pass';
+  if (r.kind !== 'independent-diff-review') return false;
+  if (typeof r.commit !== 'string' || r.commit.length === 0) return false;
+  const head = headCommit(appDir);
+  if (head === null || r.commit !== head) return false;
+  if (r.ok !== true) return false;
+  return evaluateJudgeDiffOk(r);
 }
 
 /**

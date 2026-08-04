@@ -481,8 +481,10 @@ async function main(): Promise<number> {
       { finalScore: result.finalScore, threshold, rules: loopRules },
       {
         evidenceStale: staleVerdicts.length > 0,
-        independentReviewOk: run.independentReviewOk,
-        ...loadProductJudgementOpts(dir, loopSlug)
+        // Disk first (same as GATE); live review overwrites so a just-run
+        // judge is not clobbered by a missing/stale evidence write.
+        ...loadProductJudgementOpts(dir, loopSlug),
+        independentReviewOk: run.independentReviewOk
       }
     );
     console.log(

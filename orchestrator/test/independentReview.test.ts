@@ -9,7 +9,9 @@ import {
   buildRefutePrompt,
   evaluateReviewOk,
   hashDiff,
+  independentReviewOkFromReport,
   parseJudgeJson,
+  readJudgeDiffReport,
   runIndependentDiffReview,
   type IndependentReviewReport
 } from '../src/loop/independentReview';
@@ -144,6 +146,38 @@ describe('independentReview fixture mode (known-answer)', () => {
       });
       expect(report.ok).toBe(true);
       expect(report.foundNothingExplicit).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('readJudgeDiffReport + independentReviewOkFromReport are commit-pinned', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'redanvil-review-load-'));
+    try {
+      spawnSync('git', ['init', '-q'], { cwd: dir });
+      spawnSync('git', ['config', 'user.email', 't@t'], { cwd: dir });
+      spawnSync('git', ['config', 'user.name', 't'], { cwd: dir });
+      writeFileSync(join(dir, 'a.txt'), 'a\n');
+      spawnSync('git', ['add', 'a.txt'], { cwd: dir });
+      spawnSync('git', ['commit', '-qm', 'init'], { cwd: dir });
+      const head = spawnSync('git', ['rev-parse', 'HEAD'], {
+        cwd: dir,
+        encoding: 'utf8'
+      }).stdout.trim();
+      const slug = 'load-app';
+      const outPath = join(dir, 'evidence', `judge-diff-${slug}.json`);
+      const written = runIndependentDiffReview({
+        dir,
+        outPath,
+        fixtureReport: { foundNothingExplicit: true, findings: [] }
+      });
+      expect(written.ok).toBe(true);
+      // slug from basename(dir) would differ; read by the path we wrote.
+      const loaded = readJudgeDiffReport(dir, slug);
+      expect(loaded).not.toBeNull();
+      expect(independentReviewOkFromReport(loaded, head)).toBe(true);
+      expect(independentReviewOkFromReport(loaded, '0'.repeat(40))).toBe(false);
+      expect(independentReviewOkFromReport(null, head)).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
