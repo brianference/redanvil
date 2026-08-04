@@ -470,15 +470,28 @@
   "u-api-not-found": {
     "tool": "fetch",
     "engine": null,
-    "runs": [],
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-04T04:07:58.779Z",
+        "path": "/api/__definitely_absent_cc93df2d9864aae5"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-04T04:07:58.780Z",
+        "path": "/api/__definitely_absent_cc93df2d9864aae5"
+      }
+    ],
     "knownBad": {
-      "input": "C:\\Users\\brian\\RedAnvil\\known-bad-fixtures\\u-api-not-found\\bad-app",
+      "input": "C:\\Users\\brian\\RedAnvil-fix-404\\known-bad-fixtures\\u-api-not-found\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-04T04:00:58.480Z"
+      "recordedAt": "2026-08-04T04:07:58.780Z"
     },
-    "notApplicable": true,
-    "reason": "no detail routes under functions/api/",
-    "recordedAt": "2026-08-04T04:00:58.481Z"
+    "notApplicable": false,
+    "reason": null,
+    "recordedAt": "2026-08-04T03:47:26.717Z",
+    "mode": "absent-api-path",
+    "path": "/api/__definitely_absent_cc93df2d9864aae5"
   },
   "fe-a11y-contrast": {
     "tool": "axe-core",
