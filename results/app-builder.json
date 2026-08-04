@@ -249,7 +249,7 @@
     },
     {
       "ruleId": "meas-known-bad",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-two-run",
@@ -387,9 +387,9 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-04T01:20:17.878Z",
+  "finishedAt": "2026-08-04T01:24:29.638Z",
   "provenance": {
-    "commit": "a49608422e63a589d72ceb52490d5be97701a1cf",
+    "commit": "494ba80326117ad9004d73a394a223bebebfbf3c",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
@@ -404,6 +404,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-04T01:20:17.934Z"
+    "generatedAt": "2026-08-04T01:24:29.711Z"
   }
 }
