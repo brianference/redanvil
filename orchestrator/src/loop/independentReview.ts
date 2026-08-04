@@ -10,9 +10,11 @@
  * The judge reads the DIFF, not a summary of the diff.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
+import { tmpdir } from 'node:os';
+import { quoteForCmd, scrubbedEnv } from '../process/run';
 
 /**
  * How the independent review was produced.
@@ -88,6 +90,11 @@ export interface IndependentReviewOptions {
   timeoutMs?: number;
   /** Base vs head for the diff. Defaults to merge-base with main/master..HEAD. */
   diffRange?: string;
+  /**
+   * Path-scope for `diffRange`, so an app's judge sees that app's changes.
+   * Ignored when `diffRange` is unset.
+   */
+  diffPaths?: string[];
 }
 
 /**
@@ -162,10 +169,15 @@ export function headParents(dir: string): string[] {
  * @param range - Optional explicit range (e.g. `main...HEAD`).
  * @returns Diff text (may be empty when there is genuinely nothing to review).
  */
-export function collectDiff(dir: string, range?: string): string {
+export function collectDiff(dir: string, range?: string, paths?: string[]): string {
   try {
     if (range) {
-      return execFileSync('git', ['diff', range], {
+      // Path-scope when asked. A release range spans every app in the repo, and
+      // handing one app's judge the other apps' changes buries the thing it was
+      // asked to review — the first real run reported exactly that, calling its
+      // input "a self-referential judge meta-review, not a code-diff review".
+      const pathArgs = paths !== undefined && paths.length > 0 ? ['--', ...paths] : [];
+      return execFileSync('git', ['diff', range, ...pathArgs], {
         cwd: dir,
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'ignore'],
@@ -230,10 +242,17 @@ export function buildRefutePrompt(slug: string, commit: string, diff: string): s
 
 Review the REAL git diff for \`${slug}\` at commit ${commit}.
 Your job is to REFUTE the author: find what they missed, cite file:line from
-the diff or the tree, and FAIL anything you cannot verify.
+the diff, and FAIL anything you cannot verify.
 
 PASS is the claim that needs proof, not FAIL. If you cannot verify a change,
 it does not pass.
+
+## Do not use tools
+
+The full unified diff is already in this message. Do not call tools, do not
+read files, do not run commands, do not open the tree. Answer once from the
+diff below. Intermediate status messages are forbidden — emit only the final
+JSON object described under Output format.
 
 ## Output format (JSON only, no markdown fence)
 
@@ -256,6 +275,7 @@ Rules:
 - Prefer real defects: hardcoded theme paint, missing tests for new API routes,
   placeholder brand marks, absent SOURCES/INTEGRATIONS/COMPETITORS, routes that
   render the home page, missing screenshots.
+- Do not invent "still inspecting" or "will check" findings — only final verdicts.
 
 ## THE DIFF (not a summary)
 
@@ -266,43 +286,253 @@ ${clipped.length === 0 ? '(empty diff — tree is clean and HEAD has no patch; s
 }
 
 /**
- * Parse judge JSON from stdout (tolerate surrounding prose).
+ * JSON Schema for the independent judge reply. Passed to `grok --json-schema`
+ * so the model is constrained to this shape (implies --output-format json).
+ * Matches what {@link parseJudgeJson} / evaluateReviewOk already expect.
+ */
+export const JUDGE_DIFF_JSON_SCHEMA = JSON.stringify({
+  type: 'object',
+  required: ['foundNothingExplicit', 'findings'],
+  properties: {
+    foundNothingExplicit: { type: 'boolean' },
+    findings: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['title', 'citation', 'detail', 'passed'],
+        properties: {
+          title: { type: 'string' },
+          citation: { type: 'string' },
+          detail: { type: 'string' },
+          passed: { type: 'boolean' }
+        }
+      }
+    }
+  }
+});
+
+/**
+ * Normalize a raw object into the findings payload the rest of the step uses.
  *
- * @param text - Raw judge output.
+ * @param raw - Parsed object (from the model or after envelope unwrap).
+ * @returns Findings payload, or null when the object is not a review body.
+ */
+function normalizeJudgePayload(raw: {
+  foundNothingExplicit?: unknown;
+  findings?: unknown;
+}): {
+  foundNothingExplicit: boolean;
+  findings: IndependentFinding[];
+} | null {
+  // Must look like the review body — refuse bare envelopes / unrelated objects.
+  if (!('foundNothingExplicit' in raw) && !('findings' in raw)) return null;
+  // findings must be an array when present; a wrong type is unparseable.
+  if ('findings' in raw && raw.findings !== undefined && !Array.isArray(raw.findings)) {
+    return null;
+  }
+  const findingsRaw = Array.isArray(raw.findings) ? raw.findings : [];
+  const findings: IndependentFinding[] = [];
+  for (const f of findingsRaw) {
+    if (f === null || typeof f !== 'object') continue;
+    const row = f as Record<string, unknown>;
+    if (typeof row.title !== 'string' || typeof row.citation !== 'string') continue;
+    findings.push({
+      title: row.title,
+      citation: row.citation,
+      detail: typeof row.detail === 'string' ? row.detail : '',
+      passed: row.passed === true
+    });
+  }
+  // Listed findings that all failed shape checks → unparseable, not "found nothing".
+  if (findingsRaw.length > 0 && findings.length === 0) return null;
+  return {
+    foundNothingExplicit: raw.foundNothingExplicit === true,
+    findings
+  };
+}
+
+/**
+ * Extract top-level JSON objects from a string that may concatenate several
+ * (multi-turn --json-schema runs paste one object per turn into envelope.text).
+ *
+ * @param text - Possibly multi-object text.
+ * @returns Parsed objects in order of appearance.
+ */
+export function extractJsonObjects(text: string): unknown[] {
+  const results: unknown[] = [];
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] !== '{') {
+      i += 1;
+      continue;
+    }
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    const start = i;
+    let closed = false;
+    for (let j = i; j < text.length; j++) {
+      const c = text[j]!;
+      if (inString) {
+        if (escape) {
+          escape = false;
+          continue;
+        }
+        if (c === '\\') {
+          escape = true;
+          continue;
+        }
+        if (c === '"') inString = false;
+        continue;
+      }
+      if (c === '"') {
+        inString = true;
+        continue;
+      }
+      if (c === '{') depth += 1;
+      else if (c === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          try {
+            results.push(JSON.parse(text.slice(start, j + 1)));
+          } catch {
+            /* skip malformed slice */
+          }
+          i = j + 1;
+          closed = true;
+          break;
+        }
+      }
+    }
+    if (!closed) break;
+  }
+  return results;
+}
+
+/**
+ * Parse judge JSON from stdout.
+ *
+ * When grok is invoked with --output-format json / --json-schema, stdout is a
+ * CLI envelope `{ text, stopReason, usage, ... }`. The model's actual result
+ * is the string in `text` (JSON matching JUDGE_DIFF_JSON_SCHEMA). Multi-turn
+ * runs concatenate one schema object per turn into `text` — the last valid
+ * findings body is the final answer. Unparseable input returns null so the
+ * caller can fail closed.
+ *
+ * @param text - Raw judge stdout (and optional stderr concat).
  * @returns Parsed findings payload or null.
  */
 export function parseJudgeJson(text: string): {
   foundNothingExplicit: boolean;
   findings: IndependentFinding[];
 } | null {
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start === -1 || end === -1 || end <= start) return null;
+  let body = text.trim();
+  if (body.length === 0) return null;
+
+  // Prefer the CLI JSON envelope: { text, structuredOutput, stopReason, usage, ... }.
   try {
-    const raw = JSON.parse(text.slice(start, end + 1)) as {
+    const envelope = JSON.parse(body) as {
+      text?: unknown;
+      structuredOutput?: unknown;
+      structuredOutputError?: unknown;
+      stopReason?: unknown;
       foundNothingExplicit?: unknown;
       findings?: unknown;
     };
-    const findingsRaw = Array.isArray(raw.findings) ? raw.findings : [];
-    const findings: IndependentFinding[] = [];
-    for (const f of findingsRaw) {
-      if (f === null || typeof f !== 'object') continue;
-      const row = f as Record<string, unknown>;
-      if (typeof row.title !== 'string' || typeof row.citation !== 'string') continue;
-      findings.push({
-        title: row.title,
-        citation: row.citation,
-        detail: typeof row.detail === 'string' ? row.detail : '',
-        passed: row.passed === true
-      });
+    // When --json-schema succeeds, the CLI puts the constrained object here.
+    if (
+      envelope.structuredOutput !== null &&
+      envelope.structuredOutput !== undefined &&
+      typeof envelope.structuredOutput === 'object' &&
+      !Array.isArray(envelope.structuredOutput)
+    ) {
+      const fromStructured = normalizeJudgePayload(
+        envelope.structuredOutput as {
+          foundNothingExplicit?: unknown;
+          findings?: unknown;
+        }
+      );
+      if (fromStructured !== null) return fromStructured;
     }
-    return {
-      foundNothingExplicit: raw.foundNothingExplicit === true,
-      findings
-    };
+    // Cancelled / failed structured runs: intermediate schema objects may still
+    // sit in text. Fail closed rather than promoting a partial turn to a review.
+    const stop = typeof envelope.stopReason === 'string' ? envelope.stopReason : '';
+    const schemaFailed =
+      envelope.structuredOutput === null &&
+      typeof envelope.structuredOutputError === 'string' &&
+      envelope.structuredOutputError.length > 0;
+    if (stop === 'Cancelled' || schemaFailed) {
+      return null;
+    }
+    if (typeof envelope.text === 'string') {
+      body = envelope.text.trim();
+    } else {
+      // Structured output landed as the top-level object (no text wrapper).
+      const direct = normalizeJudgePayload(envelope);
+      if (direct !== null) return direct;
+    }
   } catch {
-    return null;
+    // Not pure JSON; fall through to object extraction below.
   }
+
+  // Model reply may still be fenced or surrounded by a short note.
+  const fenced = /```(?:json)?\s*([\s\S]*?)```/.exec(body);
+  if (fenced?.[1]) body = fenced[1].trim();
+
+  const objects = extractJsonObjects(body);
+  // Last valid body wins: multi-turn schema output is intermediate then final.
+  for (let k = objects.length - 1; k >= 0; k--) {
+    const obj = objects[k];
+    if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) continue;
+    const normalized = normalizeJudgePayload(
+      obj as { foundNothingExplicit?: unknown; findings?: unknown }
+    );
+    if (normalized !== null) return normalized;
+  }
+  return null;
+}
+
+/**
+ * Build the headless `grok` argv for the independent diff review.
+ *
+ * Mirrors `.github/scripts/independent_judge.mjs` and `src/grok/harness.ts`:
+ * real flags only (--cwd, -m, --always-approve, --json-schema). Never
+ * `--grokmodel` or bare `-d` — those are not CLI options and produce no
+ * parseable review.
+ *
+ * @param opts - Cwd, path to the prompt file, session id, optional model.
+ * @returns Argv for `spawnSync('grok', ...)`.
+ */
+export function buildIndependentReviewGrokArgs(opts: {
+  cwd: string;
+  promptFile: string;
+  sessionId: string;
+  model?: string;
+}): string[] {
+  return [
+    '--no-auto-update',
+    '--always-approve',
+    '--no-alt-screen',
+    '--cwd',
+    opts.cwd,
+    '--session-id',
+    opts.sessionId,
+    '-m',
+    opts.model ?? 'grok-4.5',
+    // One turn: the full unified diff is already in the prompt file, so the
+    // model answers from that. Multi-turn tool use under --json-schema emits
+    // one intermediate body per turn, hits the ceiling mid-review, and leaves
+    // structuredOutput null (observed live: stopReason Cancelled, num_turns 8).
+    '--max-turns',
+    '1',
+    // Constrains the model to the findings shape and implies --output-format json.
+    '--json-schema',
+    JUDGE_DIFF_JSON_SCHEMA,
+    // Large refute prompts (full unified diff) exceed the Windows argv ceiling
+    // when passed via -p; --prompt-file is the path the rest of the repo uses.
+    '--prompt-file',
+    opts.promptFile
+  ];
 }
 
 /**
@@ -356,7 +586,7 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
   const repo = opts.repoRoot ?? gitRoot(dir) ?? dir;
   const slug = basename(dir);
   const commit = headCommit(dir) ?? 'unknown';
-  const diff = collectDiff(dir, opts.diffRange);
+  const diff = collectDiff(dir, opts.diffRange, opts.diffPaths);
   const diffHash = hashDiff(diff);
   const reviewedAt = new Date().toISOString();
   const outPath =
@@ -396,27 +626,40 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
   }
 
   const prompt = buildRefutePrompt(slug, commit, diff);
-  // Prefer the real grok CLI when available.
-  const grok = spawnSync(
-    'grok',
-    [
-      '-p',
-      prompt,
-      '--grokmodel',
-      'grok-4.5',
-      '-d',
-      dir,
-      '--max-turns',
-      '8',
-      '--fail-on-tool-errors'
-    ],
-    {
+  // Prompt (full unified diff) lives in a file: inlining it via -p blows past
+  // the Windows command-line limit and Node's shell:true path re-splits prose
+  // unless every arg is quoteForCmd'd (see independent_judge.mjs).
+  const taskDir = mkdtempSync(join(tmpdir(), 'redanvil-judge-diff-'));
+  const promptFile = join(taskDir, 'REFUTE_TASK.md');
+  writeFileSync(promptFile, prompt, 'utf8');
+
+  const grokArgv = buildIndependentReviewGrokArgs({
+    cwd: dir,
+    promptFile,
+    sessionId: randomUUID()
+  });
+  // grok is a .cmd shim on Windows — needs a shell. Node's shell:true joins
+  // argv without quoting, so multi-word args must be quoteForCmd'd first.
+  const useShell = process.platform === 'win32';
+  const finalArgv = useShell ? grokArgv.map(quoteForCmd) : grokArgv;
+
+  let grok: ReturnType<typeof spawnSync>;
+  try {
+    grok = spawnSync('grok', finalArgv, {
       encoding: 'utf8',
       timeout: opts.timeoutMs ?? 600_000,
       maxBuffer: 16 * 1024 * 1024,
-      shell: process.platform === 'win32'
+      shell: useShell,
+      // Same allowlist as harness runGrok / lg-grok-no-secrets — not a denylist.
+      env: scrubbedEnv([])
+    });
+  } finally {
+    try {
+      rmSync(taskDir, { recursive: true, force: true });
+    } catch {
+      /* temp dir may hold locked handles; harmless */
     }
-  );
+  }
 
   if (grok.error || grok.status === null) {
     const report: IndependentReviewReport = {
@@ -445,7 +688,11 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
     return report;
   }
 
-  const raw = `${grok.stdout ?? ''}\n${grok.stderr ?? ''}`;
+  // Prefer stdout (JSON envelope). stderr is diagnostic only — concat only as
+  // a fallback when stdout is empty so parseJudgeJson can still fail closed.
+  const stdout = typeof grok.stdout === 'string' ? grok.stdout : String(grok.stdout ?? '');
+  const stderr = typeof grok.stderr === 'string' ? grok.stderr : String(grok.stderr ?? '');
+  const raw = stdout.trim().length > 0 ? stdout : `${stdout}\n${stderr}`;
   const parsed = parseJudgeJson(raw);
   const report: IndependentReviewReport = {
     kind: 'independent-diff-review',
@@ -457,7 +704,8 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
     ok: false,
     foundNothingExplicit: parsed?.foundNothingExplicit === true,
     findings: parsed?.findings ?? [],
-    rawExcerpt: raw.slice(0, 4000),
+    // Keep enough of multi-turn schema output for audit (each turn appends a body).
+    rawExcerpt: raw.slice(0, 32_000),
     mode: 'grok'
   };
   if (parsed === null) {

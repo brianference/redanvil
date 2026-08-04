@@ -9,12 +9,14 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
+  buildIndependentReviewGrokArgs,
   buildRefutePrompt,
   collectDiff,
   evaluateReviewOk,
   hashDiff,
   headParents,
   independentReviewOkFromReport,
+  JUDGE_DIFF_JSON_SCHEMA,
   parseJudgeJson,
   readJudgeDiffReport,
   runIndependentDiffReview,
@@ -123,6 +125,178 @@ describe('independentReview pure helpers', () => {
     expect(parsed).not.toBeNull();
     expect(parsed?.foundNothingExplicit).toBe(true);
     expect(parsed?.findings).toEqual([]);
+  });
+
+  it('unwraps the grok --output-format json envelope and reads model text', () => {
+    // Real CLI shape (harness / independent_judge): envelope.text is the model body.
+    const modelBody = JSON.stringify({
+      foundNothingExplicit: false,
+      findings: [
+        {
+          title: 'missing SOURCES',
+          citation: 'README.md:1',
+          detail: 'no SOURCES.md in the tree',
+          passed: false
+        }
+      ]
+    });
+    const envelope = JSON.stringify({
+      text: modelBody,
+      stopReason: 'EndTurn',
+      usage: { total_tokens: 99 },
+      sessionId: '019f-test'
+    });
+    const parsed = parseJudgeJson(envelope);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.foundNothingExplicit).toBe(false);
+    expect(parsed?.findings).toHaveLength(1);
+    expect(parsed?.findings[0]?.title).toBe('missing SOURCES');
+    expect(parsed?.findings[0]?.passed).toBe(false);
+  });
+
+  it('prefers envelope.structuredOutput when --json-schema succeeds', () => {
+    const envelope = JSON.stringify({
+      text: 'ignored intermediate prose',
+      stopReason: 'EndTurn',
+      structuredOutput: {
+        foundNothingExplicit: true,
+        findings: []
+      },
+      structuredOutputError: null
+    });
+    const parsed = parseJudgeJson(envelope);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.foundNothingExplicit).toBe(true);
+    expect(parsed?.findings).toEqual([]);
+  });
+
+  it('takes the LAST findings body when multi-turn schema output is concatenated', () => {
+    // Live grok --json-schema multi-turn: each turn's object is appended to text.
+    const intermediate = JSON.stringify({
+      foundNothingExplicit: false,
+      findings: [
+        {
+          title: 'reviewing',
+          citation: 'x.ts:1',
+          detail: 'still looking',
+          passed: false
+        }
+      ]
+    });
+    const finalBody = JSON.stringify({
+      foundNothingExplicit: false,
+      findings: [
+        {
+          title: 'real defect',
+          citation: 'src/a.ts:10',
+          detail: 'hardcoded secret',
+          passed: false
+        },
+        {
+          title: 'verified ok',
+          citation: 'src/b.ts:2',
+          detail: 'input validated',
+          passed: true
+        }
+      ]
+    });
+    const envelope = JSON.stringify({
+      text: intermediate + finalBody,
+      stopReason: 'EndTurn'
+    });
+    const parsed = parseJudgeJson(envelope);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.findings).toHaveLength(2);
+    expect(parsed?.findings[0]?.title).toBe('real defect');
+    expect(parsed?.findings[1]?.passed).toBe(true);
+  });
+
+  it('returns null on garbage / pure prose (fail closed — no silent pass)', () => {
+    expect(parseJudgeJson('')).toBeNull();
+    expect(parseJudgeJson('not json at all')).toBeNull();
+    expect(parseJudgeJson('The diff looks fine to me. Ship it.')).toBeNull();
+    // Envelope whose text is prose, not the findings object.
+    expect(
+      parseJudgeJson(
+        JSON.stringify({
+          text: 'I reviewed the diff and found nothing wrong. Looks good!',
+          stopReason: 'EndTurn'
+        })
+      )
+    ).toBeNull();
+    // Envelope without a review body (usage-only / wrong shape).
+    expect(parseJudgeJson(JSON.stringify({ stopReason: 'EndTurn', usage: {} }))).toBeNull();
+    // Malformed findings listed but none well-formed → not "found nothing".
+    expect(
+      parseJudgeJson(
+        JSON.stringify({
+          foundNothingExplicit: true,
+          findings: [{ title: 1, citation: 42, passed: false }]
+        })
+      )
+    ).toBeNull();
+    // Cancelled run with intermediate schema text must not become a review.
+    expect(
+      parseJudgeJson(
+        JSON.stringify({
+          text: JSON.stringify({
+            foundNothingExplicit: false,
+            findings: [
+              {
+                title: 'still looking',
+                citation: 'x.ts:1',
+                detail: 'inspecting',
+                passed: false
+              }
+            ]
+          }),
+          stopReason: 'Cancelled',
+          structuredOutput: null,
+          structuredOutputError: 'model did not produce structured output'
+        })
+      )
+    ).toBeNull();
+    // structuredOutput failed even with EndTurn — fail closed.
+    expect(
+      parseJudgeJson(
+        JSON.stringify({
+          text: JSON.stringify({ foundNothingExplicit: true, findings: [] }),
+          stopReason: 'EndTurn',
+          structuredOutput: null,
+          structuredOutputError: 'model did not produce structured output'
+        })
+      )
+    ).toBeNull();
+  });
+
+  it('buildIndependentReviewGrokArgs uses real CLI flags only', () => {
+    const argv = buildIndependentReviewGrokArgs({
+      cwd: 'C:\\apps\\demo',
+      promptFile: 'C:\\tmp\\REFUTE_TASK.md',
+      sessionId: '019f0000-0000-4000-8000-000000000001'
+    });
+    // Must match how independent_judge.mjs / harness.ts invoke grok.
+    expect(argv).toEqual(
+      expect.arrayContaining([
+        '--no-auto-update',
+        '--always-approve',
+        '--no-alt-screen',
+        '--cwd',
+        'C:\\apps\\demo',
+        '-m',
+        'grok-4.5',
+        '--max-turns',
+        '1',
+        '--json-schema',
+        JUDGE_DIFF_JSON_SCHEMA,
+        '--prompt-file',
+        'C:\\tmp\\REFUTE_TASK.md'
+      ])
+    );
+    // The broken flags that made F5 permanently unparseable.
+    expect(argv).not.toContain('--grokmodel');
+    expect(argv).not.toContain('-d');
+    expect(argv.indexOf('--cwd') + 1).toBe(argv.indexOf('C:\\apps\\demo'));
   });
 });
 

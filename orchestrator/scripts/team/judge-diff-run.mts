@@ -38,6 +38,8 @@ function flag(name: string, fallback: string | undefined): string | undefined {
 const outPath = flag('out', undefined);
 const repoRoot = flag('repo-root', undefined);
 const timeoutRaw = flag('timeout', undefined);
+const diffRange = flag('diff-range', undefined);
+const diffPathsRaw = flag('diff-paths', undefined);
 const timeoutMs =
   timeoutRaw !== undefined && Number.isFinite(Number(timeoutRaw))
     ? Number(timeoutRaw)
@@ -48,7 +50,10 @@ const report = runIndependentDiffReview({
   dir,
   repoRoot: repoRoot !== undefined ? resolve(repoRoot) : undefined,
   outPath: outPath !== undefined ? resolve(outPath) : undefined,
-  timeoutMs
+  timeoutMs,
+  diffRange,
+  diffPaths:
+    diffPathsRaw !== undefined && diffPathsRaw.length > 0 ? diffPathsRaw.split(',') : undefined
 });
 
 process.stdout.write(`${JSON.stringify(report)}\n`);

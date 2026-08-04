@@ -121,6 +121,17 @@ const reviewDir =
     ? join(worktreePath, appRel)
     : worktreePath;
 
+// A judge must not review its own previous output. The disposable worktree
+// carries the committed evidence/judge-diff-<slug>.json from earlier runs, and
+// the first live run spent all six of its findings on that artifact -- stale
+// hashes and commit mismatches in a file about to be overwritten -- instead of
+// on the app. Remove it inside the throwaway worktree only; the real repo copy
+// is untouched and is rewritten by this run.
+const priorReport = join(worktreePath, 'evidence', `judge-diff-${slug}.json`);
+if (existsSync(priorReport)) {
+  rmSync(priorReport, { force: true });
+}
+
 console.log(`judge_diff: ${slug} @ ${head.slice(0, 12)} (worktree ${reviewDir})`);
 
 // Credentials must not reach the independent reviewer.
@@ -134,6 +145,25 @@ for (const k of Object.keys(scrubbed)) {
 // lands where loadProductJudgementOpts / productJudgement look for it.
 mkdirSync(dirname(outPath), { recursive: true });
 
+// Review the RELEASE range for THIS app, not just HEAD.
+//
+// HEAD is frequently a merge or an evidence commit, and the first real run said
+// so itself: it reported its input as "a self-referential judge meta-review,
+// not a code-diff review", because the newest commit touching that app was a
+// JSON evidence file. F5 asks whether an independent judge reviewed the diff of
+// what is shipping, so the range is what the push would publish, path-scoped to
+// the app so one app's judge is not handed the other apps' changes.
+//
+// No upstream ref (nothing pushed yet, or a detached branch) falls back to the
+// previous behaviour rather than inventing a range.
+const upstream = (() => {
+  const r = run('git', ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'], {
+    cwd: repoRoot
+  });
+  const name = (r.stdout ?? '').trim();
+  return r.code === 0 && name.length > 0 ? name : null;
+})();
+
 const helperArgs = [
   '--yes',
   'tsx',
@@ -146,6 +176,14 @@ const helperArgs = [
   '--timeout',
   String(timeoutSec * 1000)
 ];
+if (upstream !== null) {
+  // `:(top)` makes the pathspec repo-root relative. The judge runs INSIDE the
+  // app directory, so a bare slug resolved to <app>/<app> and produced a
+  // ZERO-byte diff -- measured: 0 bytes bare, 843464 bytes with :(top). The
+  // judge then spent every finding on the only file it could see, its own
+  // evidence artifact, and reported "Empty product diff".
+  helperArgs.push('--diff-range', `${upstream}..HEAD`, '--diff-paths', `:(top)${slug}`);
+}
 
 const res = run('npx', helperArgs, {
   env: scrubbed,
