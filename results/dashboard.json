@@ -21,11 +21,11 @@
     },
     {
       "ruleId": "u-test-presence",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-test-runners",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-test-coverage-ratchet",
@@ -53,7 +53,7 @@
     },
     {
       "ruleId": "fe-search-present",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "fe-brand-mark",
@@ -249,7 +249,7 @@
     },
     {
       "ruleId": "meas-known-bad",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-two-run",
@@ -369,22 +369,21 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "u-test-presence",
-        "u-test-runners",
+        "fe-search-present",
         "lg-shipped",
         "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-04T00:49:21.014Z",
+  "finishedAt": "2026-08-04T00:56:57.146Z",
   "provenance": {
-    "commit": "4b2764e398f6a242e6b3d643ef6ea4bc43dfd09b",
+    "commit": "8106ebf518053542c16210365980f0dcdb4b2a1e",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
     "node": "v22.19.0",
-    "verdictsHash": "2a0c93dc48f1b7dfaa2728296c67b81c2088b6f99427ab31b62afe2941cbd42d",
+    "verdictsHash": "b7e85a2d0ae644b3a38fcc32c5c4cfc65f7a77f9a08101677028782bf9508fd0",
     "notApplicable": [
       "fe-assistant-present",
       "proc-pr-title-ticket",
@@ -394,6 +393,6 @@
       "u-plat-migrations"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-04T00:49:21.073Z"
+    "generatedAt": "2026-08-04T00:56:57.204Z"
   }
 }
