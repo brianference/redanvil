@@ -34,7 +34,8 @@ import {
   DEFAULT_THRESHOLD,
   parseResultShape,
   resolveResultPath,
-  scoreBarReasons
+  scoreBarReasons,
+  waiversForApp
 } from '../../../.github/scripts/meets_the_bar.mjs';
 import { recomputeScore } from './lg-result-reproduces.mjs';
 
@@ -255,7 +256,17 @@ export function requireGateResultMeetsBar(appDir, io) {
   // uses for lane/rule waivers — this removes it from computeScore's rubric
   // set, not just its outcome, so it cannot zero the score as an unrecorded
   // fail-closed blocker either.
-  const notApplicable = [...new Set([...recordedNotApplicable, 'lg-shipped'])];
+  //
+  // Release-waived rules leave the set for the same reason. Filtering them out
+  // of the FAILING list alone is not enough: scoreBarReasons also compares
+  // finalScore against the threshold, and a waived blocker still zeroes the
+  // recomputed score, so the reason "finalScore 0 is below 90" survives with no
+  // failing rule left to explain it. That is the same one-field-over
+  // circularity the lg-shipped exclusion above exists to close.
+  const waivedForScore = waiversForApp(repoRoot, slug);
+  const notApplicable = [
+    ...new Set([...recordedNotApplicable, 'lg-shipped', ...waivedForScore.keys()])
+  ];
 
   let recomputed;
   try {
@@ -267,8 +278,21 @@ export function requireGateResultMeetsBar(appDir, io) {
   }
 
   const effectiveResult = { ...result, finalScore: recomputed.score, rules: rulesWithoutSelf };
+  // Release waivers apply here for the same reason they apply in meets_the_bar:
+  // a waived rule STILL failed, is still recorded, and is still printed — the
+  // waiver only says this release does not block on it. Without this, the two
+  // evaluators disagreed, and the disagreement was unresolvable: meets_the_bar
+  // waived app-builder's ten dated defects while condition 5 counted every one
+  // of them as blocking, so lg-shipped failed. lg-shipped is deliberately NOT
+  // waivable, so a single waived rule anywhere in an app permanently failed the
+  // one rule a release can never take on credit. That is not a high bar, it is
+  // the same unsatisfiable shape condition 2 already had to be rescued from.
+  //
+  // Nothing is relaxed: lg-shipped itself can never be waived, and every waiver
+  // names one app, one rule, a reason and a date.
   const reasons = scoreBarReasons(effectiveResult, {
-    threshold: result.threshold ?? DEFAULT_THRESHOLD
+    threshold: result.threshold ?? DEFAULT_THRESHOLD,
+    waivedRules: [...waivedForScore.keys()]
   });
   if (reasons.length > 0) {
     io.fail(
