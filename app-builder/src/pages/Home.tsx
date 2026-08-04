@@ -171,10 +171,12 @@ export function Home(): JSX.Element {
             ? copy.forgeErrorLabel
             : copy.title;
 
-  const pageSubtitle = view === 'chat' ? copy.subtitle : undefined;
-
+  // No page-level subtitle on home. The forge composer carries its own title
+  // and hint; a multi-line lead under the h1 pushed the primary action below
+  // the 375×844 fold (qa_visual / user_refuse). Wizard / templates / result
+  // surfaces use their own page titles without a lead.
   return (
-    <Page title={pageTitle} subtitle={pageSubtitle}>
+    <Page title={pageTitle}>
       {view === 'chat' && (
         <ComposerChat
           prompt={answers.prompt}

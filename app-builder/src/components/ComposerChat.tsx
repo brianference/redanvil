@@ -52,6 +52,66 @@ export function ComposerChat({
 
   return (
     <div className="ra-chat" style={rootStyle}>
+      {/* Composer first in the DOM: on mobile the primary action must sit in the
+          first viewport (qa_visual / user_refuse at 375×844). How-to + examples
+          follow as supporting content. Desktop CSS places thread | composer via
+          grid-template-areas so the two-column layout stays instruction-left. */}
+      <div className="ra-chat-composer" data-testid="wizard-composer">
+        <div style={composerShellStyle}>
+          {/* A titled panel, not a bare textarea. The right side is where the
+            user acts, so it should look like the place to act — reported as
+            "make it look more like an interactive chat window and taller". */}
+          <div style={chatHeaderStyle}>
+            <h2 style={chatTitleStyle}>{copy.chatTitle}</h2>
+            <p style={chatSubtitleStyle}>{copy.chatSubtitle}</p>
+          </div>
+          <form onSubmit={handleSubmit} aria-label={copy.composerLabel} style={composerFormStyle}>
+            <label htmlFor="composer-prompt" style={visuallyHiddenStyle}>
+              {copy.composerLabel}
+            </label>
+            <textarea
+              id="composer-prompt"
+              name="prompt"
+              rows={5}
+              value={prompt}
+              onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
+                onPromptChange(event.target.value);
+                if (showTooShort && event.target.value.trim().length >= MIN_PROMPT_LENGTH) {
+                  setShowTooShort(false);
+                }
+              }}
+              placeholder={copy.composerPlaceholder}
+              style={{ ...fieldStyle(), minHeight: theme.touch * 2, resize: 'none' }}
+              aria-describedby="composer-hint"
+              aria-invalid={showTooShort}
+            />
+            <div style={composerFooterStyle}>
+              <p id="composer-hint" style={{ ...hintStyle(), margin: 0, flex: 1 }}>
+                {showTooShort ? copy.tooShort(MIN_PROMPT_LENGTH) : copy.composerHint}
+              </p>
+              <button
+                type="submit"
+                style={buttonStyle(true, !ready)}
+                disabled={!ready}
+                aria-label={copy.sendAria}
+              >
+                {copy.sendAria}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Template path after the forge form: secondary to typing a description,
+            but still next to the primary action so it is not buried under how-to. */}
+        <button
+          type="button"
+          onClick={onBrowseTemplates}
+          style={{ ...buttonStyle(false), width: '100%', marginTop: theme.space.md }}
+        >
+          {copy.browseTemplates}
+        </button>
+      </div>
+
       <div
         className="ra-chat-thread"
         style={threadStyle}
@@ -123,64 +183,6 @@ export function ComposerChat({
           </p>
         )}
       </div>
-
-      <div className="ra-chat-composer" data-testid="wizard-composer">
-        {/* Above the composer, not below it. A template is an alternative to
-            typing a description, so it has to be visible BEFORE the user starts
-            typing one — under the panel it only ever got read after the work it
-            was meant to save had already been done. */}
-        <button
-          type="button"
-          onClick={onBrowseTemplates}
-          style={{ ...buttonStyle(false), width: '100%', marginBottom: theme.space.md }}
-        >
-          {copy.browseTemplates}
-        </button>
-
-        <div style={composerShellStyle}>
-          {/* A titled panel, not a bare textarea. The right side is where the
-            user acts, so it should look like the place to act — reported as
-            "make it look more like an interactive chat window and taller". */}
-          <div style={chatHeaderStyle}>
-            <h2 style={chatTitleStyle}>{copy.chatTitle}</h2>
-            <p style={chatSubtitleStyle}>{copy.chatSubtitle}</p>
-          </div>
-          <form onSubmit={handleSubmit} aria-label={copy.composerLabel} style={composerFormStyle}>
-            <label htmlFor="composer-prompt" style={visuallyHiddenStyle}>
-              {copy.composerLabel}
-            </label>
-            <textarea
-              id="composer-prompt"
-              name="prompt"
-              rows={8}
-              value={prompt}
-              onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
-                onPromptChange(event.target.value);
-                if (showTooShort && event.target.value.trim().length >= MIN_PROMPT_LENGTH) {
-                  setShowTooShort(false);
-                }
-              }}
-              placeholder={copy.composerPlaceholder}
-              style={{ ...fieldStyle(), minHeight: 88, resize: 'none' }}
-              aria-describedby="composer-hint"
-              aria-invalid={showTooShort}
-            />
-            <div style={composerFooterStyle}>
-              <p id="composer-hint" style={{ ...hintStyle(), margin: 0, flex: 1 }}>
-                {showTooShort ? copy.tooShort(MIN_PROMPT_LENGTH) : copy.composerHint}
-              </p>
-              <button
-                type="submit"
-                style={buttonStyle(true, !ready)}
-                disabled={!ready}
-                aria-label={copy.sendAria}
-              >
-                {copy.sendAria}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
     </div>
   );
 }
@@ -203,7 +205,7 @@ const rootStyle: CSSProperties = {
 const threadStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: 14
+  gap: theme.space.md
 };
 
 const trustRowStyle: CSSProperties = {
@@ -301,12 +303,12 @@ const composerShellStyle: CSSProperties = {
 const composerFormStyle: CSSProperties = {
   background: theme.color.surface,
   border: 'none',
-  borderRadius: 16,
-  padding: 14,
+  borderRadius: theme.radius.md,
+  padding: theme.space.md,
   boxShadow: theme.shadow.composer,
   display: 'flex',
   flexDirection: 'column',
-  gap: 10
+  gap: theme.space.sm
 };
 
 const composerFooterStyle: CSSProperties = {
@@ -335,7 +337,9 @@ const howPanelStyle: CSSProperties = {
   border: `1px solid ${theme.color.border}`,
   borderRadius: theme.radius.md,
   background: theme.color.surface,
-  padding: theme.space.lg
+  // md not lg: this panel sits below the forge form on mobile; dense is fine
+  // and keeps secondary content from dominating the scroll.
+  padding: theme.space.md
 };
 
 const howHeadingStyle: CSSProperties = {
@@ -419,7 +423,7 @@ const startersHeadingStyle: CSSProperties = {
 
 // --- Chat window (right) -------------------------------------------------------
 const chatHeaderStyle: CSSProperties = {
-  padding: `${theme.space.md}px ${theme.space.lg}px`,
+  padding: `${theme.space.sm}px ${theme.space.md}px`,
   borderBottom: `1px solid ${theme.color.border}`,
   background: theme.color.surfaceElevated
 };
