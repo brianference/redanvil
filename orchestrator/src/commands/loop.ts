@@ -318,7 +318,11 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
   const review = runIndependentDiffReview({ dir });
   const independentReviewOk = review.ok;
   let independentReviewSummary: string;
-  if (!review.completed) {
+  if (review.mode === 'empty-diff' || review.nothingToReview === true) {
+    // Distinct from "judge found nothing wrong" — no patch was reviewed at all.
+    independentReviewSummary =
+      `nothing to review (empty-diff) at ${review.commit.slice(0, 12)} — F5 fail closed`;
+  } else if (!review.completed) {
     independentReviewSummary = `incomplete (${review.mode}): judge could not finish`;
   } else if (review.findings.length === 0) {
     independentReviewSummary = review.foundNothingExplicit

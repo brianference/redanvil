@@ -14,6 +14,14 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 
+/**
+ * How the independent review was produced.
+ *
+ * `empty-diff` is its own terminal state: collectDiff found nothing to hand a
+ * judge, so no review ran. It must never evaluate as ok / F5 pass.
+ */
+export type IndependentReviewMode = 'grok' | 'fixture' | 'unavailable' | 'empty-diff';
+
 /** Evidence shape written for the finish line / isDone. */
 export interface IndependentReviewReport {
   kind: 'independent-diff-review';
@@ -34,16 +42,22 @@ export interface IndependentReviewReport {
    * For the finish line we require completed && (findings.length === 0 with
    * foundNothingExplicit) or caller policy. Default: ok only when completed
    * and every finding has passed === true, or findings empty with explicit note.
+   * Never true for mode === 'empty-diff' (nothing was reviewed).
    */
   ok: boolean;
   /** Explicit statement that the judge found nothing (required when empty). */
   foundNothingExplicit: boolean;
+  /**
+   * True when collectDiff produced no patch and no judge was invoked.
+   * Distinct from foundNothingExplicit (judge ran and found no defects).
+   */
+  nothingToReview?: boolean;
   /** Individual refute findings. */
   findings: IndependentFinding[];
   /** Raw judge stdout (truncated) for audit. */
   rawExcerpt: string;
   /** How the review was produced. */
-  mode: 'grok' | 'fixture' | 'unavailable';
+  mode: IndependentReviewMode;
 }
 
 /** One refute finding from the independent judge. */
@@ -113,12 +127,40 @@ export function headCommit(dir: string): string | null {
 }
 
 /**
+ * Parent SHAs of HEAD (empty when not a git repo / unreadable).
+ *
+ * @param dir - Git directory.
+ * @returns Parent commit SHAs in rev-list order (first parent first).
+ */
+export function headParents(dir: string): string[] {
+  try {
+    const line = execFileSync('git', ['rev-list', '--parents', '-n', '1', 'HEAD'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+    if (line.length === 0) return [];
+    // "commit parent1 parent2 ..." — drop the commit itself.
+    const parts = line.split(/\s+/).filter((p) => p.length > 0);
+    return parts.slice(1);
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Unified diff for the review. Prefers staged+unstaged against HEAD, else
  * last commit, else empty.
  *
+ * Clean-tree merge commits: plain `git show --patch` emits no patch (combined
+ * default / --cc are empty on conflict-free merges). We use the first-parent
+ * diff (`git diff <first-parent> HEAD`) — the conventional "what this merge
+ * brought onto the mainline" patch in ordinary unified-diff form the judge can
+ * read. Non-merge commits keep `git show --format= --patch HEAD`.
+ *
  * @param dir - Git directory.
  * @param range - Optional explicit range (e.g. `main...HEAD`).
- * @returns Diff text.
+ * @returns Diff text (may be empty when there is genuinely nothing to review).
  */
 export function collectDiff(dir: string, range?: string): string {
   try {
@@ -138,7 +180,18 @@ export function collectDiff(dir: string, range?: string): string {
       maxBuffer: 32 * 1024 * 1024
     });
     if (unstaged.trim().length > 0) return unstaged;
+
     // Clean tree: review the latest commit itself.
+    const parents = headParents(dir);
+    if (parents.length > 1) {
+      // Merge commit: first-parent unified diff (not --cc — empty on clean merges).
+      return execFileSync('git', ['diff', parents[0]!, 'HEAD'], {
+        cwd: dir,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+        maxBuffer: 32 * 1024 * 1024
+      });
+    }
     return execFileSync('git', ['show', '--format=', '--patch', 'HEAD'], {
       cwd: dir,
       encoding: 'utf8',
@@ -258,6 +311,46 @@ export function parseJudgeJson(text: string): {
  * @param opts - Review options.
  * @returns Report (also written to disk when possible).
  */
+/**
+ * Build the explicit empty-diff report. No judge is invoked: there is nothing
+ * to refute, and that is not the same as "reviewed and clean".
+ *
+ * @param base - Shared identity fields (slug, commit, hashes, paths).
+ * @returns Report with mode empty-diff, ok false, nothingToReview true.
+ */
+function emptyDiffReport(base: {
+  slug: string;
+  commit: string;
+  reviewedAt: string;
+  diffHash: string;
+}): IndependentReviewReport {
+  return {
+    kind: 'independent-diff-review',
+    slug: base.slug,
+    commit: base.commit,
+    reviewedAt: base.reviewedAt,
+    diffHash: base.diffHash,
+    // Step finished: we determined there is no patch. Not a silent skip.
+    completed: true,
+    ok: false,
+    foundNothingExplicit: false,
+    nothingToReview: true,
+    findings: [
+      {
+        title: 'nothing to review',
+        citation: 'orchestrator/src/loop/independentReview.ts:collectDiff',
+        detail:
+          'collectDiff produced an empty patch (clean tree and HEAD has no ' +
+          'reviewable change) — no judge was invoked; independent review cannot ' +
+          'pass on nothing. This is not "reviewed and clean".',
+        passed: false
+      }
+    ],
+    rawExcerpt: 'empty-diff: no patch collected; judge not invoked',
+    mode: 'empty-diff'
+  };
+}
+
 export function runIndependentDiffReview(opts: IndependentReviewOptions): IndependentReviewReport {
   const dir = resolve(opts.dir);
   const repo = opts.repoRoot ?? gitRoot(dir) ?? dir;
@@ -268,6 +361,17 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
   const reviewedAt = new Date().toISOString();
   const outPath =
     opts.outPath ?? join(repo, 'evidence', `judge-diff-${slug}.json`);
+
+  // Empty patch is an explicit outcome — never hand garbage to a judge, and
+  // never treat "nothing to review" as "reviewed and clean" (F5 must stay false).
+  // Fixture mode cannot paper over this: an empty commit must not satisfy F5.
+  if (diff.trim().length === 0) {
+    const report = emptyDiffReport({ slug, commit, reviewedAt, diffHash });
+    // Defense: ok is always false for this mode even if someone edits the builder.
+    report.ok = evaluateReviewOk(report);
+    writeReport(outPath, report);
+    return report;
+  }
 
   if (opts.fixtureReport) {
     const report: IndependentReviewReport = {
@@ -375,13 +479,16 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
  * Whether a completed review is acceptable for isDone.
  *
  * Empty findings require foundNothingExplicit. Any finding with passed === false
- * fails the review.
+ * fails the review. mode === 'empty-diff' / nothingToReview never passes — that
+ * means no judge ran, not that the code is clean.
  *
  * @param report - Review report.
  * @returns True when ok for the finish line.
  */
 export function evaluateReviewOk(report: IndependentReviewReport): boolean {
   if (!report.completed) return false;
+  // Nothing-to-review is never a clean pass (empty commit / empty merge hole).
+  if (report.mode === 'empty-diff' || report.nothingToReview === true) return false;
   const blockers = report.findings.filter((f) => f.passed === false);
   if (blockers.length > 0) return false;
   if (report.findings.length === 0) return report.foundNothingExplicit === true;
