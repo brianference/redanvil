@@ -27,7 +27,7 @@ export function ZoneSelector() {
   const inputId = useId();
   const listboxId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { zone, zones, loading, setZone } = useZone();
+  const { zone, zones, loading, error, setZone, reload } = useZone();
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   /** Index into the visible option list; -1 means none highlighted. */
@@ -39,7 +39,8 @@ export function ZoneSelector() {
   /** When filter misses, still show every zone so the popup is never empty. */
   const visibleZones = zeroMatch ? zones : matches;
   const outsidePlace = zeroMatch ? matchOutOfCoveragePlace(trimmed) : null;
-  const expanded = open && zones.length > 0;
+  const showSuccess = !loading && !error && zones.length > 0;
+  const expanded = open && showSuccess;
   const activeOptionId =
     expanded && activeIndex >= 0 && activeIndex < visibleZones.length
       ? `${listboxId}-opt-${activeIndex}`
@@ -134,111 +135,138 @@ export function ZoneSelector() {
       <p className="zone-selector__coverage mono" data-testid="zone-coverage-hint">
         {en.zone.coverageHint}
       </p>
-      <div className="zone-selector__controls">
-        <input
-          ref={inputRef}
-          id={inputId}
-          type="search"
-          className="zone-selector__input mono"
-          value={inputDisplay}
-          onChange={(e) => handleChange(e.target.value)}
-          onKeyDown={handleInputKeyDown}
-          onFocus={() => {
-            setOpen(true);
-            setQuery('');
-            setActiveIndex(-1);
-          }}
-          onBlur={() => {
-            // Delay so option mousedown can fire before the list unmounts.
-            window.setTimeout(() => {
-              setOpen(false);
-              setActiveIndex(-1);
-            }, 150);
-          }}
-          placeholder={en.zone.searchPlaceholder}
-          autoComplete="off"
-          disabled={loading || zones.length === 0}
-          data-testid="zone-search"
-          role="combobox"
-          aria-label={en.zone.comboboxLabel}
-          aria-expanded={expanded}
-          aria-controls={listboxId}
-          aria-autocomplete="list"
-          aria-activedescendant={activeOptionId}
-        />
-        {expanded ? (
-          <div
-            className="zone-selector__popup"
-            data-testid="zone-popup"
-            data-zero-match={zeroMatch ? 'true' : 'false'}
-          >
-            {zeroMatch ? (
-              <div
-                className="zone-selector__coverage-panel"
-                role="status"
-                data-testid="zone-no-match"
-              >
-                <p data-testid="zone-no-match-message">
-                  {outsidePlace
-                    ? en.zone.noMatchOutside(outsidePlace)
-                    : en.zone.noMatch(trimmed)}
-                </p>
-                <p className="zone-selector__coverage-hint mono">{en.zone.noMatchHint}</p>
-              </div>
-            ) : null}
 
-            <p className="zone-selector__group-label mono" id={`${listboxId}-group`}>
-              {en.zone.groupMaricopa}
-            </p>
-            <ul
-              id={listboxId}
-              className="zone-selector__list"
-              role="listbox"
-              aria-label={en.zone.listLabel}
-              aria-labelledby={`${listboxId}-group`}
-              data-testid="zone-list"
+      {loading ? (
+        <p className="zone-selector__status" role="status" data-testid="zone-loading">
+          {en.zone.loading}
+        </p>
+      ) : null}
+
+      {error && !loading ? (
+        <div
+          className="zone-selector__error"
+          role="alert"
+          data-testid="zone-error"
+        >
+          <p>{en.zone.error}</p>
+          <p className="mono">{error}</p>
+          <button
+            type="button"
+            className="zone-selector__retry"
+            onClick={reload}
+            data-testid="zone-retry"
+          >
+            {en.zone.retry}
+          </button>
+        </div>
+      ) : null}
+
+      {showSuccess ? (
+        <div className="zone-selector__controls">
+          <input
+            ref={inputRef}
+            id={inputId}
+            type="search"
+            className="zone-selector__input mono"
+            value={inputDisplay}
+            onChange={(e) => handleChange(e.target.value)}
+            onKeyDown={handleInputKeyDown}
+            onFocus={() => {
+              setOpen(true);
+              setQuery('');
+              setActiveIndex(-1);
+            }}
+            onBlur={() => {
+              // Delay so option mousedown can fire before the list unmounts.
+              window.setTimeout(() => {
+                setOpen(false);
+                setActiveIndex(-1);
+              }, 150);
+            }}
+            placeholder={en.zone.searchPlaceholder}
+            autoComplete="off"
+            data-testid="zone-search"
+            role="combobox"
+            aria-label={en.zone.comboboxLabel}
+            aria-expanded={expanded}
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-activedescendant={activeOptionId}
+          />
+          {expanded ? (
+            <div
+              className="zone-selector__popup"
+              data-testid="zone-popup"
+              data-zero-match={zeroMatch ? 'true' : 'false'}
             >
-              {visibleZones.map((z, index) => {
-                const optionId = `${listboxId}-opt-${index}`;
-                const isActive = index === activeIndex;
-                const isSelected = zone?.id === z.id;
-                return (
-                  <li key={z.id} role="presentation">
-                    <button
-                      type="button"
-                      id={optionId}
-                      className={[
-                        'zone-selector__option',
-                        isSelected ? 'zone-selector__option--selected' : '',
-                        isActive ? 'zone-selector__option--active' : ''
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                      role="option"
-                      aria-selected={isSelected || isActive}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => pick(z)}
-                      onMouseEnter={() => setActiveIndex(index)}
-                      data-testid="zone-option"
-                      data-zone-id={z.id}
-                    >
-                      <span className="zone-selector__option-name">
-                        {z.name}
-                        {z.usda_zone ? ` (Zone ${z.usda_zone})` : ''}
-                      </span>
-                      <span className="zone-selector__option-meta mono">
-                        {z.zip}
-                        {z.county ? ` · ${z.county} County` : ''}
-                        {z.elevation_ft != null ? ` · ${z.elevation_ft} ft` : ''}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ) : null}
-      </div>
+              {zeroMatch ? (
+                <div
+                  className="zone-selector__coverage-panel"
+                  role="status"
+                  data-testid="zone-no-match"
+                >
+                  <p data-testid="zone-no-match-message">
+                    {outsidePlace
+                      ? en.zone.noMatchOutside(outsidePlace)
+                      : en.zone.noMatch(trimmed)}
+                  </p>
+                  <p className="zone-selector__coverage-hint mono">{en.zone.noMatchHint}</p>
+                </div>
+              ) : null}
+
+              <p className="zone-selector__group-label mono" id={`${listboxId}-group`}>
+                {en.zone.groupMaricopa}
+              </p>
+              <ul
+                id={listboxId}
+                className="zone-selector__list"
+                role="listbox"
+                aria-label={en.zone.listLabel}
+                aria-labelledby={`${listboxId}-group`}
+                data-testid="zone-list"
+              >
+                {visibleZones.map((z, index) => {
+                  const optionId = `${listboxId}-opt-${index}`;
+                  const isActive = index === activeIndex;
+                  const isSelected = zone?.id === z.id;
+                  return (
+                    <li key={z.id} role="presentation">
+                      <button
+                        type="button"
+                        id={optionId}
+                        className={[
+                          'zone-selector__option',
+                          isSelected ? 'zone-selector__option--selected' : '',
+                          isActive ? 'zone-selector__option--active' : ''
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        role="option"
+                        aria-selected={isSelected || isActive}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => pick(z)}
+                        onMouseEnter={() => setActiveIndex(index)}
+                        data-testid="zone-option"
+                        data-zone-id={z.id}
+                      >
+                        <span className="zone-selector__option-name">
+                          {z.name}
+                          {z.usda_zone ? ` (Zone ${z.usda_zone})` : ''}
+                        </span>
+                        <span className="zone-selector__option-meta mono">
+                          {z.zip}
+                          {z.county ? ` · ${z.county} County` : ''}
+                          {z.elevation_ft != null ? ` · ${z.elevation_ft} ft` : ''}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -3,7 +3,6 @@ import {
   CropDetailResponseSchema,
   CropsResponseSchema,
   GridResponseSchema,
-  HealthResponseSchema,
   PlantableResponseSchema,
   ZonesResponseSchema,
   type AssistantResponse,
@@ -59,11 +58,6 @@ function qs(params: Record<string, string | number | undefined>): string {
   }
   const s = sp.toString();
   return s ? `?${s}` : '';
-}
-
-/** GET /api/health */
-export async function fetchHealth(): Promise<{ status: 'ok' }> {
-  return getJson('/api/health', HealthResponseSchema);
 }
 
 /** GET /api/plantable */

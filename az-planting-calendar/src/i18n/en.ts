@@ -222,7 +222,10 @@ export const en = {
      *
      * @param ft - Feet above sea level (station or town).
      */
-    elevation: (ft: number) => `${ft.toLocaleString('en-US')} ft elev.`
+    elevation: (ft: number) => `${ft.toLocaleString('en-US')} ft elev.`,
+    loading: 'Loading planning zones…',
+    error: 'Could not load planning zones.',
+    retry: 'Retry'
   },
 
   footer: {

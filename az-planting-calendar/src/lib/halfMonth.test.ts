@@ -6,7 +6,6 @@ import {
   halfMonthInWindow,
   halfMonthLabel,
   halfMonthToIsoDate,
-  halfMonthToMonth,
   monthToHalfMonths,
   HALF_MONTHS_PER_YEAR
 } from './halfMonth';
@@ -64,17 +63,18 @@ describe('labels and month helpers', () => {
     expect(halfMonthLabel(23)).toBe('Dec 15');
   });
 
-  it('maps half to month and month to halves', () => {
-    expect(halfMonthToMonth(0)).toBe(0);
-    expect(halfMonthToMonth(1)).toBe(0);
-    expect(halfMonthToMonth(14)).toBe(7);
+  it('maps month to half-month pairs', () => {
     expect(monthToHalfMonths(0)).toEqual([0, 1]);
     expect(monthToHalfMonths(11)).toEqual([22, 23]);
   });
 
   it('expands ranges including wrap', () => {
     expect(expandHalfMonthRange(2, 4)).toEqual([2, 3, 4]);
+    expect(expandHalfMonthRange(0, 0)).toEqual([0]);
+    expect(expandHalfMonthRange(0, 23)).toHaveLength(24);
     expect(expandHalfMonthRange(22, 1)).toEqual([22, 23, 0, 1]);
+    expect(expandHalfMonthRange(20, 3)).toEqual([20, 21, 22, 23, 0, 1, 2, 3]);
+    expect(expandHalfMonthRange(23, 0)).toEqual([23, 0]);
   });
 
   it('maps half-month to a representative ISO date', () => {

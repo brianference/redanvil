@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { expandHalfMonthRange } from './gridMath';
+import { expandHalfMonthRange } from './dates';
 
 describe('expandHalfMonthRange', () => {
   it('expands a non-wrapping inclusive range', () => {

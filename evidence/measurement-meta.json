@@ -5,19 +5,19 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-04T01:06:56.888Z",
+        "at": "2026-08-04T03:12:13.421Z",
         "landmarks": 5
       },
       {
         "ok": false,
-        "at": "2026-08-04T01:06:58.409Z",
+        "at": "2026-08-04T03:12:14.968Z",
         "landmarks": 5
       }
     ],
     "knownBad": {
-      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\theme-paint\\hardcoded-hero.html",
+      "input": "C:\\Users\\brian\\RedAnvil-fix-azcal\\orchestrator\\test\\fixtures\\theme-paint\\hardcoded-hero.html",
       "failed": true,
-      "recordedAt": "2026-08-04T01:06:58.409Z"
+      "recordedAt": "2026-08-04T03:12:14.968Z"
     }
   },
   "fe-search-present": {
@@ -25,18 +25,18 @@
     "engine": "chromium",
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-04T01:07:02.289Z"
+        "ok": true,
+        "at": "2026-08-04T03:12:11.471Z"
       },
       {
-        "ok": false,
-        "at": "2026-08-04T01:07:05.801Z"
+        "ok": true,
+        "at": "2026-08-04T03:12:15.102Z"
       }
     ],
     "knownBad": {
-      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\search-present\\dead-search.html",
+      "input": "C:\\Users\\brian\\RedAnvil-fix-azcal\\orchestrator\\test\\fixtures\\search-present\\dead-search.html",
       "failed": true,
-      "recordedAt": "2026-08-04T01:07:05.801Z"
+      "recordedAt": "2026-08-04T03:12:15.102Z"
     }
   }
 }

@@ -242,12 +242,14 @@ export const AssistantRequestSchema = z.object({
 });
 export type AssistantRequest = z.infer<typeof AssistantRequestSchema>;
 
-/** Filters the assistant model may emit (validated server-side). */
-export const AssistantFiltersSchema = z.object({
-  half_month: HalfMonthSchema.optional(),
-  method: MethodSchema.optional(),
-  crop: z.string().min(1).max(100).optional()
-});
+/** Filters the assistant model may emit (validated server-side). Strict: reject unknown keys. */
+export const AssistantFiltersSchema = z
+  .object({
+    half_month: HalfMonthSchema.optional(),
+    method: MethodSchema.optional(),
+    crop: z.string().trim().min(1).max(100).optional()
+  })
+  .strict();
 export type AssistantFilters = z.infer<typeof AssistantFiltersSchema>;
 
 /** One crop row returned after D1 grounding. */

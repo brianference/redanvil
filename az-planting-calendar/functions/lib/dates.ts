@@ -5,6 +5,7 @@
  */
 export {
   dateToHalfMonth,
+  expandHalfMonthRange,
   halfMonthLabel,
   HALF_MONTH_LABELS
 } from '../../src/lib/halfMonth';
