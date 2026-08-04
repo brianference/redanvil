@@ -1,11 +1,11 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-03T23:35:15.135Z",
+  "checkedAt": "2026-08-04T05:58:46.214Z",
   "ok": true,
   "findings": {
     "u-conc-smallest-diff": {
       "ok": true,
-      "detail": "Re-verified this pass by running both checks and reading their output, not by re-stamping the previous record. (1) `ls az-planting-calendar/tmp-design.json` returned 'No such file or directory' -- the leftover design_audit report against a local dev server, added in 14d4ede and deleted in f441d14, is absent from disk. (2) `grep -rn tmp-design az-planting-calendar .github orchestrator --exclude-dir=node_modules | wc -l` returned 0, so no source file, script or test still reads it. Nothing beyond the deletion was needed and nothing was left behind."
+      "detail": "Re-verified at this commit by running both checks and reading their output, not by re-stamping. (1) `ls az-planting-calendar/tmp-design.json` returned 'No such file or directory' -- the leftover design_audit report against a local dev server, added in 14d4ede and deleted in f441d14, is absent from disk. (2) `grep -rn tmp-design az-planting-calendar .github orchestrator --exclude-dir=node_modules | wc -l` returned 0, so no source file, script or test still reads it. Nothing beyond the deletion was needed and nothing was left behind."
     }
   }
 }
