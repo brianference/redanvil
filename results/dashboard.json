@@ -379,9 +379,9 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-04T06:52:44.715Z",
+  "finishedAt": "2026-08-04T06:56:28.619Z",
   "provenance": {
-    "commit": "41892fbe2bf437c34391df1d817f92af46ff2d2c",
+    "commit": "ab05f8ddff1df40f5481abf015f4a2295f0f7cae",
     "dirty": false,
     "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
     "rubricRuleCount": 94,
@@ -395,6 +395,6 @@
       "u-plat-migrations"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-04T06:52:44.788Z"
+    "generatedAt": "2026-08-04T06:56:28.678Z"
   }
 }
