@@ -636,14 +636,32 @@ export function sourceHasSearch(appDir) {
  * @param {ResultInViewportIo} io Exit helpers.
  * @param {{ url?: string | null, fixture?: string | null }} [opts]
  */
-export async function runResultInViewport(appDir, io, opts = {}) {
-  let chromium;
-  try {
-    ({ chromium } = require('playwright'));
-  } catch {
-    io.infra('playwright is not installed — cannot measure result viewport placement');
+/**
+ * Record honest n/a (no search control) with the same meta shape the browser
+ * probe path writes, so provenance still proves the check can fail elsewhere.
+ *
+ * @param {string} appDir App root.
+ * @param {ResultInViewportIo} io Exit helpers.
+ * @param {string} reason Human-readable n/a reason.
+ * @returns {never}
+ */
+function notApplicableNoSearch(appDir, io, reason) {
+  if (appDir) {
+    writeNotApplicableMeta(appDir, 'fe-result-in-viewport', {
+      tool: 'playwright',
+      engine: 'chromium',
+      reason: 'no search/filter control',
+      knownBad: {
+        input: KNOWN_BAD_FIXTURE,
+        failed: true,
+        recordedAt: nowIso()
+      }
+    });
   }
+  io.notApplicable(reason);
+}
 
+export async function runResultInViewport(appDir, io, opts = {}) {
   /** @type {string | null} */
   let base = opts.url ?? null;
   /** @type {null | (() => Promise<void>)} */
@@ -657,6 +675,23 @@ export async function runResultInViewport(appDir, io, opts = {}) {
     } else {
       if (!existsSync(appDir) || !statSync(appDir).isDirectory()) {
         io.infra(`no such app directory: ${appDir}`);
+      }
+      // No search surface in source: this rule is n/a without a browser.
+      // Previously we always booted wrangler + chromium just to confirm "no
+      // control". When Chromium was missing (CI results-provenance installs
+      // Playwright browsers only for a later e2e step), launch threw an
+      // uncaught exception → exit 1 → gate recorded a hard FAIL instead of
+      // exit 3. Committed results from a machine with browsers had the rule
+      // in provenance.notApplicable; CI reproduction did not → notApplicable
+      // mismatch. Apps whose source declares a real search control
+      // (type=search / searchbox / search|find placeholder) still take the
+      // browser path below; fixtures always do.
+      if (!opts.url && !sourceHasSearch(appDir)) {
+        notApplicableNoSearch(
+          appDir,
+          io,
+          'no search or filter text control on the collection view'
+        );
       }
       // Prefer the local build (the tree under test) over a deploy URL, same
       // as fe-search-present and fe-legal-substance: a deploy can lag HEAD by
@@ -687,16 +722,31 @@ export async function runResultInViewport(appDir, io, opts = {}) {
         } else {
           base = readDeployUrl(appDir);
           if (!base) {
-            if (!sourceHasSearch(appDir)) {
-              io.notApplicable('no search/filter control and no buildable frontend');
-            }
+            // sourceHasSearch was true above (else we already n/a'd), so the
+            // rule applies but we cannot look — infra, not a product FAIL.
             io.infra(dist.reason);
           }
         }
       }
     }
 
-    const browser = await chromium.launch();
+    let chromium;
+    try {
+      ({ chromium } = require('playwright'));
+    } catch {
+      io.infra('playwright is not installed — cannot measure result viewport placement');
+    }
+
+    /** @type {import('playwright').Browser} */
+    let browser;
+    try {
+      browser = await chromium.launch();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      io.infra(
+        `playwright chromium could not launch — cannot measure result viewport placement: ${msg.slice(0, 240)}`
+      );
+    }
     try {
       // First probe: does a search control exist? `domcontentloaded` fires
       // before a client-side data fetch resolves, so an app whose search box
@@ -718,19 +768,11 @@ export async function runResultInViewport(appDir, io, opts = {}) {
           // rule that exits before writeMeasurementMetaEntry can never earn.
           // Record n/a honestly (no synthetic dual runs) and keep the knownBad
           // pointer so provenance still proves the check can fail elsewhere.
-          if (appDir) {
-            writeNotApplicableMeta(appDir, 'fe-result-in-viewport', {
-              tool: 'playwright',
-              engine: 'chromium',
-              reason: 'no search/filter control',
-              knownBad: {
-                input: KNOWN_BAD_FIXTURE,
-                failed: true,
-                recordedAt: nowIso()
-              }
-            });
-          }
-          io.notApplicable('no search or filter text control on the collection view');
+          notApplicableNoSearch(
+            appDir,
+            io,
+            'no search or filter text control on the collection view'
+          );
         }
       } finally {
         await probe.close();

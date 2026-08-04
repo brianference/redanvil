@@ -61,6 +61,13 @@ jobs:
       # would recreate the two-React-instances bug that broke every hook.
       - name: Install workspace deps
         run: npm ci
+      # Gate reproduction runs browser-backed rules (fe-result-in-viewport,
+      # fe-search-present, fe-light-dark, …). Without Chromium those checks
+      # crash or infra-fail instead of measuring, so the reproduced
+      # notApplicable set and per-rule outcomes disagree with a real gate run
+      # that had browsers. Install before verify (and reuse for e2e smoke below).
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
       - name: Verify results were produced by the gate
         run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json process
       # The dashboard ships to production too. Gating only app-builder left half
@@ -85,10 +92,7 @@ jobs:
         run: node .github/scripts/gate_scaffold.mjs
       # End-to-end smoke of the core flow against production, driven by role with
       # web-first assertions (no fixed sleeps). Catches the chat -> wizard -> Forge
-      # PRD path that shipped a 400. Best-effort: needs a browser, so it installs
-      # chromium and does not fail the build if the browser cannot launch in CI.
-      - name: Install Playwright chromium
-        run: npx playwright install --with-deps chromium
+      # PRD path that shipped a 400. Best-effort: needs a browser (installed above).
       - name: E2E smoke against production
         run: node .github/scripts/e2e_smoke_app_builder.mjs https://redanvil.pages.dev/
 
