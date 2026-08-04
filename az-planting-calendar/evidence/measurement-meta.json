@@ -518,13 +518,13 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-04T07:27:55.371Z",
+        "at": "2026-08-04T07:29:36.585Z",
         "recomputed": 0,
         "recorded": 0
       },
       {
         "ok": true,
-        "at": "2026-08-04T07:27:55.372Z",
+        "at": "2026-08-04T07:29:36.585Z",
         "recomputed": 0,
         "recorded": 0
       }
@@ -532,7 +532,7 @@
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\lg-result-reproduces",
       "failed": true,
-      "recordedAt": "2026-08-04T07:27:56.446Z"
+      "recordedAt": "2026-08-04T07:29:37.670Z"
     }
   },
   "lg-bindings-bound": {
