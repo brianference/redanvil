@@ -96,17 +96,25 @@ ${CHROME_CSS}
 
 ${SHARED_SHELL_CSS}
 
-        /* Home composer. Mobile keeps the single stacked column it always had.
-           From 1024 up it becomes two columns — the conversation on the left,
-           the composer on the right and sticky — so a wide desktop shows the
-           product working instead of a narrow strip in a sea of empty page.
+        /* Home composer. Mobile: composer first in the DOM (primary action in
+           the first viewport), then how-to + examples. From 1024 up it becomes
+           two columns — conversation left, composer right and sticky — via
+           named grid areas so DOM order can stay mobile-first.
            The width cap lives here, NOT as an inline style, so this media query
            can actually lift it. */
         .ra-chat {
           display: flex;
           flex-direction: column;
-          gap: ${theme.space.lg}px;
+          gap: ${theme.space.md}px;
           max-width: 44rem;
+        }
+        /* Mobile-first density: less air above the fold so the forge form is
+           the first thing a phone visitor can use (still token steps only). */
+        @media (max-width: 1023px) {
+          .ra-chat-composer {
+            display: flex;
+            flex-direction: column;
+          }
         }
         @media (min-width: 1024px) {
           .ra-chat {
@@ -116,13 +124,16 @@ ${SHARED_SHELL_CSS}
                smaller of the two, which is backwards — the instructions are
                read once and the composer is used every time. */
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            grid-template-areas: "thread composer";
             gap: ${theme.space.xl}px;
             align-items: start;
           }
           .ra-chat-thread {
+            grid-area: thread;
             min-width: 0;
           }
           .ra-chat-composer {
+            grid-area: composer;
             position: sticky;
             /* Clear the sticky header plus a breath of space. */
             top: ${theme.space.xl}px;
