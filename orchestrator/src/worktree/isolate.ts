@@ -7,6 +7,7 @@ import {
   type WorktreeAssignment
 } from '../team/worktreeEnforcement';
 import type { Role } from '../team/roles';
+import { safeRemoveWorktree } from './safeRemove';
 
 /**
  * Options for creating an enforced role worktree.
@@ -82,7 +83,11 @@ export async function withEnforcedWorktree<T>(
     }
     return await fn(dir, assignment);
   } finally {
-    await run('git', ['-C', opts.repoDir, 'worktree', 'remove', '--force', dir]);
-    await run('git', ['-C', opts.repoDir, 'branch', '-D', opts.branch]);
+    // Unlink node_modules junctions BEFORE git worktree remove --force.
+    // Following a junction deleted the real node_modules in this repo once.
+    await safeRemoveWorktree(
+      { repoDir: opts.repoDir, worktreeDir: dir, branch: opts.branch },
+      run
+    );
   }
 }

@@ -2,8 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { mkdtemp, writeFile, rm, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { runRole, buildRoleBrief, scrubEnv } from '../src/team/runRole';
-import { getRole } from '../src/team/roles';
+import {
+  runRole,
+  buildRoleBrief,
+  scrubEnv,
+  assertRoleWorkDir,
+  RoleWorktreeError
+} from '../src/team/runRole';
+import { getRole, type Role } from '../src/team/roles';
 
 /**
  * runRole is the boundary where "the agent said it finished" stops being
@@ -11,6 +17,11 @@ import { getRole } from '../src/team/roles';
  */
 describe('runRole', () => {
   const engineer = getRole('engineer')!;
+  /**
+   * Artifact-contract tests use a needsWorktree:false clone so they isolate
+   * the artifact decision from worktree enforcement (tested separately).
+   */
+  const engineerLocal: Role = { ...engineer, needsWorktree: false };
 
   /**
    * A temp working directory.
@@ -28,9 +39,9 @@ describe('runRole', () => {
     // this ever passes as "ran", the contract is decorative.
     const { dir, cleanup } = await workDir();
     const res = await runRole(
-      { role: engineer, rows: [{ id: 'A1', status: 'fail' }] },
+      { role: engineerLocal, rows: [{ id: 'A1', status: 'fail' }] },
       1,
-      { dir: '', workDir: dir, slug: 'x' } as never,
+      { workDir: dir, slug: 'x' },
       {
         writeBrief: () => undefined,
         spawn: () => ({ code: 0, out: 'All done! I have implemented everything.' })
@@ -52,9 +63,9 @@ describe('runRole', () => {
     await writeFile(join(dir, 'src', 'index.ts'), 'export const app = 1;\n');
 
     const res = await runRole(
-      { role: engineer, rows: [{ id: 'A1', status: 'fail' }] },
+      { role: engineerLocal, rows: [{ id: 'A1', status: 'fail' }] },
       1,
-      { workDir: dir, slug: 'x' } as never,
+      { workDir: dir, slug: 'x' },
       { writeBrief: () => undefined, spawn: () => ({ code: 0, out: '' }) }
     );
 
@@ -70,9 +81,9 @@ describe('runRole', () => {
     await writeFile(join(dir, 'src', 'index.ts'), '');
 
     const res = await runRole(
-      { role: engineer, rows: [] },
+      { role: engineerLocal, rows: [] },
       1,
-      { workDir: dir, slug: 'x' } as never,
+      { workDir: dir, slug: 'x' },
       { writeBrief: () => undefined, spawn: () => ({ code: 0, out: '' }) }
     );
 
@@ -85,7 +96,7 @@ describe('runRole', () => {
     // must be identical — the summary carries no weight at all.
     const { dir, cleanup } = await workDir();
     const mk = (out: string) =>
-      runRole({ role: engineer, rows: [] }, 1, { workDir: dir, slug: 'x' } as never, {
+      runRole({ role: engineerLocal, rows: [] }, 1, { workDir: dir, slug: 'x' }, {
         writeBrief: () => undefined,
         spawn: () => ({ code: 0, out })
       });
@@ -135,13 +146,39 @@ describe('runRole', () => {
     await mkdir(join(dir, 'src'), { recursive: true });
     await writeFile(join(dir, 'src', 'index.ts'), 'export const app = 1;\n');
 
-    const res = await runRole({ role: engineer, rows: [] }, 1, { workDir: dir, slug: 'x' } as never, {
-      writeBrief: () => undefined,
-      spawn: () => ({ code: 137, out: 'killed' })
-    });
+    const res = await runRole(
+      { role: engineerLocal, rows: [] },
+      1,
+      { workDir: dir, slug: 'x' },
+      {
+        writeBrief: () => undefined,
+        spawn: () => ({ code: 137, out: 'killed' })
+      }
+    );
     // Artifact present, but the agent died: still not a completed role.
     expect(res.countedAsRun).toBe(false);
     expect(res.reason).toMatch(/exited 137/);
+    await cleanup();
+  });
+
+  it('(a) worktree-role given a non-worktree workDir FAILS loudly', async () => {
+    // Enforcement: needsWorktree roles are impossible to run outside a linked
+    // worktree. A plain temp dir is not isolation.
+    const { dir, cleanup } = await workDir();
+    expect(() => assertRoleWorkDir(engineer, dir)).toThrow(RoleWorktreeError);
+    await expect(
+      runRole(
+        { role: engineer, rows: [] },
+        1,
+        { workDir: dir, slug: 'x' },
+        {
+          writeBrief: () => undefined,
+          spawn: () => {
+            throw new Error('spawn must not run when worktree enforcement fails');
+          }
+        }
+      )
+    ).rejects.toThrow(RoleWorktreeError);
     await cleanup();
   });
 });

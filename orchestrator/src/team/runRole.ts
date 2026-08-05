@@ -25,6 +25,47 @@ import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { expandArtifacts, type Role, type RoleId } from './roles';
 import { missingArtifacts } from './worktreeEnforcement';
+import { observeIsolation } from '../loop/runRules';
+
+/**
+ * Thrown when a worktree-required role is asked to run outside a linked worktree.
+ *
+ * This is not a soft warning. A human once left shell cwd inside a worktree and
+ * leaked 27 absolute worktree paths into committed evidence. Enforcement makes
+ * that unrepeatable rather than remembered.
+ */
+export class RoleWorktreeError extends Error {
+  /**
+   * @param message - Why the run was refused.
+   */
+  constructor(message: string) {
+    super(message);
+    this.name = 'RoleWorktreeError';
+  }
+}
+
+/**
+ * Fail loudly when a role that requires a worktree is given a non-worktree dir.
+ *
+ * A linked worktree has `--git-dir` different from `--git-common-dir`. The live
+ * main tree does not. Roles with `needsWorktree: false` (pm, brainstorm, …)
+ * skip this check.
+ *
+ * @param role - Registry role.
+ * @param workDir - Directory the agent would run in.
+ * @throws {RoleWorktreeError} When isolation cannot be observed.
+ */
+export function assertRoleWorkDir(role: Role, workDir: string): void {
+  if (!role.needsWorktree) return;
+  const isolation = observeIsolation(workDir);
+  if (!isolation.observed || !isolation.isolated) {
+    throw new RoleWorktreeError(
+      `role ${role.id} requires a linked git worktree distinct from the main tree; ` +
+        `workDir=${workDir} (${isolation.reason}). Refusing to run outside a worktree — ` +
+        'absolute worktree paths must never leak into committed evidence because cwd was wrong.'
+    );
+  }
+}
 
 /** A row this role has been asked to move. */
 export interface AssignedRow {
@@ -174,6 +215,10 @@ export async function runRole(
   ctx: RunRoleContext,
   deps: RunRoleDeps = {}
 ): Promise<RunRoleResult> {
+  // Enforcement lives HERE so no caller can silently skip it. A worktree role
+  // given the main tree (or a plain temp dir) fails before spawn.
+  assertRoleWorkDir(assignment.role, ctx.workDir);
+
   const spawn = deps.spawn ?? defaultSpawn;
   const write = deps.writeBrief ?? ((p: string, b: string) => writeFileSync(p, b));
   const artifacts = expandArtifacts(assignment.role.artifacts, ctx.slug);

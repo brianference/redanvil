@@ -66,6 +66,27 @@ export {
 } from './pm';
 
 export {
+  runAssignment,
+  makePmRunRole,
+  unlinkNodeModulesJunction,
+  type PmRuntimeContext,
+  type PmRuntimeDeps,
+  type RoleRunOutcome
+} from './pmRuntime';
+
+export {
+  runRole,
+  buildRoleBrief,
+  scrubEnv,
+  assertRoleWorkDir,
+  RoleWorktreeError,
+  type RunRoleAssignment,
+  type RunRoleContext,
+  type RunRoleDeps,
+  type RunRoleResult
+} from './runRole';
+
+export {
   loadProductJudgementOpts,
   type ProductJudgementOpts
 } from './finishOpts';
