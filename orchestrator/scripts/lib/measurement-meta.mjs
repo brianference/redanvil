@@ -26,7 +26,8 @@
  * }
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative, isAbsolute, sep } from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 /** Relative path under an app root. */
 export const META_REL = join('evidence', 'measurement-meta.json');
@@ -124,10 +125,60 @@ export function readMeasurementMeta(appDir) {
  * @param {object} entry Fields to merge for this rule.
  * @returns {Record<string, object>} The full meta after write.
  */
+
+/**
+ * Repo root for a directory, or null when git cannot answer.
+ *
+ * @param {string} dir Directory inside a repo.
+ * @returns {string | null}
+ */
+function repoRootFor(dir) {
+  try {
+    const out = execFileSync('git', ['rev-parse', '--show-toplevel'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+    return out.length > 0 ? out : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Make a recorded fixture path portable: repo-root-relative, forward slashes.
+ *
+ * Evidence is committed and read on other machines. An absolute path like
+ * C:\Users\brian\RedAnvil\orchestrator\test\fixtures\... cannot exist on the Linux CI
+ * runner, so meas-known-bad could not resolve it there and results-provenance
+ * failed with a per-rule mismatch while the same check passed locally. Backslash
+ * separators do not resolve on POSIX either. Absolute paths OUTSIDE the repo are
+ * left alone: rewriting them would invent a path that was never measured.
+ *
+ * @param {string} appDir App directory (used to locate the repo).
+ * @param {unknown} input Recorded fixture path.
+ * @returns {unknown} Portable path, or the input untouched.
+ */
+export function portableFixturePath(appDir, input) {
+  if (typeof input !== 'string' || input.trim().length === 0) return input;
+  if (!isAbsolute(input)) return input.split(sep).join('/');
+  const root = repoRootFor(appDir);
+  if (root === null) return input;
+  const rel = relative(root, input);
+  if (rel.length === 0 || rel.startsWith('..')) return input;
+  return rel.split(sep).join('/');
+}
+
 export function writeMeasurementMetaEntry(appDir, ruleId, entry) {
   const all = readMeasurementMeta(appDir);
   const prev = all[ruleId] && typeof all[ruleId] === 'object' ? all[ruleId] : {};
-  all[ruleId] = { ...prev, ...entry };
+  const next = { ...prev, ...entry };
+  // Normalise here, once, rather than in each of the ~20 checks that record a
+  // knownBad fixture. Doing it per-check is how they drifted apart before.
+  if (next.knownBad && typeof next.knownBad === 'object') {
+    next.knownBad = { ...next.knownBad, input: portableFixturePath(appDir, next.knownBad.input) };
+  }
+  all[ruleId] = next;
   const p = metaPath(appDir);
   mkdirSync(dirname(p), { recursive: true });
   writeFileSync(p, `${JSON.stringify(all, null, 2)}\n`, 'utf8');

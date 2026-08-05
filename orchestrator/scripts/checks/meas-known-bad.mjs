@@ -11,8 +11,9 @@
  * entry does not record failed:true, when the check source is newer than
  * knownBad.recordedAt, or when re-running the fixture does not exit non-zero.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import {
@@ -115,11 +116,42 @@ export function runKnownBadFixture(ruleId, inputPath, deps = {}) {
  * @param {string} input Recorded path (absolute or app-relative).
  * @returns {string | null}
  */
+/**
+ * Repo root for a directory, or null when git cannot answer.
+ *
+ * @param {string} dir Directory inside a repo.
+ * @returns {string | null}
+ */
+function repoRootFor(dir) {
+  try {
+    const out = execFileSync('git', ['rev-parse', '--show-toplevel'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+    return out.length > 0 ? out : null;
+  } catch {
+    return null;
+  }
+}
+
 export function resolveKnownBadInput(appDir, input) {
   if (typeof input !== 'string' || input.trim().length === 0) return null;
   if (existsSync(input)) return input;
-  const underApp = join(appDir, input);
+  // Recorded paths are repo-root-relative with forward slashes so committed
+  // evidence resolves on any machine. Try the repo root, and normalise
+  // separators: a Windows-recorded path does not resolve on the Linux CI runner,
+  // which is exactly why results-provenance failed there with a per-rule
+  // mismatch on meas-known-bad while the same check passed locally.
+  const native = input.replace(/[/\\]+/g, sep);
+  if (existsSync(native)) return native;
+  const underApp = join(appDir, native);
   if (existsSync(underApp)) return underApp;
+  const root = repoRootFor(appDir);
+  if (root !== null) {
+    const underRoot = join(root, native);
+    if (existsSync(underRoot)) return underRoot;
+  }
   return null;
 }
 
