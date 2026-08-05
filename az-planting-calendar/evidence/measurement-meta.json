@@ -517,22 +517,22 @@
     "engine": null,
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-05T03:38:08.203Z",
+        "ok": true,
+        "at": "2026-08-05T03:39:10.236Z",
         "recomputed": 0,
-        "recorded": 100
+        "recorded": 0
       },
       {
-        "ok": false,
-        "at": "2026-08-05T03:38:08.204Z",
+        "ok": true,
+        "at": "2026-08-05T03:39:10.237Z",
         "recomputed": 0,
-        "recorded": 100
+        "recorded": 0
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\lg-result-reproduces",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:09.423Z"
+      "recordedAt": "2026-08-05T03:39:11.501Z"
     }
   },
   "lg-bindings-bound": {
