@@ -1,11 +1,11 @@
 {
   "baseUrl": "https://az-planting-calendar.pages.dev",
-  "checkedAt": "2026-08-04T08:31:31.437Z",
+  "checkedAt": "2026-08-05T03:20:27.898Z",
   "ok": true,
   "findings": {
     "fe-design-archetype": {
       "ok": true,
-      "detail": "Re-judged at source commit 1ec2bf03249c by opening evidence/screenshots/az-planting-calendar-1280-light.png and reading it. Needed because the shell de-duplication changed /design-system, which is source for this app, so the prior judgement no longer described the shipped commit. Same verdict against Option 3 'Timeline + rail' (DECISION.md line 13): the half-month timeline is the hero with a count chip per period and Aug 1 marked NOW; crop rows are secondary beneath it under 'Plantable in Aug 1', 7 crops with image, method badge, days-to-harvest and a cited source link; the planting assistant is a docked desktop right rail. The render is genuinely fresh -- it reads 'As of 2026-08-04'. DEVIATION carried forward: the zone IS a full-width bar but sits BELOW the crop search, which DECISION.md line 9 sanctions as a 'sticky chrome' search placement. Judged from the rendered screenshot, not from component source."
+      "detail": "Re-judged at source commit fa51010064fa by opening evidence/screenshots/az-planting-calendar-1280-light.png and reading it. Re-run because this release changed az-planting-calendar/tests/theme-evidence.spec.ts, which is source for this app, so the prior judgement no longer described the shipped commit. Verdict unchanged against Option 3 'Timeline + rail' (design-refs/home-options/DECISION.md line 13): the half-month timeline is the hero with a count chip per period and Aug 1 marked NOW; crop rows are secondary beneath it under 'Plantable in Aug 1', 7 crops each with image, method badge, days-to-harvest and a cited source link; the planting assistant is a docked desktop right rail. Render is current -- it reads 'As of 2026-08-04'. DEVIATION carried forward, not dropped: the zone IS a full-width bar but sits BELOW the crop search, which DECISION.md line 9 sanctions as a 'sticky chrome' search placement. Judged from the rendered screenshot, not from component source."
     }
   }
 }
