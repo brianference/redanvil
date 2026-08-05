@@ -213,7 +213,7 @@
     },
     {
       "ruleId": "lg-shipped",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "lg-push-cadence",
@@ -384,15 +384,14 @@
         "fe-touch-targets",
         "fe-type-floor",
         "hyg-no-binaries",
-        "hyg-no-duplication",
-        "lg-shipped"
+        "hyg-no-duplication"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-05T04:37:10.829Z",
+  "finishedAt": "2026-08-05T04:47:31.421Z",
   "provenance": {
-    "commit": "a1454bff6f02686cd5d6421366f4d2c3c87ea27b",
+    "commit": "a632700334a78a74f90043c2f162588896e0de26",
     "dirty": false,
     "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
     "rubricRuleCount": 95,
@@ -407,6 +406,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-05T04:37:10.981Z"
+    "generatedAt": "2026-08-05T04:47:31.492Z"
   }
 }
