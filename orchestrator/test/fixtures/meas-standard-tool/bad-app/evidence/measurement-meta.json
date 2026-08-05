@@ -19,17 +19,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-05T22:10:16.175Z"
+        "at": "2026-08-05T22:40:40.290Z"
       },
       {
         "ok": false,
-        "at": "2026-08-05T22:10:16.176Z"
+        "at": "2026-08-05T22:40:40.291Z"
       }
     ],
     "knownBad": {
-      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-standard-tool\\bad-app",
+      "input": "C:\\Users\\brian\\RedAnvil-pm\\orchestrator\\test\\fixtures\\meas-standard-tool\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T22:10:16.176Z"
+      "recordedAt": "2026-08-05T22:40:40.291Z"
     }
   }
 }
