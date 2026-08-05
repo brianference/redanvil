@@ -7,8 +7,9 @@
  * discard the branch. Read-only roles run in the app dir and never create a
  * branch.
  *
- * Promotion is gated on `countedAsRun` (exit 0 AND artifacts on disk), never on
- * the agent's summary. A branch is never left merged when countedAsRun is false.
+ * Promotion is gated on `countedAsRun` (exit 0, artifacts on disk, AND real
+ * content changes vs the pre-run snapshot), never on the agent's summary. A
+ * branch is never left merged when countedAsRun is false.
  */
 import { existsSync, mkdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
@@ -17,6 +18,7 @@ import { runCommand, type RunResult } from '../process/run';
 import { promoteWorktree, type PromoteResult } from '../worktree/promote';
 import { safeRemoveWorktree, unlinkNodeModulesJunction } from '../worktree/safeRemove';
 import {
+  artifactPathPrefix,
   buildAssignment,
   installWorktreeEnforcement,
   writeAssignment
@@ -91,7 +93,7 @@ export interface PmRuntimeDeps {
  */
 export interface RoleRunOutcome {
   role: RoleId;
-  /** From runRole: exit 0 AND artifacts present. */
+  /** From runRole: exit 0, artifacts present, and each artifact actually changed. */
   countedAsRun: boolean;
   /** True only when the branch was merged into the base. */
   promoted: boolean;
@@ -247,12 +249,19 @@ export async function runAssignment(
     mkdirSync(workDir, { recursive: true });
   }
 
+  // Artifact paths are worktree-root-relative (prefix app subdir when needed)
+  // so runRole and the pre-commit hook (cwd = worktree root) resolve the same
+  // absolute paths. Chosen base: worktree root — git hooks always run there,
+  // assignment.json lives there, and SPEC calls artifacts repo-relative.
+  const pathPrefix = artifactPathPrefix(ctx.repoDir, absApp);
+
   // Assignment file for hooks / promote path (enforcement install is best-effort
   // in minimal fixtures that lack hook scripts).
   const wtAssignment = buildAssignment(
     role,
     ctx.slug,
-    assignment.rows.map((r) => r.id)
+    assignment.rows.map((r) => r.id),
+    { pathPrefix }
   );
   try {
     await installWorktreeEnforcement(worktreeRoot, wtAssignment, run);
@@ -268,7 +277,13 @@ export async function runAssignment(
     result = await roleRunner(
       assignment,
       iteration,
-      { workDir, slug: ctx.slug, timeoutSec: ctx.timeoutSec },
+      {
+        workDir,
+        slug: ctx.slug,
+        timeoutSec: ctx.timeoutSec,
+        artifactRoot: worktreeRoot,
+        artifactPathPrefix: pathPrefix || undefined
+      },
       deps.runRoleDeps
     );
 

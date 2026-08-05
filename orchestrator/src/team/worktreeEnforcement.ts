@@ -13,7 +13,8 @@ import {
   statSync,
   writeFileSync
 } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expandArtifacts, type Role, type RoleId } from './roles';
 
@@ -72,22 +73,82 @@ export function hookScriptsDir(): string {
 }
 
 /**
+ * Join path segments with `/` for assignment/hook paths (repo-relative, portable).
+ *
+ * @param parts - Path segments (empty segments dropped).
+ * @returns POSIX-style relative path.
+ */
+export function joinRepoPath(...parts: string[]): string {
+  return parts
+    .filter((p) => p.length > 0)
+    .join('/')
+    .replace(/\\/g, '/')
+    .replace(/\/+/g, '/');
+}
+
+/**
+ * App path relative to the repo root, suitable as an artifact path prefix.
+ *
+ * Returns empty when the app IS the repo root (or cannot be expressed as a
+ * relative subpath). Hooks and runRole both resolve declared artifacts from the
+ * worktree/repo root; when the app lives in a subdirectory the role registry's
+ * app-scoped paths (`src/...`) must be prefixed so the hook does not look at
+ * `<worktree>/src/...` while the agent wrote `<worktree>/<app>/src/...`.
+ *
+ * @param repoDir - Repository (or worktree) root.
+ * @param appDir - App directory (absolute or relative to repoDir).
+ * @returns Prefix like `app-builder`, or `''` when none.
+ */
+export function artifactPathPrefix(repoDir: string, appDir: string): string {
+  const absRepo = resolve(repoDir);
+  const absApp = resolve(repoDir, appDir);
+  const rel = relative(absRepo, absApp);
+  if (rel === '' || rel === '.') return '';
+  if (isAbsolute(rel) || rel.startsWith(`..${sep}`) || rel === '..') return '';
+  return rel.split(sep).join('/');
+}
+
+/**
+ * Expand role artifact templates and, when needed, prefix with the app subdir
+ * so paths are worktree-root-relative (same base the pre-commit hook uses).
+ *
+ * @param artifacts - Role registry templates (may include `<slug>`).
+ * @param slug - App slug.
+ * @param pathPrefix - From {@link artifactPathPrefix}; empty when app is root.
+ * @returns Repo-/worktree-relative artifact paths.
+ */
+export function resolveRoleArtifacts(
+  artifacts: readonly string[],
+  slug: string,
+  pathPrefix = ''
+): string[] {
+  const expanded = expandArtifacts(artifacts, slug);
+  if (!pathPrefix) return expanded;
+  return expanded.map((a) => joinRepoPath(pathPrefix, a));
+}
+
+/**
  * Build an assignment record for a role worktree.
+ *
+ * Artifact paths are worktree-root-relative so `evaluatePreCommit` (cwd =
+ * worktree root) and `runRole` (with the same root) resolve identical paths.
  *
  * @param role - Role from the registry.
  * @param slug - App slug.
  * @param rows - Checklist row ids assigned this round.
+ * @param opts - Optional path prefix when the app is a monorepo subdirectory.
  * @returns Assignment JSON body.
  */
 export function buildAssignment(
   role: Role,
   slug: string,
-  rows: readonly string[]
+  rows: readonly string[],
+  opts: { pathPrefix?: string } = {}
 ): WorktreeAssignment {
   return {
     roleId: role.id,
     rows: [...rows],
-    artifacts: expandArtifacts(role.artifacts, slug),
+    artifacts: resolveRoleArtifacts(role.artifacts, slug, opts.pathPrefix ?? ''),
     slug,
     createdAt: new Date().toISOString()
   };
@@ -130,8 +191,9 @@ export function readAssignment(worktreeDir: string): WorktreeAssignment | null {
 /**
  * Check that every required artifact exists and is non-empty.
  *
- * @param worktreeDir - Worktree root.
- * @param artifacts - Repo-relative paths.
+ * @param worktreeDir - Artifact root (worktree root for role runs; same base
+ *   the pre-commit hook uses via `process.cwd()` / git work-tree root).
+ * @param artifacts - Paths relative to that root.
  * @returns Missing or empty paths.
  */
 export function missingArtifacts(
@@ -153,6 +215,75 @@ export function missingArtifacts(
     }
   }
   return missing;
+}
+
+/**
+ * SHA-256 of file contents, or null when the path is absent, empty, or unreadable.
+ *
+ * Used as the pre/post-run content check: presence alone is not evidence of work.
+ *
+ * @param artifactRoot - Base directory for relative paths.
+ * @param rel - Path relative to artifactRoot.
+ * @returns Hex digest, or null.
+ */
+export function artifactFingerprint(
+  artifactRoot: string,
+  rel: string
+): string | null {
+  const abs = join(artifactRoot, rel);
+  if (!existsSync(abs)) return null;
+  try {
+    const st = statSync(abs);
+    if (!st.isFile() || st.size === 0) return null;
+    return createHash('sha256').update(readFileSync(abs)).digest('hex');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Snapshot content fingerprints for declared artifacts (null = missing/empty).
+ *
+ * @param artifactRoot - Base directory.
+ * @param artifacts - Relative paths.
+ * @returns Map of path → fingerprint or null.
+ */
+export function snapshotArtifacts(
+  artifactRoot: string,
+  artifacts: readonly string[]
+): Map<string, string | null> {
+  const snap = new Map<string, string | null>();
+  for (const rel of artifacts) {
+    snap.set(rel, artifactFingerprint(artifactRoot, rel));
+  }
+  return snap;
+}
+
+/**
+ * Declared artifacts that are present and non-empty but byte-identical to the
+ * pre-run snapshot (including files that already existed before the role ran).
+ *
+ * A role that touches nothing fails here even when every path exists.
+ * A no-op rewrite with identical bytes also fails.
+ *
+ * @param artifactRoot - Base directory.
+ * @param artifacts - Relative paths.
+ * @param before - Snapshot taken before the agent ran.
+ * @returns Paths that did not change.
+ */
+export function unchangedArtifacts(
+  artifactRoot: string,
+  artifacts: readonly string[],
+  before: ReadonlyMap<string, string | null>
+): string[] {
+  const unchanged: string[] = [];
+  for (const rel of artifacts) {
+    const after = artifactFingerprint(artifactRoot, rel);
+    if (after === null) continue; // missing/empty → missingArtifacts
+    const prev = before.get(rel) ?? null;
+    if (prev === after) unchanged.push(rel);
+  }
+  return unchanged;
 }
 
 /**
