@@ -997,7 +997,11 @@ describe('G1–G5 measurement provenance', () => {
         'fe-breadcrumbs': { engine: 'chromium', runs: twoRealRuns(3000) },
         'fe-brand-mark-size': { engine: 'chromium', runs: twoRealRuns(4000) },
         'fe-result-in-viewport': { engine: 'chromium', runs: twoRealRuns(5000) },
-        'fe-resource-links': { engine: 'chromium', runs: twoRealRuns(6000) }
+        'fe-resource-links': { engine: 'chromium', runs: twoRealRuns(6000) },
+        // fe-legal-substance joined BROWSER_DRIVEN_RULES: its own metadata says
+        // playwright/chromium, and while it was missing from that list
+        // meas-two-run never policed it and its two runs were byte-identical.
+        'fe-legal-substance': { engine: 'chromium', runs: twoRealRuns(7000) }
       })
     );
     const r = await runCaptured((io) => runMeasTwoRun(app, io));
@@ -1144,7 +1148,10 @@ describe('G1–G5 measurement provenance', () => {
         'fe-breadcrumbs': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
         'fe-brand-mark-size': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
         'fe-result-in-viewport': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
-        'fe-resource-links': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
+        'fe-resource-links': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] },
+        // Browser-driven since it joined BROWSER_DRIVEN_RULES; G5 requires a
+        // named engine for every rule in that list.
+        'fe-legal-substance': { engine: 'chromium', runs: [{ ok: true }, { ok: true }] }
       })
     );
     const r = await runCaptured((io) => runMeasEngineNamed(app, io));
