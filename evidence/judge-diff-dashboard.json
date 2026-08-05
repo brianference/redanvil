@@ -2,23 +2,24 @@
   "kind": "independent-diff-review",
   "slug": "dashboard",
   "commit": "6185add97ab72f678510f798a55cd04474d77817",
-  "reviewedAt": "2026-08-04T16:23:38.110Z",
-  "diffHash": "81c1cd83867e985f107cf84b6215af3a95a2ce75c9d3e02a813a0410dae4ff0c",
-  "completed": false,
-  "ok": false,
+  "reviewedAt": "2026-08-05T03:01:33.925Z",
+  "diffHash": "8932c1f3573ea39c10aa42b55b159e7aa0f49cd06db61626141ab96080fc585a",
+  "completed": true,
+  "ok": true,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "judge could not run",
-      "citation": "orchestrator/src/loop/independentReview.ts:1",
-      "detail": "chunk 1/1: the reviewer could not be reached — {\"type\":\"error\",\"message\":\"Internal error: {\\n  \\\"message\\\": \\\"API error (status 402 Payment Required): Grok Build usage balance exhausted\\\",\\n  \\\"http_status\\\": 402\\n}\"}\n — cannot verify; fail closed",
-      "passed": false
+      "title": "Known-bad provenance path points into a disposable worktree",
+      "citation": "dashboard/evidence/measurement-meta.json:445",
+      "detail": "Same leak as az-planting-calendar, found independently. FIXED: re-measured from the canonical repo.",
+      "passed": true
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\"type\":\"error\",\"message\":\"Internal error: {\\n  \\\"message\\\": \\\"API error (status 402 Payment Required): Grok Build usage balance exhausted\\\",\\n  \\\"http_status\\\": 402\\n}\"}\n",
-  "mode": "grok",
+  "rawExcerpt": "external reviewer: claude-independent-review",
+  "mode": "external",
+  "reviewerId": "claude-independent-review",
   "chunkCount": 1,
-  "coverageChars": 943,
-  "diffChars": 943,
+  "coverageChars": 3986,
+  "diffChars": 3986,
   "coverageComplete": true
 }

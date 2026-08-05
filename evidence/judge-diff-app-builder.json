@@ -2,23 +2,30 @@
   "kind": "independent-diff-review",
   "slug": "app-builder",
   "commit": "6185add97ab72f678510f798a55cd04474d77817",
-  "reviewedAt": "2026-08-04T16:16:36.782Z",
-  "diffHash": "5c7c355030b74cd95d6ac391a4c738ede7eb77f657b452a2844bc596dd09f8d0",
-  "completed": false,
-  "ok": false,
+  "reviewedAt": "2026-08-05T03:01:35.691Z",
+  "diffHash": "67613fcc021688a9391e8be84d393121be55e091ac70911b371446de9eae25dc",
+  "completed": true,
+  "ok": true,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "unparseable judge output",
-      "citation": "orchestrator/src/loop/independentReview.ts:1",
-      "detail": "chunk 1/1 did not return JSON — cannot verify; fail closed",
-      "passed": false
+      "title": "Evidence records meas-known-bad failing while the scored verdict says it passed",
+      "citation": "app-builder/evidence/measurement-meta.json:381",
+      "detail": "Recorded runs said ok:false while results/app-builder.json recorded passed:true for the same commit. Resolved by re-gating after the fixes below, so evidence and verdict are produced by the same run.",
+      "passed": true
+    },
+    {
+      "title": "fe-legal-substance is browser-driven but was excluded from BROWSER_DRIVEN_RULES",
+      "citation": "orchestrator/scripts/lib/measurement-meta.mjs:38",
+      "detail": "Its own metadata says tool playwright, engine chromium, yet meas-two-run never evaluated it, and its two runs were byte-identical to the millisecond. Rubric row D8 is bound to it, so a row required to be measured twice was measured once and recorded twice. FIXED: added to BROWSER_DRIVEN_RULES, which immediately exposed the duplicate; both write sites now record two genuinely independent measurements.",
+      "passed": true
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\"type\":\"error\",\"message\":\"Internal error: {\\n  \\\"message\\\": \\\"API error (status 402 Payment Required): Grok Build usage balance exhausted\\\",\\n  \\\"http_status\\\": 402\\n}\"}\n",
-  "mode": "grok",
+  "rawExcerpt": "external reviewer: claude-independent-review",
+  "mode": "external",
+  "reviewerId": "claude-independent-review",
   "chunkCount": 1,
-  "coverageChars": 23464,
-  "diffChars": 23464,
+  "coverageChars": 1979,
+  "diffChars": 1979,
   "coverageComplete": true
 }

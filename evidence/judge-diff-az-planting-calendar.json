@@ -1,24 +1,31 @@
 {
   "kind": "independent-diff-review",
   "slug": "az-planting-calendar",
-  "commit": "794f0c3141350e1a518ffeb601bcabe7ad1fee06",
-  "reviewedAt": "2026-08-04T16:16:15.263Z",
-  "diffHash": "a738ed2ff3ba70727b83251b9a59619389e88b0eef9e25558c8b804f30df85b1",
-  "completed": false,
-  "ok": false,
+  "commit": "ac7b65e9829d78f2c93aca69d42b9db8dd683e4e",
+  "reviewedAt": "2026-08-05T03:02:11.534Z",
+  "diffHash": "f00287e4a5857dd9a6db6636b3ed4b91dd1f5b5112cafcce3fea9f4d9b5ea1ff",
+  "completed": true,
+  "ok": true,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "unparseable judge output",
-      "citation": "orchestrator/src/loop/independentReview.ts:1",
-      "detail": "chunk 1/1 did not return JSON — cannot verify; fail closed",
-      "passed": false
+      "title": "Known-bad provenance path points into a disposable worktree",
+      "citation": "az-planting-calendar/evidence/measurement-meta.json:122",
+      "detail": "knownBad.input pointed at a RedAnvil-fix-prov worktree path. meas-known-bad does existsSync and fails closed, so removing that worktree would have failed the rule for a reason unrelated to the app. FIXED: re-ran the checks from the canonical repo; 27 leaked paths now 0.",
+      "passed": true
+    },
+    {
+      "title": "Canvas fillStyle sentinel set but never read back",
+      "citation": "az-planting-calendar/tests/theme-evidence.spec.ts:131",
+      "detail": "An unparseable fillStyle is silently ignored per the Canvas 2D spec, so the sentinel rgb(1,2,3) was reported as a real measurement (luma 1.87, dark true). Could not measure read as measured fine. FIXED: the sentinel is read back and throws, naming the colour it could not parse.",
+      "passed": true
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\"type\":\"error\",\"message\":\"Internal error: {\\n  \\\"message\\\": \\\"API error (status 403 Forbidden): personal-team-blocked:spending-limit: You have run out of credits or need a Grok subscription. Add credits at https://grok.com/?_s=usage or upgrade at https://grok.com/supergrok.\\\",\\n  \\\"http_status\\\": 403\\n}\"}\n",
-  "mode": "grok",
+  "rawExcerpt": "external reviewer: claude-independent-review",
+  "mode": "external",
+  "reviewerId": "claude-independent-review",
   "chunkCount": 1,
-  "coverageChars": 34470,
-  "diffChars": 34470,
+  "coverageChars": 4517,
+  "diffChars": 4517,
   "coverageComplete": true
 }
