@@ -181,7 +181,9 @@ const KNOWN_FLAGS = new Set([
   'promote',
   'min-coverage',
   'claims',
-  'result'
+  'result',
+  'execute',
+  'budget'
 ]);
 
 async function main(): Promise<number> {
@@ -205,7 +207,9 @@ async function main(): Promise<number> {
       'no-isolate': { type: 'boolean' },
       promote: { type: 'boolean' },
       'min-coverage': { type: 'string' },
-      claims: { type: 'string' }
+      claims: { type: 'string' },
+      execute: { type: 'boolean' },
+      budget: { type: 'string' }
     }
   });
 
@@ -252,9 +256,13 @@ async function main(): Promise<number> {
     // The PM role, reachable at last. team/pm.ts and team/assign.ts had real
     // logic and passing tests with zero callers; this is the entry point that
     // makes them run against a real gate result instead of only against fixtures.
+    // Default is dry-run (plan only). --execute opts into real role runs via
+    // pmRuntime (worktrees, promote/discard, artifact contract).
     const slug = positionals[1];
     if (!slug) {
-      console.error('usage: redanvil pm <slug> [--result results/<slug>.json]');
+      console.error(
+        'usage: redanvil pm <slug> [--result results/<slug>.json] [--execute] [--max-iters N] [--budget N]'
+      );
       return 2;
     }
     const resultPath =
@@ -262,11 +270,26 @@ async function main(): Promise<number> {
         ? values.result
         : `results/${slug}.json`;
     if (!resultPath) {
-      console.error('usage: redanvil pm <slug> [--result results/<slug>.json]');
+      console.error(
+        'usage: redanvil pm <slug> [--result results/<slug>.json] [--execute] [--max-iters N] [--budget N]'
+      );
       return 2;
     }
+    const maxIters =
+      typeof values['max-iters'] === 'string' ? Number(values['max-iters']) : undefined;
+    const budgetCeiling =
+      typeof values.budget === 'string' ? Number(values.budget) : undefined;
     try {
-      return runPmCommand({ resultPath });
+      return await runPmCommand({
+        resultPath,
+        slug,
+        execute: values.execute === true,
+        maxIters: Number.isFinite(maxIters) ? maxIters : undefined,
+        budgetCeiling: Number.isFinite(budgetCeiling) ? budgetCeiling : undefined,
+        threshold:
+          typeof values.threshold === 'string' ? Number(values.threshold) : undefined,
+        deployUrl: typeof values.deploy === 'string' ? values.deploy : undefined
+      });
     } catch (err) {
       console.error(`pm failed: ${err instanceof Error ? err.message : String(err)}`);
       return 2;

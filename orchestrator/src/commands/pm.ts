@@ -7,24 +7,31 @@
  * that does not exist is worse than a missing feature, because it stops anyone
  * looking. This is the caller that makes them live.
  *
- * It runs the PLANNING half of the PM role against a real gate result. The
- * executing half (`runPm`'s `runRole`, which would actually dispatch a role to
- * Grok Build or Grok Imagine) has no runner yet, so that is deliberately NOT
- * faked here — a dry-run that reports what it WOULD do is honest; a dry-run
- * pretending work happened is the failure this repo exists to prevent.
+ * DEFAULT is a dry-run of the planning half — honest and cheap. `--execute`
+ * constructs real PmDeps (statuses from the results file, runRole through
+ * pmRuntime worktrees, gate/isDone/independentJudge from the gate path) and
+ * calls runPm. No second copies of gate or isDone logic.
  *
  * The hard error is the point: an unmet row that no role owns means the
  * checklist grew a requirement with nobody accountable for it, and that is a
  * defect in the process, not a warning to scroll past.
  */
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
+import { join, resolve, basename } from 'node:path';
 import { checklistCoverage } from '../done/coverage.mjs';
 import { loadChecklistRows } from '../done/checklist.mjs';
-import { DEFAULT_CHECKLIST_PATH, DEFAULT_DONE_THRESHOLD } from '../gate/done.mjs';
-import { dryRunAssignments } from '../team/pm';
+import { DEFAULT_CHECKLIST_PATH, DEFAULT_DONE_THRESHOLD, isDone } from '../gate/done';
+import { dryRunAssignments, runPm, type PmDeps, type PmConfig } from '../team/pm';
 import { findUnownedChecklistRows } from '../team/assign';
 import { ROLES } from '../team/roles';
+import { makePmRunRole, type PmRuntimeDeps } from '../team/pmRuntime';
+import { gateApp, type GateReport } from './gate';
+import type { Outcome } from '../gate/score';
+import { runIndependentDiffReview } from '../loop/independentReview';
+import { loadProductJudgementOpts } from '../team/finishOpts';
+import { verifyDeploy } from '../deploy/verify';
+import { readFile } from 'node:fs/promises';
+import type { RowStatus } from '../done/coverage.d.mts';
 
 /** Options for the pm command. */
 export interface PmCommandOptions {
@@ -34,6 +41,35 @@ export interface PmCommandOptions {
   checklistPath?: string;
   /** Repo root, for resolving relative paths. */
   repoRoot?: string;
+  /**
+   * When true, construct real PmDeps and call runPm. Default false (dry-run).
+   * Opt-in so a planning check never accidentally spawns agents.
+   */
+  execute?: boolean;
+  /** App slug (also used as app dir under repo root when appDir omitted). */
+  slug?: string;
+  /** App directory for execute mode. Defaults to `<repoRoot>/<slug>`. */
+  appDir?: string;
+  /** Max PM loop iterations. Defaults to 5. */
+  maxIters?: number;
+  /** Role-invocation budget ceiling. Defaults to unlimited. */
+  budgetCeiling?: number;
+  /** Score threshold for isDone / gate. Defaults to DEFAULT_DONE_THRESHOLD. */
+  threshold?: number;
+  /** Optional deploy URL for deployAndVerify when isDone. */
+  deployUrl?: string;
+  /** Judge outcomes folded into gate (execute mode). */
+  judge?: Outcome[];
+  /** Not-applicable rule ids / lanes for gate. */
+  notApplicable?: string[];
+  /**
+   * Injected runtime deps for tests (fake spawn). Production leaves this unset.
+   */
+  runtimeDeps?: PmRuntimeDeps;
+  /**
+   * Override PmDeps pieces in tests without re-implementing the command.
+   */
+  depsOverride?: Partial<PmDeps>;
 }
 
 /** Outcome of a planning run. */
@@ -59,6 +95,45 @@ function rulePassed(rules: ReadonlyArray<{ ruleId: string; passed: boolean }>, i
 }
 
 /**
+ * Build checklist statuses from a gate result payload (and optional live report).
+ *
+ * @param raw - Result JSON shape.
+ * @param checklistPath - Checklist file.
+ * @param live - Optional latest gate report (preferred after a real gate).
+ * @returns Row statuses for the PM planner.
+ */
+export function statusesFromResult(
+  raw: {
+    rules?: Array<{ ruleId: string; passed?: boolean }>;
+    finalScore?: number;
+    threshold?: number;
+  },
+  checklistPath: string,
+  live?: GateReport | null
+): ReadonlyArray<RowStatus> {
+  const rules = live
+    ? live.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed === true }))
+    : (raw.rules ?? []).map((r) => ({ ruleId: r.ruleId, passed: r.passed === true }));
+  const rows = loadChecklistRows(checklistPath);
+  const threshold =
+    typeof raw.threshold === 'number' && raw.threshold >= 0
+      ? raw.threshold
+      : DEFAULT_DONE_THRESHOLD;
+  const finalScore = live?.score ?? raw.finalScore;
+  return checklistCoverage({
+    rows,
+    ruleOutcomes: rules,
+    optValues: {
+      unitTestsPass: rulePassed(rules, 'u-test-presence'),
+      acceptanceTestsPass: rulePassed(rules, 'u-test-acceptance'),
+      coveragePct: rulePassed(rules, 'u-test-coverage-ratchet')
+    },
+    scoreMet: typeof finalScore === 'number' ? finalScore >= threshold : undefined,
+    noFailedRules: rules.every((r) => r.passed !== false)
+  });
+}
+
+/**
  * Plan role assignments for every unmet row in a gate result.
  *
  * @param opts - Result and checklist locations.
@@ -71,33 +146,10 @@ export function planFromResult(opts: PmCommandOptions): PmCommandResult {
     finalScore?: number;
     threshold?: number;
   };
-  // Normalise `passed` to a definite boolean: an absent flag is not a pass.
-  // checklistCoverage requires it, and treating "unrecorded" as true is the
-  // pass-by-default this repo removes everywhere else.
-  const result = {
-    ...raw,
-    rules: (raw.rules ?? []).map((r) => ({ ruleId: r.ruleId, passed: r.passed === true }))
-  };
-  const rows = loadChecklistRows(opts.checklistPath ?? DEFAULT_CHECKLIST_PATH);
-  const threshold =
-    typeof result.threshold === 'number' && result.threshold >= 0
-      ? result.threshold
-      : DEFAULT_DONE_THRESHOLD;
-
-  // Same construction the gate's own isDone uses, so the PM plans against
-  // exactly the rows the gate would judge — not a parallel interpretation.
-  const statuses = checklistCoverage({
-    rows,
-    ruleOutcomes: result.rules,
-    optValues: {
-      unitTestsPass: rulePassed(result.rules, 'u-test-presence'),
-      acceptanceTestsPass: rulePassed(result.rules, 'u-test-acceptance'),
-      coveragePct: rulePassed(result.rules, 'u-test-coverage-ratchet')
-    },
-    scoreMet:
-      typeof result.finalScore === 'number' ? result.finalScore >= threshold : undefined,
-    noFailedRules: result.rules.every((r) => r.passed !== false)
-  });
+  const statuses = statusesFromResult(
+    raw,
+    opts.checklistPath ?? DEFAULT_CHECKLIST_PATH
+  );
 
   const { plan, lines } = dryRunAssignments(statuses, ROLES);
   const unowned = findUnownedChecklistRows(
@@ -109,12 +161,154 @@ export function planFromResult(opts: PmCommandOptions): PmCommandResult {
 }
 
 /**
- * Run the pm command and print its plan.
+ * Execute the PM loop against a real app tree (opt-in via --execute).
  *
- * @param opts - Result and checklist locations.
- * @returns Process exit code: 0 planned cleanly, 1 an unmet row has no owner.
+ * @param opts - Command options including execute-time paths and budgets.
+ * @returns Process exit code: 0 finished or clean halt, 1 unowned / failed.
  */
-export function runPmCommand(opts: PmCommandOptions): number {
+async function executePm(opts: PmCommandOptions): Promise<number> {
+  const root = resolve(opts.repoRoot ?? process.cwd());
+  const slug =
+    opts.slug ??
+    basename(opts.resultPath.replace(/\.json$/i, '')) ??
+    'app';
+  const appDir = resolve(opts.appDir ?? join(root, slug));
+  const resultAbs = join(root, opts.resultPath);
+  if (!existsSync(resultAbs)) {
+    console.error(`pm --execute: no such result file: ${opts.resultPath}`);
+    return 2;
+  }
+
+  const raw = JSON.parse(readFileSync(resultAbs, 'utf8')) as {
+    rules?: Array<{ ruleId: string; passed?: boolean }>;
+    finalScore?: number;
+    threshold?: number;
+  };
+  const checklistPath = opts.checklistPath ?? DEFAULT_CHECKLIST_PATH;
+  const threshold =
+    opts.threshold ??
+    (typeof raw.threshold === 'number' && raw.threshold >= 0
+      ? raw.threshold
+      : DEFAULT_DONE_THRESHOLD);
+
+  // Fail closed on unowned rows before spawning anything.
+  const initial = statusesFromResult(raw, checklistPath);
+  const unowned = findUnownedChecklistRows(
+    initial.map((s) => s.id),
+    ROLES
+  );
+  if (unowned.length > 0) {
+    console.error(
+      `pm: ${unowned.length} unmet row(s) have NO owning role: ${unowned.join(', ')}\n` +
+        '    A requirement nobody owns cannot be worked. Give the row an owner in ' +
+        'team/roles.ts (owns[]), or remove the requirement.'
+    );
+    return 1;
+  }
+
+  let lastGate: GateReport | null = null;
+
+  const runtimeCtx = {
+    repoDir: root,
+    appDir,
+    slug
+  };
+
+  const baseDeps: PmDeps = {
+    readStatuses: async () => statusesFromResult(raw, checklistPath, lastGate),
+    runRole: makePmRunRole(runtimeCtx, opts.runtimeDeps ?? {}),
+    gate: async () => {
+      const report = await gateApp(
+        appDir,
+        undefined,
+        opts.judge ?? [],
+        opts.notApplicable ?? []
+      );
+      lastGate = report;
+      const failed = report.outcomes.filter((o) => !o.passed);
+      const feedback =
+        failed.length > 0
+          ? failed.map((o) => `${o.ruleId}: ${o.detail ?? 'failed'}`).join('\n')
+          : 'no rules failed';
+      return {
+        score: report.score,
+        blockers: report.blockersFailed,
+        feedback
+      };
+    },
+    independentJudge: async () => {
+      const review = runIndependentDiffReview({ dir: appDir });
+      return {
+        ok: review.ok,
+        summary: review.ok
+          ? `independent judge ok (${review.mode})`
+          : `independent judge not ok (${review.mode}): ${review.findings?.length ?? 0} finding(s)`
+      };
+    },
+    isDone: async () => {
+      const rules = lastGate
+        ? lastGate.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed }))
+        : (raw.rules ?? []).map((r) => ({
+            ruleId: r.ruleId,
+            passed: r.passed === true
+          }));
+      const finalScore = lastGate?.score ?? raw.finalScore ?? 0;
+      return isDone(
+        { finalScore, threshold, rules },
+        loadProductJudgementOpts(appDir, slug)
+      );
+    },
+    deployAndVerify: opts.deployUrl
+      ? async () => {
+          const localIndex = join(appDir, 'dist', 'index.html');
+          if (!existsSync(localIndex)) {
+            return { ok: false, detail: 'no dist/index.html for deploy verify' };
+          }
+          const html = await readFile(localIndex, 'utf8');
+          const check = await verifyDeploy(opts.deployUrl!, html);
+          return { ok: check.ok, detail: check.reason ?? 'verified' };
+        }
+      : undefined
+  };
+
+  const deps: PmDeps = { ...baseDeps, ...opts.depsOverride };
+  const cfg: PmConfig = {
+    threshold,
+    maxIters: opts.maxIters ?? 5,
+    budgetCeiling: opts.budgetCeiling,
+    stagnationLimit: 2,
+    dryRun: false
+  };
+
+  console.log(
+    `pm --execute: slug=${slug} appDir=${appDir} maxIters=${cfg.maxIters}` +
+      (cfg.budgetCeiling !== undefined ? ` budget=${cfg.budgetCeiling}` : '')
+  );
+
+  const result = await runPm(deps, cfg);
+  console.log(
+    `pm finished: finished=${result.finished} budgetUsed=${result.budgetUsed}` +
+      ` budgetExhausted=${result.budgetExhausted} stopReason=${result.loop.stopReason ?? 'none'}`
+  );
+  if (!result.finished) {
+    for (const r of result.doneReasons.slice(0, 8)) {
+      console.log(`  not-done: ${r}`);
+    }
+  }
+  return result.finished ? 0 : 1;
+}
+
+/**
+ * Run the pm command: dry-run by default, or execute when opts.execute is true.
+ *
+ * @param opts - Result and checklist locations; execute flags.
+ * @returns Process exit code: 0 planned/finished cleanly, 1 error / unfinished.
+ */
+export async function runPmCommand(opts: PmCommandOptions): Promise<number> {
+  if (opts.execute === true) {
+    return executePm(opts);
+  }
+
   const { lines, unowned } = planFromResult(opts);
   for (const line of lines) console.log(line);
   if (unowned.length > 0) {
