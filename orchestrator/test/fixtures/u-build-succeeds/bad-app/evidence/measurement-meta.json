@@ -5,19 +5,19 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-05T04:31:00.642Z",
+        "at": "2026-08-05T04:36:22.079Z",
         "status": 1
       },
       {
         "ok": false,
-        "at": "2026-08-05T04:31:00.643Z",
+        "at": "2026-08-05T04:36:22.080Z",
         "status": 1
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\u-build-succeeds\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T04:31:00.643Z"
+      "recordedAt": "2026-08-05T04:36:22.080Z"
     }
   }
 }
