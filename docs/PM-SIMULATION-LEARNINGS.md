@@ -101,9 +101,53 @@ the litter being cleaned.
 Cleanup on the happy path and the throw path covers the cases you can imagine.
 The sweep covers the ones you cannot.
 
-### Simulation 2
+### Simulation 2 — real agent, one role, with a planted orphan
 
-Not yet run.
+Command: `pm app-builder --execute --max-iters 1 --budget 1`, after deliberately
+planting a fake orphan branch `ra-role-engineer-i9-zzfake` to test the new sweep.
+
+**The sweep works, verified in the real repository rather than a fixture:**
+
+    pm: swept orphan role branch ra-role-engineer-i9-zzfake
+
+and it left all ~20 unrelated worktrees and 28 branches alone. Its target list
+against this repo is empty, and it rejects every near miss -- `ra-role`,
+`ra-role-x`, `role-engineer-i1-abc`, `ra-role-engineer-i1` are all false, while a
+genuine `ra-role-qa-visual-i1-msgo8ea7` is true.
+
+Then the interesting part:
+
+    pm-runtime: content: produced 4 artifact(s) (iteration 1); not promoted:
+      git commit failed: pre-commit: REFUSED
+        - required artifact(s) absent or empty for role content:
+          src/pages/Terms.tsx, src/pages/Privacy.tsx, src/pages/About.tsx, src/pages/Contact.tsx
+
+**BUG 2 (found here) — a role that does nothing is counted as having run.**
+`runRole` decides `countedAsRun = exit 0 AND missingArtifacts is empty`. The
+content role's four declared artifacts already exist in app-builder and were
+committed in `ee9f80a`, long before any role ran. So the check finds them
+present and counts the role as run having changed nothing at all.
+
+The design intent is stated in runRole's own comment: an agent saying "done" is
+not evidence, the artifact is. **An artifact that pre-dates the run is not
+evidence either.** As written the check cannot fail for any role whose declared
+artifacts are already in the repo, which is most of them.
+
+**BUG 3 (found here) — the two artifact checks disagree on their base.**
+`runRole` resolves the declared paths against `ctx.workDir`; the pre-commit hook
+in `worktreeEnforcement` resolves the same paths from the worktree ROOT. One
+looked for `<worktree>/app-builder/src/pages/Terms.tsx`, the other for
+`<worktree>/src/pages/Terms.tsx`. That disagreement is the only reason the hook
+caught what runRole had already approved -- a lucky catch, not a designed one.
+
+**Learning 4 — "the artifact exists" is not "the agent did the work."**
+Presence is necessary and nowhere near sufficient. The verdict has to compare
+against the worktree's base commit: a real diff touching the declared artifacts,
+with a byte-identical rewrite counting as no work.
+
+**Learning 5 — two checks with the same name and different bases will disagree,
+and the disagreement is luck.** Here it happened to catch a defect. It could as
+easily have hidden one.
 
 ### Simulation 3
 
