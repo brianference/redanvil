@@ -45,17 +45,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-05T03:38:32.429Z"
+        "at": "2026-08-05T03:45:53.710Z"
       },
       {
         "ok": false,
-        "at": "2026-08-05T03:38:35.960Z"
+        "at": "2026-08-05T03:45:57.239Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\search-present\\dead-search.html",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:35.960Z"
+      "recordedAt": "2026-08-05T03:45:57.240Z"
     }
   },
   "fe-brand-mark-size": {
@@ -64,13 +64,13 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:36:46.942Z",
+        "at": "2026-08-05T03:44:07.262Z",
         "height1280": 96,
         "height375": 56
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:36:48.061Z",
+        "at": "2026-08-05T03:44:08.420Z",
         "height1280": 96,
         "height375": 56
       }
@@ -83,7 +83,7 @@
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\brand-mark-size\\small.html",
       "failed": true,
-      "recordedAt": "2026-08-05T03:36:48.061Z"
+      "recordedAt": "2026-08-05T03:44:08.420Z"
     }
   },
   "fe-breadcrumbs": {
@@ -92,17 +92,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:36:50.584Z"
+        "at": "2026-08-05T03:44:10.841Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:36:52.021Z"
+        "at": "2026-08-05T03:44:12.322Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\breadcrumbs",
       "failed": true,
-      "recordedAt": "2026-08-05T03:36:52.021Z"
+      "recordedAt": "2026-08-05T03:44:12.322Z"
     }
   },
   "fe-result-in-viewport": {
@@ -111,17 +111,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:37:05.596Z"
+        "at": "2026-08-05T03:44:25.948Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:37:12.962Z"
+        "at": "2026-08-05T03:44:33.299Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\result-in-viewport\\below-fold.html",
       "failed": true,
-      "recordedAt": "2026-08-05T03:37:12.962Z"
+      "recordedAt": "2026-08-05T03:44:33.299Z"
     },
     "notApplicable": false,
     "reason": null
@@ -132,17 +132,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:37:15.581Z"
+        "at": "2026-08-05T03:44:36.171Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:37:16.945Z"
+        "at": "2026-08-05T03:44:37.479Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\resource-links\\bad",
       "failed": true,
-      "recordedAt": "2026-08-05T03:37:16.970Z"
+      "recordedAt": "2026-08-05T03:44:37.506Z"
     }
   },
   "fe-light-dark": {
@@ -151,19 +151,19 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-05T03:38:26.881Z",
+        "at": "2026-08-05T03:45:48.231Z",
         "landmarks": 5
       },
       {
         "ok": false,
-        "at": "2026-08-05T03:38:28.440Z",
+        "at": "2026-08-05T03:45:49.768Z",
         "landmarks": 5
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\theme-paint\\hardcoded-hero.html",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:28.440Z"
+      "recordedAt": "2026-08-05T03:45:49.768Z"
     }
   },
   "u-build-succeeds": {
@@ -172,19 +172,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:37:54.576Z",
+        "at": "2026-08-05T03:45:15.470Z",
         "status": 0
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:37:54.577Z",
+        "at": "2026-08-05T03:45:15.470Z",
         "status": 0
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\u-build-succeeds\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:37:54.577Z"
+      "recordedAt": "2026-08-05T03:45:15.470Z"
     }
   },
   "u-api-not-found": {
@@ -193,17 +193,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:37:59.394Z"
+        "at": "2026-08-05T03:45:20.384Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:37:59.396Z"
+        "at": "2026-08-05T03:45:20.385Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\known-bad-fixtures\\u-api-not-found\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:37:59.396Z"
+      "recordedAt": "2026-08-05T03:45:20.385Z"
     },
     "notApplicable": false,
     "reason": null,
@@ -215,21 +215,21 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:38:04.042Z",
-        "path": "/api/__definitely_absent_2b4eac7574f5b66b",
+        "at": "2026-08-05T03:45:24.968Z",
+        "path": "/api/__definitely_absent_3106a4d4879832ad",
         "status": 404
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:04.043Z",
-        "path": "/api/__definitely_absent_2b4eac7574f5b66b",
+        "at": "2026-08-05T03:45:24.969Z",
+        "path": "/api/__definitely_absent_3106a4d4879832ad",
         "status": 404
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\known-bad-fixtures\\u-api-no-spa-mask\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:04.043Z"
+      "recordedAt": "2026-08-05T03:45:24.969Z"
     }
   },
   "u-legal-claims-true": {
@@ -238,17 +238,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:38:04.165Z"
+        "at": "2026-08-05T03:45:25.104Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:04.166Z"
+        "at": "2026-08-05T03:45:25.104Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\u-legal-claims-true\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:04.166Z"
+      "recordedAt": "2026-08-05T03:45:25.104Z"
     }
   },
   "fe-favicon-legible": {
@@ -257,7 +257,7 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:38:04.881Z",
+        "at": "2026-08-05T03:45:25.852Z",
         "metrics": {
           "inkCoverage": 0.458984375,
           "detailEnergy": 188.8609034439758,
@@ -269,7 +269,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:04.882Z",
+        "at": "2026-08-05T03:45:25.852Z",
         "metrics": {
           "inkCoverage": 0.458984375,
           "detailEnergy": 188.8609034439758,
@@ -281,7 +281,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:05.275Z",
+        "at": "2026-08-05T03:45:26.257Z",
         "metrics": {
           "inkCoverage": 0.375,
           "detailEnergy": 188.80813895337675,
@@ -293,7 +293,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:05.275Z",
+        "at": "2026-08-05T03:45:26.257Z",
         "metrics": {
           "inkCoverage": 0.375,
           "detailEnergy": 188.80813895337675,
@@ -305,7 +305,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:05.660Z",
+        "at": "2026-08-05T03:45:26.642Z",
         "metrics": {
           "inkCoverage": 0.3701171875,
           "detailEnergy": 160.98443392176873,
@@ -317,7 +317,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:05.660Z",
+        "at": "2026-08-05T03:45:26.642Z",
         "metrics": {
           "inkCoverage": 0.3701171875,
           "detailEnergy": 160.98443392176873,
@@ -332,7 +332,7 @@
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\fe-favicon-legible\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:05.661Z"
+      "recordedAt": "2026-08-05T03:45:26.643Z"
     }
   },
   "meas-known-bad": {
@@ -341,17 +341,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:38:56.421Z"
+        "at": "2026-08-05T03:46:17.803Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:56.422Z"
+        "at": "2026-08-05T03:46:17.803Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-known-bad\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:56.422Z"
+      "recordedAt": "2026-08-05T03:46:17.803Z"
     }
   },
   "meas-two-run": {
@@ -360,17 +360,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:38:56.524Z"
+        "at": "2026-08-05T03:46:17.925Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:56.525Z"
+        "at": "2026-08-05T03:46:17.925Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-two-run\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:56.525Z"
+      "recordedAt": "2026-08-05T03:46:17.925Z"
     }
   },
   "meas-recheck-flattering": {
@@ -379,17 +379,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:38:56.643Z"
+        "at": "2026-08-05T03:46:18.027Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:56.644Z"
+        "at": "2026-08-05T03:46:18.028Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-recheck-flattering\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:56.644Z"
+      "recordedAt": "2026-08-05T03:46:18.028Z"
     }
   },
   "meas-standard-tool": {
@@ -398,17 +398,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:38:56.802Z"
+        "at": "2026-08-05T03:46:18.187Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:56.802Z"
+        "at": "2026-08-05T03:46:18.187Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-standard-tool\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:56.802Z"
+      "recordedAt": "2026-08-05T03:46:18.187Z"
     }
   },
   "meas-engine-named": {
@@ -417,17 +417,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:38:56.926Z"
+        "at": "2026-08-05T03:46:18.294Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:38:56.927Z"
+        "at": "2026-08-05T03:46:18.295Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-engine-named\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:38:56.927Z"
+      "recordedAt": "2026-08-05T03:46:18.295Z"
     }
   },
   "fe-legal-substance": {
@@ -436,19 +436,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:37:18.040Z",
+        "at": "2026-08-05T03:44:38.550Z",
         "summary": "terms 1746w/16h2; privacy 1804w/15h2"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:37:18.580Z",
+        "at": "2026-08-05T03:44:39.084Z",
         "summary": "terms 1746w/16h2; privacy 1804w/15h2"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\fe-legal-substance\\bad",
       "failed": true,
-      "recordedAt": "2026-08-05T03:37:18.580Z"
+      "recordedAt": "2026-08-05T03:44:39.084Z"
     }
   },
   "fe-a11y-contrast": {
@@ -457,12 +457,12 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:32:33.514Z",
+        "at": "2026-08-05T03:39:46.071Z",
         "report": "evidence/axe/az-planting-calendar-dark.json"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:32:37.475Z",
+        "at": "2026-08-05T03:39:49.873Z",
         "report": "evidence/axe/az-planting-calendar-light.json"
       }
     ],
@@ -478,19 +478,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:37:19.328Z",
+        "at": "2026-08-05T03:44:39.775Z",
         "type": "WebApplication"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:37:19.329Z",
+        "at": "2026-08-05T03:44:39.776Z",
         "type": "WebApplication"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\structured-data\\bad.html",
       "failed": true,
-      "recordedAt": "2026-08-05T03:37:19.329Z"
+      "recordedAt": "2026-08-05T03:44:39.776Z"
     }
   },
   "proc-design-options": {
@@ -499,17 +499,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:37:19.456Z"
+        "at": "2026-08-05T03:44:39.891Z"
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:37:19.457Z"
+        "at": "2026-08-05T03:44:39.892Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\proc-design-options\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:37:19.457Z"
+      "recordedAt": "2026-08-05T03:44:39.892Z"
     }
   },
   "lg-result-reproduces": {
@@ -518,13 +518,13 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:39:10.236Z",
+        "at": "2026-08-05T03:45:29.178Z",
         "recomputed": 0,
         "recorded": 0
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:39:10.237Z",
+        "at": "2026-08-05T03:45:29.179Z",
         "recomputed": 0,
         "recorded": 0
       }
@@ -532,7 +532,7 @@
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\lg-result-reproduces",
       "failed": true,
-      "recordedAt": "2026-08-05T03:39:11.501Z"
+      "recordedAt": "2026-08-05T03:45:30.458Z"
     }
   },
   "lg-bindings-bound": {
@@ -541,14 +541,14 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:37:44.925Z",
+        "at": "2026-08-05T03:45:05.837Z",
         "base": "https://az-planting-calendar.pages.dev"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\lg-bindings-bound\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:37:44.926Z"
+      "recordedAt": "2026-08-05T03:45:05.838Z"
     },
     "notApplicable": false,
     "reason": null
@@ -559,17 +559,17 @@
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\u-api-real-output\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:37:33.440Z"
+      "recordedAt": "2026-08-05T03:44:54.166Z"
     },
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-05T03:37:33.439Z",
+        "at": "2026-08-05T03:44:54.165Z",
         "routes": 9
       },
       {
         "ok": true,
-        "at": "2026-08-05T03:37:33.440Z",
+        "at": "2026-08-05T03:44:54.166Z",
         "routes": 9
       }
     ]
