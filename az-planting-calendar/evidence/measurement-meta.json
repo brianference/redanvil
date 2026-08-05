@@ -44,18 +44,18 @@
     "engine": "chromium",
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-04T07:35:48.491Z"
+        "ok": true,
+        "at": "2026-08-05T02:59:08.386Z"
       },
       {
-        "ok": false,
-        "at": "2026-08-04T07:35:52.014Z"
+        "ok": true,
+        "at": "2026-08-05T02:59:12.199Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\search-present\\dead-search.html",
       "failed": true,
-      "recordedAt": "2026-08-04T07:35:52.014Z"
+      "recordedAt": "2026-08-05T02:59:12.199Z"
     }
   },
   "fe-brand-mark-size": {
@@ -111,17 +111,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-04T16:08:08.775Z"
+        "at": "2026-08-05T02:59:25.513Z"
       },
       {
         "ok": true,
-        "at": "2026-08-04T16:08:17.440Z"
+        "at": "2026-08-05T02:59:32.834Z"
       }
     ],
     "knownBad": {
-      "input": "C:\\Users\\brian\\RedAnvil-fix-prov\\orchestrator\\test\\fixtures\\result-in-viewport\\below-fold.html",
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\result-in-viewport\\below-fold.html",
       "failed": true,
-      "recordedAt": "2026-08-04T16:08:17.440Z"
+      "recordedAt": "2026-08-05T02:59:32.834Z"
     },
     "notApplicable": false,
     "reason": null
@@ -150,20 +150,20 @@
     "engine": "chromium",
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-04T07:35:43.020Z",
-        "landmarks": 5
+        "ok": true,
+        "at": "2026-08-05T02:58:58.286Z",
+        "landmarks": 9
       },
       {
-        "ok": false,
-        "at": "2026-08-04T07:35:44.558Z",
-        "landmarks": 5
+        "ok": true,
+        "at": "2026-08-05T02:58:59.974Z",
+        "landmarks": 9
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\theme-paint\\hardcoded-hero.html",
       "failed": true,
-      "recordedAt": "2026-08-04T07:35:44.558Z"
+      "recordedAt": "2026-08-05T02:58:59.974Z"
     }
   },
   "u-build-succeeds": {
