@@ -75,6 +75,21 @@ export {
 } from './pmRuntime';
 
 export {
+  isRoleBranch,
+  ROLE_BRANCH_PATTERN,
+  trackLiveRoleWorktree,
+  untrackLiveRoleWorktree,
+  listLiveRoleWorktrees,
+  cleanupLiveRoleWorktrees,
+  handlePmTerminationSignal,
+  installPmSignalCleanup,
+  sweepStaleRoleWorktrees,
+  parseWorktreePorcelain,
+  type LiveRoleWorktree,
+  type SweepRoleWorktreesResult
+} from './roleWorktreeLifecycle';
+
+export {
   runRole,
   buildRoleBrief,
   scrubEnv,

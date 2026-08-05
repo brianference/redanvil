@@ -25,6 +25,11 @@ import { dryRunAssignments, runPm, type PmDeps, type PmConfig } from '../team/pm
 import { findUnownedChecklistRows } from '../team/assign';
 import { ROLES } from '../team/roles';
 import { makePmRunRole, type PmRuntimeDeps } from '../team/pmRuntime';
+import {
+  installPmSignalCleanup,
+  sweepStaleRoleWorktrees,
+  type GitRunner
+} from '../team/roleWorktreeLifecycle';
 import { gateApp, type GateReport } from './gate';
 import type { Outcome } from '../gate/score';
 import { runIndependentDiffReview } from '../loop/independentReview';
@@ -46,6 +51,12 @@ export interface PmCommandOptions {
    * Opt-in so a planning check never accidentally spawns agents.
    */
   execute?: boolean;
+  /**
+   * When true, remove stale role worktrees/branches matching the pmRuntime
+   * naming convention, then exit (unless --execute is also set). Also runs
+   * automatically at the start of execute mode.
+   */
+  clean?: boolean;
   /** App slug (also used as app dir under repo root when appDir omitted). */
   slug?: string;
   /** App directory for execute mode. Defaults to `<repoRoot>/<slug>`. */
@@ -70,6 +81,10 @@ export interface PmCommandOptions {
    * Override PmDeps pieces in tests without re-implementing the command.
    */
   depsOverride?: Partial<PmDeps>;
+  /**
+   * Injected git runner for sweep / signal cleanup in tests.
+   */
+  sweepRun?: GitRunner;
 }
 
 /** Outcome of a planning run. */
@@ -161,7 +176,26 @@ export function planFromResult(opts: PmCommandOptions): PmCommandResult {
 }
 
 /**
+ * Sweep stale role worktrees for a repo (shared by --clean and execute startup).
+ *
+ * @param repoDir - Main tree.
+ * @param opts - Optional injected runner.
+ * @returns Sweep summary.
+ */
+async function runRoleWorktreeSweep(
+  repoDir: string,
+  opts: PmCommandOptions
+): Promise<void> {
+  await sweepStaleRoleWorktrees(repoDir, {
+    run: opts.sweepRun
+  });
+}
+
+/**
  * Execute the PM loop against a real app tree (opt-in via --execute).
+ *
+ * Sweeps stale role worktrees first so a previous crash cannot leave the next
+ * run tripping over litter, then installs SIGINT/SIGTERM cleanup for live ones.
  *
  * @param opts - Command options including execute-time paths and budgets.
  * @returns Process exit code: 0 finished or clean halt, 1 unowned / failed.
@@ -179,132 +213,150 @@ async function executePm(opts: PmCommandOptions): Promise<number> {
     return 2;
   }
 
-  const raw = JSON.parse(readFileSync(resultAbs, 'utf8')) as {
-    rules?: Array<{ ruleId: string; passed?: boolean }>;
-    finalScore?: number;
-    threshold?: number;
-  };
-  const checklistPath = opts.checklistPath ?? DEFAULT_CHECKLIST_PATH;
-  const threshold =
-    opts.threshold ??
-    (typeof raw.threshold === 'number' && raw.threshold >= 0
-      ? raw.threshold
-      : DEFAULT_DONE_THRESHOLD);
+  // Before any role is dispatched: clear orphans from a prior killed process.
+  await runRoleWorktreeSweep(root, opts);
 
-  // Fail closed on unowned rows before spawning anything.
-  const initial = statusesFromResult(raw, checklistPath);
-  const unowned = findUnownedChecklistRows(
-    initial.map((s) => s.id),
-    ROLES
-  );
-  if (unowned.length > 0) {
-    console.error(
-      `pm: ${unowned.length} unmet row(s) have NO owning role: ${unowned.join(', ')}\n` +
-        '    A requirement nobody owns cannot be worked. Give the row an owner in ' +
-        'team/roles.ts (owns[]), or remove the requirement.'
+  const uninstallSignals = installPmSignalCleanup({
+    run: opts.sweepRun ?? opts.runtimeDeps?.run
+  });
+
+  try {
+    const raw = JSON.parse(readFileSync(resultAbs, 'utf8')) as {
+      rules?: Array<{ ruleId: string; passed?: boolean }>;
+      finalScore?: number;
+      threshold?: number;
+    };
+    const checklistPath = opts.checklistPath ?? DEFAULT_CHECKLIST_PATH;
+    const threshold =
+      opts.threshold ??
+      (typeof raw.threshold === 'number' && raw.threshold >= 0
+        ? raw.threshold
+        : DEFAULT_DONE_THRESHOLD);
+
+    // Fail closed on unowned rows before spawning anything.
+    const initial = statusesFromResult(raw, checklistPath);
+    const unowned = findUnownedChecklistRows(
+      initial.map((s) => s.id),
+      ROLES
     );
-    return 1;
-  }
-
-  let lastGate: GateReport | null = null;
-
-  const runtimeCtx = {
-    repoDir: root,
-    appDir,
-    slug
-  };
-
-  const baseDeps: PmDeps = {
-    readStatuses: async () => statusesFromResult(raw, checklistPath, lastGate),
-    runRole: makePmRunRole(runtimeCtx, opts.runtimeDeps ?? {}),
-    gate: async () => {
-      const report = await gateApp(
-        appDir,
-        undefined,
-        opts.judge ?? [],
-        opts.notApplicable ?? []
+    if (unowned.length > 0) {
+      console.error(
+        `pm: ${unowned.length} unmet row(s) have NO owning role: ${unowned.join(', ')}\n` +
+          '    A requirement nobody owns cannot be worked. Give the row an owner in ' +
+          'team/roles.ts (owns[]), or remove the requirement.'
       );
-      lastGate = report;
-      const failed = report.outcomes.filter((o) => !o.passed);
-      const feedback =
-        failed.length > 0
-          ? failed.map((o) => `${o.ruleId}: ${o.detail ?? 'failed'}`).join('\n')
-          : 'no rules failed';
-      return {
-        score: report.score,
-        blockers: report.blockersFailed,
-        feedback
-      };
-    },
-    independentJudge: async () => {
-      const review = runIndependentDiffReview({ dir: appDir });
-      return {
-        ok: review.ok,
-        summary: review.ok
-          ? `independent judge ok (${review.mode})`
-          : `independent judge not ok (${review.mode}): ${review.findings?.length ?? 0} finding(s)`
-      };
-    },
-    isDone: async () => {
-      const rules = lastGate
-        ? lastGate.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed }))
-        : (raw.rules ?? []).map((r) => ({
-            ruleId: r.ruleId,
-            passed: r.passed === true
-          }));
-      const finalScore = lastGate?.score ?? raw.finalScore ?? 0;
-      return isDone(
-        { finalScore, threshold, rules },
-        loadProductJudgementOpts(appDir, slug)
-      );
-    },
-    deployAndVerify: opts.deployUrl
-      ? async () => {
-          const localIndex = join(appDir, 'dist', 'index.html');
-          if (!existsSync(localIndex)) {
-            return { ok: false, detail: 'no dist/index.html for deploy verify' };
-          }
-          const html = await readFile(localIndex, 'utf8');
-          const check = await verifyDeploy(opts.deployUrl!, html);
-          return { ok: check.ok, detail: check.reason ?? 'verified' };
-        }
-      : undefined
-  };
-
-  const deps: PmDeps = { ...baseDeps, ...opts.depsOverride };
-  const cfg: PmConfig = {
-    threshold,
-    maxIters: opts.maxIters ?? 5,
-    budgetCeiling: opts.budgetCeiling,
-    stagnationLimit: 2,
-    dryRun: false
-  };
-
-  console.log(
-    `pm --execute: slug=${slug} appDir=${appDir} maxIters=${cfg.maxIters}` +
-      (cfg.budgetCeiling !== undefined ? ` budget=${cfg.budgetCeiling}` : '')
-  );
-
-  const result = await runPm(deps, cfg);
-  console.log(
-    `pm finished: finished=${result.finished} budgetUsed=${result.budgetUsed}` +
-      ` budgetExhausted=${result.budgetExhausted} stopReason=${result.loop.stopReason ?? 'none'}`
-  );
-  if (!result.finished) {
-    for (const r of result.doneReasons.slice(0, 8)) {
-      console.log(`  not-done: ${r}`);
+      return 1;
     }
+
+    let lastGate: GateReport | null = null;
+
+    const runtimeCtx = {
+      repoDir: root,
+      appDir,
+      slug
+    };
+
+    const baseDeps: PmDeps = {
+      readStatuses: async () => statusesFromResult(raw, checklistPath, lastGate),
+      runRole: makePmRunRole(runtimeCtx, opts.runtimeDeps ?? {}),
+      gate: async () => {
+        const report = await gateApp(
+          appDir,
+          undefined,
+          opts.judge ?? [],
+          opts.notApplicable ?? []
+        );
+        lastGate = report;
+        const failed = report.outcomes.filter((o) => !o.passed);
+        const feedback =
+          failed.length > 0
+            ? failed.map((o) => `${o.ruleId}: ${o.detail ?? 'failed'}`).join('\n')
+            : 'no rules failed';
+        return {
+          score: report.score,
+          blockers: report.blockersFailed,
+          feedback
+        };
+      },
+      independentJudge: async () => {
+        const review = runIndependentDiffReview({ dir: appDir });
+        return {
+          ok: review.ok,
+          summary: review.ok
+            ? `independent judge ok (${review.mode})`
+            : `independent judge not ok (${review.mode}): ${review.findings?.length ?? 0} finding(s)`
+        };
+      },
+      isDone: async () => {
+        const rules = lastGate
+          ? lastGate.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed }))
+          : (raw.rules ?? []).map((r) => ({
+              ruleId: r.ruleId,
+              passed: r.passed === true
+            }));
+        const finalScore = lastGate?.score ?? raw.finalScore ?? 0;
+        return isDone(
+          { finalScore, threshold, rules },
+          loadProductJudgementOpts(appDir, slug)
+        );
+      },
+      deployAndVerify: opts.deployUrl
+        ? async () => {
+            const localIndex = join(appDir, 'dist', 'index.html');
+            if (!existsSync(localIndex)) {
+              return { ok: false, detail: 'no dist/index.html for deploy verify' };
+            }
+            const html = await readFile(localIndex, 'utf8');
+            const check = await verifyDeploy(opts.deployUrl!, html);
+            return { ok: check.ok, detail: check.reason ?? 'verified' };
+          }
+        : undefined
+    };
+
+    const deps: PmDeps = { ...baseDeps, ...opts.depsOverride };
+    const cfg: PmConfig = {
+      threshold,
+      maxIters: opts.maxIters ?? 5,
+      budgetCeiling: opts.budgetCeiling,
+      stagnationLimit: 2,
+      dryRun: false
+    };
+
+    console.log(
+      `pm --execute: slug=${slug} appDir=${appDir} maxIters=${cfg.maxIters}` +
+        (cfg.budgetCeiling !== undefined ? ` budget=${cfg.budgetCeiling}` : '')
+    );
+
+    const result = await runPm(deps, cfg);
+    console.log(
+      `pm finished: finished=${result.finished} budgetUsed=${result.budgetUsed}` +
+        ` budgetExhausted=${result.budgetExhausted} stopReason=${result.loop.stopReason ?? 'none'}`
+    );
+    if (!result.finished) {
+      for (const r of result.doneReasons.slice(0, 8)) {
+        console.log(`  not-done: ${r}`);
+      }
+    }
+    return result.finished ? 0 : 1;
+  } finally {
+    uninstallSignals();
   }
-  return result.finished ? 0 : 1;
 }
 
 /**
- * Run the pm command: dry-run by default, or execute when opts.execute is true.
+ * Run the pm command: dry-run by default, --clean to sweep orphans, or
+ * --execute for the real loop (which always sweeps first).
  *
  * @param opts - Result and checklist locations; execute flags.
  * @returns Process exit code: 0 planned/finished cleanly, 1 error / unfinished.
  */
 export async function runPmCommand(opts: PmCommandOptions): Promise<number> {
+  if (opts.clean === true && opts.execute !== true) {
+    const root = resolve(opts.repoRoot ?? process.cwd());
+    await runRoleWorktreeSweep(root, opts);
+    return 0;
+  }
+
   if (opts.execute === true) {
     return executePm(opts);
   }

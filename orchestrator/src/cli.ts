@@ -183,7 +183,8 @@ const KNOWN_FLAGS = new Set([
   'claims',
   'result',
   'execute',
-  'budget'
+  'budget',
+  'clean'
 ]);
 
 async function main(): Promise<number> {
@@ -209,7 +210,8 @@ async function main(): Promise<number> {
       'min-coverage': { type: 'string' },
       claims: { type: 'string' },
       execute: { type: 'boolean' },
-      budget: { type: 'string' }
+      budget: { type: 'string' },
+      clean: { type: 'boolean' }
     }
   });
 
@@ -261,7 +263,7 @@ async function main(): Promise<number> {
     const slug = positionals[1];
     if (!slug) {
       console.error(
-        'usage: redanvil pm <slug> [--result results/<slug>.json] [--execute] [--max-iters N] [--budget N]'
+        'usage: redanvil pm <slug> [--result results/<slug>.json] [--execute] [--clean] [--max-iters N] [--budget N]'
       );
       return 2;
     }
@@ -271,7 +273,7 @@ async function main(): Promise<number> {
         : `results/${slug}.json`;
     if (!resultPath) {
       console.error(
-        'usage: redanvil pm <slug> [--result results/<slug>.json] [--execute] [--max-iters N] [--budget N]'
+        'usage: redanvil pm <slug> [--result results/<slug>.json] [--execute] [--clean] [--max-iters N] [--budget N]'
       );
       return 2;
     }
@@ -284,6 +286,7 @@ async function main(): Promise<number> {
         resultPath,
         slug,
         execute: values.execute === true,
+        clean: values.clean === true,
         maxIters: Number.isFinite(maxIters) ? maxIters : undefined,
         budgetCeiling: Number.isFinite(budgetCeiling) ? budgetCeiling : undefined,
         threshold:

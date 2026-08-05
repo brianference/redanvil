@@ -28,6 +28,10 @@ import {
 } from './runRole';
 import type { RoleAssignment } from './assign';
 import type { RoleId } from './roles';
+import {
+  trackLiveRoleWorktree,
+  untrackLiveRoleWorktree
+} from './roleWorktreeLifecycle';
 
 /** Git / shell runner shape (matches process/run). */
 export type GitRunner = (
@@ -231,6 +235,12 @@ export async function runAssignment(
   const parent = deps.worktreeParent ?? tmpdir();
   const worktreeRoot = join(parent, `redanvil-role-${role.id}-${Date.now().toString(36)}`);
   await addWorktree(ctx.repoDir, branch, worktreeRoot, run);
+  // Register before any await that can race with SIGTERM so signal cleanup sees it.
+  trackLiveRoleWorktree({
+    repoDir: ctx.repoDir,
+    worktreeDir: worktreeRoot,
+    branch
+  });
 
   const workDir = appDirInWorktree(ctx, worktreeRoot);
   if (!existsSync(workDir)) {
@@ -297,19 +307,27 @@ export async function runAssignment(
     }
   } catch (err) {
     // Clean up the worktree even when runRole throws (e.g. enforcement).
-    await safeRemoveWorktree(
-      { repoDir: ctx.repoDir, worktreeDir: worktreeRoot, branch },
-      run
-    );
+    try {
+      await safeRemoveWorktree(
+        { repoDir: ctx.repoDir, worktreeDir: worktreeRoot, branch },
+        run
+      );
+    } finally {
+      untrackLiveRoleWorktree(worktreeRoot);
+    }
     throw err;
   }
 
   // Always discard the disposable worktree. Promotion already merged the commit
   // when green; the throwaway branch must not linger either way.
-  await safeRemoveWorktree(
-    { repoDir: ctx.repoDir, worktreeDir: worktreeRoot, branch },
-    run
-  );
+  try {
+    await safeRemoveWorktree(
+      { repoDir: ctx.repoDir, worktreeDir: worktreeRoot, branch },
+      run
+    );
+  } finally {
+    untrackLiveRoleWorktree(worktreeRoot);
+  }
 
   return {
     role: role.id,
