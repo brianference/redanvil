@@ -42,7 +42,14 @@ export const BROWSER_DRIVEN_RULES = Object.freeze([
   'fe-breadcrumbs',
   'fe-brand-mark-size',
   'fe-result-in-viewport',
-  'fe-resource-links'
+  'fe-resource-links',
+  // Its own recorded metadata says tool "playwright", engine "chromium", so it
+  // is browser-driven and meas-two-run must police it. While it was missing
+  // here its two runs were byte-identical to the millisecond -- the exact
+  // one-measurement-written-twice fingerprint runsAreDuplicate exists to catch
+  // -- and nothing evaluated it. Rubric row D8 is bound to this rule, so a row
+  // required to be measured twice was measured once and recorded twice.
+  'fe-legal-substance'
 ]);
 
 /**

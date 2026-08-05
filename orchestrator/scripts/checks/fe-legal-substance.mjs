@@ -514,14 +514,20 @@ export async function measureRenderedLegalPage(page, base, kind) {
  * @param {boolean} ok
  * @param {string} summary
  */
-function recordProvenance(appDir, ok, summary) {
+function recordProvenance(appDir, ok, summary, runAts) {
   if (!appDir) return;
+  // The two runs are the two REAL page measurements (terms, then privacy), each
+  // timestamped when it happened. This previously called nowIso() twice at write
+  // time, which on a fast machine produced byte-identical entries -- one
+  // measurement written down twice, which is manufactured evidence. meas-two-run
+  // never caught it because this rule was missing from BROWSER_DRIVEN_RULES.
+  const [termsAt, privacyAt] = runAts;
   writeMeasurementMetaEntry(appDir, 'fe-legal-substance', {
     tool: 'playwright',
     engine: 'chromium',
     runs: [
-      { ok, at: nowIso(), summary },
-      { ok, at: nowIso(), summary }
+      { ok, at: termsAt, summary },
+      { ok, at: privacyAt, summary }
     ],
     knownBad: {
       input: KNOWN_BAD_FIXTURE,
@@ -550,15 +556,24 @@ export async function runLegalSubstance(appDir, io, opts = {}) {
     if (!existsSync(opts.fixtureDir)) {
       io.fail(`fixture dir not found: ${opts.fixtureDir}`);
     }
-    const pages = loadFixtureDir(opts.fixtureDir);
-    const result = evaluateLegalSubstance(pages);
+    // Two REAL evaluations, each reloading the fixture from disk and timestamped
+    // when it ran. This used to evaluate once and write the result twice with
+    // two nowIso() calls at write time, which is one measurement recorded twice
+    // -- manufactured evidence, and byte-identical on a fast machine.
+    const firstPages = loadFixtureDir(opts.fixtureDir);
+    const first = evaluateLegalSubstance(firstPages);
+    const firstAt = nowIso();
+    const secondPages = loadFixtureDir(opts.fixtureDir);
+    const second = evaluateLegalSubstance(secondPages);
+    const secondAt = nowIso();
+    const result = second;
     if (appDir) {
       writeMeasurementMetaEntry(appDir, 'fe-legal-substance', {
         tool: 'html-fixture',
         engine: null,
         runs: [
-          { ok: result.ok, at: nowIso(), summary: result.summary },
-          { ok: result.ok, at: nowIso(), summary: result.summary }
+          { ok: first.ok, at: firstAt, summary: first.summary },
+          { ok: second.ok, at: secondAt, summary: second.summary }
         ],
         knownBad: {
           input: KNOWN_BAD_FIXTURE,
@@ -611,7 +626,9 @@ export async function runLegalSubstance(appDir, io, opts = {}) {
     try {
       const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
       const t = await measureRenderedLegalPage(page, base, 'terms');
+      const termsAt = nowIso();
       const p = await measureRenderedLegalPage(page, base, 'privacy');
+      const privacyAt = nowIso();
       const failures = [...t.failures, ...p.failures];
       // Empty shell (SPA never hydrated) — treat as missing pages.
       if (t.words === 0 && t.h2 === 0 && p.words === 0 && p.h2 === 0) {
@@ -621,7 +638,7 @@ export async function runLegalSubstance(appDir, io, opts = {}) {
       }
       const ok = failures.length === 0;
       const summary = `terms ${t.words}w/${t.h2}h2; privacy ${p.words}w/${p.h2}h2`;
-      recordProvenance(appDir, ok, summary);
+      recordProvenance(appDir, ok, summary, [termsAt, privacyAt]);
       if (!ok) {
         io.fail(failures.join('\n') + `\n(rendered measurement: ${summary})`);
       }

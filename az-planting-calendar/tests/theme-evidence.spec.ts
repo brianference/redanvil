@@ -128,9 +128,18 @@ async function samplePaintedSurface(
     if (!ctx) {
       throw new Error('2d canvas context unavailable');
     }
-    // Sentinel so a failed fillStyle assignment is detectable (engine keeps prior style).
-    ctx.fillStyle = 'rgb(1, 2, 3)';
+    // Sentinel so a failed fillStyle assignment is detectable: per the Canvas 2D
+    // spec an unparseable value is SILENTLY IGNORED and the previous style is
+    // kept. Setting the sentinel is not enough -- it has to be read back. Without
+    // this check a colour the canvas cannot parse left rgb(1,2,3) in place and
+    // was reported as a real measurement (luma 1.87 => dark:true), which is
+    // 'could not measure' reading as 'measured fine'.
+    const SENTINEL = 'rgb(1, 2, 3)';
+    ctx.fillStyle = SENTINEL;
     ctx.fillStyle = css;
+    if (ctx.fillStyle === SENTINEL && css.replace(/\s+/g, '') !== 'rgb(1,2,3)') {
+      throw new Error(`canvas could not parse computed colour ${JSON.stringify(css)}`);
+    }
     ctx.fillRect(0, 0, 1, 1);
     const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
     // Luma on engine-resolved sRGB bytes (not a regex over the CSS string).

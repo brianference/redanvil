@@ -397,18 +397,18 @@
     "engine": null,
     "runs": [
       {
-        "ok": true,
-        "at": "2026-08-05T02:47:38.055Z"
+        "ok": false,
+        "at": "2026-08-05T02:51:20.121Z"
       },
       {
-        "ok": true,
-        "at": "2026-08-05T02:47:38.056Z"
+        "ok": false,
+        "at": "2026-08-05T02:51:20.122Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-two-run\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T02:47:38.056Z"
+      "recordedAt": "2026-08-05T02:51:20.122Z"
     }
   },
   "meas-recheck-flattering": {
