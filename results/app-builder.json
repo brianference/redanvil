@@ -4,8 +4,8 @@
   "finalScore": 0,
   "threshold": 90,
   "passed": false,
-  "evaluated": 81,
-  "total": 81,
+  "evaluated": 82,
+  "total": 82,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -213,6 +213,10 @@
     },
     {
       "ruleId": "lg-shipped",
+      "passed": false
+    },
+    {
+      "ruleId": "lg-push-cadence",
       "passed": true
     },
     {
@@ -245,7 +249,7 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-known-bad",
@@ -380,17 +384,19 @@
         "fe-touch-targets",
         "fe-type-floor",
         "hyg-no-binaries",
-        "hyg-no-duplication"
+        "hyg-no-duplication",
+        "lg-shipped",
+        "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-04T08:58:47.819Z",
+  "finishedAt": "2026-08-05T02:47:38.484Z",
   "provenance": {
-    "commit": "f4224d921292d59c93d7a18acacf940e5f241cbf",
+    "commit": "3d3fd69e0edb0d004171bd740b7b0660721d99d7",
     "dirty": false,
-    "rubricHash": "801caf50aa1e5d8fec3e37bfa872536931a555d329246b4a900f9a860896b023",
-    "rubricRuleCount": 94,
+    "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
+    "rubricRuleCount": 95,
     "node": "v22.19.0",
     "verdictsHash": "2c22b3192f3bdcfb52bbfffe56f1e87fef2ce57e64653b36bfeee8295e7ec8cf",
     "notApplicable": [
@@ -402,6 +408,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-04T08:58:47.901Z"
+    "generatedAt": "2026-08-05T02:47:38.580Z"
   }
 }
