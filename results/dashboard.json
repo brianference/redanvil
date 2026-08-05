@@ -1,9 +1,9 @@
 {
   "kind": "results",
   "slug": "dashboard",
-  "finalScore": 0,
+  "finalScore": 100,
   "threshold": 90,
-  "passed": false,
+  "passed": true,
   "evaluated": 83,
   "total": 83,
   "rules": [
@@ -217,7 +217,7 @@
     },
     {
       "ruleId": "lg-shipped",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "lg-push-cadence",
@@ -375,16 +375,14 @@
   "iterations": [
     {
       "index": 1,
-      "score": 0,
-      "blockers": [
-        "lg-shipped"
-      ]
+      "score": 100,
+      "blockers": []
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-05T03:15:28.251Z",
+  "finishedAt": "2026-08-05T03:25:15.985Z",
   "provenance": {
-    "commit": "31899c262b7c1976472ad487563a67b1ab74e4de",
+    "commit": "d8c1d5ec10a30407d2ddaf6615d057bf8da50810",
     "dirty": false,
     "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
     "rubricRuleCount": 95,
@@ -398,6 +396,6 @@
       "u-plat-migrations"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-05T03:15:28.333Z"
+    "generatedAt": "2026-08-05T03:25:16.065Z"
   }
 }

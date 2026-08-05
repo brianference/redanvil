@@ -19,17 +19,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-05T03:19:14.935Z"
+        "at": "2026-08-05T03:24:43.713Z"
       },
       {
         "ok": false,
-        "at": "2026-08-05T03:19:14.936Z"
+        "at": "2026-08-05T03:24:43.714Z"
       }
     ],
     "knownBad": {
       "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\meas-engine-named\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-05T03:19:14.936Z"
+      "recordedAt": "2026-08-05T03:24:43.714Z"
     }
   }
 }
