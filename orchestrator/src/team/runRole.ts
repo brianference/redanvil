@@ -9,9 +9,11 @@
  *
  * THE ONE RULE THIS FILE ENFORCES, from `roles.ts`'s own docstring: a role that
  * returns without its artifacts counts as NOT RUN. The agent's exit code and its
- * summary are both claims. Files on disk are the evidence. `countedAsRun` is
- * decided by `missingArtifacts`, never by what the CLI said about itself — that
- * distinction is the whole reason the artifact contract exists.
+ * summary are both claims. Files on disk are the evidence — and an artifact that
+ * pre-dates the run is not evidence either. `countedAsRun` requires exit 0,
+ * every declared artifact present and non-empty, AND a real content change to
+ * each declared artifact versus the pre-run snapshot (create or meaningful
+ * edit; byte-identical rewrites do not count).
  *
  * The grok invocation mirrors `independent_judge.mjs`, including two hard-won
  * details: the brief goes in a FILE because passing it as an argument exceeded
@@ -24,7 +26,12 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { expandArtifacts, type Role, type RoleId } from './roles';
-import { missingArtifacts } from './worktreeEnforcement';
+import {
+  missingArtifacts,
+  resolveRoleArtifacts,
+  snapshotArtifacts,
+  unchangedArtifacts
+} from './worktreeEnforcement';
 import { observeIsolation } from '../loop/runRules';
 
 /**
@@ -83,12 +90,24 @@ export interface RunRoleAssignment {
 
 /** Where and how the role runs. */
 export interface RunRoleContext {
-  /** Directory the agent works in: a worktree, or the app dir for read-only roles. */
+  /** Directory the agent works in: a worktree app dir, or the app dir for read-only roles. */
   workDir: string;
   /** App slug, used to expand `<slug>` in artifact templates. */
   slug: string;
   /** Wall-clock ceiling for one role. */
   timeoutSec?: number;
+  /**
+   * Directory that declared artifact paths are relative to.
+   * Must match the pre-commit hook base (git work-tree root / worktree root).
+   * Defaults to `workDir` when the app is the repo root.
+   */
+  artifactRoot?: string;
+  /**
+   * Prefix for app-scoped registry paths when the app is a monorepo subdirectory
+   * (e.g. `app-builder`). Same value written into assignment.json so hooks and
+   * runRole resolve identical paths.
+   */
+  artifactPathPrefix?: string;
 }
 
 /** Injectable side effects, so tests never shell out to a real agent. */
@@ -113,14 +132,27 @@ export interface RunRoleResult {
   /** Declared artifacts that are absent or empty after the run. */
   missing: string[];
   /**
-   * True ONLY when the process succeeded AND every declared artifact exists.
-   * A role that returns without its artifacts counts as not run.
+   * Declared artifacts present after the run but byte-identical to the pre-run
+   * snapshot (pre-existing files the role never changed, or no-op rewrites).
+   */
+  unchanged: string[];
+  /**
+   * True ONLY when the process succeeded, every declared artifact exists and is
+   * non-empty, AND every declared artifact differs in content from the pre-run
+   * snapshot. Presence without change is not a run.
    */
   countedAsRun: boolean;
   /** Human-readable why. */
   reason: string;
   /** Trailing agent output, for diagnosis. Never used to decide the outcome. */
   output: string;
+  /**
+   * Artifact root used for presence/change checks (same base as the hook when
+   * wired by pmRuntime).
+   */
+  artifactRoot: string;
+  /** Repo-/worktree-relative artifact paths used for the checks. */
+  artifacts: string[];
 }
 
 /** Default ceiling for one role. */
@@ -137,6 +169,7 @@ export const DEFAULT_ROLE_TIMEOUT_SEC = 900;
  * @returns Markdown brief.
  */
 export function buildRoleBrief(assignment: RunRoleAssignment, slug: string): string {
+  // Brief paths stay agent-cwd-relative (workDir), not worktree-root-relative.
   const artifacts = expandArtifacts(assignment.role.artifacts, slug);
   const rows = assignment.rows
     .map((r) => `- ${r.id} (${r.status})${r.detail ? ` — ${r.detail}` : ''}`)
@@ -156,9 +189,10 @@ export function buildRoleBrief(assignment: RunRoleAssignment, slug: string): str
     ...artifacts.map((a) => `- ${a}`),
     '',
     'A summary is not a deliverable. This run is judged ONLY by whether the',
-    'files above exist and are non-empty when you exit. If you cannot produce',
-    'one, say so plainly and leave it absent — do not write a placeholder, and',
-    'do not claim completion you cannot evidence.',
+    'files above exist, are non-empty, AND differ from what was already on disk',
+    'when you started (create or meaningfully edit; a no-op rewrite does not',
+    'count). If you cannot produce one, say so plainly and leave it absent —',
+    'do not write a placeholder, and do not claim completion you cannot evidence.',
     ''
   ].join('\n');
 }
@@ -221,7 +255,16 @@ export async function runRole(
 
   const spawn = deps.spawn ?? defaultSpawn;
   const write = deps.writeBrief ?? ((p: string, b: string) => writeFileSync(p, b));
-  const artifacts = expandArtifacts(assignment.role.artifacts, ctx.slug);
+  // Same expansion + prefix as buildAssignment / pre-commit, against the same root.
+  const artifactRoot = ctx.artifactRoot ?? ctx.workDir;
+  const artifacts = resolveRoleArtifacts(
+    assignment.role.artifacts,
+    ctx.slug,
+    ctx.artifactPathPrefix ?? ''
+  );
+
+  // Pre-run snapshot: presence after exit is not enough if the bytes never moved.
+  const before = snapshotArtifacts(artifactRoot, artifacts);
 
   const briefPath = join(ctx.workDir, 'ROLE_TASK.md');
   write(briefPath, buildRoleBrief(assignment, ctx.slug));
@@ -254,10 +297,14 @@ export async function runRole(
     shell: useShell
   });
 
-  const missing = missingArtifacts(ctx.workDir, artifacts);
+  const missing = missingArtifacts(artifactRoot, artifacts);
+  const unchanged =
+    missing.length === 0 ? unchangedArtifacts(artifactRoot, artifacts, before) : [];
   // The decision. Note what is NOT consulted: res.out. An agent saying "done"
   // has never been evidence, and this is the boundary where that is enforced.
-  const countedAsRun = res.code === 0 && missing.length === 0;
+  // Pre-existing artifacts that the role did not change are also not evidence.
+  const countedAsRun =
+    res.code === 0 && missing.length === 0 && unchanged.length === 0;
 
   let reason: string;
   if (res.code !== 0) {
@@ -266,6 +313,10 @@ export async function runRole(
     reason =
       `${assignment.role.id}: agent exited 0 but left no ${missing.join(', ')} — ` +
       'counted as NOT RUN. A summary is not a deliverable.';
+  } else if (unchanged.length > 0) {
+    reason =
+      `${assignment.role.id}: agent exited 0 but did not change ${unchanged.join(', ')} — ` +
+      'counted as NOT RUN. An artifact that pre-dates the run (or a no-op rewrite) is not evidence.';
   } else {
     reason = `${assignment.role.id}: produced ${artifacts.length} artifact(s) (iteration ${iteration})`;
   }
@@ -274,8 +325,11 @@ export async function runRole(
     role: assignment.role.id,
     exitCode: res.code,
     missing,
+    unchanged,
     countedAsRun,
     reason,
-    output: res.out.slice(-4000)
+    output: res.out.slice(-4000),
+    artifactRoot,
+    artifacts
   };
 }

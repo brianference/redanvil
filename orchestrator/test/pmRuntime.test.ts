@@ -219,14 +219,11 @@ describe('pmRuntime failure modes (a–e)', () => {
     const { repoDir, cleanup } = makeRepo();
     const pm = getRole('pm')!;
     expect(pm.needsWorktree).toBe(false);
-    // Point artifact at a file we create so countedAsRun can be true without
-    // needing a worktree.
+    // Role must actually produce the artifact during the run (not pre-seed it).
     const role: Role = {
       ...pm,
       artifacts: ['results/x.json']
     };
-    mkdirSync(join(repoDir, 'results'), { recursive: true });
-    writeFileSync(join(repoDir, 'results', 'x.json'), '{"ok":true}\n');
 
     const branchesBefore = spawnSync('git', ['-C', repoDir, 'branch'], {
       encoding: 'utf8'
@@ -251,7 +248,12 @@ describe('pmRuntime failure modes (a–e)', () => {
       {
         runRoleDeps: {
           writeBrief: () => undefined,
-          spawn: () => ({ code: 0, out: '' })
+          spawn: (_cmd, _args, opts) => {
+            const cwd = opts.cwd ?? repoDir;
+            mkdirSync(join(cwd, 'results'), { recursive: true });
+            writeFileSync(join(cwd, 'results', 'x.json'), '{"ok":true}\n');
+            return { code: 0, out: '' };
+          }
         }
       }
     );
@@ -266,6 +268,41 @@ describe('pmRuntime failure modes (a–e)', () => {
     // No new branch lines beyond what existed.
     expect(branchesAfter).toBe(branchesBefore);
     cleanup();
+  }, wtTimeout);
+
+  it('(a-runtime) present-but-unchanged artifacts → countedAsRun false, NOT promoted', async () => {
+    // Mirrors the live content-role failure: files already on the base branch,
+    // agent exits 0 without editing them, must not promote.
+    const { repoDir, cleanup } = makeRepo();
+    mkdirSync(join(repoDir, 'src'), { recursive: true });
+    writeFileSync(join(repoDir, 'src', 'index.ts'), 'export const app = 1;\n');
+    git(repoDir, ['add', '-A']);
+    git(repoDir, ['commit', '-q', '-m', 'pre-existing artifact']);
+    const before = headSha(repoDir);
+    const parent = mkdtempSync(join(tmpdir(), 'ra-pmrt-wtparent-'));
+
+    const outcome = await runAssignment(engineerAssignment(), 1, {
+      repoDir,
+      appDir: repoDir,
+      slug: 'x'
+    }, {
+      worktreeParent: parent,
+      runRoleDeps: {
+        writeBrief: () => undefined,
+        spawn: () => ({ code: 0, out: 'done (noop)' })
+      },
+      promote: async () => {
+        throw new Error('promote must not be called when artifacts are unchanged');
+      }
+    });
+
+    expect(outcome.countedAsRun).toBe(false);
+    expect(outcome.promoted).toBe(false);
+    expect(outcome.result.unchanged.length).toBeGreaterThan(0);
+    expect(outcome.reason).toMatch(/not counted as run|did not change/i);
+    expect(headSha(repoDir)).toBe(before);
+    cleanup();
+    rmSync(parent, { recursive: true, force: true });
   }, wtTimeout);
 
   it('(e) worktree cleanup with node_modules junction does NOT delete the real node_modules', async () => {

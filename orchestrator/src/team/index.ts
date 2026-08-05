@@ -116,5 +116,11 @@ export {
   writeAssignment,
   missingArtifacts,
   messageClaimsDone,
+  artifactPathPrefix,
+  resolveRoleArtifacts,
+  snapshotArtifacts,
+  unchangedArtifacts,
+  artifactFingerprint,
+  joinRepoPath,
   type WorktreeAssignment
 } from './worktreeEnforcement';
