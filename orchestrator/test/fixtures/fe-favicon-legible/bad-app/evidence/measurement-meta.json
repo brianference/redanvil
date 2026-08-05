@@ -5,7 +5,7 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-04T15:59:25.210Z",
+        "at": "2026-08-05T02:42:37.177Z",
         "metrics": {
           "inkCoverage": 1,
           "detailEnergy": 7.105427357601002e-15,
@@ -17,7 +17,7 @@
       },
       {
         "ok": false,
-        "at": "2026-08-04T15:59:25.210Z",
+        "at": "2026-08-05T02:42:37.177Z",
         "metrics": {
           "inkCoverage": 1,
           "detailEnergy": 7.105427357601002e-15,
@@ -28,11 +28,11 @@
         }
       }
     ],
-    "source": "C:\\Users\\brian\\RedAnvil-fix-prov\\orchestrator\\test\\fixtures\\fe-favicon-legible\\bad-app\\public\\favicon.png",
+    "source": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\fe-favicon-legible\\bad-app\\public\\favicon.png",
     "knownBad": {
-      "input": "C:\\Users\\brian\\RedAnvil-fix-prov\\orchestrator\\test\\fixtures\\fe-favicon-legible\\bad-app",
+      "input": "C:\\Users\\brian\\RedAnvil\\orchestrator\\test\\fixtures\\fe-favicon-legible\\bad-app",
       "failed": true,
-      "recordedAt": "2026-08-04T15:59:25.210Z"
+      "recordedAt": "2026-08-05T02:42:37.177Z"
     }
   }
 }
