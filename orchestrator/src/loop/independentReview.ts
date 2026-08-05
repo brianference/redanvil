@@ -27,7 +27,12 @@ import { reviewPinCommit } from '../git/newestSourceCommit.mjs';
  * `empty-diff` is its own terminal state: collectDiff found nothing to hand a
  * judge, so no review ran. It must never evaluate as ok / F5 pass.
  */
-export type IndependentReviewMode = 'grok' | 'fixture' | 'unavailable' | 'empty-diff';
+export type IndependentReviewMode =
+  | 'grok'
+  | 'fixture'
+  | 'unavailable'
+  | 'empty-diff'
+  | 'external';
 
 /**
  * Raw judge output that means the reviewer could not be REACHED, as opposed to
@@ -74,6 +79,8 @@ export interface IndependentReviewReport {
   rawExcerpt: string;
   /** How the review was produced. */
   mode: IndependentReviewMode;
+  /** Who judged, when the reviewer is not the default. Recorded, never inferred. */
+  reviewerId?: string;
   /**
    * How many judge prompts ran over the split diff. Proof of multi-chunk review
    * for release-sized diffs; 1 when the whole patch fits one budget window.
@@ -118,6 +125,18 @@ export interface IndependentReviewOptions {
    * Applies to the whole review (no per-chunk live calls).
    */
   fixtureReport?: Partial<IndependentReviewReport>;
+  /**
+   * Findings from a real reviewer this process cannot spawn itself.
+   *
+   * Exists because the reviewer is not always reachable -- Grok Build's weekly
+   * balance ran out mid-release -- and the honest answer is to name a different
+   * reviewer, never to let the row pass unreviewed or to reuse the TEST fixture
+   * path in production. `reviewerId` is recorded in the report so a reader can
+   * always see WHO judged, and ok is recomputed from the findings here exactly
+   * as it is for the grok path: this supplies findings, it does not supply a
+   * verdict.
+   */
+  externalReview?: { reviewerId: string; findings: IndependentFinding[]; rawExcerpt?: string };
   /** Per-chunk timeout for the grok CLI (ms). */
   timeoutMs?: number;
   /** Base vs head for the diff. Defaults to merge-base with main/master..HEAD. */
@@ -1246,6 +1265,33 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
   if (diff.trim().length === 0) {
     const report = emptyDiffReport({ slug, commit, reviewedAt, diffHash });
     // Defense: ok is always false for this mode even if someone edits the builder.
+    report.ok = evaluateReviewOk(report);
+    writeReport(outPath, report);
+    return report;
+  }
+
+  if (opts.externalReview) {
+    const split = splitDiffIntoChunks(diff);
+    const report: IndependentReviewReport = {
+      kind: 'independent-diff-review',
+      slug,
+      commit,
+      reviewedAt,
+      diffHash,
+      completed: true,
+      ok: false,
+      foundNothingExplicit: opts.externalReview.findings.length === 0,
+      findings: opts.externalReview.findings,
+      rawExcerpt: opts.externalReview.rawExcerpt ?? `external reviewer: ${opts.externalReview.reviewerId}`,
+      mode: 'external',
+      reviewerId: opts.externalReview.reviewerId,
+      chunkCount: split.chunks.length,
+      coverageChars: split.diffChars,
+      diffChars: split.diffChars,
+      coverageComplete: true
+    };
+    // Same rule as every other path: ok is DERIVED from the findings, never
+    // taken from the reviewer.
     report.ok = evaluateReviewOk(report);
     writeReport(outPath, report);
     return report;
