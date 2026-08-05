@@ -1,5 +1,5 @@
 {
   "_why": "Coverage ratchet state. baseCommit null means the next gate run records the commit it sees; highWaterPct is the best overall line coverage reached and may never decrease. Tracked on purpose - its git history proves nobody lowered the bar.",
-  "baseCommit": "1f160cdaee81acbf7ddaf56952302fd21f515756",
+  "baseCommit": "0499f6239655dffc2a3a1a66470465a72116a938",
   "highWaterPct": 94.37
 }

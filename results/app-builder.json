@@ -249,7 +249,7 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-known-bad",
@@ -384,14 +384,15 @@
         "fe-touch-targets",
         "fe-type-floor",
         "hyg-no-binaries",
-        "hyg-no-duplication"
+        "hyg-no-duplication",
+        "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-05T03:29:39.707Z",
+  "finishedAt": "2026-08-05T04:23:27.006Z",
   "provenance": {
-    "commit": "1f160cdaee81acbf7ddaf56952302fd21f515756",
+    "commit": "0499f6239655dffc2a3a1a66470465a72116a938",
     "dirty": false,
     "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
     "rubricRuleCount": 95,
@@ -406,6 +407,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-05T03:29:39.773Z"
+    "generatedAt": "2026-08-05T04:23:27.071Z"
   }
 }
