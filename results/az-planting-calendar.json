@@ -1,9 +1,9 @@
 {
   "kind": "results",
   "slug": "az-planting-calendar",
-  "finalScore": 0,
+  "finalScore": 100,
   "threshold": 90,
-  "passed": false,
+  "passed": true,
   "evaluated": 84,
   "total": 84,
   "rules": [
@@ -225,7 +225,7 @@
     },
     {
       "ruleId": "lg-shipped",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "lg-push-cadence",
@@ -383,16 +383,14 @@
   "iterations": [
     {
       "index": 1,
-      "score": 0,
-      "blockers": [
-        "lg-shipped"
-      ]
+      "score": 100,
+      "blockers": []
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-05T04:31:49.127Z",
+  "finishedAt": "2026-08-05T04:55:23.186Z",
   "provenance": {
-    "commit": "a719ba14393553939278420436347d84de00ecb8",
+    "commit": "cab2ad261d9522163dfd62844f4761120e91f1e0",
     "dirty": false,
     "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
     "rubricRuleCount": 95,
@@ -405,6 +403,6 @@
       "u-test-presence"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-05T04:31:49.231Z"
+    "generatedAt": "2026-08-05T04:55:23.262Z"
   }
 }
