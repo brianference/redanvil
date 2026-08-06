@@ -85,7 +85,7 @@ test('an unknown path shows a not-found page with a way back', async ({ page }) 
 
 test('sitter search narrows the visible catalog', async ({ page }) => {
   await page.goto('/');
-  const list = page.getByTestId('sitter-list');
+  const list = page.getByTestId('search-results');
   await expect(list).toBeVisible({ timeout: 30_000 });
   const before = await list.locator('li').count();
   expect(before).toBeGreaterThan(1);
@@ -106,7 +106,7 @@ test('assistant panel is reachable from the shell', async ({ page }) => {
 test('filter sitters by neighbourhood and pet types narrows the catalog', async ({ page }) => {
   // Covers claims: filter, neighbourhood, pet types (u-claims-covered).
   await page.goto('/');
-  const list = page.getByTestId('sitter-list');
+  const list = page.getByTestId('search-results');
   await expect(list).toBeVisible({ timeout: 30_000 });
   const before = await list.locator('li').count();
   expect(before).toBeGreaterThan(1);
@@ -119,7 +119,7 @@ test('filter sitters by neighbourhood and pet types narrows the catalog', async 
 
 test('sitter detail with reviews shows the profile and review list', async ({ page }) => {
   await page.goto('/');
-  const list = page.getByTestId('sitter-list');
+  const list = page.getByTestId('search-results');
   await expect(list).toBeVisible({ timeout: 30_000 });
   await list.locator('a').first().click();
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();

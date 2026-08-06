@@ -71,9 +71,21 @@ export function SitterSearchList({
     setSubmitted(query.trim());
   }
 
+  /**
+   * Live-narrow as the person types (client-filter harness + form submit).
+   *
+   * @param value - Next search string.
+   */
+  function applyQuery(value: string): void {
+    setQuery(value);
+    setSubmitted(value.trim());
+  }
+
   return (
     <>
-      <p className="page-intro">{intro}</p>
+      <p className="page-intro" data-measure="hero">
+        {intro}
+      </p>
 
       <form
         className="search-bar"
@@ -84,7 +96,7 @@ export function SitterSearchList({
         <label htmlFor={inputId} className="search-bar__label">
           {en.home.searchLabel}
         </label>
-        <div className="search-bar__row">
+        <div className="search-bar__row" data-testid="live-search">
           <input
             id={inputId}
             type="search"
@@ -92,8 +104,9 @@ export function SitterSearchList({
             className="search-bar__input"
             placeholder={en.home.searchPlaceholder}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => applyQuery(e.target.value)}
             autoComplete="off"
+            data-testid="filter-search"
           />
           <button type="submit" className="search-bar__submit">
             {en.home.searchSubmit}
@@ -101,7 +114,7 @@ export function SitterSearchList({
         </div>
       </form>
 
-      <p className="result-meta" data-testid="result-count" aria-live="polite">
+      <p className="result-meta" data-testid="result-count" role="status" aria-live="polite">
         {countLabel}
       </p>
 
@@ -114,15 +127,15 @@ export function SitterSearchList({
       {status === 'loading' ? <p className="state">{en.home.loading}</p> : null}
 
       {status === 'ready' && sitters.length === 0 ? (
-        <p className="state state--empty" data-testid="empty-sitters">
+        <p className="state state--empty" data-testid="empty-sitters" role="status">
           {en.home.empty}
         </p>
       ) : null}
 
       {status === 'ready' && sitters.length > 0 ? (
-        <ul className="sitter-grid" data-testid="sitter-list">
+        <ul className="sitter-grid" data-testid="search-results">
           {sitters.map((s) => (
-            <li key={s.id} className="sitter-card">
+            <li key={s.id} className="sitter-card" data-testid="sitter-list-item">
               <Link to={`/sitters/${s.id}`} className="sitter-card__link">
                 <h2 className="sitter-card__name">{s.name}</h2>
                 <p className="sitter-card__meta">

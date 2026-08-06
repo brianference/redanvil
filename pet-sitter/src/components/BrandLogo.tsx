@@ -28,6 +28,7 @@ export function BrandLogo({
         height={56}
         className={markClassName ?? 'brand__mark'}
         data-testid="brand-mark"
+        data-measure="mark"
       />
       <span className={nameClassName ?? 'brand__name'}>{en.app.name}</span>
     </Link>

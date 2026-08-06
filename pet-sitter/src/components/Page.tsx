@@ -24,7 +24,7 @@ export function Page({ title, children }: PageProps): JSX.Element {
       <a className="skip-link" href="#main">
         {en.nav.skipToContent}
       </a>
-      <header className="topbar">
+      <header className="topbar" data-testid="compact-header" data-measure="header">
         <BrandLogo className="brand" markClassName="brand__mark" nameClassName="brand__name" />
         <nav className="topbar__nav" aria-label={en.app.primaryNav}>
           <ul className="topbar__list">
