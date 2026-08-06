@@ -9,6 +9,7 @@
 /** Stable role identifiers used in assignment files and hooks. */
 export type RoleId =
   | 'pm'
+  | 'product'
   | 'brainstorm'
   | 'logo'
   | 'layout'
@@ -92,11 +93,26 @@ export const ROLES: readonly Role[] = Object.freeze([
       'You are the PM orchestrator. Own the worktree, the loop, and the finish line. ' +
       'Assign every unmet checklist row to its owning role. Promote only green worktrees. ' +
       'Never declare done from an agent summary -- only from measurement artifacts. ' +
-      'Never lower a bar to converge. Never stage while a delegated run is in flight.'
+      'Never lower a bar to converge. Never stage while a delegated run is in flight. ' +
+      'Order: product before design, design before build. A missing results file means ' +
+      'every checklist row is unmet -- plan from that, never invent scores.'
+  },
+  {
+    id: 'product',
+    owns: ['fe-product-completeness', 'u-claims-covered'],
+    artifacts: ['docs/<slug>-product-brief.md', 'docs/<slug>-prd.md'],
+    needsWorktree: false,
+    prompt:
+      'You are the product owner, not the orchestrator. Bring the PRD in as ' +
+      'docs/<slug>-prd.md and keep it authoritative. Produce docs/<slug>-product-brief.md ' +
+      'that records, from the PRD: (1) what the product promises, (2) the core user job ' +
+      'end to end, (3) acceptance evidence for each promise. Every promise must map to a ' +
+      'checklist/rubric row someone owns -- a promise with no owning row is a hard error. ' +
+      'Own fe-product-completeness and u-claims-covered. Run before design and build.'
   },
   {
     id: 'brainstorm',
-    owns: ['feature-gaps', 'fe-product-completeness'],
+    owns: ['feature-gaps'],
     artifacts: ['docs/<slug>-features.md'],
     needsWorktree: false,
     prompt:
@@ -205,7 +221,6 @@ export const ROLES: readonly Role[] = Object.freeze([
     id: 'testwriter',
     owns: [
       'u-test-acceptance',
-      'u-claims-covered',
       'u-test-presence',
       'u-test-feature-audit',
       'u-test-runners',
@@ -217,7 +232,8 @@ export const ROLES: readonly Role[] = Object.freeze([
     prompt:
       'Write acceptance tests from the PRD acceptance criteria BEFORE the engineer builds, ' +
       'so tests encode the requirement rather than the implementation. Own u-test-acceptance ' +
-      'and u-claims-covered.'
+      'and the test-runner lanes. Product owns u-claims-covered (promise map); you name each ' +
+      'capability in a real acceptance test.'
   },
   {
     id: 'qa-visual',

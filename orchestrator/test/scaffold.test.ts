@@ -111,6 +111,25 @@ describe('scaffoldApp', () => {
     expect(pkg.scripts.verify).toContain('test:coverage');
   });
 
+  it('ships independent vitest unit, browser, and VRT lanes', async () => {
+    const config = await readFile(join(out, 'vitest.config.ts'), 'utf8');
+    expect(config).toContain("name: 'unit'");
+    expect(config).toContain("name: 'browser'");
+    expect(config).toContain("name: 'vrt'");
+    expect(config).toMatch(/browser\s*:\s*\{[\s\S]*enabled\s*:\s*true/);
+
+    const pkg = JSON.parse(await readFile(join(out, 'package.json'), 'utf8'));
+    expect(pkg.scripts['test:unit']).toContain('--project unit');
+    expect(pkg.scripts['test:browser']).toContain('--project browser');
+    expect(pkg.scripts['test:vrt']).toContain('--project vrt');
+    expect(pkg.devDependencies['@vitest/browser']).toBe(pkg.devDependencies.vitest);
+
+    const browserTest = await readFile(join(out, 'src/lib/focus.browser.test.ts'), 'utf8');
+    expect(browserTest).toMatch(/focus/i);
+    const vrtTest = await readFile(join(out, 'src/lib/shell.vrt.test.ts'), 'utf8');
+    expect(vrtTest).toContain('toHaveScreenshot');
+  });
+
   it('ships an API example set and a tracked coverage-ratchet state file', async () => {
     const examples = JSON.parse(await readFile(join(out, 'tests', 'api-examples.json'), 'utf8'));
     // The scaffold really generates functions/api/health.ts, so the starter
