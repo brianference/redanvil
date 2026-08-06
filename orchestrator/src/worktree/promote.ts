@@ -76,6 +76,35 @@ export interface PromoteResult {
   commit: string | null;
   /** Why promotion did not happen, in words a person can act on. */
   reason: string;
+  /**
+   * When true, the role's work is verified but the environment blocked the
+   * merge (e.g. dirty base tree). Callers must RETAIN the branch/worktree so a
+   * later attempt can promote without re-running the role. Role-fault refusals
+   * (no changes, failed commit, broken build) leave this false/undefined.
+   */
+  environmental?: boolean;
+}
+
+/**
+ * Whether a promotion refusal is the environment's fault, not the role's.
+ *
+ * Dirty base is the measured case from the managed-agent run: verified
+ * artifacts were destroyed because the branch was swept after a correct
+ * refusal. Other environmental refusals can be added here without weakening
+ * role-fault discard behaviour.
+ *
+ * @param result - Promote result (or its reason string).
+ * @returns True when the branch/worktree must be retained for a later promote.
+ */
+export function isEnvironmentalPromotionRefusal(
+  result: PromoteResult | string
+): boolean {
+  if (typeof result === 'string') {
+    return /uncommitted changes|dirty tree/i.test(result);
+  }
+  if (result.promoted) return false;
+  if (result.environmental === true) return true;
+  return isEnvironmentalPromotionRefusal(result.reason);
 }
 
 /**
@@ -128,11 +157,13 @@ export async function promoteWorktree(opts: PromoteOptions): Promise<PromoteResu
   const run = opts.run ?? runCommand;
 
   // The base has to be clean BEFORE anything is committed, so a refusal costs
-  // nothing and leaves no half-promoted state behind.
+  // nothing and leaves no half-promoted state behind. This is environmental:
+  // the role's work may be fine — callers must retain the branch for retry.
   if (await isDirty(repoDir, run)) {
     return {
       promoted: false,
       commit: null,
+      environmental: true,
       reason:
         'the base repository has uncommitted changes. Merging into a dirty tree buries ' +
         'in-flight work in a merge commit nobody reads — commit or stash it first.'
@@ -165,7 +196,12 @@ export async function promoteWorktree(opts: PromoteOptions): Promise<PromoteResu
     return { promoted: false, commit: null, reason: `git add failed: ${add.stderr || add.stdout}` };
   }
 
-  const commit = await run('git', [
+  // When skipAssignmentGuards is set, countedAsRun (or an explicit test) already
+  // decided artifacts/gate. Local pre-commit hooks still require gate-status.json
+  // and would refuse a legitimate promote-after-retain; --no-verify pairs with
+  // skipAssignmentGuards. When guards are on, hooks stay armed and the
+  // server-side evaluatePromoteGuards above is the non-skippable finish line.
+  const commitArgs = [
     '-C',
     worktreeDir,
     '-c',
@@ -173,9 +209,11 @@ export async function promoteWorktree(opts: PromoteOptions): Promise<PromoteResu
     '-c',
     'user.name=RedAnvil',
     'commit',
+    ...(opts.skipAssignmentGuards === true ? (['--no-verify'] as const) : []),
     '-m',
     message
-  ]);
+  ];
+  const commit = await run('git', [...commitArgs]);
   if (commit.code !== 0) {
     return {
       promoted: false,

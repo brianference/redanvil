@@ -61,6 +61,21 @@ describe('titleFromPrompt / isTitleFragment', () => {
       isTitleFragment('Show What Is Plantable In the Current Half Month Window Seed Vs')
     ).toBe(true);
   });
+
+  it('(f) Find-and-book pet sitters → noun-phrase title/slug; old mangled title is a fragment', () => {
+    // Measured bug: "Find and book trusted local pet sitters" became
+    // title "And Book Trusted Local Pet Sitters" / slug and-book-trusted-...
+    const prompt = 'Find and book trusted local pet sitters';
+    const title = titleFromPrompt(prompt);
+    expect(title.toLowerCase()).not.toMatch(/^and\b/);
+    expect(title.toLowerCase()).not.toMatch(/^book\b/);
+    expect(title.toLowerCase()).not.toMatch(/^find\b/);
+    expect(title.toLowerCase()).toMatch(/pet\s+sitter/);
+    expect(isTitleFragment(title)).toBe(false);
+    // Old broken output must now be flagged.
+    expect(isTitleFragment('And Book Trusted Local Pet Sitters')).toBe(true);
+    expect(isTitleFragment('Book Trusted Local Pet Sitters')).toBe(true);
+  });
 });
 
 describe('stripGeneratorDirectives / requirementLines', () => {

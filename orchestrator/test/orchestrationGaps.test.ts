@@ -469,9 +469,12 @@ describe('enforceDesignBeforeBuild pure edge cases', () => {
       const gated = enforceDesignBeforeBuild(plan, appDir, ROLES);
       const ids = gated.plan.assignments.map((a) => a.role.id);
       expect(ids).not.toContain('engineer');
-      expect(ids).toContain('qa-visual');
-      expect(ids).toEqual(expect.arrayContaining(['logo', 'layout']));
+      // Iteration economy: QA cannot raise the score while design (then build)
+      // is blocked — only unblocking design roles dispatch (not a full fan-out).
+      expect(ids).not.toContain('qa-visual');
+      expect(ids.sort()).toEqual(['layout', 'logo'].sort());
       expect(gated.refusedBuildRoles).toContain('engineer');
+      expect(gated.plan.sessionsSavedThisIteration ?? 0).toBeGreaterThan(0);
       for (const id of BUILD_ROLE_IDS) {
         expect(ids).not.toContain(id);
       }

@@ -10,12 +10,20 @@
  * Promotion is gated on `countedAsRun` (exit 0, artifacts on disk, AND real
  * content changes vs the pre-run snapshot), never on the agent's summary. A
  * branch is never left merged when countedAsRun is false.
+ *
+ * Environmental promotion refusal (dirty base tree): KEEP the branch and
+ * worktree so a later iteration can promote without re-running the role.
+ * Role-fault failures (non-zero exit, unchanged artifacts) still discard.
  */
 import { existsSync, mkdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runCommand, type RunResult } from '../process/run';
-import { promoteWorktree, type PromoteResult } from '../worktree/promote';
+import {
+  isEnvironmentalPromotionRefusal,
+  promoteWorktree,
+  type PromoteResult
+} from '../worktree/promote';
 import { safeRemoveWorktree, unlinkNodeModulesJunction } from '../worktree/safeRemove';
 import {
   artifactPathPrefix,
@@ -34,6 +42,117 @@ import {
   trackLiveRoleWorktree,
   untrackLiveRoleWorktree
 } from './roleWorktreeLifecycle';
+
+/**
+ * A role worktree retained after an environmental promotion refusal so a later
+ * iteration can promote it once the base tree is clean — without re-running
+ * the agent.
+ */
+export interface RetainedRoleWorktree {
+  /** Main tree the worktree branches from. */
+  repoDir: string;
+  /** Absolute path of the linked worktree. */
+  worktreeDir: string;
+  /** Branch name (`ra-role-...`). */
+  branch: string;
+  /** Role that produced the work. */
+  roleId: RoleId;
+  /** Absolute app dir on the main tree (retention key). */
+  appDir: string;
+  /** Iteration that produced the work. */
+  iteration: number;
+  /** Why promotion was refused (for logs). */
+  reason: string;
+}
+
+/** Retained work keyed by repo|app|role — one pending promote per role per app. */
+const retainedByKey = new Map<string, RetainedRoleWorktree>();
+
+/**
+ * Stable key for retained work for one role on one app in one repo.
+ *
+ * @param repoDir - Main tree.
+ * @param appDir - Absolute app directory.
+ * @param roleId - Role id.
+ * @returns Map key.
+ */
+function retentionKey(repoDir: string, appDir: string, roleId: RoleId): string {
+  return `${resolve(repoDir)}|${resolve(appDir)}|${roleId}`;
+}
+
+/**
+ * Look up retained work for a role (tests and promote-before-rerun).
+ *
+ * @param repoDir - Main tree.
+ * @param appDir - App directory (absolute or relative to repo).
+ * @param roleId - Role id.
+ * @returns Retained entry or undefined.
+ */
+export function getRetainedRoleWorktree(
+  repoDir: string,
+  appDir: string,
+  roleId: RoleId
+): RetainedRoleWorktree | undefined {
+  return retainedByKey.get(retentionKey(repoDir, resolve(repoDir, appDir), roleId));
+}
+
+/**
+ * List all retained role worktrees (tests / diagnostics).
+ *
+ * @returns Copy of retained entries.
+ */
+export function listRetainedRoleWorktrees(): RetainedRoleWorktree[] {
+  return [...retainedByKey.values()];
+}
+
+/**
+ * Clear retained registry (tests only).
+ */
+export function clearRetainedRoleWorktreesForTests(): void {
+  retainedByKey.clear();
+}
+
+/**
+ * Register retained work after an environmental promotion refusal.
+ *
+ * @param entry - Worktree to keep for a later promote.
+ */
+function retainRoleWorktree(entry: RetainedRoleWorktree): void {
+  const key = retentionKey(entry.repoDir, entry.appDir, entry.roleId);
+  // Supersede any older retention for the same role/app.
+  const prior = retainedByKey.get(key);
+  if (prior && resolve(prior.worktreeDir) !== resolve(entry.worktreeDir)) {
+    // Leave prior in place only if paths differ — caller is responsible for
+    // cleanup of the older path when replacing; tests use a single retention.
+  }
+  retainedByKey.set(key, {
+    ...entry,
+    repoDir: resolve(entry.repoDir),
+    worktreeDir: resolve(entry.worktreeDir),
+    appDir: resolve(entry.appDir)
+  });
+  // Keep live tracking so startup sweep and signal cleanup still see it.
+  trackLiveRoleWorktree({
+    repoDir: entry.repoDir,
+    worktreeDir: entry.worktreeDir,
+    branch: entry.branch
+  });
+}
+
+/**
+ * Drop retention after successful promote or role-fault discard.
+ *
+ * @param repoDir - Main tree.
+ * @param appDir - Absolute app dir.
+ * @param roleId - Role id.
+ */
+function dropRetainedRoleWorktree(
+  repoDir: string,
+  appDir: string,
+  roleId: RoleId
+): void {
+  retainedByKey.delete(retentionKey(repoDir, appDir, roleId));
+}
 
 /** Git / shell runner shape (matches process/run). */
 export type GitRunner = (
@@ -97,6 +216,16 @@ export interface RoleRunOutcome {
   countedAsRun: boolean;
   /** True only when the branch was merged into the base. */
   promoted: boolean;
+  /**
+   * True when promotion was refused for an environmental reason and the
+   * branch/worktree were KEPT for a later promote (no agent re-run).
+   */
+  retained: boolean;
+  /**
+   * True when this call only retried promotion of previously retained work
+   * and did not spawn the role agent again.
+   */
+  promoteOnly: boolean;
   /** Worktree path used, or null for read-only roles. */
   worktreeDir: string | null;
   /** Branch name, or null when no branch was created. */
@@ -191,13 +320,155 @@ async function addWorktree(
 }
 
 /**
+ * Build a synthetic RunRoleResult for a promote-only retry (no agent spawn).
+ *
+ * @param roleId - Role id.
+ * @param worktreeDir - Retained worktree path (artifact root).
+ * @returns Minimal successful counted-as-run result.
+ */
+function promoteOnlyRoleResult(roleId: RoleId, worktreeDir: string): RunRoleResult {
+  return {
+    role: roleId,
+    exitCode: 0,
+    countedAsRun: true,
+    missing: [],
+    unchanged: [],
+    reason: 'retained work from prior iteration (promote-only; agent not re-run)',
+    output: '',
+    artifactRoot: worktreeDir,
+    artifacts: []
+  };
+}
+
+/**
+ * Attempt to promote previously retained work without re-running the role.
+ *
+ * @param retained - Entry from the retention registry.
+ * @param iteration - Current PM iteration.
+ * @param assignment - Current assignment (for commit message context).
+ * @param deps - Runtime deps.
+ * @param run - Git runner.
+ * @returns Outcome when retained work was handled; null when none applicable.
+ */
+async function tryPromoteRetained(
+  retained: RetainedRoleWorktree,
+  iteration: number,
+  assignment: RoleAssignment,
+  deps: PmRuntimeDeps,
+  run: GitRunner
+): Promise<RoleRunOutcome | null> {
+  if (!existsSync(retained.worktreeDir)) {
+    dropRetainedRoleWorktree(retained.repoDir, retained.appDir, retained.roleId);
+    untrackLiveRoleWorktree(retained.worktreeDir);
+    return null;
+  }
+
+  const promoteFn =
+    deps.promote ??
+    ((o: {
+      repoDir: string;
+      worktreeDir: string;
+      branch: string;
+      message: string;
+    }) => defaultPromote(o, run));
+
+  const promo = await promoteFn({
+    repoDir: retained.repoDir,
+    worktreeDir: retained.worktreeDir,
+    branch: retained.branch,
+    message:
+      `RA-role: ${retained.roleId} iteration ${iteration} (retained from i${retained.iteration})\n\n` +
+      `Promote-only retry after environmental refusal.\n` +
+      `rows: ${assignment.rows.map((r) => r.id).join(', ') || '(none)'}`
+  });
+
+  const result = promoteOnlyRoleResult(retained.roleId, retained.worktreeDir);
+
+  if (promo.promoted === true) {
+    dropRetainedRoleWorktree(retained.repoDir, retained.appDir, retained.roleId);
+    try {
+      await safeRemoveWorktree(
+        {
+          repoDir: retained.repoDir,
+          worktreeDir: retained.worktreeDir,
+          branch: retained.branch
+        },
+        run
+      );
+    } finally {
+      untrackLiveRoleWorktree(retained.worktreeDir);
+    }
+    return {
+      role: retained.roleId,
+      countedAsRun: true,
+      promoted: true,
+      retained: false,
+      promoteOnly: true,
+      worktreeDir: retained.worktreeDir,
+      branch: retained.branch,
+      result,
+      reason: `promoted retained branch ${retained.branch} without re-running role`
+    };
+  }
+
+  if (isEnvironmentalPromotionRefusal(promo)) {
+    // Still dirty (or other environmental block) — keep retention, no agent.
+    retainRoleWorktree({
+      ...retained,
+      reason: promo.reason
+    });
+    return {
+      role: retained.roleId,
+      countedAsRun: true,
+      promoted: false,
+      retained: true,
+      promoteOnly: true,
+      worktreeDir: retained.worktreeDir,
+      branch: retained.branch,
+      result,
+      reason:
+        `retained work still not promoted (no re-run): ${promo.reason}`
+    };
+  }
+
+  // Non-environmental refusal on retry: discard (role work is no longer usable).
+  dropRetainedRoleWorktree(retained.repoDir, retained.appDir, retained.roleId);
+  try {
+    await safeRemoveWorktree(
+      {
+        repoDir: retained.repoDir,
+        worktreeDir: retained.worktreeDir,
+        branch: retained.branch
+      },
+      run
+    );
+  } finally {
+    untrackLiveRoleWorktree(retained.worktreeDir);
+  }
+  return {
+    role: retained.roleId,
+    countedAsRun: true,
+    promoted: false,
+    retained: false,
+    promoteOnly: true,
+    worktreeDir: retained.worktreeDir,
+    branch: retained.branch,
+    result,
+    reason: `retained work discarded after non-environmental refusal: ${promo.reason}`
+  };
+}
+
+/**
  * Run one role assignment: worktree (or not), runRole, promote or discard.
+ *
+ * When a prior environmental promotion refusal left retained work for this
+ * role, attempts promotion first and does not re-spawn the agent.
  *
  * @param assignment - Role + rows from the PM planner.
  * @param iteration - 1-based PM iteration.
  * @param ctx - Repo / app / slug.
  * @param deps - Injected side effects.
- * @returns What happened, including promote/discard.
+ * @returns What happened, including promote/discard/retain.
  */
 export async function runAssignment(
   assignment: RoleAssignment,
@@ -225,11 +496,30 @@ export async function runAssignment(
       role: role.id,
       countedAsRun: result.countedAsRun,
       promoted: false,
+      retained: false,
+      promoteOnly: false,
       worktreeDir: null,
       branch: null,
       result,
       reason: `${result.reason} (read-only; no worktree/branch)`
     };
+  }
+
+  // Environmental retention: promote before re-running the role.
+  const prior = getRetainedRoleWorktree(ctx.repoDir, absApp, role.id);
+  if (prior) {
+    const fromRetained = await tryPromoteRetained(
+      prior,
+      iteration,
+      assignment,
+      deps,
+      run
+    );
+    if (fromRetained) {
+      // Successful promote or still-retained: never spawn the agent again.
+      // Only fall through when retention was dropped as missing on disk (null).
+      return fromRetained;
+    }
   }
 
   // Mutating roles: disposable worktree on its own branch.
@@ -271,6 +561,7 @@ export async function runAssignment(
 
   let result: RunRoleResult;
   let promoted = false;
+  let retained = false;
   let reason: string;
 
   try {
@@ -311,9 +602,26 @@ export async function runAssignment(
           `rows: ${assignment.rows.map((r) => r.id).join(', ') || '(none)'}`
       });
       promoted = promo.promoted === true;
-      reason = promoted
-        ? `${result.reason}; promoted ${branch}`
-        : `${result.reason}; not promoted: ${promo.reason}`;
+      if (promoted) {
+        reason = `${result.reason}; promoted ${branch}`;
+      } else if (isEnvironmentalPromotionRefusal(promo)) {
+        // KEEP branch + worktree for a later promote. Do not charge a re-run.
+        retained = true;
+        retainRoleWorktree({
+          repoDir: ctx.repoDir,
+          worktreeDir: worktreeRoot,
+          branch,
+          roleId: role.id,
+          appDir: absApp,
+          iteration,
+          reason: promo.reason
+        });
+        reason =
+          `${result.reason}; not promoted: ${promo.reason} ` +
+          `(retained branch ${branch} for promote-once-clean; no re-run)`;
+      } else {
+        reason = `${result.reason}; not promoted: ${promo.reason}`;
+      }
     } else {
       reason =
         result.countedAsRun === false
@@ -322,6 +630,7 @@ export async function runAssignment(
     }
   } catch (err) {
     // Clean up the worktree even when runRole throws (e.g. enforcement).
+    dropRetainedRoleWorktree(ctx.repoDir, absApp, role.id);
     try {
       await safeRemoveWorktree(
         { repoDir: ctx.repoDir, worktreeDir: worktreeRoot, branch },
@@ -333,21 +642,25 @@ export async function runAssignment(
     throw err;
   }
 
-  // Always discard the disposable worktree. Promotion already merged the commit
-  // when green; the throwaway branch must not linger either way.
-  try {
-    await safeRemoveWorktree(
-      { repoDir: ctx.repoDir, worktreeDir: worktreeRoot, branch },
-      run
-    );
-  } finally {
-    untrackLiveRoleWorktree(worktreeRoot);
+  // Discard only when not retained. Promotion already merged when green;
+  // role-fault failures discard; environmental refusals keep the worktree.
+  if (!retained) {
+    try {
+      await safeRemoveWorktree(
+        { repoDir: ctx.repoDir, worktreeDir: worktreeRoot, branch },
+        run
+      );
+    } finally {
+      untrackLiveRoleWorktree(worktreeRoot);
+    }
   }
 
   return {
     role: role.id,
     countedAsRun: result.countedAsRun,
     promoted,
+    retained,
+    promoteOnly: false,
     worktreeDir: worktreeRoot,
     branch,
     result,
