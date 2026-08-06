@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://pet-sitter-vz1.pages.dev",
-  "checkedAt": "2026-08-06T03:58:29.021Z",
+  "checkedAt": "2026-08-06T04:05:07.842Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
