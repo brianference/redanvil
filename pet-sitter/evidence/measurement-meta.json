@@ -282,17 +282,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T03:57:27.831Z"
+        "at": "2026-08-06T03:58:11.966Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T03:57:27.832Z"
+        "at": "2026-08-06T03:58:11.967Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-known-bad/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T03:57:27.832Z"
+      "recordedAt": "2026-08-06T03:58:11.967Z"
     }
   },
   "meas-two-run": {
@@ -301,17 +301,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T03:57:27.946Z"
+        "at": "2026-08-06T03:58:12.088Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T03:57:27.947Z"
+        "at": "2026-08-06T03:58:12.088Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-two-run/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T03:57:27.947Z"
+      "recordedAt": "2026-08-06T03:58:12.088Z"
     }
   },
   "meas-recheck-flattering": {
@@ -323,17 +323,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T03:57:28.087Z"
+        "at": "2026-08-06T03:58:12.200Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T03:57:28.088Z"
+        "at": "2026-08-06T03:58:12.201Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-recheck-flattering/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T03:57:28.088Z"
+      "recordedAt": "2026-08-06T03:58:12.201Z"
     }
   },
   "meas-standard-tool": {
@@ -342,17 +342,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T03:57:28.233Z"
+        "at": "2026-08-06T03:58:12.336Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T03:57:28.233Z"
+        "at": "2026-08-06T03:58:12.337Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-standard-tool/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T03:57:28.233Z"
+      "recordedAt": "2026-08-06T03:58:12.337Z"
     }
   },
   "meas-engine-named": {
@@ -361,17 +361,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T03:57:28.342Z"
+        "at": "2026-08-06T03:58:12.443Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T03:57:28.342Z"
+        "at": "2026-08-06T03:58:12.444Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-engine-named/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T03:57:28.342Z"
+      "recordedAt": "2026-08-06T03:58:12.444Z"
     }
   },
   "lg-result-reproduces": {
@@ -500,12 +500,12 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T03:48:32.011Z",
+        "at": "2026-08-06T03:58:38.672Z",
         "report": "evidence/axe/pet-sitter-dark.json"
       },
       {
         "ok": true,
-        "at": "2026-08-06T03:48:34.124Z",
+        "at": "2026-08-06T03:58:40.815Z",
         "report": "evidence/axe/pet-sitter-light.json"
       }
     ]
