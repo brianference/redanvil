@@ -326,9 +326,23 @@ export function deriveEntities(prompt: string): string[] {
 }
 
 /**
+ * Leading action verbs that mark a title as a task phrase, not a product name.
+ * Includes "book" / "schedule" / "manage" so "Book Trusted Local Pet Sitters"
+ * and residue after stripping "Find and …" are both caught.
+ */
+const TITLE_LEADING_VERBS =
+  /^(show|find|build|create|make|list|display|browse|track|search|book|schedule|manage|get|hire|order|buy|sell|rent)$/i;
+
+/**
+ * Coordinating conjunctions that only appear when a verb-phrase cut left mid-sentence
+ * residue (e.g. "And Book Trusted Local Pet Sitters" from "Find and book …").
+ */
+const TITLE_LEADING_CONJUNCTION = /^(and|or|but)$/i;
+
+/**
  * Whether a derived title is still a sentence fragment, not a product name.
- * True when it ends mid-clause or is a long imperative/description with no
- * compact noun-phrase shape.
+ * True when it ends mid-clause, starts with a verb/conjunction residue, or is a
+ * long imperative/description with no compact noun-phrase shape.
  *
  * @param title - Candidate product title.
  * @returns True when Forge should require an explicit product name.
@@ -342,10 +356,18 @@ export function isTitleFragment(title: string): boolean {
   const last = words[words.length - 1]!.toLowerCase();
   if (DANGLING_TAIL.has(last)) return true;
   if (words.length > TITLE_MAX_WORDS) return true;
-  // Imperative / sentence openers that were not reduced to a noun phrase.
+  const first = words[0]!;
+  // Mid-sentence residue: "And Book Trusted…" from stripping only the first verb.
+  if (TITLE_LEADING_CONJUNCTION.test(first)) return true;
+  // Imperative / task openers are never product names (any length).
+  // Previously only length>4 was flagged, so "And Book Trusted Local Pet Sitters"
+  // (starts with And) and short verb titles slipped through.
+  if (TITLE_LEADING_VERBS.test(first)) return true;
+  // "Find And Book …" style: verb + conjunction still visible.
   if (
-    words.length > 4 &&
-    /^(show|find|build|create|make|list|display|browse|track|search)$/i.test(words[0]!)
+    words.length >= 2 &&
+    TITLE_LEADING_VERBS.test(first) &&
+    TITLE_LEADING_CONJUNCTION.test(words[1]!)
   ) {
     return true;
   }
@@ -388,17 +410,22 @@ export function titleFromPrompt(prompt: string): string {
   // "app for/that … X" / "tracking X" / "show what is X".
   // Prefer "tracking/find X" over "app for <audience>" so "app for Small Businesses"
   // does not beat "Shift Scheduling".
+  //
+  // Do NOT let "Find and book trusted local pet sitters" capture "and book …"
+  // as the product name — strip leading verb chains first (see stripLeadingVerbPhrase).
   const patterns: RegExp[] = [
     /\b(?:finds?|search(?:es)? for|tracks?|shows?|lists?|displays?|browses?)\s+(?:the\s+|what\s+is\s+|a\s+|an\s+)?(.+?)(?:\s+with\b|\s+in\b|\s+for\b|[.,]|$)/i,
     /\btracking\s+(.+?)(?:\s+with\b|[.,]|$)/i,
-    /\b(?:app|application|tool|system)\s+(?:for|that|to)\s+(?:finds?\s+|tracks?\s+|shows?\s+|lists?\s+|manages?\s+|schedules?\s+)(.+?)(?:\s+with\b|[.,]|$)/i
+    /\b(?:app|application|tool|system)\s+(?:for|that|to)\s+(?:finds?\s+|tracks?\s+|shows?\s+|lists?\s+|manages?\s+|schedules?\s+|books?\s+)(.+?)(?:\s+with\b|[.,]|$)/i
   ];
   for (const re of patterns) {
     const hit = re.exec(firstLine) ?? re.exec(productPrompt);
-    const raw = (hit?.[1] ?? '')
-      .replace(/\b(lowest|highest|cheapest|best|fastest|cost|price|current)\b/gi, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const raw = stripLeadingVerbPhrase(
+      (hit?.[1] ?? '')
+        .replace(/\b(lowest|highest|cheapest|best|fastest|cost|price|current)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    );
     if (raw.length > 2 && !GENERIC_DOMAIN.test(raw) && raw.split(/\s+/).length <= TITLE_MAX_WORDS) {
       const titled = toTitleCase(raw);
       if (!isTitleFragment(titled)) return titled;
@@ -410,16 +437,7 @@ export function titleFromPrompt(prompt: string): string {
     .replace(/[^a-zA-Z0-9 ]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  const words = cleaned.split(/\s+/).filter(Boolean);
-  // Drop leading imperatives / articles so the residue can be a noun phrase.
-  while (
-    words.length > 1 &&
-    /^(show|find|build|create|make|list|display|browse|track|search|a|an|the|what|is)$/i.test(
-      words[0]!
-    )
-  ) {
-    words.shift();
-  }
+  const words = stripLeadingVerbPhrase(cleaned).split(/\s+/).filter(Boolean);
   while (words.length > 1 && DANGLING_TAIL.has(words[words.length - 1]!.toLowerCase())) {
     words.pop();
   }
@@ -428,7 +446,47 @@ export function titleFromPrompt(prompt: string): string {
     clipped.pop();
   }
   if (clipped.length === 0) return 'New App';
-  return toTitleCase(clipped.join(' '));
+  const titled = toTitleCase(clipped.join(' '));
+  // Last resort: if still a fragment, prefer the trailing noun phrase (last 2–3 words).
+  if (isTitleFragment(titled) && clipped.length > 2) {
+    const tail = clipped.slice(-3);
+    const tailTitle = toTitleCase(tail.join(' '));
+    if (!isTitleFragment(tailTitle)) return tailTitle;
+  }
+  return titled;
+}
+
+/**
+ * Strip leading imperative verbs, articles, and "and/or + verb" chains so a
+ * task phrase reduces to its noun object.
+ *
+ * "Find and book trusted local pet sitters" → "trusted local pet sitters"
+ *
+ * @param phrase - Raw capture or first-line text.
+ * @returns Residue after verb-phrase stripping.
+ */
+function stripLeadingVerbPhrase(phrase: string): string {
+  const words = phrase
+    .replace(/[^a-zA-Z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  // Drop leading imperatives, articles, copulae, and coordinating conjunctions
+  // that only glue verb chains ("find and book …").
+  while (words.length > 1) {
+    const w = words[0]!.toLowerCase();
+    if (
+      TITLE_LEADING_VERBS.test(w) ||
+      TITLE_LEADING_CONJUNCTION.test(w) ||
+      /^(a|an|the|what|is|are|to)$/i.test(w)
+    ) {
+      words.shift();
+      continue;
+    }
+    break;
+  }
+  return words.join(' ');
 }
 
 /**

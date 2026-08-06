@@ -1,5 +1,6 @@
+import { existsSync } from 'node:fs';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import type { Job } from '../schemas/job';
 import { CORPUS_VERSION } from '../corpus/version';
@@ -38,8 +39,22 @@ export interface ScaffoldInput {
 export interface ScaffoldResult {
   files: string[];
   conformancePath: string;
-  /** True when the output directory was initialised as a git repository. */
+  /**
+   * True when the output directory was initialised as its own git repository.
+   * False when nested inside an existing repo (no nested .git) or when init failed.
+   */
   gitInitialised: boolean;
+  /**
+   * True when scaffold skipped `git init` because outDir lives inside another
+   * repository. Nested repos become GITLINKs and break role worktrees.
+   */
+  nestedGitSkipped: boolean;
+  /**
+   * Explicit next step for the caller. When nestedGitSkipped, the app files
+   * must be committed into the enclosing repository before PM roles run —
+   * scaffold does not auto-commit into a shared tree.
+   */
+  commitInstruction: string;
   /** True when the app's own PRD was written to `PRD.md`. */
   prdIncluded: boolean;
 }
@@ -117,32 +132,103 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
     await writeFile(full, content);
   }
 
-  // A scaffold is not a repository until someone says so, and several rules
-  // shell out to git. `hyg-env-ignored` runs `git check-ignore .env`, which
-  // exits 128 outside a repo — so every freshly generated app failed a security
-  // blocker on day one despite shipping a correct .gitignore. Initialising here
-  // means the app is gate-able the moment it exists.
-  const gitInitialised = initGitRepo(outDir);
+  // Git setup: standalone scaffolds get their own repo so rules that shell out
+  // to git (e.g. hyg-env-ignored) work on day one. When the app lives INSIDE an
+  // existing repository (monorepo), never `git init` here — a nested .git turns
+  // the app into a GITLINK, role worktrees check out an empty pointer, and every
+  // role is refused with "not a git repository". Caller must commit the files
+  // into the enclosing repo (scaffold does not auto-commit into a shared tree).
+  const gitSetup = setupScaffoldGit(outDir);
 
   return {
     files: Object.keys(files),
     conformancePath: join(outDir, 'conformance.json'),
-    gitInitialised,
+    gitInitialised: gitSetup.gitInitialised,
+    nestedGitSkipped: gitSetup.nestedGitSkipped,
+    commitInstruction: gitSetup.commitInstruction,
     prdIncluded: input.prdMarkdown !== undefined
   };
 }
 
 /**
- * Initialise the scaffold as a git repository with one commit.
+ * Walk parents of dir looking for a .git entry (directory or file for worktrees).
+ *
+ * @param dir - Starting directory (absolute or relative).
+ * @returns Absolute path of the enclosing git root, or null when none.
+ */
+export function findEnclosingGitRoot(dir: string): string | null {
+  let cur = resolve(dir);
+  // Cap walks so a weird volume root cannot spin forever.
+  for (let i = 0; i < 64; i += 1) {
+    const gitEntry = join(cur, '.git');
+    if (existsSync(gitEntry)) {
+      return cur;
+    }
+    const parent = dirname(cur);
+    if (parent === cur) return null;
+    cur = parent;
+  }
+  return null;
+}
+
+/**
+ * Decide whether to init a nested repo and return explicit caller instructions.
+ *
+ * @param outDir - Scaffold output directory.
+ * @returns Init flags and a commit instruction the CLI/caller must surface.
+ */
+function setupScaffoldGit(outDir: string): {
+  gitInitialised: boolean;
+  nestedGitSkipped: boolean;
+  commitInstruction: string;
+} {
+  const absOut = resolve(outDir);
+  const enclosing = findEnclosingGitRoot(absOut);
+
+  // Nested: outDir is strictly inside another repo (not the root of one).
+  if (enclosing !== null && resolve(enclosing) !== absOut) {
+    return {
+      gitInitialised: false,
+      nestedGitSkipped: true,
+      commitInstruction:
+        `Scaffold wrote files under existing repository ${enclosing}. ` +
+        `Do NOT expect a nested .git here. Commit the new app into that repository ` +
+        `before running PM roles (e.g. git add ${absOut} && git commit -m "chore: scaffold app") ` +
+        `so role worktrees see the app tree. Scaffold does not auto-commit into a shared tree.`
+    };
+  }
+
+  // Standalone (no enclosing repo, or outDir is itself a git root): init + commit.
+  const gitInitialised = initStandaloneGitRepo(absOut);
+  if (gitInitialised) {
+    return {
+      gitInitialised: true,
+      nestedGitSkipped: false,
+      commitInstruction:
+        'Scaffold initialised a standalone git repository and created the first commit. ' +
+        'The app is gate-able as its own repo.'
+    };
+  }
+  return {
+    gitInitialised: false,
+    nestedGitSkipped: false,
+    commitInstruction:
+      'Scaffold could not initialise git (git missing or init failed). ' +
+      'Run git init && git add -A && git commit in the app directory before gating.'
+  };
+}
+
+/**
+ * Initialise the scaffold as a standalone git repository with one commit.
  *
  * Best effort: a machine without git still gets a working app, and the caller
  * is told it did not happen rather than being left to discover it through a
  * confusing rule failure.
  *
- * @param outDir - Directory to initialise.
+ * @param outDir - Directory to initialise (must NOT sit inside another repo).
  * @returns True when the repository was created and committed.
  */
-function initGitRepo(outDir: string): boolean {
+function initStandaloneGitRepo(outDir: string): boolean {
   const run = (args: string[]): boolean =>
     spawnSync('git', args, { cwd: outDir, stdio: 'ignore' }).status === 0;
   if (!run(['init', '-q'])) return false;

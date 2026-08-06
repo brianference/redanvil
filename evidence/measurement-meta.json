@@ -5,19 +5,19 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-06T02:09:40.372Z",
+        "at": "2026-08-06T05:03:32.360Z",
         "landmarks": 5
       },
       {
         "ok": false,
-        "at": "2026-08-06T02:09:41.886Z",
+        "at": "2026-08-06T05:03:33.910Z",
         "landmarks": 5
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/theme-paint/hardcoded-hero.html",
       "failed": true,
-      "recordedAt": "2026-08-06T02:09:41.886Z"
+      "recordedAt": "2026-08-06T05:03:33.910Z"
     }
   },
   "fe-search-present": {
@@ -26,17 +26,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T02:09:39.889Z"
+        "at": "2026-08-06T05:03:31.344Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T02:09:43.432Z"
+        "at": "2026-08-06T05:03:34.879Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/search-present/dead-search.html",
       "failed": true,
-      "recordedAt": "2026-08-06T02:09:43.433Z"
+      "recordedAt": "2026-08-06T05:03:34.879Z"
     }
   }
 }

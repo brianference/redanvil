@@ -14,6 +14,10 @@ export interface ScaffoldCommandOk {
   ok: true;
   files: number;
   prdIncluded: boolean;
+  /** True when a nested .git was intentionally not created. */
+  nestedGitSkipped: boolean;
+  /** Explicit commit / git next step (always set; caller must surface it). */
+  commitInstruction: string;
   /** PM command that is the only supported build entry after scaffold. */
   nextCommand: string;
   /** Lines describing team registration (for the CLI to print). */
@@ -65,8 +69,12 @@ export async function scaffoldFromJobFile(
       ok: true,
       files: result.files.length,
       prdIncluded: result.prdIncluded,
+      nestedGitSkipped: result.nestedGitSkipped,
+      commitInstruction: result.commitInstruction,
       nextCommand: team.nextCommand,
-      teamMessages: team.messages
+      // Lead with the git/commit instruction so nested scaffolds never look ready
+      // for PM roles before the enclosing repo has the app on HEAD.
+      teamMessages: [result.commitInstruction, ...team.messages]
     };
   } catch (err) {
     if (err instanceof ValidationError) return { ok: false, issues: err.issues };

@@ -287,28 +287,41 @@ export function enforceDesignBeforeBuild(
     };
   }
 
+  const priorIds = plan.assignments.map((a) => a.role.id);
   const refusedBuildRoles = plan.assignments
     .filter((a) => (BUILD_ROLE_IDS as readonly string[]).includes(a.role.id))
     .map((a) => a.role.id);
 
-  const withoutBuild = plan.assignments.filter(
-    (a) => !(BUILD_ROLE_IDS as readonly string[]).includes(a.role.id)
+  // Score-raising build work is blocked. QA/debugger/etc. cannot raise the
+  // score either until design (and then build) land — pay only for unblocking
+  // design roles (logo/layout), not a full fan-out.
+  const designOnlySeed = plan.assignments.filter((a) =>
+    (DESIGN_ROLE_IDS as readonly string[]).includes(a.role.id)
   );
 
   const { assignments: withDesign, assignedDesignRoles } = ensureDesignAssignments(
-    withoutBuild,
+    designOnlySeed,
     roles,
     deliverables
   );
 
+  // Keep only logo/layout — never reintroduce non-design roles here.
+  const onlyDesign = withDesign.filter((a) =>
+    (DESIGN_ROLE_IDS as readonly string[]).includes(a.role.id)
+  );
+  const finalIds = new Set(onlyDesign.map((a) => a.role.id));
+  // Count prior plan roles that no longer dispatch (force-added design roles
+  // are not "saved" — they still run).
+  const sessionsSaved = priorIds.filter((id) => !finalIds.has(id)).length;
+
   if (refusedBuildRoles.length > 0) {
     messages.push(
       `pm: REFUSED to dispatch build role(s) [${refusedBuildRoles.join(', ')}] — ` +
-        'design deliverables missing or undecided'
+        'design deliverables missing or undecided; only unblocking design roles run'
     );
   } else {
     messages.push(
-      'pm: design deliverables missing or undecided — assigning design roles before any build role'
+      'pm: design deliverables missing or undecided — assigning design roles only (no full fan-out)'
     );
   }
   for (const r of deliverables.reasons) {
@@ -319,12 +332,18 @@ export function enforceDesignBeforeBuild(
       `pm: assigning design role(s) first: ${assignedDesignRoles.join(', ')}`
     );
   }
+  if (sessionsSaved > 0) {
+    messages.push(
+      `pm: iteration economy — skipped ${sessionsSaved} role session(s) with no path to a better score`
+    );
+  }
 
   const gated: PmIterationPlan = {
     iteration: plan.iteration,
-    assignments: withDesign,
-    worktreeRoles: withDesign.filter((a) => a.role.needsWorktree).map((a) => a.role.id),
-    readOnlyRoles: withDesign.filter((a) => !a.role.needsWorktree).map((a) => a.role.id)
+    assignments: onlyDesign,
+    worktreeRoles: onlyDesign.filter((a) => a.role.needsWorktree).map((a) => a.role.id),
+    readOnlyRoles: onlyDesign.filter((a) => !a.role.needsWorktree).map((a) => a.role.id),
+    sessionsSavedThisIteration: sessionsSaved
   };
 
   return {

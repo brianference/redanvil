@@ -321,54 +321,61 @@ export function enforceProductBeforeDesign(
     };
   }
 
-  const refusedRoles = plan.assignments
-    .filter((a) => (POST_PRODUCT_ROLE_IDS as readonly string[]).includes(a.role.id))
-    .map((a) => a.role.id);
-
-  let without = plan.assignments.filter(
-    (a) => !(POST_PRODUCT_ROLE_IDS as readonly string[]).includes(a.role.id)
-  );
+  // Every non-product assignment is blocked for score-raising until the brief
+  // exists — including QA/brainstorm that used to fan out for free. Dispatch
+  // ONLY product (the unblocking role).
+  const priorIds = plan.assignments.map((a) => a.role.id);
+  const refusedRoles = priorIds.filter((id) => id !== PRODUCT_ROLE_ID);
 
   let assignedProduct = false;
-  if (!without.some((a) => a.role.id === PRODUCT_ROLE_ID)) {
+  let productAssignment = plan.assignments.find((a) => a.role.id === PRODUCT_ROLE_ID);
+  if (!productAssignment) {
     const role = roles.find((r) => r.id === PRODUCT_ROLE_ID) ?? getRole(PRODUCT_ROLE_ID);
     if (role) {
-      without = [
-        {
-          role,
-          rows: [],
-          matchedOwns: [...role.owns]
-        },
-        ...without
-      ];
+      productAssignment = {
+        role,
+        rows: [],
+        matchedOwns: [...role.owns]
+      };
       assignedProduct = true;
     }
   } else {
     assignedProduct = true;
   }
 
+  const onlyProduct = productAssignment ? [productAssignment] : [];
+  const finalIds = new Set(onlyProduct.map((a) => a.role.id));
+  // Prior plan roles that no longer dispatch (product force-add is not "saved").
+  const sessionsSaved = priorIds.filter((id) => !finalIds.has(id)).length;
+
   if (refusedRoles.length > 0) {
     messages.push(
       `pm: REFUSED to dispatch role(s) [${refusedRoles.join(', ')}] — ` +
-        'product brief missing (product has not run)'
+        'product brief missing (product has not run); only unblocking role product runs'
     );
   } else {
     messages.push(
-      'pm: product brief missing — assigning product before design or build'
+      'pm: product brief missing — assigning product only (no score-raising path yet)'
     );
   }
   for (const r of deliverables.reasons) {
     messages.push(`  - ${r}`);
   }
   if (assignedProduct) {
-    messages.push('pm: assigning product role first');
+    messages.push('pm: assigning product role first (unblocking only)');
+  }
+  if (sessionsSaved > 0) {
+    messages.push(
+      `pm: iteration economy — skipped ${sessionsSaved} role session(s) with no path to a better score`
+    );
   }
 
   const gated: PmIterationPlan = {
     iteration: plan.iteration,
-    assignments: without,
-    worktreeRoles: without.filter((a) => a.role.needsWorktree).map((a) => a.role.id),
-    readOnlyRoles: without.filter((a) => !a.role.needsWorktree).map((a) => a.role.id)
+    assignments: onlyProduct,
+    worktreeRoles: onlyProduct.filter((a) => a.role.needsWorktree).map((a) => a.role.id),
+    readOnlyRoles: onlyProduct.filter((a) => !a.role.needsWorktree).map((a) => a.role.id),
+    sessionsSavedThisIteration: sessionsSaved
   };
 
   return {

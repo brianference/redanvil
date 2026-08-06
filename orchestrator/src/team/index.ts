@@ -63,7 +63,8 @@ export {
   type PmDeps,
   type PmConfig,
   type PmResult,
-  type PmIterationPlan
+  type PmIterationPlan,
+  type IterationDispatchEconomy
 } from './pm';
 
 export {
@@ -114,9 +115,13 @@ export {
   runAssignment,
   makePmRunRole,
   unlinkNodeModulesJunction,
+  getRetainedRoleWorktree,
+  listRetainedRoleWorktrees,
+  clearRetainedRoleWorktreesForTests,
   type PmRuntimeContext,
   type PmRuntimeDeps,
-  type RoleRunOutcome
+  type RoleRunOutcome,
+  type RetainedRoleWorktree
 } from './pmRuntime';
 
 export {

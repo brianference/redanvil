@@ -25,6 +25,21 @@ import {
 } from './productPrecondition';
 
 /**
+ * How many agent sessions an iteration skipped because score-raising roles
+ * were blocked by an unmet precondition (dispatch unblocking roles only).
+ */
+export interface IterationDispatchEconomy {
+  /** Sessions not paid this iteration (roles stripped with no path to improve). */
+  sessionsSaved: number;
+  /** Role ids that were not dispatched for that reason. */
+  skippedRoleIds: RoleId[];
+  /** Unblocking roles that still run. */
+  unblockingRoleIds: RoleId[];
+  /** Human-readable summary line for the run report. */
+  summary: string;
+}
+
+/**
  * One iteration's assignment snapshot for dry-run and logging.
  */
 export interface PmIterationPlan {
@@ -45,6 +60,13 @@ export interface PmIterationPlan {
    * product runs. Absent when appDir/slug were not provided.
    */
   productPrecondition?: ProductPreconditionResult;
+  /**
+   * Agent sessions not dispatched this iteration because every score-raising
+   * role was blocked (only unblocking roles run). Zero when full fan-out.
+   */
+  sessionsSavedThisIteration?: number;
+  /** Detail for the run summary when sessions were saved. */
+  dispatchEconomy?: IterationDispatchEconomy;
 }
 
 /**
@@ -134,6 +156,11 @@ export interface PmResult {
   budgetExhausted: boolean;
   /** Role invocations consumed. */
   budgetUsed: number;
+  /**
+   * Total agent sessions not paid across iterations because score-raising
+   * roles were blocked (unblocking-only dispatch). Reported in the run summary.
+   */
+  sessionsSaved: number;
   /** Independent judge summary from the last pass, when any. */
   judgeSummary: string | null;
 }
@@ -263,6 +290,12 @@ export function dryRunAssignments(
       lines.push(`  ${m}`);
     }
   }
+  if ((plan.sessionsSavedThisIteration ?? 0) > 0) {
+    lines.push(
+      `  iteration economy: saved ${plan.sessionsSavedThisIteration} session(s) ` +
+        '(only unblocking roles dispatched)'
+    );
+  }
   return { plan, lines };
 }
 
@@ -284,12 +317,14 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
   let finished = false;
   let doneReasons: string[] = [];
   let judgeSummary: string | null = null;
+  let sessionsSaved = 0;
 
   if (cfg.dryRun === true) {
     const statuses = await deps.readStatuses();
     const { plan, lines } = dryRunAssignments(statuses, roles, deps.appDir, deps.slug);
     plans.push(plan);
     for (const line of lines) console.log(line);
+    const drySaved = plan.sessionsSavedThisIteration ?? 0;
     return {
       loop: {
         passed: false,
@@ -309,6 +344,7 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
       doneReasons: ['dry-run -- no execution'],
       budgetExhausted: false,
       budgetUsed: 0,
+      sessionsSaved: drySaved,
       judgeSummary: null
     };
   }
@@ -327,6 +363,8 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
 
     const statuses = await deps.readStatuses();
     const plan = planIteration(statuses, roles, iteration, deps.appDir, deps.slug);
+    const saved = plan.sessionsSavedThisIteration ?? 0;
+    sessionsSaved += saved;
     plans.push(plan);
 
     // Surface product then design refusals so a skipped step is never silent.
@@ -340,6 +378,12 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
         console.log(m);
       }
     }
+    if (saved > 0) {
+      console.log(
+        `pm: iteration ${iteration} economy — saved ${saved} session(s) ` +
+          `(only unblocking roles; no path for blocked score-raising roles to improve)`
+      );
+    }
 
     // product → design → others → user-refuse last (see roleDispatchOrder).
     const ordered = [...plan.assignments].sort((a, b) => {
@@ -351,6 +395,8 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
     // Parallel for independent roles; sequential if budget forces drip.
     // Design/build never appear here when product brief is missing; build never
     // appears when design is missing -- planIteration already stripped them.
+    // When a precondition blocks every score-raising role, only unblocking
+    // roles remain (product, or logo/layout) — no full fan-out for free.
     const runnable: RoleAssignment[] = [];
     for (const a of ordered) {
       if (budgetUsed >= budgetCeiling) {
@@ -451,6 +497,13 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
     ];
   }
 
+  if (sessionsSaved > 0) {
+    console.log(
+      `pm: run summary — saved ${sessionsSaved} agent session(s) total by dispatching ` +
+        'only unblocking roles when score-raising work was precondition-blocked'
+    );
+  }
+
   return {
     loop: {
       ...loop,
@@ -467,6 +520,7 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
     doneReasons,
     budgetExhausted,
     budgetUsed,
+    sessionsSaved,
     judgeSummary
   };
 }
