@@ -269,7 +269,7 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-known-bad",
@@ -393,15 +393,14 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "lg-shipped",
-        "lg-result-reproduces"
+        "lg-shipped"
       ]
     }
   ],
-  "deployUrl": null,
-  "finishedAt": "2026-08-06T04:10:44.323Z",
+  "deployUrl": "https://pet-sitter-vz1.pages.dev",
+  "finishedAt": "2026-08-06T04:17:26.825Z",
   "provenance": {
-    "commit": "848d4bffb34ad9cb37b8658fc58b63ca5ba628cf",
+    "commit": "1222b3b3bb6a98e56251807e4d028c10a9a74900",
     "dirty": false,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
@@ -412,6 +411,6 @@
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-06T04:10:44.388Z"
+    "generatedAt": "2026-08-06T04:17:26.897Z"
   }
 }
