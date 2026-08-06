@@ -25,7 +25,7 @@
     },
     {
       "ruleId": "u-test-runners",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "u-test-coverage-ratchet",
@@ -249,7 +249,7 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-known-bad",
@@ -373,6 +373,7 @@
       "index": 1,
       "score": 0,
       "blockers": [
+        "u-test-runners",
         "u-api-no-spa-mask",
         "fe-search-present",
         "fe-assistant-present",
@@ -386,16 +387,15 @@
         "hyg-no-binaries",
         "hyg-no-duplication",
         "lg-shipped",
-        "lg-push-cadence",
-        "lg-result-reproduces"
+        "lg-push-cadence"
       ]
     }
   ],
   "deployUrl": "https://redanvil.pages.dev",
-  "finishedAt": "2026-08-06T01:34:30.515Z",
+  "finishedAt": "2026-08-06T01:38:31.984Z",
   "provenance": {
-    "commit": "dcb71657ae8025a70e590f3a8060ab949b347fb4",
-    "dirty": false,
+    "commit": "6c066ebe774fd287341c005f9f1082d19ce47d21",
+    "dirty": true,
     "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
     "rubricRuleCount": 95,
     "node": "v22.19.0",
@@ -409,6 +409,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-06T01:34:30.583Z"
+    "generatedAt": "2026-08-06T01:38:32.044Z"
   }
 }

@@ -2,16 +2,123 @@
   "_why": "Live request/response pairs captured by u-api-real-output against the real Workers runtime. The judge half of the rule reads THIS, not the source: the question it answers is whether these answers deliver what the product claims, which nothing static can decide.",
   "routes": [
     {
+      "route": "/api/assistant",
+      "path": "/api/assistant",
+      "method": "POST",
+      "requestBody": {
+        "message": "dogs in Leslieville under 60"
+      },
+      "expectation": {
+        "status": [
+          200,
+          502,
+          503
+        ],
+        "nonEmpty": true
+      },
+      "status": 502,
+      "responseBody": "{\"error\":\"The assistant model failed. Try again in a moment.\"}",
+      "error": null
+    },
+    {
+      "route": "/api/auth",
+      "path": "/api/auth",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true,
+        "jsonPath": "user"
+      },
+      "status": 200,
+      "responseBody": "{\"user\":null}",
+      "error": null
+    },
+    {
+      "route": "/api/auth",
+      "path": "/api/auth",
+      "method": "POST",
+      "requestBody": {
+        "action": "sign-in",
+        "email": "not-a-user@example.invalid",
+        "password": "wrong-password-xx"
+      },
+      "expectation": {
+        "status": 401
+      },
+      "status": 401,
+      "responseBody": "{\"error\":\"invalid email or password\"}",
+      "error": null
+    },
+    {
       "route": "/api/health",
       "path": "/api/health",
       "method": "GET",
       "requestBody": null,
       "expectation": {
         "status": 200,
-        "nonEmpty": true
+        "nonEmpty": true,
+        "jsonPath": "status",
+        "equals": "ok"
       },
       "status": 200,
       "responseBody": "{\"status\":\"ok\"}",
+      "error": null
+    },
+    {
+      "route": "/api/sitters",
+      "path": "/api/sitters",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true,
+        "minItems": 3,
+        "jsonPath": "sitters"
+      },
+      "status": 200,
+      "responseBody": "{\"sitters\":[{\"id\":\"sit-yorkville-08\",\"owner_user_id\":null,\"name\":\"Alex Rivera\",\"neighbourhood\":\"Yorkville\",\"rate_per_night\":80,\"pet_types\":\"dogs,cats\",\"bio\":\"Short-notice overnight coverage for city travellers. References available on request.\",\"verified_reviews\":52,\"available_from\":\"2026-08-01\",\"available_to\":\"2026-12-31\",\"source_url\":\"https://www.rover.com/\",\"created_at\":\"2026-08-06T00:00:00.000Z\"},{\"id\":\"sit-annex-02\",\"owner_user_id\":null,\"name\":\"Jordan Patel\",\"neighbourhood\":\"The Annex\",\"rate_per_night\":65,\"pet_types\":\"dogs\",\"bio\":\"Apartment-based overnight care near Bloor. Accepts dogs under 40 lb with a trial meet.\",\"verified_reviews\":41,\"available_from\":\"2026-08-01\",\"available_to\":\"2026-11-30\",\"source_url\":\"https://wagwalking.com/\",\"created_at\":\"2026-08-06T00:00:00.000Z\"},{\"id\":\"sit-beaches-04\",\"owner_user_id\":null,\"name\":\"Riley Ng\",\"neighbourhood\":\"The Beaches\",\"rate_per_night\":70,\"pet_types\":\"dogs\",\"bio\":\"Beach-area house with fenced yard. Best for active dogs that need long morning walks.\",\"verified_reviews\":33,\"available_from\":\"2026-08-10\",\"available_to\":\"2026-12-15\",\"source_url\":\"https://www.rover.com/\",\"created_at\":\"2026-08-06T00:00:00.000Z\"},{\"id\":\"sit-highpark-06\",\"owner_user_id\":null,\"name\":\"Casey Brooks\",\"neighbourhood\":\"High Park\",\"rate_per_night\":62,\"pet_types\":\"dogs\",\"bio\":\"Near High Park trails. Mid-day walks and overnight boarding for one or two dogs.\",\"verified_reviews\":29,\"available_from\":\"2026-08-01\",\"available_to\":\"2026-12-31\",\"source_url\":\"https://wagwalking.com/\",\"created_at\":\"2026-08-06T00:00:00.000Z\"},{\"id\":\"sit-leslieville-01\",\"owner_user_id\":null,\"name\":\"Avery Chen\",\"neighbourhood\":\"Leslieville\",\"rate_per_night\":55,\"pet_types\":\"dogs,cats\",\"bio\":\"Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.\",\"verified_reviews\":24,\"available_from\":\"2026-08-01\",\"available_to\":\"2026-12-31\",\"source_url\":\"https://www.rover.com/\",\"created_at\":\"2026-08-06T00:00:00.000Z\"},{\"id\":\"sit-riverdale-03\",\"owner_user_id\":null,\"name\":\"Sam Okonkwo\",\"neighbourhood\":\"Riverdale\",\"rate_per_night\":48,\"pet_types\":\"cats,small mammals\",\"bio\":\"Cat-only drop-ins and multi-day stays. Litter, meds, and photo updates included.\",\"verified_reviews\":18,\"available_from\":\"2026-08-05\",\"available_to\":\"2026-10-31\",\"source_url\":\"https://www.petsitters.org/\",\"created_at\":\"2026-08-06T00:00:00.000Z\"},{\"id\":\"sit-liberty-05\",\"owner_user_id\":null,\"name\":\"Morgan Ellis\",\"neighbourhood\":\"Liberty Village\",\"rate_per_night\":58,\"pet_types\":\"dogs,cats\",\"bio\":\"Condo stays with flexible drop-off windows. Happy to coordinate with building pet policies.\",\"verified_reviews\":12,\"available_from\":\"2026-08-01\",\"available_to\":\"2026-09-30\",\"source_url\":\"https://www.care.com/\",\"created_at\":\"2026-08-06T00:00:00.000Z\"},{\"id\":\"sit-distillery-07\",\"owner_user_id\":null,\"name\":\"Taylor Kim\",\"neighbourhood\":\"Distillery District\",\"rate_per_night\":75,\"pet_types\":\"cats\",\"bio\":\"Quiet loft for cats only. Daily play sessions and twice-daily food checks.\",\"verified_reviews\":9,\"available_from\":\"2026-08-15\",\"available_to\":\"2026-11-15\",\"source_url\":\"https://www.petsitters.org/\",\"created_at\":\"2026-08-06T00:00:00.000Z\"}],\"count\":8}",
+      "error": null
+    },
+    {
+      "route": "/api/sitters",
+      "path": "/api/sitters?q=Leslieville",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true,
+        "jsonPath": "count",
+        "equals": 1
+      },
+      "status": 200,
+      "responseBody": "{\"sitters\":[{\"id\":\"sit-leslieville-01\",\"owner_user_id\":null,\"name\":\"Avery Chen\",\"neighbourhood\":\"Leslieville\",\"rate_per_night\":55,\"pet_types\":\"dogs,cats\",\"bio\":\"Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.\",\"verified_reviews\":24,\"available_from\":\"2026-08-01\",\"available_to\":\"2026-12-31\",\"source_url\":\"https://www.rover.com/\",\"created_at\":\"2026-08-06T00:00:00.000Z\"}],\"count\":1}",
+      "error": null
+    },
+    {
+      "route": "/api/sitters/[id]",
+      "path": "/api/sitters/sit-leslieville-01",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true,
+        "jsonPath": "sitter.name"
+      },
+      "status": 200,
+      "responseBody": "{\"sitter\":{\"id\":\"sit-leslieville-01\",\"owner_user_id\":null,\"name\":\"Avery Chen\",\"neighbourhood\":\"Leslieville\",\"rate_per_night\":55,\"pet_types\":\"dogs,cats\",\"bio\":\"Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.\",\"verified_reviews\":24,\"available_from\":\"2026-08-01\",\"available_to\":\"2026-12-31\",\"source_url\":\"https://www.rover.com/\",\"created_at\":\"2026-08-06T00:00:00.000Z\"},\"reviews\":[{\"id\":\"rev-01\",\"sitter_id\":\"sit-leslieville-01\",\"author_user_id\":null,\"rating\":5,\"body\":\"Reliable evening walks and clear photo updates every night.\",\"created_at\":\"2026-07-12T00:00:00.000Z\"}]}",
+      "error": null
+    },
+    {
+      "route": "/api/sitters/[id]",
+      "path": "/api/sitters/__no_such_id__",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 404
+      },
+      "status": 404,
+      "responseBody": "{\"error\":\"sitter not found\"}",
       "error": null
     }
   ]
