@@ -429,6 +429,167 @@ function findHardcodedJsxCopy(content) {
   return m[1].slice(0, 100);
 }
 
+/**
+ * Names of helpers that validate URL schemes before a value may enter href.
+ * Keep in lockstep with design-system/safeHttpUrl.ts and SafeExternalLink.
+ */
+const SAFE_HREF_FNS = new Set(['safeHttpUrl', 'safeHref', 'safeUrl']);
+
+/**
+ * Extract the expression inside a balanced `{…}` starting at openIdx (the `{`).
+ *
+ * @param {string} source Full file source.
+ * @param {number} openIdx Index of the opening `{`.
+ * @returns {{ expr: string, end: number } | null}
+ */
+function takeBalancedBraceExpr(source, openIdx) {
+  if (source[openIdx] !== '{') return null;
+  let depth = 0;
+  let i = openIdx;
+  for (; i < source.length; i++) {
+    const ch = source[i];
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) {
+        return { expr: source.slice(openIdx + 1, i).trim(), end: i };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Find the JSX/HTML tag name that owns an attribute at attrIndex.
+ * Walks backward past whitespace and other attrs to the nearest `<Name`.
+ *
+ * @param {string} source File source.
+ * @param {number} attrIndex Index of the `href` / `src` attribute name.
+ * @returns {string} Tag name (e.g. `a`, `SafeExternalLink`) or empty.
+ */
+function tagNameBeforeAttr(source, attrIndex) {
+  let i = attrIndex - 1;
+  while (i >= 0 && /\s/.test(source[i])) i--;
+  // Walk back over prior attributes and their values (best-effort).
+  while (i >= 0 && source[i] !== '<') {
+    i--;
+  }
+  if (i < 0 || source[i] !== '<') return '';
+  const m = /^<\/?([A-Za-z][\w.-]*)/.exec(source.slice(i));
+  return m ? m[1] : '';
+}
+
+/**
+ * True when expr is a string or template literal with no interpolation.
+ *
+ * @param {string} expr JSX attribute expression body.
+ * @returns {boolean}
+ */
+function isStaticStringExpr(expr) {
+  const t = expr.trim();
+  if ((t.startsWith("'") && t.endsWith("'")) || (t.startsWith('"') && t.endsWith('"'))) {
+    return true;
+  }
+  if (t.startsWith('`') && t.endsWith('`') && !t.slice(1, -1).includes('${')) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * True when the expression is already gated by a known safe helper, or is a
+ * nullish literal that cannot become a sink.
+ *
+ * @param {string} expr Expression inside href={…}.
+ * @returns {boolean}
+ */
+function exprIsSchemeGated(expr) {
+  const t = expr.trim();
+  if (t === 'null' || t === 'undefined' || t === "''" || t === '""') return true;
+  // Direct call: safeHttpUrl(x), safeHref(x) ?? undefined, safeUrl(x) || '#'
+  for (const name of SAFE_HREF_FNS) {
+    if (new RegExp(`\\b${name}\\s*\\(`).test(t)) return true;
+  }
+  // Conditional where both arms are gated or nullish: gated ? a : b
+  if (t.includes('?') && t.includes(':')) {
+    // Best-effort: if any arm still has a bare property access and no gate, fail
+    // by returning false when no safe fn appears at all (handled above).
+    // A ternary that uses the gate once is enough (safe ? safeHttpUrl(x) : null).
+    if ([...SAFE_HREF_FNS].some((n) => new RegExp(`\\b${n}\\s*\\(`).test(t))) return true;
+  }
+  return false;
+}
+
+/**
+ * Identifiers in this file that were assigned from a safe href helper.
+ *
+ * @param {string} content File source.
+ * @returns {Set<string>}
+ */
+function safeHrefAssignedIdents(content) {
+  /** @type {Set<string>} */
+  const names = new Set();
+  const re =
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:safeHttpUrl|safeHref|safeUrl)\s*\(/g;
+  let m;
+  while ((m = re.exec(content)) !== null) {
+    names.add(m[1]);
+  }
+  return names;
+}
+
+/**
+ * Find unvalidated data-driven href={…} (and dangerous src=) bindings.
+ *
+ * Safe forms: string literals, safeHttpUrl/safeHref/safeUrl calls, identifiers
+ * assigned from those, and props on SafeExternalLink (which validates).
+ *
+ * @param {string} content File source.
+ * @returns {string[]} Short descriptions of each defect (empty = clean).
+ */
+function findUnsafeHrefBindings(content) {
+  const assigned = safeHrefAssignedIdents(content);
+  /** @type {string[]} */
+  const findings = [];
+  // href={…} on any element; src={…} only on tags that load remote documents/code.
+  const attrRe = /\b(href|src)\s*=\s*\{/g;
+  let m;
+  while ((m = attrRe.exec(content)) !== null) {
+    const attr = m[1];
+    const openIdx = m.index + m[0].length - 1; // points at `{`
+    const taken = takeBalancedBraceExpr(content, openIdx);
+    if (!taken) continue;
+    const expr = taken.expr;
+    const tag = tagNameBeforeAttr(content, m.index);
+
+    // SafeExternalLink validates its href prop before rendering an <a>.
+    if (tag === 'SafeExternalLink') continue;
+
+    // src on <img>/<video>/<audio>/<source> is usually a relative asset path;
+    // the XSS class this rule catches is scheme injection in navigable hrefs
+    // and document-loading sinks (iframe/script/object/embed).
+    if (attr === 'src') {
+      const dangerousSrc = /^(iframe|script|object|embed)$/i.test(tag);
+      if (!dangerousSrc) continue;
+    }
+
+    if (isStaticStringExpr(expr)) continue;
+    if (exprIsSchemeGated(expr)) continue;
+
+    // Bare identifier assigned from a safe helper earlier in the file.
+    if (/^[A-Za-z_$][\w$]*$/.test(expr) && assigned.has(expr)) continue;
+
+    // Template / concat that forces a same-origin path prefix cannot carry a
+    // foreign scheme (`/` + anything is still a path).
+    if (/^`[/#]/.test(expr.trim()) || /^(['"])[/#]/.test(expr.trim())) continue;
+
+    findings.push(`${attr}={${expr.slice(0, 80)}}`);
+    // Advance past this binding so nested braces do not double-match.
+    attrRe.lastIndex = taken.end + 1;
+  }
+  return findings;
+}
+
 switch (ruleId) {
   case 'u-typing-scoped-ignores': {
     // Bare @ts-ignore / @ts-nocheck / @ts-expect-error with no trailing justification fails.
@@ -939,6 +1100,24 @@ switch (ruleId) {
       /\beval\s*\(|new\s+Function\s*\(|child_process|\.innerHTML\s*=|document\.write\s*\(/
     );
     hit ? fail(`SAST sink: ${hit}`) : pass();
+    break;
+  }
+  case 'u-sec-safe-href': {
+    // Data-driven href={…} without scheme validation is XSS (javascript:,
+    // mixed-case/whitespace schemes, protocol-relative //evil). Require the
+    // shared safeHttpUrl / safeHref / safeUrl gate or SafeExternalLink, and
+    // fail closed on any bare data expression. String literals and identifiers
+    // assigned from those helpers pass. n/a when there is no JSX source.
+    const files = tsx().filter((f) => !isTestFile(f));
+    if (files.length === 0) notApplicable('no typescript source to scan');
+    for (const f of files) {
+      const c = read(f);
+      const findings = findUnsafeHrefBindings(c);
+      if (findings.length > 0) {
+        fail(`unvalidated data-driven href: ${f}: ${findings[0]}`);
+      }
+    }
+    pass();
     break;
   }
   case 'u-typing-no-any': {

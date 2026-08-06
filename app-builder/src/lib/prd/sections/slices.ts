@@ -83,7 +83,7 @@ export function buildSlices(opts: {
     } else if (isPrimaryDetail) {
       db = `Read one row from \`${primaryTable}\``;
       api = `GET /api/${primaryTable}/:id`;
-      ui = `${primary}DetailPage at \`/${primaryTable}/:id\` with back link`;
+      ui = `${primary}DetailPage at \`/${primaryTable}/:id\` with back link; any data-driven external link uses safeHttpUrl/SafeExternalLink (omit anchor when null)`;
     } else if (isAccess && hasAuth) {
       db = 'users + sessions tables (from Slice 0 DDL)';
       api = 'POST /api/auth/register, /api/auth/sign-in, /api/auth/sign-out';

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { SafeExternalLink } from '../../../../design-system/SafeExternalLink';
 import { en } from '../../i18n/en';
 import { theme } from '../../theme';
 import type { Example } from '../../lib/examples';
@@ -66,22 +67,20 @@ export function ExampleCard({ example }: ExampleCardProps): JSX.Element {
           ) : null}
 
           <div className="ex-card__actions">
-            <a
+            <SafeExternalLink
               href={example.liveUrl}
-              rel="noopener noreferrer"
               className="ex-card__action ex-card__action--primary"
               style={primaryActionStyle}
             >
               {copy.viewLive}
-            </a>
-            <a
+            </SafeExternalLink>
+            <SafeExternalLink
               href={example.repoUrl}
-              rel="noopener noreferrer"
               className="ex-card__action ex-card__action--ghost"
               style={ghostActionStyle}
             >
               {copy.viewSource}
-            </a>
+            </SafeExternalLink>
           </div>
         </div>
       </div>

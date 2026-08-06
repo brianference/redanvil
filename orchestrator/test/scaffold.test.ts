@@ -111,6 +111,16 @@ describe('scaffoldApp', () => {
     expect(pkg.scripts.verify).toContain('test:coverage');
   });
 
+  it('ships the shared safeHttpUrl gate and SafeExternalLink (u-sec-safe-href)', async () => {
+    const util = await readFile(join(out, 'src/lib/safeHttpUrl.ts'), 'utf8');
+    expect(util).toContain('export function safeHttpUrl');
+    expect(util).toContain('export function safeHref');
+    expect(util).toMatch(/protocol !== 'http:'/);
+    const link = await readFile(join(out, 'src/components/SafeExternalLink.tsx'), 'utf8');
+    expect(link).toContain('safeHttpUrl');
+    expect(link).toContain('SafeExternalLink');
+  });
+
   it('ships independent vitest unit, browser, and VRT lanes', async () => {
     const config = await readFile(join(out, 'vitest.config.ts'), 'utf8');
     expect(config).toContain("name: 'unit'");

@@ -1,4 +1,7 @@
 import { z } from 'zod';
+// Single shared implementation — do not reimplement scheme checks here.
+export { safeHttpUrl, safeUrl } from '../../../design-system/safeHttpUrl';
+import { safeUrl } from '../../../design-system/safeHttpUrl';
 
 /** One rule result from the gate feed. */
 export interface RunRule {
@@ -38,19 +41,6 @@ export interface RunSummary {
 export interface RuleLaneGroup {
   lane: string;
   rules: readonly RunRule[];
-}
-
-/**
- * Accepts only http/https URLs; everything else (javascript:, data:, blob:, junk) becomes null.
- */
-export function safeUrl(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  try {
-    const parsed = new URL(value);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? value : null;
-  } catch {
-    return null;
-  }
 }
 
 /**

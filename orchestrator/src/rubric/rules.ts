@@ -32,6 +32,10 @@ export const RULES: Rule[] = [
   rule('u-sec-timeouts', 'security', 'major', 'det'),
   rule('u-sec-headers-cors', 'security', 'major', 'det'),
   rule('u-sec-sast', 'security', 'major', 'det'),
+  // Data-driven href={row.url} without scheme validation is XSS (javascript:,
+  // protocol-relative, whitespace/case-tricked schemes). Scored blocker so a
+  // green gate cannot hide a click-to-execute sink.
+  rule('u-sec-safe-href', 'security', 'blocker', 'det'),
   // loop-gate.md declares runtime parity a blocker, but no rubric rule encoded
   // it, so the corpus's most emphatic requirement scored nothing. Node-only
   // globals pass every unit test (which runs in Node) and then throw at runtime

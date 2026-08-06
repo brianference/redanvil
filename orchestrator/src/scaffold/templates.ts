@@ -1302,7 +1302,77 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     `}\n`;
 
   for (const p of PAGES) files[`src/pages/${p}.tsx`] = pageComponent(p);
+
+  // Entity detail starter: any data-driven external link MUST go through
+  // safeHttpUrl / SafeExternalLink. pet-sitter (and every app that followed the
+  // old pattern) shipped `<a href={row.source_url}>` and inherited XSS.
+  if (job.entities.length > 0) {
+    const primary = job.entities[0]!.name;
+    files[`src/pages/${primary}Detail.tsx`] = entityDetailPageTsx(primary);
+  }
+
   return files;
+}
+
+/**
+ * Starter entity detail page that demonstrates the safe external-link pattern.
+ *
+ * Renders no anchor when `source_url` fails scheme validation (u-sec-safe-href).
+ *
+ * @param entityName - PascalCase entity name (e.g. `Sitter`).
+ * @returns TypeScript React module source.
+ */
+function entityDetailPageTsx(entityName: string): string {
+  return (
+    `import { Link } from 'react-router-dom';\n` +
+    `import { Page } from '../components/Page';\n` +
+    `import { SafeExternalLink } from '../components/SafeExternalLink';\n` +
+    `import { en } from '../i18n/en';\n\n` +
+    `/** One ${entityName} row as returned by the detail API (extend as the schema lands). */\n` +
+    `export interface ${entityName}DetailRow {\n` +
+    `  id: string;\n` +
+    `  title: string;\n` +
+    `  description: string;\n` +
+    `  /** Optional external citation / source URL from data — never put raw into href. */\n` +
+    `  source_url?: string | null;\n` +
+    `}\n\n` +
+    `export interface ${entityName}DetailProps {\n` +
+    `  /** Loaded row, or null while missing. */\n` +
+    `  row: ${entityName}DetailRow | null;\n` +
+    `}\n\n` +
+    `/**\n` +
+    ` * ${entityName} detail. External links use SafeExternalLink so a\n` +
+    ` * javascript:/data:/protocol-relative source_url never becomes a click sink.\n` +
+    ` */\n` +
+    `export function ${entityName}Detail({ row }: ${entityName}DetailProps): JSX.Element {\n` +
+    `  if (row === null) {\n` +
+    `    return (\n` +
+    `      <Page title={en.pages.home.title}>\n` +
+    `        <p>Not found.</p>\n` +
+    `        <p>\n` +
+    `          <Link to="/">Back</Link>\n` +
+    `        </p>\n` +
+    `      </Page>\n` +
+    `    );\n` +
+    `  }\n\n` +
+    `  return (\n` +
+    `    <Page title={row.title}>\n` +
+    `      <p>{row.description}</p>\n` +
+    `      {/* u-sec-safe-href: SafeExternalLink validates the scheme and renders\n` +
+    `          nothing when the value is not absolute http(s). Never write\n` +
+    `          <a href={row.source_url}> — that is the XSS class this blocks. */\n` +
+    `      {row.source_url ? (\n` +
+    `        <p>\n` +
+    `          <SafeExternalLink href={row.source_url}>Source</SafeExternalLink>\n` +
+    `        </p>\n` +
+    `      ) : null}\n` +
+    `      <p>\n` +
+    `        <Link to="/">Back</Link>\n` +
+    `      </p>\n` +
+    `    </Page>\n` +
+    `  );\n` +
+    `}\n`
+  );
 }
 
 /**

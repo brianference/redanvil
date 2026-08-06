@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
 import { en } from '../i18n/en';
 import { useZone } from '../hooks/useZone';
 import { AssistantPanel } from './AssistantPanel';
@@ -117,14 +118,12 @@ export function Layout() {
               {en.footer.sourceLabel}
             </p>
             <p className="site-footer__source-line">{en.footer.sourceLine}</p>
-            <a
+            <SafeExternalLink
               className="site-footer__source-link"
               href={en.footer.dataLinkHref}
-              target="_blank"
-              rel="noopener noreferrer"
             >
               {en.footer.dataLinkLabel}
-            </a>
+            </SafeExternalLink>
           </aside>
 
           <div className="site-footer__bottom">

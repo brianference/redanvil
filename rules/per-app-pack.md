@@ -14,6 +14,7 @@ Injected into every app RedAnvil generates, on top of the base-15 and the rubric
 - Real data only. No dummy, fake, placeholder, or lorem ipsum content. Seed from real examples.
 - Secrets in `.env` / Cloudflare secrets only, never in code, config, or output. `.env` gitignored.
 - All inputs validated with Zod at the boundary; parameterized D1 queries only.
+- **Never put untrusted data into `href` or remote `src` without scheme validation.** A `javascript:` (or `data:`, protocol-relative `//evil`, whitespace/case-tricked scheme) URI in a data field executes on click. Use the shared `safeHttpUrl` / `safeHref` helpers (scaffolded as `src/lib/safeHttpUrl.ts`, canonical copy in monorepo `design-system/safeHttpUrl.ts`) or `SafeExternalLink`. When validation fails, render **no** anchor — not a dead link and not the raw value. Gated by `u-sec-safe-href`.
 
 ## Required pages and SEO
 

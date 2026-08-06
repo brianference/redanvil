@@ -14,20 +14,17 @@ const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), 'prd.character
  * real generator — never by hand. Full golden payloads live in
  * `prd.characterization.fixtures/*.json`.
  *
- * Last regenerated because the generated §12 checklist gained rows G6 and G7
- * ("a new meta-rule was run against a fixture that provably fails it" and "a
- * two-run record holds two genuinely independent measurements"). The generator
- * echoes DONE-CHECKLIST.md, so adding rows there changes every PRD it writes.
- * All five goldens differed at exactly one point — immediately after G5 — which
- * is what an intended, uniform addition looks like; a real regression would not
- * land in the same place in all five.
+ * Last regenerated because entity detail slices now require safeHttpUrl /
+ * SafeExternalLink for data-driven external links (u-sec-safe-href), and the
+ * file tree lists src/lib/safeHttpUrl.ts. That prose lands in every generated
+ * PRD the same way, so all five goldens move together.
  */
 const EXPECTED_DIGESTS: Readonly<Record<string, string>> = {
-  'dashboard-auth-two-entities': 'afa2b30593b5313862f184da7e84a26b95f03e85aa4cc7de25547b0fea4e2dd9',
-  'mobile-no-auth-two-entities': '2b490e962cdf53d8b035eda0ce07bd3810480809c6f8df5990376ae5c203e826',
-  'marketplace-auth-scoped': '7014a83266f9d1309889169c388645e5a7c452eb8445b2734607fdd276346e8c',
-  'empty-entities-no-auth': 'fe814c4e5bdda62b7e21e9527914f0bcc6880bf2abaa73db7016641ad1a2074e',
-  'long-prompt-many-entities': '193c03937f55289d3500358da8a9333d805d9a2f8a767db66c10f43214fe8d3a'
+  'dashboard-auth-two-entities': '77ec762927a533edc35b5468c535f74782865b7a95111fb58be56723ab066c04',
+  'mobile-no-auth-two-entities': '2df07c8d6a529527a230e25eb6371f2b884af4253057c70fa39c2f4e803b0f2e',
+  'marketplace-auth-scoped': '3919febc3a063e962e79c99368dafe8baa3df42d2b7252b0b39684875b019d83',
+  'empty-entities-no-auth': '5d7eef4047ade3540e859ee5c3adfc2fe984dddcf8fa0ee7695bb77c42cac69d',
+  'long-prompt-many-entities': '2824582f4a8a69fc8ad3a1326e4376d6461e811b5fb5d886da12331e4c3f7436'
 };
 
 describe('generatePrd characterization (byte-identical output)', () => {

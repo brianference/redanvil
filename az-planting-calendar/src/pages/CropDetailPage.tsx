@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
+import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
 import { CropArt } from '../components/CropArt';
 import { MethodChip } from '../components/MethodChip';
 import { useAsyncLoad } from '../hooks/useAsyncLoad';
@@ -97,14 +98,9 @@ export function CropDetailPage() {
                   )}
                   <p className="window-card__cite">
                     <span className="window-card__cite-label">{en.detail.citation}</span>{' '}
-                    <a
-                      href={w.source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-testid="citation-link"
-                    >
+                    <SafeExternalLink href={w.source.url} data-testid="citation-link">
                       {w.source.title}
-                    </a>
+                    </SafeExternalLink>
                     <span className="window-card__cite-meta mono">
                       {' '}
                       — {w.source.author}, {w.source.publisher}. {en.detail.retrieved}{' '}
@@ -159,14 +155,9 @@ function GrowingGuideSection({ guide }: { guide: CropGuide | null }) {
           </dl>
           <p className="window-card__cite">
             <span className="window-card__cite-label">{en.detail.guideCitation}</span>{' '}
-            <a
-              href={guide.source.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="guide-citation-link"
-            >
+            <SafeExternalLink href={guide.source.url} data-testid="guide-citation-link">
               {guide.source.title}
-            </a>
+            </SafeExternalLink>
             <span className="window-card__cite-meta mono">
               {' '}
               — {guide.source.author}, {guide.source.publisher}. {en.detail.retrieved}{' '}

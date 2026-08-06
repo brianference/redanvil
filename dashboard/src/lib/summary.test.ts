@@ -66,10 +66,16 @@ describe('safeUrl', () => {
   it('keeps http and https URLs', () => {
     expect(safeUrl('https://example.com')).toBe('https://example.com');
     expect(safeUrl('http://example.com')).toBe('http://example.com');
+    expect(safeUrl('https://example.com/path')).toBe('https://example.com/path');
   });
 
-  it('rejects non-http schemes and junk', () => {
+  it('rejects non-http schemes, whitespace/case tricks, protocol-relative, and junk', () => {
     expect(safeUrl('javascript:alert(1)')).toBeNull();
+    expect(safeUrl(' javascript:alert(1)')).toBeNull();
+    expect(safeUrl('JaVaScRiPt:alert(1)')).toBeNull();
+    expect(safeUrl('java\tscript:alert(1)')).toBeNull();
+    expect(safeUrl('java\nscript:alert(1)')).toBeNull();
+    expect(safeUrl('//evil.example')).toBeNull();
     expect(safeUrl('data:text/html,hi')).toBeNull();
     expect(safeUrl('not a url')).toBeNull();
     expect(safeUrl(null)).toBeNull();

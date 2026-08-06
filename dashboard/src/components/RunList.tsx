@@ -1,5 +1,6 @@
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
 import { en } from '../i18n/en';
 import { formatRelativeTime } from '../lib/relativeTime';
 import type { Run } from '../lib/summary';
@@ -210,9 +211,8 @@ function RunCard({ run }: { run: Run }): JSX.Element {
             {relative}
           </time>
           {run.deployUrl !== null && run.deployUrl !== '' ? (
-            <a
+            <SafeExternalLink
               href={run.deployUrl}
-              target="_blank"
               rel="noreferrer"
               style={deployLinkStyle}
               className="ra-deploy-link"
@@ -221,7 +221,7 @@ function RunCard({ run }: { run: Run }): JSX.Element {
               }}
             >
               {en.runList.openDeploy}
-            </a>
+            </SafeExternalLink>
           ) : (
             <span style={noneStyle}>{en.runList.none}</span>
           )}
