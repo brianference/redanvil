@@ -1,22 +1,22 @@
 {
   "baseUrl": "https://pet-sitter-vz1.pages.dev",
-  "checkedAt": "2026-08-06T03:48:30.059Z",
+  "checkedAt": "2026-08-06T03:58:29.021Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
-      "detail": "6 route(s) at 375; every interactive element >= 44px"
+      "detail": "7 route(s) at 375; every interactive element >= 44px"
     },
     "fe-type-floor": {
       "ok": true,
-      "detail": "6 route(s) at 375, smallest body font 16px; nothing under 16px"
+      "detail": "7 route(s) at 375, smallest body font 16px; nothing under 16px"
     },
     "fe-responsive-375": {
       "ok": true,
-      "detail": "no page or element overflow/clip at 375 on 6 route(s) (H>1px V>2px)"
+      "detail": "no page or element overflow/clip at 375 on 7 route(s) (H>1px V>2px)"
     },
     "fe-safe-areas": {
       "ok": true,
-      "detail": "header sticky on all 6 route(s), padding-top 12px"
+      "detail": "header sticky on all 7 route(s), padding-top 12px"
     },
     "fe-premium-nav": {
       "ok": true,
@@ -48,7 +48,7 @@
     },
     "fe-required-pages": {
       "ok": true,
-      "detail": "/about 200 \"About Pet Sitter Finder\" 836w/9§; /contact 200 \"Contact\" 697w/8§; /terms 200 \"Terms and conditions\" 2606w/17§; /privacy 200 \"Privacy policy\" 2335w/16§; /no-such-page 200 \"Page not found\" 15w/0§"
+      "detail": "/about 200 \"About Pet Sitter Finder\" 836w/9§; /contact 200 \"Contact\" 697w/8§; /terms 200 \"Terms and conditions\" 2606w/17§; /privacy 200 \"Privacy policy\" 2335w/16§; /sitters 200 \"Sitters\" 18w/0§; /no-such-page 200 \"Page not found\" 15w/0§"
     },
     "fe-visual-review-recorded": {
       "ok": true,

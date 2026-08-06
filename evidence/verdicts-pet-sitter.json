@@ -9,7 +9,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "6 route(s) at 375; every interactive element >= 44px",
-    "reviewedAt": "2026-08-06T03:57:55.461Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -22,7 +22,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "6 route(s) at 375, smallest body font 16px; nothing under 16px",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -35,7 +35,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "no page or element overflow/clip at 375 on 6 route(s) (H>1px V>2px)",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -48,7 +48,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "header sticky on all 6 route(s), padding-top 12px",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -61,7 +61,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "8 header link(s) [Pet Sitter Finder, Home, Sitters, About, Terms, Privacy, Contact, Sign in], aria-current on \"Home\"",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -74,7 +74,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "active nav item: weight 700, gradient background false, aria-current present true",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -87,7 +87,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "no attribution text",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -100,7 +100,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "cross-site link present",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -113,7 +113,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "title \"Pet Sitter Finder\", description present, og:image present",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -126,7 +126,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "/about 200 \"About Pet Sitter Finder\" 836w/9§; /contact 200 \"Contact\" 697w/8§; /terms 200 \"Terms and conditions\" 2606w/17§; /privacy 200 \"Privacy policy\" 2335w/16§; /no-such-page 200 \"Page not found\" 15w/0§",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -139,7 +139,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "0 console/page error(s) across the measured loads",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -152,7 +152,7 @@
       "evidence/screenshots/pet-sitter-375-dark.png"
     ],
     "note": "claimed \"Card grid marketplace\"; widest block 1360px of 1440px, gutters 40/40",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -164,7 +164,7 @@
       "evidence/axe/pet-sitter-light.json"
     ],
     "note": "axe-core dark+light zero contrast violations",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -175,7 +175,7 @@
       "evidence/width-pet-sitter.json"
     ],
     "note": "desktop width >=80%",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -186,7 +186,7 @@
       "evidence/cold-pet-sitter.json"
     ],
     "note": "a first-time visitor gets a working app: 5 cold-start check(s) held",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -198,7 +198,7 @@
       "evidence/cold-pet-sitter.json"
     ],
     "note": "runtime + cold pass",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -211,7 +211,7 @@
       "pet-sitter/src/components/Page.tsx"
     ],
     "note": "named components",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -224,7 +224,7 @@
       "pet-sitter/src/pages/NotFound.tsx"
     ],
     "note": "distinct error states",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -236,7 +236,7 @@
       "pet-sitter/functions/api/assistant.ts"
     ],
     "note": "idiomatic TS",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -248,7 +248,7 @@
       "pet-sitter/functions/lib/http.ts"
     ],
     "note": "shared only when needed",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -260,7 +260,7 @@
       "pet-sitter/src/lib/schemas.ts"
     ],
     "note": "stdlib+framework",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -272,7 +272,7 @@
       "pet-sitter/src/pages/Sitters.tsx"
     ],
     "note": "smallest diff",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -285,7 +285,7 @@
       "pet-sitter/functions/lib/auth.test.ts"
     ],
     "note": "tests cover claims",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -296,7 +296,7 @@
       "pet-sitter/tests/acceptance.spec.ts"
     ],
     "note": "behavioral acceptance",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   },
   {
@@ -308,7 +308,7 @@
       "pet-sitter/tests/api-examples.json"
     ],
     "note": "live API traffic",
-    "reviewedAt": "2026-08-06T03:57:55.462Z",
+    "reviewedAt": "2026-08-06T03:58:40.861Z",
     "reviewedCommit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2"
   }
 ]
