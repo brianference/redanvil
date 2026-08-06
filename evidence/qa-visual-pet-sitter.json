@@ -1,0 +1,63 @@
+{
+  "verdict": "pass",
+  "findings": [],
+  "measurements": {
+    "observations": [
+      {
+        "viewportWidth": 375,
+        "viewportHeight": 844,
+        "primaryResultY": 657.703125,
+        "primaryResultHeight": 419.21875,
+        "brandMarkHeight": 56,
+        "headerHeight": 253,
+        "heroHeight": 72,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "dark"
+      },
+      {
+        "viewportWidth": 375,
+        "viewportHeight": 844,
+        "primaryResultY": 657.703125,
+        "primaryResultHeight": 419.21875,
+        "brandMarkHeight": 56,
+        "headerHeight": 253,
+        "heroHeight": 72,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "light"
+      },
+      {
+        "viewportWidth": 1280,
+        "viewportHeight": 900,
+        "primaryResultY": 385.390625,
+        "primaryResultHeight": 189.609375,
+        "brandMarkHeight": 56,
+        "headerHeight": 81,
+        "heroHeight": 24,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "dark"
+      },
+      {
+        "viewportWidth": 1280,
+        "viewportHeight": 900,
+        "primaryResultY": 385.390625,
+        "primaryResultHeight": 189.609375,
+        "brandMarkHeight": 56,
+        "headerHeight": 81,
+        "heroHeight": 24,
+        "truncatedElementCount": 0,
+        "primaryActionAboveFold": true,
+        "route": "/",
+        "theme": "light"
+      }
+    ],
+    "failReasons": []
+  },
+  "writtenAt": "2026-08-06T03:47:44.346Z",
+  "slug": "pet-sitter"
+}

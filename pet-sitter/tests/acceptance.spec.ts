@@ -89,8 +89,8 @@ test('sitter search narrows the visible catalog', async ({ page }) => {
   await expect(list).toBeVisible({ timeout: 30_000 });
   const before = await list.locator('li').count();
   expect(before).toBeGreaterThan(1);
-  await page.getByLabel(/search sitters/i).fill('Leslieville');
-  await page.getByRole('button', { name: /^search$/i }).click();
+  // Live-narrow on type (applyQuery) — no submit required.
+  await page.getByTestId('filter-search').fill('Leslieville');
   await expect
     .poll(async () => list.locator('li').count(), { timeout: 30_000 })
     .toBeLessThan(before);

@@ -136,6 +136,42 @@ export const CORE_APPS = Object.freeze([
         Object.freeze({ path: '/contact', linkName: 'Contact', headingText: 'Contact' })
       ])
     })
+  },
+  {
+    slug: 'pet-sitter',
+    dir: 'pet-sitter',
+    url: 'https://pet-sitter-vz1.pages.dev',
+    designRoutes: '/about,/contact,/terms,/privacy,/sitters,/no-such-page',
+    widthRoutes: '/,/about,/contact,/terms,/privacy',
+    e2e: false,
+    wizard: false,
+    coreFlow: 'search',
+    na: 'process',
+    // Copied from pet-sitter/src/i18n/en.ts page titles (Page shell h1) and
+    // claims.searchProbe.query (Leslieville — a real seeded neighbourhood).
+    stranger: Object.freeze({
+      purposeSentence:
+        'Find and book trusted local pet sitters: browse sitters by neighbourhood with verified reviews, per-night rates, and the pet types each sitter accepts.',
+      searchQuery: 'Leslieville',
+      requiredPages: Object.freeze([
+        Object.freeze({
+          path: '/about',
+          linkName: 'About',
+          headingText: 'About Pet Sitter Finder'
+        }),
+        Object.freeze({
+          path: '/terms',
+          linkName: 'Terms',
+          headingText: 'Terms and conditions'
+        }),
+        Object.freeze({
+          path: '/privacy',
+          linkName: 'Privacy',
+          headingText: 'Privacy policy'
+        }),
+        Object.freeze({ path: '/contact', linkName: 'Contact', headingText: 'Contact' })
+      ])
+    })
   }
 ]);
 
