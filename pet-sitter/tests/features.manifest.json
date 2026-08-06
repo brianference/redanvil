@@ -4,38 +4,32 @@
     {
       "role": "button",
       "name": "theme-toggle",
-      "routes": [
-        "/",
-        "/about",
-        "/terms",
-        "/privacy",
-        "/contact"
-      ],
+      "routes": ["/", "/about", "/terms", "/privacy", "/contact", "/sitters", "/login"],
       "test": "acceptance.spec.ts > the theme toggle flips the theme and the choice survives a reload"
     },
     {
       "role": "link",
       "name": "nav-link",
-      "routes": [
-        "/",
-        "/about",
-        "/terms",
-        "/privacy",
-        "/contact"
-      ],
+      "routes": ["/", "/about", "/terms", "/privacy", "/contact", "/sitters"],
       "test": "acceptance.spec.ts > primary navigation reaches the required pages"
     },
     {
       "role": "link",
       "name": "brand",
-      "routes": [
-        "/",
-        "/about",
-        "/terms",
-        "/privacy",
-        "/contact"
-      ],
+      "routes": ["/", "/about", "/terms", "/privacy", "/contact"],
       "test": "acceptance.spec.ts > the brand link returns to the home page"
+    },
+    {
+      "role": "search",
+      "name": "sitter-search",
+      "routes": ["/"],
+      "test": "acceptance.spec.ts > sitter search narrows the visible catalog"
+    },
+    {
+      "role": "button",
+      "name": "assistant",
+      "routes": ["/"],
+      "test": "acceptance.spec.ts > assistant panel is reachable from the shell"
     }
   ]
 }

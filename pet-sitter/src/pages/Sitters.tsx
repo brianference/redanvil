@@ -1,13 +1,13 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { fetchSitters, type SitterSummary } from '../lib/api';
 import { en } from '../i18n/en';
 
 /**
- * Home: marketplace search over sitters with live narrowing.
+ * Full sitters collection with text search that narrows results.
  */
-export function Home(): JSX.Element {
+export function Sitters(): JSX.Element {
   const [query, setQuery] = useState('');
   const [submitted, setSubmitted] = useState('');
   const [sitters, setSitters] = useState<SitterSummary[]>([]);
@@ -17,7 +17,6 @@ export function Home(): JSX.Element {
   useEffect(() => {
     let cancelled = false;
     setStatus('loading');
-    setError(null);
     void fetchSitters({ q: submitted || undefined })
       .then((data) => {
         if (cancelled) return;
@@ -26,8 +25,7 @@ export function Home(): JSX.Element {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : en.home.loadError);
-        setSitters([]);
+        setError(err instanceof Error ? err.message : en.sitters.loadError);
         setStatus('error');
       });
     return () => {
@@ -35,14 +33,8 @@ export function Home(): JSX.Element {
     };
   }, [submitted]);
 
-  const countLabel = useMemo(() => {
-    if (status === 'loading') return en.home.loading;
-    if (status === 'error') return en.home.errorCount;
-    return `${sitters.length} ${en.home.resultCountLabel}`;
-  }, [sitters.length, status]);
-
   /**
-   * Apply the text search.
+   * Apply search.
    *
    * @param event - Form submit.
    */
@@ -52,48 +44,40 @@ export function Home(): JSX.Element {
   }
 
   return (
-    <Page title={en.home.title}>
-      <p className="page-intro">{en.home.intro}</p>
-
-      <form className="search-bar" role="search" onSubmit={onSearch} data-testid="sitter-search">
-        <label htmlFor="sitter-search-input" className="search-bar__label">
+    <Page title={en.sitters.title}>
+      <p className="page-intro">{en.sitters.intro}</p>
+      <form className="search-bar" role="search" onSubmit={onSearch}>
+        <label htmlFor="sitters-page-search" className="search-bar__label">
           {en.home.searchLabel}
         </label>
         <div className="search-bar__row">
           <input
-            id="sitter-search-input"
+            id="sitters-page-search"
             type="search"
             name="q"
             className="search-bar__input"
-            placeholder={en.home.searchPlaceholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            autoComplete="off"
+            placeholder={en.home.searchPlaceholder}
           />
           <button type="submit" className="search-bar__submit">
             {en.home.searchSubmit}
           </button>
         </div>
       </form>
-
-      <p className="result-meta" data-testid="result-count" aria-live="polite">
-        {countLabel}
+      <p className="result-meta" aria-live="polite">
+        {status === 'ready'
+          ? `${sitters.length} ${en.home.resultCountLabel}`
+          : en.home.loading}
       </p>
-
       {status === 'error' ? (
         <p className="state state--error" role="alert">
-          {error ?? en.home.loadError}
+          {error}
         </p>
       ) : null}
-
-      {status === 'loading' ? <p className="state">{en.home.loading}</p> : null}
-
       {status === 'ready' && sitters.length === 0 ? (
-        <p className="state state--empty" data-testid="empty-sitters">
-          {en.home.empty}
-        </p>
+        <p className="state state--empty">{en.home.empty}</p>
       ) : null}
-
       {status === 'ready' && sitters.length > 0 ? (
         <ul className="sitter-grid" data-testid="sitter-list">
           {sitters.map((s) => (
@@ -102,19 +86,14 @@ export function Home(): JSX.Element {
                 <h2 className="sitter-card__name">{s.name}</h2>
                 <p className="sitter-card__meta">
                   {s.neighbourhood} · ${s.rate_per_night}
-                  {en.home.perNight} · {s.verified_reviews} {en.home.reviews}
+                  {en.home.perNight}
                 </p>
                 <p className="sitter-card__pets">{s.pet_types}</p>
-                <p className="sitter-card__bio">{s.bio}</p>
               </Link>
             </li>
           ))}
         </ul>
       ) : null}
-
-      <p className="home-more">
-        <Link to="/sitters">{en.home.browseAll}</Link>
-      </p>
     </Page>
   );
 }

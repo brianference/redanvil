@@ -6,13 +6,15 @@ export interface AppRoute {
   name: string;
 }
 
-/** Canonical routes for the generated app shell. */
+/** Canonical routes for Pet Sitter Finder. */
 export const ROUTES: readonly AppRoute[] = [
   { path: '/', name: 'Home' },
+  { path: '/sitters', name: 'Sitters' },
   { path: '/about', name: 'About' },
   { path: '/terms', name: 'Terms' },
   { path: '/privacy', name: 'Privacy' },
-  { path: '/contact', name: 'Contact' }
+  { path: '/contact', name: 'Contact' },
+  { path: '/login', name: 'Login' }
 ] as const;
 
 /**

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Option C — Timeline / calendar availability hero · Pet Sitter Finder</title>
+  <style>
+    :root {
+      --bg: #f7f3eb;
+      --surface: #fffdf8;
+      --text: #1a1410;
+      --muted: #6b5e52;
+      --border: #1a1410;
+      --accent: #c2410c;
+      --accent-ink: #ffffff;
+      --avail: #15803d;
+      --busy: #d6cfc4;
+      --today: #1a1410;
+      --shadow: 4px 4px 0 #1a1410;
+      --band: #efe6d8;
+    }
+    [data-theme="dark"] {
+      --bg: #120f0c;
+      --surface: #1c1713;
+      --text: #f6efe6;
+      --muted: #a89888;
+      --border: #f6efe6;
+      --accent: #fb923c;
+      --accent-ink: #1a1008;
+      --avail: #4ade80;
+      --busy: #3a322b;
+      --today: #f6efe6;
+      --shadow: 4px 4px 0 #f6efe6;
+      --band: #2a221c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background: #26201a;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+    .page-meta {
+      max-width: 420px;
+      margin: 0 auto 16px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .page-meta h1 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .page-meta p { margin: 0 0 10px; color: #b8a99a; }
+    .arch-tag {
+      display: inline-block;
+      border: 2px solid #fff;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .themes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .theme-label {
+      text-align: center;
+      color: #c9b8a6;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .phone {
+      width: 375px;
+      border: 3px solid #000;
+      background: var(--bg);
+      box-shadow: 8px 8px 0 #000;
+      overflow: hidden;
+    }
+    /* —— ARCHITECTURE C: availability calendar is the hero; sitter list is secondary —— */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border);
+      background: var(--surface);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 14px;
+    }
+    .mark {
+      width: 26px;
+      height: 26px;
+      border: 2px solid var(--border);
+      background: var(--accent);
+    }
+    .nav a {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .date-hero {
+      padding: 16px 14px 14px;
+      border-bottom: 2px solid var(--border);
+      background: var(--band);
+    }
+    .date-hero h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+    .date-hero .sub {
+      margin: 0 0 14px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      align-items: end;
+      margin-bottom: 12px;
+    }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .field .box {
+      border: 2px solid var(--border);
+      background: var(--surface);
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .arrow {
+      font-weight: 900;
+      font-size: 18px;
+      padding-bottom: 10px;
+    }
+
+    .cal {
+      border: 2px solid var(--border);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 10px;
+    }
+    .cal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .cal-head strong {
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .cal-head span {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .dow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      margin-bottom: 4px;
+    }
+    .dow span {
+      text-align: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .day {
+      aspect-ratio: 1;
+      border: 1.5px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--busy);
+      color: var(--muted);
+      min-height: 36px;
+    }
+    .day.avail {
+      background: color-mix(in srgb, var(--avail) 22%, var(--surface));
+      color: var(--text);
+    }
+    .day.in-range {
+      background: var(--accent);
+      color: var(--accent-ink);
+      border-color: var(--border);
+    }
+    .day.today {
+      outline: 2px solid var(--today);
+      outline-offset: -2px;
+    }
+    .day .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--avail);
+      margin-top: 2px;
+    }
+    .day.in-range .dot { background: var(--accent-ink); }
+    .legend {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .legend i {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border: 1px solid var(--border);
+      margin-right: 4px;
+      vertical-align: -1px;
+    }
+    .legend .a { background: color-mix(in srgb, var(--avail) 22%, var(--surface)); }
+    .legend .r { background: var(--accent); }
+    .legend .b { background: var(--busy); }
+
+    .secondary {
+      padding: 14px;
+    }
+    .secondary-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .secondary-head h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .secondary-head span {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .search-inline {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .search-inline input {
+      flex: 1;
+      min-height: 44px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 16px;
+      padding: 0 12px;
+      font-family: inherit;
+    }
+    .search-inline button {
+      min-height: 44px;
+      padding: 0 14px;
+      border: 2px solid var(--border);
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 800;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    /* Secondary: horizontal timeline rows, not vertical marketplace cards */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .t-row {
+      border: 2px solid var(--border);
+      background: var(--surface);
+      padding: 10px 12px;
+    }
+    .t-row header {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .t-row h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .t-row .rate {
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .t-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .bars {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 3px;
+      height: 10px;
+    }
+    .bars span {
+      background: var(--busy);
+      border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+    }
+    .bars span.on {
+      background: var(--avail);
+      border-color: var(--border);
+    }
+    .bars span.sel {
+      background: var(--accent);
+      border-color: var(--border);
+    }
+    .t-row footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .t-row footer button {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 2px solid var(--border);
+      background: var(--accent);
+      color: var(--accent-ink);
+      font-weight: 800;
+      font-size: 12px;
+      font-family: inherit;
+      box-shadow: 2px 2px 0 var(--border);
+    }
+    .t-row footer .match {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--avail);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-meta">
+    <div class="arch-tag">Option C · Architecture</div>
+    <h1>Timeline / calendar availability hero</h1>
+    <p>
+      Dates and availability own the top of the page as a full calendar hero. The sitter
+      list is secondary and structured as timeline rows (week bars), not photo cards and
+      not a map rail. Search sits under the calendar, after dates are set.
+    </p>
+  </div>
+
+  <div class="themes">
+    <div>
+      <div class="theme-label">Light · 375</div>
+      <div class="phone" data-theme="light">
+        <header class="nav">
+          <div class="brand"><div class="mark" aria-hidden="true"></div> Pet Sitter Finder</div>
+          <a href="#">Sign in</a>
+        </header>
+
+        <section class="date-hero" aria-label="Choose care dates">
+          <h1>When do you need care?</h1>
+          <p class="sub">Pick dates first. We rank sitters who are free for that whole window.</p>
+
+          <div class="range-row">
+            <div class="field">
+              <label>Check-in</label>
+              <div class="box">Fri, Aug 8</div>
+            </div>
+            <div class="arrow" aria-hidden="true">→</div>
+            <div class="field">
+              <label>Check-out</label>
+              <div class="box">Mon, Aug 11</div>
+            </div>
+          </div>
+
+          <div class="cal" aria-label="August availability calendar">
+            <div class="cal-head">
+              <strong>August 2026</strong>
+              <span>Half-month window</span>
+            </div>
+            <div class="dow">
+              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+            </div>
+            <div class="days">
+              <div class="day" style="visibility:hidden"></div>
+              <div class="day" style="visibility:hidden"></div>
+              <div class="day" style="visibility:hidden"></div>
+              <div class="day" style="visibility:hidden"></div>
+              <div class="day" style="visibility:hidden"></div>
+              <div class="day avail">1<span class="dot"></span></div>
+              <div class="day avail">2<span class="dot"></span></div>
+              <div class="day avail">3<span class="dot"></span></div>
+              <div class="day avail">4<span class="dot"></span></div>
+              <div class="day today avail">5<span class="dot"></span></div>
+              <div class="day avail">6<span class="dot"></span></div>
+              <div class="day avail">7<span class="dot"></span></div>
+              <div class="day in-range">8<span class="dot"></span></div>
+              <div class="day in-range">9<span class="dot"></span></div>
+              <div class="day in-range">10<span class="dot"></span></div>
+              <div class="day in-range">11<span class="dot"></span></div>
+              <div class="day avail">12<span class="dot"></span></div>
+              <div class="day avail">13<span class="dot"></span></div>
+              <div class="day avail">14<span class="dot"></span></div>
+              <div class="day">15</div>
+            </div>
+            <div class="legend">
+              <span><i class="a"></i>Sitters free</span>
+              <span><i class="r"></i>Your range</span>
+              <span><i class="b"></i>Sparse</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="secondary" aria-label="Sitters for selected dates">
+          <div class="secondary-head">
+            <h2>Sitters free Aug 8–11</h2>
+            <span>8 matches</span>
+          </div>
+          <div class="search-inline">
+            <input type="search" aria-label="Search sitters" value="Riverside dogs" readonly />
+            <button type="button">Filter</button>
+          </div>
+          <div class="timeline">
+            <article class="t-row">
+              <header>
+                <h3>Maya Chen · Riverside</h3>
+                <div class="rate">$38/night</div>
+              </header>
+              <div class="t-meta">4.9 · verified · dogs &amp; cats</div>
+              <div class="bars" aria-hidden="true">
+                <span class="on"></span><span class="on"></span><span class="on"></span>
+                <span class="sel"></span><span class="sel"></span><span class="sel"></span><span class="sel"></span>
+              </div>
+              <footer>
+                <span class="match">Full window free</span>
+                <button type="button">Request</button>
+              </footer>
+            </article>
+            <article class="t-row">
+              <header>
+                <h3>Jordan Hale · Harbor</h3>
+                <div class="rate">$42/night</div>
+              </header>
+              <div class="t-meta">4.8 · verified · dogs</div>
+              <div class="bars" aria-hidden="true">
+                <span class="on"></span><span></span><span class="on"></span>
+                <span class="sel"></span><span class="sel"></span><span class="sel"></span><span class="on"></span>
+              </div>
+              <footer>
+                <span class="match">Full window free</span>
+                <button type="button">Request</button>
+              </footer>
+            </article>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div>
+      <div class="theme-label">Dark · 375</div>
+      <div class="phone" data-theme="dark">
+        <header class="nav">
+          <div class="brand"><div class="mark" aria-hidden="true"></div> Pet Sitter Finder</div>
+          <a href="#">Sign in</a>
+        </header>
+
+        <section class="date-hero" aria-label="Choose care dates">
+          <h1>When do you need care?</h1>
+          <p class="sub">Pick dates first. We rank sitters who are free for that whole window.</p>
+
+          <div class="range-row">
+            <div class="field">
+              <label>Check-in</label>
+              <div class="box">Fri, Aug 8</div>
+            </div>
+            <div class="arrow" aria-hidden="true">→</div>
+            <div class="field">
+              <label>Check-out</label>
+              <div class="box">Mon, Aug 11</div>
+            </div>
+          </div>
+
+          <div class="cal" aria-label="August availability calendar">
+            <div class="cal-head">
+              <strong>August 2026</strong>
+              <span>Half-month window</span>
+            </div>
+            <div class="dow">
+              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+            </div>
+            <div class="days">
+              <div class="day" style="visibility:hidden"></div>
+              <div class="day" style="visibility:hidden"></div>
+              <div class="day" style="visibility:hidden"></div>
+              <div class="day" style="visibility:hidden"></div>
+              <div class="day" style="visibility:hidden"></div>
+              <div class="day avail">1<span class="dot"></span></div>
+              <div class="day avail">2<span class="dot"></span></div>
+              <div class="day avail">3<span class="dot"></span></div>
+              <div class="day avail">4<span class="dot"></span></div>
+              <div class="day today avail">5<span class="dot"></span></div>
+              <div class="day avail">6<span class="dot"></span></div>
+              <div class="day avail">7<span class="dot"></span></div>
+              <div class="day in-range">8<span class="dot"></span></div>
+              <div class="day in-range">9<span class="dot"></span></div>
+              <div class="day in-range">10<span class="dot"></span></div>
+              <div class="day in-range">11<span class="dot"></span></div>
+              <div class="day avail">12<span class="dot"></span></div>
+              <div class="day avail">13<span class="dot"></span></div>
+              <div class="day avail">14<span class="dot"></span></div>
+              <div class="day">15</div>
+            </div>
+            <div class="legend">
+              <span><i class="a"></i>Sitters free</span>
+              <span><i class="r"></i>Your range</span>
+              <span><i class="b"></i>Sparse</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="secondary" aria-label="Sitters for selected dates">
+          <div class="secondary-head">
+            <h2>Sitters free Aug 8–11</h2>
+            <span>8 matches</span>
+          </div>
+          <div class="search-inline">
+            <input type="search" aria-label="Search sitters" value="Riverside dogs" readonly />
+            <button type="button">Filter</button>
+          </div>
+          <div class="timeline">
+            <article class="t-row">
+              <header>
+                <h3>Maya Chen · Riverside</h3>
+                <div class="rate">$38/night</div>
+              </header>
+              <div class="t-meta">4.9 · verified · dogs &amp; cats</div>
+              <div class="bars" aria-hidden="true">
+                <span class="on"></span><span class="on"></span><span class="on"></span>
+                <span class="sel"></span><span class="sel"></span><span class="sel"></span><span class="sel"></span>
+              </div>
+              <footer>
+                <span class="match">Full window free</span>
+                <button type="button">Request</button>
+              </footer>
+            </article>
+            <article class="t-row">
+              <header>
+                <h3>Jordan Hale · Harbor</h3>
+                <div class="rate">$42/night</div>
+              </header>
+              <div class="t-meta">4.8 · verified · dogs</div>
+              <div class="t-meta" style="display:none"></div>
+              <div class="bars" aria-hidden="true">
+                <span class="on"></span><span></span><span class="on"></span>
+                <span class="sel"></span><span class="sel"></span><span class="sel"></span><span class="on"></span>
+              </div>
+              <footer>
+                <span class="match">Full window free</span>
+                <button type="button">Request</button>
+              </footer>
+            </article>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

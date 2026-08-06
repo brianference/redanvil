@@ -2,7 +2,9 @@ import type { ReactNode } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { en } from '../i18n/en';
 import { ROUTES } from '../lib/routes';
-import { theme } from '../theme';
+import { AssistantPanel } from './AssistantPanel';
+import { BrandLogo } from './BrandLogo';
+import { Breadcrumbs } from './Breadcrumbs';
 import { ThemeToggle } from './ThemeToggle';
 
 export interface PageProps {
@@ -12,64 +14,106 @@ export interface PageProps {
   children: ReactNode;
 }
 
-/** Shared page shell: sticky header, primary nav, one h1, professional footer. */
+/** Shared page shell: sticky header, primary nav, breadcrumbs, footer, assistant. */
 export function Page({ title, children }: PageProps): JSX.Element {
+  const navRoutes = ROUTES.filter((r) => r.name !== 'Home');
+
   return (
-    <div>
-      <header
-        style={{
-          position: 'sticky',
-          top: 0,
-          display: 'flex',
-          alignItems: 'center',
-          gap: theme.space.md,
-          padding: theme.space.md,
-          background: theme.color.surface,
-          borderBottom: '1px solid ' + theme.color.border
-        }}
-      >
-        <Link
-          data-testid="brand"
-          to="/"
-          style={{ color: theme.color.text, fontWeight: 700, textDecoration: 'none' }}
-        >
-          {en.app.name}
-        </Link>
-        <nav aria-label={en.app.primaryNav}>
-          <ul style={{ display: 'flex', gap: theme.space.md, listStyle: 'none', margin: 0, padding: 0 }}>
-            {ROUTES.map((route) => (
+    <div className="shell">
+      <a className="skip-link" href="#main">
+        {en.nav.skipToContent}
+      </a>
+      <header className="topbar">
+        <BrandLogo className="brand" markClassName="brand__mark" nameClassName="brand__name" />
+        <nav className="topbar__nav" aria-label={en.app.primaryNav}>
+          <ul className="topbar__list">
+            {navRoutes.map((route) => (
               <li key={route.path}>
                 <NavLink
                   data-testid="nav-link"
                   to={route.path}
-                  style={({ isActive }) => ({
-                    color: isActive ? theme.color.text : theme.color.muted,
-                    // fe-noncolor-state: the active page is underlined as
-                    // well as recoloured, so the state survives a colour
-                    // vision difference and a greyscale screenshot.
-                    textDecoration: isActive ? 'underline' : 'none',
-                    // R1.1: a 44px touch target, not a bare text link.
-                    minHeight: 44,
-                    display: 'inline-flex',
-                    alignItems: 'center'
-                  })}
+                  className={({ isActive }) =>
+                    isActive ? 'topbar__link topbar__link--active' : 'topbar__link'
+                  }
                 >
-                  {route.name}
+                  {route.name === 'Sitters'
+                    ? en.nav.sitters
+                    : route.name === 'About'
+                      ? en.nav.about
+                      : route.name === 'Terms'
+                        ? en.nav.terms
+                        : route.name === 'Privacy'
+                          ? en.nav.privacy
+                          : route.name === 'Contact'
+                            ? en.nav.contact
+                            : route.name === 'Login'
+                              ? en.nav.login
+                              : route.name}
                 </NavLink>
               </li>
             ))}
           </ul>
         </nav>
-        <div style={{ marginLeft: 'auto' }}>
+        <div className="topbar__actions">
           <ThemeToggle />
         </div>
       </header>
-      <main>
-        <h1>{title}</h1>
-        {children}
+      <Breadcrumbs />
+      <main id="main" className="main">
+        <div className="main__inner">
+          <h1 className="main__title">{title}</h1>
+          {children}
+        </div>
       </main>
-      <footer>
-        <small>{en.app.footerCopyright}</small>
+      <AssistantPanel />
+      <footer className="site-footer">
+        <div className="site-footer__inner">
+          <div className="site-footer__grid">
+            <section className="site-footer__col" aria-labelledby="footer-explore">
+              <h2 id="footer-explore" className="site-footer__heading">
+                {en.footer.explore}
+              </h2>
+              <ul className="site-footer__list">
+                <li>
+                  <Link to="/">{en.nav.home}</Link>
+                </li>
+                <li>
+                  <Link to="/sitters">{en.nav.sitters}</Link>
+                </li>
+                <li>
+                  <Link to="/login">{en.nav.login}</Link>
+                </li>
+              </ul>
+            </section>
+            <section className="site-footer__col" aria-labelledby="footer-company">
+              <h2 id="footer-company" className="site-footer__heading">
+                {en.footer.company}
+              </h2>
+              <ul className="site-footer__list">
+                <li>
+                  <Link to="/about">{en.nav.about}</Link>
+                </li>
+                <li>
+                  <Link to="/contact">{en.nav.contact}</Link>
+                </li>
+              </ul>
+            </section>
+            <section className="site-footer__col" aria-labelledby="footer-legal">
+              <h2 id="footer-legal" className="site-footer__heading">
+                {en.footer.legal}
+              </h2>
+              <ul className="site-footer__list">
+                <li>
+                  <Link to="/terms">{en.nav.terms}</Link>
+                </li>
+                <li>
+                  <Link to="/privacy">{en.nav.privacy}</Link>
+                </li>
+              </ul>
+            </section>
+          </div>
+          <p className="site-footer__copy">{en.app.footerCopyright}</p>
+        </div>
       </footer>
     </div>
   );

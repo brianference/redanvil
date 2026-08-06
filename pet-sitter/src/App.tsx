@@ -1,24 +1,31 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { pathForPage } from './lib/routes';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ScrollToTop } from './components/ScrollToTop';
-import { Home } from './pages/Home';
 import { About } from './pages/About';
-import { Terms } from './pages/Terms';
-import { Privacy } from './pages/Privacy';
 import { Contact } from './pages/Contact';
+import { Home } from './pages/Home';
+import { Login } from './pages/Login';
+import { NotFound } from './pages/NotFound';
+import { Privacy } from './pages/Privacy';
+import { SitterDetail } from './pages/SitterDetail';
+import { Sitters } from './pages/Sitters';
+import { Terms } from './pages/Terms';
 
-/** App router: composes the required pages from the shared route table. */
+/** App router: marketplace + required shell pages. */
 export function App(): JSX.Element {
   return (
     <BrowserRouter>
-      {/* Inside the router: it reads the current location (R34). */}
       <ScrollToTop />
       <Routes>
-        <Route path={pathForPage('Home') ?? '/'} element={<Home />} />
-        <Route path={pathForPage('About') ?? '/about'} element={<About />} />
-        <Route path={pathForPage('Terms') ?? '/terms'} element={<Terms />} />
-        <Route path={pathForPage('Privacy') ?? '/privacy'} element={<Privacy />} />
-        <Route path={pathForPage('Contact') ?? '/contact'} element={<Contact />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/sitters" element={<Sitters />} />
+        <Route path="/sitters/:id" element={<SitterDetail />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

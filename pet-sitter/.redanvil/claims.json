@@ -1,4 +1,32 @@
 {
+  "kind": "claims",
   "slug": "pet-sitter",
-  "deployUrl": "https://pet-sitter-vz1.pages.dev"
+  "title": "Pet Sitter Finder",
+  "appType": "Marketplace",
+  "hasAuth": true,
+  "entities": ["Sitter", "Pet", "Booking", "Review"],
+  "threshold": 90,
+  "features": [
+    "search sitters",
+    "filter sitters by neighbourhood and pet types",
+    "sitter detail with reviews",
+    "register and sign in",
+    "AI assistant grounded in sitters data"
+  ],
+  "deployUrl": "https://pet-sitter-vz1.pages.dev",
+  "design": {
+    "archetype": "Card grid marketplace",
+    "_why": "Chosen option A from design-refs/design-options/DECISION.md: search-first card grid."
+  },
+  "coldVisitorProbe": {
+    "path": "/",
+    "expectSelector": "[data-testid='sitter-search'], form[role='search']",
+    "minCount": 1
+  },
+  "searchProbe": {
+    "path": "/",
+    "inputName": "/search|find/i",
+    "query": "Leslieville",
+    "expectFewerResults": true
+  }
 }

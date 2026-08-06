@@ -6,6 +6,8 @@
       "DOM",
       "DOM.Iterable"
     ],
+    "types": ["@cloudflare/workers-types", "vite/client"],
+    "isolatedModules": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",

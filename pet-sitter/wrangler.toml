@@ -6,3 +6,7 @@ pages_build_output_dir = "dist"
 binding = "DB"
 database_name = "pet-sitter-db"
 database_id = "863f14ee-f8f0-46b0-9d8f-0756d4412047"
+migrations_dir = "migrations"
+
+[ai]
+binding = "AI"

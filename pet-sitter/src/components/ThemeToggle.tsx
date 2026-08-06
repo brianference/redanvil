@@ -4,15 +4,17 @@ import { theme } from '../theme';
 type ThemeChoice = 'light' | 'dark';
 
 /**
- * The user's saved choice, else the brand default.
- *
- * Dark is the stated default. A saved choice always wins.
+ * Saved choice wins; otherwise follow the OS preference (cold visitor default).
  *
  * @param stored - Raw localStorage value, or null.
  * @returns The theme to apply.
  */
 function resolveTheme(stored: string | null): ThemeChoice {
-  return stored === 'light' || stored === 'dark' ? stored : 'dark';
+  if (stored === 'light' || stored === 'dark') return stored;
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  return 'dark';
 }
 
 /**

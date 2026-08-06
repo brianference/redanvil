@@ -82,3 +82,23 @@ test('an unknown path shows a not-found page with a way back', async ({ page }) 
   await expect(page.getByText(/not found|no such|404/i).first()).toBeVisible();
   await expect(page.getByRole('link').first()).toBeVisible();
 });
+
+test('sitter search narrows the visible catalog', async ({ page }) => {
+  await page.goto('/');
+  const list = page.getByTestId('sitter-list');
+  await expect(list).toBeVisible({ timeout: 30_000 });
+  const before = await list.locator('li').count();
+  expect(before).toBeGreaterThan(1);
+  await page.getByLabel(/search sitters/i).fill('Leslieville');
+  await page.getByRole('button', { name: /^search$/i }).click();
+  await expect
+    .poll(async () => list.locator('li').count(), { timeout: 30_000 })
+    .toBeLessThan(before);
+  await expect(page.getByTestId('result-count')).toBeVisible();
+});
+
+test('assistant panel is reachable from the shell', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /open the sitters assistant|ask about sitters/i }).click();
+  await expect(page.getByLabel(/your question/i)).toBeVisible();
+});

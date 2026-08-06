@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Option B — Map-first + list rail · Pet Sitter Finder</title>
+  <style>
+    :root {
+      --bg: #eef2f0;
+      --surface: #ffffff;
+      --text: #0e1512;
+      --muted: #4d5c56;
+      --border: #0e1512;
+      --accent: #0f766e;
+      --accent-ink: #ffffff;
+      --map-a: #c5ddd4;
+      --map-b: #9ec9b8;
+      --pin: #e5484d;
+      --shadow: 3px 3px 0 #0e1512;
+      --rail: #ffffff;
+    }
+    [data-theme="dark"] {
+      --bg: #0a1210;
+      --surface: #121c19;
+      --text: #e8f2ee;
+      --muted: #8aa39a;
+      --border: #e8f2ee;
+      --accent: #2dd4bf;
+      --accent-ink: #04201c;
+      --map-a: #1a2e28;
+      --map-b: #243d34;
+      --pin: #fb7185;
+      --shadow: 3px 3px 0 #e8f2ee;
+      --rail: #121c19;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background: #1c2220;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+    .page-meta {
+      max-width: 420px;
+      margin: 0 auto 16px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .page-meta h1 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      color: #fff;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .page-meta p { margin: 0 0 10px; color: #a8b3ad; }
+    .arch-tag {
+      display: inline-block;
+      border: 2px solid #fff;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .themes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .theme-label {
+      text-align: center;
+      color: #c0cdc7;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .phone {
+      width: 375px;
+      height: 720px;
+      border: 3px solid #000;
+      background: var(--bg);
+      box-shadow: 8px 8px 0 #000;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    /* —— ARCHITECTURE B: map is the canvas; list is a bottom/side rail —— */
+    .compact-bar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--border);
+      background: var(--surface);
+      z-index: 3;
+    }
+    .mark {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border);
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+    .compact-bar input {
+      min-height: 40px;
+      border: 2px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      padding: 0 10px;
+      font-family: inherit;
+      width: 100%;
+    }
+    .icon-btn {
+      min-width: 40px;
+      min-height: 40px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 800;
+      font-size: 12px;
+      font-family: inherit;
+    }
+
+    .map-stage {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+      background:
+        linear-gradient(90deg, transparent 49%, rgba(0,0,0,0.06) 49%, rgba(0,0,0,0.06) 51%, transparent 51%),
+        linear-gradient(0deg, transparent 49%, rgba(0,0,0,0.06) 49%, rgba(0,0,0,0.06) 51%, transparent 51%),
+        linear-gradient(135deg, var(--map-a), var(--map-b));
+      background-size: 48px 48px, 48px 48px, 100% 100%;
+      border-bottom: 2px solid var(--border);
+    }
+    .map-label {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      box-shadow: var(--shadow);
+    }
+    .pin {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border);
+      background: var(--pin);
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: 2px 2px 0 var(--border);
+    }
+    .pin.selected {
+      background: var(--accent);
+      width: 34px;
+      height: 34px;
+      z-index: 2;
+    }
+    .pin span {
+      display: none;
+    }
+    .map-legend {
+      position: absolute;
+      bottom: 12px;
+      right: 10px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+      max-width: 140px;
+      line-height: 1.3;
+    }
+
+    /* Bottom sheet rail — structural opposite of a card grid page */
+    .list-rail {
+      flex: 0 0 280px;
+      background: var(--rail);
+      border-top: 3px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .rail-handle {
+      display: flex;
+      justify-content: center;
+      padding: 8px 0 4px;
+    }
+    .rail-handle i {
+      width: 40px;
+      height: 4px;
+      background: var(--muted);
+      display: block;
+    }
+    .rail-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 4px 14px 8px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
+    }
+    .rail-head h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .rail-head span {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .rail-filters {
+      display: flex;
+      gap: 6px;
+      padding: 8px 14px;
+      overflow: hidden;
+    }
+    .rail-filters span {
+      border: 1.5px solid var(--border);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      white-space: nowrap;
+      background: var(--bg);
+    }
+    .rail-filters .on {
+      background: var(--text);
+      color: var(--bg);
+    }
+    .rail-list {
+      overflow: hidden;
+      padding: 0 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .rail-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      border: 2px solid var(--border);
+      padding: 10px 12px;
+      background: var(--surface);
+      min-height: 64px;
+      align-items: center;
+    }
+    .rail-row.selected {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      box-shadow: var(--shadow);
+    }
+    .rail-row h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .rail-row p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.3;
+    }
+    .price {
+      font-weight: 800;
+      font-size: 14px;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .price small {
+      display: block;
+      font-weight: 600;
+      font-size: 11px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="page-meta">
+    <div class="arch-tag">Option B · Architecture</div>
+    <h1>Map-first + list rail</h1>
+    <p>
+      The map is the primary canvas (full remaining viewport). Sitters appear as pins.
+      Results live in a bottom sheet / list rail, not a page-long card grid. Search is a
+      compact bar over the map, not a marketing hero.
+    </p>
+  </div>
+
+  <div class="themes">
+    <div>
+      <div class="theme-label">Light · 375</div>
+      <div class="phone" data-theme="light">
+        <div class="compact-bar">
+          <div class="mark" aria-hidden="true"></div>
+          <input type="search" aria-label="Search sitters near me" value="Riverside" readonly />
+          <button type="button" class="icon-btn" aria-label="Filters">Filt</button>
+        </div>
+
+        <div class="map-stage" role="img" aria-label="Map of sitters near Riverside">
+          <div class="map-label">Map · neighbourhood</div>
+          <div class="pin" style="top: 18%; left: 22%;"></div>
+          <div class="pin selected" style="top: 36%; left: 48%;"></div>
+          <div class="pin" style="top: 52%; left: 30%;"></div>
+          <div class="pin" style="top: 28%; left: 68%;"></div>
+          <div class="pin" style="top: 60%; left: 58%;"></div>
+          <div class="map-legend">5 sitters in view · drag map to reload</div>
+        </div>
+
+        <aside class="list-rail" aria-label="Sitters near map center">
+          <div class="rail-handle"><i></i></div>
+          <div class="rail-head">
+            <h2>Near map center</h2>
+            <span>Sorted by distance</span>
+          </div>
+          <div class="rail-filters">
+            <span class="on">Dogs</span>
+            <span>Overnight</span>
+            <span>Verified</span>
+            <span>$–$$</span>
+          </div>
+          <div class="rail-list">
+            <div class="rail-row selected">
+              <div>
+                <h3>Maya Chen</h3>
+                <p>0.4 mi · 4.9 · dogs &amp; cats · Fri–Mon</p>
+              </div>
+              <div class="price">$38<small>/ night</small></div>
+            </div>
+            <div class="rail-row">
+              <div>
+                <h3>Jordan Hale</h3>
+                <p>0.7 mi · 4.8 · dogs · Sat–Tue</p>
+              </div>
+              <div class="price">$42<small>/ night</small></div>
+            </div>
+            <div class="rail-row">
+              <div>
+                <h3>Sam Ortiz</h3>
+                <p>1.1 mi · 4.7 · dogs · next week</p>
+              </div>
+              <div class="price">$35<small>/ night</small></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <div>
+      <div class="theme-label">Dark · 375</div>
+      <div class="phone" data-theme="dark">
+        <div class="compact-bar">
+          <div class="mark" aria-hidden="true"></div>
+          <input type="search" aria-label="Search sitters near me" value="Riverside" readonly />
+          <button type="button" class="icon-btn" aria-label="Filters">Filt</button>
+        </div>
+
+        <div class="map-stage" role="img" aria-label="Map of sitters near Riverside">
+          <div class="map-label">Map · neighbourhood</div>
+          <div class="pin" style="top: 18%; left: 22%;"></div>
+          <div class="pin selected" style="top: 36%; left: 48%;"></div>
+          <div class="pin" style="top: 52%; left: 30%;"></div>
+          <div class="pin" style="top: 28%; left: 68%;"></div>
+          <div class="pin" style="top: 60%; left: 58%;"></div>
+          <div class="map-legend">5 sitters in view · drag map to reload</div>
+        </div>
+
+        <aside class="list-rail" aria-label="Sitters near map center">
+          <div class="rail-handle"><i></i></div>
+          <div class="rail-head">
+            <h2>Near map center</h2>
+            <span>Sorted by distance</span>
+          </div>
+          <div class="rail-filters">
+            <span class="on">Dogs</span>
+            <span>Overnight</span>
+            <span>Verified</span>
+            <span>$–$$</span>
+          </div>
+          <div class="rail-list">
+            <div class="rail-row selected">
+              <div>
+                <h3>Maya Chen</h3>
+                <p>0.4 mi · 4.9 · dogs &amp; cats · Fri–Mon</p>
+              </div>
+              <div class="price">$38<small>/ night</small></div>
+            </div>
+            <div class="rail-row">
+              <div>
+                <h3>Jordan Hale</h3>
+                <p>0.7 mi · 4.8 · dogs · Sat–Tue</p>
+              </div>
+              <div class="price">$42<small>/ night</small></div>
+            </div>
+            <div class="rail-row">
+              <div>
+                <h3>Sam Ortiz</h3>
+                <p>1.1 mi · 4.7 · dogs · next week</p>
+              </div>
+              <div class="price">$35<small>/ night</small></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
