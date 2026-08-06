@@ -23,6 +23,9 @@ export function isGateOutput(file) {
     path.endsWith('/.redanvil/coverage-state.json') ||
     path.startsWith('.redanvil/coverage-state.json') ||
     /(^|\/)evidence\//.test(path) ||
-    /^results\/[^/]+\.json$/.test(path)
+    // Repo-root results/<slug>.json and app-nested <app>/results/<slug>.json —
+    // both are gate writes. Treating only the root form as output left
+    // pet-sitter/results/pet-sitter.json free to stale every visual verdict.
+    /(^|\/)results\/[^/]+\.json$/.test(path)
   );
 }
