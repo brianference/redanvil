@@ -9,7 +9,7 @@ import {
   newSessionToken,
   toBase64Url
 } from '../lib/auth';
-import { errorJson, json, optionsResponse } from '../lib/http';
+import { errorJson, json, optionsResponse, parseJsonBody, requireDb } from '../lib/http';
 
 const COOKIE_NAME = 'psf_session';
 
@@ -45,25 +45,16 @@ function sessionCookie(token: string, maxAgeSec: number): string {
  */
 export async function onRequestPost(context: AppContext): Promise<Response> {
   try {
-    if (!context.env.DB) {
-      return errorJson(context.request, 'database binding unavailable', 503);
-    }
+    const missingDb = requireDb(context.request, context.env.DB);
+    if (missingDb) return missingDb;
 
-    let raw: unknown;
-    try {
-      raw = await context.request.json();
-    } catch {
-      return errorJson(context.request, 'Invalid JSON body', 400);
-    }
-    const parsed = AuthBodySchema.safeParse(raw);
-    if (!parsed.success) {
-      return errorJson(
-        context.request,
-        parsed.error.issues[0]?.message ?? 'invalid auth body',
-        400
-      );
-    }
-    const body = parsed.data;
+    const bodyResult = await parseJsonBody(
+      context.request,
+      AuthBodySchema,
+      'invalid auth body'
+    );
+    if (!bodyResult.ok) return bodyResult.response;
+    const body = bodyResult.value;
     if (body.action === 'sign-out') {
       const headers = new Headers(
         json(context.request, { ok: true }, 200, 'POST, OPTIONS').headers

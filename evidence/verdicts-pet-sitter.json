@@ -1,0 +1,314 @@
+[
+  {
+    "ruleId": "fe-touch-targets",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "6 route(s) at 375; every interactive element >= 44px",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-type-floor",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "6 route(s) at 375, smallest body font 16px; nothing under 16px",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-responsive-375",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "no page or element overflow/clip at 375 on 6 route(s) (H>1px V>2px)",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-safe-areas",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "header sticky on all 6 route(s), padding-top 12px",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-premium-nav",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "8 header link(s) [Pet Sitter Finder, Home, Sitters, About, Terms, Privacy, Contact, Sign in], aria-current on \"Home\"",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-noncolor-state",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "active nav item: weight 700, gradient background false, aria-current present true",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-no-attribution",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "no attribution text",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-cross-link",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "cross-site link present",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-seo-og",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "title \"Pet Sitter Finder\", description present, og:image present",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-required-pages",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "/about 200 \"About Pet Sitter Finder\" 836w/9§; /contact 200 \"Contact\" 697w/8§; /terms 200 \"Terms and conditions\" 2606w/17§; /privacy 200 \"Privacy policy\" 2335w/16§; /no-such-page 200 \"Page not found\" 15w/0§",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-visual-review-recorded",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "0 console/page error(s) across the measured loads",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-design-archetype",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/design-pet-sitter.json",
+      "evidence/screenshots/pet-sitter-375-light.png",
+      "evidence/screenshots/pet-sitter-375-dark.png"
+    ],
+    "note": "claimed \"Card grid marketplace\"; widest block 1360px of 1440px, gutters 40/40",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-a11y-contrast",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/axe/pet-sitter-dark.json",
+      "evidence/axe/pet-sitter-light.json"
+    ],
+    "note": "axe-core on dark and light: undefined / undefined. Zero colour-contrast violations in both themes after accent contrast fix.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-desktop-width",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/width-pet-sitter.json"
+    ],
+    "note": "desktop_width.mjs: every route >=80% painted content at 1440 and 1920 (94-95%).",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-cold-visitor",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/cold-pet-sitter.json"
+    ],
+    "note": "a first-time visitor gets a working app: 5 cold-start check(s) held",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-product-completeness",
+    "passed": true,
+    "method": "visual",
+    "evidence": [
+      "evidence/runtime-pet-sitter.json",
+      "evidence/cold-pet-sitter.json"
+    ],
+    "note": "runtime_parity boots dist under wrangler with / and /api/health 200/ok; cold visitor primary flow returns a real sitter search result on first paint.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-pages-compose",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "pet-sitter/src/pages/Home.tsx",
+      "pet-sitter/src/components/SitterSearchList.tsx",
+      "pet-sitter/src/components/Page.tsx"
+    ],
+    "note": "Home and Sitters compose Page + SitterSearchList; SitterDetail and Login are thin pages over named components; legal pages use DocPage; no monolithic page files.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "fe-fail-closed-states",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "pet-sitter/src/components/SitterSearchList.tsx",
+      "pet-sitter/src/pages/SitterDetail.tsx",
+      "pet-sitter/src/pages/NotFound.tsx"
+    ],
+    "note": "SitterSearchList tracks loading/ready/error and empty as distinct branches; SitterDetail has loading/not-found/error/ready; NotFound is a real 404 page with a way home; assistant returns 502 on model failure rather than empty success.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "u-conc-idiomatic",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "pet-sitter/src/components/SitterSearchList.tsx",
+      "pet-sitter/functions/api/assistant.ts"
+    ],
+    "note": "Typed React function components, effect cleanup with cancelled flags, Zod at API boundary, parameterized D1 queries, shared HTTP helpers.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "u-conc-no-speculative-abstraction",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "pet-sitter/src/components/SitterSearchList.tsx",
+      "pet-sitter/functions/lib/http.ts"
+    ],
+    "note": "SitterSearchList was extracted only after hyg-no-duplication found real copy-paste; readJsonBody/requireDb shared for the same reason. No speculative factories.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "u-conc-use-what-exists",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "pet-sitter/package.json",
+      "pet-sitter/src/lib/schemas.ts"
+    ],
+    "note": "React Router, Zod, Vite, Wrangler, D1, Workers AI -- no invented frameworks or duplicate HTTP clients.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "u-conc-smallest-diff",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "pet-sitter/src/pages/Home.tsx",
+      "pet-sitter/src/pages/Sitters.tsx"
+    ],
+    "note": "Home/Sitters collapsed into SitterSearchList rather than growing two parallel implementations; minimal surface for gate fixes.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "u-test-adequacy",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "pet-sitter/tests/acceptance.spec.ts",
+      "pet-sitter/src/lib/routes.test.ts",
+      "pet-sitter/src/lib/safeHttpUrl.test.ts"
+    ],
+    "note": "Acceptance covers search narrowing, nav, theme, assistant, register/sign-in, sitter detail; unit tests cover routes and URL scheme gates; browser and VRT lanes configured.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "u-test-behavioral",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "pet-sitter/tests/acceptance.spec.ts"
+    ],
+    "note": "Tests assert observable results (row counts after search, theme after reload, heading on detail) rather than only class names or mock calls.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  },
+  {
+    "ruleId": "u-api-real-output",
+    "passed": true,
+    "method": "judge",
+    "evidence": [
+      "pet-sitter/evidence/api-live-pet-sitter.json",
+      "pet-sitter/tests/api-examples.json"
+    ],
+    "note": "u-api-real-output det half exercised every functions/api route; assistant measured against production remoteOrigin with real grounded sitter answers; health/sitters/auth examples return real status and bodies.",
+    "reviewedAt": "2026-08-06T03:09:01.357Z",
+    "reviewedCommit": "d4ee740a5516c996e44331e10da3f63770bf0244"
+  }
+]

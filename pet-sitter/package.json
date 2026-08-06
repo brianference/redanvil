@@ -9,9 +9,12 @@
     "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:browser": "vitest run --project browser",
+    "test:vrt": "vitest run --project vrt",
     "test:e2e": "playwright test",
     "test:features": "node scripts/feature-audit.mjs",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --project unit --coverage",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run test:coverage && npm run build && npm run test:e2e && npm run test:features"
   },
   "dependencies": {
@@ -28,6 +31,7 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "@vitest/browser": "^2.1.9",
     "@vitest/coverage-v8": "2.1.9",
     "eslint": "^9.0.0",
     "tailwindcss": "^3.4.0",

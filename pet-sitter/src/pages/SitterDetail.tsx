@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
+import { SafeExternalLink } from '../components/SafeExternalLink';
 import { fetchSitterDetail, type ReviewSummary, type SitterSummary } from '../lib/api';
 import { en } from '../i18n/en';
 
@@ -90,9 +91,9 @@ export function SitterDetail(): JSX.Element {
         <p className="detail__bio">{sitter.bio}</p>
         {sitter.source_url ? (
           <p className="detail__source">
-            <a href={sitter.source_url} rel="noopener noreferrer" target="_blank">
+            <SafeExternalLink href={sitter.source_url} data-testid="sitter-source-link">
               {en.detail.sourceLink}
-            </a>
+            </SafeExternalLink>
           </p>
         ) : null}
 

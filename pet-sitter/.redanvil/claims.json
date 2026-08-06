@@ -7,11 +7,26 @@
   "entities": ["Sitter", "Pet", "Booking", "Review"],
   "threshold": 90,
   "features": [
-    "search sitters",
-    "filter sitters by neighbourhood and pet types",
-    "sitter detail with reviews",
-    "register and sign in",
-    "AI assistant grounded in sitters data"
+    {
+      "id": "search-sitters",
+      "name": "search sitters"
+    },
+    {
+      "id": "filter-neighbourhood-pets",
+      "name": "filter sitters by neighbourhood and pet types"
+    },
+    {
+      "id": "sitter-detail-reviews",
+      "name": "sitter detail with reviews"
+    },
+    {
+      "id": "register-sign-in",
+      "name": "register and sign in"
+    },
+    {
+      "id": "assistant-grounded",
+      "name": "AI assistant grounded in sitters data"
+    }
   ],
   "deployUrl": "https://pet-sitter-vz1.pages.dev",
   "design": {

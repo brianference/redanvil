@@ -1,7 +1,7 @@
 import { AssistantRequestSchema } from '../../src/lib/schemas';
 import type { AppContext } from '../lib/env';
 import { listSitters, type SitterRow } from '../lib/db';
-import { errorJson, json, optionsResponse } from '../lib/http';
+import { errorJson, json, optionsResponse, parseJsonBody, requireDb } from '../lib/http';
 
 /** Workers AI model id for filter extraction. */
 const ASSISTANT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
@@ -91,28 +91,19 @@ function extractJsonObject(text: string): unknown {
  */
 export async function onRequestPost(context: AppContext): Promise<Response> {
   try {
-    if (!context.env.DB) {
-      return errorJson(context.request, 'database binding unavailable', 503);
-    }
+    const missingDb = requireDb(context.request, context.env.DB);
+    if (missingDb) return missingDb;
     if (!context.env.AI) {
       return errorJson(context.request, 'AI binding unavailable', 503);
     }
 
-    let raw: unknown;
-    try {
-      raw = await context.request.json();
-    } catch {
-      return errorJson(context.request, 'Invalid JSON body', 400);
-    }
-    const parsedBody = AssistantRequestSchema.safeParse(raw);
-    if (!parsedBody.success) {
-      return errorJson(
-        context.request,
-        parsedBody.error.issues[0]?.message ?? 'message must be 1–500 characters',
-        400
-      );
-    }
-    const message = parsedBody.data.message;
+    const bodyResult = await parseJsonBody(
+      context.request,
+      AssistantRequestSchema,
+      'message must be 1–500 characters'
+    );
+    if (!bodyResult.ok) return bodyResult.response;
+    const message = bodyResult.value.message;
 
     let filters: Record<string, unknown> = {};
     try {

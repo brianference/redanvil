@@ -16,7 +16,8 @@ export interface PageProps {
 
 /** Shared page shell: sticky header, primary nav, breadcrumbs, footer, assistant. */
 export function Page({ title, children }: PageProps): JSX.Element {
-  const navRoutes = ROUTES.filter((r) => r.name !== 'Home');
+  // Include Home so desktop audit on `/` still finds aria-current="page".
+  const navRoutes = ROUTES;
 
   return (
     <div className="shell">
@@ -32,23 +33,26 @@ export function Page({ title, children }: PageProps): JSX.Element {
                 <NavLink
                   data-testid="nav-link"
                   to={route.path}
+                  end={route.path === '/'}
                   className={({ isActive }) =>
                     isActive ? 'topbar__link topbar__link--active' : 'topbar__link'
                   }
                 >
-                  {route.name === 'Sitters'
-                    ? en.nav.sitters
-                    : route.name === 'About'
-                      ? en.nav.about
-                      : route.name === 'Terms'
-                        ? en.nav.terms
-                        : route.name === 'Privacy'
-                          ? en.nav.privacy
-                          : route.name === 'Contact'
-                            ? en.nav.contact
-                            : route.name === 'Login'
-                              ? en.nav.login
-                              : route.name}
+                  {route.name === 'Home'
+                    ? en.nav.home
+                    : route.name === 'Sitters'
+                      ? en.nav.sitters
+                      : route.name === 'About'
+                        ? en.nav.about
+                        : route.name === 'Terms'
+                          ? en.nav.terms
+                          : route.name === 'Privacy'
+                            ? en.nav.privacy
+                            : route.name === 'Contact'
+                              ? en.nav.contact
+                              : route.name === 'Login'
+                                ? en.nav.login
+                                : route.name}
                 </NavLink>
               </li>
             ))}
@@ -95,6 +99,15 @@ export function Page({ title, children }: PageProps): JSX.Element {
                 </li>
                 <li>
                   <Link to="/contact">{en.nav.contact}</Link>
+                </li>
+                <li>
+                  <a
+                    href="https://redanvil.pages.dev"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    {en.footer.siblingProduct}
+                  </a>
                 </li>
               </ul>
             </section>

@@ -1,0 +1,60 @@
+{
+  "baseUrl": "https://pet-sitter-vz1.pages.dev",
+  "checkedAt": "2026-08-06T03:07:22.963Z",
+  "findings": {
+    "fe-touch-targets": {
+      "ok": true,
+      "detail": "6 route(s) at 375; every interactive element >= 44px"
+    },
+    "fe-type-floor": {
+      "ok": true,
+      "detail": "6 route(s) at 375, smallest body font 16px; nothing under 16px"
+    },
+    "fe-responsive-375": {
+      "ok": true,
+      "detail": "no page or element overflow/clip at 375 on 6 route(s) (H>1px V>2px)"
+    },
+    "fe-safe-areas": {
+      "ok": true,
+      "detail": "header sticky on all 6 route(s), padding-top 12px"
+    },
+    "fe-premium-nav": {
+      "ok": true,
+      "detail": "8 header link(s) [Pet Sitter Finder, Home, Sitters, About, Terms, Privacy, Contact, Sign in], aria-current on \"Home\""
+    },
+    "fe-noncolor-state": {
+      "ok": true,
+      "detail": "active nav item: weight 700, gradient background false, aria-current present true"
+    },
+    "fe-no-attribution": {
+      "ok": true,
+      "detail": "no attribution text"
+    },
+    "fe-cross-link": {
+      "ok": true,
+      "detail": "cross-site link present"
+    },
+    "fe-seo-og": {
+      "ok": true,
+      "detail": "title \"Pet Sitter Finder\", description present, og:image present"
+    },
+    "fe-light-dark": {
+      "ok": true,
+      "detail": "landmark paint changes between themes (3 regions); toggle ok"
+    },
+    "fe-design-archetype": {
+      "ok": true,
+      "detail": "claimed \"Card grid marketplace\"; widest block 1360px of 1440px, gutters 40/40"
+    },
+    "fe-required-pages": {
+      "ok": true,
+      "detail": "/about 200 \"About Pet Sitter Finder\" 836w/9§; /contact 200 \"Contact\" 697w/8§; /terms 200 \"Terms and conditions\" 2606w/17§; /privacy 200 \"Privacy policy\" 2335w/16§; /no-such-page 200 \"Page not found\" 15w/0§"
+    },
+    "fe-visual-review-recorded": {
+      "ok": true,
+      "detail": "0 console/page error(s) across the measured loads"
+    }
+  },
+  "consoleErrors": [],
+  "ok": true
+}

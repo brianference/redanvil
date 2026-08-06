@@ -1,0 +1,18 @@
+{
+  "appDir": "C:\\Users\\brian\\RedAnvil\\pet-sitter",
+  "checkedAt": "2026-08-06T03:08:11.221Z",
+  "port": 63277,
+  "results": [
+    {
+      "path": "/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "ok": true
+}

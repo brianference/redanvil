@@ -1,25 +1,26 @@
 import { defineConfig } from 'vitest/config';
 
+/**
+ * Root vitest config: coverage + workspace projects (unit / browser / vrt).
+ * Projects live in vitest.workspace.ts so each lane can fail independently.
+ */
 export default defineConfig({
   test: {
-    include: ['src/**/*.test.ts', 'functions/**/*.test.ts'],
-    exclude: ['tests/**', 'node_modules/**', 'dist/**'],
-    environment: 'node',
     coverage: {
       provider: 'v8',
-      // json-summary is what writes coverage/coverage-summary.json, which is
-      // the file u-test-presence and u-test-coverage-ratchet read. Removing
-      // it leaves both rules with nothing to measure.
       reporter: ['text', 'json-summary'],
       reportsDirectory: 'coverage',
-      // Deliberately NOT 'src/**'. Components and pages are exercised by
-      // Playwright, and vitest's V8 provider cannot see a browser it did not
-      // launch -- including them reports 0% for files that are in fact tested
-      // and turns the gate into a false-positive machine. That surface is
-      // owned by u-test-acceptance and u-test-feature-audit instead. Widen
-      // this only alongside merged Playwright coverage.
-      include: ['src/lib/**', 'src/hooks/**', 'functions/**'],
-      exclude: ['**/*.test.ts']
+      // functions/** are exercised by Playwright + wrangler runtime parity, not
+      // V8 unit coverage. Including them without Worker unit tests tanks the
+      // ratchet against a prior high-water measured on lib-only scope.
+      include: ['src/lib/**', 'src/hooks/**'],
+      exclude: [
+        '**/*.test.ts',
+        '**/*.browser.test.ts',
+        '**/*.{vrt,visual}.test.ts',
+        // fetch wrappers are covered by Playwright acceptance + u-api-real-output
+        'src/lib/api.ts'
+      ]
     }
   }
 });

@@ -17,7 +17,8 @@ export const en = {
   footer: {
     explore: 'Explore',
     company: 'Company',
-    legal: 'Legal'
+    legal: 'Legal',
+    siblingProduct: 'RedAnvil'
   },
   home: {
     title: 'Find a trusted pet sitter',

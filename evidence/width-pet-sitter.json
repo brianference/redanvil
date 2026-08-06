@@ -1,0 +1,122 @@
+{
+  "baseUrl": "https://pet-sitter-vz1.pages.dev",
+  "checkedAt": "2026-08-06T03:07:37.414Z",
+  "minPct": 80,
+  "widths": [
+    1440,
+    1920
+  ],
+  "results": [
+    {
+      "route": "/",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 94,
+      "contentBox": {
+        "left": 40,
+        "right": 1400
+      },
+      "ok": true
+    },
+    {
+      "route": "/about",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 94,
+      "contentBox": {
+        "left": 40,
+        "right": 1398
+      },
+      "ok": true
+    },
+    {
+      "route": "/contact",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 94,
+      "contentBox": {
+        "left": 40,
+        "right": 1394
+      },
+      "ok": true
+    },
+    {
+      "route": "/terms",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 94,
+      "contentBox": {
+        "left": 40,
+        "right": 1399
+      },
+      "ok": true
+    },
+    {
+      "route": "/privacy",
+      "width": 1440,
+      "status": 200,
+      "contentPct": 94,
+      "contentBox": {
+        "left": 40,
+        "right": 1399
+      },
+      "ok": true
+    },
+    {
+      "route": "/",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 95,
+      "contentBox": {
+        "left": 40,
+        "right": 1880
+      },
+      "ok": true
+    },
+    {
+      "route": "/about",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 95,
+      "contentBox": {
+        "left": 40,
+        "right": 1871
+      },
+      "ok": true
+    },
+    {
+      "route": "/contact",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 95,
+      "contentBox": {
+        "left": 40,
+        "right": 1880
+      },
+      "ok": true
+    },
+    {
+      "route": "/terms",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 95,
+      "contentBox": {
+        "left": 40,
+        "right": 1880
+      },
+      "ok": true
+    },
+    {
+      "route": "/privacy",
+      "width": 1920,
+      "status": 200,
+      "contentPct": 95,
+      "contentBox": {
+        "left": 40,
+        "right": 1879
+      },
+      "ok": true
+    }
+  ],
+  "ok": true
+}

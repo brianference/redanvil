@@ -1,120 +1,19 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Page } from '../components/Page';
-import { fetchSitters, type SitterSummary } from '../lib/api';
+import { SitterSearchList } from '../components/SitterSearchList';
 import { en } from '../i18n/en';
 
 /**
  * Home: marketplace search over sitters with live narrowing.
  */
 export function Home(): JSX.Element {
-  const [query, setQuery] = useState('');
-  const [submitted, setSubmitted] = useState('');
-  const [sitters, setSitters] = useState<SitterSummary[]>([]);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setStatus('loading');
-    setError(null);
-    void fetchSitters({ q: submitted || undefined })
-      .then((data) => {
-        if (cancelled) return;
-        setSitters(data.sitters);
-        setStatus('ready');
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : en.home.loadError);
-        setSitters([]);
-        setStatus('error');
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [submitted]);
-
-  const countLabel = useMemo(() => {
-    if (status === 'loading') return en.home.loading;
-    if (status === 'error') return en.home.errorCount;
-    return `${sitters.length} ${en.home.resultCountLabel}`;
-  }, [sitters.length, status]);
-
-  /**
-   * Apply the text search.
-   *
-   * @param event - Form submit.
-   */
-  function onSearch(event: FormEvent): void {
-    event.preventDefault();
-    setSubmitted(query.trim());
-  }
-
   return (
     <Page title={en.home.title}>
-      <p className="page-intro">{en.home.intro}</p>
-
-      <form className="search-bar" role="search" onSubmit={onSearch} data-testid="sitter-search">
-        <label htmlFor="sitter-search-input" className="search-bar__label">
-          {en.home.searchLabel}
-        </label>
-        <div className="search-bar__row">
-          <input
-            id="sitter-search-input"
-            type="search"
-            name="q"
-            className="search-bar__input"
-            placeholder={en.home.searchPlaceholder}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            autoComplete="off"
-          />
-          <button type="submit" className="search-bar__submit">
-            {en.home.searchSubmit}
-          </button>
-        </div>
-      </form>
-
-      <p className="result-meta" data-testid="result-count" aria-live="polite">
-        {countLabel}
-      </p>
-
-      {status === 'error' ? (
-        <p className="state state--error" role="alert">
-          {error ?? en.home.loadError}
-        </p>
-      ) : null}
-
-      {status === 'loading' ? <p className="state">{en.home.loading}</p> : null}
-
-      {status === 'ready' && sitters.length === 0 ? (
-        <p className="state state--empty" data-testid="empty-sitters">
-          {en.home.empty}
-        </p>
-      ) : null}
-
-      {status === 'ready' && sitters.length > 0 ? (
-        <ul className="sitter-grid" data-testid="sitter-list">
-          {sitters.map((s) => (
-            <li key={s.id} className="sitter-card">
-              <Link to={`/sitters/${s.id}`} className="sitter-card__link">
-                <h2 className="sitter-card__name">{s.name}</h2>
-                <p className="sitter-card__meta">
-                  {s.neighbourhood} · ${s.rate_per_night}
-                  {en.home.perNight} · {s.verified_reviews} {en.home.reviews}
-                </p>
-                <p className="sitter-card__pets">{s.pet_types}</p>
-                <p className="sitter-card__bio">{s.bio}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      <p className="home-more">
-        <Link to="/sitters">{en.home.browseAll}</Link>
-      </p>
+      <SitterSearchList
+        intro={en.home.intro}
+        showBrowseAll
+        formTestId="sitter-search"
+        inputId="sitter-search-input"
+      />
     </Page>
   );
 }

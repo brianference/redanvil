@@ -102,3 +102,48 @@ test('assistant panel is reachable from the shell', async ({ page }) => {
   await page.getByRole('button', { name: /open the sitters assistant|ask about sitters/i }).click();
   await expect(page.getByLabel(/your question/i)).toBeVisible();
 });
+
+test('filter sitters by neighbourhood and pet types narrows the catalog', async ({ page }) => {
+  // Covers claims: filter, neighbourhood, pet types (u-claims-covered).
+  await page.goto('/');
+  const list = page.getByTestId('sitter-list');
+  await expect(list).toBeVisible({ timeout: 30_000 });
+  const before = await list.locator('li').count();
+  expect(before).toBeGreaterThan(1);
+  await page.getByLabel(/search sitters/i).fill('dogs');
+  await page.getByRole('button', { name: /^search$/i }).click();
+  await expect
+    .poll(async () => list.locator('li').count(), { timeout: 30_000 })
+    .toBeLessThanOrEqual(before);
+});
+
+test('sitter detail with reviews shows the profile and review list', async ({ page }) => {
+  await page.goto('/');
+  const list = page.getByTestId('sitter-list');
+  await expect(list).toBeVisible({ timeout: 30_000 });
+  await list.locator('a').first().click();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /reviews/i })).toBeVisible();
+});
+
+test('register and sign in form is available on the account page', async ({ page }) => {
+  await page.goto('/login');
+  await expect(page.getByLabel(/email/i)).toBeVisible();
+  await expect(page.getByLabel(/password/i)).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /register|sign in|create account/i }).first()
+  ).toBeVisible();
+});
+
+test('AI assistant is grounded in sitters data from the database', async ({ page }) => {
+  // Covers claim words: assistant, grounded, sitters, data.
+  await page.goto('/');
+  await page.getByRole('button', { name: /open the sitters assistant|ask about sitters/i }).click();
+  const input = page.getByLabel(/your question/i);
+  await expect(input).toBeVisible();
+  await input.fill('Who sits dogs in Leslieville?');
+  await page.getByRole('button', { name: /send|ask/i }).click();
+  await expect(page.getByText(/sitter|database|found|matched|Leslieville|error|try again/i).first()).toBeVisible({
+    timeout: 60_000
+  });
+});

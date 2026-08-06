@@ -54,8 +54,9 @@
       "route": "/api/assistant",
       "method": "POST",
       "body": { "message": "dogs in Leslieville under 60" },
+      "remoteOrigin": "https://pet-sitter-vz1.pages.dev",
       "expect": {
-        "status": [200, 502, 503],
+        "status": 200,
         "nonEmpty": true
       }
     },

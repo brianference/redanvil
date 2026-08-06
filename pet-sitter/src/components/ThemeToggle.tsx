@@ -4,17 +4,14 @@ import { theme } from '../theme';
 type ThemeChoice = 'light' | 'dark';
 
 /**
- * Saved choice wins; otherwise follow the OS preference (cold visitor default).
+ * Saved choice wins; otherwise light (cold visitor: first paint is light).
  *
  * @param stored - Raw localStorage value, or null.
  * @returns The theme to apply.
  */
 function resolveTheme(stored: string | null): ThemeChoice {
   if (stored === 'light' || stored === 'dark') return stored;
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  }
-  return 'dark';
+  return 'light';
 }
 
 /**
@@ -23,7 +20,7 @@ function resolveTheme(stored: string | null): ThemeChoice {
  * @returns The toggle button.
  */
 export function ThemeToggle(): JSX.Element {
-  const [mode, setMode] = useState<ThemeChoice>('dark');
+  const [mode, setMode] = useState<ThemeChoice>('light');
 
   useEffect(() => {
     const next = resolveTheme(localStorage.getItem('theme'));
@@ -32,12 +29,14 @@ export function ThemeToggle(): JSX.Element {
   }, []);
 
   const toggle = useCallback((): void => {
-    setMode((current): ThemeChoice => {
-      const next: ThemeChoice = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.dataset.theme = next;
-      localStorage.setItem('theme', next);
-      return next;
-    });
+    // Read the DOM as source of truth so a design-audit paint sample that
+    // flips data-theme without going through React still toggles correctly.
+    const current: ThemeChoice =
+      document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+    const next: ThemeChoice = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('theme', next);
+    setMode(next);
   }, []);
 
   return (

@@ -9,15 +9,11 @@
         "message": "dogs in Leslieville under 60"
       },
       "expectation": {
-        "status": [
-          200,
-          502,
-          503
-        ],
+        "status": 200,
         "nonEmpty": true
       },
-      "status": 502,
-      "responseBody": "{\"error\":\"The assistant model failed. Try again in a moment.\"}",
+      "status": 200,
+      "responseBody": "{\"answer\":\"Found 2 sitters in the app database. Using filters: {\\\"neighbourhood\\\":\\\"Leslieville\\\",\\\"pet_type\\\":\\\"dogs\\\",\\\"max_rate\\\":60}.\\nAvery Chen in Leslieville: $55/night, accepts dogs,cats, 24 verified reviews\\nSample Sitter in Leslieville: $50/night, accepts dogs, 3 verified reviews\",\"sitters\":[{\"id\":\"sit-leslieville-01\",\"name\":\"Avery Chen\",\"neighbourhood\":\"Leslieville\",\"rate_per_night\":55,\"pet_types\":\"dogs,cats\",\"verified_reviews\":24},{\"id\":\"sample\",\"name\":\"Sample Sitter\",\"neighbourhood\":\"Leslieville\",\"rate_per_night\":50,\"pet_types\":\"dogs\",\"verified_reviews\":3}],\"filters\":{\"neighbourhood\":\"Leslieville\",\"pet_type\":\"dogs\",\"max_rate\":60}}",
       "error": null
     },
     {
