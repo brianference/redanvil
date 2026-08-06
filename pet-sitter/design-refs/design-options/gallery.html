@@ -7,218 +7,104 @@
   <style>
     * { box-sizing: border-box; }
     body {
-      margin: 0;
-      font-family: Inter, system-ui, sans-serif;
-      background: #0d0d12;
-      color: #f0f0f4;
-      padding: 28px 20px 64px;
-      line-height: 1.45;
+      margin: 0; font-family: Inter, system-ui, sans-serif;
+      background: #0d0d12; color: #f0f0f4; padding: 28px 20px 80px; line-height: 1.45;
     }
-    header {
-      max-width: 1200px;
-      margin: 0 auto 28px;
-    }
-    header h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: -0.03em;
-    }
-    header p {
-      margin: 0;
-      max-width: 62ch;
-      color: #a0a0ae;
-      font-size: 15px;
-    }
+    header { max-width: 1400px; margin: 0 auto 24px; }
+    header h1 { margin: 0 0 8px; font-size: 28px; font-weight: 900; letter-spacing: -0.03em; }
+    header p { margin: 0; color: #a0a0ae; max-width: 72ch; font-size: 15px; }
     .note {
-      margin-top: 12px;
-      padding: 10px 12px;
-      border: 1px solid #333344;
-      background: #16161f;
-      font-size: 13px;
-      color: #c8c8d4;
-      max-width: 72ch;
+      margin-top: 14px; padding: 12px 14px; border: 1px solid #333344; background: #16161f;
+      font-size: 13px; color: #c8c8d4; max-width: 80ch; border-radius: 8px;
     }
-    .grid {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 24px;
+    .note strong { color: #fff; }
+    .cols {
+      max-width: 1400px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;
     }
-    .card {
-      border: 2px solid #2a2a38;
-      background: #14141c;
-      display: flex;
-      flex-direction: column;
-      min-height: 100%;
+    @media (max-width: 1100px) { .cols { grid-template-columns: 1fr; } }
+    .col {
+      border: 1px solid #2a2a38; background: #14141c; border-radius: 12px; overflow: hidden;
+      display: flex; flex-direction: column; min-height: 100%;
     }
-    .card-head {
-      padding: 16px 16px 12px;
-      border-bottom: 1px solid #2a2a38;
+    .col-head { padding: 16px; border-bottom: 1px solid #2a2a38; }
+    .col-head .tag {
+      display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; border: 1px solid #f0f0f4; padding: 3px 8px; margin-bottom: 10px;
     }
-    .card-head .label {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      border: 1px solid #f0f0f4;
-      padding: 3px 8px;
-      margin-bottom: 10px;
-    }
-    .card-head h2 {
-      margin: 0 0 6px;
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-    .card-head p {
-      margin: 0;
-      font-size: 13px;
-      color: #9a9aab;
-    }
-    .struct {
-      margin: 10px 0 0;
-      padding: 0;
-      list-style: none;
-      font-size: 12px;
-      color: #b8b8c8;
-    }
-    .struct li {
-      padding: 3px 0;
-      border-top: 1px solid #222230;
-    }
-    .struct li:first-child { border-top: 0; }
-    .struct strong { color: #e8e8f0; font-weight: 700; }
-    .frame-wrap {
-      padding: 12px;
-      background: #0a0a10;
-      flex: 1;
-    }
+    .col-head h2 { margin: 0 0 6px; font-size: 18px; font-weight: 800; }
+    .col-head p { margin: 0; font-size: 13px; color: #9a9aab; }
+    .col-head ul { margin: 10px 0 0; padding: 0; list-style: none; font-size: 12px; color: #b8b8c8; }
+    .col-head li { padding: 3px 0; border-top: 1px solid #222230; }
+    .col-head li:first-child { border-top: 0; }
+    .col-head strong { color: #e8e8f0; }
+    .frame-wrap { padding: 10px; background: #0a0a10; flex: 1; }
     iframe {
-      width: 100%;
-      height: 780px;
-      border: 1px solid #333344;
-      background: #1a1a22;
-      display: block;
+      width: 100%; height: 920px; border: 0; border-radius: 8px; background: #12141a; display: block;
     }
-    .actions {
-      padding: 12px 16px;
-      border-top: 1px solid #2a2a38;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+    .open-link {
+      display: block; text-align: center; padding: 12px; font-size: 13px; font-weight: 700;
+      color: #f07167; text-decoration: none; border-top: 1px solid #2a2a38;
     }
-    .actions a {
-      color: #fff;
-      background: #e5484d;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 800;
-      padding: 10px 14px;
-      min-height: 40px;
-      display: inline-flex;
-      align-items: center;
-      border: 2px solid #000;
-    }
-    .actions a.ghost {
-      background: transparent;
-      border-color: #555568;
-      color: #d0d0dc;
-    }
-    footer {
-      max-width: 1200px;
-      margin: 32px auto 0;
-      font-size: 13px;
-      color: #7a7a8a;
-    }
-    footer a { color: #c8c8d8; }
+    .open-link:hover { background: #1a1a24; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Pet Sitter Finder — design options</h1>
+    <h1>Pet Sitter Finder - three design options</h1>
     <p>
-      Three structurally distinct home / search architectures for the marketplace.
-      Each option is a different layout system, not a recolor of the same skeleton.
-      Open a full option file for light + dark at 375px side by side.
+      Each column is a different architecture and visual direction. Every option includes home + sitter detail
+      at 375 and 1280, light and dark. Brand mark is the approved <strong>mark-01</strong> (coral house with dog and cat).
+      Real seed sitters only. Mix freely: "layout of B, colour of C."
     </p>
     <div class="note">
-      Chosen direction is recorded in <strong>DECISION.md</strong> in this folder.
-      Brand mark (logo PNG) is owned separately; expected ship path
-      <code>public/brand-mark.png</code> (see design-refs/BRAND-NOTE.md).
+      <strong>Choice is open.</strong> See <code>DECISION.md</code> for one-line architecture + visual direction per option.
+      Do not treat prior "Option A chosen" notes as binding - this pass replaces them for owner review.
     </div>
   </header>
-
-  <div class="grid">
-    <article class="card">
-      <div class="card-head">
-        <span class="label">Option A</span>
-        <h2>Card grid marketplace</h2>
-        <p>Sticky top search owns the job; results are a single-column photo+body card grid.</p>
-        <ul class="struct">
-          <li><strong>Primary surface:</strong> full-width result cards</li>
-          <li><strong>Search:</strong> sticky slab under nav with chip filters</li>
-          <li><strong>Not present:</strong> map canvas, calendar hero</li>
+  <div class="cols">
+    <article class="col">
+      <div class="col-head">
+        <div class="tag">Option A</div>
+        <h2>Photo-card marketplace</h2>
+        <p>Warm coral · soft depth · face-led cards</p>
+        <ul>
+          <li><strong>Primary surface:</strong> photo card grid</li>
+          <li><strong>Search:</strong> floating multi-field capsule</li>
+          <li><strong>Distinct element:</strong> price-on-photo badges + capsule search</li>
         </ul>
       </div>
-      <div class="frame-wrap">
-        <iframe src="option-a.html" title="Option A card grid marketplace" loading="lazy"></iframe>
-      </div>
-      <div class="actions">
-        <a href="option-a.html">Open full Option A</a>
-        <a class="ghost" href="DECISION.md">Read decision</a>
-      </div>
+      <div class="frame-wrap"><iframe src="option-a.html" title="Option A full frames"></iframe></div>
+      <a class="open-link" href="option-a.html" target="_blank" rel="noopener">Open Option A full page</a>
     </article>
-
-    <article class="card">
-      <div class="card-head">
-        <span class="label">Option B</span>
-        <h2>Map-first + list rail</h2>
-        <p>Map fills the working canvas; sitters are pins; results sit in a bottom sheet rail.</p>
-        <ul class="struct">
-          <li><strong>Primary surface:</strong> map stage with pins</li>
-          <li><strong>Search:</strong> compact bar over the map</li>
-          <li><strong>Secondary:</strong> bottom list rail sorted by distance</li>
+    <article class="col">
+      <div class="col-head">
+        <div class="tag">Option B</div>
+        <h2>Map stage + sheet rail</h2>
+        <p>Sage trust green · map-first · pin faces</p>
+        <ul>
+          <li><strong>Primary surface:</strong> map with avatar pins</li>
+          <li><strong>Results:</strong> bottom sheet / side rail</li>
+          <li><strong>Distinct element:</strong> face pins + distance rail</li>
         </ul>
       </div>
-      <div class="frame-wrap">
-        <iframe src="option-b.html" title="Option B map-first list rail" loading="lazy"></iframe>
-      </div>
-      <div class="actions">
-        <a href="option-b.html">Open full Option B</a>
-        <a class="ghost" href="DECISION.md">Read decision</a>
-      </div>
+      <div class="frame-wrap"><iframe src="option-b.html" title="Option B full frames"></iframe></div>
+      <a class="open-link" href="option-b.html" target="_blank" rel="noopener">Open Option B full page</a>
     </article>
-
-    <article class="card">
-      <div class="card-head">
-        <span class="label">Option C</span>
-        <h2>Timeline / calendar hero</h2>
-        <p>Availability calendar is the hero; sitter list is secondary timeline rows with week bars.</p>
-        <ul class="struct">
-          <li><strong>Primary surface:</strong> date range + half-month calendar</li>
-          <li><strong>Search:</strong> under the calendar, after dates are set</li>
-          <li><strong>Secondary:</strong> timeline rows (not photo cards, not map)</li>
+    <article class="col">
+      <div class="col-head">
+        <div class="tag">Option C</div>
+        <h2>Date-first calendar funnel</h2>
+        <p>Honey amber · editorial type · timeline bars</p>
+        <ul>
+          <li><strong>Primary surface:</strong> check-in calendar hero</li>
+          <li><strong>Results:</strong> timeline rows with week bars</li>
+          <li><strong>Distinct element:</strong> half-month grid + availability strips</li>
         </ul>
       </div>
-      <div class="frame-wrap">
-        <iframe src="option-c.html" title="Option C calendar timeline hero" loading="lazy"></iframe>
-      </div>
-      <div class="actions">
-        <a href="option-c.html">Open full Option C</a>
-        <a class="ghost" href="DECISION.md">Read decision</a>
-      </div>
+      <div class="frame-wrap"><iframe src="option-c.html" title="Option C full frames"></iframe></div>
+      <a class="open-link" href="option-c.html" target="_blank" rel="noopener">Open Option C full page</a>
     </article>
   </div>
-
-  <footer>
-    Structural comparison for RedAnvil C9 / <code>proc-design-options</code>.
-    Files: <a href="option-a.html">option-a.html</a> ·
-    <a href="option-b.html">option-b.html</a> ·
-    <a href="option-c.html">option-c.html</a> ·
-    <a href="DECISION.md">DECISION.md</a>
-  </footer>
 </body>
 </html>
