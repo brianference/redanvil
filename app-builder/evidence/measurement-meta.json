@@ -277,17 +277,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-06T01:37:38.809Z"
+        "at": "2026-08-06T02:53:05.649Z"
       },
       {
         "ok": false,
-        "at": "2026-08-06T01:37:38.810Z"
+        "at": "2026-08-06T02:53:05.650Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/u-legal-claims-true/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T01:37:38.810Z"
+      "recordedAt": "2026-08-06T02:53:05.650Z"
     }
   },
   "fe-favicon-legible": {

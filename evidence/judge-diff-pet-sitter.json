@@ -1,78 +1,78 @@
 {
   "kind": "independent-diff-review",
   "slug": "pet-sitter",
-  "commit": "d4ee740a5516c996e44331e10da3f63770bf0244",
-  "reviewedAt": "2026-08-06T02:49:53.584Z",
-  "diffHash": "b87f66526d35fd53dee1b0e01561ca4dad32be26b39c2c2744e60a7afe19c67f",
+  "commit": "2b57e2a7c9e521a635f20d49d534db3cc1115831",
+  "reviewedAt": "2026-08-06T03:37:36.543Z",
+  "diffHash": "44c63e862dc7c497f356dbb329c04b5fac62e9d646700340d5c976d25680fb7d",
   "completed": true,
   "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "Identical dual-run timestamps in meas-two-run fixture",
-      "citation": "orchestrator/test/fixtures/meas-two-run/bad-app/evidence/measurement-meta.json:15",
-      "detail": "Both runs share the same `at` timestamp (`2026-08-06T02:49:22.690Z`). The two-run guard requires distinct timestamps to prove independent runs; byte-identical times mean the known-bad record does not demonstrate two separate measurements. This is the exact false-pass class called out for meas-two-run.",
+      "title": "Identical two-run timestamps (meas-two-run vacuity)",
+      "citation": "az-planting-calendar/evidence/measurement-meta.json:241",
+      "detail": "Both runs for a two-run measurement share the exact same timestamp (2026-08-06T02:52:50.858Z). Corpus rules treat back-to-back identical timestamps as evidence that two runs were recorded without independent execution (meas-two-run false-pass pattern). Cannot treat dual-run agreement as verified.",
       "passed": false
     },
     {
-      "title": "Identical dual-run timestamps in fe-favicon-legible fixture",
-      "citation": "orchestrator/test/fixtures/fe-favicon-legible/bad-app/evidence/measurement-meta.json:5",
-      "detail": "Both runs are stamped `2026-08-06T02:49:10.959Z` with identical metrics. A two-run record written with the same clock value does not prove two independent measurements; the fixture still fails to show distinct run provenance.",
+      "title": "Identical two-run timestamps (favicon bad fixture)",
+      "citation": "orchestrator/test/fixtures/fe-favicon-legible/bad-app/evidence/measurement-meta.json:8",
+      "detail": "Both runs record at 2026-08-06T03:36:53.614Z with identical metrics. Same meas-two-run defect: timestamps do not prove two independent runs.",
       "passed": false
     },
     {
-      "title": "Identical dual-run timestamps in u-build-succeeds fixture",
-      "citation": "orchestrator/test/fixtures/u-build-succeeds/bad-app/evidence/measurement-meta.json:5",
-      "detail": "Both runs share `at: 2026-08-06T02:49:06.575Z`. Distinct timestamps are required for a two-run measurement; identical stamps leave the dual-run claim unverified.",
+      "title": "Identical two-run timestamps (meas-engine-named)",
+      "citation": "orchestrator/test/fixtures/meas-engine-named/bad-app/evidence/measurement-meta.json:22",
+      "detail": "Both runs share 2026-08-06T03:37:05.832Z. Dual-run evidence is not independent.",
       "passed": false
     },
     {
-      "title": "Identical dual-run timestamps in u-legal-claims-true fixture",
-      "citation": "orchestrator/test/fixtures/u-legal-claims-true/bad-app/evidence/measurement-meta.json:5",
-      "detail": "Both runs share `at: 2026-08-06T02:49:10.361Z`. Only `recordedAt` differs by 1ms; the two run entries themselves are not independently timed, so two-run independence is not proven.",
+      "title": "Identical two-run timestamps (u-build-succeeds)",
+      "citation": "orchestrator/test/fixtures/u-build-succeeds/bad-app/evidence/measurement-meta.json:8",
+      "detail": "Both runs share 2026-08-06T03:36:49.250Z and status 1. Two-run record is byte-identical at write time.",
       "passed": false
     },
     {
-      "title": "Coverage high-water unchanged while baseCommit advanced",
-      "citation": "pet-sitter/.redanvil/coverage-state.json:1",
-      "detail": "`baseCommit` moves to `d4ee740a5516c996e44331e10da3f63770bf0244` but `highWaterPct` stays 35.71. The diff shows no test/source changes that would explain a real coverage measurement; advancing the ratchet base without raising coverage (or proving the re-measure) only rewrites bookkeeping.",
+      "title": "pet-sitter meas-engine-named identical timestamps",
+      "citation": "pet-sitter/evidence/measurement-meta.json:364",
+      "detail": "pet-sitter meas-engine-named runs both at 2026-08-06T03:37:36.387Z. Dual-run agreement is not proven independent.",
       "passed": false
     },
     {
-      "title": "New security rule fails; no remediation in diff",
-      "citation": "results/pet-sitter.json:155",
-      "detail": "`u-sec-safe-href` is added and recorded `passed: false`, and it is listed as a blocker. The diff contains no application code changes that would fix unsafe href usage; the commit only refreshes gate metadata and fixture timestamps. The new blocker is reported, not addressed.",
+      "title": "lg-result-reproduces flips to true with zero score",
+      "citation": "pet-sitter/evidence/measurement-meta.json:382",
+      "detail": "lg-result-reproduces changes from ok:false to ok:true while recomputed:0 and recorded:0 remain. A pass with both scores zero does not prove a real score was recomputed and matched; this can be a vacuous pass on an empty/zero result file rather than verified reproducibility of a scored gate.",
       "passed": false
     },
     {
-      "title": "Score remains 0 with many blockers still failing",
-      "citation": "results/pet-sitter.json:4",
-      "detail": "`finalScore` is 0, `passed` is false, and blockers still include `u-test-runners`, `u-api-real-output`, `u-claims-covered`, `fe-a11y-contrast`, `u-legal-claims-true`, `fe-premium-nav`, `fe-required-pages`, `fe-desktop-width`, `hyg-no-duplication`, `lg-shipped`, `lg-result-reproduces`. Evaluated count drops 64→58 / total 88→82 while the app is not improved. Metadata churn is not product progress.",
+      "title": "Diff is mostly timestamp churn, not product code",
+      "citation": "pet-sitter/evidence/measurement-meta.json:405",
+      "detail": "Visible hunks only rewrite measurement-meta timestamps (and one ok flag) across app-builder, az-planting-calendar, fixtures, and pet-sitter. No application source, tests, routes, screenshots, or SOURCES/INTEGRATIONS/COMPETITORS appear in the provided diff. Any claim that pet-sitter product behavior improved at 2b57e2a is not verifiable from this commit content.",
       "passed": false
     },
     {
-      "title": "No application source changes in the commit",
-      "citation": "results/pet-sitter.json:311",
-      "detail": "Visible hunks are only known-bad measurement-meta timestamps, coverage-state, evidence/results JSON, and gate bookkeeping. No `src/`, `functions/`, pages, or tests appear. Claims that app quality improved cannot be verified from this diff; only fixture timestamps and score reports moved.",
+      "title": "Truncated middle — full pet-sitter delta not reviewable",
+      "citation": "pet-sitter/.redanv:1",
+      "detail": "The provided diff is middle-truncated at pet-sitter/.redanv. Without the complete unified diff for that path and any omitted files, those changes cannot be verified and do not pass.",
       "passed": false
     },
     {
-      "title": "meas-standard-tool drops from blockers without app proof",
-      "citation": "results/pet-sitter.json:311",
-      "detail": "`meas-standard-tool` disappears from the blocker list while the only related change is re-stamping fixture meta. Without a corresponding app measurement or code change in the diff, the blocker removal is unverified as a real pass.",
+      "title": "Cross-app evidence rewritten in pet-sitter commit",
+      "citation": "app-builder/evidence/measurement-meta.json:280",
+      "detail": "Commit claimed for pet-sitter also rewrites measurement-meta for app-builder, az-planting-calendar, known-bad-fixtures, and many orchestrator fixtures. That scope is noise or pollution relative to a pet-sitter product review; it does not establish pet-sitter app correctness.",
       "passed": false
     },
     {
-      "title": "fe-resource-links flips true without app code",
-      "citation": "results/pet-sitter.json:81",
-      "detail": "`fe-resource-links` changes from `passed: false` to `passed: true` with no resource-link or page implementation in the diff. A verdict flip without a corresponding source or measurement artifact change in this commit cannot be treated as verified progress.",
+      "title": "fe-favicon two-run identical stamps in pet-sitter meta",
+      "citation": "pet-sitter/evidence/measurement-meta.json:443",
+      "detail": "Two consecutive favicon runs both at 2026-08-06T03:36:44.710Z with identical metrics, then another pair both at 2026-08-06T03:36:45.029Z. Paired identical timestamps undermine the two-run independence check.",
       "passed": false
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\\"foundNothingExplicit\\\":false,\\\"findings\\\":[{\\\"title\\\":\\\"Identical dual-run timestamps in meas-two-run fixture\\\",\\\"citation\\\":\\\"orchestrator/test/fixtures/meas-two-run/bad-app/evidence/measurement-meta.json:15\\\",\\\"detail\\\":\\\"Both runs share the same `at` timestamp (`2026-08-06T02:49:22.690Z`). The two-run guard requires distinct timestamps to prove independent runs; byte-identical times mean the known-bad record does not demonstrate two separate measurements. This is the exact false-pass class called out for meas-two-run.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Identical dual-run timestamps in fe-favicon-legible fixture\\\",\\\"citation\\\":\\\"orchestrator/test/fixtures/fe-favicon-legible/bad-app/evidence/measurement-meta.json:5\\\",\\\"detail\\\":\\\"Both runs are stamped `2026-08-06T02:49:10.959Z` with identical metrics. A two-run record written with the same clock value does not prove two independent measurements; the fixture still fails to show distinct run provenance.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Identical dual-run timestamps in u-build-succeeds fixture\\\",\\\"citation\\\":\\\"orchestrator/test/fixtures/u-build-succeeds/bad-app/evidence/measurement-meta.json:5\\\",\\\"detail\\\":\\\"Both runs share `at: 2026-08-06T02:49:06.575Z`. Distinct timestamps are required for a two-run measurement; identical stamps leave the dual-run claim unverified.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Identical dual-run timestamps in u-legal-claims-true fixture\\\",\\\"citation\\\":\\\"orchestrator/test/fixtures/u-legal-claims-true/bad-app/evidence/measurement-meta.json:5\\\",\\\"detail\\\":\\\"Both runs share `at: 2026-08-06T02:49:10.361Z`. Only `recordedAt` differs by 1ms; the two run entries themselves are not independently timed, so two-run independence is not proven.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Coverage high-water unchanged while baseCommit advanced\\\",\\\"citation\\\":\\\"pet-sitter/.redanvil/coverage-state.json:1\\\",\\\"detail\\\":\\\"`baseCommit` moves to `d4ee740a5516c996e44331e10da3f63770bf0244` but `highWaterPct` stays 35.71. The diff shows no test/source changes that would explain a real coverage measurement; advancing the ratchet base without raising coverage (or proving the re-measure) only rewrites bookkeeping.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"New security rule fails; no remediation in diff\\\",\\\"citation\\\":\\\"results/pet-sitter.json:155\\\",\\\"detail\\\":\\\"`u-sec-safe-href` is added and recorded `passed: false`, and it is listed as a blocker. The diff contains no application code changes that would fix unsafe href usage; the commit only refreshes gate metadata and fixture timestamps. The new blocker is reported, not addressed.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Score remains 0 with many blockers still failing\\\",\\\"citation\\\":\\\"results/pet-sitter.json:4\\\",\\\"detail\\\":\\\"`finalScore` is 0, `passed` is false, and blockers still include `u-test-runners`, `u-api-real-output`, `u-claims-covered`, `fe-a11y-contrast`, `u-legal-claims-true`, `fe-premium-nav`, `fe-required-pages`, `fe-desktop-width`, `hyg-no-duplication`, `lg-shipped`, `lg-result-reproduces`. Evaluated count drops 64→58 / total 88→82 while the app is not improved. Metadata churn is not product progress.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"No application source changes in the commit\\\",\\\"citation\\\":\\\"results/pet-sitter.json:311\\\",\\\"detail\\\":\\\"Visible hunks are only known-bad measurement-meta timestamps, coverage-state, evidence/results JSON, and gate bookkeeping. No `src/`, `functions/`, pages, or tests appear. Claims that app quality improved cannot be verified from this diff; only fixture timestamps and score reports moved.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"meas-standard-tool drops from blockers without app proof\\\",\\\"citation\\\":\\\"results/pet-sitter.json:311\\\",\\\"detail\\\":\\\"`meas-standard-tool` disappears from the blocker list while the only related change is re-stamping fixture meta. Without a corresponding app measurement or code change in the diff, the blocker removal is unverified as a real pass.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"fe-r",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{ \\\"foundNothingExplicit\\\": false, \\\"findings\\\": [\\n  {\\n    \\\"title\\\": \\\"Identical two-run timestamps (meas-two-run vacuity)\\\",\\n    \\\"citation\\\": \\\"az-planting-calendar/evidence/measurement-meta.json:241\\\",\\n    \\\"detail\\\": \\\"Both runs for a two-run measurement share the exact same timestamp (2026-08-06T02:52:50.858Z). Corpus rules treat back-to-back identical timestamps as evidence that two runs were recorded without independent execution (meas-two-run false-pass pattern). Cannot treat dual-run agreement as verified.\\\",\\n    \\\"passed\\\": false\\n  },\\n  {\\n    \\\"title\\\": \\\"Identical two-run timestamps (favicon bad fixture)\\\",\\n    \\\"citation\\\": \\\"orchestrator/test/fixtures/fe-favicon-legible/bad-app/evidence/measurement-meta.json:8\\\",\\n    \\\"detail\\\": \\\"Both runs record at 2026-08-06T03:36:53.614Z with identical metrics. Same meas-two-run defect: timestamps do not prove two independent runs.\\\",\\n    \\\"passed\\\": false\\n  },\\n  {\\n    \\\"title\\\": \\\"Identical two-run timestamps (meas-engine-named)\\\",\\n    \\\"citation\\\": \\\"orchestrator/test/fixtures/meas-engine-named/bad-app/evidence/measurement-meta.json:22\\\",\\n    \\\"detail\\\": \\\"Both runs share 2026-08-06T03:37:05.832Z. Dual-run evidence is not independent.\\\",\\n    \\\"passed\\\": false\\n  },\\n  {\\n    \\\"title\\\": \\\"Identical two-run timestamps (u-build-succeeds)\\\",\\n    \\\"citation\\\": \\\"orchestrator/test/fixtures/u-build-succeeds/bad-app/evidence/measurement-meta.json:8\\\",\\n    \\\"detail\\\": \\\"Both runs share 2026-08-06T03:36:49.250Z and status 1. Two-run record is byte-identical at write time.\\\",\\n    \\\"passed\\\": false\\n  },\\n  {\\n    \\\"title\\\": \\\"pet-sitter meas-engine-named identical timestamps\\\",\\n    \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:364\\\",\\n    \\\"detail\\\": \\\"pet-sitter meas-engine-named runs both at 2026-08-06T03:37:36.387Z. Dual-run agreement is not proven independent.\\\",\\n    \\\"passed\\\": false\\n  },\\n  {\\n    \\\"title\\\": \\\"lg-result-reproduces flips to true with zero score\\\",\\n    \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:382\\\",\\n    \\\"detail\\\": \\\"lg-result-reproduces changes from ok:false to ok:true while recomputed:0 and recorded:0 remain. A pass with both scores zero does not prove a real score was recomputed and matched; this can be a vacuous pass on an empty/zero result file rather than verified reproducibility of a scored gate.\\\",\\n    \\\"passed\\\": false\\n  },\\n  {\\n    \\\"title\\\": \\\"Diff is mostly timestamp churn, not product code\\\",\\n    \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:405\\\",\\n    \\\"detail\\\": \\\"Visible hunks only rewrite measurement-meta timestamps (and one ok flag) across app-builder, az-planting-calendar, fixtures, and pet-sitter. No application source, tests, routes, screenshots, or SOURCES/INTEGRATIONS/COMPETITORS appear in the provided diff. Any claim that pet-sitter product behavior improved at 2b57e2a is not verifiable from this commit content.\\\",\\n    \\\"passed\\\": false\\n  },\\n  {\\n    \\\"title\\\": \\\"Truncated middle — full pet-sitter delta not reviewable\\\",\\n    \\\"citation\\\": \\\"pet-sitter/.redanv:1\\\",\\n    \\\"detail\\\": \\\"The provided diff is middle-truncated at pet-sitter/.redanv. Without the complete unified diff for that path and any omitted files, those changes cannot be verified and do not pass.\\\",\\n    \\\"passed\\\": false\\n  },\\n  {\\n    \\\"title\\\": \\\"Cross-app evidence rewritten in pet-sitter commit\\\",\\n    \\\"citation\\\": \\\"app-builder/evidence/measurement-meta.json:280\\\",\\n    \\\"detail\\\": \\\"Commit claimed for pet-sitter also rewrites measurement-meta for app-builder, az-planting-calendar, known-bad-fixtures, and many orchestrator fixtures. That scope is noise or pollution relative to a pet-sitter product review; it does not establish pet-sitter app correctness.\\\",\\n    \\\"passed\\\": false\\n  },\\n  {\\n    \\\"title\\\": \\\"fe-favicon two-run identical stamps in pet-sitter meta\\\",\\n    \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:443\\\",\\n    \\\"detail\\\": \\\"Two consecutive favicon runs b",
   "mode": "grok",
   "chunkCount": 1,
-  "coverageChars": 31420,
-  "diffChars": 31420,
+  "coverageChars": 28557,
+  "diffChars": 28557,
   "coverageComplete": true
 }
