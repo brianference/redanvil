@@ -59,6 +59,7 @@ export {
   runPm,
   planIteration,
   dryRunAssignments,
+  roleDispatchOrder,
   type PmDeps,
   type PmConfig,
   type PmResult,
@@ -76,6 +77,23 @@ export {
   type DesignDeliverablesStatus,
   type DesignPreconditionResult
 } from './designPrecondition';
+
+export {
+  evaluateProductDeliverables,
+  enforceProductBeforeDesign,
+  parseProductPromises,
+  findPromisesWithoutOwner,
+  loadProductPromises,
+  productBriefRel,
+  productPrdRel,
+  resolveProductBriefPath,
+  POST_PRODUCT_ROLE_IDS,
+  PRODUCT_ROLE_ID,
+  type ProductPromise,
+  type UnownedPromise,
+  type ProductDeliverablesStatus,
+  type ProductPreconditionResult
+} from './productPrecondition';
 
 export {
   engageTeamAfterScaffold,

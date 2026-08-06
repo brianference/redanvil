@@ -70,9 +70,17 @@ describe('finish-line constants', () => {
   });
 
   it('APPS is the single source of truth used by reverify consumers', () => {
-    expect(APPS.map((a) => a.slug).sort()).toEqual(
-      ['app-builder', 'az-planting-calendar', 'dashboard'].sort()
+    // CORE production apps are always present; managed (scaffolded) apps from
+    // .redanvil/managed-apps.json are merged in so the gate/PM see them without
+    // a hand-edited parallel list.
+    const slugs = APPS.map((a) => a.slug).sort();
+    expect(slugs).toEqual(
+      expect.arrayContaining(
+        ['app-builder', 'az-planting-calendar', 'dashboard'].sort()
+      )
     );
+    // Every managed registry entry must appear in APPS (no silent drop).
+    expect(slugs.length).toBeGreaterThanOrEqual(3);
   });
 });
 

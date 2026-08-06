@@ -86,6 +86,41 @@ function unmetWithBuildAndDesign() {
 }
 
 /**
+ * Write a product brief so design-before-build tests can reach the design gate
+ * (product runs first; without this brief, logo/layout are refused).
+ *
+ * @param appDir - App root.
+ * @param slug - App slug for the brief filename.
+ */
+function writeProductBrief(appDir: string, slug = 'fixture-app'): void {
+  const docs = join(appDir, 'docs');
+  mkdirSync(docs, { recursive: true });
+  writeFileSync(
+    join(docs, `${slug}-product-brief.md`),
+    [
+      '# Product brief',
+      '',
+      '## Promises',
+      '',
+      '- Search works | owns: B4',
+      '',
+      '## Core user job',
+      '',
+      'A visitor finds and uses the primary capability end to end.',
+      '',
+      '## Acceptance evidence',
+      '',
+      '- Search works: acceptance test names the search control and asserts visible results.',
+      ''
+    ].join('\n')
+  );
+  writeFileSync(
+    join(docs, `${slug}-prd.md`),
+    '# PRD\n\nProduct requirements for the fixture app.\n'
+  );
+}
+
+/**
  * Write a complete, real design decision tree under appDir.
  *
  * @param appDir - App root.
@@ -133,10 +168,13 @@ function writeDecidedDesign(appDir: string): void {
 describe('a. no design-refs → PM refuses build roles, assigns logo+layout', () => {
   it('refuses engineer/content and assigns design roles first', async () => {
     const appDir = mkdtempSync(join(tmpdir(), 'ra-gap-a-'));
+    const slug = 'fixture-app';
     try {
+      // Product brief present so we reach the design gate (product runs earlier).
+      writeProductBrief(appDir, slug);
       // Failing input: empty app dir, no design-refs at all.
       const statuses = unmetWithBuildAndDesign();
-      const plan = planIteration(statuses, ROLES, 1, appDir);
+      const plan = planIteration(statuses, ROLES, 1, appDir, slug);
       const ids = plan.assignments.map((a) => a.role.id);
 
       expect(plan.designPrecondition).toBeDefined();
@@ -156,6 +194,7 @@ describe('a. no design-refs → PM refuses build roles, assigns logo+layout', ()
       const result = await runPm(
         {
           appDir,
+          slug,
           readStatuses: async () => statuses,
           runRole: async (a) => {
             ran.push(a.role.id);
@@ -188,7 +227,9 @@ describe('a. no design-refs → PM refuses build roles, assigns logo+layout', ()
 describe('b. empty/placeholder DECISION.md → still MISSING', () => {
   it('treats empty DECISION.md as missing and refuses build roles', () => {
     const appDir = mkdtempSync(join(tmpdir(), 'ra-gap-b-'));
+    const slug = 'fixture-app';
     try {
+      writeProductBrief(appDir, slug);
       // Failing input: files exist but DECISION.md is blank / placeholder.
       writeDecidedDesign(appDir);
       writeFileSync(join(appDir, 'design-refs/logo/DECISION.md'), '\n');
@@ -202,7 +243,7 @@ describe('b. empty/placeholder DECISION.md → still MISSING', () => {
       expect(status.reasons.join(' ')).toMatch(/empty|placeholder|unwritten|TBD/i);
 
       const statuses = unmetWithBuildAndDesign();
-      const plan = planIteration(statuses, ROLES, 1, appDir);
+      const plan = planIteration(statuses, ROLES, 1, appDir, slug);
       const ids = plan.assignments.map((a) => a.role.id);
       expect(ids).not.toContain('engineer');
       expect(plan.designPrecondition!.messages.join('\n')).toMatch(/REFUSED|undecided|missing/i);
@@ -227,13 +268,15 @@ describe('b. empty/placeholder DECISION.md → still MISSING', () => {
 describe('c. all design deliverables present and decided → build roles dispatch', () => {
   it('allows engineer/content when design is decided', async () => {
     const appDir = mkdtempSync(join(tmpdir(), 'ra-gap-c-'));
+    const slug = 'fixture-app';
     try {
+      writeProductBrief(appDir, slug);
       writeDecidedDesign(appDir);
       const status = evaluateDesignDeliverables(appDir);
       expect(status.ok).toBe(true);
 
       const statuses = unmetWithBuildAndDesign();
-      const plan = planIteration(statuses, ROLES, 1, appDir);
+      const plan = planIteration(statuses, ROLES, 1, appDir, slug);
       const ids = plan.assignments.map((a) => a.role.id);
       expect(plan.designPrecondition?.refusedBuildRoles ?? []).toEqual([]);
       expect(ids).toEqual(expect.arrayContaining(['engineer', 'content', 'logo', 'layout']));
@@ -242,6 +285,7 @@ describe('c. all design deliverables present and decided → build roles dispatc
       await runPm(
         {
           appDir,
+          slug,
           readStatuses: async () => statuses,
           runRole: async (a) => {
             ran.push(a.role.id);
@@ -437,13 +481,20 @@ describe('enforceDesignBeforeBuild pure edge cases', () => {
   });
 });
 
-describe('dryRun surfaces design refusal lines', () => {
-  it('prints refusal when appDir has no design-refs', () => {
+describe('dryRun surfaces product then design refusal lines', () => {
+  it('prints product refusal when brief is missing (before design)', () => {
     const appDir = mkdtempSync(join(tmpdir(), 'ra-gap-dry-'));
     try {
-      const { lines, plan } = dryRunAssignments(unmetWithBuildAndDesign(), ROLES, appDir);
-      expect(lines.join('\n')).toMatch(/REFUSED|design/i);
+      const { lines, plan } = dryRunAssignments(
+        unmetWithBuildAndDesign(),
+        ROLES,
+        appDir,
+        'fixture-app'
+      );
+      // Product runs first — without a brief, design is never reached.
+      expect(lines.join('\n')).toMatch(/product brief missing|product has not run|REFUSED/i);
       expect(plan.assignments.map((a) => a.role.id)).not.toContain('engineer');
+      expect(plan.assignments.map((a) => a.role.id)).toContain('product');
     } finally {
       rmSync(appDir, { recursive: true, force: true });
     }

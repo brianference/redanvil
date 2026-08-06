@@ -802,65 +802,138 @@ function playwrightConfigTs(): string {
 }
 
 /**
- * Vitest config for the scaffold.
+ * Vitest multi-project config for the scaffold.
  *
- * Without this, vitest's default glob swallows `tests/*.spec.ts` — the
- * Playwright acceptance suite — and fails trying to run browser specs in Node.
- * Unit tests live beside their source; acceptance tests live in `tests/` and
- * belong to Playwright.
+ * Four independent lanes the process map requires (unit / browser / vrt / pytest).
+ * Playwright acceptance stays under tests/ and is NOT swallowed by vitest.
+ *
+ * Named projects matter for the gate: a failure reports which lane failed, so
+ * "tests passed" can never mean "the unit lane passed and nobody ran the rest".
  */
 function vitestConfigTs(): string {
-  return (
-    `import { defineConfig } from 'vitest/config';
+  return `import { defineConfig } from 'vitest/config';
 
-` +
-    `export default defineConfig({
-` +
-    `  test: {
-` +
-    `    include: ['src/**/*.test.ts', 'functions/**/*.test.ts'],
-` +
-    `    exclude: ['tests/**', 'node_modules/**', 'dist/**'],
-` +
-    `    environment: 'node',
-` +
-    `    coverage: {
-` +
-    `      provider: 'v8',
-` +
-    `      // json-summary is what writes coverage/coverage-summary.json, which is
-` +
-    `      // the file u-test-presence and u-test-coverage-ratchet read. Removing
-` +
-    `      // it leaves both rules with nothing to measure.
-` +
-    `      reporter: ['text', 'json-summary'],
-` +
-    `      reportsDirectory: 'coverage',
-` +
-    `      // Deliberately NOT 'src/**'. Components and pages are exercised by
-` +
-    `      // Playwright, and vitest's V8 provider cannot see a browser it did not
-` +
-    `      // launch -- including them reports 0% for files that are in fact tested
-` +
-    `      // and turns the gate into a false-positive machine. That surface is
-` +
-    `      // owned by u-test-acceptance and u-test-feature-audit instead. Widen
-` +
-    `      // this only alongside merged Playwright coverage.
-` +
-    `      include: ['src/lib/**', 'src/hooks/**', 'functions/**'],
-` +
-    `      exclude: ['**/*.test.ts']
-` +
-    `    }
-` +
-    `  }
-` +
-    `});
-`
-  );
+/** VRT specs: toHaveScreenshot at 375 and 1280. */
+const vrtPattern = '**/*.{vrt,visual}.test.{ts,tsx}';
+
+export default defineConfig({
+  test: {
+    // Coverage is collected once for the whole run from the root config.
+    coverage: {
+      provider: 'v8',
+      // json-summary is what writes coverage/coverage-summary.json, which is
+      // the file u-test-presence and u-test-coverage-ratchet read. Removing
+      // it leaves both rules with nothing to measure.
+      reporter: ['text', 'json-summary'],
+      reportsDirectory: 'coverage',
+      // Deliberately NOT 'src/**'. Components and pages are exercised by
+      // Playwright / browser / vrt lanes; vitest's V8 provider cannot see a
+      // browser it did not launch.
+      include: ['src/lib/**', 'src/hooks/**', 'functions/**'],
+      exclude: ['**/*.test.ts', '**/*.browser.test.ts', '**/*.{vrt,visual}.test.ts']
+    },
+    projects: [
+      {
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.test.ts', 'functions/**/*.test.ts'],
+          exclude: [
+            '**/*.browser.test.ts',
+            vrtPattern,
+            'tests/**',
+            'node_modules/**',
+            'dist/**'
+          ]
+        }
+      },
+      {
+        test: {
+          name: 'browser',
+          // Real-DOM behaviour jsdom fakes badly: focus order, combobox keyboard,
+          // scroll containers, scrollIntoView.
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: 'playwright',
+            name: 'chromium',
+            instances: [{ browser: 'chromium' }]
+          },
+          include: ['**/*.browser.test.ts'],
+          exclude: ['tests/**', 'node_modules/**', 'dist/**']
+        }
+      },
+      {
+        test: {
+          name: 'vrt',
+          // Visual regression at 375 and 1280 via toHaveScreenshot.
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: 'playwright',
+            name: 'chromium',
+            instances: [
+              { browser: 'chromium', viewport: { width: 375, height: 900 } },
+              { browser: 'chromium', viewport: { width: 1280, height: 900 } }
+            ]
+          },
+          include: [vrtPattern],
+          exclude: ['tests/**', 'node_modules/**', 'dist/**']
+        }
+      }
+    ]
+  }
+});
+`;
+}
+
+/**
+ * Starter browser-lane test — focus / keyboard path that jsdom cannot prove.
+ *
+ * @returns TypeScript source.
+ */
+function browserLaneTestTs(): string {
+  return `import { describe, it, expect } from 'vitest';
+
+/**
+ * Browser lane: real focus and keyboard behaviour.
+ * Replace / extend with app-specific combobox and scroll-container cases.
+ */
+describe('browser lane — focus', () => {
+  it('moves focus to a button when it is focused()', () => {
+    const btn = document.createElement('button');
+    btn.textContent = 'Go';
+    document.body.appendChild(btn);
+    btn.focus();
+    expect(document.activeElement).toBe(btn);
+    btn.remove();
+  });
+});
+`;
+}
+
+/**
+ * Starter VRT lane test — toHaveScreenshot at the viewports the project declares.
+ *
+ * @returns TypeScript source.
+ */
+function vrtLaneTestTs(): string {
+  return `import { describe, it, expect } from 'vitest';
+import { page } from '@vitest/browser/context';
+
+/**
+ * VRT lane: mechanical visual regression at 375 and 1280.
+ * Baseline screenshots are written on first run; review them before committing.
+ */
+describe('vrt lane — shell snapshot', () => {
+  it('captures the document shell', async () => {
+    document.body.innerHTML =
+      '<main style="padding:16px;font-family:system-ui"><h1>App shell</h1></main>';
+    // toHaveScreenshot is the VRT contract u-test-runners detects.
+    await expect(page.elementLocator(document.body)).toHaveScreenshot('shell.png');
+  });
+});
+`;
 }
 
 /**
@@ -1007,7 +1080,13 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
             preview: 'wrangler pages dev ./dist',
             typecheck: 'tsc -b',
             lint: 'eslint . --max-warnings 0',
+            // Default `test` runs every vitest project (unit + browser + vrt).
+            // Each lane is also invocable alone so u-test-runners can fail them
+            // independently — a green unit lane must not hide a red browser/VRT lane.
             test: 'vitest run',
+            'test:unit': 'vitest run --project unit',
+            'test:browser': 'vitest run --project browser',
+            'test:vrt': 'vitest run --project vrt',
             'test:e2e': 'playwright test',
             // The control inventory (u-test-feature-audit). It crawls the
             // RUNNING app, so it needs the preview server up; `verify` is what
@@ -1051,6 +1130,8 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
             // Bump these two together or not at all; scaffold.test.ts asserts it.
             vitest: '2.1.9',
             '@vitest/coverage-v8': '2.1.9',
+            // Browser + VRT lanes (scroll/focus/combobox and toHaveScreenshot).
+            '@vitest/browser': '2.1.9',
             wrangler: '^3.78.0'
           }
         },
@@ -1134,6 +1215,10 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     'src/i18n/en.ts': i18nEnTs(job, builtAt),
     'src/lib/routes.ts': routesTs(),
     'src/lib/routes.test.ts': routesTestTs(),
+    // Browser + VRT lanes so u-test-runners sees all four process-map lanes
+    // on day one (unit from routes.test.ts, browser, vrt, plus pytest when present).
+    'src/lib/focus.browser.test.ts': browserLaneTestTs(),
+    'src/lib/shell.vrt.test.ts': vrtLaneTestTs(),
     'tests/acceptance.spec.ts': acceptanceSpecTs(),
     // Per-page acceptance placeholders: intentionally FAIL until the builder
     // replaces them with real assertions. A scaffold that ships a green empty

@@ -169,20 +169,22 @@ export function evaluateCommitMsg(worktreeDir, message) {
   if (!messageClaimsDone(message)) {
     return { ok: true, reasons: [] };
   }
-  // Not a role commit: the role-artifact contract does not apply here. A role
-  // worktree CANNOT escape by deleting its assignment -- being in a role
-  // worktree with no assignment is still refused below.
-  if (!isRoleWorktree(worktreeDir)) {
-    return { ok: true, reasons: [] };
-  }
+  // Align with worktreeEnforcement.ts: a worktree that carries an assignment
+  // is role-bound regardless of branch name. Early-returning on non-role
+  // branch names let "feat: done …" through with a fail verdict on disk.
+  // Role branch without assignment is still refused (cannot escape by delete).
   const assignment = readAssignment(worktreeDir);
   if (assignment === null) {
-    return {
-      ok: false,
-      reasons: [
-        'commit message claims completion but .redanvil/assignment.json is missing'
-      ]
-    };
+    if (isRoleWorktree(worktreeDir)) {
+      return {
+        ok: false,
+        reasons: [
+          'commit message claims completion but .redanvil/assignment.json is missing'
+        ]
+      };
+    }
+    // Not role-bound and no assignment: nothing to enforce here.
+    return { ok: true, reasons: [] };
   }
   const missing = missingArtifacts(worktreeDir, assignment.artifacts);
   if (missing.length > 0) {

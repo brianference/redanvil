@@ -1,8 +1,0 @@
-{
-  "kind": "result",
-  "slug": "pet-sitter",
-  "finalScore": 0,
-  "threshold": 90,
-  "rules": [],
-  "note": "Scaffold stub — not a measurement. Run the PM: npx tsx orchestrator/src/cli.ts pm pet-sitter --execute"
-}
