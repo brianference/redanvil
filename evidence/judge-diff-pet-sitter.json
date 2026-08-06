@@ -1,54 +1,48 @@
 {
   "kind": "independent-diff-review",
   "slug": "pet-sitter",
-  "commit": "06cf1d5980151facd94b46444a7668201e3cb23b",
-  "reviewedAt": "2026-08-06T03:50:06.142Z",
-  "diffHash": "6560336870996df20fed706aa17820043a55b81760bb4729ed057e1fa4b728aa",
+  "commit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2",
+  "reviewedAt": "2026-08-06T03:52:07.012Z",
+  "diffHash": "a005ffaf0788b0e1932bd84ecfeec2b0e5e386061d368b96f91ffb6dc7b04eaf",
   "completed": true,
   "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "Live search untested",
-      "citation": "pet-sitter/src/components/SitterSearchList.tsx:79",
-      "detail": "applyQuery sets submitted on every keystroke, changing filter semantics from submit-only to live-narrow. The acceptance suite only retargets data-testid from sitter-list to search-results; nothing in the diff asserts that typing without form submit reduces result count. The behavior change is unverified.",
+      "title": "Evidence timestamps only",
+      "citation": "pet-sitter/evidence/measurement-meta.json:503",
+      "detail": "The only evidence change is swapping axe run timestamps (03:25→03:48). No axe report bodies, measurement outputs, or other evidence files appear in the diff. Adding data-measure hooks in UI cannot be verified as re-measured; the meta touch alone does not prove a real measurement pass against this commit.",
       "passed": false
     },
     {
-      "title": "Hero measure on intro paragraph",
-      "citation": "pet-sitter/src/components/SitterSearchList.tsx:86",
-      "detail": "data-measure=\"hero\" is on a page-intro <p>, not a primary painted hero or full content surface. Harnesses that sample [data-measure=hero] for painted width will measure short intro text, not the catalog column, so desktop-width claims are not proven and may be gamed.",
-      "passed": false
-    },
-    {
-      "title": "search-results rename incomplete in diff",
-      "citation": "pet-sitter/src/components/SitterSearchList.tsx:136",
-      "detail": "data-testid renames sitter-list to search-results. Only tests/acceptance.spec.ts is updated in this commit. Other consumers (other specs, audit manifests, measure scripts) are not shown; completeness of the rename cannot be verified from the diff alone.",
-      "passed": false
-    },
-    {
-      "title": "compact-header on full topbar",
+      "title": "Measurement hooks unverified",
       "citation": "pet-sitter/src/components/Page.tsx:27",
-      "detail": "The main sticky topbar (brand + primary nav) is labeled data-testid=\"compact-header\". That name implies a compact/mobile header, not the full shell header; harnesses keyed to compact-header may pass against the wrong surface.",
+      "detail": "Diff adds data-measure=\"header\" (Page), data-measure=\"mark\" (BrandLogo), and data-measure=\"hero\" (SitterSearchList) with no harness/script/report changes. Cannot verify these selectors are consumed or that width/theme/layout measurements were re-run after the markup change.",
       "passed": false
     },
     {
-      "title": "Mark measure is not brand proof",
-      "citation": "pet-sitter/src/components/BrandLogo.tsx:31",
-      "detail": "Only adds data-measure=\"mark\". The image asset, source, and alt are unchanged; a real non-placeholder brand mark is not verified by instrumentation alone.",
+      "title": "Testid rename not fully verified",
+      "citation": "pet-sitter/src/components/SitterSearchList.tsx:136",
+      "detail": "data-testid renames sitter-list → search-results (and adds sitter-list-item, filter-search, live-search). Only acceptance.spec.ts is updated in the diff. Cannot verify other specs, feature-audit manifests, or smoke scripts that may still target sitter-list; incomplete migration is a fail-closed gap.",
       "passed": false
     },
     {
-      "title": "No measurement or visual evidence",
-      "citation": "pet-sitter/tests/acceptance.spec.ts:88",
-      "detail": "The commit is almost entirely data-testid/data-measure wiring plus a live-filter hook. No screenshots, measure run output, or cold-visitor proof is in the diff. Gate-facing instrumentation does not pass until those artifacts exist and are inspected.",
+      "title": "Acceptance search locator weakened",
+      "citation": "pet-sitter/tests/acceptance.spec.ts:94",
+      "detail": "Search narrowing test stopped using getByLabel(/search sitters/i) and the submit button, and now only fills getByTestId('filter-search'). Live-narrow via applyQuery is consistent with SitterSearchList onChange, but the test no longer guards the accessible name of the search control—only a test id.",
       "passed": false
+    },
+    {
+      "title": "Live filter wiring consistent",
+      "citation": "pet-sitter/src/components/SitterSearchList.tsx:79",
+      "detail": "applyQuery sets query and submitted(trim) on each keystroke; onChange calls it; acceptance expects count to drop without submit. That behavioral coupling is internally consistent in the diff. Not a defect—but it is not proof the full suite is green or that production filtering matches.",
+      "passed": true
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"Live search untested\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/SitterSearchList.tsx:79\\\",\\n      \\\"detail\\\": \\\"applyQuery sets submitted on every keystroke, changing filter semantics from submit-only to live-narrow. The acceptance suite only retargets data-testid from sitter-list to search-results; nothing in the diff asserts that typing without form submit reduces result count. The behavior change is unverified.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Hero measure on intro paragraph\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/SitterSearchList.tsx:86\\\",\\n      \\\"detail\\\": \\\"data-measure=\\\\\\\"hero\\\\\\\" is on a page-intro <p>, not a primary painted hero or full content surface. Harnesses that sample [data-measure=hero] for painted width will measure short intro text, not the catalog column, so desktop-width claims are not proven and may be gamed.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"search-results rename incomplete in diff\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/SitterSearchList.tsx:136\\\",\\n      \\\"detail\\\": \\\"data-testid renames sitter-list to search-results. Only tests/acceptance.spec.ts is updated in this commit. Other consumers (other specs, audit manifests, measure scripts) are not shown; completeness of the rename cannot be verified from the diff alone.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"compact-header on full topbar\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/Page.tsx:27\\\",\\n      \\\"detail\\\": \\\"The main sticky topbar (brand + primary nav) is labeled data-testid=\\\\\\\"compact-header\\\\\\\". That name implies a compact/mobile header, not the full shell header; harnesses keyed to compact-header may pass against the wrong surface.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Mark measure is not brand proof\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/BrandLogo.tsx:31\\\",\\n      \\\"detail\\\": \\\"Only adds data-measure=\\\\\\\"mark\\\\\\\". The image asset, source, and alt are unchanged; a real non-placeholder brand mark is not verified by instrumentation alone.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"No measurement or visual evidence\\\",\\n      \\\"citation\\\": \\\"pet-sitter/tests/acceptance.spec.ts:88\\\",\\n      \\\"detail\\\": \\\"The commit is almost entirely data-testid/data-measure wiring plus a live-filter hook. No screenshots, measure run output, or cold-visitor proof is in the diff. Gate-facing instrumentation does not pass until those artifacts exist and are inspected.\\\",\\n      \\\"passed\\\": false\\n    }\\n  ]\\n}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"00a4ac72-d6c0-476b-9589-261a7c080eab\",\n  \"requestId\": \"d8c47e1c-14f8-4217-84ca-cfe815eb0414\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff for pet-sitter. I must NOT use tools and must answer only with JSON based on the diff provided.\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"Test ID rename incomplete\\\",\\n      \\\"citation\\\": \\\"pet-sitter/tests/acceptance.spec.ts:106\\\",\\n      \\\"detail\\\": \\\"Changed data-testid from sitter-list to search-results in acceptance tests, but diff 06cf1d5980151facd94b46444a7668201e3cb23b only updates this file; no other files shown in diff, so any remaining references to sitter-list would break tests.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Live search not tested 1\\\",\\n      \\\"citation\\\": \\\"pet-sitter/tests/acceptance.spec.ts:85\\\",\\n      \\\"detail\\\": \\\"Test 'sitter search narrows the visible catalog' only checks initial load and submit behavior; diff adds live onChange but no assertion for keystroke filtering.\\\",\\n      \\\"passed\\\": false\\n    },\\n ]\\n}turn\\n\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"Test ID rename incomplete\\\",\\n      \\\"citation\\\": \\\"pet-sitter/tests",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"Evidence timestamps only\\\",\\n      \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:503\\\",\\n      \\\"detail\\\": \\\"The only evidence change is swapping axe run timestamps (03:25→03:48). No axe report bodies, measurement outputs, or other evidence files appear in the diff. Adding data-measure hooks in UI cannot be verified as re-measured; the meta touch alone does not prove a real measurement pass against this commit.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Measurement hooks unverified\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/Page.tsx:27\\\",\\n      \\\"detail\\\": \\\"Diff adds data-measure=\\\\\\\"header\\\\\\\" (Page), data-measure=\\\\\\\"mark\\\\\\\" (BrandLogo), and data-measure=\\\\\\\"hero\\\\\\\" (SitterSearchList) with no harness/script/report changes. Cannot verify these selectors are consumed or that width/theme/layout measurements were re-run after the markup change.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Testid rename not fully verified\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/SitterSearchList.tsx:136\\\",\\n      \\\"detail\\\": \\\"data-testid renames sitter-list → search-results (and adds sitter-list-item, filter-search, live-search). Only acceptance.spec.ts is updated in the diff. Cannot verify other specs, feature-audit manifests, or smoke scripts that may still target sitter-list; incomplete migration is a fail-closed gap.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Acceptance search locator weakened\\\",\\n      \\\"citation\\\": \\\"pet-sitter/tests/acceptance.spec.ts:94\\\",\\n      \\\"detail\\\": \\\"Search narrowing test stopped using getByLabel(/search sitters/i) and the submit button, and now only fills getByTestId('filter-search'). Live-narrow via applyQuery is consistent with SitterSearchList onChange, but the test no longer guards the accessible name of the search control—only a test id.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Live filter wiring consistent\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/SitterSearchList.tsx:79\\\",\\n      \\\"detail\\\": \\\"applyQuery sets query and submitted(trim) on each keystroke; onChange calls it; acceptance expects count to drop without submit. That behavioral coupling is internally consistent in the diff. Not a defect—but it is not proof the full suite is green or that production filtering matches.\\\",\\n      \\\"passed\\\": true\\n    }\\n  ]\\n}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"eae5f64d-5311-4855-8137-70965189c5ac\",\n  \"requestId\": \"88f43d56-e5f9-4b1d-899c-c817fd89b341\",\n  \"thought\": \"The user wants me to act as an independent code judge and review the git diff for pet-sitter. They explicitly said:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"missing test coverage for live search\\\",\\n      \\\"citation\\\": \\\"pet-sitter/tests/acceptance.spec.ts:85\\\",\\n      \\\"detail\\\": \\\"test('sitter search narrows the visible catalog'...) uses getByTestId('filter-search') but never verifies the accessible name of the search input (getByLabel(/search sitters/i)) — the change to applyQuery + data-testid broke the original a11y test path\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"measurement-meta.json 2026 timestamps\\\",\\n      \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:500\\\",\\n      \\\"detail\\\": \\\"only timestamps updated in axe reports; no actual axe report content changed — cannot verify new data-measure hooks were actually measured against the updated markup\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n \\\"title\\\": \\\"incomplete testid migration\\\",\\n  \\\"citation\\\": \\\"pet-sitter/tests/acceptance.spec.ts:106\\\",\\n  \\\"detail\\\": \\\"renamed sitter-list to search-results in acceptance.spec.ts but diff only shows this file — cannot verify other test files still reference the old testid\\\",\\n  \\\" passed\\\": false\\n    }\\n  ]\\n}```<|tool_call_begin|>```json\\n{\\n  \\\"f",
   "mode": "grok",
   "chunkCount": 1,
-  "coverageChars": 5747,
-  "diffChars": 5747,
+  "coverageChars": 6752,
+  "diffChars": 6752,
   "coverageComplete": true
 }
