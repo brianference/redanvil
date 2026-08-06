@@ -1,9 +1,9 @@
 {
   "kind": "results",
   "slug": "pet-sitter",
-  "finalScore": 0,
+  "finalScore": 100,
   "threshold": 90,
-  "passed": false,
+  "passed": true,
   "evaluated": 87,
   "total": 87,
   "rules": [
@@ -233,7 +233,7 @@
     },
     {
       "ruleId": "lg-shipped",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "lg-push-cadence",
@@ -391,26 +391,24 @@
   "iterations": [
     {
       "index": 1,
-      "score": 0,
-      "blockers": [
-        "lg-shipped"
-      ]
+      "score": 100,
+      "blockers": []
     }
   ],
-  "deployUrl": null,
-  "finishedAt": "2026-08-06T04:52:16.243Z",
+  "deployUrl": "https://pet-sitter-vz1.pages.dev",
+  "finishedAt": "2026-08-06T04:54:11.137Z",
   "provenance": {
-    "commit": "ae64d9eac668ed01dabec90d22b7f1fec220b1bd",
-    "dirty": false,
+    "commit": "4f74564b385dce157e2914b6e325b817379d6c20",
+    "dirty": true,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
     "node": "v22.19.0",
-    "verdictsHash": "7c925e5821475bc8abaffd7be1e3a24bdd4f8af1d7a68c6a11bae7f2fd2f82b8",
+    "verdictsHash": "93c4d15f71afe7b3546afdd8a95ab4966f4321d9a8f69ddc4d0ae08ec17e5165",
     "notApplicable": [
       "proc-pr-title-ticket",
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-06T04:52:16.356Z"
+    "generatedAt": "2026-08-06T04:40:22.474Z"
   }
 }
