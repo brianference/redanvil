@@ -1,0 +1,78 @@
+{
+  "kind": "independent-diff-review",
+  "slug": "pet-sitter",
+  "commit": "d4ee740a5516c996e44331e10da3f63770bf0244",
+  "reviewedAt": "2026-08-06T02:49:53.584Z",
+  "diffHash": "b87f66526d35fd53dee1b0e01561ca4dad32be26b39c2c2744e60a7afe19c67f",
+  "completed": true,
+  "ok": false,
+  "foundNothingExplicit": false,
+  "findings": [
+    {
+      "title": "Identical dual-run timestamps in meas-two-run fixture",
+      "citation": "orchestrator/test/fixtures/meas-two-run/bad-app/evidence/measurement-meta.json:15",
+      "detail": "Both runs share the same `at` timestamp (`2026-08-06T02:49:22.690Z`). The two-run guard requires distinct timestamps to prove independent runs; byte-identical times mean the known-bad record does not demonstrate two separate measurements. This is the exact false-pass class called out for meas-two-run.",
+      "passed": false
+    },
+    {
+      "title": "Identical dual-run timestamps in fe-favicon-legible fixture",
+      "citation": "orchestrator/test/fixtures/fe-favicon-legible/bad-app/evidence/measurement-meta.json:5",
+      "detail": "Both runs are stamped `2026-08-06T02:49:10.959Z` with identical metrics. A two-run record written with the same clock value does not prove two independent measurements; the fixture still fails to show distinct run provenance.",
+      "passed": false
+    },
+    {
+      "title": "Identical dual-run timestamps in u-build-succeeds fixture",
+      "citation": "orchestrator/test/fixtures/u-build-succeeds/bad-app/evidence/measurement-meta.json:5",
+      "detail": "Both runs share `at: 2026-08-06T02:49:06.575Z`. Distinct timestamps are required for a two-run measurement; identical stamps leave the dual-run claim unverified.",
+      "passed": false
+    },
+    {
+      "title": "Identical dual-run timestamps in u-legal-claims-true fixture",
+      "citation": "orchestrator/test/fixtures/u-legal-claims-true/bad-app/evidence/measurement-meta.json:5",
+      "detail": "Both runs share `at: 2026-08-06T02:49:10.361Z`. Only `recordedAt` differs by 1ms; the two run entries themselves are not independently timed, so two-run independence is not proven.",
+      "passed": false
+    },
+    {
+      "title": "Coverage high-water unchanged while baseCommit advanced",
+      "citation": "pet-sitter/.redanvil/coverage-state.json:1",
+      "detail": "`baseCommit` moves to `d4ee740a5516c996e44331e10da3f63770bf0244` but `highWaterPct` stays 35.71. The diff shows no test/source changes that would explain a real coverage measurement; advancing the ratchet base without raising coverage (or proving the re-measure) only rewrites bookkeeping.",
+      "passed": false
+    },
+    {
+      "title": "New security rule fails; no remediation in diff",
+      "citation": "results/pet-sitter.json:155",
+      "detail": "`u-sec-safe-href` is added and recorded `passed: false`, and it is listed as a blocker. The diff contains no application code changes that would fix unsafe href usage; the commit only refreshes gate metadata and fixture timestamps. The new blocker is reported, not addressed.",
+      "passed": false
+    },
+    {
+      "title": "Score remains 0 with many blockers still failing",
+      "citation": "results/pet-sitter.json:4",
+      "detail": "`finalScore` is 0, `passed` is false, and blockers still include `u-test-runners`, `u-api-real-output`, `u-claims-covered`, `fe-a11y-contrast`, `u-legal-claims-true`, `fe-premium-nav`, `fe-required-pages`, `fe-desktop-width`, `hyg-no-duplication`, `lg-shipped`, `lg-result-reproduces`. Evaluated count drops 64→58 / total 88→82 while the app is not improved. Metadata churn is not product progress.",
+      "passed": false
+    },
+    {
+      "title": "No application source changes in the commit",
+      "citation": "results/pet-sitter.json:311",
+      "detail": "Visible hunks are only known-bad measurement-meta timestamps, coverage-state, evidence/results JSON, and gate bookkeeping. No `src/`, `functions/`, pages, or tests appear. Claims that app quality improved cannot be verified from this diff; only fixture timestamps and score reports moved.",
+      "passed": false
+    },
+    {
+      "title": "meas-standard-tool drops from blockers without app proof",
+      "citation": "results/pet-sitter.json:311",
+      "detail": "`meas-standard-tool` disappears from the blocker list while the only related change is re-stamping fixture meta. Without a corresponding app measurement or code change in the diff, the blocker removal is unverified as a real pass.",
+      "passed": false
+    },
+    {
+      "title": "fe-resource-links flips true without app code",
+      "citation": "results/pet-sitter.json:81",
+      "detail": "`fe-resource-links` changes from `passed: false` to `passed: true` with no resource-link or page implementation in the diff. A verdict flip without a corresponding source or measurement artifact change in this commit cannot be treated as verified progress.",
+      "passed": false
+    }
+  ],
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\\"foundNothingExplicit\\\":false,\\\"findings\\\":[{\\\"title\\\":\\\"Identical dual-run timestamps in meas-two-run fixture\\\",\\\"citation\\\":\\\"orchestrator/test/fixtures/meas-two-run/bad-app/evidence/measurement-meta.json:15\\\",\\\"detail\\\":\\\"Both runs share the same `at` timestamp (`2026-08-06T02:49:22.690Z`). The two-run guard requires distinct timestamps to prove independent runs; byte-identical times mean the known-bad record does not demonstrate two separate measurements. This is the exact false-pass class called out for meas-two-run.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Identical dual-run timestamps in fe-favicon-legible fixture\\\",\\\"citation\\\":\\\"orchestrator/test/fixtures/fe-favicon-legible/bad-app/evidence/measurement-meta.json:5\\\",\\\"detail\\\":\\\"Both runs are stamped `2026-08-06T02:49:10.959Z` with identical metrics. A two-run record written with the same clock value does not prove two independent measurements; the fixture still fails to show distinct run provenance.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Identical dual-run timestamps in u-build-succeeds fixture\\\",\\\"citation\\\":\\\"orchestrator/test/fixtures/u-build-succeeds/bad-app/evidence/measurement-meta.json:5\\\",\\\"detail\\\":\\\"Both runs share `at: 2026-08-06T02:49:06.575Z`. Distinct timestamps are required for a two-run measurement; identical stamps leave the dual-run claim unverified.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Identical dual-run timestamps in u-legal-claims-true fixture\\\",\\\"citation\\\":\\\"orchestrator/test/fixtures/u-legal-claims-true/bad-app/evidence/measurement-meta.json:5\\\",\\\"detail\\\":\\\"Both runs share `at: 2026-08-06T02:49:10.361Z`. Only `recordedAt` differs by 1ms; the two run entries themselves are not independently timed, so two-run independence is not proven.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Coverage high-water unchanged while baseCommit advanced\\\",\\\"citation\\\":\\\"pet-sitter/.redanvil/coverage-state.json:1\\\",\\\"detail\\\":\\\"`baseCommit` moves to `d4ee740a5516c996e44331e10da3f63770bf0244` but `highWaterPct` stays 35.71. The diff shows no test/source changes that would explain a real coverage measurement; advancing the ratchet base without raising coverage (or proving the re-measure) only rewrites bookkeeping.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"New security rule fails; no remediation in diff\\\",\\\"citation\\\":\\\"results/pet-sitter.json:155\\\",\\\"detail\\\":\\\"`u-sec-safe-href` is added and recorded `passed: false`, and it is listed as a blocker. The diff contains no application code changes that would fix unsafe href usage; the commit only refreshes gate metadata and fixture timestamps. The new blocker is reported, not addressed.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Score remains 0 with many blockers still failing\\\",\\\"citation\\\":\\\"results/pet-sitter.json:4\\\",\\\"detail\\\":\\\"`finalScore` is 0, `passed` is false, and blockers still include `u-test-runners`, `u-api-real-output`, `u-claims-covered`, `fe-a11y-contrast`, `u-legal-claims-true`, `fe-premium-nav`, `fe-required-pages`, `fe-desktop-width`, `hyg-no-duplication`, `lg-shipped`, `lg-result-reproduces`. Evaluated count drops 64→58 / total 88→82 while the app is not improved. Metadata churn is not product progress.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"No application source changes in the commit\\\",\\\"citation\\\":\\\"results/pet-sitter.json:311\\\",\\\"detail\\\":\\\"Visible hunks are only known-bad measurement-meta timestamps, coverage-state, evidence/results JSON, and gate bookkeeping. No `src/`, `functions/`, pages, or tests appear. Claims that app quality improved cannot be verified from this diff; only fixture timestamps and score reports moved.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"meas-standard-tool drops from blockers without app proof\\\",\\\"citation\\\":\\\"results/pet-sitter.json:311\\\",\\\"detail\\\":\\\"`meas-standard-tool` disappears from the blocker list while the only related change is re-stamping fixture meta. Without a corresponding app measurement or code change in the diff, the blocker removal is unverified as a real pass.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"fe-r",
+  "mode": "grok",
+  "chunkCount": 1,
+  "coverageChars": 31420,
+  "diffChars": 31420,
+  "coverageComplete": true
+}
