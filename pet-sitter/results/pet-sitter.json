@@ -65,7 +65,7 @@
     },
     {
       "ruleId": "fe-brand-mark",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-brand-mark-size",
@@ -85,7 +85,7 @@
     },
     {
       "ruleId": "fe-legal-substance",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-structured-data",
@@ -101,11 +101,11 @@
     },
     {
       "ruleId": "u-integration-scan",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-competitor-scan",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-typing-scoped-ignores",
@@ -113,7 +113,7 @@
     },
     {
       "ruleId": "u-sec-param-sql",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-sec-no-stub-paths",
@@ -121,15 +121,15 @@
     },
     {
       "ruleId": "u-sec-timeouts",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-sec-headers-cors",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-val-input-validation",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-theme-tokens-only",
@@ -289,16 +289,12 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "u-val-input-validation",
-        "u-sec-param-sql",
         "u-test-runners",
         "u-api-real-output",
         "u-claims-covered",
         "fe-a11y-contrast",
-        "fe-brand-mark",
         "fe-favicon-legible",
         "fe-resource-links",
-        "fe-legal-substance",
         "u-legal-claims-true",
         "fe-premium-nav",
         "fe-required-pages",
@@ -318,9 +314,9 @@
     }
   ],
   "deployUrl": "https://pet-sitter-vz1.pages.dev",
-  "finishedAt": "2026-08-06T01:56:00.571Z",
+  "finishedAt": "2026-08-06T02:02:32.467Z",
   "provenance": {
-    "commit": "2b67314163060c4559d7b23aa25e39109f0c3196",
+    "commit": "5a78b708176c5d5f0afc0554bbc0eadbc35b9df6",
     "dirty": true,
     "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
     "rubricRuleCount": 95,
@@ -332,6 +328,6 @@
       "proc-pr-title-ticket"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-06T01:56:00.635Z"
+    "generatedAt": "2026-08-06T02:02:32.527Z"
   }
 }

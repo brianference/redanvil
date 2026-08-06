@@ -6,7 +6,78 @@
       "method": "GET",
       "expect": {
         "status": 200,
+        "nonEmpty": true,
+        "jsonPath": "status",
+        "equals": "ok"
+      }
+    },
+    {
+      "route": "/api/sitters",
+      "method": "GET",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true,
+        "minItems": 3,
+        "jsonPath": "sitters"
+      }
+    },
+    {
+      "route": "/api/sitters",
+      "method": "GET",
+      "query": { "q": "Leslieville" },
+      "expect": {
+        "status": 200,
+        "nonEmpty": true,
+        "jsonPath": "count",
+        "equals": 1
+      }
+    },
+    {
+      "route": "/api/sitters/[id]",
+      "method": "GET",
+      "params": { "id": "sit-leslieville-01" },
+      "expect": {
+        "status": 200,
+        "nonEmpty": true,
+        "jsonPath": "sitter.name"
+      }
+    },
+    {
+      "route": "/api/sitters/[id]",
+      "method": "GET",
+      "params": { "id": "__no_such_id__" },
+      "expect": {
+        "status": 404
+      }
+    },
+    {
+      "route": "/api/assistant",
+      "method": "POST",
+      "body": { "message": "dogs in Leslieville under 60" },
+      "expect": {
+        "status": [200, 502, 503],
         "nonEmpty": true
+      }
+    },
+    {
+      "route": "/api/auth",
+      "method": "GET",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true,
+        "jsonPath": "user"
+      }
+    },
+    {
+      "route": "/api/auth",
+      "method": "POST",
+      "body": {
+        "action": "sign-in",
+        "email": "not-a-user@example.invalid",
+        "password": "wrong-password-xx"
+      },
+      "expect": {
+        "status": 401
       }
     }
   ]

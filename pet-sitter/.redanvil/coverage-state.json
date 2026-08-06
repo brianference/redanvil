@@ -1,5 +1,5 @@
 {
   "_why": "Coverage ratchet state, read by u-test-presence and u-test-coverage-ratchet. baseCommit is the commit the coverage delta is measured against; null means the next gate run records the commit it sees. highWaterPct is the best overall line coverage this app has reached and may never decrease. This file is tracked on purpose: its git history is what proves nobody lowered the bar to go green.",
-  "baseCommit": "2b67314163060c4559d7b23aa25e39109f0c3196",
+  "baseCommit": "5a78b708176c5d5f0afc0554bbc0eadbc35b9df6",
   "highWaterPct": 35.71
 }
