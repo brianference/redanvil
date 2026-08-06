@@ -10,6 +10,9 @@
 # Advisory text after deploy was ignored eight times. This hook is the local
 # signal; CI apps-meet-the-bar is the one that cannot be bypassed with --no-verify.
 #
+# Also folds team worktree enforcement (orchestrator/scripts/team/hooks/pre-push.mjs)
+# when .redanvil/assignment.json is present, WITHOUT replacing the finish-line check.
+#
 # Works under Git Bash on Windows (POSIX sh). stdin: <local_ref> <local_sha>
 # <remote_ref> <remote_sha> per line. Empty stdin (manual dry-run) checks ALL apps.
 set -eu
@@ -24,6 +27,18 @@ cd "$REPO_ROOT" || exit 1
 
 NODE=${NODE:-node}
 CHECKER=".github/scripts/meets_the_bar.mjs"
+TEAM_PRE_PUSH="orchestrator/scripts/team/hooks/pre-push.mjs"
+
+# Team enforcement (role-bound trees only). Load-bearing finish-line check below
+# always runs regardless of assignment.
+if [ -f .redanvil/assignment.json ] && [ -f "$TEAM_PRE_PUSH" ]; then
+  echo "pre-push: team worktree enforcement (assignment present)" >&2
+  if ! "$NODE" "$TEAM_PRE_PUSH"
+  then
+    echo "pre-push: REFUSED — team worktree enforcement failed" >&2
+    exit 1
+  fi
+fi
 
 # lg-shipped asks "is HEAD on the remote?", which cannot be true yet inside the
 # hook that is deciding whether to put it there. Left literal it deadlocks and

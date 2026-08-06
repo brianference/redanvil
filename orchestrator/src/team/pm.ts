@@ -15,6 +15,10 @@ import { runLoop, type GateOutcome, type LoopConfig, type LoopResult } from '../
 import { assignUnmetRows, type RoleAssignment } from './assign';
 import type { Role, RoleId } from './roles';
 import { ROLES } from './roles';
+import {
+  enforceDesignBeforeBuild,
+  type DesignPreconditionResult
+} from './designPrecondition';
 
 /**
  * One iteration's assignment snapshot for dry-run and logging.
@@ -26,6 +30,12 @@ export interface PmIterationPlan {
   worktreeRoles: RoleId[];
   /** Roles that only read. */
   readOnlyRoles: RoleId[];
+  /**
+   * When design deliverables blocked build roles this iteration, the refusal
+   * evidence (for logs and tests). Absent when design is decided or appDir
+   * was not provided.
+   */
+  designPrecondition?: DesignPreconditionResult;
 }
 
 /**
@@ -59,6 +69,12 @@ export interface PmDeps {
    * isDone predicate over the latest gate outcome + opts.
    */
   isDone: () => Promise<{ done: boolean; reasons: string[] }>;
+  /**
+   * App directory for the design-before-build precondition. When set, the PM
+   * refuses engineer/content/testwriter until logo + layout decisions exist.
+   * When omitted (legacy unit tests of budget alone), the gate is skipped.
+   */
+  appDir?: string;
 }
 
 /**
@@ -113,15 +129,20 @@ export interface PmResult {
  * (it runs last). When only user-refuse rows remain (or the product-judgement
  * gate needs it), it is included.
  *
+ * When `appDir` is provided, design deliverables are checked and build roles
+ * are stripped until logo + layout decisions exist on disk.
+ *
  * @param statuses - Current checklist statuses.
  * @param roles - Registry.
  * @param iteration - 1-based iteration index.
+ * @param appDir - Optional app directory for the design precondition.
  * @returns Plan for this iteration.
  */
 export function planIteration(
   statuses: ReadonlyArray<RowStatus>,
   roles: readonly Role[],
-  iteration: number
+  iteration: number,
+  appDir?: string
 ): PmIterationPlan {
   const { assignments } = assignUnmetRows(statuses, roles);
 
@@ -134,13 +155,21 @@ export function planIteration(
   // When everything checklist-passes, still schedule user-refuse if it is in
   // the registry -- the PM asks it last. Callers that already have an accept
   // can leave statuses green and not re-plan refuse work.
-  const finalAssignments = active;
-
-  return {
+  const raw: PmIterationPlan = {
     iteration,
-    assignments: finalAssignments,
-    worktreeRoles: finalAssignments.filter((a) => a.role.needsWorktree).map((a) => a.role.id),
-    readOnlyRoles: finalAssignments.filter((a) => !a.role.needsWorktree).map((a) => a.role.id)
+    assignments: active,
+    worktreeRoles: active.filter((a) => a.role.needsWorktree).map((a) => a.role.id),
+    readOnlyRoles: active.filter((a) => !a.role.needsWorktree).map((a) => a.role.id)
+  };
+
+  if (appDir === undefined || appDir === '') {
+    return raw;
+  }
+
+  const gated = enforceDesignBeforeBuild(raw, appDir, roles);
+  return {
+    ...gated.plan,
+    designPrecondition: gated
   };
 }
 
@@ -149,13 +178,15 @@ export function planIteration(
  *
  * @param statuses - Checklist statuses (e.g. from an existing gate result).
  * @param roles - Registry.
+ * @param appDir - Optional app directory for the design precondition.
  * @returns Human-readable lines and the plan.
  */
 export function dryRunAssignments(
   statuses: ReadonlyArray<RowStatus>,
-  roles: readonly Role[] = ROLES
+  roles: readonly Role[] = ROLES,
+  appDir?: string
 ): { plan: PmIterationPlan; lines: string[] } {
-  const plan = planIteration(statuses, roles, 1);
+  const plan = planIteration(statuses, roles, 1, appDir);
   const lines: string[] = [];
   lines.push(`dry-run PM: ${plan.assignments.length} role batch(es) for unmet rows`);
   for (const a of plan.assignments) {
@@ -166,6 +197,11 @@ export function dryRunAssignments(
   }
   if (plan.assignments.length === 0) {
     lines.push('  (no unmet rows -- nothing to assign)');
+  }
+  if (plan.designPrecondition) {
+    for (const m of plan.designPrecondition.messages) {
+      lines.push(`  ${m}`);
+    }
   }
   return { plan, lines };
 }
@@ -191,7 +227,7 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
 
   if (cfg.dryRun === true) {
     const statuses = await deps.readStatuses();
-    const { plan, lines } = dryRunAssignments(statuses, roles);
+    const { plan, lines } = dryRunAssignments(statuses, roles, deps.appDir);
     plans.push(plan);
     for (const line of lines) console.log(line);
     return {
@@ -230,17 +266,31 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
     }
 
     const statuses = await deps.readStatuses();
-    const plan = planIteration(statuses, roles, iteration);
+    const plan = planIteration(statuses, roles, iteration, deps.appDir);
     plans.push(plan);
 
-    // user-refuse last among this plan's roles.
+    // Surface design refusals so a skipped design step is never silent.
+    if (plan.designPrecondition) {
+      for (const m of plan.designPrecondition.messages) {
+        console.log(m);
+      }
+    }
+
+    // user-refuse last among this plan's roles; design roles before others when
+    // the precondition forced them (stable localeCompare still groups them).
     const ordered = [...plan.assignments].sort((a, b) => {
       if (a.role.id === 'user-refuse') return 1;
       if (b.role.id === 'user-refuse') return -1;
+      const designOrder = (id: string): number =>
+        id === 'logo' ? 0 : id === 'layout' ? 1 : 2;
+      const d = designOrder(a.role.id) - designOrder(b.role.id);
+      if (d !== 0) return d;
       return a.role.id.localeCompare(b.role.id);
     });
 
     // Parallel for independent roles; sequential if budget forces drip.
+    // Build roles never appear here when design is missing -- planIteration
+    // already stripped them.
     const runnable: RoleAssignment[] = [];
     for (const a of ordered) {
       if (budgetUsed >= budgetCeiling) {

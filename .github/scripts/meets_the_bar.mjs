@@ -22,7 +22,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { APPS, appBySlug } from './apps.mjs';
+import { APPS, appBySlug, getApps } from './apps.mjs';
 import { isDone } from '../../orchestrator/src/gate/done.mjs';
 import {
   listAcceptedFailingFindings,
@@ -807,10 +807,12 @@ export function evaluateApp(repoRoot, app, opts = {}) {
  * @returns {MeetBarVerdict[]}
  */
 export function evaluateApps(repoRoot, opts = {}) {
+  // Fresh read so scaffolded managed apps are included without restarting node.
+  const all = getApps(repoRoot);
   const list =
     opts.slugs && opts.slugs.length > 0
-      ? opts.slugs.map((s) => appBySlug(s) ?? { slug: s, dir: s })
-      : [...APPS];
+      ? opts.slugs.map((s) => appBySlug(s, repoRoot) ?? { slug: s, dir: s })
+      : [...all];
   return list.map((app) => evaluateApp(repoRoot, app, { threshold: opts.threshold }));
 }
 

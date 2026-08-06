@@ -1,0 +1,31 @@
+#!/bin/sh
+# pre-commit — team worktree enforcement when this tree is role-bound.
+#
+# Invokes orchestrator/scripts/team/hooks/pre-commit.mjs (artifacts + gate-status)
+# only when .redanvil/assignment.json is present. Main-tree commits without an
+# assignment are not role-bound and pass through.
+#
+# hooksPath stays .githooks (see scripts/install-hooks.mjs).
+set -eu
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {
+  echo "pre-commit: not inside a git work tree" >&2
+  exit 1
+}
+cd "$REPO_ROOT" || exit 1
+
+# Role-bound trees only. A missing assignment is not a free pass inside a
+# worktree that was supposed to install one — those worktrees set local
+# hooksPath to .redanvil/hooks which always runs the team script.
+if [ ! -f .redanvil/assignment.json ]; then
+  exit 0
+fi
+
+NODE=${NODE:-node}
+TEAM_HOOK="orchestrator/scripts/team/hooks/pre-commit.mjs"
+if [ ! -f "$TEAM_HOOK" ]; then
+  echo "pre-commit: missing $TEAM_HOOK — cannot enforce role artifacts" >&2
+  exit 1
+fi
+
+exec "$NODE" "$TEAM_HOOK"

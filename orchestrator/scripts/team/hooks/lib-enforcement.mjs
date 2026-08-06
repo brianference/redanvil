@@ -3,6 +3,7 @@
  * Keep behaviour aligned with src/team/worktreeEnforcement.ts.
  */
 import { existsSync, readFileSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
 /** @type {readonly string[]} */
@@ -132,8 +133,46 @@ export function evaluatePreCommit(worktreeDir, opts = {}) {
  * @param {string} message
  * @returns {{ ok: boolean, reasons: string[] }}
  */
+
+/**
+ * Role-worktree branch names created by pmRuntime: ra-role-<id>-i<n>-<suffix>.
+ * Kept in step with ROLE_BRANCH_PATTERN in team/roleWorktreeLifecycle.ts.
+ */
+const ROLE_BRANCH_RE = /^ra-role-[a-z0-9]+(?:-[a-z0-9]+)*-i\d+-[a-z0-9]+$/;
+
+/**
+ * True when this directory is one of the managed ROLE worktrees.
+ *
+ * The artifact rules exist for role commits. The main tree has no assignment
+ * and never will, so applying them there refuses every ordinary commit whose
+ * message happens to sound like completion -- which is exactly what happened:
+ * this hook blocked the very commit that installed it. Scope by where the
+ * commit is being made, not by what its message says.
+ *
+ * @param {string} worktreeDir
+ * @returns {boolean}
+ */
+export function isRoleWorktree(worktreeDir) {
+  try {
+    const branch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+      cwd: worktreeDir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+    return ROLE_BRANCH_RE.test(branch);
+  } catch {
+    return false;
+  }
+}
+
 export function evaluateCommitMsg(worktreeDir, message) {
   if (!messageClaimsDone(message)) {
+    return { ok: true, reasons: [] };
+  }
+  // Not a role commit: the role-artifact contract does not apply here. A role
+  // worktree CANNOT escape by deleting its assignment -- being in a role
+  // worktree with no assignment is still refused below.
+  if (!isRoleWorktree(worktreeDir)) {
     return { ok: true, reasons: [] };
   }
   const assignment = readAssignment(worktreeDir);

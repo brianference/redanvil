@@ -3,6 +3,9 @@
  * pre-push, CI, and user-refuse stranger expectations. Do not hardcode a
  * parallel list elsewhere.
  *
+ * Scaffolded apps are appended from `.redanvil/managed-apps.json` (see
+ * registerManagedApp) so the gate and PM see them without a hand-edited list.
+ *
  * @typedef {{
  *   path: string,
  *   linkName: string,
@@ -35,8 +38,15 @@
  * }} GatedApp
  */
 
-/** @type {readonly GatedApp[]} */
-export const APPS = Object.freeze([
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+/**
+ * Built-in production apps. Managed (scaffolded) apps are merged at read time.
+ *
+ * @type {readonly GatedApp[]}
+ */
+export const CORE_APPS = Object.freeze([
   {
     slug: 'app-builder',
     dir: 'app-builder',
@@ -130,13 +140,94 @@ export const APPS = Object.freeze([
 ]);
 
 /**
+ * Placeholder stranger expectations for a freshly scaffolded managed app.
+ * Real apps replace these when they graduate into CORE_APPS.
+ *
+ * @param {string} slug App slug.
+ * @returns {StrangerExpectations}
+ */
+function managedStrangerDefaults(slug) {
+  return Object.freeze({
+    purposeSentence: `${slug}: managed scaffold — purpose not yet product-judged.`,
+    searchQuery: 'test',
+    requiredPages: Object.freeze([
+      Object.freeze({ path: '/about', linkName: 'About', headingText: 'About' }),
+      Object.freeze({ path: '/terms', linkName: 'Terms', headingText: 'Terms' }),
+      Object.freeze({ path: '/privacy', linkName: 'Privacy', headingText: 'Privacy' }),
+      Object.freeze({ path: '/contact', linkName: 'Contact', headingText: 'Contact' })
+    ])
+  });
+}
+
+/**
+ * Load scaffolded apps from `.redanvil/managed-apps.json` under the monorepo root.
+ *
+ * @param {string} [repoRoot=process.cwd()] Repository root.
+ * @returns {GatedApp[]}
+ */
+export function loadManagedApps(repoRoot = process.cwd()) {
+  const path = join(repoRoot, '.redanvil', 'managed-apps.json');
+  if (!existsSync(path)) return [];
+  try {
+    const raw = JSON.parse(readFileSync(path, 'utf8'));
+    if (raw?.kind !== 'managed-apps' || !Array.isArray(raw.apps)) return [];
+    /** @type {GatedApp[]} */
+    const out = [];
+    for (const entry of raw.apps) {
+      if (!entry || typeof entry.slug !== 'string' || typeof entry.dir !== 'string') {
+        continue;
+      }
+      // Skip if already a core app (core wins).
+      if (CORE_APPS.some((a) => a.slug === entry.slug)) continue;
+      out.push({
+        slug: entry.slug,
+        dir: entry.dir,
+        url: '',
+        designRoutes: '/about,/contact,/terms,/privacy,/no-such-page',
+        widthRoutes: null,
+        e2e: false,
+        wizard: false,
+        coreFlow: 'search',
+        na: 'process',
+        stranger: managedStrangerDefaults(entry.slug)
+      });
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * All gated apps: core production list plus managed scaffolds.
+ *
+ * @param {string} [repoRoot=process.cwd()] Repository root.
+ * @returns {readonly GatedApp[]}
+ */
+export function getApps(repoRoot = process.cwd()) {
+  const managed = loadManagedApps(repoRoot);
+  if (managed.length === 0) return CORE_APPS;
+  return Object.freeze([...CORE_APPS, ...managed]);
+}
+
+/**
+ * Default export used by meets_the_bar / reverify / pre-push.
+ * Includes managed apps from cwd so a scaffolded app is visible immediately.
+ *
+ * @type {readonly GatedApp[]}
+ */
+export const APPS = getApps();
+
+/**
  * Look up a gated app by slug.
  *
  * @param {string} slug App slug.
+ * @param {string} [repoRoot] Optional repo root for a fresh managed-apps read.
  * @returns {GatedApp | undefined}
  */
-export function appBySlug(slug) {
-  return APPS.find((a) => a.slug === slug);
+export function appBySlug(slug, repoRoot) {
+  const list = repoRoot === undefined ? APPS : getApps(repoRoot);
+  return list.find((a) => a.slug === slug);
 }
 
 /**

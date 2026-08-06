@@ -1,0 +1,22 @@
+#!/bin/sh
+# commit-msg — reject done-claims without a passing measurement when role-bound.
+#
+# Invokes orchestrator/scripts/team/hooks/commit-msg.mjs. When no assignment
+# exists, the team script still allows ordinary messages; only completion claims
+# without evidence are refused.
+set -eu
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {
+  echo "commit-msg: not inside a git work tree" >&2
+  exit 1
+}
+cd "$REPO_ROOT" || exit 1
+
+NODE=${NODE:-node}
+TEAM_HOOK="orchestrator/scripts/team/hooks/commit-msg.mjs"
+if [ ! -f "$TEAM_HOOK" ]; then
+  echo "commit-msg: missing $TEAM_HOOK" >&2
+  exit 1
+fi
+
+exec "$NODE" "$TEAM_HOOK" "$@"
