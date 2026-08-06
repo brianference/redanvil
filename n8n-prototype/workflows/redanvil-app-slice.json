@@ -1,0 +1,140 @@
+{
+  "id": "redanvilSlice001",
+  "name": "RedAnvil app slice (product to gate)",
+  "active": false,
+  "settings": { "executionOrder": "v1", "saveDataErrorExecution": "all", "saveDataSuccessExecution": "all" },
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start a slice",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {}
+    },
+    {
+      "id": "cfg",
+      "name": "Slice config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// One place defines the runner, the repo and each role's artifact contract.\n// A role's `artifacts` directory IS its contract: the runner refuses the role\n// unless something under that directory actually changed. Point two roles at\n// the same directory and each would take credit for the other's work, so every\n// role owns a distinct path.\nconst repoRoot = $env.REDANVIL_REPO || 'C:/Users/brian/RedAnvil';\nconst runner = $env.REDANVIL_RUNNER || 'C:/Users/brian/RedAnvil/n8n-prototype/role-run.mjs';\nconst slug = $env.REDANVIL_SLUG || 'pet-sitter';\nreturn [{ json: { repoRoot, runner, slug } }];"
+      }
+    },
+    {
+      "id": "p1",
+      "name": "Product brief params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $input.first().json;\nreturn [{ json: { ...c, role: 'product', artifacts: `${c.slug}/docs/product`, cmd: $env.REDANVIL_CMD_PRODUCT || 'echo no product runner configured && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r1",
+      "name": "Role: product",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [600, 0],
+      "parameters": { "source": "database", "workflowId": "redanvilRole001", "mode": "once", "options": {} }
+    },
+    {
+      "id": "p2",
+      "name": "Logo params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: 'logo', artifacts: `${c.slug}/design-refs/logos`, cmd: $env.REDANVIL_CMD_LOGO || 'echo no logo runner configured && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r2",
+      "name": "Role: logo",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [1000, 0],
+      "parameters": { "source": "database", "workflowId": "redanvilRole001", "mode": "once", "options": {} }
+    },
+    {
+      "id": "p3",
+      "name": "Layout params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: 'layout', artifacts: `${c.slug}/design-refs/design-options`, cmd: $env.REDANVIL_CMD_LAYOUT || 'echo no layout runner configured && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r3",
+      "name": "Role: layout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [1400, 0],
+      "parameters": { "source": "database", "workflowId": "redanvilRole001", "mode": "once", "options": {} }
+    },
+    {
+      "id": "approve",
+      "name": "Owner picks a design",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1600, 0],
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Pick a design direction",
+        "formDescription": "The logo and layout roles produced verified artifacts. Open the gallery, then record the decision. Nothing builds until this is submitted.",
+        "formFields": {
+          "values": [
+            { "fieldLabel": "Chosen option", "fieldType": "dropdown", "fieldOptions": { "values": [{ "option": "A" }, { "option": "B" }, { "option": "C" }, { "option": "All three as views" }] }, "requiredField": true },
+            { "fieldLabel": "Why", "fieldType": "textarea", "requiredField": true }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "p4",
+      "name": "Gate params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1800, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// The owner's decision is itself an artifact -- it is written to DECISION.md\n// so a later run cannot claim a choice that was never recorded.\nconst c = $('Slice config').first().json;\nconst d = $input.first().json;\nreturn [{ json: { ...c, role: 'gate', artifacts: `${c.slug}/.redanvil`, decision: d, cmd: $env.REDANVIL_CMD_GATE || 'echo no gate runner configured && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r4",
+      "name": "Role: gate",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [2000, 0],
+      "parameters": { "source": "database", "workflowId": "redanvilRole001", "mode": "once", "options": {} }
+    }
+  ],
+  "connections": {
+    "Start a slice": { "main": [[{ "node": "Slice config", "type": "main", "index": 0 }]] },
+    "Slice config": { "main": [[{ "node": "Product brief params", "type": "main", "index": 0 }]] },
+    "Product brief params": { "main": [[{ "node": "Role: product", "type": "main", "index": 0 }]] },
+    "Role: product": { "main": [[{ "node": "Logo params", "type": "main", "index": 0 }]] },
+    "Logo params": { "main": [[{ "node": "Role: logo", "type": "main", "index": 0 }]] },
+    "Role: logo": { "main": [[{ "node": "Layout params", "type": "main", "index": 0 }]] },
+    "Layout params": { "main": [[{ "node": "Role: layout", "type": "main", "index": 0 }]] },
+    "Role: layout": { "main": [[{ "node": "Owner picks a design", "type": "main", "index": 0 }]] },
+    "Owner picks a design": { "main": [[{ "node": "Gate params", "type": "main", "index": 0 }]] },
+    "Gate params": { "main": [[{ "node": "Role: gate", "type": "main", "index": 0 }]] },
+    "Role: gate": { "main": [[]] }
+  }
+}

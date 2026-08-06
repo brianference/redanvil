@@ -1,0 +1,8 @@
+# n8n's user folder holds database.sqlite and config -- the latter contains the
+# instance encryption key used for credentials. Never commit it.
+.n8n-home/
+node_modules/
+package-lock.json
+
+# Scratch app tree used to exercise the slice end to end.
+.demo/

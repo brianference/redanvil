@@ -1,0 +1,96 @@
+{
+  "id": "redanvilRole001",
+  "name": "RedAnvil role (verified unit of work)",
+  "active": false,
+  "settings": { "executionOrder": "v1", "saveDataErrorExecution": "all", "saveDataSuccessExecution": "all" },
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When called by the PM",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "parameters": { "inputSource": "passthrough" }
+    },
+    {
+      "id": "runrole",
+      "name": "Run role and fingerprint artifacts",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [220, 0],
+      "parameters": {
+        "executeOnce": true,
+        "command": "=node \"{{ $json.runner }}\" --role={{ $json.role }} --cmd=\"{{ $json.cmd }}\" --artifacts={{ $json.artifacts }} --repoRoot=\"{{ $json.repoRoot }}\" --exitZero=1"
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "parse",
+      "name": "Parse the verdict",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// The runner prints a JSON verdict on stdout and exits non-zero when the\n// role did not count as run. A non-zero exit is an expected outcome here, not\n// an infrastructure failure, so the verdict is read from stdout either way.\n// Failing to parse is itself a failure -- an unreadable verdict must never be\n// treated as a pass.\nconst raw = $input.first().json;\nlet verdict;\ntry {\n  verdict = JSON.parse(String(raw.stdout ?? '').trim());\n} catch (err) {\n  return [{ json: {\n    countedAsRun: false,\n    role: 'unknown',\n    reasons: ['verdict was not parseable JSON -- the runner did not report'],\n    rawStdout: String(raw.stdout ?? '').slice(0, 500),\n    rawStderr: String(raw.stderr ?? '').slice(0, 500)\n  } }];\n}\nreturn [{ json: { ...verdict, commandExitCode: raw.exitCode } }];"
+      }
+    },
+    {
+      "id": "gate",
+      "name": "Did the role actually do work?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [660, 0],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "counted",
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true },
+              "leftValue": "={{ $json.countedAsRun }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ok",
+      "name": "Verified - promote",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [900, -100],
+      "parameters": {}
+    },
+    {
+      "id": "refuse",
+      "name": "Refuse - role produced nothing",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [900, 100],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "={{ $json.role }} did not count as run: {{ $json.reasons.join('; ') }}"
+      }
+    }
+  ],
+  "connections": {
+    "When called by the PM": { "main": [[{ "node": "Run role and fingerprint artifacts", "type": "main", "index": 0 }]] },
+    "Run role and fingerprint artifacts": { "main": [[{ "node": "Parse the verdict", "type": "main", "index": 0 }]] },
+    "Parse the verdict": { "main": [[{ "node": "Did the role actually do work?", "type": "main", "index": 0 }]] },
+    "Did the role actually do work?": {
+      "main": [
+        [{ "node": "Verified - promote", "type": "main", "index": 0 }],
+        [{ "node": "Refuse - role produced nothing", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}
