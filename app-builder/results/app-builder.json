@@ -1,0 +1,414 @@
+{
+  "kind": "results",
+  "slug": "app-builder",
+  "finalScore": 0,
+  "threshold": 90,
+  "passed": false,
+  "evaluated": 77,
+  "total": 77,
+  "rules": [
+    {
+      "ruleId": "u-typing-strict",
+      "passed": true
+    },
+    {
+      "ruleId": "u-typing-no-any",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-dead-code",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-presence",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-runners",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-coverage-ratchet",
+      "passed": true
+    },
+    {
+      "ruleId": "hyg-env-ignored",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-acceptance",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-feature-audit",
+      "passed": true
+    },
+    {
+      "ruleId": "u-no-placeholders",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-visible-response",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-search-present",
+      "passed": false
+    },
+    {
+      "ruleId": "fe-assistant-present",
+      "passed": false
+    },
+    {
+      "ruleId": "fe-brand-mark",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-brand-mark-size",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-breadcrumbs",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-resource-links",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-legal-substance",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-structured-data",
+      "passed": false
+    },
+    {
+      "ruleId": "proc-design-options",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-prior-art",
+      "passed": false
+    },
+    {
+      "ruleId": "u-typing-scoped-ignores",
+      "passed": true
+    },
+    {
+      "ruleId": "u-sec-param-sql",
+      "passed": true
+    },
+    {
+      "ruleId": "u-sec-no-stub-paths",
+      "passed": true
+    },
+    {
+      "ruleId": "u-sec-timeouts",
+      "passed": true
+    },
+    {
+      "ruleId": "u-sec-headers-cors",
+      "passed": true
+    },
+    {
+      "ruleId": "u-val-input-validation",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-theme-tokens-only",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-no-unsanitized-html",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-i18n-central-copy",
+      "passed": true
+    },
+    {
+      "ruleId": "hyg-no-binaries",
+      "passed": false
+    },
+    {
+      "ruleId": "hyg-secret-scan",
+      "passed": true
+    },
+    {
+      "ruleId": "u-sec-sast",
+      "passed": true
+    },
+    {
+      "ruleId": "u-plat-worker-runtime",
+      "passed": true
+    },
+    {
+      "ruleId": "u-plat-runtime-parity",
+      "passed": true
+    },
+    {
+      "ruleId": "u-api-real-output",
+      "passed": true
+    },
+    {
+      "ruleId": "u-data-no-placeholder",
+      "passed": true
+    },
+    {
+      "ruleId": "u-plat-migrations",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-seo-assets",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-icon-button-labels",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-no-inline-width",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-no-padding",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-file-size",
+      "passed": true
+    },
+    {
+      "ruleId": "hyg-no-duplication",
+      "passed": false
+    },
+    {
+      "ruleId": "ci-actionlint",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-sha-pinned",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-least-privilege",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-no-injection",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-exit-code-integrity",
+      "passed": true
+    },
+    {
+      "ruleId": "proc-conventional-commits",
+      "passed": true
+    },
+    {
+      "ruleId": "proc-artifact-verified",
+      "passed": false
+    },
+    {
+      "ruleId": "lg-shipped",
+      "passed": false
+    },
+    {
+      "ruleId": "lg-push-cadence",
+      "passed": true
+    },
+    {
+      "ruleId": "lg-bindings-bound",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-light-dark",
+      "passed": true
+    },
+    {
+      "ruleId": "u-build-succeeds",
+      "passed": true
+    },
+    {
+      "ruleId": "u-api-not-found",
+      "passed": true
+    },
+    {
+      "ruleId": "u-api-no-spa-mask",
+      "passed": false
+    },
+    {
+      "ruleId": "u-legal-claims-true",
+      "passed": false
+    },
+    {
+      "ruleId": "fe-favicon-legible",
+      "passed": false
+    },
+    {
+      "ruleId": "lg-result-reproduces",
+      "passed": false
+    },
+    {
+      "ruleId": "meas-known-bad",
+      "passed": false
+    },
+    {
+      "ruleId": "meas-two-run",
+      "passed": true
+    },
+    {
+      "ruleId": "meas-recheck-flattering",
+      "passed": true
+    },
+    {
+      "ruleId": "meas-standard-tool",
+      "passed": true
+    },
+    {
+      "ruleId": "meas-engine-named",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-touch-targets",
+      "passed": false
+    },
+    {
+      "ruleId": "fe-type-floor",
+      "passed": false
+    },
+    {
+      "ruleId": "fe-responsive-375",
+      "passed": false
+    },
+    {
+      "ruleId": "fe-safe-areas",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-premium-nav",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-noncolor-state",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-no-attribution",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cross-link",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-seo-og",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-required-pages",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-visual-review-recorded",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cold-visitor",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-a11y-contrast",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-idiomatic",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-no-speculative-abstraction",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-use-what-exists",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-smallest-diff",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-adequacy",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-behavioral",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-pages-compose",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-fail-closed-states",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-desktop-width",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-product-completeness",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-design-archetype",
+      "passed": true
+    }
+  ],
+  "iterations": [
+    {
+      "index": 1,
+      "score": 0,
+      "blockers": [
+        "u-api-no-spa-mask",
+        "fe-search-present",
+        "fe-assistant-present",
+        "fe-favicon-legible",
+        "fe-structured-data",
+        "u-legal-claims-true",
+        "fe-prior-art",
+        "fe-responsive-375",
+        "fe-touch-targets",
+        "fe-type-floor",
+        "hyg-no-binaries",
+        "hyg-no-duplication",
+        "lg-shipped",
+        "lg-result-reproduces"
+      ]
+    }
+  ],
+  "deployUrl": "https://redanvil.pages.dev",
+  "finishedAt": "2026-08-06T00:32:19.480Z",
+  "provenance": {
+    "commit": "2adaa95d7222dd31de124c4fb93ef2cbaf3ed104",
+    "dirty": true,
+    "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
+    "rubricRuleCount": 95,
+    "node": "v22.19.0",
+    "verdictsHash": "2c22b3192f3bdcfb52bbfffe56f1e87fef2ce57e64653b36bfeee8295e7ec8cf",
+    "notApplicable": [
+      "ci",
+      "fe-result-in-viewport",
+      "proc-pr-title-ticket",
+      "process",
+      "u-claims-covered",
+      "u-competitor-scan",
+      "u-integration-scan"
+    ],
+    "staleVerdicts": [],
+    "generatedAt": "2026-08-06T00:32:19.539Z"
+  }
+}

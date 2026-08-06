@@ -5,17 +5,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-06T00:26:44.642Z"
+        "at": "2026-08-06T00:32:01.208Z"
       },
       {
         "ok": false,
-        "at": "2026-08-06T00:26:44.643Z"
+        "at": "2026-08-06T00:32:01.208Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/proc-design-options/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:26:44.643Z"
+      "recordedAt": "2026-08-06T00:32:01.208Z"
     }
   }
 }
