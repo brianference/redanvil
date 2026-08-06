@@ -156,15 +156,165 @@ export function discoverItemDetailRoutes(appDir) {
 }
 
 /**
- * Materialise dynamic segments for navigation.
+ * Whether a route still has unresolved dynamic segments (:id or [id]).
  *
  * @param {string} route Route path.
- * @returns {string}
+ * @returns {boolean}
  */
-export function materialiseRoute(route) {
+export function hasDynamicSegment(route) {
+  return /\/:[A-Za-z_]|\/\[[^\]]+\]/.test(route);
+}
+
+/**
+ * Collection path prefix for a detail route (e.g. /sitters/:id → /sitters).
+ *
+ * @param {string} route Route with dynamic segment.
+ * @returns {string | null}
+ */
+export function collectionPathForRoute(route) {
+  const n = normalisePath(route);
+  const m = n.match(/^(\/[^/]+)\/(?::\w+|\[(?:\.\.\.)?[\w-]+\])(?:\/|$)/);
+  return m?.[1] ?? null;
+}
+
+/**
+ * Pull a real item id/slug from a collection JSON body.
+ * Never invents a literal; returns null when nothing real is present.
+ *
+ * @param {unknown} body Parsed JSON.
+ * @returns {string | null}
+ */
+export function firstRealIdFromJson(body) {
+  /** @type {unknown[]} */
+  const candidates = [];
+  if (Array.isArray(body)) {
+    candidates.push(...body);
+  } else if (body && typeof body === 'object') {
+    for (const value of Object.values(/** @type {Record<string, unknown>} */ (body))) {
+      if (Array.isArray(value)) candidates.push(...value);
+    }
+  }
+  /** @type {string | null} */
+  let fallback = null;
+  for (const item of candidates) {
+    if (!item || typeof item !== 'object') continue;
+    const row = /** @type {Record<string, unknown>} */ (item);
+    for (const key of ['id', 'slug', 'slugId', 'key']) {
+      const v = row[key];
+      let id = null;
+      if (typeof v === 'string' && v.trim().length > 0) id = v.trim();
+      else if (typeof v === 'number' && Number.isFinite(v)) id = String(v);
+      if (!id) continue;
+      // Prefer a non-placeholder id when the catalog still contains the old
+      // probe row; never invent one, but do not require that row either.
+      if (id !== 'sample') return id;
+      if (fallback == null) fallback = id;
+    }
+  }
+  return fallback;
+}
+
+/**
+ * Scrape a collection HTML page for the first detail link under the collection.
+ *
+ * @param {string} html Collection page HTML.
+ * @param {string} collection Collection path (e.g. /sitters).
+ * @returns {string | null} Real id segment, or null.
+ */
+export function firstRealIdFromHtml(html, collection) {
+  const prefix = collection.endsWith('/') ? collection.slice(0, -1) : collection;
+  const escaped = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(
+    `(?:href|to)\\s*=\\s*['"\`](?:https?:\\/\\/[^'"\`]+)?${escaped}\\/([^'"\`?#/]+)`,
+    'gi'
+  );
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const id = (m[1] ?? '').trim();
+    if (id && id !== ':' && !id.startsWith(':') && id !== 'sample') {
+      // Prefer non-placeholder ids when the page still lists the probe row.
+      // Continue scanning only if we want any real id; "sample" is skipped
+      // because it is the invented literal this check must not depend on.
+      return id;
+    }
+  }
+  // Second pass: accept any non-empty segment if the only link was odd.
+  re.lastIndex = 0;
+  while ((m = re.exec(html)) !== null) {
+    const id = (m[1] ?? '').trim();
+    if (id && id !== ':' && !id.startsWith(':')) return id;
+  }
+  return null;
+}
+
+/**
+ * Derive a REAL detail id at probe time from the live collection.
+ * Fail closed: never fall back to a hardcoded literal such as "sample".
+ *
+ * @param {string} base Origin (no trailing slash).
+ * @param {string} route Route template (e.g. /sitters/:id).
+ * @param {{ fetchImpl?: typeof fetch }} [opts]
+ * @returns {Promise<string | null>} Real id, or null when none available.
+ */
+export async function resolveRealDetailId(base, route, opts = {}) {
+  const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
+  if (typeof fetchImpl !== 'function') return null;
+  const collection = collectionPathForRoute(route);
+  if (!collection) return null;
+  const origin = base.replace(/\/$/, '');
+
+  // 1) Collection API: /api/sitters, /api/crops, …
+  try {
+    const apiUrl = `${origin}/api${collection}`;
+    const res = await fetchImpl(apiUrl, {
+      headers: { Accept: 'application/json', 'User-Agent': BROWSER_UA },
+      redirect: 'follow'
+    });
+    if (res.ok) {
+      const body = await res.json();
+      const id = firstRealIdFromJson(body);
+      if (id) return id;
+    }
+  } catch {
+    // try HTML fallback
+  }
+
+  // 2) Collection page HTML: first real detail link.
+  try {
+    const pageUrl = `${origin}${collection}`;
+    const res = await fetchImpl(pageUrl, {
+      headers: { Accept: 'text/html', 'User-Agent': BROWSER_UA },
+      redirect: 'follow'
+    });
+    if (res.ok) {
+      const html = await res.text();
+      const id = firstRealIdFromHtml(html, collection);
+      if (id) return id;
+    }
+  } catch {
+    // fail closed
+  }
+  return null;
+}
+
+/**
+ * Materialise dynamic segments using a real id. Throws when no real id
+ * can be resolved — callers must surface that as a check failure.
+ *
+ * @param {string} route Route path.
+ * @param {string | null} realId Real id from resolveRealDetailId, or null.
+ * @returns {string}
+ * @throws {Error} When the route is dynamic and realId is missing.
+ */
+export function materialiseRoute(route, realId) {
+  if (!hasDynamicSegment(route)) return route;
+  if (realId == null || String(realId).trim() === '') {
+    throw new Error('no real detail id available');
+  }
+  const id = String(realId).trim();
   return route
-    .replace(/:\w+/g, 'sample')
-    .replace(/\[(\.\.\.)?[\w-]+\]/g, 'sample');
+    .replace(/:\w+/g, id)
+    .replace(/\[(\.\.\.)?[\w-]+\]/g, id);
 }
 
 /**
@@ -513,6 +663,22 @@ export async function runResourceLinks(appDir, io, opts = {}) {
     /** @type {Map<string, { ok: boolean, status: number | null, error?: string }>} */
     const cache = new Map();
 
+    // Resolve a real detail id once per dynamic route template before crawling.
+    // Never invent "sample" — if the catalog has no rows, the check fails.
+    /** @type {Map<string, string>} */
+    const realIdsByRoute = new Map();
+    for (const route of targets) {
+      if (!hasDynamicSegment(route)) continue;
+      if (realIdsByRoute.has(route)) continue;
+      const id = await resolveRealDetailId(base, route);
+      if (id == null) {
+        io.fail(
+          `no real detail id available for ${route} (collection API/page returned nothing probeable)`
+        );
+      }
+      realIdsByRoute.set(route, id);
+    }
+
     const browser = await chromium.launch();
     /**
      * @returns {Promise<{ failures: string[], pagesChecked: number }>}
@@ -527,7 +693,14 @@ export async function runResourceLinks(appDir, io, opts = {}) {
         // CI; still enough to catch systemic missing links.
         const sample = targets.slice(0, 30);
         for (const route of sample) {
-          const path = materialiseRoute(route);
+          let path;
+          try {
+            path = materialiseRoute(route, realIdsByRoute.get(route) ?? null);
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            fails.push(`${route}: ${msg}`);
+            continue;
+          }
           const url = `${base}${path.startsWith('/') ? path : `/${path}`}`;
           try {
             await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45_000 });

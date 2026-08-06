@@ -12,7 +12,14 @@ export const en = {
     privacy: 'Privacy',
     contact: 'Contact',
     login: 'Sign in',
-    sitterDetail: 'Sitter'
+    sitterDetail: 'Sitter',
+    /** Open the overflow nav at narrow widths. */
+    menuOpen: 'Menu',
+    /**
+     * Short on purpose: a longer close label starved the brand column at 375.
+     * aria-expanded still exposes open/closed state to assistive tech.
+     */
+    menuClose: 'Close'
   },
   footer: {
     explore: 'Explore',

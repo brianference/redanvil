@@ -1,7 +1,7 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { en } from '../i18n/en';
-import { ROUTES } from '../lib/routes';
+import { ROUTES, type AppRoute } from '../lib/routes';
 import { AssistantPanel } from './AssistantPanel';
 import { BrandLogo } from './BrandLogo';
 import { Breadcrumbs } from './Breadcrumbs';
@@ -14,10 +14,56 @@ export interface PageProps {
   children: ReactNode;
 }
 
+/**
+ * Localised label for a primary nav route.
+ *
+ * @param route - Canonical app route.
+ * @returns Display string.
+ */
+function navLabel(route: AppRoute): string {
+  switch (route.name) {
+    case 'Home':
+      return en.nav.home;
+    case 'Sitters':
+      return en.nav.sitters;
+    case 'About':
+      return en.nav.about;
+    case 'Terms':
+      return en.nav.terms;
+    case 'Privacy':
+      return en.nav.privacy;
+    case 'Contact':
+      return en.nav.contact;
+    case 'Login':
+      return en.nav.login;
+    default:
+      return route.name;
+  }
+}
+
+/**
+ * NavLink class names for topbar links.
+ *
+ * @param isActive - Whether the link matches the current location.
+ * @returns Class string.
+ */
+function topbarLinkClass(isActive: boolean): string {
+  return isActive ? 'topbar__link topbar__link--active' : 'topbar__link';
+}
+
 /** Shared page shell: sticky header, primary nav, breadcrumbs, footer, assistant. */
 export function Page({ title, children }: PageProps): JSX.Element {
-  // Include Home so desktop audit on `/` still finds aria-current="page".
-  const navRoutes = ROUTES;
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Home stays visible at 375; secondary chrome goes behind the menu control.
+  const primaryRoutes = ROUTES.filter((route) => route.path === '/');
+  const secondaryRoutes = ROUTES.filter((route) => route.path !== '/');
+
+  /**
+   * Close the mobile overflow menu after a secondary nav selection.
+   */
+  function closeMenu(): void {
+    setMenuOpen(false);
+  }
 
   return (
     <div className="shell">
@@ -26,33 +72,30 @@ export function Page({ title, children }: PageProps): JSX.Element {
       </a>
       <header className="topbar" data-testid="compact-header" data-measure="header">
         <BrandLogo className="brand" markClassName="brand__mark" nameClassName="brand__name" />
-        <nav className="topbar__nav" aria-label={en.app.primaryNav}>
-          <ul className="topbar__list">
-            {navRoutes.map((route) => (
+        <nav className="topbar__nav" aria-label={en.app.primaryNav} data-testid="primary-nav">
+          <ul className="topbar__list topbar__list--primary">
+            {primaryRoutes.map((route) => (
               <li key={route.path}>
                 <NavLink
                   data-testid="nav-link"
                   to={route.path}
-                  end={route.path === '/'}
-                  className={({ isActive }) =>
-                    isActive ? 'topbar__link topbar__link--active' : 'topbar__link'
-                  }
+                  end
+                  className={({ isActive }) => topbarLinkClass(isActive)}
                 >
-                  {route.name === 'Home'
-                    ? en.nav.home
-                    : route.name === 'Sitters'
-                      ? en.nav.sitters
-                      : route.name === 'About'
-                        ? en.nav.about
-                        : route.name === 'Terms'
-                          ? en.nav.terms
-                          : route.name === 'Privacy'
-                            ? en.nav.privacy
-                            : route.name === 'Contact'
-                              ? en.nav.contact
-                              : route.name === 'Login'
-                                ? en.nav.login
-                                : route.name}
+                  {navLabel(route)}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+          <ul className="topbar__list topbar__list--desktop-secondary">
+            {secondaryRoutes.map((route) => (
+              <li key={route.path}>
+                <NavLink
+                  data-testid="nav-link"
+                  to={route.path}
+                  className={({ isActive }) => topbarLinkClass(isActive)}
+                >
+                  {navLabel(route)}
                 </NavLink>
               </li>
             ))}
@@ -60,7 +103,43 @@ export function Page({ title, children }: PageProps): JSX.Element {
         </nav>
         <div className="topbar__actions">
           <ThemeToggle />
+          <button
+            type="button"
+            className="topbar__menu-btn"
+            aria-expanded={menuOpen}
+            aria-controls="topbar-menu"
+            data-testid="nav-menu-toggle"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? en.nav.menuClose : en.nav.menuOpen}
+          </button>
         </div>
+        <nav
+          id="topbar-menu"
+          className={
+            menuOpen
+              ? 'topbar__menu topbar__menu--open'
+              : 'topbar__menu'
+          }
+          aria-label={en.app.primaryNav}
+          hidden={!menuOpen}
+          data-testid="primary-nav-menu"
+        >
+          <ul className="topbar__list topbar__list--menu">
+            {secondaryRoutes.map((route) => (
+              <li key={route.path}>
+                <NavLink
+                  data-testid="nav-link"
+                  to={route.path}
+                  className={({ isActive }) => topbarLinkClass(isActive)}
+                  onClick={closeMenu}
+                >
+                  {navLabel(route)}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </header>
       <Breadcrumbs />
       <main id="main" className="main">
