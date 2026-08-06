@@ -159,14 +159,49 @@ function repoRootFor(dir) {
  * @param {unknown} input Recorded fixture path.
  * @returns {unknown} Portable path, or the input untouched.
  */
+
+/**
+ * Every worktree root of the repository containing `dir`.
+ *
+ * @param {string} dir Directory inside a repo.
+ * @returns {string[]} Absolute worktree roots (empty when git cannot answer).
+ */
+function worktreeRoots(dir) {
+  try {
+    const out = execFileSync('git', ['worktree', 'list', '--porcelain'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    });
+    return out
+      .split(String.fromCharCode(10))
+      .map((l) => l.trim())
+      .filter((l) => l.startsWith('worktree '))
+      .map((l) => l.slice('worktree '.length).trim())
+      .filter((l) => l.length > 0);
+  } catch {
+    return [];
+  }
+}
+
 export function portableFixturePath(appDir, input) {
   if (typeof input !== 'string' || input.trim().length === 0) return input;
   if (!isAbsolute(input)) return input.split(sep).join('/');
   const root = repoRootFor(appDir);
   if (root === null) return input;
-  const rel = relative(root, input);
-  if (rel.length === 0 || rel.startsWith('..')) return input;
-  return rel.split(sep).join('/');
+  const direct = relative(root, input);
+  if (direct.length > 0 && !direct.startsWith('..')) return direct.split(sep).join('/');
+  // A path inside a SIBLING WORKTREE of the same repository is still this repo's
+  // file, just reached through another checkout. Leaving it absolute re-created
+  // the leak the repo-relative rewrite was meant to end: a run whose shell cwd
+  // sat in a worktree recorded C:\Users\brian\RedAnvil-pm\... into the main tree's
+  // evidence, and that path dies with the worktree. Map it back by its
+  // repo-relative tail so the record survives the worktree being discarded.
+  for (const wt of worktreeRoots(appDir)) {
+    const rel = relative(wt, input);
+    if (rel.length > 0 && !rel.startsWith('..')) return rel.split(sep).join('/');
+  }
+  return input;
 }
 
 export function writeMeasurementMetaEntry(appDir, ruleId, entry) {
