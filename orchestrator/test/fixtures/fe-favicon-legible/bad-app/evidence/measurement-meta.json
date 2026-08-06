@@ -5,7 +5,7 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-06T00:12:58.002Z",
+        "at": "2026-08-06T00:15:58.315Z",
         "metrics": {
           "inkCoverage": 1,
           "detailEnergy": 7.105427357601002e-15,
@@ -17,7 +17,7 @@
       },
       {
         "ok": false,
-        "at": "2026-08-06T00:12:58.002Z",
+        "at": "2026-08-06T00:15:58.315Z",
         "metrics": {
           "inkCoverage": 1,
           "detailEnergy": 7.105427357601002e-15,
@@ -32,7 +32,7 @@
     "knownBad": {
       "input": "orchestrator/test/fixtures/fe-favicon-legible/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:58.002Z"
+      "recordedAt": "2026-08-06T00:15:58.315Z"
     }
   }
 }

@@ -5,13 +5,13 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-06T00:13:00.318Z",
+        "at": "2026-08-06T00:16:00.640Z",
         "recomputed": 0,
         "recorded": 100
       },
       {
         "ok": false,
-        "at": "2026-08-06T00:13:00.319Z",
+        "at": "2026-08-06T00:16:00.640Z",
         "recomputed": 0,
         "recorded": 100
       }
@@ -19,7 +19,7 @@
     "knownBad": {
       "input": "orchestrator/test/fixtures/lg-result-reproduces",
       "failed": true,
-      "recordedAt": "2026-08-06T00:13:01.474Z"
+      "recordedAt": "2026-08-06T00:16:01.796Z"
     }
   }
 }
