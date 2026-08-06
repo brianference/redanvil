@@ -1,0 +1,12 @@
+{
+  "kind": "managed-apps",
+  "apps": [
+    {
+      "slug": "pet-sitter",
+      "dir": "pet-sitter",
+      "entryPoint": "pm",
+      "registeredAt": "2026-08-06T01:12:09.000Z",
+      "handBuildBlocked": true
+    }
+  ]
+}
