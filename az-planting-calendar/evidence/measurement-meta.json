@@ -45,17 +45,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-06T00:13:16.839Z"
+        "at": "2026-08-06T00:23:37.767Z"
       },
       {
         "ok": false,
-        "at": "2026-08-06T00:13:20.356Z"
+        "at": "2026-08-06T00:23:41.281Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/search-present/dead-search.html",
       "failed": true,
-      "recordedAt": "2026-08-06T00:13:20.356Z"
+      "recordedAt": "2026-08-06T00:23:41.281Z"
     }
   },
   "fe-brand-mark-size": {
@@ -64,13 +64,13 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:11:41.317Z",
+        "at": "2026-08-06T00:22:02.552Z",
         "height1280": 96,
         "height375": 56
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:11:42.032Z",
+        "at": "2026-08-06T00:22:03.235Z",
         "height1280": 96,
         "height375": 56
       }
@@ -83,7 +83,7 @@
     "knownBad": {
       "input": "orchestrator/test/fixtures/brand-mark-size/small.html",
       "failed": true,
-      "recordedAt": "2026-08-06T00:11:42.032Z"
+      "recordedAt": "2026-08-06T00:22:03.235Z"
     }
   },
   "fe-breadcrumbs": {
@@ -92,17 +92,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:11:44.042Z"
+        "at": "2026-08-06T00:22:05.247Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:11:45.447Z"
+        "at": "2026-08-06T00:22:06.666Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/breadcrumbs",
       "failed": true,
-      "recordedAt": "2026-08-06T00:11:45.447Z"
+      "recordedAt": "2026-08-06T00:22:06.666Z"
     }
   },
   "fe-result-in-viewport": {
@@ -111,17 +111,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:11:58.093Z"
+        "at": "2026-08-06T00:22:19.286Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:05.324Z"
+        "at": "2026-08-06T00:22:26.498Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/result-in-viewport/below-fold.html",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:05.324Z"
+      "recordedAt": "2026-08-06T00:22:26.498Z"
     },
     "notApplicable": false,
     "reason": null
@@ -132,17 +132,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:07.197Z"
+        "at": "2026-08-06T00:22:28.192Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:08.120Z"
+        "at": "2026-08-06T00:22:29.115Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/resource-links/bad",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:08.147Z"
+      "recordedAt": "2026-08-06T00:22:29.139Z"
     }
   },
   "fe-light-dark": {
@@ -151,19 +151,19 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-06T00:13:11.384Z",
+        "at": "2026-08-06T00:23:32.354Z",
         "landmarks": 5
       },
       {
         "ok": false,
-        "at": "2026-08-06T00:13:12.908Z",
+        "at": "2026-08-06T00:23:33.871Z",
         "landmarks": 5
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/theme-paint/hardcoded-hero.html",
       "failed": true,
-      "recordedAt": "2026-08-06T00:13:12.908Z"
+      "recordedAt": "2026-08-06T00:23:33.871Z"
     }
   },
   "u-build-succeeds": {
@@ -172,19 +172,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:40.552Z",
+        "at": "2026-08-06T00:23:01.378Z",
         "status": 0
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:40.552Z",
+        "at": "2026-08-06T00:23:01.378Z",
         "status": 0
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/u-build-succeeds/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:40.552Z"
+      "recordedAt": "2026-08-06T00:23:01.378Z"
     }
   },
   "u-api-not-found": {
@@ -193,17 +193,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:44.428Z"
+        "at": "2026-08-06T00:23:05.266Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:44.429Z"
+        "at": "2026-08-06T00:23:05.267Z"
       }
     ],
     "knownBad": {
       "input": "known-bad-fixtures/u-api-not-found/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:44.429Z"
+      "recordedAt": "2026-08-06T00:23:05.267Z"
     },
     "notApplicable": false,
     "reason": null,
@@ -215,21 +215,21 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:48.292Z",
-        "path": "/api/__definitely_absent_0d8e57f01ab29329",
+        "at": "2026-08-06T00:23:09.127Z",
+        "path": "/api/__definitely_absent_e1e33a486fe6f6c8",
         "status": 404
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:48.292Z",
-        "path": "/api/__definitely_absent_0d8e57f01ab29329",
+        "at": "2026-08-06T00:23:09.127Z",
+        "path": "/api/__definitely_absent_e1e33a486fe6f6c8",
         "status": 404
       }
     ],
     "knownBad": {
       "input": "known-bad-fixtures/u-api-no-spa-mask/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:48.292Z"
+      "recordedAt": "2026-08-06T00:23:09.127Z"
     }
   },
   "u-legal-claims-true": {
@@ -238,17 +238,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:48.445Z"
+        "at": "2026-08-06T00:23:09.283Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:48.445Z"
+        "at": "2026-08-06T00:23:09.284Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/u-legal-claims-true/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:48.445Z"
+      "recordedAt": "2026-08-06T00:23:09.284Z"
     }
   },
   "fe-favicon-legible": {
@@ -257,7 +257,7 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:49.065Z",
+        "at": "2026-08-06T00:23:09.907Z",
         "metrics": {
           "inkCoverage": 0.458984375,
           "detailEnergy": 188.8609034439758,
@@ -269,7 +269,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:49.065Z",
+        "at": "2026-08-06T00:23:09.907Z",
         "metrics": {
           "inkCoverage": 0.458984375,
           "detailEnergy": 188.8609034439758,
@@ -281,7 +281,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:49.380Z",
+        "at": "2026-08-06T00:23:10.208Z",
         "metrics": {
           "inkCoverage": 0.375,
           "detailEnergy": 188.80813895337675,
@@ -293,7 +293,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:49.380Z",
+        "at": "2026-08-06T00:23:10.208Z",
         "metrics": {
           "inkCoverage": 0.375,
           "detailEnergy": 188.80813895337675,
@@ -305,7 +305,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:49.682Z",
+        "at": "2026-08-06T00:23:10.529Z",
         "metrics": {
           "inkCoverage": 0.3701171875,
           "detailEnergy": 160.98443392176873,
@@ -317,7 +317,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:49.682Z",
+        "at": "2026-08-06T00:23:10.529Z",
         "metrics": {
           "inkCoverage": 0.3701171875,
           "detailEnergy": 160.98443392176873,
@@ -332,7 +332,7 @@
     "knownBad": {
       "input": "orchestrator/test/fixtures/fe-favicon-legible/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:49.682Z"
+      "recordedAt": "2026-08-06T00:23:10.529Z"
     }
   },
   "meas-known-bad": {
@@ -340,18 +340,18 @@
     "engine": null,
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-06T00:13:39.409Z"
+        "ok": true,
+        "at": "2026-08-06T00:24:00.409Z"
       },
       {
-        "ok": false,
-        "at": "2026-08-06T00:13:39.410Z"
+        "ok": true,
+        "at": "2026-08-06T00:24:00.409Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-known-bad/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:13:39.410Z"
+      "recordedAt": "2026-08-06T00:24:00.409Z"
     }
   },
   "meas-two-run": {
@@ -360,17 +360,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:13:39.533Z"
+        "at": "2026-08-06T00:24:00.531Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:13:39.534Z"
+        "at": "2026-08-06T00:24:00.532Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-two-run/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:13:39.534Z"
+      "recordedAt": "2026-08-06T00:24:00.532Z"
     }
   },
   "meas-recheck-flattering": {
@@ -379,17 +379,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:13:39.658Z"
+        "at": "2026-08-06T00:24:00.660Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:13:39.659Z"
+        "at": "2026-08-06T00:24:00.661Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-recheck-flattering/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:13:39.659Z"
+      "recordedAt": "2026-08-06T00:24:00.661Z"
     }
   },
   "meas-standard-tool": {
@@ -398,17 +398,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:13:39.799Z"
+        "at": "2026-08-06T00:24:00.802Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:13:39.799Z"
+        "at": "2026-08-06T00:24:00.803Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-standard-tool/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:13:39.799Z"
+      "recordedAt": "2026-08-06T00:24:00.803Z"
     }
   },
   "meas-engine-named": {
@@ -417,17 +417,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:13:39.922Z"
+        "at": "2026-08-06T00:24:00.924Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:13:39.922Z"
+        "at": "2026-08-06T00:24:00.925Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-engine-named/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:13:39.922Z"
+      "recordedAt": "2026-08-06T00:24:00.925Z"
     }
   },
   "fe-legal-substance": {
@@ -436,19 +436,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:09.156Z",
+        "at": "2026-08-06T00:22:30.102Z",
         "summary": "terms 1746w/16h2; privacy 1804w/15h2"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:09.701Z",
+        "at": "2026-08-06T00:22:30.649Z",
         "summary": "terms 1746w/16h2; privacy 1804w/15h2"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/fe-legal-substance/bad",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:09.702Z"
+      "recordedAt": "2026-08-06T00:22:30.649Z"
     }
   },
   "fe-a11y-contrast": {
@@ -457,12 +457,12 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:08:04.455Z",
+        "at": "2026-08-06T00:18:19.199Z",
         "report": "evidence/axe/az-planting-calendar-dark.json"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:08:07.443Z",
+        "at": "2026-08-06T00:18:22.141Z",
         "report": "evidence/axe/az-planting-calendar-light.json"
       }
     ],
@@ -478,19 +478,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:10.046Z",
+        "at": "2026-08-06T00:22:30.994Z",
         "type": "WebApplication"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:10.047Z",
+        "at": "2026-08-06T00:22:30.994Z",
         "type": "WebApplication"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/structured-data/bad.html",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:10.047Z"
+      "recordedAt": "2026-08-06T00:22:30.994Z"
     }
   },
   "proc-design-options": {
@@ -499,17 +499,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:10.173Z"
+        "at": "2026-08-06T00:22:31.119Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:10.173Z"
+        "at": "2026-08-06T00:22:31.120Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/proc-design-options/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:10.173Z"
+      "recordedAt": "2026-08-06T00:22:31.120Z"
     }
   },
   "lg-result-reproduces": {
@@ -517,22 +517,22 @@
     "engine": null,
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-06T00:12:52.059Z",
-        "recomputed": 100,
-        "recorded": 100
+        "ok": true,
+        "at": "2026-08-06T00:23:12.893Z",
+        "recomputed": 0,
+        "recorded": 0
       },
       {
-        "ok": false,
-        "at": "2026-08-06T00:12:52.059Z",
-        "recomputed": 100,
-        "recorded": 100
+        "ok": true,
+        "at": "2026-08-06T00:23:12.893Z",
+        "recomputed": 0,
+        "recorded": 0
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/lg-result-reproduces",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:53.233Z"
+      "recordedAt": "2026-08-06T00:23:14.055Z"
     }
   },
   "lg-bindings-bound": {
@@ -541,14 +541,14 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:32.354Z",
+        "at": "2026-08-06T00:22:53.316Z",
         "base": "https://az-planting-calendar.pages.dev"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/lg-bindings-bound/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:32.354Z"
+      "recordedAt": "2026-08-06T00:22:53.317Z"
     },
     "notApplicable": false,
     "reason": null
@@ -559,17 +559,17 @@
     "knownBad": {
       "input": "orchestrator/test/fixtures/u-api-real-output/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T00:12:23.673Z"
+      "recordedAt": "2026-08-06T00:22:44.594Z"
     },
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T00:12:23.673Z",
+        "at": "2026-08-06T00:22:44.593Z",
         "routes": 9
       },
       {
         "ok": true,
-        "at": "2026-08-06T00:12:23.673Z",
+        "at": "2026-08-06T00:22:44.594Z",
         "routes": 9
       }
     ]
