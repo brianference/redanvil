@@ -73,12 +73,13 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
       {
         id: 'F2',
         name: `${primary} detail`,
-        behavior: `Clicking a list row opens the full ${primary} record with title, description, and a back link.`,
+        behavior: `Clicking a list row opens the full ${primary} record with title, description, and a back link. Any external URL from data is rendered only after safeHttpUrl/safeHref validation (no anchor when unsafe).`,
         mvp: true,
         acceptance: [
           `GIVEN a ${primary} id that exists in D1 WHEN the user opens /${primaryTable}/:id THEN the page shows title, description, and a back link to the list`,
           `GIVEN an unknown id WHEN the user opens /${primaryTable}/:id THEN a not-found state with a path back to the list is shown`,
-          `GIVEN the API returns 500 WHEN detail loads THEN an error message with a retry action is shown`
+          `GIVEN the API returns 500 WHEN detail loads THEN an error message with a retry action is shown`,
+          `GIVEN a detail record whose source/external URL is javascript: or otherwise non-http(s) WHEN the page renders THEN no anchor is emitted for that URL (safeHttpUrl/SafeExternalLink; u-sec-safe-href)`
         ],
         tests: {
           unit: [`${primary}RowSchema_acceptsValidRow`, `${primary}RowSchema_rejectsMissingId`],

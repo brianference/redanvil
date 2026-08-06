@@ -122,6 +122,7 @@ export const APP_CHECKS: Check[] = [
   det('hyg-no-binaries'),
   det('hyg-secret-scan'),
   det('u-sec-sast'),
+  det('u-sec-safe-href'),
   det('u-plat-worker-runtime'),
   // Real Workers boot + live HTTP. Build + wrangler pages dev can approach the
   // default 180s check ceiling, so give this check an explicit 5-minute budget.

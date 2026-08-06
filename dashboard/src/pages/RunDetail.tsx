@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { StatusBadge } from '../components/StatusBadge';
 import { en } from '../i18n/en';
+import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
 import { groupRulesByLane, type Run, type RunIteration, type RunRule } from '../lib/summary';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 import { type RunsState, useRuns } from '../lib/useRuns';
@@ -117,9 +118,9 @@ function RunHeader({ run }: { run: Run }): JSX.Element {
         <li style={metaItemStyle}>
           <span style={metaLabelStyle}>{en.runDetail.deployLabel}</span>
           {run.deployUrl !== null && run.deployUrl !== '' ? (
-            <a href={run.deployUrl} target="_blank" rel="noreferrer" style={linkStyle}>
+            <SafeExternalLink href={run.deployUrl} rel="noreferrer" style={linkStyle}>
               {en.runDetail.openDeploy}
-            </a>
+            </SafeExternalLink>
           ) : (
             <span style={{ color: theme.color.muted }}>{en.runDetail.none}</span>
           )}

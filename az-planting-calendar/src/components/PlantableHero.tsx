@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
 import { en } from '../i18n/en';
 import type { PlantableItem, PlantableResponse } from '../lib/schemas';
 import { CropArt } from './CropArt';
@@ -142,14 +143,9 @@ function PlantableRow({
         {primarySource ? (
           <p className="plant-row__source">
             <span className="plant-row__label">{en.hero.source}</span>{' '}
-            <a
-              href={primarySource.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="source-link"
-            >
+            <SafeExternalLink href={primarySource.url} data-testid="source-link">
               {primarySource.title}
-            </a>
+            </SafeExternalLink>
           </p>
         ) : null}
         {granularity === 'month' ? (

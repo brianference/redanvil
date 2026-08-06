@@ -81,6 +81,12 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
   // from scratch. Shipping the rule without the template it names would repeat the
   // exact mistake the rule documents: guidance cited and unavailable.
   const logoBrief = await readFile(join(designSystemDir, 'logo-brief-template.md'), 'utf8');
+  // u-sec-safe-href: copy the canonical scheme gate so generated apps never
+  // reimplement (and drift from) the monorepo design-system helper.
+  const safeHttpUrlTs = await readFile(join(designSystemDir, 'safeHttpUrl.ts'), 'utf8');
+  const safeExternalLinkTsx = (await readFile(join(designSystemDir, 'SafeExternalLink.tsx'), 'utf8'))
+    // Scaffold places the util under src/lib/; rewrite the relative import.
+    .replace("from './safeHttpUrl'", "from '../lib/safeHttpUrl'");
   // The definition of done travels WITH the app. It was a document in the
   // orchestrator's own repo, so the builder of a generated app never saw the
   // forty conditions its work would be judged against and met them one gate
@@ -95,6 +101,9 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
     'design-system/mobile-design-rules.md': designRules,
     'design-system/screen-patterns.md': screenPatterns,
     'design-system/logo-brief-template.md': logoBrief,
+    // Canonical URL scheme gate (u-sec-safe-href). Same source as monorepo design-system.
+    'src/lib/safeHttpUrl.ts': safeHttpUrlTs,
+    'src/components/SafeExternalLink.tsx': safeExternalLinkTsx,
     ...(input.prdMarkdown === undefined ? {} : { 'PRD.md': input.prdMarkdown }),
     ...(input.claimsJson === undefined
       ? {}

@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react';
+import { safeHref } from '../../../design-system/safeHttpUrl';
 import type { Prd } from '../lib/prd';
 import { savePrd, SavePrdError } from '../lib/savePrd';
 import { en } from '../i18n/en';
@@ -113,14 +114,21 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
       </div>
 
       {saveState.status === 'loading' && <LoadingBanner message={copy.saving} />}
-      {saveState.status === 'success' && (
-        <div role="status" style={statusBannerStyle()}>
-          <span aria-hidden="true">✓</span>
-          <a href={saveState.url} style={{ color: theme.color.accent, fontWeight: 600 }}>
-            {copy.savedViewAt(saveState.url)}
-          </a>
-        </div>
-      )}
+      {saveState.status === 'success' &&
+        (() => {
+          // API returns a same-origin path (`/prd/:id`); safeHref accepts that
+          // and rejects javascript:/data:/protocol-relative values.
+          const savedHref = safeHref(saveState.url);
+          if (savedHref === null) return null;
+          return (
+            <div role="status" style={statusBannerStyle()}>
+              <span aria-hidden="true">✓</span>
+              <a href={savedHref} style={{ color: theme.color.accent, fontWeight: 600 }}>
+                {copy.savedViewAt(savedHref)}
+              </a>
+            </div>
+          );
+        })()}
       {saveState.status === 'error' && <ErrorBanner message={saveState.message} />}
 
       <div style={cardStyle(theme.space.md)}>

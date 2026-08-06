@@ -6,6 +6,7 @@
  * than pulling either app's theme into design-system.
  */
 import React, { type CSSProperties, type ReactNode } from 'react';
+import { safeHttpUrl } from './safeHttpUrl';
 
 const URL_RE = /(https?:\/\/[^\s]+)/g;
 
@@ -30,8 +31,12 @@ export function linkifyText(text: string, linkColor: string): ReactNode[] {
   const parts = text.split(URL_RE);
   return parts.map((part, index) => {
     if (part.startsWith('http://') || part.startsWith('https://')) {
-      const href = part.replace(/[.,;:)]+$/, '');
-      const trailing = part.slice(href.length);
+      const candidate = part.replace(/[.,;:)]+$/, '');
+      const trailing = part.slice(candidate.length);
+      const href = safeHttpUrl(candidate);
+      if (href === null) {
+        return part;
+      }
       return (
         <span key={`u-${index}`}>
           <a href={href} target="_blank" rel="noreferrer" style={linkStyle}>

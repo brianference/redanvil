@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { SafeExternalLink } from '../../../../design-system/SafeExternalLink';
 import { en } from '../../i18n/en';
 import { theme } from '../../theme';
 import type { Example } from '../../lib/examples';
@@ -33,12 +34,12 @@ export function ExampleStory({ example }: ExampleStoryProps): JSX.Element {
           {example.name}
         </h2>
         <p style={taglineStyle}>{example.tagline}</p>
-        <a href={example.liveUrl} rel="noopener noreferrer" style={liveStyle}>
+        <SafeExternalLink href={example.liveUrl} style={liveStyle}>
           {copy.viewLive}
-        </a>
-        <a href={example.repoUrl} rel="noopener noreferrer" style={liveStyle}>
+        </SafeExternalLink>
+        <SafeExternalLink href={example.repoUrl} style={liveStyle}>
           {copy.viewSource}
-        </a>
+        </SafeExternalLink>
       </header>
 
       <section aria-labelledby={`feat-${example.slug}`}>

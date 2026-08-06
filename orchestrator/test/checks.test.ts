@@ -698,6 +698,131 @@ export function measure(code: string): number {
   });
 });
 
+describe('check.mjs — u-sec-safe-href', () => {
+  it('fails on bare href={sourceUrl} (javascript: XSS class)', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/pages/Detail.tsx',
+      `
+export function Detail({ sourceUrl }: { sourceUrl: string }): JSX.Element {
+  // value may be javascript:alert(1) — unvalidated data-driven href is XSS
+  return <a href={sourceUrl}>Source</a>;
+}
+`
+    );
+    const r = runCheck('u-sec-safe-href', app);
+    expect(r.status, r.stderr).toBe(1);
+    expect(r.stderr).toMatch(/unvalidated data-driven href/i);
+  });
+
+  it('fails on the committed known-bad fixture', () => {
+    const fixture = join(
+      dirname(fileURLToPath(import.meta.url)),
+      '..',
+      '..',
+      'known-bad-fixtures',
+      'u-sec-safe-href',
+      'bad-app'
+    );
+    const r = runCheck('u-sec-safe-href', fixture);
+    expect(r.status, r.stderr).toBe(1);
+    expect(r.stderr).toMatch(/unvalidated data-driven href/i);
+  });
+
+  it.each([
+    ['variant-whitespace', 'leading whitespace scheme'],
+    ['variant-mixed-case', 'mixed-case scheme'],
+    ['variant-tab', 'tab/newline in scheme'],
+    ['variant-protocol-relative', 'protocol-relative //evil']
+  ] as const)('fails variant fixture %s (%s)', (name, _label) => {
+    const fixture = join(
+      dirname(fileURLToPath(import.meta.url)),
+      '..',
+      '..',
+      'known-bad-fixtures',
+      'u-sec-safe-href',
+      name
+    );
+    const r = runCheck('u-sec-safe-href', fixture);
+    expect(r.status, `${name}: ${r.stderr}`).toBe(1);
+  });
+
+  it('passes when href is gated by safeHttpUrl', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/lib/safeHttpUrl.ts',
+      `
+export function safeHttpUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  try {
+    const u = new URL(value.trim());
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+`
+    );
+    write(
+      app,
+      'src/pages/Detail.tsx',
+      `
+import { safeHttpUrl } from '../lib/safeHttpUrl';
+export function Detail({ sourceUrl }: { sourceUrl: string }): JSX.Element {
+  const href = safeHttpUrl(sourceUrl);
+  return <main>{href ? <a href={href}>Source</a> : null}</main>;
+}
+`
+    );
+    const r = runCheck('u-sec-safe-href', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+
+  it('passes the committed good-app fixture (validated https)', () => {
+    const fixture = join(
+      dirname(fileURLToPath(import.meta.url)),
+      '..',
+      '..',
+      'known-bad-fixtures',
+      'u-sec-safe-href',
+      'good-app'
+    );
+    const r = runCheck('u-sec-safe-href', fixture);
+    expect(r.status, r.stderr).toBe(0);
+  });
+
+  it('passes when there is no data-driven href (literals only)', () => {
+    const fixture = join(
+      dirname(fileURLToPath(import.meta.url)),
+      '..',
+      '..',
+      'known-bad-fixtures',
+      'u-sec-safe-href',
+      'no-href-app'
+    );
+    const r = runCheck('u-sec-safe-href', fixture);
+    expect(r.status, r.stderr).toBe(0);
+  });
+
+  it('passes SafeExternalLink without flagging its href prop', () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/pages/Detail.tsx',
+      `
+import { SafeExternalLink } from '../components/SafeExternalLink';
+export function Detail({ sourceUrl }: { sourceUrl: string }): JSX.Element {
+  return <SafeExternalLink href={sourceUrl}>Source</SafeExternalLink>;
+}
+`
+    );
+    const r = runCheck('u-sec-safe-href', app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+});
+
 describe('check.mjs — u-conc-no-padding', () => {
   it('fails when a source file has three or more consecutive blank lines', () => {
     const app = makeAppDir();
