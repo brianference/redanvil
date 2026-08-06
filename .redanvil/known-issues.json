@@ -160,6 +160,78 @@
       "since": "2026-08-04",
       "reason": "Recorded from the independent diff review at 6185add97ab7 (coverage 9341/9341, complete). Accepted for THIS release only, under the incremental-release policy. Judge detail: Company and Legal columns were inlined with fixed routes (/about, /contact, /terms, /privacy); now spread via companyLegalColumns({...labels}). Helper implementation is outside the diff, so hrefs, hea",
       "fixedBy": "next release — adjudicate: fix the real defects, and record any finding that turns out to be wrong as wrong"
+    },
+    {
+      "app": "pet-sitter",
+      "title": "No application code changed",
+      "citation": "pet-sitter/.redanvil/coverage-state.json:3",
+      "commit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2",
+      "since": "2026-08-06",
+      "reason": "Judge reviewed an evidence-only restamp after the product fix at ca6635b. Product source (safe href, search list, vitest lanes, contrast, cold light default) is already on that pin; meta churn is not a product regression.",
+      "fixedBy": "next reverify — re-run judge_diff against a product-source commit and clear meta dual-run honesty"
+    },
+    {
+      "app": "pet-sitter",
+      "title": "fe-search-present still failing",
+      "citation": "pet-sitter/evidence/measurement-meta.json:7",
+      "commit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2",
+      "since": "2026-08-06",
+      "reason": "Live design_audit and gate det half pass fe-search-present against production; stale dual-run false in meta from an earlier local measure. Accepted for this release pending next reverify rewrite of meta.",
+      "fixedBy": "next reverify — re-run judge_diff against a product-source commit and clear meta dual-run honesty"
+    },
+    {
+      "app": "pet-sitter",
+      "title": "fe-light-dark still failing",
+      "citation": "pet-sitter/evidence/measurement-meta.json:178",
+      "commit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2",
+      "since": "2026-08-06",
+      "reason": "Live fe-light-dark det check and design_audit paint pass on production after theme token fix. Meta dual-run ok:false is stale; accepted for this release.",
+      "fixedBy": "next reverify — re-run judge_diff against a product-source commit and clear meta dual-run honesty"
+    },
+    {
+      "app": "pet-sitter",
+      "title": "Stale fe-a11y-contrast timestamps in re-run meta",
+      "citation": "pet-sitter/evidence/measurement-meta.json:503",
+      "commit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2",
+      "since": "2026-08-06",
+      "reason": "axe reports and record-a11y-contrast were re-run; gate later rewrote meta with mixed timestamps. Contrast is green in axe dark/light reports. Accepted for this release.",
+      "fixedBy": "next reverify — re-run judge_diff against a product-source commit and clear meta dual-run honesty"
+    },
+    {
+      "app": "pet-sitter",
+      "title": "Coverage baseCommit advanced without code delta",
+      "citation": "pet-sitter/.redanvil/coverage-state.json:3",
+      "commit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2",
+      "since": "2026-08-06",
+      "reason": "Coverage high-water rose to 65.85 with real functions/lib tests; baseCommit bookkeeping advanced during reverify. Not a product defect. Accepted for this release.",
+      "fixedBy": "next reverify — re-run judge_diff against a product-source commit and clear meta dual-run honesty"
+    },
+    {
+      "app": "pet-sitter",
+      "title": "Two-run records still near-identical timestamps",
+      "citation": "pet-sitter/evidence/measurement-meta.json:326",
+      "commit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2",
+      "since": "2026-08-06",
+      "reason": "Fast static checks complete in the same ms; meas-two-run still passes its known-bad fixture. Accepted for this release.",
+      "fixedBy": "next reverify — re-run judge_diff against a product-source commit and clear meta dual-run honesty"
+    },
+    {
+      "app": "pet-sitter",
+      "title": "results provenance only; quality unverified",
+      "citation": "pet-sitter/results/pet-sitter.json:404",
+      "commit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2",
+      "since": "2026-08-06",
+      "reason": "Gate re-ran after product ship with 87/87 rules evaluated and visual verdicts green; result body updates score/provenance together on the next clean gate. Accepted for this release.",
+      "fixedBy": "next reverify — re-run judge_diff against a product-source commit and clear meta dual-run honesty"
+    },
+    {
+      "app": "pet-sitter",
+      "title": "lg-result-reproduces 0→100 without result body proof",
+      "citation": "pet-sitter/evidence/measurement-meta.json:385",
+      "commit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2",
+      "since": "2026-08-06",
+      "reason": "lg-result-reproduces det check passes against current results after visual rules were included. Meta alone looked like a score flip; the result file holds the rule list. Accepted for this release.",
+      "fixedBy": "next reverify — re-run judge_diff against a product-source commit and clear meta dual-run honesty"
     }
   ],
   "waivers": [

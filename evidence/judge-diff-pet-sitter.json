@@ -2,47 +2,65 @@
   "kind": "independent-diff-review",
   "slug": "pet-sitter",
   "commit": "ca6635b5f9162d10f61abef95e6ed3283a8365e2",
-  "reviewedAt": "2026-08-06T03:52:07.012Z",
-  "diffHash": "a005ffaf0788b0e1932bd84ecfeec2b0e5e386061d368b96f91ffb6dc7b04eaf",
+  "reviewedAt": "2026-08-06T04:36:47.349Z",
+  "diffHash": "23704d1a408c0a370800ac34d4635441132f3527c15f0a9b456f8c51f6cd2d79",
   "completed": true,
   "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "Evidence timestamps only",
+      "title": "No application code changed",
+      "citation": "pet-sitter/.redanvil/coverage-state.json:3",
+      "detail": "The entire commit only touches coverage-state, evidence/measurement-meta.json, and results/pet-sitter.json. Zero product source, tests, assets, or deploy config. Any claim that the app was fixed, improved, or re-implemented is unverified from this diff.",
+      "passed": false
+    },
+    {
+      "title": "fe-search-present still failing",
+      "citation": "pet-sitter/evidence/measurement-meta.json:7",
+      "detail": "Both fe-search-present runs remain ok:false after the re-run (timestamps only). Search presence/behavior is still measured as failed; nothing in the diff remediates it.",
+      "passed": false
+    },
+    {
+      "title": "fe-light-dark still failing",
+      "citation": "pet-sitter/evidence/measurement-meta.json:178",
+      "detail": "Both fe-light-dark runs remain ok:false (landmarks:5). Theme paint/light-dark measurement still fails; only recordedAt/at timestamps moved. Hardcoded or non-token theme paint is not shown fixed.",
+      "passed": false
+    },
+    {
+      "title": "Stale fe-a11y-contrast timestamps in re-run meta",
       "citation": "pet-sitter/evidence/measurement-meta.json:503",
-      "detail": "The only evidence change is swapping axe run timestamps (03:25→03:48). No axe report bodies, measurement outputs, or other evidence files appear in the diff. Adding data-measure hooks in UI cannot be verified as re-measured; the meta touch alone does not prove a real measurement pass against this commit.",
+      "detail": "fe-a11y-contrast runs are stamped 2026-08-06T04:05:17Z / 04:05:19Z while surrounding measurements in the same file were re-stamped ~04:30–04:31Z. That is not a coherent single gate re-run; contrast pass cannot be treated as freshly verified alongside the later meta.",
       "passed": false
     },
     {
-      "title": "Measurement hooks unverified",
-      "citation": "pet-sitter/src/components/Page.tsx:27",
-      "detail": "Diff adds data-measure=\"header\" (Page), data-measure=\"mark\" (BrandLogo), and data-measure=\"hero\" (SitterSearchList) with no harness/script/report changes. Cannot verify these selectors are consumed or that width/theme/layout measurements were re-run after the markup change.",
+      "title": "Coverage baseCommit advanced without code delta",
+      "citation": "pet-sitter/.redanvil/coverage-state.json:3",
+      "detail": "baseCommit moved to ce6b90427a0a54497813a756e0f699071db8b8f4 while highWaterPct stays 65.85 and no source/test files appear in the diff. Advancing the ratchet base without a product change resets the coverage-delta baseline and cannot be verified as earned progress.",
       "passed": false
     },
     {
-      "title": "Testid rename not fully verified",
-      "citation": "pet-sitter/src/components/SitterSearchList.tsx:136",
-      "detail": "data-testid renames sitter-list → search-results (and adds sitter-list-item, filter-search, live-search). Only acceptance.spec.ts is updated in the diff. Cannot verify other specs, feature-audit manifests, or smoke scripts that may still target sitter-list; incomplete migration is a fail-closed gap.",
+      "title": "Two-run records still near-identical timestamps",
+      "citation": "pet-sitter/evidence/measurement-meta.json:326",
+      "detail": "meas-recheck-flattering both runs share identical at 2026-08-06T04:31:21.451Z; similar 0–1ms pairs appear for meas-standard-tool, u-build-succeeds, u-api-real-output, etc. Independent two-run agreement is not proven when timestamps are effectively write-time duplicates.",
       "passed": false
     },
     {
-      "title": "Acceptance search locator weakened",
-      "citation": "pet-sitter/tests/acceptance.spec.ts:94",
-      "detail": "Search narrowing test stopped using getByLabel(/search sitters/i) and the submit button, and now only fills getByTestId('filter-search'). Live-narrow via applyQuery is consistent with SitterSearchList onChange, but the test no longer guards the accessible name of the search control—only a test id.",
+      "title": "results provenance only; quality unverified",
+      "citation": "pet-sitter/results/pet-sitter.json:404",
+      "detail": "results/pet-sitter.json only updates finishedAt, provenance.commit (to ce6b904...), and generatedAt. The shown hunk does not change scores, verdicts, or failing rules. lg-result-reproduces meta jumps recomputed/recorded 0→100 without any result payload body in this diff—cannot verify a real score improvement.",
       "passed": false
     },
     {
-      "title": "Live filter wiring consistent",
-      "citation": "pet-sitter/src/components/SitterSearchList.tsx:79",
-      "detail": "applyQuery sets query and submitted(trim) on each keystroke; onChange calls it; acceptance expects count to drop without submit. That behavioral coupling is internally consistent in the diff. Not a defect—but it is not proof the full suite is green or that production filtering matches.",
-      "passed": true
+      "title": "lg-result-reproduces 0→100 without result body proof",
+      "citation": "pet-sitter/evidence/measurement-meta.json:385",
+      "detail": "lg-result-reproduces flips recomputed/recorded from 0 to 100 with only measurement-meta timestamps. No matching results content, gate log, or score recomputation artifact appears in the diff; the 100 claim is not independently verifiable here.",
+      "passed": false
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"Evidence timestamps only\\\",\\n      \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:503\\\",\\n      \\\"detail\\\": \\\"The only evidence change is swapping axe run timestamps (03:25→03:48). No axe report bodies, measurement outputs, or other evidence files appear in the diff. Adding data-measure hooks in UI cannot be verified as re-measured; the meta touch alone does not prove a real measurement pass against this commit.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Measurement hooks unverified\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/Page.tsx:27\\\",\\n      \\\"detail\\\": \\\"Diff adds data-measure=\\\\\\\"header\\\\\\\" (Page), data-measure=\\\\\\\"mark\\\\\\\" (BrandLogo), and data-measure=\\\\\\\"hero\\\\\\\" (SitterSearchList) with no harness/script/report changes. Cannot verify these selectors are consumed or that width/theme/layout measurements were re-run after the markup change.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Testid rename not fully verified\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/SitterSearchList.tsx:136\\\",\\n      \\\"detail\\\": \\\"data-testid renames sitter-list → search-results (and adds sitter-list-item, filter-search, live-search). Only acceptance.spec.ts is updated in the diff. Cannot verify other specs, feature-audit manifests, or smoke scripts that may still target sitter-list; incomplete migration is a fail-closed gap.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Acceptance search locator weakened\\\",\\n      \\\"citation\\\": \\\"pet-sitter/tests/acceptance.spec.ts:94\\\",\\n      \\\"detail\\\": \\\"Search narrowing test stopped using getByLabel(/search sitters/i) and the submit button, and now only fills getByTestId('filter-search'). Live-narrow via applyQuery is consistent with SitterSearchList onChange, but the test no longer guards the accessible name of the search control—only a test id.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Live filter wiring consistent\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/components/SitterSearchList.tsx:79\\\",\\n      \\\"detail\\\": \\\"applyQuery sets query and submitted(trim) on each keystroke; onChange calls it; acceptance expects count to drop without submit. That behavioral coupling is internally consistent in the diff. Not a defect—but it is not proof the full suite is green or that production filtering matches.\\\",\\n      \\\"passed\\\": true\\n    }\\n  ]\\n}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"eae5f64d-5311-4855-8137-70965189c5ac\",\n  \"requestId\": \"88f43d56-e5f9-4b1d-899c-c817fd89b341\",\n  \"thought\": \"The user wants me to act as an independent code judge and review the git diff for pet-sitter. They explicitly said:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"missing test coverage for live search\\\",\\n      \\\"citation\\\": \\\"pet-sitter/tests/acceptance.spec.ts:85\\\",\\n      \\\"detail\\\": \\\"test('sitter search narrows the visible catalog'...) uses getByTestId('filter-search') but never verifies the accessible name of the search input (getByLabel(/search sitters/i)) — the change to applyQuery + data-testid broke the original a11y test path\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"measurement-meta.json 2026 timestamps\\\",\\n      \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:500\\\",\\n      \\\"detail\\\": \\\"only timestamps updated in axe reports; no actual axe report content changed — cannot verify new data-measure hooks were actually measured against the updated markup\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n \\\"title\\\": \\\"incomplete testid migration\\\",\\n  \\\"citation\\\": \\\"pet-sitter/tests/acceptance.spec.ts:106\\\",\\n  \\\"detail\\\": \\\"renamed sitter-list to search-results in acceptance.spec.ts but diff only shows this file — cannot verify other test files still reference the old testid\\\",\\n  \\\" passed\\\": false\\n    }\\n  ]\\n}```<|tool_call_begin|>```json\\n{\\n  \\\"f",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"No application code changed\\\",\\n      \\\"citation\\\": \\\"pet-sitter/.redanvil/coverage-state.json:3\\\",\\n      \\\"detail\\\": \\\"The entire commit only touches coverage-state, evidence/measurement-meta.json, and results/pet-sitter.json. Zero product source, tests, assets, or deploy config. Any claim that the app was fixed, improved, or re-implemented is unverified from this diff.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"fe-search-present still failing\\\",\\n      \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:7\\\",\\n      \\\"detail\\\": \\\"Both fe-search-present runs remain ok:false after the re-run (timestamps only). Search presence/behavior is still measured as failed; nothing in the diff remediates it.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"fe-light-dark still failing\\\",\\n      \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:178\\\",\\n      \\\"detail\\\": \\\"Both fe-light-dark runs remain ok:false (landmarks:5). Theme paint/light-dark measurement still fails; only recordedAt/at timestamps moved. Hardcoded or non-token theme paint is not shown fixed.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Stale fe-a11y-contrast timestamps in re-run meta\\\",\\n      \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:503\\\",\\n      \\\"detail\\\": \\\"fe-a11y-contrast runs are stamped 2026-08-06T04:05:17Z / 04:05:19Z while surrounding measurements in the same file were re-stamped ~04:30–04:31Z. That is not a coherent single gate re-run; contrast pass cannot be treated as freshly verified alongside the later meta.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Coverage baseCommit advanced without code delta\\\",\\n      \\\"citation\\\": \\\"pet-sitter/.redanvil/coverage-state.json:3\\\",\\n      \\\"detail\\\": \\\"baseCommit moved to ce6b90427a0a54497813a756e0f699071db8b8f4 while highWaterPct stays 65.85 and no source/test files appear in the diff. Advancing the ratchet base without a product change resets the coverage-delta baseline and cannot be verified as earned progress.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Two-run records still near-identical timestamps\\\",\\n      \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:326\\\",\\n      \\\"detail\\\": \\\"meas-recheck-flattering both runs share identical at 2026-08-06T04:31:21.451Z; similar 0–1ms pairs appear for meas-standard-tool, u-build-succeeds, u-api-real-output, etc. Independent two-run agreement is not proven when timestamps are effectively write-time duplicates.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"results provenance only; quality unverified\\\",\\n      \\\"citation\\\": \\\"pet-sitter/results/pet-sitter.json:404\\\",\\n      \\\"detail\\\": \\\"results/pet-sitter.json only updates finishedAt, provenance.commit (to ce6b904...), and generatedAt. The shown hunk does not change scores, verdicts, or failing rules. lg-result-reproduces meta jumps recomputed/recorded 0→100 without any result payload body in this diff—cannot verify a real score improvement.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"lg-result-reproduces 0→100 without result body proof\\\",\\n      \\\"citation\\\": \\\"pet-sitter/evidence/measurement-meta.json:385\\\",\\n      \\\"detail\\\": \\\"lg-result-reproduces flips recomputed/recorded from 0 to 100 with only measurement-meta timestamps. No matching results content, gate log, or score recomputation artifact appears in the diff; the 100 claim is not independently verifiable here.\\\",\\n      \\\"passed\\\": false\\n    }\\n  ]\\n}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"35f88b24-1be3-4bea-858d-965793f87e5d\",\n  \"requestId\": \"f8dc2bce-9f37-4aa3-ab8b-96d218991ff0\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff for pet-sitter at a specific commit. They explicitly said:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n     ",
   "mode": "grok",
   "chunkCount": 1,
-  "coverageChars": 6752,
-  "diffChars": 6752,
+  "coverageChars": 15763,
+  "diffChars": 15763,
   "coverageComplete": true
 }
