@@ -398,10 +398,10 @@
       ]
     }
   ],
-  "deployUrl": null,
-  "finishedAt": "2026-08-06T05:09:19.345Z",
+  "deployUrl": "https://pet-sitter-vz1.pages.dev",
+  "finishedAt": "2026-08-06T05:10:23.339Z",
   "provenance": {
-    "commit": "307d7002e1778e2efd41028991611b75040cd5cd",
+    "commit": "c7f8d3c8b3e225b12e25769367554dc7240f46d1",
     "dirty": false,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
@@ -412,6 +412,6 @@
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-06T05:09:19.379Z"
+    "generatedAt": "2026-08-06T05:10:23.339Z"
   }
 }
