@@ -1,57 +1,87 @@
-# Design decision — Pet Sitter Finder
+# Design options - Pet Sitter Finder
 
-**Date:** 2026-08-06  
-**App:** Pet Sitter Finder (`pet-sitter`)  
-**Artifacts:** `option-a.html`, `option-b.html`, `option-c.html`, `gallery.html`
+**Date:** 2026-08-05  
+**Status:** Choice open - owner has not picked.  
+**Artifacts:** `option-a.html`, `option-b.html`, `option-c.html`, `gallery.html`  
+**Brand mark:** `mark-01.png` (approved coral house with dog + cat) in every option. Favicon should derive from the same mark when implementing.
 
-## Chosen option
+## One-line per option
 
-**Option A — Card grid marketplace with top search bar**, with two ideas pulled from C:
+| Option | Architecture | Visual direction |
+|--------|--------------|------------------|
+| **A** | Floating multi-field search capsule, then full-bleed photo cards with faces, then sticky booking bar on detail | Warm coral on cream, soft 20px radii, Airbnb-class depth; price-on-photo badges |
+| **B** | Map stage owns the canvas; results in a bottom sheet (phone) or side rail (desktop) with avatar pins | Sage trust green, soft map wash; face pins and distance-sorted rail rows |
+| **C** | Date-first funnel: check-in/out + half-month calendar hero, then timeline rows with week availability bars | Honey amber + charcoal editorial type (Fraunces + Source Sans); availability strips |
 
-1. Surface **booking date range** early (check-in / check-out chips or a compact range control under the sticky search), because the core job ends in a booking request for specific dates.
-2. Keep a path to a **calendar / half-month availability view** (PRD F3) as a secondary mode on the sitters surface, not as the home architecture.
+## Shared requirements (all three)
 
-Option B’s map remains a **secondary view** (link or toggle from the results footer), not the default home layout for MVP.
-
-## Why A wins for this product
-
-- The primary actor is a pet owner who **searches and constrains a catalogue** (neighbourhood, reviews, rate, pet types, availability). A sticky search + filter chip row + scannable cards matches that job without requiring a maps SDK on day one.
-- Cards make the fields owners compare legible in one glance: neighbourhood, verified badge, pet types, per-night rate, short availability line. That is the marketplace scan pattern Rover and Care.com train users on.
-- MVP scope includes text search that must **narrow result counts**, filters that restore the full set when cleared, and sitter detail from a list/grid row. Option A implements that path with the fewest moving parts.
-- Cloudflare Pages + D1 + no payment rails: A ships the job without geo tiles, clustering, or a real map provider. B would either fake a permanent map panel or force an integration we are not building in MVP.
-- PRD §7.3a’s “command canvas” hypothesis still fits A: the sticky search slab is the command bar; the card grid is the full-bleed work surface; contextual CTAs (request booking) sit at the bottom when relevant.
+- mark-01 logo only - never invent a new mark
+- Real seed sitters (8 rows from `0003_rebuild.sql`): names, neighbourhoods, rates, pet types, availability, review counts
+- Pet types as pills; ratings as score + stars when a review row exists (else Verified + count); availability on every card
+- Light and dark via semantic tokens; 44px targets; 16px body; no RedAnvil shell (no plain white sticky header + bordered 2-col white cards)
+- Home + sitter detail at 375 and 1280 in both themes
 
 ## Structural differences (not palette swaps)
 
-These are different architectures. Recoloring one does not produce another.
+| | A | B | C |
+|--|---|---|---|
+| What owns the fold | Search capsule + first photo cards | Map | Calendar + date range |
+| Result unit | Large photo card | Compact rail row | Timeline row + week bar |
+| Spatial model | Vertical page flow | Split map + sheet/rail | Calendar column + list |
+| Absent in that option | No map, no calendar hero | No photo grid page, no calendar hero | No map, no photo card grid |
 
-| | Option A | Option B | Option C |
-|--|----------|----------|----------|
-| **Primary surface** | Full-width sitter **card grid** | **Map stage** with pins | **Calendar / date hero** |
-| **Search placement** | Sticky slab under nav with chip filters | Compact bar **over the map** | **Below** the calendar after dates |
-| **Result unit** | Photo rail + body **card** | Compact **rail row** by distance | **Timeline row** with week bars |
-| **Spatial model** | Vertical page flow | Split canvas + bottom sheet rail | Date-first funnel, list secondary |
-| **What owns the fold** | Search + first cards | Map | Check-in/out + half-month grid |
-| **Absent in that option** | No map, no calendar hero | No card grid page, no calendar hero | No map, no photo card grid |
+## Choice
 
-## What we deliberately did not choose
+**DECIDED 2026-08-05 by the owner: ship all three as switchable views of one app.**
 
-- **Option B as default:** Neighbourhood is a filter and a field, not a live map product. A mock map panel would either mislead users or pull in map tiles, geocoding, and pin clustering before search and booking request work. Map can return after MVP as an alternate results mode.
-- **Option C as default home:** Calendar-first is right for airline or house-sit inventory where the date is the only entry key. Here owners often start with place + pet type + rate, then confirm dates. C still informs F3 (sitters grid / half-month window) and the date chips under A’s search.
+Not a pick-one. A, B and C become three view modes over the same sitter data,
+selected by a segmented control in the results header:
 
-## Implementation contract
+| View | From | What it is for |
+|------|------|----------------|
+| **Photos** (default) | Option A | Browsing faces and homes; search capsule over full-bleed photo cards |
+| **Map** | Option B | "Who is near me" — avatar pins, bottom sheet on phone, side rail on desktop |
+| **Dates** | Option C | "I need Aug 12-16" — calendar hero with availability dots, then timeline rows |
 
-Build the home / sitters browse surface to match **Option A**’s structure:
+Owner note: "i like how you added photos" — real sitter faces are a kept
+requirement in every view, not decoration.
 
-- Sticky top nav with brand mark and primary links.
-- Sticky search control whose accessible name matches `/search|find/i`, with active filter chips.
-- Result cards showing verified state, neighbourhood, pet types, rate, short availability.
-- Primary CTA path: open sitter detail → request booking for dates.
-- Light and dark themes from semantic tokens; brutal-utility edges (strong borders, hard offset shadows, heavy type) as visual direction, not a second layout.
-- Secondary: date range control; optional calendar mode; optional map mode later.
+### Binding for implementation
 
-Mockups in this folder are the layout contract. Do not re-center a generic column shell and call it done.
+- One data source, three renderers. The view switch changes presentation only;
+  the query, filters and result set are shared state. Switching views never
+  loses the dates, the neighbourhood, or the pet-type filter.
+- The chosen view persists across reloads, and is reflected in the URL so a view
+  is linkable.
+- `mark-01.png` is the only brand mark in all three. Never introduce another.
+- Every view keeps: pet-type pills, rating with stars plus review count,
+  visible availability, sitter avatar, and the nightly rate. The rate is the
+  app's own seed column `rate_per_night` (`migrations/0003_rebuild.sql:32`,
+  seeded from line 75); option B's `$55/night` for Avery Chen is that row's
+  real value at line 79, not an invented figure. No rate is ever displayed
+  that does not come from a `sitter` row.
+- Palettes do NOT switch per view -- that would read as three different apps.
+  Ship A's warm coral on cream as the app palette, and carry B's sage and C's
+  amber only as accents inside their own view (map wash, availability dots).
+- Fraunces is C's editorial voice; if it is not the app-wide display face, the
+  Dates view must not be the only screen using it.
 
-## Brand mark
+### Defects found in visual review -- fix as the first build step, not later
 
-Logo PNG generation is owned by a separate role. Expected production path: `public/brand-mark.png`. See `design-refs/BRAND-NOTE.md`.
+Found by opening the renders, not by reading the markup.
+
+1. **B at 375px: the wordmark is overlapped by the search field.** The header
+   paints `Sit...` because the search input sits on top of it. This is the
+   "no overlapping text at 375px" blocker.
+2. **C at 375px: the calendar grid overflows.** The Saturday column is clipped
+   mid-cell -- the `SA` header and the `15` are cut by the viewport edge.
+3. **All three: the "Ask about sitters" pill overlaps content** -- the first
+   photo in A, the second sitter card in B, the footer in C. The live site has
+   the same defect; the assistant affordance needs to reserve its own space.
+4. **Render coverage was narrower than this file claimed.** The shared
+   requirements above promised home and sitter detail at 375 and 1280 in both
+   themes; what existed was 10 renders -- detail for A only, desktop in light
+   only, no dark desktop at all. Implementation must produce the full matrix.
+
+Item 4 is the reusable lesson: a requirements list in a decision doc is not
+evidence that the requirement was met. Count the artifacts.

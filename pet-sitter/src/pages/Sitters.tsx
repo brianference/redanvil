@@ -3,7 +3,7 @@ import { SitterSearchList } from '../components/SitterSearchList';
 import { en } from '../i18n/en';
 
 /**
- * Full sitters collection with text search that narrows results.
+ * Full sitters collection with shared filters and three view modes.
  */
 export function Sitters(): JSX.Element {
   return (

@@ -3,422 +3,1042 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Option B — Map-first + list rail · Pet Sitter Finder</title>
+  <title>Option B - Map stage + sheet rail · Pet Sitter Finder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --bg: #eef2f0;
-      --surface: #ffffff;
-      --text: #0e1512;
-      --muted: #4d5c56;
-      --border: #0e1512;
-      --accent: #0f766e;
-      --accent-ink: #ffffff;
-      --map-a: #c5ddd4;
-      --map-b: #9ec9b8;
-      --pin: #e5484d;
-      --shadow: 3px 3px 0 #0e1512;
-      --rail: #ffffff;
-    }
-    [data-theme="dark"] {
-      --bg: #0a1210;
-      --surface: #121c19;
-      --text: #e8f2ee;
-      --muted: #8aa39a;
-      --border: #e8f2ee;
-      --accent: #2dd4bf;
-      --accent-ink: #04201c;
-      --map-a: #1a2e28;
-      --map-b: #243d34;
-      --pin: #fb7185;
-      --shadow: 3px 3px 0 #e8f2ee;
-      --rail: #121c19;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, sans-serif;
-      background: #1c2220;
-      color: var(--text);
-      min-height: 100vh;
-      padding: 24px 16px 48px;
-    }
-    .page-meta {
-      max-width: 420px;
-      margin: 0 auto 16px;
-      font-size: 14px;
-      line-height: 1.45;
-    }
-    .page-meta h1 {
-      margin: 0 0 6px;
-      font-size: 20px;
-      color: #fff;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-    .page-meta p { margin: 0 0 10px; color: #a8b3ad; }
-    .arch-tag {
-      display: inline-block;
-      border: 2px solid #fff;
-      padding: 4px 8px;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 12px;
-      color: #fff;
-    }
-    .themes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 28px;
-      justify-content: center;
-      align-items: flex-start;
-    }
-    .theme-label {
-      text-align: center;
-      color: #c0cdc7;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 8px;
-    }
-    .phone {
-      width: 375px;
-      height: 720px;
-      border: 3px solid #000;
-      background: var(--bg);
-      box-shadow: 8px 8px 0 #000;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    /* —— ARCHITECTURE B: map is the canvas; list is a bottom/side rail —— */
-    .compact-bar {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 8px;
-      align-items: center;
-      padding: 10px 12px;
-      border-bottom: 2px solid var(--border);
-      background: var(--surface);
-      z-index: 3;
-    }
-    .mark {
-      width: 28px;
-      height: 28px;
-      border: 2px solid var(--border);
-      background: var(--accent);
-      flex-shrink: 0;
-    }
-    .compact-bar input {
-      min-height: 40px;
-      border: 2px solid var(--border);
-      background: var(--bg);
-      color: var(--text);
-      font-size: 15px;
-      padding: 0 10px;
-      font-family: inherit;
-      width: 100%;
-    }
-    .icon-btn {
-      min-width: 40px;
-      min-height: 40px;
-      border: 2px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-weight: 800;
-      font-size: 12px;
-      font-family: inherit;
-    }
+    
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: #12141a;
+  color: #e8e8ee;
+  padding: 28px 16px 64px;
+  line-height: 1.45;
+}
+.page-head { max-width: 1320px; margin: 0 auto 20px; }
+.page-head h1 { margin: 0 0 8px; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #fff; }
+.page-head .arch { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid #fff; padding: 4px 10px; margin-bottom: 10px; }
+.page-head p { margin: 0; color: #a0a0ae; max-width: 70ch; font-size: 15px; }
+.section-label {
+  max-width: 1320px; margin: 28px auto 12px; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: #8b8b9a;
+}
+.row {
+  max-width: 1320px; margin: 0 auto 8px;
+  display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; justify-content: flex-start;
+}
+.frame-wrap { flex: 0 0 auto; }
+.frame-cap {
+  text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: #9a9aaa; margin-bottom: 8px;
+}
+.phone {
+  width: 375px; height: 780px; overflow: hidden; position: relative;
+  border: 3px solid #000; border-radius: 28px; background: var(--bg);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+  color: var(--text); font-family: var(--font); font-size: 16px;
+  display: flex; flex-direction: column;
+}
+.desktop {
+  width: 1280px; height: 820px; overflow: hidden; position: relative;
+  border: 3px solid #000; border-radius: 12px; background: var(--bg);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+  color: var(--text); font-family: var(--font); font-size: 16px;
+  display: flex; flex-direction: column;
+  transform-origin: top left;
+}
+.desktop-scale { width: 640px; height: 410px; overflow: hidden; }
+.desktop-scale .desktop { transform: scale(0.5); }
+.scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+button, a, input, select { font: inherit; }
+button { cursor: pointer; min-height: 44px; min-width: 44px; }
+img { display: block; max-width: 100%; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
 
-    .map-stage {
-      flex: 1;
-      position: relative;
-      min-height: 0;
-      background:
-        linear-gradient(90deg, transparent 49%, rgba(0,0,0,0.06) 49%, rgba(0,0,0,0.06) 51%, transparent 51%),
-        linear-gradient(0deg, transparent 49%, rgba(0,0,0,0.06) 49%, rgba(0,0,0,0.06) 51%, transparent 51%),
-        linear-gradient(135deg, var(--map-a), var(--map-b));
-      background-size: 48px 48px, 48px 48px, 100% 100%;
-      border-bottom: 2px solid var(--border);
-    }
-    .map-label {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: var(--surface);
-      border: 2px solid var(--border);
-      padding: 4px 8px;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      box-shadow: var(--shadow);
-    }
-    .pin {
-      position: absolute;
-      width: 28px;
-      height: 28px;
-      border: 2px solid var(--border);
-      background: var(--pin);
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: 2px 2px 0 var(--border);
-    }
-    .pin.selected {
-      background: var(--accent);
-      width: 34px;
-      height: 34px;
-      z-index: 2;
-    }
-    .pin span {
-      display: none;
-    }
-    .map-legend {
-      position: absolute;
-      bottom: 12px;
-      right: 10px;
-      background: var(--surface);
-      border: 2px solid var(--border);
-      padding: 8px 10px;
-      font-size: 12px;
-      font-weight: 700;
-      box-shadow: var(--shadow);
-      max-width: 140px;
-      line-height: 1.3;
-    }
-
-    /* Bottom sheet rail — structural opposite of a card grid page */
-    .list-rail {
-      flex: 0 0 280px;
-      background: var(--rail);
-      border-top: 3px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-    .rail-handle {
-      display: flex;
-      justify-content: center;
-      padding: 8px 0 4px;
-    }
-    .rail-handle i {
-      width: 40px;
-      height: 4px;
-      background: var(--muted);
-      display: block;
-    }
-    .rail-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      padding: 4px 14px 8px;
-      border-bottom: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
-    }
-    .rail-head h2 {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 800;
-    }
-    .rail-head span {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 600;
-    }
-    .rail-filters {
-      display: flex;
-      gap: 6px;
-      padding: 8px 14px;
-      overflow: hidden;
-    }
-    .rail-filters span {
-      border: 1.5px solid var(--border);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 8px;
-      white-space: nowrap;
-      background: var(--bg);
-    }
-    .rail-filters .on {
-      background: var(--text);
-      color: var(--bg);
-    }
-    .rail-list {
-      overflow: hidden;
-      padding: 0 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .rail-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      border: 2px solid var(--border);
-      padding: 10px 12px;
-      background: var(--surface);
-      min-height: 64px;
-      align-items: center;
-    }
-    .rail-row.selected {
-      outline: 2px solid var(--accent);
-      outline-offset: -2px;
-      box-shadow: var(--shadow);
-    }
-    .rail-row h3 {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-    }
-    .rail-row p {
-      margin: 2px 0 0;
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.3;
-    }
-    .price {
-      font-weight: 800;
-      font-size: 14px;
-      text-align: right;
-      white-space: nowrap;
-    }
-    .price small {
-      display: block;
-      font-weight: 600;
-      font-size: 11px;
-      color: var(--muted);
-    }
+    
+  .opt-b {
+    --font: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+    --bg: var(--b-bg); --surface: var(--b-surface); --text: var(--b-text);
+    --muted: var(--b-muted); --border: var(--b-border); --accent: var(--b-accent);
+    --accent-ink: var(--b-accent-ink); --chip: var(--b-chip); --ok: var(--b-ok);
+    --map: var(--b-map); --shadow: var(--b-shadow); --radius: 16px;
+  }
+  .opt-b[data-theme="light"] {
+    --b-bg: #f3f6f4; --b-surface: #ffffff; --b-text: #0f1f18;
+    --b-muted: #4d6358; --b-border: #d5e0d9; --b-accent: #0f7a55;
+    --b-accent-ink: #ffffff; --b-chip: #e6f2eb; --b-ok: #0f7a55;
+    --b-map: #dfece4; --b-shadow: 0 12px 32px rgba(15,31,24,0.12);
+  }
+  .opt-b[data-theme="dark"] {
+    --b-bg: #0c1410; --b-surface: #15201a; --b-text: #eaf3ee;
+    --b-muted: #9bb0a4; --b-border: #2a3b32; --b-accent: #3dcf94;
+    --b-accent-ink: #0c1410; --b-chip: #1c2b23; --b-ok: #3dcf94;
+    --b-map: #1a2820; --b-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  }
+  .opt-b .top {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
+    position: absolute; top: 0; left: 0; right: 0; z-index: 30;
+    min-width: 0;
+  }
+  .opt-b .brand { display: flex; align-items: center; gap: 8px; min-height: 44px; color: inherit; text-decoration: none; flex-shrink: 0; }
+  .opt-b .brand img { width: 36px; height: 36px; border-radius: 10px; }
+  .opt-b .brand-name { font-weight: 800; font-size: 14px; }
+  /* Defect 1 fix: hide wordmark on phone so search never overlaps "Sit..." */
+  .phone.opt-b .brand-name { display: none; }
+  .opt-b .search-over {
+    flex: 1 1 auto; display: flex; align-items: center; gap: 8px; min-height: 44px; min-width: 0;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+    padding: 0 6px 0 14px; box-shadow: var(--shadow);
+  }
+  .opt-b .search-over input {
+    flex: 1; border: 0; background: transparent; color: var(--text); font-weight: 600; min-width: 0; outline: none;
+  }
+  .opt-b .search-over button {
+    width: 40px; height: 40px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 800;
+  }
+  .opt-b .icon-btn {
+    width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text);
+  }
+  .opt-b .stage { flex: 1; display: flex; flex-direction: column; position: relative; min-height: 0; }
+  .opt-b .map {
+    flex: 1; background:
+      linear-gradient(180deg, transparent 60%, color-mix(in srgb, var(--bg) 40%, transparent)),
+      radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--accent) 12%, var(--map)), var(--map));
+    position: relative; min-height: 220px;
+  }
+  .opt-b .map-grid {
+    position: absolute; inset: 0; opacity: 0.35;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .opt-b .pin {
+    position: absolute; width: 48px; height: 48px; border-radius: 50%;
+    border: 3px solid var(--surface); box-shadow: var(--shadow); overflow: hidden;
+    background: var(--chip); padding: 0; transform: translate(-50%, -50%);
+  }
+  .opt-b .pin img { width: 100%; height: 100%; object-fit: cover; }
+  .opt-b .pin.active { outline: 3px solid var(--accent); width: 56px; height: 56px; z-index: 2; }
+  .opt-b .sheet {
+    background: var(--surface); border-radius: 20px 20px 0 0; box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
+    border-top: 1px solid var(--border); display: flex; flex-direction: column; max-height: 52%;
+    z-index: 20;
+  }
+  .desktop.opt-b .stage { flex-direction: row; }
+  .desktop.opt-b .map { flex: 1.15; min-height: 100%; }
+  .desktop.opt-b .sheet {
+    flex: 0 0 420px; max-height: none; height: 100%; border-radius: 0;
+    border-top: 0; border-left: 1px solid var(--border); box-shadow: none;
+  }
+  .opt-b .sheet-handle {
+    width: 40px; height: 4px; border-radius: 999px; background: var(--border);
+    margin: 10px auto 6px;
+  }
+  .desktop.opt-b .sheet-handle { display: none; }
+  .opt-b .sheet-head { padding: 4px 16px 10px; }
+  .opt-b .sheet-head h1 { margin: 0 0 4px; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+  .opt-b .sheet-head p { margin: 0; color: var(--muted); font-size: 14px; }
+  .opt-b .date-row {
+    display: flex; gap: 8px; padding: 0 16px 12px; overflow-x: auto;
+  }
+  .opt-b .date-chip {
+    flex: 0 0 auto; min-height: 44px; padding: 0 14px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    font-weight: 700; font-size: 13px; white-space: nowrap;
+  }
+  .opt-b .date-chip[aria-pressed="true"] {
+    background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+  }
+  .opt-b .rail {
+    list-style: none; margin: 0; padding: 0 12px 16px; overflow-y: auto; flex: 1;
+  }
+  .desktop.opt-b .rail { padding-bottom: 16px; }
+  .opt-b .rail-row {
+    display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center;
+    padding: 12px; border-radius: var(--radius); border: 1px solid transparent;
+    background: transparent; width: 100%; text-align: left; color: inherit; min-height: 88px;
+  }
+  .opt-b .rail-row:hover, .opt-b .rail-row.active {
+    background: var(--chip); border-color: var(--border);
+  }
+  .opt-b .rail-avatar {
+    width: 64px; height: 64px; border-radius: 16px; object-fit: cover; background: var(--chip);
+  }
+  .opt-b .rail-name { margin: 0; font-size: 16px; font-weight: 800; }
+  .opt-b .rail-meta { margin: 2px 0 6px; color: var(--muted); font-size: 13px; }
+  .opt-b .rating { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .opt-b .rating .stars { color: #c9a227; }
+  .opt-b .rating .score { color: var(--text); font-weight: 800; }
+  .opt-b .pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .opt-b .pill {
+    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  }
+  .opt-b .rail-price { font-weight: 800; font-size: 16px; white-space: nowrap; }
+  .opt-b .rail-price span { display: block; font-weight: 500; font-size: 11px; color: var(--muted); }
+  .opt-b .avail-dot {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--ok); font-weight: 700; margin-top: 4px;
+  }
+  .opt-b .avail-dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+  .opt-b .assist-dock {
+    flex-shrink: 0; padding: 10px 12px max(12px, env(safe-area-inset-bottom));
+    background: var(--surface); border-top: 1px solid var(--border); z-index: 25;
+  }
+  .opt-b .assist {
+    min-height: 48px; width: 100%; padding: 0 16px; border-radius: 999px; border: 0;
+    background: var(--text); color: var(--bg); font-weight: 700; font-size: 14px;
+    box-shadow: var(--shadow);
+  }
+  .desktop.opt-b .assist-dock {
+    position: absolute; left: 16px; bottom: 16px; right: auto; width: auto;
+    background: transparent; border: 0; padding: 0; z-index: 25;
+  }
+  .desktop.opt-b .assist { width: auto; min-width: 180px; }
+  /* Detail */
+  .opt-b .detail-shell { display: flex; flex-direction: column; height: 100%; }
+  .desktop.opt-b .detail-shell { flex-direction: row; }
+  .opt-b .detail-map {
+    height: 200px; background: var(--map); position: relative; flex-shrink: 0;
+  }
+  .desktop.opt-b .detail-map { flex: 1; height: auto; }
+  .opt-b .detail-panel {
+    flex: 1; background: var(--surface); overflow-y: auto; padding: 20px 16px 110px;
+    border-radius: 20px 20px 0 0; margin-top: -16px; position: relative; z-index: 2;
+    border-top: 1px solid var(--border);
+  }
+  .desktop.opt-b .detail-panel {
+    flex: 0 0 440px; margin: 0; border-radius: 0; border-top: 0; border-left: 1px solid var(--border);
+    padding: 24px; padding-top: 72px;
+  }
+  .opt-b .detail-avatar {
+    width: 88px; height: 88px; border-radius: 22px; object-fit: cover;
+    border: 3px solid var(--surface); margin-top: -52px; box-shadow: var(--shadow);
+  }
+  .desktop.opt-b .detail-avatar { margin-top: 0; width: 96px; height: 96px; }
+  .opt-b .detail-name { margin: 12px 0 4px; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
+  .opt-b .detail-hood { margin: 0 0 10px; color: var(--muted); }
+  .opt-b .detail-bio { margin: 14px 0; line-height: 1.55; }
+  .opt-b .book-bar {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 20;
+    display: flex; gap: 12px; align-items: center; padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border);
+  }
+  .desktop.opt-b .book-bar { position: static; margin-top: 20px; padding: 0; border: 0; background: transparent; flex-direction: column; align-items: stretch; }
+  .opt-b .book-cta {
+    min-height: 48px; padding: 0 18px; border: 0; border-radius: 999px;
+    background: var(--accent); color: var(--accent-ink); font-weight: 800;
+  }
+  .desktop.opt-b .book-cta { width: 100%; }
+  .opt-b .nav-links { display: none; }
+  .desktop.opt-b .nav-links { display: flex; gap: 4px; margin-left: auto; }
+  .opt-b .nav-link {
+    min-height: 40px; padding: 0 12px; border-radius: 999px; color: var(--muted);
+    text-decoration: none; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center;
+  }
+  .opt-b .nav-link[aria-current="page"] { background: var(--chip); color: var(--text); }
+  
   </style>
 </head>
 <body>
-  <div class="page-meta">
-    <div class="arch-tag">Option B · Architecture</div>
-    <h1>Map-first + list rail</h1>
-    <p>
-      The map is the primary canvas (full remaining viewport). Sitters appear as pins.
-      Results live in a bottom sheet / list rail, not a page-long card grid. Search is a
-      compact bar over the map, not a marketing hero.
-    </p>
-  </div>
-
-  <div class="themes">
-    <div>
-      <div class="theme-label">Light · 375</div>
-      <div class="phone" data-theme="light">
-        <div class="compact-bar">
-          <div class="mark" aria-hidden="true"></div>
-          <input type="search" aria-label="Search sitters near me" value="Riverside" readonly />
-          <button type="button" class="icon-btn" aria-label="Filters">Filt</button>
-        </div>
-
-        <div class="map-stage" role="img" aria-label="Map of sitters near Riverside">
-          <div class="map-label">Map · neighbourhood</div>
-          <div class="pin" style="top: 18%; left: 22%;"></div>
-          <div class="pin selected" style="top: 36%; left: 48%;"></div>
-          <div class="pin" style="top: 52%; left: 30%;"></div>
-          <div class="pin" style="top: 28%; left: 68%;"></div>
-          <div class="pin" style="top: 60%; left: 58%;"></div>
-          <div class="map-legend">5 sitters in view · drag map to reload</div>
-        </div>
-
-        <aside class="list-rail" aria-label="Sitters near map center">
-          <div class="rail-handle"><i></i></div>
-          <div class="rail-head">
-            <h2>Near map center</h2>
-            <span>Sorted by distance</span>
+  <header class="page-head">
+    <div class="arch">Option B</div>
+    <h1>Map stage + sheet rail</h1>
+    <p><strong>Architecture:</strong> full map with face pins owns the canvas; results live in a bottom sheet (phone) or side rail (desktop).
+    <strong>Visual:</strong> sage trust green, soft map wash. Distinct element: avatar map pins and distance-sorted rail rows.</p>
+  </header>
+  <div class="section-label">Home - light</div>
+  <div class="row">
+      <div class="frame-wrap">
+        <div class="frame-cap">375 · light · home</div>
+        
+        <div class="phone opt-b" data-theme="light">
+        <div class="stage">
+          <div class="top">
+            <a class="brand" href="#"><img src="mark-01.png" alt="" width="36" height="36" /><span class="brand-name">Sitters</span></a>
+            <form class="search-over" role="search" aria-label="Find sitters">
+              <label class="sr-only" for="b-q-light-phone">Search</label>
+              <input id="b-q-light-phone" type="search" placeholder="Neighbourhood or name" />
+              <button type="submit" aria-label="Search">Go</button>
+            </form>
+            
+            <button type="button" class="icon-btn" aria-label="Switch theme">Dark</button>
           </div>
-          <div class="rail-filters">
-            <span class="on">Dogs</span>
-            <span>Overnight</span>
-            <span>Verified</span>
-            <span>$–$$</span>
+          <div class="map" role="img" aria-label="Map of Toronto sitters">
+            <div class="map-grid" aria-hidden="true"></div>
+            <button type="button" class="pin active" style="left:28%;top:35%" aria-label="Avery Chen in Leslieville">
+          <img src="avatars/avery-chen.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:48%;top:42%" aria-label="Jordan Patel in The Annex">
+          <img src="avatars/jordan-patel.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:62%;top:28%" aria-label="Sam Okonkwo in Riverdale">
+          <img src="avatars/sam-okonkwo.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:35%;top:58%" aria-label="Riley Ng in The Beaches">
+          <img src="avatars/riley-ng.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:70%;top:55%" aria-label="Morgan Ellis in Liberty Village">
+          <img src="avatars/morgan-ellis.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:22%;top:48%" aria-label="Casey Brooks in High Park">
+          <img src="avatars/casey-brooks.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:55%;top:68%" aria-label="Taylor Kim in Distillery District">
+          <img src="avatars/taylor-kim.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:78%;top:38%" aria-label="Alex Rivera in Yorkville">
+          <img src="avatars/alex-rivera.jpg" alt="" />
+        </button>
           </div>
-          <div class="rail-list">
-            <div class="rail-row selected">
-              <div>
-                <h3>Maya Chen</h3>
-                <p>0.4 mi · 4.9 · dogs &amp; cats · Fri–Mon</p>
-              </div>
-              <div class="price">$38<small>/ night</small></div>
+          <section class="sheet" aria-label="Sitter results">
+            <div class="sheet-handle" aria-hidden="true"></div>
+            <div class="sheet-head">
+              <h1>8 sitters nearby</h1>
+              <p>Toronto · sorted by distance</p>
             </div>
-            <div class="rail-row">
-              <div>
-                <h3>Jordan Hale</h3>
-                <p>0.7 mi · 4.8 · dogs · Sat–Tue</p>
-              </div>
-              <div class="price">$42<small>/ night</small></div>
+            <div class="date-row" role="toolbar" aria-label="Stay dates">
+              <button type="button" class="date-chip" aria-pressed="true">Aug 12-16</button>
+              <button type="button" class="date-chip" aria-pressed="false">This weekend</button>
+              <button type="button" class="date-chip" aria-pressed="false">Flexible</button>
             </div>
-            <div class="rail-row">
-              <div>
-                <h3>Sam Ortiz</h3>
-                <p>1.1 mi · 4.7 · dogs · next week</p>
-              </div>
-              <div class="price">$35<small>/ night</small></div>
+            <ul class="rail">
+        <li>
+          <button type="button" class="rail-row active">
+            <img class="rail-avatar" src="avatars/avery-chen.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Avery Chen</h2>
+              <p class="rail-meta">Leslieville</p>
+              <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
             </div>
-          </div>
-        </aside>
+            <div class="rail-price">$55<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/jordan-patel.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Jordan Patel</h2>
+              <p class="rail-meta">The Annex</p>
+              <span class="rating" aria-label="5.0 out of 5, 41 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 41 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 1 - Nov 30</div>
+            </div>
+            <div class="rail-price">$65<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/sam-okonkwo.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Sam Okonkwo</h2>
+              <p class="rail-meta">Riverdale</p>
+              <span class="rating" aria-label="4.0 out of 5, 18 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 18 reviews</span>
+              <div class="pills"><span class="pill">Cats</span><span class="pill">Small mammals</span></div>
+              <div class="avail-dot">Available Aug 5 - Oct 31</div>
+            </div>
+            <div class="rail-price">$48<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/riley-ng.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Riley Ng</h2>
+              <p class="rail-meta">The Beaches</p>
+              <span class="rating" aria-label="5.0 out of 5, 33 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 33 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 10 - Dec 15</div>
+            </div>
+            <div class="rail-price">$70<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/morgan-ellis.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Morgan Ellis</h2>
+              <p class="rail-meta">Liberty Village</p>
+              <span class="rating" aria-label="12 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 12 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Sep 30</div>
+            </div>
+            <div class="rail-price">$58<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/casey-brooks.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Casey Brooks</h2>
+              <p class="rail-meta">High Park</p>
+              <span class="rating" aria-label="29 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 29 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
+            </div>
+            <div class="rail-price">$62<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/taylor-kim.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Taylor Kim</h2>
+              <p class="rail-meta">Distillery District</p>
+              <span class="rating" aria-label="9 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 9 reviews</span>
+              <div class="pills"><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 15 - Nov 15</div>
+            </div>
+            <div class="rail-price">$75<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/alex-rivera.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Alex Rivera</h2>
+              <p class="rail-meta">Yorkville</p>
+              <span class="rating" aria-label="4.0 out of 5, 52 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 52 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
+            </div>
+            <div class="rail-price">$80<span>/night</span></div>
+          </button>
+        </li></ul>
+            <div class="assist-dock">
+              <button type="button" class="assist">Ask about sitters</button>
+            </div>
+          </section>
+        </div></div>
+        
       </div>
-    </div>
-
-    <div>
-      <div class="theme-label">Dark · 375</div>
-      <div class="phone" data-theme="dark">
-        <div class="compact-bar">
-          <div class="mark" aria-hidden="true"></div>
-          <input type="search" aria-label="Search sitters near me" value="Riverside" readonly />
-          <button type="button" class="icon-btn" aria-label="Filters">Filt</button>
+      <div class="frame-wrap">
+        <div class="frame-cap">1280 · light · home</div>
+        <div class="desktop-scale">
+        <div class="desktop opt-b" data-theme="light">
+        <div class="stage">
+          <div class="top">
+            <a class="brand" href="#"><img src="mark-01.png" alt="" width="36" height="36" /><span class="brand-name">Pet Sitter Finder</span></a>
+            <form class="search-over" role="search" aria-label="Find sitters">
+              <label class="sr-only" for="b-q-light-desktop">Search</label>
+              <input id="b-q-light-desktop" type="search" placeholder="Neighbourhood or name" />
+              <button type="submit" aria-label="Search">Go</button>
+            </form>
+            <nav class="nav-links" aria-label="Primary">
+                    <a class="nav-link" href="#" aria-current="page">Map</a>
+                    <a class="nav-link" href="#">About</a>
+                    <a class="nav-link" href="#">Sign in</a>
+                  </nav>
+            <button type="button" class="icon-btn" aria-label="Switch theme">Dark</button>
+          </div>
+          <div class="map" role="img" aria-label="Map of Toronto sitters">
+            <div class="map-grid" aria-hidden="true"></div>
+            <button type="button" class="pin active" style="left:28%;top:35%" aria-label="Avery Chen in Leslieville">
+          <img src="avatars/avery-chen.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:48%;top:42%" aria-label="Jordan Patel in The Annex">
+          <img src="avatars/jordan-patel.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:62%;top:28%" aria-label="Sam Okonkwo in Riverdale">
+          <img src="avatars/sam-okonkwo.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:35%;top:58%" aria-label="Riley Ng in The Beaches">
+          <img src="avatars/riley-ng.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:70%;top:55%" aria-label="Morgan Ellis in Liberty Village">
+          <img src="avatars/morgan-ellis.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:22%;top:48%" aria-label="Casey Brooks in High Park">
+          <img src="avatars/casey-brooks.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:55%;top:68%" aria-label="Taylor Kim in Distillery District">
+          <img src="avatars/taylor-kim.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:78%;top:38%" aria-label="Alex Rivera in Yorkville">
+          <img src="avatars/alex-rivera.jpg" alt="" />
+        </button>
+          </div>
+          <section class="sheet" aria-label="Sitter results">
+            
+            <div class="sheet-head">
+              <h1>8 sitters nearby</h1>
+              <p>Toronto · sorted by distance</p>
+            </div>
+            <div class="date-row" role="toolbar" aria-label="Stay dates">
+              <button type="button" class="date-chip" aria-pressed="true">Aug 12-16</button>
+              <button type="button" class="date-chip" aria-pressed="false">This weekend</button>
+              <button type="button" class="date-chip" aria-pressed="false">Flexible</button>
+            </div>
+            <ul class="rail">
+        <li>
+          <button type="button" class="rail-row active">
+            <img class="rail-avatar" src="avatars/avery-chen.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Avery Chen</h2>
+              <p class="rail-meta">Leslieville</p>
+              <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
+            </div>
+            <div class="rail-price">$55<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/jordan-patel.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Jordan Patel</h2>
+              <p class="rail-meta">The Annex</p>
+              <span class="rating" aria-label="5.0 out of 5, 41 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 41 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 1 - Nov 30</div>
+            </div>
+            <div class="rail-price">$65<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/sam-okonkwo.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Sam Okonkwo</h2>
+              <p class="rail-meta">Riverdale</p>
+              <span class="rating" aria-label="4.0 out of 5, 18 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 18 reviews</span>
+              <div class="pills"><span class="pill">Cats</span><span class="pill">Small mammals</span></div>
+              <div class="avail-dot">Available Aug 5 - Oct 31</div>
+            </div>
+            <div class="rail-price">$48<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/riley-ng.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Riley Ng</h2>
+              <p class="rail-meta">The Beaches</p>
+              <span class="rating" aria-label="5.0 out of 5, 33 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 33 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 10 - Dec 15</div>
+            </div>
+            <div class="rail-price">$70<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/morgan-ellis.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Morgan Ellis</h2>
+              <p class="rail-meta">Liberty Village</p>
+              <span class="rating" aria-label="12 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 12 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Sep 30</div>
+            </div>
+            <div class="rail-price">$58<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/casey-brooks.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Casey Brooks</h2>
+              <p class="rail-meta">High Park</p>
+              <span class="rating" aria-label="29 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 29 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
+            </div>
+            <div class="rail-price">$62<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/taylor-kim.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Taylor Kim</h2>
+              <p class="rail-meta">Distillery District</p>
+              <span class="rating" aria-label="9 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 9 reviews</span>
+              <div class="pills"><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 15 - Nov 15</div>
+            </div>
+            <div class="rail-price">$75<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/alex-rivera.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Alex Rivera</h2>
+              <p class="rail-meta">Yorkville</p>
+              <span class="rating" aria-label="4.0 out of 5, 52 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 52 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
+            </div>
+            <div class="rail-price">$80<span>/night</span></div>
+          </button>
+        </li></ul>
+            <div class="assist-dock">
+              <button type="button" class="assist">Ask about sitters</button>
+            </div>
+          </section>
+        </div></div>
         </div>
-
-        <div class="map-stage" role="img" aria-label="Map of sitters near Riverside">
-          <div class="map-label">Map · neighbourhood</div>
-          <div class="pin" style="top: 18%; left: 22%;"></div>
-          <div class="pin selected" style="top: 36%; left: 48%;"></div>
-          <div class="pin" style="top: 52%; left: 30%;"></div>
-          <div class="pin" style="top: 28%; left: 68%;"></div>
-          <div class="pin" style="top: 60%; left: 58%;"></div>
-          <div class="map-legend">5 sitters in view · drag map to reload</div>
-        </div>
-
-        <aside class="list-rail" aria-label="Sitters near map center">
-          <div class="rail-handle"><i></i></div>
-          <div class="rail-head">
-            <h2>Near map center</h2>
-            <span>Sorted by distance</span>
+      </div></div>
+  <div class="section-label">Home - dark</div>
+  <div class="row">
+      <div class="frame-wrap">
+        <div class="frame-cap">375 · dark · home</div>
+        
+        <div class="phone opt-b" data-theme="dark">
+        <div class="stage">
+          <div class="top">
+            <a class="brand" href="#"><img src="mark-01.png" alt="" width="36" height="36" /><span class="brand-name">Sitters</span></a>
+            <form class="search-over" role="search" aria-label="Find sitters">
+              <label class="sr-only" for="b-q-dark-phone">Search</label>
+              <input id="b-q-dark-phone" type="search" placeholder="Neighbourhood or name" />
+              <button type="submit" aria-label="Search">Go</button>
+            </form>
+            
+            <button type="button" class="icon-btn" aria-label="Switch theme">Light</button>
           </div>
-          <div class="rail-filters">
-            <span class="on">Dogs</span>
-            <span>Overnight</span>
-            <span>Verified</span>
-            <span>$–$$</span>
+          <div class="map" role="img" aria-label="Map of Toronto sitters">
+            <div class="map-grid" aria-hidden="true"></div>
+            <button type="button" class="pin active" style="left:28%;top:35%" aria-label="Avery Chen in Leslieville">
+          <img src="avatars/avery-chen.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:48%;top:42%" aria-label="Jordan Patel in The Annex">
+          <img src="avatars/jordan-patel.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:62%;top:28%" aria-label="Sam Okonkwo in Riverdale">
+          <img src="avatars/sam-okonkwo.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:35%;top:58%" aria-label="Riley Ng in The Beaches">
+          <img src="avatars/riley-ng.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:70%;top:55%" aria-label="Morgan Ellis in Liberty Village">
+          <img src="avatars/morgan-ellis.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:22%;top:48%" aria-label="Casey Brooks in High Park">
+          <img src="avatars/casey-brooks.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:55%;top:68%" aria-label="Taylor Kim in Distillery District">
+          <img src="avatars/taylor-kim.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:78%;top:38%" aria-label="Alex Rivera in Yorkville">
+          <img src="avatars/alex-rivera.jpg" alt="" />
+        </button>
           </div>
-          <div class="rail-list">
-            <div class="rail-row selected">
-              <div>
-                <h3>Maya Chen</h3>
-                <p>0.4 mi · 4.9 · dogs &amp; cats · Fri–Mon</p>
-              </div>
-              <div class="price">$38<small>/ night</small></div>
+          <section class="sheet" aria-label="Sitter results">
+            <div class="sheet-handle" aria-hidden="true"></div>
+            <div class="sheet-head">
+              <h1>8 sitters nearby</h1>
+              <p>Toronto · sorted by distance</p>
             </div>
-            <div class="rail-row">
-              <div>
-                <h3>Jordan Hale</h3>
-                <p>0.7 mi · 4.8 · dogs · Sat–Tue</p>
-              </div>
-              <div class="price">$42<small>/ night</small></div>
+            <div class="date-row" role="toolbar" aria-label="Stay dates">
+              <button type="button" class="date-chip" aria-pressed="true">Aug 12-16</button>
+              <button type="button" class="date-chip" aria-pressed="false">This weekend</button>
+              <button type="button" class="date-chip" aria-pressed="false">Flexible</button>
             </div>
-            <div class="rail-row">
-              <div>
-                <h3>Sam Ortiz</h3>
-                <p>1.1 mi · 4.7 · dogs · next week</p>
-              </div>
-              <div class="price">$35<small>/ night</small></div>
+            <ul class="rail">
+        <li>
+          <button type="button" class="rail-row active">
+            <img class="rail-avatar" src="avatars/avery-chen.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Avery Chen</h2>
+              <p class="rail-meta">Leslieville</p>
+              <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
             </div>
-          </div>
-        </aside>
+            <div class="rail-price">$55<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/jordan-patel.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Jordan Patel</h2>
+              <p class="rail-meta">The Annex</p>
+              <span class="rating" aria-label="5.0 out of 5, 41 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 41 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 1 - Nov 30</div>
+            </div>
+            <div class="rail-price">$65<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/sam-okonkwo.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Sam Okonkwo</h2>
+              <p class="rail-meta">Riverdale</p>
+              <span class="rating" aria-label="4.0 out of 5, 18 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 18 reviews</span>
+              <div class="pills"><span class="pill">Cats</span><span class="pill">Small mammals</span></div>
+              <div class="avail-dot">Available Aug 5 - Oct 31</div>
+            </div>
+            <div class="rail-price">$48<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/riley-ng.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Riley Ng</h2>
+              <p class="rail-meta">The Beaches</p>
+              <span class="rating" aria-label="5.0 out of 5, 33 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 33 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 10 - Dec 15</div>
+            </div>
+            <div class="rail-price">$70<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/morgan-ellis.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Morgan Ellis</h2>
+              <p class="rail-meta">Liberty Village</p>
+              <span class="rating" aria-label="12 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 12 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Sep 30</div>
+            </div>
+            <div class="rail-price">$58<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/casey-brooks.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Casey Brooks</h2>
+              <p class="rail-meta">High Park</p>
+              <span class="rating" aria-label="29 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 29 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
+            </div>
+            <div class="rail-price">$62<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/taylor-kim.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Taylor Kim</h2>
+              <p class="rail-meta">Distillery District</p>
+              <span class="rating" aria-label="9 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 9 reviews</span>
+              <div class="pills"><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 15 - Nov 15</div>
+            </div>
+            <div class="rail-price">$75<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/alex-rivera.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Alex Rivera</h2>
+              <p class="rail-meta">Yorkville</p>
+              <span class="rating" aria-label="4.0 out of 5, 52 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 52 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
+            </div>
+            <div class="rail-price">$80<span>/night</span></div>
+          </button>
+        </li></ul>
+            <div class="assist-dock">
+              <button type="button" class="assist">Ask about sitters</button>
+            </div>
+          </section>
+        </div></div>
+        
       </div>
+      <div class="frame-wrap">
+        <div class="frame-cap">1280 · dark · home</div>
+        <div class="desktop-scale">
+        <div class="desktop opt-b" data-theme="dark">
+        <div class="stage">
+          <div class="top">
+            <a class="brand" href="#"><img src="mark-01.png" alt="" width="36" height="36" /><span class="brand-name">Pet Sitter Finder</span></a>
+            <form class="search-over" role="search" aria-label="Find sitters">
+              <label class="sr-only" for="b-q-dark-desktop">Search</label>
+              <input id="b-q-dark-desktop" type="search" placeholder="Neighbourhood or name" />
+              <button type="submit" aria-label="Search">Go</button>
+            </form>
+            <nav class="nav-links" aria-label="Primary">
+                    <a class="nav-link" href="#" aria-current="page">Map</a>
+                    <a class="nav-link" href="#">About</a>
+                    <a class="nav-link" href="#">Sign in</a>
+                  </nav>
+            <button type="button" class="icon-btn" aria-label="Switch theme">Light</button>
+          </div>
+          <div class="map" role="img" aria-label="Map of Toronto sitters">
+            <div class="map-grid" aria-hidden="true"></div>
+            <button type="button" class="pin active" style="left:28%;top:35%" aria-label="Avery Chen in Leslieville">
+          <img src="avatars/avery-chen.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:48%;top:42%" aria-label="Jordan Patel in The Annex">
+          <img src="avatars/jordan-patel.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:62%;top:28%" aria-label="Sam Okonkwo in Riverdale">
+          <img src="avatars/sam-okonkwo.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:35%;top:58%" aria-label="Riley Ng in The Beaches">
+          <img src="avatars/riley-ng.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:70%;top:55%" aria-label="Morgan Ellis in Liberty Village">
+          <img src="avatars/morgan-ellis.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:22%;top:48%" aria-label="Casey Brooks in High Park">
+          <img src="avatars/casey-brooks.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:55%;top:68%" aria-label="Taylor Kim in Distillery District">
+          <img src="avatars/taylor-kim.jpg" alt="" />
+        </button><button type="button" class="pin" style="left:78%;top:38%" aria-label="Alex Rivera in Yorkville">
+          <img src="avatars/alex-rivera.jpg" alt="" />
+        </button>
+          </div>
+          <section class="sheet" aria-label="Sitter results">
+            
+            <div class="sheet-head">
+              <h1>8 sitters nearby</h1>
+              <p>Toronto · sorted by distance</p>
+            </div>
+            <div class="date-row" role="toolbar" aria-label="Stay dates">
+              <button type="button" class="date-chip" aria-pressed="true">Aug 12-16</button>
+              <button type="button" class="date-chip" aria-pressed="false">This weekend</button>
+              <button type="button" class="date-chip" aria-pressed="false">Flexible</button>
+            </div>
+            <ul class="rail">
+        <li>
+          <button type="button" class="rail-row active">
+            <img class="rail-avatar" src="avatars/avery-chen.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Avery Chen</h2>
+              <p class="rail-meta">Leslieville</p>
+              <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
+            </div>
+            <div class="rail-price">$55<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/jordan-patel.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Jordan Patel</h2>
+              <p class="rail-meta">The Annex</p>
+              <span class="rating" aria-label="5.0 out of 5, 41 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 41 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 1 - Nov 30</div>
+            </div>
+            <div class="rail-price">$65<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/sam-okonkwo.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Sam Okonkwo</h2>
+              <p class="rail-meta">Riverdale</p>
+              <span class="rating" aria-label="4.0 out of 5, 18 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 18 reviews</span>
+              <div class="pills"><span class="pill">Cats</span><span class="pill">Small mammals</span></div>
+              <div class="avail-dot">Available Aug 5 - Oct 31</div>
+            </div>
+            <div class="rail-price">$48<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/riley-ng.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Riley Ng</h2>
+              <p class="rail-meta">The Beaches</p>
+              <span class="rating" aria-label="5.0 out of 5, 33 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 33 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 10 - Dec 15</div>
+            </div>
+            <div class="rail-price">$70<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/morgan-ellis.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Morgan Ellis</h2>
+              <p class="rail-meta">Liberty Village</p>
+              <span class="rating" aria-label="12 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 12 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Sep 30</div>
+            </div>
+            <div class="rail-price">$58<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/casey-brooks.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Casey Brooks</h2>
+              <p class="rail-meta">High Park</p>
+              <span class="rating" aria-label="29 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 29 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
+            </div>
+            <div class="rail-price">$62<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/taylor-kim.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Taylor Kim</h2>
+              <p class="rail-meta">Distillery District</p>
+              <span class="rating" aria-label="9 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 9 reviews</span>
+              <div class="pills"><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 15 - Nov 15</div>
+            </div>
+            <div class="rail-price">$75<span>/night</span></div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="rail-row">
+            <img class="rail-avatar" src="avatars/alex-rivera.jpg" alt="" />
+            <div>
+              <h2 class="rail-name">Alex Rivera</h2>
+              <p class="rail-meta">Yorkville</p>
+              <span class="rating" aria-label="4.0 out of 5, 52 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 52 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="avail-dot">Available Aug 1 - Dec 31</div>
+            </div>
+            <div class="rail-price">$80<span>/night</span></div>
+          </button>
+        </li></ul>
+            <div class="assist-dock">
+              <button type="button" class="assist">Ask about sitters</button>
+            </div>
+          </section>
+        </div></div>
+        </div>
+      </div></div>
+  <div class="section-label">Sitter detail - light</div>
+  <div class="row">
+    <div class="frame-wrap">
+      <div class="frame-cap">375 · light · detail</div>
+      
+      <div class="phone opt-b" data-theme="light">
+      <div class="detail-shell">
+        <div class="top">
+          <button type="button" class="icon-btn" aria-label="Back">Back</button>
+          <a class="brand" href="#"><img src="mark-01.png" alt="" width="36" height="36" /><span class="brand-name">Pet Sitter Finder</span></a>
+          <button type="button" class="icon-btn" aria-label="Switch theme">Dark</button>
+        </div>
+        <div class="detail-map" role="img" aria-label="Map near Leslieville">
+          <div class="map-grid" aria-hidden="true"></div>
+          <button type="button" class="pin active" style="left:48%;top:52%" aria-label="Avery Chen">
+            <img src="avatars/avery-chen.jpg" alt="" />
+          </button>
+        </div>
+        <div class="detail-panel">
+          <img class="detail-avatar" src="avatars/avery-chen.jpg" alt="Avery Chen" />
+          <h1 class="detail-name">Avery Chen</h1>
+          <p class="detail-hood">Leslieville · ~1.2 km</p>
+          <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+          <div class="pills" style="margin-top:10px"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+          <div class="avail-dot" style="margin-top:10px">Available Aug 1 - Dec 31</div>
+          <p class="detail-bio">Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.</p>
+          
+        </div>
+        <div class="book-bar">
+                <div>
+                  <div style="font-weight:800;font-size:18px">$55<span style="font-weight:500;color:var(--muted);font-size:13px"> / night</span></div>
+                  <div style="font-size:12px;color:var(--muted)">Aug 12 - 16</div>
+                </div>
+                <button type="button" class="book-cta">Request to book</button>
+              </div>
+      </div></div>
+      
     </div>
-  </div>
+    <div class="frame-wrap">
+      <div class="frame-cap">1280 · light · detail</div>
+      <div class="desktop-scale">
+      <div class="desktop opt-b" data-theme="light">
+      <div class="detail-shell">
+        <div class="top">
+          <button type="button" class="icon-btn" aria-label="Back">Back</button>
+          <a class="brand" href="#"><img src="mark-01.png" alt="" width="36" height="36" /><span class="brand-name">Pet Sitter Finder</span></a>
+          <button type="button" class="icon-btn" aria-label="Switch theme">Dark</button>
+        </div>
+        <div class="detail-map" role="img" aria-label="Map near Leslieville">
+          <div class="map-grid" aria-hidden="true"></div>
+          <button type="button" class="pin active" style="left:48%;top:52%" aria-label="Avery Chen">
+            <img src="avatars/avery-chen.jpg" alt="" />
+          </button>
+        </div>
+        <div class="detail-panel">
+          <img class="detail-avatar" src="avatars/avery-chen.jpg" alt="Avery Chen" />
+          <h1 class="detail-name">Avery Chen</h1>
+          <p class="detail-hood">Leslieville · ~1.2 km</p>
+          <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+          <div class="pills" style="margin-top:10px"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+          <div class="avail-dot" style="margin-top:10px">Available Aug 1 - Dec 31</div>
+          <p class="detail-bio">Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.</p>
+          <div class="book-bar">
+                  <div style="font-weight:800;font-size:20px">$55 <span style="font-weight:500;color:var(--muted);font-size:14px">/ night</span></div>
+                  <div style="color:var(--muted);font-size:14px;margin:4px 0 8px">Aug 12 - Aug 16 selected</div>
+                  <button type="button" class="book-cta">Request to book</button>
+                </div>
+        </div>
+        
+      </div></div>
+      </div>
+    </div></div>
+  <div class="section-label">Sitter detail - dark</div>
+  <div class="row">
+    <div class="frame-wrap">
+      <div class="frame-cap">375 · dark · detail</div>
+      
+      <div class="phone opt-b" data-theme="dark">
+      <div class="detail-shell">
+        <div class="top">
+          <button type="button" class="icon-btn" aria-label="Back">Back</button>
+          <a class="brand" href="#"><img src="mark-01.png" alt="" width="36" height="36" /><span class="brand-name">Pet Sitter Finder</span></a>
+          <button type="button" class="icon-btn" aria-label="Switch theme">Light</button>
+        </div>
+        <div class="detail-map" role="img" aria-label="Map near Leslieville">
+          <div class="map-grid" aria-hidden="true"></div>
+          <button type="button" class="pin active" style="left:48%;top:52%" aria-label="Avery Chen">
+            <img src="avatars/avery-chen.jpg" alt="" />
+          </button>
+        </div>
+        <div class="detail-panel">
+          <img class="detail-avatar" src="avatars/avery-chen.jpg" alt="Avery Chen" />
+          <h1 class="detail-name">Avery Chen</h1>
+          <p class="detail-hood">Leslieville · ~1.2 km</p>
+          <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+          <div class="pills" style="margin-top:10px"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+          <div class="avail-dot" style="margin-top:10px">Available Aug 1 - Dec 31</div>
+          <p class="detail-bio">Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.</p>
+          
+        </div>
+        <div class="book-bar">
+                <div>
+                  <div style="font-weight:800;font-size:18px">$55<span style="font-weight:500;color:var(--muted);font-size:13px"> / night</span></div>
+                  <div style="font-size:12px;color:var(--muted)">Aug 12 - 16</div>
+                </div>
+                <button type="button" class="book-cta">Request to book</button>
+              </div>
+      </div></div>
+      
+    </div>
+    <div class="frame-wrap">
+      <div class="frame-cap">1280 · dark · detail</div>
+      <div class="desktop-scale">
+      <div class="desktop opt-b" data-theme="dark">
+      <div class="detail-shell">
+        <div class="top">
+          <button type="button" class="icon-btn" aria-label="Back">Back</button>
+          <a class="brand" href="#"><img src="mark-01.png" alt="" width="36" height="36" /><span class="brand-name">Pet Sitter Finder</span></a>
+          <button type="button" class="icon-btn" aria-label="Switch theme">Light</button>
+        </div>
+        <div class="detail-map" role="img" aria-label="Map near Leslieville">
+          <div class="map-grid" aria-hidden="true"></div>
+          <button type="button" class="pin active" style="left:48%;top:52%" aria-label="Avery Chen">
+            <img src="avatars/avery-chen.jpg" alt="" />
+          </button>
+        </div>
+        <div class="detail-panel">
+          <img class="detail-avatar" src="avatars/avery-chen.jpg" alt="Avery Chen" />
+          <h1 class="detail-name">Avery Chen</h1>
+          <p class="detail-hood">Leslieville · ~1.2 km</p>
+          <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+          <div class="pills" style="margin-top:10px"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+          <div class="avail-dot" style="margin-top:10px">Available Aug 1 - Dec 31</div>
+          <p class="detail-bio">Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.</p>
+          <div class="book-bar">
+                  <div style="font-weight:800;font-size:20px">$55 <span style="font-weight:500;color:var(--muted);font-size:14px">/ night</span></div>
+                  <div style="color:var(--muted);font-size:14px;margin:4px 0 8px">Aug 12 - Aug 16 selected</div>
+                  <button type="button" class="book-cta">Request to book</button>
+                </div>
+        </div>
+        
+      </div></div>
+      </div>
+    </div></div>
 </body>
 </html>

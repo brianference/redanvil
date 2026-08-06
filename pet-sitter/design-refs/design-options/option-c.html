@@ -3,609 +3,1192 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Option C — Timeline / calendar availability hero · Pet Sitter Finder</title>
+  <title>Option C - Date-first calendar funnel · Pet Sitter Finder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Source+Sans+3:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --bg: #f7f3eb;
-      --surface: #fffdf8;
-      --text: #1a1410;
-      --muted: #6b5e52;
-      --border: #1a1410;
-      --accent: #c2410c;
-      --accent-ink: #ffffff;
-      --avail: #15803d;
-      --busy: #d6cfc4;
-      --today: #1a1410;
-      --shadow: 4px 4px 0 #1a1410;
-      --band: #efe6d8;
-    }
-    [data-theme="dark"] {
-      --bg: #120f0c;
-      --surface: #1c1713;
-      --text: #f6efe6;
-      --muted: #a89888;
-      --border: #f6efe6;
-      --accent: #fb923c;
-      --accent-ink: #1a1008;
-      --avail: #4ade80;
-      --busy: #3a322b;
-      --today: #f6efe6;
-      --shadow: 4px 4px 0 #f6efe6;
-      --band: #2a221c;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, sans-serif;
-      background: #26201a;
-      color: var(--text);
-      min-height: 100vh;
-      padding: 24px 16px 48px;
-    }
-    .page-meta {
-      max-width: 420px;
-      margin: 0 auto 16px;
-      font-size: 14px;
-      line-height: 1.45;
-    }
-    .page-meta h1 {
-      margin: 0 0 6px;
-      font-size: 20px;
-      color: #fff;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-    .page-meta p { margin: 0 0 10px; color: #b8a99a; }
-    .arch-tag {
-      display: inline-block;
-      border: 2px solid #fff;
-      padding: 4px 8px;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 12px;
-      color: #fff;
-    }
-    .themes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 28px;
-      justify-content: center;
-      align-items: flex-start;
-    }
-    .theme-label {
-      text-align: center;
-      color: #c9b8a6;
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 8px;
-    }
-    .phone {
-      width: 375px;
-      border: 3px solid #000;
-      background: var(--bg);
-      box-shadow: 8px 8px 0 #000;
-      overflow: hidden;
-    }
-    /* —— ARCHITECTURE C: availability calendar is the hero; sitter list is secondary —— */
-    .nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 14px;
-      border-bottom: 2px solid var(--border);
-      background: var(--surface);
-    }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 800;
-      font-size: 14px;
-    }
-    .mark {
-      width: 26px;
-      height: 26px;
-      border: 2px solid var(--border);
-      background: var(--accent);
-    }
-    .nav a {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--muted);
-      text-decoration: none;
-    }
+    
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: #12141a;
+  color: #e8e8ee;
+  padding: 28px 16px 64px;
+  line-height: 1.45;
+}
+.page-head { max-width: 1320px; margin: 0 auto 20px; }
+.page-head h1 { margin: 0 0 8px; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #fff; }
+.page-head .arch { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid #fff; padding: 4px 10px; margin-bottom: 10px; }
+.page-head p { margin: 0; color: #a0a0ae; max-width: 70ch; font-size: 15px; }
+.section-label {
+  max-width: 1320px; margin: 28px auto 12px; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: #8b8b9a;
+}
+.row {
+  max-width: 1320px; margin: 0 auto 8px;
+  display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; justify-content: flex-start;
+}
+.frame-wrap { flex: 0 0 auto; }
+.frame-cap {
+  text-align: center; font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: #9a9aaa; margin-bottom: 8px;
+}
+.phone {
+  width: 375px; height: 780px; overflow: hidden; position: relative;
+  border: 3px solid #000; border-radius: 28px; background: var(--bg);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+  color: var(--text); font-family: var(--font); font-size: 16px;
+  display: flex; flex-direction: column;
+}
+.desktop {
+  width: 1280px; height: 820px; overflow: hidden; position: relative;
+  border: 3px solid #000; border-radius: 12px; background: var(--bg);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+  color: var(--text); font-family: var(--font); font-size: 16px;
+  display: flex; flex-direction: column;
+  transform-origin: top left;
+}
+.desktop-scale { width: 640px; height: 410px; overflow: hidden; }
+.desktop-scale .desktop { transform: scale(0.5); }
+.scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+button, a, input, select { font: inherit; }
+button { cursor: pointer; min-height: 44px; min-width: 44px; }
+img { display: block; max-width: 100%; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
 
-    .date-hero {
-      padding: 16px 14px 14px;
-      border-bottom: 2px solid var(--border);
-      background: var(--band);
-    }
-    .date-hero h1 {
-      margin: 0 0 4px;
-      font-size: 22px;
-      font-weight: 900;
-      letter-spacing: -0.03em;
-      line-height: 1.15;
-    }
-    .date-hero .sub {
-      margin: 0 0 14px;
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-    .range-row {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 8px;
-      align-items: end;
-      margin-bottom: 12px;
-    }
-    .field label {
-      display: block;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 4px;
-    }
-    .field .box {
-      border: 2px solid var(--border);
-      background: var(--surface);
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      padding: 0 10px;
-      font-size: 15px;
-      font-weight: 700;
-    }
-    .arrow {
-      font-weight: 900;
-      font-size: 18px;
-      padding-bottom: 10px;
-    }
-
-    .cal {
-      border: 2px solid var(--border);
-      background: var(--surface);
-      box-shadow: var(--shadow);
-      padding: 10px;
-    }
-    .cal-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .cal-head strong {
-      font-size: 14px;
-      font-weight: 800;
-    }
-    .cal-head span {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--muted);
-    }
-    .dow {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 2px;
-      margin-bottom: 4px;
-    }
-    .dow span {
-      text-align: center;
-      font-size: 10px;
-      font-weight: 800;
-      color: var(--muted);
-      text-transform: uppercase;
-    }
-    .days {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-    }
-    .day {
-      aspect-ratio: 1;
-      border: 1.5px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 700;
-      background: var(--busy);
-      color: var(--muted);
-      min-height: 36px;
-    }
-    .day.avail {
-      background: color-mix(in srgb, var(--avail) 22%, var(--surface));
-      color: var(--text);
-    }
-    .day.in-range {
-      background: var(--accent);
-      color: var(--accent-ink);
-      border-color: var(--border);
-    }
-    .day.today {
-      outline: 2px solid var(--today);
-      outline-offset: -2px;
-    }
-    .day .dot {
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--avail);
-      margin-top: 2px;
-    }
-    .day.in-range .dot { background: var(--accent-ink); }
-    .legend {
-      display: flex;
-      gap: 12px;
-      margin-top: 8px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--muted);
-    }
-    .legend i {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border: 1px solid var(--border);
-      margin-right: 4px;
-      vertical-align: -1px;
-    }
-    .legend .a { background: color-mix(in srgb, var(--avail) 22%, var(--surface)); }
-    .legend .r { background: var(--accent); }
-    .legend .b { background: var(--busy); }
-
-    .secondary {
-      padding: 14px;
-    }
-    .secondary-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 10px;
-    }
-    .secondary-head h2 {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 800;
-    }
-    .secondary-head span {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 600;
-    }
-    .search-inline {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .search-inline input {
-      flex: 1;
-      min-height: 44px;
-      border: 2px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-size: 16px;
-      padding: 0 12px;
-      font-family: inherit;
-    }
-    .search-inline button {
-      min-height: 44px;
-      padding: 0 14px;
-      border: 2px solid var(--border);
-      background: var(--text);
-      color: var(--bg);
-      font-weight: 800;
-      font-size: 13px;
-      font-family: inherit;
-    }
-
-    /* Secondary: horizontal timeline rows, not vertical marketplace cards */
-    .timeline {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .t-row {
-      border: 2px solid var(--border);
-      background: var(--surface);
-      padding: 10px 12px;
-    }
-    .t-row header {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .t-row h3 {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 800;
-    }
-    .t-row .rate {
-      font-size: 13px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-    .t-meta {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-    .bars {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 3px;
-      height: 10px;
-    }
-    .bars span {
-      background: var(--busy);
-      border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
-    }
-    .bars span.on {
-      background: var(--avail);
-      border-color: var(--border);
-    }
-    .bars span.sel {
-      background: var(--accent);
-      border-color: var(--border);
-    }
-    .t-row footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 8px;
-    }
-    .t-row footer button {
-      min-height: 36px;
-      padding: 0 12px;
-      border: 2px solid var(--border);
-      background: var(--accent);
-      color: var(--accent-ink);
-      font-weight: 800;
-      font-size: 12px;
-      font-family: inherit;
-      box-shadow: 2px 2px 0 var(--border);
-    }
-    .t-row footer .match {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--avail);
-    }
+    
+  .opt-c {
+    --font: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --display: "Fraunces", Georgia, serif;
+    --bg: var(--c-bg); --surface: var(--c-surface); --text: var(--c-text);
+    --muted: var(--c-muted); --border: var(--c-border); --accent: var(--c-accent);
+    --accent-ink: var(--c-accent-ink); --chip: var(--c-chip); --ok: var(--c-ok);
+    --shadow: var(--c-shadow); --radius: 14px;
+  }
+  .opt-c[data-theme="light"] {
+    --c-bg: #f7f1e6; --c-surface: #fffdf8; --c-text: #1a1510;
+    --c-muted: #6a5d4e; --c-border: #e4d5c0; --c-accent: #c45c26;
+    --c-accent-ink: #fffdf8; --c-chip: #f0e4d2; --c-ok: #2f6b3a;
+    --c-shadow: 0 6px 20px rgba(26,21,16,0.08);
+  }
+  .opt-c[data-theme="dark"] {
+    --c-bg: #12100e; --c-surface: #1c1915; --c-text: #f6efe4;
+    --c-muted: #b5a792; --c-border: #3a332a; --c-accent: #e8894a;
+    --c-accent-ink: #1a1510; --c-chip: #2a241c; --c-ok: #6dba78;
+    --c-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  }
+  .opt-c .nav {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .opt-c .brand { display: flex; align-items: center; gap: 10px; min-height: 44px; color: inherit; text-decoration: none; }
+  .opt-c .brand img { width: 40px; height: 40px; border-radius: 12px; }
+  .opt-c .brand-name { font-family: var(--display); font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
+  .opt-c .nav-actions { display: flex; gap: 6px; align-items: center; }
+  .opt-c .nav-link {
+    min-height: 44px; padding: 0 12px; border-radius: 10px; color: var(--muted);
+    text-decoration: none; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center;
+  }
+  .opt-c .nav-link[aria-current="page"] { color: var(--text); background: var(--chip); }
+  .opt-c .icon-btn {
+    width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text);
+  }
+  .phone.opt-c .nav-links { display: none; }
+  .desktop.opt-c .nav-links { display: flex; gap: 4px; }
+  .opt-c .cal-hero {
+    padding: 18px 16px 12px;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, var(--bg)), var(--bg));
+  }
+  .desktop.opt-c .home-split {
+    display: grid; grid-template-columns: 380px 1fr; gap: 0; flex: 1; min-height: 0;
+  }
+  .desktop.opt-c .cal-hero {
+    border-right: 1px solid var(--border); height: 100%; overflow-y: auto; padding: 24px;
+    position: sticky; top: 0;
+  }
+  .opt-c .cal-hero h1 {
+    margin: 0 0 6px; font-family: var(--display); font-size: 28px; font-weight: 700;
+    letter-spacing: -0.03em; line-height: 1.15;
+  }
+  .opt-c .cal-hero .lead { margin: 0 0 16px; color: var(--muted); font-size: 16px; }
+  .opt-c .range-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px; box-shadow: var(--shadow); margin-bottom: 14px;
+  }
+  .opt-c .range-box .labels {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;
+  }
+  .opt-c .range-box label {
+    display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);
+  }
+  .opt-c .range-box input {
+    min-height: 44px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); padding: 0 10px; font-weight: 700;
+  }
+  .opt-c .month-title {
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 800; margin-bottom: 8px; font-size: 15px;
+  }
+  .opt-c .month-nav button {
+    width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text);
+  }
+  .opt-c .cal-grid {
+    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center;
+    width: 100%; min-width: 0;
+  }
+  .opt-c .cal-dow {
+    font-size: 11px; font-weight: 800; color: var(--muted); padding: 6px 0; text-transform: uppercase;
+    min-width: 0; overflow: hidden;
+  }
+  .opt-c .cal-day {
+    min-height: 40px; border-radius: 10px; border: 0; background: transparent; color: var(--text);
+    font-weight: 700; font-size: 14px; position: relative; min-width: 0; width: 100%; padding: 0;
+  }
+  /* Defect 2 fix: fit 7 columns at 375px without clipping Saturday */
+  .phone.opt-c .cal-hero { padding: 14px 10px 10px; overflow-x: hidden; max-width: 100%; }
+  .phone.opt-c .cal-grid { gap: 2px; }
+  .phone.opt-c .cal-dow { font-size: 10px; padding: 4px 0; letter-spacing: 0; }
+  .phone.opt-c .cal-day { min-height: 34px; font-size: 12px; border-radius: 8px; }
+  .phone.opt-c .range-box { padding: 10px; }
+  .phone.opt-c .range-box input { padding: 0 6px; font-size: 13px; }
+  .opt-c .cal-day.muted { color: var(--muted); opacity: 0.45; }
+  .opt-c .cal-day.in-range { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+  .opt-c .cal-day.range-end, .opt-c .cal-day.range-start {
+    background: var(--accent); color: var(--accent-ink);
+  }
+  .opt-c .cal-day.has-sitters::after {
+    content: ""; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+    width: 4px; height: 4px; border-radius: 50%; background: var(--ok);
+  }
+  .opt-c .search-inline {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+  .opt-c .search-inline input {
+    flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); padding: 0 12px; font-weight: 600;
+  }
+  .opt-c .search-inline button {
+    min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px;
+    background: var(--accent); color: var(--accent-ink); font-weight: 800;
+  }
+  .opt-c .timeline-wrap { flex: 1; overflow-y: auto; padding: 12px 16px 16px; }
+  .desktop.opt-c .timeline-wrap { padding: 20px 28px 16px; }
+  .opt-c .timeline-meta {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 12px; color: var(--muted); font-size: 14px;
+  }
+  .opt-c .timeline-meta strong { color: var(--text); }
+  .opt-c .timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+  .opt-c .t-row {
+    display: grid; grid-template-columns: 72px 1fr; gap: 14px; align-items: start;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px; box-shadow: var(--shadow); text-align: left; color: inherit; width: 100%;
+    min-height: 96px;
+  }
+  .opt-c .t-avatar {
+    width: 72px; height: 72px; border-radius: 18px; object-fit: cover; background: var(--chip);
+  }
+  .opt-c .t-name { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -0.02em; }
+  .opt-c .t-hood { margin: 2px 0 6px; color: var(--muted); font-size: 14px; }
+  .opt-c .rating { font-size: 13px; color: var(--muted); display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .opt-c .rating .stars { color: #c4892a; }
+  .opt-c .rating .score { color: var(--text); font-weight: 800; }
+  .opt-c .pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .opt-c .pill {
+    min-height: 28px; padding: 0 10px; border-radius: 8px; display: inline-flex; align-items: center;
+    background: var(--chip); border: 1px solid var(--border); font-size: 12px; font-weight: 700;
+  }
+  .opt-c .week-bar {
+    display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; margin-top: 8px;
+  }
+  .opt-c .week-bar span {
+    height: 10px; border-radius: 3px; background: var(--chip); border: 1px solid var(--border);
+  }
+  .opt-c .week-bar span.open { background: color-mix(in srgb, var(--ok) 55%, var(--chip)); border-color: var(--ok); }
+  .opt-c .week-bar span.busy { background: color-mix(in srgb, var(--accent) 25%, var(--chip)); }
+  .opt-c .t-foot {
+    display: flex; justify-content: space-between; align-items: center; margin-top: 10px; gap: 8px;
+  }
+  .opt-c .t-price { font-weight: 800; font-size: 16px; }
+  .opt-c .t-price span { font-weight: 500; color: var(--muted); font-size: 13px; }
+  .opt-c .t-cta {
+    min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-weight: 800; font-size: 13px;
+  }
+  .opt-c .assist-dock {
+    flex-shrink: 0; padding: 10px 16px max(12px, env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    border-top: 1px solid var(--border); z-index: 15;
+  }
+  .opt-c .assist {
+    min-height: 48px; width: 100%; padding: 0 16px; border-radius: 12px; border: 0;
+    background: var(--text); color: var(--bg); font-weight: 800; font-size: 14px;
+    box-shadow: var(--shadow);
+  }
+  .desktop.opt-c .assist-dock { padding: 12px 28px 20px; }
+  .desktop.opt-c .assist { max-width: 280px; margin-left: auto; }
+  /* Detail */
+  .opt-c .detail-top {
+    display: grid; grid-template-columns: 120px 1fr; gap: 16px; padding: 20px 16px 8px; align-items: center;
+  }
+  .desktop.opt-c .detail-layout {
+    display: grid; grid-template-columns: 1fr 360px; gap: 28px; padding: 28px; align-items: start;
+  }
+  .opt-c .detail-avatar {
+    width: 120px; height: 120px; border-radius: 28px; object-fit: cover; border: 1px solid var(--border);
+  }
+  .opt-c .detail-name {
+    margin: 0 0 4px; font-family: var(--display); font-size: 28px; font-weight: 700; letter-spacing: -0.03em;
+  }
+  .opt-c .detail-hood { margin: 0 0 8px; color: var(--muted); }
+  .opt-c .detail-body { padding: 8px 16px 120px; }
+  .desktop.opt-c .detail-body { padding: 0; }
+  .opt-c .detail-bio { margin: 14px 0; line-height: 1.55; max-width: 60ch; }
+  .opt-c .book-panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; box-shadow: var(--shadow);
+  }
+  .opt-c .book-panel h3 { margin: 0 0 12px; font-family: var(--display); font-size: 22px; }
+  .opt-c .book-bar {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 18;
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--surface) 95%, transparent); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center;
+  }
+  .opt-c .book-cta {
+    min-height: 48px; padding: 0 18px; border: 0; border-radius: 12px;
+    background: var(--accent); color: var(--accent-ink); font-weight: 800;
+  }
+  .desktop.opt-c .book-panel .book-cta { width: 100%; margin-top: 10px; }
+  .opt-c .crumb { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  
   </style>
 </head>
 <body>
-  <div class="page-meta">
-    <div class="arch-tag">Option C · Architecture</div>
-    <h1>Timeline / calendar availability hero</h1>
-    <p>
-      Dates and availability own the top of the page as a full calendar hero. The sitter
-      list is secondary and structured as timeline rows (week bars), not photo cards and
-      not a map rail. Search sits under the calendar, after dates are set.
-    </p>
-  </div>
-
-  <div class="themes">
-    <div>
-      <div class="theme-label">Light · 375</div>
-      <div class="phone" data-theme="light">
-        <header class="nav">
-          <div class="brand"><div class="mark" aria-hidden="true"></div> Pet Sitter Finder</div>
-          <a href="#">Sign in</a>
-        </header>
-
-        <section class="date-hero" aria-label="Choose care dates">
+  <header class="page-head">
+    <div class="arch">Option C</div>
+    <h1>Date-first calendar funnel</h1>
+    <p><strong>Architecture:</strong> check-in/out + half-month calendar owns the fold; sitters render as a timeline with week availability bars.
+    <strong>Visual:</strong> honey amber + charcoal editorial type. Distinct element: calendar hero and per-row availability strips.</p>
+  </header>
+  <div class="section-label">Home - light</div>
+  <div class="row">
+      <div class="frame-wrap">
+        <div class="frame-cap">375 · light · home</div>
+        
+        <div class="phone opt-c" data-theme="light">
+      <header class="nav">
+        <a class="brand" href="#">
+          <img src="mark-01.png" alt="" width="40" height="40" />
+          <span class="brand-name">Pet Sitter Finder</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a class="nav-link" href="#" aria-current="page">Dates</a>
+          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="#">Sign in</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="icon-btn" aria-label="Switch theme">Dark</button>
+          <button type="button" class="icon-btn" aria-label="Menu">=</button>
+        </div>
+      </header><div class="scroll">
+        <section class="cal-hero">
           <h1>When do you need care?</h1>
-          <p class="sub">Pick dates first. We rank sitters who are free for that whole window.</p>
-
-          <div class="range-row">
-            <div class="field">
-              <label>Check-in</label>
-              <div class="box">Fri, Aug 8</div>
+          <p class="lead">Pick dates first - only sitters free for your stay appear below.</p>
+          <div class="range-box">
+            <div class="labels">
+              <label>Check-in<input type="date" value="2026-08-12" /></label>
+              <label>Check-out<input type="date" value="2026-08-16" /></label>
             </div>
-            <div class="arrow" aria-hidden="true">→</div>
-            <div class="field">
-              <label>Check-out</label>
-              <div class="box">Mon, Aug 11</div>
+            <div class="month-title">
+              <span>August 2026</span>
+              <div class="month-nav">
+                <button type="button" aria-label="Previous month"><</button>
+                <button type="button" aria-label="Next month">></button>
+              </div>
             </div>
-          </div>
-
-          <div class="cal" aria-label="August availability calendar">
-            <div class="cal-head">
-              <strong>August 2026</strong>
-              <span>Half-month window</span>
-            </div>
-            <div class="dow">
-              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-            </div>
-            <div class="days">
-              <div class="day" style="visibility:hidden"></div>
-              <div class="day" style="visibility:hidden"></div>
-              <div class="day" style="visibility:hidden"></div>
-              <div class="day" style="visibility:hidden"></div>
-              <div class="day" style="visibility:hidden"></div>
-              <div class="day avail">1<span class="dot"></span></div>
-              <div class="day avail">2<span class="dot"></span></div>
-              <div class="day avail">3<span class="dot"></span></div>
-              <div class="day avail">4<span class="dot"></span></div>
-              <div class="day today avail">5<span class="dot"></span></div>
-              <div class="day avail">6<span class="dot"></span></div>
-              <div class="day avail">7<span class="dot"></span></div>
-              <div class="day in-range">8<span class="dot"></span></div>
-              <div class="day in-range">9<span class="dot"></span></div>
-              <div class="day in-range">10<span class="dot"></span></div>
-              <div class="day in-range">11<span class="dot"></span></div>
-              <div class="day avail">12<span class="dot"></span></div>
-              <div class="day avail">13<span class="dot"></span></div>
-              <div class="day avail">14<span class="dot"></span></div>
-              <div class="day">15</div>
-            </div>
-            <div class="legend">
-              <span><i class="a"></i>Sitters free</span>
-              <span><i class="r"></i>Your range</span>
-              <span><i class="b"></i>Sparse</span>
-            </div>
+            <div class="cal-grid"><div class="cal-dow">Su</div><div class="cal-dow">Mo</div><div class="cal-dow">Tu</div><div class="cal-dow">We</div><div class="cal-dow">Th</div><div class="cal-dow">Fr</div><div class="cal-dow">Sa</div><button type="button" class="cal-day muted" tabindex="-1">26</button><button type="button" class="cal-day muted" tabindex="-1">27</button><button type="button" class="cal-day muted" tabindex="-1">28</button><button type="button" class="cal-day muted" tabindex="-1">29</button><button type="button" class="cal-day muted" tabindex="-1">30</button><button type="button" class="cal-day muted" tabindex="-1">31</button><button type="button" class="cal-day has-sitters" aria-label="August 1">1</button><button type="button" class="cal-day" aria-label="August 2">2</button><button type="button" class="cal-day" aria-label="August 3">3</button><button type="button" class="cal-day" aria-label="August 4">4</button><button type="button" class="cal-day has-sitters" aria-label="August 5">5</button><button type="button" class="cal-day" aria-label="August 6">6</button><button type="button" class="cal-day" aria-label="August 7">7</button><button type="button" class="cal-day has-sitters" aria-label="August 8">8</button><button type="button" class="cal-day" aria-label="August 9">9</button><button type="button" class="cal-day has-sitters" aria-label="August 10">10</button><button type="button" class="cal-day" aria-label="August 11">11</button><button type="button" class="cal-day in-range range-start has-sitters" aria-label="August 12">12</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 13">13</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 14">14</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 15">15</button><button type="button" class="cal-day in-range range-end has-sitters" aria-label="August 16">16</button><button type="button" class="cal-day" aria-label="August 17">17</button><button type="button" class="cal-day" aria-label="August 18">18</button><button type="button" class="cal-day" aria-label="August 19">19</button><button type="button" class="cal-day has-sitters" aria-label="August 20">20</button><button type="button" class="cal-day" aria-label="August 21">21</button><button type="button" class="cal-day has-sitters" aria-label="August 22">22</button><button type="button" class="cal-day" aria-label="August 23">23</button><button type="button" class="cal-day" aria-label="August 24">24</button><button type="button" class="cal-day" aria-label="August 25">25</button><button type="button" class="cal-day" aria-label="August 26">26</button><button type="button" class="cal-day" aria-label="August 27">27</button><button type="button" class="cal-day has-sitters" aria-label="August 28">28</button><button type="button" class="cal-day" aria-label="August 29">29</button><button type="button" class="cal-day" aria-label="August 30">30</button><button type="button" class="cal-day" aria-label="August 31">31</button></div>
+            <form class="search-inline" role="search" aria-label="Find sitters">
+              <label class="sr-only" for="c-q-light-phone">Search sitters</label>
+              <input id="c-q-light-phone" type="search" placeholder="Neighbourhood or name" />
+              <button type="submit">Find</button>
+            </form>
           </div>
         </section>
-
-        <section class="secondary" aria-label="Sitters for selected dates">
-          <div class="secondary-head">
-            <h2>Sitters free Aug 8–11</h2>
-            <span>8 matches</span>
+        <div class="timeline-wrap">
+          <div class="timeline-meta">
+            <span><strong>8</strong> open Aug 12-16</span>
+            <span>Bars = Aug 1-14 availability</span>
           </div>
-          <div class="search-inline">
-            <input type="search" aria-label="Search sitters" value="Riverside dogs" readonly />
-            <button type="button">Filter</button>
-          </div>
-          <div class="timeline">
-            <article class="t-row">
-              <header>
-                <h3>Maya Chen · Riverside</h3>
-                <div class="rate">$38/night</div>
-              </header>
-              <div class="t-meta">4.9 · verified · dogs &amp; cats</div>
-              <div class="bars" aria-hidden="true">
-                <span class="on"></span><span class="on"></span><span class="on"></span>
-                <span class="sel"></span><span class="sel"></span><span class="sel"></span><span class="sel"></span>
+          <ul class="timeline">
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/avery-chen.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Avery Chen</h2>
+              <p class="t-hood">Leslieville</p>
+              <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$55<span> / night</span></div>
+                <span class="t-cta">See profile</span>
               </div>
-              <footer>
-                <span class="match">Full window free</span>
-                <button type="button">Request</button>
-              </footer>
-            </article>
-            <article class="t-row">
-              <header>
-                <h3>Jordan Hale · Harbor</h3>
-                <div class="rate">$42/night</div>
-              </header>
-              <div class="t-meta">4.8 · verified · dogs</div>
-              <div class="bars" aria-hidden="true">
-                <span class="on"></span><span></span><span class="on"></span>
-                <span class="sel"></span><span class="sel"></span><span class="sel"></span><span class="on"></span>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/jordan-patel.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Jordan Patel</h2>
+              <p class="t-hood">The Annex</p>
+              <span class="rating" aria-label="5.0 out of 5, 41 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 41 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$65<span> / night</span></div>
+                <span class="t-cta">See profile</span>
               </div>
-              <footer>
-                <span class="match">Full window free</span>
-                <button type="button">Request</button>
-              </footer>
-            </article>
-          </div>
-        </section>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/sam-okonkwo.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Sam Okonkwo</h2>
+              <p class="t-hood">Riverdale</p>
+              <span class="rating" aria-label="4.0 out of 5, 18 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 18 reviews</span>
+              <div class="pills"><span class="pill">Cats</span><span class="pill">Small mammals</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$48<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/riley-ng.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Riley Ng</h2>
+              <p class="t-hood">The Beaches</p>
+              <span class="rating" aria-label="5.0 out of 5, 33 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 33 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="busy" title="2026-08-05"></span><span class="busy" title="2026-08-06"></span><span class="busy" title="2026-08-07"></span><span class="busy" title="2026-08-08"></span><span class="busy" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$70<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/morgan-ellis.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Morgan Ellis</h2>
+              <p class="t-hood">Liberty Village</p>
+              <span class="rating" aria-label="12 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 12 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$58<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/casey-brooks.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Casey Brooks</h2>
+              <p class="t-hood">High Park</p>
+              <span class="rating" aria-label="29 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 29 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$62<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/taylor-kim.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Taylor Kim</h2>
+              <p class="t-hood">Distillery District</p>
+              <span class="rating" aria-label="9 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 9 reviews</span>
+              <div class="pills"><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="busy" title="2026-08-05"></span><span class="busy" title="2026-08-06"></span><span class="busy" title="2026-08-07"></span><span class="busy" title="2026-08-08"></span><span class="busy" title="2026-08-09"></span><span class="busy" title="2026-08-10"></span><span class="busy" title="2026-08-11"></span><span class="busy" title="2026-08-12"></span><span class="busy" title="2026-08-13"></span><span class="busy" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$75<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/alex-rivera.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Alex Rivera</h2>
+              <p class="t-hood">Yorkville</p>
+              <span class="rating" aria-label="4.0 out of 5, 52 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 52 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$80<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li></ul>
+        </div></div><div class="assist-dock"><button type="button" class="assist">Ask about sitters</button></div></div>
+        
       </div>
-    </div>
-
-    <div>
-      <div class="theme-label">Dark · 375</div>
-      <div class="phone" data-theme="dark">
-        <header class="nav">
-          <div class="brand"><div class="mark" aria-hidden="true"></div> Pet Sitter Finder</div>
-          <a href="#">Sign in</a>
-        </header>
-
-        <section class="date-hero" aria-label="Choose care dates">
+      <div class="frame-wrap">
+        <div class="frame-cap">1280 · light · home</div>
+        <div class="desktop-scale">
+        <div class="desktop opt-c" data-theme="light">
+      <header class="nav">
+        <a class="brand" href="#">
+          <img src="mark-01.png" alt="" width="40" height="40" />
+          <span class="brand-name">Pet Sitter Finder</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a class="nav-link" href="#" aria-current="page">Dates</a>
+          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="#">Sign in</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="icon-btn" aria-label="Switch theme">Dark</button>
+          
+        </div>
+      </header><div class="home-split">
+        <section class="cal-hero">
           <h1>When do you need care?</h1>
-          <p class="sub">Pick dates first. We rank sitters who are free for that whole window.</p>
-
-          <div class="range-row">
-            <div class="field">
-              <label>Check-in</label>
-              <div class="box">Fri, Aug 8</div>
+          <p class="lead">Pick dates first - only sitters free for your stay appear below.</p>
+          <div class="range-box">
+            <div class="labels">
+              <label>Check-in<input type="date" value="2026-08-12" /></label>
+              <label>Check-out<input type="date" value="2026-08-16" /></label>
             </div>
-            <div class="arrow" aria-hidden="true">→</div>
-            <div class="field">
-              <label>Check-out</label>
-              <div class="box">Mon, Aug 11</div>
+            <div class="month-title">
+              <span>August 2026</span>
+              <div class="month-nav">
+                <button type="button" aria-label="Previous month"><</button>
+                <button type="button" aria-label="Next month">></button>
+              </div>
             </div>
-          </div>
-
-          <div class="cal" aria-label="August availability calendar">
-            <div class="cal-head">
-              <strong>August 2026</strong>
-              <span>Half-month window</span>
-            </div>
-            <div class="dow">
-              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
-            </div>
-            <div class="days">
-              <div class="day" style="visibility:hidden"></div>
-              <div class="day" style="visibility:hidden"></div>
-              <div class="day" style="visibility:hidden"></div>
-              <div class="day" style="visibility:hidden"></div>
-              <div class="day" style="visibility:hidden"></div>
-              <div class="day avail">1<span class="dot"></span></div>
-              <div class="day avail">2<span class="dot"></span></div>
-              <div class="day avail">3<span class="dot"></span></div>
-              <div class="day avail">4<span class="dot"></span></div>
-              <div class="day today avail">5<span class="dot"></span></div>
-              <div class="day avail">6<span class="dot"></span></div>
-              <div class="day avail">7<span class="dot"></span></div>
-              <div class="day in-range">8<span class="dot"></span></div>
-              <div class="day in-range">9<span class="dot"></span></div>
-              <div class="day in-range">10<span class="dot"></span></div>
-              <div class="day in-range">11<span class="dot"></span></div>
-              <div class="day avail">12<span class="dot"></span></div>
-              <div class="day avail">13<span class="dot"></span></div>
-              <div class="day avail">14<span class="dot"></span></div>
-              <div class="day">15</div>
-            </div>
-            <div class="legend">
-              <span><i class="a"></i>Sitters free</span>
-              <span><i class="r"></i>Your range</span>
-              <span><i class="b"></i>Sparse</span>
-            </div>
+            <div class="cal-grid"><div class="cal-dow">Su</div><div class="cal-dow">Mo</div><div class="cal-dow">Tu</div><div class="cal-dow">We</div><div class="cal-dow">Th</div><div class="cal-dow">Fr</div><div class="cal-dow">Sa</div><button type="button" class="cal-day muted" tabindex="-1">26</button><button type="button" class="cal-day muted" tabindex="-1">27</button><button type="button" class="cal-day muted" tabindex="-1">28</button><button type="button" class="cal-day muted" tabindex="-1">29</button><button type="button" class="cal-day muted" tabindex="-1">30</button><button type="button" class="cal-day muted" tabindex="-1">31</button><button type="button" class="cal-day has-sitters" aria-label="August 1">1</button><button type="button" class="cal-day" aria-label="August 2">2</button><button type="button" class="cal-day" aria-label="August 3">3</button><button type="button" class="cal-day" aria-label="August 4">4</button><button type="button" class="cal-day has-sitters" aria-label="August 5">5</button><button type="button" class="cal-day" aria-label="August 6">6</button><button type="button" class="cal-day" aria-label="August 7">7</button><button type="button" class="cal-day has-sitters" aria-label="August 8">8</button><button type="button" class="cal-day" aria-label="August 9">9</button><button type="button" class="cal-day has-sitters" aria-label="August 10">10</button><button type="button" class="cal-day" aria-label="August 11">11</button><button type="button" class="cal-day in-range range-start has-sitters" aria-label="August 12">12</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 13">13</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 14">14</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 15">15</button><button type="button" class="cal-day in-range range-end has-sitters" aria-label="August 16">16</button><button type="button" class="cal-day" aria-label="August 17">17</button><button type="button" class="cal-day" aria-label="August 18">18</button><button type="button" class="cal-day" aria-label="August 19">19</button><button type="button" class="cal-day has-sitters" aria-label="August 20">20</button><button type="button" class="cal-day" aria-label="August 21">21</button><button type="button" class="cal-day has-sitters" aria-label="August 22">22</button><button type="button" class="cal-day" aria-label="August 23">23</button><button type="button" class="cal-day" aria-label="August 24">24</button><button type="button" class="cal-day" aria-label="August 25">25</button><button type="button" class="cal-day" aria-label="August 26">26</button><button type="button" class="cal-day" aria-label="August 27">27</button><button type="button" class="cal-day has-sitters" aria-label="August 28">28</button><button type="button" class="cal-day" aria-label="August 29">29</button><button type="button" class="cal-day" aria-label="August 30">30</button><button type="button" class="cal-day" aria-label="August 31">31</button></div>
+            <form class="search-inline" role="search" aria-label="Find sitters">
+              <label class="sr-only" for="c-q-light-desktop">Search sitters</label>
+              <input id="c-q-light-desktop" type="search" placeholder="Neighbourhood or name" />
+              <button type="submit">Find</button>
+            </form>
           </div>
         </section>
-
-        <section class="secondary" aria-label="Sitters for selected dates">
-          <div class="secondary-head">
-            <h2>Sitters free Aug 8–11</h2>
-            <span>8 matches</span>
+        <div class="timeline-wrap">
+          <div class="timeline-meta">
+            <span><strong>8</strong> open Aug 12-16</span>
+            <span>Bars = Aug 1-14 availability</span>
           </div>
-          <div class="search-inline">
-            <input type="search" aria-label="Search sitters" value="Riverside dogs" readonly />
-            <button type="button">Filter</button>
-          </div>
-          <div class="timeline">
-            <article class="t-row">
-              <header>
-                <h3>Maya Chen · Riverside</h3>
-                <div class="rate">$38/night</div>
-              </header>
-              <div class="t-meta">4.9 · verified · dogs &amp; cats</div>
-              <div class="bars" aria-hidden="true">
-                <span class="on"></span><span class="on"></span><span class="on"></span>
-                <span class="sel"></span><span class="sel"></span><span class="sel"></span><span class="sel"></span>
+          <ul class="timeline">
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/avery-chen.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Avery Chen</h2>
+              <p class="t-hood">Leslieville</p>
+              <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$55<span> / night</span></div>
+                <span class="t-cta">See profile</span>
               </div>
-              <footer>
-                <span class="match">Full window free</span>
-                <button type="button">Request</button>
-              </footer>
-            </article>
-            <article class="t-row">
-              <header>
-                <h3>Jordan Hale · Harbor</h3>
-                <div class="rate">$42/night</div>
-              </header>
-              <div class="t-meta">4.8 · verified · dogs</div>
-              <div class="t-meta" style="display:none"></div>
-              <div class="bars" aria-hidden="true">
-                <span class="on"></span><span></span><span class="on"></span>
-                <span class="sel"></span><span class="sel"></span><span class="sel"></span><span class="on"></span>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/jordan-patel.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Jordan Patel</h2>
+              <p class="t-hood">The Annex</p>
+              <span class="rating" aria-label="5.0 out of 5, 41 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 41 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$65<span> / night</span></div>
+                <span class="t-cta">See profile</span>
               </div>
-              <footer>
-                <span class="match">Full window free</span>
-                <button type="button">Request</button>
-              </footer>
-            </article>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/sam-okonkwo.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Sam Okonkwo</h2>
+              <p class="t-hood">Riverdale</p>
+              <span class="rating" aria-label="4.0 out of 5, 18 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 18 reviews</span>
+              <div class="pills"><span class="pill">Cats</span><span class="pill">Small mammals</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$48<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/riley-ng.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Riley Ng</h2>
+              <p class="t-hood">The Beaches</p>
+              <span class="rating" aria-label="5.0 out of 5, 33 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 33 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="busy" title="2026-08-05"></span><span class="busy" title="2026-08-06"></span><span class="busy" title="2026-08-07"></span><span class="busy" title="2026-08-08"></span><span class="busy" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$70<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/morgan-ellis.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Morgan Ellis</h2>
+              <p class="t-hood">Liberty Village</p>
+              <span class="rating" aria-label="12 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 12 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$58<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/casey-brooks.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Casey Brooks</h2>
+              <p class="t-hood">High Park</p>
+              <span class="rating" aria-label="29 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 29 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$62<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/taylor-kim.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Taylor Kim</h2>
+              <p class="t-hood">Distillery District</p>
+              <span class="rating" aria-label="9 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 9 reviews</span>
+              <div class="pills"><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="busy" title="2026-08-05"></span><span class="busy" title="2026-08-06"></span><span class="busy" title="2026-08-07"></span><span class="busy" title="2026-08-08"></span><span class="busy" title="2026-08-09"></span><span class="busy" title="2026-08-10"></span><span class="busy" title="2026-08-11"></span><span class="busy" title="2026-08-12"></span><span class="busy" title="2026-08-13"></span><span class="busy" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$75<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/alex-rivera.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Alex Rivera</h2>
+              <p class="t-hood">Yorkville</p>
+              <span class="rating" aria-label="4.0 out of 5, 52 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 52 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$80<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li></ul>
+        </div></div><div class="assist-dock"><button type="button" class="assist">Ask about sitters</button></div></div>
+        </div>
+      </div></div>
+  <div class="section-label">Home - dark</div>
+  <div class="row">
+      <div class="frame-wrap">
+        <div class="frame-cap">375 · dark · home</div>
+        
+        <div class="phone opt-c" data-theme="dark">
+      <header class="nav">
+        <a class="brand" href="#">
+          <img src="mark-01.png" alt="" width="40" height="40" />
+          <span class="brand-name">Pet Sitter Finder</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a class="nav-link" href="#" aria-current="page">Dates</a>
+          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="#">Sign in</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="icon-btn" aria-label="Switch theme">Light</button>
+          <button type="button" class="icon-btn" aria-label="Menu">=</button>
+        </div>
+      </header><div class="scroll">
+        <section class="cal-hero">
+          <h1>When do you need care?</h1>
+          <p class="lead">Pick dates first - only sitters free for your stay appear below.</p>
+          <div class="range-box">
+            <div class="labels">
+              <label>Check-in<input type="date" value="2026-08-12" /></label>
+              <label>Check-out<input type="date" value="2026-08-16" /></label>
+            </div>
+            <div class="month-title">
+              <span>August 2026</span>
+              <div class="month-nav">
+                <button type="button" aria-label="Previous month"><</button>
+                <button type="button" aria-label="Next month">></button>
+              </div>
+            </div>
+            <div class="cal-grid"><div class="cal-dow">Su</div><div class="cal-dow">Mo</div><div class="cal-dow">Tu</div><div class="cal-dow">We</div><div class="cal-dow">Th</div><div class="cal-dow">Fr</div><div class="cal-dow">Sa</div><button type="button" class="cal-day muted" tabindex="-1">26</button><button type="button" class="cal-day muted" tabindex="-1">27</button><button type="button" class="cal-day muted" tabindex="-1">28</button><button type="button" class="cal-day muted" tabindex="-1">29</button><button type="button" class="cal-day muted" tabindex="-1">30</button><button type="button" class="cal-day muted" tabindex="-1">31</button><button type="button" class="cal-day has-sitters" aria-label="August 1">1</button><button type="button" class="cal-day" aria-label="August 2">2</button><button type="button" class="cal-day" aria-label="August 3">3</button><button type="button" class="cal-day" aria-label="August 4">4</button><button type="button" class="cal-day has-sitters" aria-label="August 5">5</button><button type="button" class="cal-day" aria-label="August 6">6</button><button type="button" class="cal-day" aria-label="August 7">7</button><button type="button" class="cal-day has-sitters" aria-label="August 8">8</button><button type="button" class="cal-day" aria-label="August 9">9</button><button type="button" class="cal-day has-sitters" aria-label="August 10">10</button><button type="button" class="cal-day" aria-label="August 11">11</button><button type="button" class="cal-day in-range range-start has-sitters" aria-label="August 12">12</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 13">13</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 14">14</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 15">15</button><button type="button" class="cal-day in-range range-end has-sitters" aria-label="August 16">16</button><button type="button" class="cal-day" aria-label="August 17">17</button><button type="button" class="cal-day" aria-label="August 18">18</button><button type="button" class="cal-day" aria-label="August 19">19</button><button type="button" class="cal-day has-sitters" aria-label="August 20">20</button><button type="button" class="cal-day" aria-label="August 21">21</button><button type="button" class="cal-day has-sitters" aria-label="August 22">22</button><button type="button" class="cal-day" aria-label="August 23">23</button><button type="button" class="cal-day" aria-label="August 24">24</button><button type="button" class="cal-day" aria-label="August 25">25</button><button type="button" class="cal-day" aria-label="August 26">26</button><button type="button" class="cal-day" aria-label="August 27">27</button><button type="button" class="cal-day has-sitters" aria-label="August 28">28</button><button type="button" class="cal-day" aria-label="August 29">29</button><button type="button" class="cal-day" aria-label="August 30">30</button><button type="button" class="cal-day" aria-label="August 31">31</button></div>
+            <form class="search-inline" role="search" aria-label="Find sitters">
+              <label class="sr-only" for="c-q-dark-phone">Search sitters</label>
+              <input id="c-q-dark-phone" type="search" placeholder="Neighbourhood or name" />
+              <button type="submit">Find</button>
+            </form>
           </div>
         </section>
+        <div class="timeline-wrap">
+          <div class="timeline-meta">
+            <span><strong>8</strong> open Aug 12-16</span>
+            <span>Bars = Aug 1-14 availability</span>
+          </div>
+          <ul class="timeline">
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/avery-chen.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Avery Chen</h2>
+              <p class="t-hood">Leslieville</p>
+              <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$55<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/jordan-patel.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Jordan Patel</h2>
+              <p class="t-hood">The Annex</p>
+              <span class="rating" aria-label="5.0 out of 5, 41 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 41 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$65<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/sam-okonkwo.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Sam Okonkwo</h2>
+              <p class="t-hood">Riverdale</p>
+              <span class="rating" aria-label="4.0 out of 5, 18 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 18 reviews</span>
+              <div class="pills"><span class="pill">Cats</span><span class="pill">Small mammals</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$48<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/riley-ng.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Riley Ng</h2>
+              <p class="t-hood">The Beaches</p>
+              <span class="rating" aria-label="5.0 out of 5, 33 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 33 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="busy" title="2026-08-05"></span><span class="busy" title="2026-08-06"></span><span class="busy" title="2026-08-07"></span><span class="busy" title="2026-08-08"></span><span class="busy" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$70<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/morgan-ellis.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Morgan Ellis</h2>
+              <p class="t-hood">Liberty Village</p>
+              <span class="rating" aria-label="12 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 12 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$58<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/casey-brooks.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Casey Brooks</h2>
+              <p class="t-hood">High Park</p>
+              <span class="rating" aria-label="29 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 29 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$62<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/taylor-kim.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Taylor Kim</h2>
+              <p class="t-hood">Distillery District</p>
+              <span class="rating" aria-label="9 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 9 reviews</span>
+              <div class="pills"><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="busy" title="2026-08-05"></span><span class="busy" title="2026-08-06"></span><span class="busy" title="2026-08-07"></span><span class="busy" title="2026-08-08"></span><span class="busy" title="2026-08-09"></span><span class="busy" title="2026-08-10"></span><span class="busy" title="2026-08-11"></span><span class="busy" title="2026-08-12"></span><span class="busy" title="2026-08-13"></span><span class="busy" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$75<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/alex-rivera.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Alex Rivera</h2>
+              <p class="t-hood">Yorkville</p>
+              <span class="rating" aria-label="4.0 out of 5, 52 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 52 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$80<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li></ul>
+        </div></div><div class="assist-dock"><button type="button" class="assist">Ask about sitters</button></div></div>
+        
       </div>
+      <div class="frame-wrap">
+        <div class="frame-cap">1280 · dark · home</div>
+        <div class="desktop-scale">
+        <div class="desktop opt-c" data-theme="dark">
+      <header class="nav">
+        <a class="brand" href="#">
+          <img src="mark-01.png" alt="" width="40" height="40" />
+          <span class="brand-name">Pet Sitter Finder</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a class="nav-link" href="#" aria-current="page">Dates</a>
+          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="#">Sign in</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="icon-btn" aria-label="Switch theme">Light</button>
+          
+        </div>
+      </header><div class="home-split">
+        <section class="cal-hero">
+          <h1>When do you need care?</h1>
+          <p class="lead">Pick dates first - only sitters free for your stay appear below.</p>
+          <div class="range-box">
+            <div class="labels">
+              <label>Check-in<input type="date" value="2026-08-12" /></label>
+              <label>Check-out<input type="date" value="2026-08-16" /></label>
+            </div>
+            <div class="month-title">
+              <span>August 2026</span>
+              <div class="month-nav">
+                <button type="button" aria-label="Previous month"><</button>
+                <button type="button" aria-label="Next month">></button>
+              </div>
+            </div>
+            <div class="cal-grid"><div class="cal-dow">Su</div><div class="cal-dow">Mo</div><div class="cal-dow">Tu</div><div class="cal-dow">We</div><div class="cal-dow">Th</div><div class="cal-dow">Fr</div><div class="cal-dow">Sa</div><button type="button" class="cal-day muted" tabindex="-1">26</button><button type="button" class="cal-day muted" tabindex="-1">27</button><button type="button" class="cal-day muted" tabindex="-1">28</button><button type="button" class="cal-day muted" tabindex="-1">29</button><button type="button" class="cal-day muted" tabindex="-1">30</button><button type="button" class="cal-day muted" tabindex="-1">31</button><button type="button" class="cal-day has-sitters" aria-label="August 1">1</button><button type="button" class="cal-day" aria-label="August 2">2</button><button type="button" class="cal-day" aria-label="August 3">3</button><button type="button" class="cal-day" aria-label="August 4">4</button><button type="button" class="cal-day has-sitters" aria-label="August 5">5</button><button type="button" class="cal-day" aria-label="August 6">6</button><button type="button" class="cal-day" aria-label="August 7">7</button><button type="button" class="cal-day has-sitters" aria-label="August 8">8</button><button type="button" class="cal-day" aria-label="August 9">9</button><button type="button" class="cal-day has-sitters" aria-label="August 10">10</button><button type="button" class="cal-day" aria-label="August 11">11</button><button type="button" class="cal-day in-range range-start has-sitters" aria-label="August 12">12</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 13">13</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 14">14</button><button type="button" class="cal-day in-range has-sitters" aria-label="August 15">15</button><button type="button" class="cal-day in-range range-end has-sitters" aria-label="August 16">16</button><button type="button" class="cal-day" aria-label="August 17">17</button><button type="button" class="cal-day" aria-label="August 18">18</button><button type="button" class="cal-day" aria-label="August 19">19</button><button type="button" class="cal-day has-sitters" aria-label="August 20">20</button><button type="button" class="cal-day" aria-label="August 21">21</button><button type="button" class="cal-day has-sitters" aria-label="August 22">22</button><button type="button" class="cal-day" aria-label="August 23">23</button><button type="button" class="cal-day" aria-label="August 24">24</button><button type="button" class="cal-day" aria-label="August 25">25</button><button type="button" class="cal-day" aria-label="August 26">26</button><button type="button" class="cal-day" aria-label="August 27">27</button><button type="button" class="cal-day has-sitters" aria-label="August 28">28</button><button type="button" class="cal-day" aria-label="August 29">29</button><button type="button" class="cal-day" aria-label="August 30">30</button><button type="button" class="cal-day" aria-label="August 31">31</button></div>
+            <form class="search-inline" role="search" aria-label="Find sitters">
+              <label class="sr-only" for="c-q-dark-desktop">Search sitters</label>
+              <input id="c-q-dark-desktop" type="search" placeholder="Neighbourhood or name" />
+              <button type="submit">Find</button>
+            </form>
+          </div>
+        </section>
+        <div class="timeline-wrap">
+          <div class="timeline-meta">
+            <span><strong>8</strong> open Aug 12-16</span>
+            <span>Bars = Aug 1-14 availability</span>
+          </div>
+          <ul class="timeline">
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/avery-chen.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Avery Chen</h2>
+              <p class="t-hood">Leslieville</p>
+              <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$55<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/jordan-patel.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Jordan Patel</h2>
+              <p class="t-hood">The Annex</p>
+              <span class="rating" aria-label="5.0 out of 5, 41 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 41 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$65<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/sam-okonkwo.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Sam Okonkwo</h2>
+              <p class="t-hood">Riverdale</p>
+              <span class="rating" aria-label="4.0 out of 5, 18 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 18 reviews</span>
+              <div class="pills"><span class="pill">Cats</span><span class="pill">Small mammals</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$48<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/riley-ng.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Riley Ng</h2>
+              <p class="t-hood">The Beaches</p>
+              <span class="rating" aria-label="5.0 out of 5, 33 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 33 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="busy" title="2026-08-05"></span><span class="busy" title="2026-08-06"></span><span class="busy" title="2026-08-07"></span><span class="busy" title="2026-08-08"></span><span class="busy" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$70<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/morgan-ellis.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Morgan Ellis</h2>
+              <p class="t-hood">Liberty Village</p>
+              <span class="rating" aria-label="12 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 12 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$58<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/casey-brooks.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Casey Brooks</h2>
+              <p class="t-hood">High Park</p>
+              <span class="rating" aria-label="29 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 29 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$62<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/taylor-kim.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Taylor Kim</h2>
+              <p class="t-hood">Distillery District</p>
+              <span class="rating" aria-label="9 verified reviews"><span class="star" aria-hidden="true">★</span> <span class="score">Verified</span> · 9 reviews</span>
+              <div class="pills"><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="busy" title="2026-08-01"></span><span class="busy" title="2026-08-02"></span><span class="busy" title="2026-08-03"></span><span class="busy" title="2026-08-04"></span><span class="busy" title="2026-08-05"></span><span class="busy" title="2026-08-06"></span><span class="busy" title="2026-08-07"></span><span class="busy" title="2026-08-08"></span><span class="busy" title="2026-08-09"></span><span class="busy" title="2026-08-10"></span><span class="busy" title="2026-08-11"></span><span class="busy" title="2026-08-12"></span><span class="busy" title="2026-08-13"></span><span class="busy" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$75<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li>
+          <button type="button" class="t-row">
+            <img class="t-avatar" src="avatars/alex-rivera.jpg" alt="" />
+            <div>
+              <h2 class="t-name">Alex Rivera</h2>
+              <p class="t-hood">Yorkville</p>
+              <span class="rating" aria-label="4.0 out of 5, 52 reviews"><span class="stars" aria-hidden="true">★★★★☆</span> <span class="score">4.0</span> · 52 reviews</span>
+              <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+              <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+              <div class="t-foot">
+                <div class="t-price">$80<span> / night</span></div>
+                <span class="t-cta">See profile</span>
+              </div>
+            </div>
+          </button>
+        </li></ul>
+        </div></div><div class="assist-dock"><button type="button" class="assist">Ask about sitters</button></div></div>
+        </div>
+      </div></div>
+  <div class="section-label">Sitter detail - light</div>
+  <div class="row">
+    <div class="frame-wrap">
+      <div class="frame-cap">375 · light · detail</div>
+      
+      <div class="phone opt-c" data-theme="light">
+      <header class="nav">
+        <a class="brand" href="#">
+          <img src="mark-01.png" alt="" width="40" height="40" />
+          <span class="brand-name">Pet Sitter Finder</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a class="nav-link" href="#" >Dates</a>
+          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="#">Sign in</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="icon-btn" aria-label="Switch theme">Dark</button>
+          <button type="button" class="icon-btn" aria-label="Menu">=</button>
+        </div>
+      </header><div class="scroll">
+      <div class="detail-top">
+        <img class="detail-avatar" src="avatars/avery-chen.jpg" alt="Avery Chen" />
+        <div>
+          
+          <h1 class="detail-name">Avery Chen</h1>
+          <p class="detail-hood">Leslieville</p>
+          <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+        <p class="detail-bio">Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.</p>
+        <h2 style="font-size:16px;margin:18px 0 8px;font-weight:800">Availability</h2>
+        <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+        <p style="margin:8px 0 0;color:var(--muted);font-size:14px">Available Aug 1 - Dec 31</p>
+        <h2 style="font-size:16px;margin:18px 0 8px;font-weight:800">Guest note</h2>
+        <p style="margin:0;color:var(--muted)">"Reliable evening walks and clear photo updates every night."</p>
+      </div></div>
+           <div class="book-bar">
+             <div>
+               <div style="font-weight:800;font-size:18px">$55<span style="font-weight:500;color:var(--muted);font-size:13px"> / night</span></div>
+               <div style="font-size:12px;color:var(--muted)">Aug 12 - 16</div>
+             </div>
+             <button type="button" class="book-cta">Request to book</button>
+           </div></div>
+      
     </div>
-  </div>
+    <div class="frame-wrap">
+      <div class="frame-cap">1280 · light · detail</div>
+      <div class="desktop-scale">
+      <div class="desktop opt-c" data-theme="light">
+      <header class="nav">
+        <a class="brand" href="#">
+          <img src="mark-01.png" alt="" width="40" height="40" />
+          <span class="brand-name">Pet Sitter Finder</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a class="nav-link" href="#" >Dates</a>
+          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="#">Sign in</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="icon-btn" aria-label="Switch theme">Dark</button>
+          
+        </div>
+      </header><div class="scroll"><div class="detail-layout"><div>
+      <div class="detail-top">
+        <img class="detail-avatar" src="avatars/avery-chen.jpg" alt="Avery Chen" />
+        <div>
+          <p class="crumb">Dates / Avery Chen</p>
+          <h1 class="detail-name">Avery Chen</h1>
+          <p class="detail-hood">Leslieville</p>
+          <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+        <p class="detail-bio">Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.</p>
+        <h2 style="font-size:16px;margin:18px 0 8px;font-weight:800">Availability</h2>
+        <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+        <p style="margin:8px 0 0;color:var(--muted);font-size:14px">Available Aug 1 - Dec 31</p>
+        <h2 style="font-size:16px;margin:18px 0 8px;font-weight:800">Guest note</h2>
+        <p style="margin:0;color:var(--muted)">"Reliable evening walks and clear photo updates every night."</p>
+      </div></div><aside>
+      <div class="book-panel">
+        <h3>$55 <span style="font-weight:500;font-size:14px;color:var(--muted)">/ night</span></h3>
+        <label class="date-field" style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Check-in
+          <input type="date" value="2026-08-12" style="min-height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:0 10px;font-weight:700" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Check-out
+          <input type="date" value="2026-08-16" style="min-height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:0 10px;font-weight:700" />
+        </label>
+        <button type="button" class="book-cta">Request to book</button>
+      </div></aside></div></div></div>
+      </div>
+    </div></div>
+  <div class="section-label">Sitter detail - dark</div>
+  <div class="row">
+    <div class="frame-wrap">
+      <div class="frame-cap">375 · dark · detail</div>
+      
+      <div class="phone opt-c" data-theme="dark">
+      <header class="nav">
+        <a class="brand" href="#">
+          <img src="mark-01.png" alt="" width="40" height="40" />
+          <span class="brand-name">Pet Sitter Finder</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a class="nav-link" href="#" >Dates</a>
+          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="#">Sign in</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="icon-btn" aria-label="Switch theme">Light</button>
+          <button type="button" class="icon-btn" aria-label="Menu">=</button>
+        </div>
+      </header><div class="scroll">
+      <div class="detail-top">
+        <img class="detail-avatar" src="avatars/avery-chen.jpg" alt="Avery Chen" />
+        <div>
+          
+          <h1 class="detail-name">Avery Chen</h1>
+          <p class="detail-hood">Leslieville</p>
+          <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+        <p class="detail-bio">Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.</p>
+        <h2 style="font-size:16px;margin:18px 0 8px;font-weight:800">Availability</h2>
+        <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+        <p style="margin:8px 0 0;color:var(--muted);font-size:14px">Available Aug 1 - Dec 31</p>
+        <h2 style="font-size:16px;margin:18px 0 8px;font-weight:800">Guest note</h2>
+        <p style="margin:0;color:var(--muted)">"Reliable evening walks and clear photo updates every night."</p>
+      </div></div>
+           <div class="book-bar">
+             <div>
+               <div style="font-weight:800;font-size:18px">$55<span style="font-weight:500;color:var(--muted);font-size:13px"> / night</span></div>
+               <div style="font-size:12px;color:var(--muted)">Aug 12 - 16</div>
+             </div>
+             <button type="button" class="book-cta">Request to book</button>
+           </div></div>
+      
+    </div>
+    <div class="frame-wrap">
+      <div class="frame-cap">1280 · dark · detail</div>
+      <div class="desktop-scale">
+      <div class="desktop opt-c" data-theme="dark">
+      <header class="nav">
+        <a class="brand" href="#">
+          <img src="mark-01.png" alt="" width="40" height="40" />
+          <span class="brand-name">Pet Sitter Finder</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a class="nav-link" href="#" >Dates</a>
+          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="#">Sign in</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="icon-btn" aria-label="Switch theme">Light</button>
+          
+        </div>
+      </header><div class="scroll"><div class="detail-layout"><div>
+      <div class="detail-top">
+        <img class="detail-avatar" src="avatars/avery-chen.jpg" alt="Avery Chen" />
+        <div>
+          <p class="crumb">Dates / Avery Chen</p>
+          <h1 class="detail-name">Avery Chen</h1>
+          <p class="detail-hood">Leslieville</p>
+          <span class="rating" aria-label="5.0 out of 5, 24 reviews"><span class="stars" aria-hidden="true">★★★★★</span> <span class="score">5.0</span> · 24 reviews</span>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="pills"><span class="pill">Dogs</span><span class="pill">Cats</span></div>
+        <p class="detail-bio">Evening walks and overnight stays for small and medium dogs. Quiet home near Greenwood Park.</p>
+        <h2 style="font-size:16px;margin:18px 0 8px;font-weight:800">Availability</h2>
+        <div class="week-bar" aria-label="Availability Aug 1-14"><span class="open" title="2026-08-01"></span><span class="open" title="2026-08-02"></span><span class="open" title="2026-08-03"></span><span class="open" title="2026-08-04"></span><span class="open" title="2026-08-05"></span><span class="open" title="2026-08-06"></span><span class="open" title="2026-08-07"></span><span class="open" title="2026-08-08"></span><span class="open" title="2026-08-09"></span><span class="open" title="2026-08-10"></span><span class="open" title="2026-08-11"></span><span class="open" title="2026-08-12"></span><span class="open" title="2026-08-13"></span><span class="open" title="2026-08-14"></span></div>
+        <p style="margin:8px 0 0;color:var(--muted);font-size:14px">Available Aug 1 - Dec 31</p>
+        <h2 style="font-size:16px;margin:18px 0 8px;font-weight:800">Guest note</h2>
+        <p style="margin:0;color:var(--muted)">"Reliable evening walks and clear photo updates every night."</p>
+      </div></div><aside>
+      <div class="book-panel">
+        <h3>$55 <span style="font-weight:500;font-size:14px;color:var(--muted)">/ night</span></h3>
+        <label class="date-field" style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Check-in
+          <input type="date" value="2026-08-12" style="min-height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:0 10px;font-weight:700" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Check-out
+          <input type="date" value="2026-08-16" style="min-height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);padding:0 10px;font-weight:700" />
+        </label>
+        <button type="button" class="book-cta">Request to book</button>
+      </div></aside></div></div></div>
+      </div>
+    </div></div>
 </body>
 </html>
