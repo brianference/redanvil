@@ -1,0 +1,41 @@
+{
+  "_why": "Every interactive control on the site and the test that proves it works. scripts/feature-audit.mjs crawls the RUNNING app and fails when a control is not listed here, so a new control is untested-by-default instead of silently unverified. The test field must name a test that OPERATES the control and asserts what it changed -- a visibility assertion is a claim with no evidence behind it. Keep it in sync with the real test title; the gate resolves every claim against the spec files.",
+  "controls": [
+    {
+      "role": "button",
+      "name": "theme-toggle",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "acceptance.spec.ts > the theme toggle flips the theme and the choice survives a reload"
+    },
+    {
+      "role": "link",
+      "name": "nav-link",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "acceptance.spec.ts > primary navigation reaches the required pages"
+    },
+    {
+      "role": "link",
+      "name": "brand",
+      "routes": [
+        "/",
+        "/about",
+        "/terms",
+        "/privacy",
+        "/contact"
+      ],
+      "test": "acceptance.spec.ts > the brand link returns to the home page"
+    }
+  ]
+}

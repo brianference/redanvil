@@ -1,0 +1,8 @@
+{
+  "slug": "pet-sitter",
+  "entryPoint": "pm",
+  "registeredAt": "2026-08-06T01:12:09.000Z",
+  "handBuildBlocked": true,
+  "nextCommand": "npx tsx orchestrator/src/cli.ts pm pet-sitter --execute",
+  "reason": "This app is managed by the agent team. Hand-building skips logo/layout design decisions. Run the PM; it assigns design roles first and refuses engineer/content/testwriter until design-refs decisions exist on disk."
+}

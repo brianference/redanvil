@@ -1,0 +1,90 @@
+{
+  "kind": "independent-diff-review",
+  "slug": "pet-sitter",
+  "commit": "9795f888844a409554ce8e3e53e9e06cb738bbdb",
+  "reviewedAt": "2026-08-06T01:23:58.824Z",
+  "diffHash": "540270db1fbd111bdf65866839d5b6e8eddb71aae05503290ae136f0586b1bf5",
+  "completed": true,
+  "ok": false,
+  "foundNothingExplicit": false,
+  "findings": [
+    {
+      "title": "No product code changed",
+      "citation": "results/pet-sitter.json:4",
+      "detail": "Diff only touches coverage-state, measurement-meta timestamps, and results JSON. No app source, functions, UI, tests, or deploy config. finalScore remains 0 and passed remains false — this commit does not fix the app.",
+      "passed": false
+    },
+    {
+      "title": "lg-bindings-bound single run only",
+      "citation": "evidence/measurement-meta.json:393",
+      "detail": "lg-bindings-bound records one run with ok:true (at 2026-08-06T01:22:25.371Z). Two-run agreement is not present. results flips lg-bindings-bound to passed:true without verifiable dual-run evidence in this meta.",
+      "passed": false
+    },
+    {
+      "title": "Not shipped; deployUrl null",
+      "citation": "results/pet-sitter.json:280",
+      "detail": "deployUrl is null. lg-shipped remains passed:false. lg-bindings-bound meta cites https://pet-sitter-vz1.pages.dev but results still report no deploy URL — shipped/prod proof is incomplete.",
+      "passed": false
+    },
+    {
+      "title": "Dirty provenance",
+      "citation": "results/pet-sitter.json:284",
+      "detail": "provenance.dirty is true while provenance.commit is 9795f888… Results were generated against a dirty tree; gate output is not a clean commit artifact.",
+      "passed": false
+    },
+    {
+      "title": "Coverage baseCommit self-points",
+      "citation": ".redanvil/coverage-state.json:3",
+      "detail": "baseCommit was set to 9795f888… (this same commit). highWaterPct stays 35.71. Self-basing the ratchet inside the commit under review does not prove coverage improved or that the prior baseline was honored.",
+      "passed": false
+    },
+    {
+      "title": "Vacuous two-run timestamps",
+      "citation": "evidence/measurement-meta.json:316",
+      "detail": "meas-recheck-flattering runs both use identical at 2026-08-06T01:23:27.926Z (and notApplicable remains true with empty prior results reason). Same pattern for u-build-succeeds (both 2026-08-06T01:22:31.249Z). Dual timestamps written back-to-back are not independent re-runs.",
+      "passed": false
+    },
+    {
+      "title": "SPA still masks absent API",
+      "citation": "evidence/measurement-meta.json:238",
+      "detail": "u-api-no-spa-mask still ok:false with status:200 on a synthetic absent /api/__definitely_absent_* path. Missing API routes still return the SPA shell instead of a real 404.",
+      "passed": false
+    },
+    {
+      "title": "Brand mark still undersized",
+      "citation": "evidence/measurement-meta.json:28",
+      "detail": "fe-brand-mark-size still ok:false with height1280:18 and height375:36. No logo/asset change in the diff; brand mark gate remains failed.",
+      "passed": false
+    },
+    {
+      "title": "Search control still missing",
+      "citation": "evidence/measurement-meta.json:72",
+      "detail": "fe-result-in-viewport remains notApplicable with reason \"no search/filter control\". Diff does not add collection search; fe-search-present class of requirements is unaddressed.",
+      "passed": false
+    },
+    {
+      "title": "lg-result-reproduces empty",
+      "citation": "evidence/measurement-meta.json:376",
+      "detail": "lg-result-reproduces runs show recomputed:0 and recorded:0, ok:false. results now lists it as a blocker. Nothing in this commit makes prior results reproducible.",
+      "passed": false
+    },
+    {
+      "title": "lg-push-cadence pass unverified",
+      "citation": "results/pet-sitter.json:191",
+      "detail": "lg-push-cadence appears as passed:true with no measurement payload in this diff beyond the boolean (and dirty:true tree). Cannot verify push cadence from meta alone; treat as unproven.",
+      "passed": false
+    },
+    {
+      "title": "Most measurements still fail",
+      "citation": "evidence/measurement-meta.json:7",
+      "detail": "fe-search-present, fe-brand-mark-size, fe-breadcrumbs, fe-legal-substance, fe-structured-data, proc-design-options, fe-light-dark, u-api-not-found, u-api-no-spa-mask, meas-known-bad, meas-two-run, meas-standard-tool, meas-engine-named, lg-result-reproduces all still record ok:false (or equivalent). Timestamp bumps are not fixes.",
+      "passed": false
+    }
+  ],
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"No product code changed\\\",\\n      \\\"citation\\\": \\\"results/pet-sitter.json:4\\\",\\n      \\\"detail\\\": \\\"Diff only touches coverage-state, measurement-meta timestamps, and results JSON. No app source, functions, UI, tests, or deploy config. finalScore remains 0 and passed remains false — this commit does not fix the app.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"lg-bindings-bound single run only\\\",\\n      \\\"citation\\\": \\\"evidence/measurement-meta.json:393\\\",\\n      \\\"detail\\\": \\\"lg-bindings-bound records one run with ok:true (at 2026-08-06T01:22:25.371Z). Two-run agreement is not present. results flips lg-bindings-bound to passed:true without verifiable dual-run evidence in this meta.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Not shipped; deployUrl null\\\",\\n      \\\"citation\\\": \\\"results/pet-sitter.json:280\\\",\\n      \\\"detail\\\": \\\"deployUrl is null. lg-shipped remains passed:false. lg-bindings-bound meta cites https://pet-sitter-vz1.pages.dev but results still report no deploy URL — shipped/prod proof is incomplete.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Dirty provenance\\\",\\n      \\\"citation\\\": \\\"results/pet-sitter.json:284\\\",\\n      \\\"detail\\\": \\\"provenance.dirty is true while provenance.commit is 9795f888… Results were generated against a dirty tree; gate output is not a clean commit artifact.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Coverage baseCommit self-points\\\",\\n      \\\"citation\\\": \\\".redanvil/coverage-state.json:3\\\",\\n      \\\"detail\\\": \\\"baseCommit was set to 9795f888… (this same commit). highWaterPct stays 35.71. Self-basing the ratchet inside the commit under review does not prove coverage improved or that the prior baseline was honored.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Vacuous two-run timestamps\\\",\\n      \\\"citation\\\": \\\"evidence/measurement-meta.json:316\\\",\\n      \\\"detail\\\": \\\"meas-recheck-flattering runs both use identical at 2026-08-06T01:23:27.926Z (and notApplicable remains true with empty prior results reason). Same pattern for u-build-succeeds (both 2026-08-06T01:22:31.249Z). Dual timestamps written back-to-back are not independent re-runs.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"SPA still masks absent API\\\",\\n      \\\"citation\\\": \\\"evidence/measurement-meta.json:238\\\",\\n      \\\"detail\\\": \\\"u-api-no-spa-mask still ok:false with status:200 on a synthetic absent /api/__definitely_absent_* path. Missing API routes still return the SPA shell instead of a real 404.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Brand mark still undersized\\\",\\n      \\\"citation\\\": \\\"evidence/measurement-meta.json:28\\\",\\n      \\\"detail\\\": \\\"fe-brand-mark-size still ok:false with height1280:18 and height375:36. No logo/asset change in the diff; brand mark gate remains failed.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Search control still missing\\\",\\n      \\\"citation\\\": \\\"evidence/measurement-meta.json:72\\\",\\n      \\\"detail\\\": \\\"fe-result-in-viewport remains notApplicable with reason \\\\\\\"no search/filter control\\\\\\\". Diff does not add collection search; fe-search-present class of requirements is unaddressed.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"lg-result-reproduces empty\\\",\\n      \\\"citation\\\": \\\"evidence/measurement-meta.json:376\\\",\\n      \\\"detail\\\": \\\"lg-result-reproduces runs show recomputed:0 and recorded:0, ok:false. results now lists it as a blocker. Nothing in this commit makes prior results reproducible.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"lg-push-cadence pass unverified\\\",\\n      \\\"citation\\\": \\\"results/pet-sitter.json:191\\\",\\n      \\\"detail\\\": \\\"lg-push-cadence appears as passed:true with no measurement payload in this diff beyond the boolean (and dirty:true tree). Cannot verify push cadence from meta alone",
+  "mode": "grok",
+  "chunkCount": 1,
+  "coverageChars": 15858,
+  "diffChars": 15858,
+  "coverageComplete": true
+}

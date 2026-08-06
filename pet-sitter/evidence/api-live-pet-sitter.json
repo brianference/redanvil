@@ -1,0 +1,18 @@
+{
+  "_why": "Live request/response pairs captured by u-api-real-output against the real Workers runtime. The judge half of the rule reads THIS, not the source: the question it answers is whether these answers deliver what the product claims, which nothing static can decide.",
+  "routes": [
+    {
+      "route": "/api/health",
+      "path": "/api/health",
+      "method": "GET",
+      "requestBody": null,
+      "expectation": {
+        "status": 200,
+        "nonEmpty": true
+      },
+      "status": 200,
+      "responseBody": "{\"status\":\"ok\"}",
+      "error": null
+    }
+  ]
+}

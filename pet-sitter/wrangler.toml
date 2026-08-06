@@ -1,0 +1,8 @@
+name = "pet-sitter"
+compatibility_date = "2026-07-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pet-sitter-db"
+database_id = "863f14ee-f8f0-46b0-9d8f-0756d4412047"

@@ -1,0 +1,39 @@
+/* Theme variables. Dark is the default; light is opt-in via data-theme. */
+:root {
+  --bg: #0b0b0f;
+  --surface: #15151d;
+  --surface-elevated: #1c1c26;
+  --text: #f5f5f7;
+  --text-on-accent: #ffffff;
+  --muted: #9b9ba6;
+  --accent: #e5484d;
+  --border: #2b2b36;
+}
+
+:root[data-theme='light'] {
+  --bg: #f4f4f6;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --text: #111114;
+  --text-on-accent: #ffffff;
+  --muted: #5c5c68;
+  --accent: #c62828;
+  --border: #d8d8e0;
+}
+
+html {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    sans-serif;
+  /* 16px floor: fe-type-floor is a blocker. */
+  font-size: 16px;
+  line-height: 1.5;
+}

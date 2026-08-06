@@ -1,0 +1,13 @@
+{
+  "_why": "One realistic call per API route, and what its live answer must satisfy. u-api-real-output enumerates functions/api/** on disk and fails on any route with no example here, so a new endpoint is unproven-by-default. It boots the app for real and calls each example: a non-2xx, an empty body, an empty collection under nonEmpty, or placeholder text all fail. Add minItems when the product claims breadth -- it is what separates \"the endpoint answered\" from \"the endpoint is useful\", and without it a two-row catalog passes every check while returning nothing for anything a person types.",
+  "examples": [
+    {
+      "route": "/api/health",
+      "method": "GET",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
+    }
+  ]
+}
