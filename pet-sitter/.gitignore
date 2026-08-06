@@ -4,3 +4,6 @@ dist/
 .dev.vars
 .wrangler/
 coverage/
+
+src/lib/__screenshots__/
+

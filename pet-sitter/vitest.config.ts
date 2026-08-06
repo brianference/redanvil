@@ -10,10 +10,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json-summary'],
       reportsDirectory: 'coverage',
-      // functions/** are exercised by Playwright + wrangler runtime parity, not
-      // V8 unit coverage. Including them without Worker unit tests tanks the
-      // ratchet against a prior high-water measured on lib-only scope.
-      include: ['src/lib/**', 'src/hooks/**'],
+      include: ['src/lib/**', 'src/hooks/**', 'functions/lib/**'],
       exclude: [
         '**/*.test.ts',
         '**/*.browser.test.ts',
