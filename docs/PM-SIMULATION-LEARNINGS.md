@@ -149,7 +149,66 @@ with a byte-identical rewrite counting as no work.
 and the disagreement is luck.** Here it happened to catch a defect. It could as
 easily have hidden one.
 
-### Simulation 3
+### Simulation 1 (real) — pet-sitter, the first new app through the managed process
+
+Command: `pm pet-sitter --execute --max-iters 3`, then `--max-iters 2`.
+
+**Delivered:** product brief (315 lines, promise -> owning-row contract), three
+structurally distinct layout options (card grid / map / calendar) with a reasoned
+DECISION.md, a logo DECISION.md and mark-01. The owner picked mark-01 and Option A.
+
+**NOT delivered:** the app itself. Final score 0/100, `stopReason=no improvement
+over 0/100 in 2 consecutive iterations`. Not built, not shipped, not deployed.
+
+**BUG 4 (mine, and the most expensive) — committing during a live run destroys
+role output.** The logo role produced FIVE artifacts (three marks, gallery,
+DECISION). None were promoted:
+
+    logo: produced 5 artifact(s) (iteration 3); not promoted: the base repository
+    has uncommitted changes. Merging into a dirty tree buries in-flight work in a
+    merge commit nobody reads -- commit or stash it first.
+
+I was committing a security fix while the run was in flight -- the exact rule in
+CLAUDE.md that says never git add/commit/stash during a delegated run. Four roles
+lost work: logo, qa-runtime, qa-data, qa-visual.
+
+**BUG 5 (design) — a refused promotion discards the work.** The guard is right;
+sweeping the branch afterwards is not. Verified artifacts were destroyed rather
+than retained for retry, so the next iteration had to regenerate them from
+scratch at full cost. A refused promotion must KEEP the branch so a later
+iteration can promote it once the tree is clean.
+
+**BUG 6 — the scaffold creates a nested `.git`.** The new app was recorded as a
+GITLINK, so role worktrees checked out an empty pointer and every role was
+refused with "pet-sitter is not a git repository". Enforcement was right; the
+scaffold is wrong. It also registers the app without committing it, and a role
+cannot work on a tree HEAD does not contain.
+
+**BUG 7 — `generatePrd` mangles product names.** "Find and book trusted local pet
+sitters" produced title "And Book Trusted Local Pet Sitters" and slug
+`and-book-trusted-local-pet-sitters`. `isTitleFragment` did not catch it.
+
+**BUG 8 — an XSS class shipped in the scaffold template.** `<a href={data}>` with
+no scheme validation, present in FOUR apps including two in production. Caught by
+a background reviewer, not the gate, because nobody had encoded URL-scheme
+validation as a rule. Now fixed with one shared validator and a scored rule.
+
+**Learning 6 — cost is dominated by role sessions, not by delegations.**
+A single `--max-iters 3` run cost 17 Grok agent sessions; `--max-iters 2` cost 6.
+Grok went 16% -> 58% mostly on simulation iterations, not on building the
+machinery. Iterating an app that has no path to improvement (build roles blocked,
+nothing to gate) burns a full fan-out per iteration for nothing. Check that an
+iteration CAN improve before paying for it.
+
+**Learning 7 — the gallery must be checked, not trusted.** The layout gallery was
+3-column dark+light but 375-only, missing 1280, while its DECISION.md read as
+complete. The standard now fails that automatically.
+
+### Simulation 2 — sushi-finder
+
+Not yet run.
+
+### Simulation 3 — appliance-care
 
 Not yet run.
 
