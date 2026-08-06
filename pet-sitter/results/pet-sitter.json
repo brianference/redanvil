@@ -4,8 +4,8 @@
   "finalScore": 0,
   "threshold": 90,
   "passed": false,
-  "evaluated": 58,
-  "total": 82,
+  "evaluated": 87,
+  "total": 87,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -25,7 +25,7 @@
     },
     {
       "ruleId": "u-test-runners",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-test-coverage-ratchet",
@@ -33,7 +33,7 @@
     },
     {
       "ruleId": "u-claims-covered",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "hyg-env-ignored",
@@ -157,7 +157,7 @@
     },
     {
       "ruleId": "u-sec-safe-href",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-plat-worker-runtime",
@@ -169,7 +169,7 @@
     },
     {
       "ruleId": "u-api-real-output",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-data-no-placeholder",
@@ -201,7 +201,7 @@
     },
     {
       "ruleId": "hyg-no-duplication",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "ci-actionlint",
@@ -225,6 +225,10 @@
     },
     {
       "ruleId": "proc-conventional-commits",
+      "passed": true
+    },
+    {
+      "ruleId": "proc-artifact-verified",
       "passed": true
     },
     {
@@ -257,7 +261,7 @@
     },
     {
       "ruleId": "u-legal-claims-true",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-favicon-legible",
@@ -281,10 +285,106 @@
     },
     {
       "ruleId": "meas-standard-tool",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-engine-named",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-touch-targets",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-type-floor",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-responsive-375",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-safe-areas",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-premium-nav",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-noncolor-state",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-no-attribution",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cross-link",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-seo-og",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-required-pages",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-visual-review-recorded",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-design-archetype",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-a11y-contrast",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-desktop-width",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cold-visitor",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-product-completeness",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-pages-compose",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-fail-closed-states",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-idiomatic",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-no-speculative-abstraction",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-use-what-exists",
+      "passed": true
+    },
+    {
+      "ruleId": "u-conc-smallest-diff",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-adequacy",
+      "passed": true
+    },
+    {
+      "ruleId": "u-test-behavioral",
       "passed": true
     }
   ],
@@ -293,44 +393,25 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "u-sec-safe-href",
-        "u-test-runners",
-        "u-api-real-output",
-        "u-claims-covered",
-        "fe-a11y-contrast",
-        "u-legal-claims-true",
-        "fe-premium-nav",
-        "fe-required-pages",
-        "fe-no-attribution",
-        "fe-responsive-375",
-        "fe-product-completeness",
-        "fe-visual-review-recorded",
-        "fe-cold-visitor",
-        "fe-touch-targets",
-        "fe-type-floor",
-        "fe-desktop-width",
-        "hyg-no-duplication",
         "lg-shipped",
         "lg-result-reproduces"
       ]
     }
   ],
-  "deployUrl": "https://pet-sitter-vz1.pages.dev",
-  "finishedAt": "2026-08-06T02:22:05.234Z",
+  "deployUrl": null,
+  "finishedAt": "2026-08-06T03:29:42.823Z",
   "provenance": {
-    "commit": "d4ee740a5516c996e44331e10da3f63770bf0244",
+    "commit": "63f030409bd311f1d86c5c7d345ba55f1c59ba85",
     "dirty": false,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
     "node": "v22.19.0",
-    "verdictsHash": null,
+    "verdictsHash": "8577dafd5bce04f393a8fe9d2ca5f8f36b001b44d7768a6a277d7027b57c9f48",
     "notApplicable": [
-      "ci",
-      "proc-artifact-verified",
       "proc-pr-title-ticket",
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-06T02:22:05.295Z"
+    "generatedAt": "2026-08-06T03:29:42.886Z"
   }
 }
