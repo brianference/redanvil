@@ -329,6 +329,8 @@ async function main(): Promise<number> {
     );
     if (r.ok) {
       console.log(`scaffolded ${r.files} files into ${outDir}`);
+      for (const line of r.teamMessages) console.log(line);
+      console.log(`build entry: ${r.nextCommand}`);
       if (!r.prdIncluded) {
         // Loud, not silent. Without it the app carries only the generic rule
         // pack, and the design direction picked for this product is lost.

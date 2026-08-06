@@ -259,6 +259,9 @@ async function executePm(opts: PmCommandOptions): Promise<number> {
     const baseDeps: PmDeps = {
       readStatuses: async () => statusesFromResult(raw, checklistPath, lastGate),
       runRole: makePmRunRole(runtimeCtx, opts.runtimeDeps ?? {}),
+      // Design-before-build: refuse engineer/content/testwriter until logo +
+      // layout DECISION.md files exist and name a real choice.
+      appDir,
       gate: async () => {
         const report = await gateApp(
           appDir,

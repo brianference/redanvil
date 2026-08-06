@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 /**
- * Point git at `.githooks` so pre-push (and any future hooks) run without a
+ * Point git at `.githooks` so pre-commit, commit-msg, and pre-push run without a
  * manual `git config` step. Wired as the root package.json `prepare` script so
- * a plain `npm install` arms the finish-line refusal.
+ * a plain `npm install` arms team enforcement + the finish-line refusal.
+ *
+ * hooksPath is always `.githooks` (never silently redirected). The team logic
+ * lives under orchestrator/scripts/team/hooks/; the shell wrappers in .githooks
+ * invoke it.
  *
  * Idempotent: re-running is safe.
  */
@@ -13,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const hooksPath = '.githooks';
-const prePush = join(repoRoot, hooksPath, 'pre-push');
+const requiredHooks = ['pre-commit', 'commit-msg', 'pre-push'];
 
 /**
  * Install core.hooksPath for this repository.
@@ -21,8 +25,16 @@ const prePush = join(repoRoot, hooksPath, 'pre-push');
  */
 function install() {
   if (!existsSync(join(repoRoot, hooksPath))) {
-    console.error(`install-hooks: ${hooksPath}/ is missing — cannot arm pre-push`);
+    console.error(`install-hooks: ${hooksPath}/ is missing — cannot arm hooks`);
     process.exit(1);
+  }
+
+  for (const name of requiredHooks) {
+    const p = join(repoRoot, hooksPath, name);
+    if (!existsSync(p)) {
+      console.error(`install-hooks: missing ${hooksPath}/${name}`);
+      process.exit(1);
+    }
   }
 
   try {
@@ -41,16 +53,21 @@ function install() {
     stdio: ['ignore', 'pipe', 'pipe']
   });
 
-  // POSIX executable bit so Git Bash / Linux / macOS will run the hook.
-  if (existsSync(prePush) && process.platform !== 'win32') {
-    try {
-      chmodSync(prePush, 0o755);
-    } catch {
-      // Non-fatal on exotic filesystems.
+  // POSIX executable bit so Git Bash / Linux / macOS will run the hooks.
+  if (process.platform !== 'win32') {
+    for (const name of requiredHooks) {
+      const p = join(repoRoot, hooksPath, name);
+      try {
+        chmodSync(p, 0o755);
+      } catch {
+        // Non-fatal on exotic filesystems.
+      }
     }
   }
 
-  console.log(`install-hooks: core.hooksPath=${hooksPath}`);
+  console.log(
+    `install-hooks: core.hooksPath=${hooksPath} (${requiredHooks.join(', ')})`
+  );
 }
 
 install();

@@ -66,6 +66,33 @@ export {
 } from './pm';
 
 export {
+  evaluateDesignDeliverables,
+  enforceDesignBeforeBuild,
+  isRealDecision,
+  BUILD_ROLE_IDS,
+  DESIGN_ROLE_IDS,
+  LOGO_REQUIRED_FILES,
+  LAYOUT_REQUIRED_FILES,
+  type DesignDeliverablesStatus,
+  type DesignPreconditionResult
+} from './designPrecondition';
+
+export {
+  engageTeamAfterScaffold,
+  registerManagedApp,
+  loadManagedAppsRegistry,
+  writeTeamBinding,
+  readTeamBinding,
+  isHandBuildBlocked,
+  emptyResultStub,
+  MANAGED_APPS_FILE,
+  TEAM_JSON,
+  type ManagedAppEntry,
+  type TeamBinding,
+  type EngageTeamResult
+} from './registerManagedApp';
+
+export {
   runAssignment,
   makePmRunRole,
   unlinkNodeModulesJunction,

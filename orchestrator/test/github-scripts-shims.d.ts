@@ -111,7 +111,10 @@ declare module '../../.github/scripts/apps.mjs' {
     coreFlow: CoreFlow;
     na: string;
   }
+  export const CORE_APPS: readonly GatedApp[];
   export const APPS: readonly GatedApp[];
-  export function appBySlug(slug: string): GatedApp | undefined;
+  export function loadManagedApps(repoRoot?: string): GatedApp[];
+  export function getApps(repoRoot?: string): readonly GatedApp[];
+  export function appBySlug(slug: string, repoRoot?: string): GatedApp | undefined;
   export function coreFlowForSlug(slug: string): CoreFlow;
 }
