@@ -4,8 +4,8 @@
   "finalScore": 0,
   "threshold": 90,
   "passed": false,
-  "evaluated": 58,
-  "total": 82,
+  "evaluated": 64,
+  "total": 88,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -25,11 +25,15 @@
     },
     {
       "ruleId": "u-test-runners",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "u-test-coverage-ratchet",
       "passed": true
+    },
+    {
+      "ruleId": "u-claims-covered",
+      "passed": false
     },
     {
       "ruleId": "hyg-env-ignored",
@@ -53,47 +57,55 @@
     },
     {
       "ruleId": "fe-search-present",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-assistant-present",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-brand-mark",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-brand-mark-size",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-breadcrumbs",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-result-in-viewport",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-resource-links",
       "passed": false
     },
     {
       "ruleId": "fe-legal-substance",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-structured-data",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "proc-design-options",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-prior-art",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-integration-scan",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-competitor-scan",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-typing-scoped-ignores",
@@ -108,7 +120,15 @@
       "passed": true
     },
     {
+      "ruleId": "u-sec-timeouts",
+      "passed": true
+    },
+    {
       "ruleId": "u-sec-headers-cors",
+      "passed": true
+    },
+    {
+      "ruleId": "u-val-input-validation",
       "passed": true
     },
     {
@@ -145,7 +165,7 @@
     },
     {
       "ruleId": "u-api-real-output",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "u-data-no-placeholder",
@@ -177,6 +197,26 @@
     },
     {
       "ruleId": "hyg-no-duplication",
+      "passed": false
+    },
+    {
+      "ruleId": "ci-actionlint",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-sha-pinned",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-least-privilege",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-no-injection",
+      "passed": true
+    },
+    {
+      "ruleId": "ci-exit-code-integrity",
       "passed": true
     },
     {
@@ -197,7 +237,7 @@
     },
     {
       "ruleId": "fe-light-dark",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-build-succeeds",
@@ -205,14 +245,18 @@
     },
     {
       "ruleId": "u-api-not-found",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-api-no-spa-mask",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "u-legal-claims-true",
+      "passed": false
+    },
+    {
+      "ruleId": "fe-favicon-legible",
       "passed": true
     },
     {
@@ -221,11 +265,11 @@
     },
     {
       "ruleId": "meas-known-bad",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-two-run",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-recheck-flattering",
@@ -237,7 +281,7 @@
     },
     {
       "ruleId": "meas-engine-named",
-      "passed": false
+      "passed": true
     }
   ],
   "iterations": [
@@ -245,18 +289,12 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "u-api-not-found",
-        "u-api-no-spa-mask",
+        "u-test-runners",
+        "u-api-real-output",
+        "u-claims-covered",
         "fe-a11y-contrast",
-        "fe-search-present",
-        "fe-assistant-present",
-        "fe-brand-mark",
-        "fe-brand-mark-size",
-        "fe-breadcrumbs",
-        "fe-legal-substance",
-        "fe-structured-data",
-        "fe-prior-art",
-        "fe-light-dark",
+        "fe-resource-links",
+        "u-legal-claims-true",
         "fe-premium-nav",
         "fe-required-pages",
         "fe-no-attribution",
@@ -267,41 +305,28 @@
         "fe-touch-targets",
         "fe-type-floor",
         "fe-desktop-width",
-        "proc-design-options",
+        "hyg-no-duplication",
         "lg-shipped",
         "lg-result-reproduces",
-        "meas-known-bad",
-        "meas-two-run",
-        "meas-standard-tool",
-        "meas-engine-named"
+        "meas-standard-tool"
       ]
     }
   ],
   "deployUrl": "https://pet-sitter-vz1.pages.dev",
-  "finishedAt": "2026-08-06T01:26:59.340Z",
+  "finishedAt": "2026-08-06T02:07:47.257Z",
   "provenance": {
-    "commit": "46b76694ad32450d6ac8830eaf8540c6e22972d7",
+    "commit": "fb1e57335165246a351083e14662e35dbe252da6",
     "dirty": true,
     "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
     "rubricRuleCount": 95,
     "node": "v22.19.0",
     "verdictsHash": null,
     "notApplicable": [
-      "ci-actionlint",
-      "ci-exit-code-integrity",
-      "ci-least-privilege",
-      "ci-no-injection",
-      "ci-sha-pinned",
-      "fe-favicon-legible",
-      "fe-resource-links",
-      "fe-result-in-viewport",
+      "ci",
       "proc-artifact-verified",
-      "proc-pr-title-ticket",
-      "u-claims-covered",
-      "u-sec-timeouts",
-      "u-val-input-validation"
+      "proc-pr-title-ticket"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-06T01:26:59.386Z"
+    "generatedAt": "2026-08-06T02:07:47.333Z"
   }
 }
