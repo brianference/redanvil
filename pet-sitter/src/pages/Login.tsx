@@ -29,6 +29,7 @@ export function Login(): JSX.Element {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         credentials: 'same-origin',
+        signal: AbortSignal.timeout(20_000),
         body: JSON.stringify({
           action: mode,
           email,

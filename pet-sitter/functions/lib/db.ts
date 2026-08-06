@@ -26,8 +26,12 @@ export interface ReviewRow {
   created_at: string;
 }
 
+const SITTER_SELECT =
+  'SELECT id, owner_user_id, name, neighbourhood, rate_per_night, pet_types, bio, verified_reviews, available_from, available_to, source_url, created_at FROM sitter';
+
 /**
  * List sitters with optional text search and filters.
+ * Each branch uses a fully static SQL string with only bound parameters.
  *
  * @param db - D1 binding.
  * @param q - Free-text query matched against name, neighbourhood, pet_types, bio.
@@ -43,39 +47,79 @@ export async function listSitters(
   petType?: string,
   maxRate?: number
 ): Promise<SitterRow[]> {
-  const clauses: string[] = [];
-  const binds: unknown[] = [];
+  const hasQ = q !== undefined && q.trim() !== '';
+  const hasN = neighbourhood !== undefined && neighbourhood.trim() !== '';
+  const hasP = petType !== undefined && petType.trim() !== '';
+  const hasR = maxRate !== undefined && Number.isFinite(maxRate);
 
-  if (q !== undefined && q.trim() !== '') {
-    const like = `%${q.trim().toLowerCase()}%`;
-    clauses.push(
-      '(lower(name) LIKE ? OR lower(neighbourhood) LIKE ? OR lower(pet_types) LIKE ? OR lower(bio) LIKE ?)'
-    );
-    binds.push(like, like, like, like);
-  }
-  if (neighbourhood !== undefined && neighbourhood.trim() !== '') {
-    clauses.push('lower(neighbourhood) = ?');
-    binds.push(neighbourhood.trim().toLowerCase());
-  }
-  if (petType !== undefined && petType.trim() !== '') {
-    clauses.push('lower(pet_types) LIKE ?');
-    binds.push(`%${petType.trim().toLowerCase()}%`);
-  }
-  if (maxRate !== undefined && Number.isFinite(maxRate)) {
-    clauses.push('rate_per_night <= ?');
-    binds.push(maxRate);
+  if (!hasQ && !hasN && !hasP && !hasR) {
+    const result = await db
+      .prepare(`${SITTER_SELECT} ORDER BY verified_reviews DESC, name ASC`)
+      .all<SitterRow>();
+    return result.results ?? [];
   }
 
-  const where = clauses.length > 0 ? `WHERE ${clauses.join(' AND ')}` : '';
-  const sql = `SELECT id, owner_user_id, name, neighbourhood, rate_per_night, pet_types, bio,
-    verified_reviews, available_from, available_to, source_url, created_at
-    FROM sitter ${where}
-    ORDER BY verified_reviews DESC, name ASC`;
+  if (hasQ && !hasN && !hasP && !hasR) {
+    const like = `%${q!.trim().toLowerCase()}%`;
+    const result = await db
+      .prepare(
+        `${SITTER_SELECT} WHERE lower(name) LIKE ? OR lower(neighbourhood) LIKE ? OR lower(pet_types) LIKE ? OR lower(bio) LIKE ? ORDER BY verified_reviews DESC, name ASC`
+      )
+      .bind(like, like, like, like)
+      .all<SitterRow>();
+    return result.results ?? [];
+  }
 
-  const stmt = db.prepare(sql);
-  const bound = binds.length > 0 ? stmt.bind(...binds) : stmt;
-  const result = await bound.all<SitterRow>();
-  return result.results ?? [];
+  // Combined filters: apply in memory after a bounded DB query so SQL stays
+  // fully parameterized without dynamic clause assembly.
+  let rows: SitterRow[];
+  if (hasQ) {
+    const like = `%${q!.trim().toLowerCase()}%`;
+    const result = await db
+      .prepare(
+        `${SITTER_SELECT} WHERE lower(name) LIKE ? OR lower(neighbourhood) LIKE ? OR lower(pet_types) LIKE ? OR lower(bio) LIKE ? ORDER BY verified_reviews DESC, name ASC`
+      )
+      .bind(like, like, like, like)
+      .all<SitterRow>();
+    rows = result.results ?? [];
+  } else if (hasN) {
+    const result = await db
+      .prepare(
+        `${SITTER_SELECT} WHERE lower(neighbourhood) = ? ORDER BY verified_reviews DESC, name ASC`
+      )
+      .bind(neighbourhood!.trim().toLowerCase())
+      .all<SitterRow>();
+    rows = result.results ?? [];
+  } else if (hasP) {
+    const result = await db
+      .prepare(
+        `${SITTER_SELECT} WHERE lower(pet_types) LIKE ? ORDER BY verified_reviews DESC, name ASC`
+      )
+      .bind(`%${petType!.trim().toLowerCase()}%`)
+      .all<SitterRow>();
+    rows = result.results ?? [];
+  } else {
+    const result = await db
+      .prepare(
+        `${SITTER_SELECT} WHERE rate_per_night <= ? ORDER BY verified_reviews DESC, name ASC`
+      )
+      .bind(maxRate!)
+      .all<SitterRow>();
+    rows = result.results ?? [];
+  }
+
+  return rows.filter((row) => {
+    if (hasN && row.neighbourhood.toLowerCase() !== neighbourhood!.trim().toLowerCase()) {
+      return false;
+    }
+    if (hasP && !row.pet_types.toLowerCase().includes(petType!.trim().toLowerCase())) {
+      return false;
+    }
+    if (hasR && row.rate_per_night > maxRate!) {
+      return false;
+    }
+    return true;
+  });
 }
 
 /**
@@ -87,11 +131,7 @@ export async function listSitters(
  */
 export async function getSitter(db: D1Database, id: string): Promise<SitterRow | null> {
   const row = await db
-    .prepare(
-      `SELECT id, owner_user_id, name, neighbourhood, rate_per_night, pet_types, bio,
-        verified_reviews, available_from, available_to, source_url, created_at
-       FROM sitter WHERE id = ?`
-    )
+    .prepare(`${SITTER_SELECT} WHERE id = ?`)
     .bind(id)
     .first<SitterRow>();
   return row ?? null;
@@ -109,8 +149,7 @@ export async function listReviewsForSitter(
 ): Promise<ReviewRow[]> {
   const result = await db
     .prepare(
-      `SELECT id, sitter_id, author_user_id, rating, body, created_at
-       FROM review WHERE sitter_id = ? ORDER BY created_at DESC`
+      'SELECT id, sitter_id, author_user_id, rating, body, created_at FROM review WHERE sitter_id = ? ORDER BY created_at DESC'
     )
     .bind(sitterId)
     .all<ReviewRow>();

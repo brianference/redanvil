@@ -1,3 +1,4 @@
+import { SittersQuerySchema } from '../../src/lib/schemas';
 import type { AppContext } from '../lib/env';
 import { listSitters } from '../lib/db';
 import { errorJson, json, optionsResponse } from '../lib/http';
@@ -12,21 +13,20 @@ export async function onRequestGet(context: AppContext): Promise<Response> {
       return errorJson(context.request, 'database binding unavailable', 503);
     }
     const url = new URL(context.request.url);
-    const q = url.searchParams.get('q') ?? undefined;
-    const neighbourhood = url.searchParams.get('neighbourhood') ?? undefined;
-    const petType = url.searchParams.get('pet_type') ?? undefined;
-    const maxRateRaw = url.searchParams.get('max_rate');
-    let maxRate: number | undefined;
-    if (maxRateRaw !== null && maxRateRaw !== '') {
-      const n = Number(maxRateRaw);
-      if (!Number.isFinite(n) || n < 0) {
-        return errorJson(context.request, 'invalid max_rate', 400);
-      }
-      maxRate = n;
+    const parsed = SittersQuerySchema.safeParse({
+      q: url.searchParams.get('q') ?? undefined,
+      neighbourhood: url.searchParams.get('neighbourhood') ?? undefined,
+      pet_type: url.searchParams.get('pet_type') ?? undefined,
+      max_rate: url.searchParams.get('max_rate') ?? undefined
+    });
+    if (!parsed.success) {
+      return errorJson(
+        context.request,
+        parsed.error.issues[0]?.message ?? 'invalid query',
+        400
+      );
     }
-    if (q !== undefined && q.length > 100) {
-      return errorJson(context.request, 'q must be at most 100 characters', 400);
-    }
+    const { q, neighbourhood, pet_type: petType, max_rate: maxRate } = parsed.data;
     const sitters = await listSitters(context.env.DB, q, neighbourhood, petType, maxRate);
     return json(context.request, { sitters, count: sitters.length });
   } catch (err) {

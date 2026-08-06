@@ -24,16 +24,16 @@ Pet Sitter Finder is a **local overnight / multi-day sitter marketplace** with n
 
 Relative to Rover / Care.com / Wag! today:
 
-1. **Background-check and platform guarantee badges** as first-class, third-party verified claims (Rover Guarantee, screening products).
-2. **On-platform messaging and photo updates** during a stay.
-3. **Payments, payouts, refunds, and service-fee transparency**.
-4. **Live GPS walk tracking** (Wag!) and real-time sitter location.
-5. **Multi-service catalogue** as separate product lines (boarding vs walking vs training) with dedicated funnels.
-6. **Native mobile apps** and push notifications.
-7. **Map-primary browse with pin clustering** and draw-search-area (Rover/Wag patterns).
-8. **Insurance / emergency vet support** productized into the booking.
-9. **Sitter calendar sync** with external calendars and automatic block-out of booked nights at platform scale.
-10. **Owner pet profiles with medical history** as a rich managed entity (our Pet entity is beyond full MVP CRUD UI).
+- Background-check and platform guarantee badges as first-class, third-party verified claims (Rover Guarantee, screening products)
+- On-platform messaging and photo updates during a stay
+- Payments, payouts, refunds, and service-fee transparency
+- Live GPS walk tracking (Wag!) and real-time sitter location
+- Multi-service catalogue as separate product lines (boarding vs walking vs training) with dedicated funnels
+- Native mobile apps and push notifications
+- Map-primary browse with pin clustering and draw-search-area (Rover/Wag patterns)
+- Insurance / emergency vet support productized into the booking
+- Sitter calendar sync with external calendars and automatic block-out of booked nights at platform scale
+- Owner pet profiles with medical history as a rich managed entity (our Pet entity is beyond full MVP CRUD UI)
 
 MVP still must ship the controls that make the job real: text search, neighbourhood / reviews / rate / pet-type / availability filters, sitter detail, booking request for dates, auth, and assistant over local data.
 

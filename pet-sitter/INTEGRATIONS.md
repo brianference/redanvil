@@ -32,16 +32,17 @@ Do not integrate a separate BaaS, Express API server, or Node-native auth librar
 
 No third-party marketplace SaaS or pet-sitting API is licensed and runtime-fit to drop in as the product. Below are building blocks evaluated for reuse vs rewrite.
 
-| repo / product | stars (approx. context) | language | licence | last push context | flags |
-|---|---:|---|---|---|---|
-| Cloudflare D1 + Pages Functions (platform) | n/a (platform) | TS | proprietary platform | active | **Chosen runtime** |
-| Zod | high | TS | MIT | active | **Adopt** — boundary validation on all API inputs |
-| Vite + React | high | TS | MIT | active | **Adopt** — SPA toolchain |
-| Playwright | high | TS | Apache-2.0 | active | **Adopt** — acceptance / a11y harness |
-| Supabase JS | high | TS | Apache-2.0 | active | **Reject** — runtime/hosting model rejected |
-| Express | high | JS | MIT | active | **Reject** — long-lived Node server |
-| node-bcrypt / bcryptjs | high | C++/JS | MIT | active | **Reject** native path; prefer Web Crypto even over pure-JS bcrypt for one stack |
-| jsonwebtoken | high | JS | MIT | active | **Reject** — use HMAC session cookies via Web Crypto |
+| repo | stars | language | licence | last push | checked | source | flags |
+|---|---:|---|---|---|---|---|---|
+| cloudflare/workers-sdk | n/a | TS | Apache-2.0 | active | 2026-08-06 | https://github.com/cloudflare/workers-sdk | Chosen runtime |
+| colinhacks/zod | high | TS | MIT | active | 2026-08-06 | https://github.com/colinhacks/zod | Adopt boundary validation |
+| vitejs/vite | high | TS | MIT | active | 2026-08-06 | https://github.com/vitejs/vite | Adopt SPA toolchain |
+| facebook/react | high | TS | MIT | active | 2026-08-06 | https://github.com/facebook/react | Adopt SPA UI |
+| microsoft/playwright | high | TS | Apache-2.0 | active | 2026-08-06 | https://github.com/microsoft/playwright | Adopt acceptance harness |
+| supabase/supabase-js | high | TS | Apache-2.0 | active | 2026-08-06 | https://github.com/supabase/supabase-js | Reject hosting model |
+| expressjs/express | high | JS | MIT | active | 2026-08-06 | https://github.com/expressjs/express | Reject long-lived Node server |
+| dcodeIO/bcrypt.js | high | JS | MIT | active | 2026-08-06 | https://github.com/dcodeIO/bcrypt.js | Reject; Web Crypto instead |
+| auth0/node-jsonwebtoken | high | JS | MIT | active | 2026-08-06 | https://github.com/auth0/node-jsonwebtoken | Reject; HMAC session cookies |
 
 Star counts move constantly; the decision is driven by **Workers runtime fit** and **org platform rules**, not star rank.
 

@@ -1,3 +1,4 @@
+import { AssistantRequestSchema } from '../../src/lib/schemas';
 import type { AppContext } from '../lib/env';
 import { listSitters, type SitterRow } from '../lib/db';
 import { errorJson, json, optionsResponse } from '../lib/http';
@@ -97,22 +98,21 @@ export async function onRequestPost(context: AppContext): Promise<Response> {
       return errorJson(context.request, 'AI binding unavailable', 503);
     }
 
-    let body: unknown;
+    let raw: unknown;
     try {
-      body = await context.request.json();
+      raw = await context.request.json();
     } catch {
       return errorJson(context.request, 'Invalid JSON body', 400);
     }
-    const message =
-      typeof body === 'object' &&
-      body !== null &&
-      'message' in body &&
-      typeof (body as { message: unknown }).message === 'string'
-        ? (body as { message: string }).message.trim()
-        : '';
-    if (message.length === 0 || message.length > 500) {
-      return errorJson(context.request, 'message must be 1–500 characters', 400);
+    const parsedBody = AssistantRequestSchema.safeParse(raw);
+    if (!parsedBody.success) {
+      return errorJson(
+        context.request,
+        parsedBody.error.issues[0]?.message ?? 'message must be 1–500 characters',
+        400
+      );
     }
+    const message = parsedBody.data.message;
 
     let filters: Record<string, unknown> = {};
     try {
