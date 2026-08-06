@@ -203,14 +203,19 @@ img { display: block; max-width: 100%; }
     margin-top: 4px; min-height: 44px; border-radius: 999px; border: 0;
     background: var(--accent); color: var(--accent-ink); font-weight: 700; width: 100%;
   }
-  .opt-a .assist {
-    position: absolute; left: 16px; bottom: max(16px, env(safe-area-inset-bottom));
-    z-index: 15; min-height: 48px; padding: 0 18px; border-radius: 999px; border: 0;
-    background: var(--text); color: var(--bg); font-weight: 700; font-size: 14px;
-    box-shadow: var(--shadow); display: inline-flex; align-items: center; gap: 8px;
+  .opt-a .assist-dock {
+    flex-shrink: 0; padding: 10px 16px max(12px, env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    border-top: 1px solid var(--border); z-index: 15;
   }
-  .phone.opt-a .card-grid { padding-bottom: 100px; }
-  .phone.opt-a .assist { max-width: calc(100% - 32px); }
+  .opt-a .assist {
+    min-height: 48px; width: 100%; padding: 0 18px; border-radius: 999px; border: 0;
+    background: var(--text); color: var(--bg); font-weight: 700; font-size: 14px;
+    box-shadow: var(--shadow); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .phone.opt-a .card-grid { padding-bottom: 24px; }
+  .desktop.opt-a .assist-dock { padding: 12px 28px 20px; }
+  .desktop.opt-a .assist { max-width: 280px; }
   /* Detail */
   .opt-a .detail-hero {
     position: relative; height: 280px; background: var(--chip);
@@ -471,7 +476,9 @@ img { display: block; max-width: 100%; }
           </div>
         </li></ul>
         </div>
-        <button type="button" class="assist" aria-label="Ask about sitters">Ask about sitters</button>
+        <div class="assist-dock">
+          <button type="button" class="assist" aria-label="Ask about sitters">Ask about sitters</button>
+        </div>
       </div>
       
     </div>
@@ -671,7 +678,9 @@ img { display: block; max-width: 100%; }
           </div>
         </li></ul>
         </div>
-        <button type="button" class="assist" aria-label="Ask about sitters">Ask about sitters</button>
+        <div class="assist-dock">
+          <button type="button" class="assist" aria-label="Ask about sitters">Ask about sitters</button>
+        </div>
       </div>
       </div>
     </div>
@@ -870,7 +879,9 @@ img { display: block; max-width: 100%; }
           </div>
         </li></ul>
         </div>
-        <button type="button" class="assist" aria-label="Ask about sitters">Ask about sitters</button>
+        <div class="assist-dock">
+          <button type="button" class="assist" aria-label="Ask about sitters">Ask about sitters</button>
+        </div>
       </div>
       
     </div>
@@ -1070,7 +1081,9 @@ img { display: block; max-width: 100%; }
           </div>
         </li></ul>
         </div>
-        <button type="button" class="assist" aria-label="Ask about sitters">Ask about sitters</button>
+        <div class="assist-dock">
+          <button type="button" class="assist" aria-label="Ask about sitters">Ask about sitters</button>
+        </div>
       </div>
       </div>
     </div>

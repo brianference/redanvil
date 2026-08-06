@@ -377,14 +377,19 @@ function optionA() {
     margin-top: 4px; min-height: 44px; border-radius: 999px; border: 0;
     background: var(--accent); color: var(--accent-ink); font-weight: 700; width: 100%;
   }
-  .opt-a .assist {
-    position: absolute; left: 16px; bottom: max(16px, env(safe-area-inset-bottom));
-    z-index: 15; min-height: 48px; padding: 0 18px; border-radius: 999px; border: 0;
-    background: var(--text); color: var(--bg); font-weight: 700; font-size: 14px;
-    box-shadow: var(--shadow); display: inline-flex; align-items: center; gap: 8px;
+  .opt-a .assist-dock {
+    flex-shrink: 0; padding: 10px 16px max(12px, env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    border-top: 1px solid var(--border); z-index: 15;
   }
-  .phone.opt-a .card-grid { padding-bottom: 100px; }
-  .phone.opt-a .assist { max-width: calc(100% - 32px); }
+  .opt-a .assist {
+    min-height: 48px; width: 100%; padding: 0 18px; border-radius: 999px; border: 0;
+    background: var(--text); color: var(--bg); font-weight: 700; font-size: 14px;
+    box-shadow: var(--shadow); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .phone.opt-a .card-grid { padding-bottom: 24px; }
+  .desktop.opt-a .assist-dock { padding: 12px 28px 20px; }
+  .desktop.opt-a .assist { max-width: 280px; }
   /* Detail */
   .opt-a .detail-hero {
     position: relative; height: 280px; background: var(--chip);
@@ -529,7 +534,9 @@ function optionA() {
           <div class="meta-row"><span><strong>${SITTERS.length}</strong> sitters open for Aug 12-16</span><span>Sort: Top rated</span></div>
           <ul class="card-grid">${cards}</ul>
         </div>
-        <button type="button" class="assist" aria-label="Ask about sitters">Ask about sitters</button>`;
+        <div class="assist-dock">
+          <button type="button" class="assist" aria-label="Ask about sitters">Ask about sitters</button>
+        </div>`;
     } else {
       const s = DETAIL;
       const main = `
@@ -666,12 +673,15 @@ function optionB() {
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
     position: absolute; top: 0; left: 0; right: 0; z-index: 30;
+    min-width: 0;
   }
-  .opt-b .brand { display: flex; align-items: center; gap: 8px; min-height: 44px; color: inherit; text-decoration: none; }
+  .opt-b .brand { display: flex; align-items: center; gap: 8px; min-height: 44px; color: inherit; text-decoration: none; flex-shrink: 0; }
   .opt-b .brand img { width: 36px; height: 36px; border-radius: 10px; }
   .opt-b .brand-name { font-weight: 800; font-size: 14px; }
+  /* Defect 1 fix: hide wordmark on phone so search never overlaps "Sit..." */
+  .phone.opt-b .brand-name { display: none; }
   .opt-b .search-over {
-    flex: 1; display: flex; align-items: center; gap: 8px; min-height: 44px;
+    flex: 1 1 auto; display: flex; align-items: center; gap: 8px; min-height: 44px; min-width: 0;
     background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
     padding: 0 6px 0 14px; box-shadow: var(--shadow);
   }
@@ -737,9 +747,9 @@ function optionB() {
     background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
   }
   .opt-b .rail {
-    list-style: none; margin: 0; padding: 0 12px 88px; overflow-y: auto; flex: 1;
+    list-style: none; margin: 0; padding: 0 12px 16px; overflow-y: auto; flex: 1;
   }
-  .desktop.opt-b .rail { padding-bottom: 24px; }
+  .desktop.opt-b .rail { padding-bottom: 16px; }
   .opt-b .rail-row {
     display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center;
     padding: 12px; border-radius: var(--radius); border: 1px solid transparent;
@@ -767,13 +777,20 @@ function optionB() {
     display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--ok); font-weight: 700; margin-top: 4px;
   }
   .opt-b .avail-dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); }
+  .opt-b .assist-dock {
+    flex-shrink: 0; padding: 10px 12px max(12px, env(safe-area-inset-bottom));
+    background: var(--surface); border-top: 1px solid var(--border); z-index: 25;
+  }
   .opt-b .assist {
-    position: absolute; left: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 25;
-    min-height: 48px; padding: 0 16px; border-radius: 999px; border: 0;
+    min-height: 48px; width: 100%; padding: 0 16px; border-radius: 999px; border: 0;
     background: var(--text); color: var(--bg); font-weight: 700; font-size: 14px;
     box-shadow: var(--shadow);
   }
-  .desktop.opt-b .assist { left: auto; right: 440px; }
+  .desktop.opt-b .assist-dock {
+    position: absolute; left: 16px; bottom: 16px; right: auto; width: auto;
+    background: transparent; border: 0; padding: 0; z-index: 25;
+  }
+  .desktop.opt-b .assist { width: auto; min-width: 180px; }
   /* Detail */
   .opt-b .detail-shell { display: flex; flex-direction: column; height: 100%; }
   .desktop.opt-b .detail-shell { flex-direction: row; }
@@ -901,8 +918,10 @@ function optionB() {
               <button type="button" class="date-chip" aria-pressed="false">Flexible</button>
             </div>
             <ul class="rail">${rows}</ul>
+            <div class="assist-dock">
+              <button type="button" class="assist">Ask about sitters</button>
+            </div>
           </section>
-          <button type="button" class="assist">Ask about sitters</button>
         </div>`;
 
       return `
@@ -1084,15 +1103,24 @@ function optionC() {
     background: var(--bg); color: var(--text);
   }
   .opt-c .cal-grid {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center;
+    display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center;
+    width: 100%; min-width: 0;
   }
   .opt-c .cal-dow {
     font-size: 11px; font-weight: 800; color: var(--muted); padding: 6px 0; text-transform: uppercase;
+    min-width: 0; overflow: hidden;
   }
   .opt-c .cal-day {
     min-height: 40px; border-radius: 10px; border: 0; background: transparent; color: var(--text);
-    font-weight: 700; font-size: 14px; position: relative;
+    font-weight: 700; font-size: 14px; position: relative; min-width: 0; width: 100%; padding: 0;
   }
+  /* Defect 2 fix: fit 7 columns at 375px without clipping Saturday */
+  .phone.opt-c .cal-hero { padding: 14px 10px 10px; overflow-x: hidden; max-width: 100%; }
+  .phone.opt-c .cal-grid { gap: 2px; }
+  .phone.opt-c .cal-dow { font-size: 10px; padding: 4px 0; letter-spacing: 0; }
+  .phone.opt-c .cal-day { min-height: 34px; font-size: 12px; border-radius: 8px; }
+  .phone.opt-c .range-box { padding: 10px; }
+  .phone.opt-c .range-box input { padding: 0 6px; font-size: 13px; }
   .opt-c .cal-day.muted { color: var(--muted); opacity: 0.45; }
   .opt-c .cal-day.in-range { background: color-mix(in srgb, var(--accent) 18%, transparent); }
   .opt-c .cal-day.range-end, .opt-c .cal-day.range-start {
@@ -1113,8 +1141,8 @@ function optionC() {
     min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px;
     background: var(--accent); color: var(--accent-ink); font-weight: 800;
   }
-  .opt-c .timeline-wrap { flex: 1; overflow-y: auto; padding: 12px 16px 100px; }
-  .desktop.opt-c .timeline-wrap { padding: 20px 28px 40px; }
+  .opt-c .timeline-wrap { flex: 1; overflow-y: auto; padding: 12px 16px 16px; }
+  .desktop.opt-c .timeline-wrap { padding: 20px 28px 16px; }
   .opt-c .timeline-meta {
     display: flex; justify-content: space-between; align-items: baseline;
     margin-bottom: 12px; color: var(--muted); font-size: 14px;
@@ -1157,13 +1185,18 @@ function optionC() {
     min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border);
     background: var(--bg); color: var(--text); font-weight: 800; font-size: 13px;
   }
+  .opt-c .assist-dock {
+    flex-shrink: 0; padding: 10px 16px max(12px, env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    border-top: 1px solid var(--border); z-index: 15;
+  }
   .opt-c .assist {
-    position: absolute; right: 16px; bottom: max(16px, env(safe-area-inset-bottom));
-    z-index: 15; min-height: 48px; padding: 0 16px; border-radius: 12px; border: 0;
+    min-height: 48px; width: 100%; padding: 0 16px; border-radius: 12px; border: 0;
     background: var(--text); color: var(--bg); font-weight: 800; font-size: 14px;
     box-shadow: var(--shadow);
   }
-  .desktop.opt-c .assist { right: 28px; bottom: 28px; }
+  .desktop.opt-c .assist-dock { padding: 12px 28px 20px; }
+  .desktop.opt-c .assist { max-width: 280px; margin-left: auto; }
   /* Detail */
   .opt-c .detail-top {
     display: grid; grid-template-columns: 120px 1fr; gap: 16px; padding: 20px 16px 8px; align-items: center;
@@ -1324,13 +1357,14 @@ function optionC() {
             <span>Bars = Aug 1-14 availability</span>
           </div>
           <ul class="timeline">${rows}</ul>
-        </div>
-        <button type="button" class="assist">Ask about sitters</button>`;
+        </div>`;
+
+      const assistDock = `<div class="assist-dock"><button type="button" class="assist">Ask about sitters</button></div>`;
 
       const body =
         device === 'phone'
-          ? `${nav}<div class="scroll">${calBlock}${list}</div>`
-          : `${nav}<div class="home-split">${calBlock}${list}</div>`;
+          ? `${nav}<div class="scroll">${calBlock}${list}</div>${assistDock}`
+          : `${nav}<div class="home-split">${calBlock}${list}</div>${assistDock}`;
 
       return `
       <div class="frame-wrap">
@@ -1583,6 +1617,6 @@ writeFileSync(join(__dir, 'option-a.html'), optionA(), 'utf8');
 writeFileSync(join(__dir, 'option-b.html'), optionB(), 'utf8');
 writeFileSync(join(__dir, 'option-c.html'), optionC(), 'utf8');
 writeFileSync(join(__dir, 'gallery.html'), gallery(), 'utf8');
-writeFileSync(join(__dir, 'DECISION.md'), decisionMd(), 'utf8');
-console.log('Wrote option-a/b/c.html, gallery.html, DECISION.md');
+// DECISION.md is owner-owned — do not overwrite it from this builder.
+console.log('Wrote option-a/b/c.html, gallery.html');
 

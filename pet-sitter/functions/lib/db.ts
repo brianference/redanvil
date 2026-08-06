@@ -14,6 +14,11 @@ export interface SitterRow {
   available_to: string | null;
   source_url: string | null;
   created_at: string;
+  /**
+   * Average of review.rating rows for this sitter, or null when no review row exists.
+   * Never invent a score client-side — only this field (or per-review ratings) is real.
+   */
+  avg_rating: number | null;
 }
 
 /** Review row. */
@@ -26,8 +31,24 @@ export interface ReviewRow {
   created_at: string;
 }
 
-const SITTER_SELECT =
-  'SELECT id, owner_user_id, name, neighbourhood, rate_per_night, pet_types, bio, verified_reviews, available_from, available_to, source_url, created_at FROM sitter';
+const SITTER_SELECT = `SELECT id, owner_user_id, name, neighbourhood, rate_per_night, pet_types, bio,
+  verified_reviews, available_from, available_to, source_url, created_at,
+  (SELECT AVG(CAST(rating AS REAL)) FROM review r WHERE r.sitter_id = sitter.id) AS avg_rating
+  FROM sitter`;
+
+/**
+ * Normalize D1 avg_rating (number | string | null) to number | null.
+ *
+ * @param row - Raw sitter row from D1.
+ */
+function normalizeSitter(row: SitterRow): SitterRow {
+  const raw = row.avg_rating as number | string | null | undefined;
+  if (raw == null || raw === '') {
+    return { ...row, avg_rating: null };
+  }
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  return { ...row, avg_rating: Number.isFinite(n) ? n : null };
+}
 
 /**
  * List sitters with optional text search and filters.
@@ -56,7 +77,7 @@ export async function listSitters(
     const result = await db
       .prepare(`${SITTER_SELECT} ORDER BY verified_reviews DESC, name ASC`)
       .all<SitterRow>();
-    return result.results ?? [];
+    return (result.results ?? []).map(normalizeSitter);
   }
 
   if (hasQ && !hasN && !hasP && !hasR) {
@@ -67,7 +88,7 @@ export async function listSitters(
       )
       .bind(like, like, like, like)
       .all<SitterRow>();
-    return result.results ?? [];
+    return (result.results ?? []).map(normalizeSitter);
   }
 
   // Combined filters: apply in memory after a bounded DB query so SQL stays
@@ -108,18 +129,20 @@ export async function listSitters(
     rows = result.results ?? [];
   }
 
-  return rows.filter((row) => {
-    if (hasN && row.neighbourhood.toLowerCase() !== neighbourhood!.trim().toLowerCase()) {
-      return false;
-    }
-    if (hasP && !row.pet_types.toLowerCase().includes(petType!.trim().toLowerCase())) {
-      return false;
-    }
-    if (hasR && row.rate_per_night > maxRate!) {
-      return false;
-    }
-    return true;
-  });
+  return rows
+    .filter((row) => {
+      if (hasN && row.neighbourhood.toLowerCase() !== neighbourhood!.trim().toLowerCase()) {
+        return false;
+      }
+      if (hasP && !row.pet_types.toLowerCase().includes(petType!.trim().toLowerCase())) {
+        return false;
+      }
+      if (hasR && row.rate_per_night > maxRate!) {
+        return false;
+      }
+      return true;
+    })
+    .map(normalizeSitter);
 }
 
 /**
@@ -134,7 +157,7 @@ export async function getSitter(db: D1Database, id: string): Promise<SitterRow |
     .prepare(`${SITTER_SELECT} WHERE id = ?`)
     .bind(id)
     .first<SitterRow>();
-  return row ?? null;
+  return row ? normalizeSitter(row) : null;
 }
 
 /**

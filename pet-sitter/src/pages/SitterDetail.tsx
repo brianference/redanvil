@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
+import { PetTypePills } from '../components/PetTypePills';
 import { SafeExternalLink } from '../components/SafeExternalLink';
+import { SitterAvatar } from '../components/SitterAvatar';
+import { SitterRating } from '../components/SitterRating';
 import { fetchSitterDetail, type ReviewSummary, type SitterSummary } from '../lib/api';
 import { en } from '../i18n/en';
 
 /**
- * Sitter detail with reviews and external source link when present.
+ * Sitter detail with avatar, rating from review rows, reviews, and source link.
  */
 export function SitterDetail(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +46,12 @@ export function SitterDetail(): JSX.Element {
     };
   }, [id]);
 
+  const avgFromReviews = useMemo(() => {
+    if (reviews.length === 0) return null;
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    return sum / reviews.length;
+  }, [reviews]);
+
   if (status === 'loading') {
     return (
       <Page title={en.detail.loadingTitle}>
@@ -72,16 +81,22 @@ export function SitterDetail(): JSX.Element {
     );
   }
 
+  const avgRating = sitter.avg_rating ?? avgFromReviews;
+
   return (
     <Page title={sitter.name}>
       <div className="detail">
-        <p className="detail__meta">
-          {sitter.neighbourhood} · ${sitter.rate_per_night}
-          {en.home.perNight} · {sitter.verified_reviews} {en.home.reviews}
-        </p>
-        <p className="detail__pets">
-          <strong>{en.detail.petTypes}:</strong> {sitter.pet_types}
-        </p>
+        <div className="detail__hero">
+          <SitterAvatar sitterId={sitter.id} name={sitter.name} className="detail__avatar" />
+          <div className="detail__intro">
+            <p className="detail__meta">
+              {sitter.neighbourhood} · ${sitter.rate_per_night}
+              {en.home.perNight}
+            </p>
+            <SitterRating avgRating={avgRating} reviewCount={sitter.verified_reviews} />
+            <PetTypePills petTypes={sitter.pet_types} />
+          </div>
+        </div>
         {sitter.available_from && sitter.available_to ? (
           <p className="detail__avail">
             <strong>{en.detail.availability}:</strong> {sitter.available_from} →{' '}

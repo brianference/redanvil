@@ -29,6 +29,8 @@ export interface SitterSummary {
   available_to: string | null;
   source_url: string | null;
   created_at: string;
+  /** Average of review rows, or null when no review row exists. */
+  avg_rating: number | null;
 }
 
 /** Review on a sitter detail. */
