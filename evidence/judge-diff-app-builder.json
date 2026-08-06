@@ -1,31 +1,54 @@
 {
   "kind": "independent-diff-review",
   "slug": "app-builder",
-  "commit": "6185add97ab72f678510f798a55cd04474d77817",
-  "reviewedAt": "2026-08-05T03:01:35.691Z",
-  "diffHash": "67613fcc021688a9391e8be84d393121be55e091ac70911b371446de9eae25dc",
+  "commit": "ba632bafa23ad51741610b702bae9040cac0dc1a",
+  "reviewedAt": "2026-08-06T01:19:34.915Z",
+  "diffHash": "764f696c431d491d1b29117b0ab70474cf55dc046e8e648aeca6e984a98e9a25",
   "completed": true,
-  "ok": true,
+  "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "Evidence records meas-known-bad failing while the scored verdict says it passed",
-      "citation": "app-builder/evidence/measurement-meta.json:381",
-      "detail": "Recorded runs said ok:false while results/app-builder.json recorded passed:true for the same commit. Resolved by re-gating after the fixes below, so evidence and verdict are produced by the same run.",
-      "passed": true
+      "title": "Diff is evidence-only, no application code",
+      "citation": "app-builder/.redanvil/coverage-state.json:1",
+      "detail": "The visible diff only updates coverage ratchet state, live API evidence snapshots, measurement-meta timestamps, and a score-history/verdict dump. No application source (routes, components, workers, migrations) appears in the provided hunks, so no product fix can be verified from this commit.",
+      "passed": false
     },
     {
-      "title": "fe-legal-substance is browser-driven but was excluded from BROWSER_DRIVEN_RULES",
-      "citation": "orchestrator/scripts/lib/measurement-meta.mjs:38",
-      "detail": "Its own metadata says tool playwright, engine chromium, yet meas-two-run never evaluated it, and its two runs were byte-identical to the millisecond. Rubric row D8 is bound to it, so a row required to be measured twice was measured once and recorded twice. FIXED: added to BROWSER_DRIVEN_RULES, which immediately exposed the duplicate; both write sites now record two genuinely independent measurements.",
-      "passed": true
+      "title": "Gate still failing ship and bindings",
+      "citation": "app-builder/evidence/score-history.json:1",
+      "detail": "Recorded verdicts include lg-shipped passed:false, lg-bindings-bound passed:false, deployUrl:null, and provenance.dirty:true on commit 181e085. That is explicit proof the app is not shipped and bindings are not verified; a score/evidence refresh does not clear those blockers.",
+      "passed": false
+    },
+    {
+      "title": "API and measurement rules still fail",
+      "citation": "app-builder/evidence/score-history.json:1",
+      "detail": "u-api-not-found, u-api-no-spa-mask, fe-light-dark, meas-known-bad, meas-two-run, meas-standard-tool, and meas-engine-named are all recorded passed:false with a long blocker list on iteration 1. The commit only re-stamps evidence timestamps and response bodies; it does not show fixes for those failures.",
+      "passed": false
+    },
+    {
+      "title": "Live API evidence still truncated and queued-only",
+      "citation": "app-builder/evidence/api-live-app-builder.json:24",
+      "detail": "GET /api jobs responseBody remains truncated mid-field (ends at \"thresho\") and lists many identical bird-watching jobs still status queued. That does not prove healthy job completion or complete API contract coverage; it is a re-capture of the same partial snapshot shape.",
+      "passed": false
+    },
+    {
+      "title": "Coverage baseCommit moved without code proof",
+      "citation": "app-builder/.redanvil/coverage-state.json:4",
+      "detail": "baseCommit changes from 2adaa95… to 5b4c7df… while highWaterPct stays 94.37. Without a source or test diff, this looks like ratchet bookkeeping on a new base, not a verified coverage improvement.",
+      "passed": false
+    },
+    {
+      "title": "Cannot verify middle of truncated diff",
+      "citation": "app-builder/evidence/measurement-meta.json:5",
+      "detail": "The prompt marks the middle of the unified diff as truncated. Any claims about unshown files cannot be verified from the supplied text; only the evidence/meta and score-history patterns that appear are reviewable, and those show re-runs of measurements (including fe-search-present ok:false twice) rather than product changes.",
+      "passed": false
     }
   ],
-  "rawExcerpt": "external reviewer: claude-independent-review",
-  "mode": "external",
-  "reviewerId": "claude-independent-review",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{ \\\"foundNothingExplicit\\\": false, \\\"findings\\\": [ { \\\"title\\\": \\\"Diff is evidence-only, no application code\\\", \\\"citation\\\": \\\"app-builder/.redanvil/coverage-state.json:1\\\", \\\"detail\\\": \\\"The visible diff only updates coverage ratchet state, live API evidence snapshots, measurement-meta timestamps, and a score-history/verdict dump. No application source (routes, components, workers, migrations) appears in the provided hunks, so no product fix can be verified from this commit.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"Gate still failing ship and bindings\\\", \\\"citation\\\": \\\"app-builder/evidence/score-history.json:1\\\", \\\"detail\\\": \\\"Recorded verdicts include lg-shipped passed:false, lg-bindings-bound passed:false, deployUrl:null, and provenance.dirty:true on commit 181e085. That is explicit proof the app is not shipped and bindings are not verified; a score/evidence refresh does not clear those blockers.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"API and measurement rules still fail\\\", \\\"citation\\\": \\\"app-builder/evidence/score-history.json:1\\\", \\\"detail\\\": \\\"u-api-not-found, u-api-no-spa-mask, fe-light-dark, meas-known-bad, meas-two-run, meas-standard-tool, and meas-engine-named are all recorded passed:false with a long blocker list on iteration 1. The commit only re-stamps evidence timestamps and response bodies; it does not show fixes for those failures.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"Live API evidence still truncated and queued-only\\\", \\\"citation\\\": \\\"app-builder/evidence/api-live-app-builder.json:24\\\", \\\"detail\\\": \\\"GET /api jobs responseBody remains truncated mid-field (ends at \\\\\\\"thresho\\\\\\\") and lists many identical bird-watching jobs still status queued. That does not prove healthy job completion or complete API contract coverage; it is a re-capture of the same partial snapshot shape.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"Coverage baseCommit moved without code proof\\\", \\\"citation\\\": \\\"app-builder/.redanvil/coverage-state.json:4\\\", \\\"detail\\\": \\\"baseCommit changes from 2adaa95… to 5b4c7df… while highWaterPct stays 94.37. Without a source or test diff, this looks like ratchet bookkeeping on a new base, not a verified coverage improvement.\\\", \\\"passed\\\": false }, { \\\"title\\\": \\\"Cannot verify middle of truncated diff\\\", \\\"citation\\\": \\\"app-builder/evidence/measurement-meta.json:5\\\", \\\"detail\\\": \\\"The prompt marks the middle of the unified diff as truncated. Any claims about unshown files cannot be verified from the supplied text; only the evidence/meta and score-history patterns that appear are reviewable, and those show re-runs of measurements (including fe-search-present ok:false twice) rather than product changes.\\\", \\\"passed\\\": false } ] }\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"d07b6169-989e-4947-98f5-00d8da42e514\",\n  \"requestId\": \"32334419-b0f5-4e81-977a-185774b8796c\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff. They said \\\"Do not use tools\\\" and to answer from the diff only. But then there's a system message saying the full request was...\",\n  \"usage\": {\n    \"input_tokens\": 31307,\n    \"cache_read_input_tokens\": 2816,\n    \"output_tokens\": 758,\n    \"reasoning_tokens\": 109,\n    \"total_tokens\": 34881\n  },\n  \"num_turns\": 1,\n  \"total_cost_usd\": 0.0680068,\n  \"total_cost_usd_ticks\": 680068000,\n  \"modelUsage\": {\n    \"grok-4.5-build\": {\n      \"inputTokens\": 31307,\n      \"outputTokens\": 758,\n      \"cacheReadInputTokens\": 2816,\n      \"modelCalls\": 1,\n      \"costUSD\": 0.0680068\n    }\n  },\n  \"structuredOutput\": {\n    \"foundNothingExplicit\": false,\n    \"findings\": [\n      {\n        \"title\": \"Diff is evidence-only, no application code\",\n        \"citation\": \"app-builder/.redanvil/coverage-state.json:1\",\n        \"detail\": \"The visible diff only updates coverage ratchet state, live API evidence snapshots, measurement-meta timestamps, and a score-history/verdict dump. No application source (routes, components, workers, migrations) appears in the provided hunks, so no prod",
+  "mode": "grok",
   "chunkCount": 1,
-  "coverageChars": 1979,
-  "diffChars": 1979,
+  "coverageChars": 43757,
+  "diffChars": 43757,
   "coverageComplete": true
 }
