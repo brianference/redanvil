@@ -198,10 +198,35 @@ export const PROCESS = [
     ]
   },
   {
+    id: 'reverify',
+    role: 'reverify',
+    summary: 'Re-measure against the deployed HEAD build and re-stamp verdicts',
+    dependsOn: ['visual'],
+    humanGate: false,
+    skippable: false,
+    requires: [
+      {
+        // The push was refused for exactly this: "evidence is stale relative to
+        // the commit it claims to review". Every change to src/ invalidates the
+        // recorded verdicts, so a recorded review is evidence only for the
+        // commit it was taken at. Leaving that to a human to remember is what
+        // produced the refusal; here the process cannot reach `ship` without it.
+        //
+        // `dirty` matters as much as `commit`: measuring a dirty tree produces a
+        // green result that describes no commit at all, which is worse than red.
+        path: 'results/pet-sitter.json',
+        kind: 'file',
+        minBytes: 200,
+        provenanceMatchesHead: true,
+        why: 'a verdict recorded at another commit, or against a dirty tree, is not evidence for this one'
+      }
+    ]
+  },
+  {
     id: 'ship',
     role: 'ship',
     summary: 'Deploy and prove the served asset hash matches the build',
-    dependsOn: ['visual'],
+    dependsOn: ['reverify'],
     humanGate: false,
     skippable: false,
     requires: [

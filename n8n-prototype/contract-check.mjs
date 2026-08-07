@@ -12,6 +12,7 @@
  *
  * Exit 0 only when every requested step passes.
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { orderedSteps, PROCESS } from './process-map.mjs';
@@ -80,6 +81,51 @@ function distinctHashReasons(full, c) {
 }
 
 /**
+ * Verify a results file's provenance describes THIS commit and a clean tree.
+ *
+ * Fail-closed on every unknown: an unreadable file, an absent provenance block,
+ * or a git call that does not answer all mean FAILED. "Could not tell" must
+ * never read as "fine" -- that is how stale evidence earned credit for commits
+ * it never saw.
+ *
+ * @param {string} full absolute path to the results file
+ * @param {string} appDir app directory, used to locate the repo
+ * @param {import('./process-map.mjs').ArtifactContract} c the contract
+ * @returns {string[]} reasons, empty when the evidence is fresh
+ */
+function provenanceFreshnessReasons(full, appDir, c) {
+  /** @type {{provenance?: {commit?: string, dirty?: boolean}}} */
+  let parsed;
+  try {
+    parsed = JSON.parse(readFileSync(full, 'utf8'));
+  } catch (err) {
+    return [`${c.path} is not parseable JSON (${String(err).slice(0, 60)}) -- ${c.why}`];
+  }
+
+  const prov = parsed.provenance;
+  if (!prov?.commit) return [`${c.path} records no provenance commit -- ${c.why}`];
+
+  let head = '';
+  try {
+    head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: appDir, encoding: 'utf8' }).trim();
+  } catch {
+    return [`${c.path}: cannot resolve HEAD to compare provenance against -- ${c.why}`];
+  }
+
+  /** @type {string[]} */
+  const reasons = [];
+  if (prov.commit !== head) {
+    reasons.push(
+      `${c.path} provenance is commit ${prov.commit.slice(0, 12)} but HEAD is ${head.slice(0, 12)} -- ${c.why}`
+    );
+  }
+  if (prov.dirty === true) {
+    reasons.push(`${c.path} was measured against a DIRTY tree, so it describes no commit -- ${c.why}`);
+  }
+  return reasons;
+}
+
+/**
  * Check a single artifact contract against the app directory.
  * @param {string} appDir absolute app directory
  * @param {import('./process-map.mjs').ArtifactContract} c the contract
@@ -119,6 +165,10 @@ export function checkContract(appDir, c) {
 
   if (c.jsonDistinctHashes !== undefined) {
     reasons.push(...distinctHashReasons(full, c));
+  }
+
+  if (c.provenanceMatchesHead) {
+    reasons.push(...provenanceFreshnessReasons(full, appDir, c));
   }
 
   // Only read text when there is something to assert about its contents.
