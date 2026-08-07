@@ -140,7 +140,7 @@ export const RULES: Rule[] = [
   rule('fe-brand-mark', 'frontend', 'blocker', 'det'),
   // D7: fe-brand-mark checks bytes/shape; this measures 32x32 ink, detail, contrast.
   rule('fe-favicon-legible', 'frontend', 'blocker', 'det'),
-  // D10: rendered header mark height ≥48px@1280 and ≥32px@375 (bytes alone miss a tiny mark).
+  // D10: rendered header mark height ≥72px@1280 and ≥48px@375 (bytes alone miss a tiny mark).
   rule('fe-brand-mark-size', 'frontend', 'blocker', 'det'),
   // C8: inner/detail pages need a breadcrumb nav with a parent link.
   rule('fe-breadcrumbs', 'frontend', 'blocker', 'det'),

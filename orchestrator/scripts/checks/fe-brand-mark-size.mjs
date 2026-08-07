@@ -13,8 +13,9 @@
  * actually paints. A 32px mark shipped and was called far too small.
  *
  * Measure the rendered height of the header brand mark (img or svg) at 1280
- * and at 375. Require ≥ 48px at 1280 and ≥ 32px at 375. Fail when no image or
- * SVG mark is found in the header at all.
+ * and at 375. Require ≥ 72px at 1280 and ≥ 48px at 375. Fail when no image or
+ * SVG mark is found in the header at all. (Earlier floors of 48/32 still let a
+ * mark ship that the owner read as too small — 56px desktop / 40px mobile.)
  */
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
@@ -30,9 +31,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 const KNOWN_BAD_FIXTURE = join(here, '..', '..', 'test', 'fixtures', 'brand-mark-size', 'small.html');
 
 /** Minimum rendered height (px) at desktop viewport. */
-export const MIN_HEIGHT_1280 = 48;
+export const MIN_HEIGHT_1280 = 72;
 /** Minimum rendered height (px) at mobile viewport. */
-export const MIN_HEIGHT_375 = 32;
+export const MIN_HEIGHT_375 = 48;
 
 /**
  * @typedef {{

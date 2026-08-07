@@ -74,7 +74,7 @@ function reasonsForObservation(m) {
   if (m.primaryActionAboveFold !== true) {
     reasons.push(`${label}: primary action is not above the fold`);
   }
-  const minMark = m.viewportWidth >= 1280 ? 48 : 32;
+  const minMark = m.viewportWidth >= 1280 ? 72 : 48;
   if (!Number.isFinite(m.brandMarkHeight) || m.brandMarkHeight < minMark) {
     reasons.push(
       `${label}: brand-mark height ${m.brandMarkHeight}px is below floor ${minMark}px`

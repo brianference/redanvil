@@ -296,7 +296,7 @@ export function knownBadBelowFoldStrangerView(): StrangerView {
     viewportHeight: 900,
     advertisedBroken: false,
     looksBuggy: false,
-    brandMarkHeight: 48
+    brandMarkHeight: 72
   };
 }
 
@@ -314,6 +314,6 @@ export function knownGoodInViewStrangerView(): StrangerView {
     viewportHeight: 900,
     advertisedBroken: false,
     looksBuggy: false,
-    brandMarkHeight: 48
+    brandMarkHeight: 72
   };
 }

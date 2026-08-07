@@ -158,13 +158,13 @@ a {
   text-decoration: none;
   color: var(--text);
   font-weight: 700;
-  min-height: 48px;
+  min-height: 72px;
   flex-shrink: 0;
 }
 
 .brand__mark {
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
   display: block;
   object-fit: contain;
   flex-shrink: 0;
@@ -304,13 +304,17 @@ a {
   /* Mark only at 375 — full wordmark plus Home + Menu overflows and
      truncates to "Pet Sitter Fi…", which looks broken. aria-label on
      the brand link still names the app for assistive tech. */
+  .brand {
+    min-height: 48px;
+  }
+
   .brand__name {
     display: none;
   }
 
   .brand__mark {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
   }
 
   .topbar__actions {

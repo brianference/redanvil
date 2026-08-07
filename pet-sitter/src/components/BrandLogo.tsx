@@ -24,8 +24,8 @@ export function BrandLogo({
       <img
         src="/brand-mark.png"
         alt=""
-        width={56}
-        height={56}
+        width={72}
+        height={72}
         className={markClassName ?? 'brand__mark'}
         data-testid="brand-mark"
         data-measure="mark"

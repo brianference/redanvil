@@ -99,7 +99,7 @@ traceable to where it came from.
 - **Size art to the discrimination task.** Thumbnails made beans, okra and
   yardlong read as the same green shape; if the reader must tell items apart,
   the art must be large enough to do it.
-- The brand mark renders **>= 48px at 1280**. 32px was called "way too small";
+- The brand mark renders **>= 72px at 1280** and **>= 48px at 375**. 32–56px was called "way too small";
   96px was right.
 - **Never delete the brand's defining element to fix a rendering problem.** The
   calendar behind the cactus was keyed away to solve a plate on the dark header,

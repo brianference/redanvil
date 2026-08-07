@@ -72,7 +72,7 @@ export const APP_CHECKS: Check[] = [
   det('fe-assistant-present'),
   // Real brand mark asset + substantive favicon/OG — not a text span or emoji.
   det('fe-brand-mark'),
-  // Rendered header mark size (48px@1280 / 32px@375) — bytes alone miss a tiny mark.
+  // Rendered header mark size (72px@1280 / 48px@375) — bytes alone miss a tiny mark.
   {
     ruleId: 'fe-brand-mark-size',
     command: 'node',

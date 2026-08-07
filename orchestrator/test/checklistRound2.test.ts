@@ -610,7 +610,7 @@ describe('D10 fe-brand-mark-size', () => {
   });
 
   it('PASSES when heights meet floors (known-good pure)', () => {
-    const r = evaluateMarkHeights({ found: true, height1280: 56, height375: 40 });
+    const r = evaluateMarkHeights({ found: true, height1280: 72, height375: 48 });
     expect(r.ok).toBe(true);
   });
 
@@ -628,11 +628,11 @@ describe('D10 fe-brand-mark-size', () => {
       runBrandMarkSize(app, io, { fixture })
     );
     expect(r.code).toBe(1);
-    expect(r.msg).toMatch(/height|48|32/i);
+    expect(r.msg).toMatch(/height|72|48|32|24/i);
     console.log('fe-brand-mark-size playwright known-bad:', r.msg.slice(0, 250));
   }, 60_000);
 
-  it('PASSES Playwright fixture with 56px mark (known-good)', async () => {
+  it('PASSES Playwright fixture with 72px mark (known-good)', async () => {
     const fixture = join(here, 'fixtures/brand-mark-size/large.html');
     const app = makeAppDir();
     write(app, 'src/App.tsx', 'export default function A(){return null}');
