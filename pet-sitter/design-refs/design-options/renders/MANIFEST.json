@@ -1,89 +1,90 @@
 {
-  "generatedAt": "2026-08-07T03:37:06.269Z",
+  "generatedAt": "2026-08-07T03:49:11.089Z",
   "renders": [
     {
       "file": "app_photos_375_light.png",
       "viewport": 375,
       "theme": "light",
       "view": "photos",
-      "sha256": "7740d2b4e8de2c6cfad3854cf9dfaa403218a5167fbac6256989d5f409075276"
+      "sha256": "9eb976b40ddf7fdf19a079c15f59358bebbcab464be3d59277c1fb929c8ec041"
     },
     {
       "file": "app_photos_375_dark.png",
       "viewport": 375,
       "theme": "dark",
       "view": "photos",
-      "sha256": "6a806d7d03ba6ef9196cd90b1682da24d6abcd3bf7edf3dbc00560c69d48f0c4"
+      "sha256": "85bbb3a50f4f633183efbb2cc0a8da7966166040a82d63e7572a6290f5ac9f11"
     },
     {
       "file": "app_photos_1280_light.png",
       "viewport": 1280,
       "theme": "light",
       "view": "photos",
-      "sha256": "da8046d532e95ded5b8f126366afe5328eef85bed0796bc81d5d33874d90b757"
+      "sha256": "2175369b23a9d1400038d79c7495f8a322f633c5ea119e10ce2a121d53cc2369"
     },
     {
       "file": "app_photos_1280_dark.png",
       "viewport": 1280,
       "theme": "dark",
       "view": "photos",
-      "sha256": "63bb89afd1274160ea29ac5c25433b6b1772b02a24ec647add737e6cad694ee0"
+      "sha256": "52f3cf025fcaf4690910cfa87344d1375e74fc596ab4b0ae2ab6b33de52210ab"
     },
     {
       "file": "app_map_375_light.png",
       "viewport": 375,
       "theme": "light",
       "view": "map",
-      "sha256": "0ab468280c8b42269a8ffb7ba7281fe39cc4c0b737839f64ac4de18b15570824"
+      "sha256": "5e4ee56d624bc68dea8fab767673b1672a50226e5fcec8a3aee3835ed577d7e7"
     },
     {
       "file": "app_map_375_dark.png",
       "viewport": 375,
       "theme": "dark",
       "view": "map",
-      "sha256": "6516569e94c9b6a2724bc67fe76dcd939ebf08a407e180e72f1bc6c9d4b4d014"
+      "sha256": "67f4c9d129a43367646e6906d6e03d16315506058b42ff215c13bb12bc924a11"
     },
     {
       "file": "app_map_1280_light.png",
       "viewport": 1280,
       "theme": "light",
       "view": "map",
-      "sha256": "17b79cfd4901c97890091002dfc3401e559add1ea849a078e5bdff9fabe4acf0"
+      "sha256": "481facd4f49abcb5ce8644845eca5d9d0c26384f28778a8a826ecb22a82b3cae"
     },
     {
       "file": "app_map_1280_dark.png",
       "viewport": 1280,
       "theme": "dark",
       "view": "map",
-      "sha256": "5c5ddfb5d1699a5f0243020d244b3e13ad5df7e5606d415ff2603ac8a0edaf46"
+      "sha256": "738742bd721332516b7fb3f9f723489d216edfe1bec6a7429ccf87719b9e9089"
     },
     {
       "file": "app_dates_375_light.png",
       "viewport": 375,
       "theme": "light",
       "view": "dates",
-      "sha256": "1f782f807ad0bafce066c3a7cb0d0ac474a203e5b890c9ee718eab31ca98874e"
+      "sha256": "bbadeaa473d38a37fb147f63542e3acc421224e9797f0fb83a883e0df829d5d3"
     },
     {
       "file": "app_dates_375_dark.png",
       "viewport": 375,
       "theme": "dark",
       "view": "dates",
-      "sha256": "a6440cc18d8ac65e9d7ce7535dfa85ad2c1a0b08fd1eb4f27cfb12190f9c17c9"
+      "sha256": "661264bf8e241902c79c65ca5ea0c9a8288494473e8e8e5d746a811dbf722bfd"
     },
     {
       "file": "app_dates_1280_light.png",
       "viewport": 1280,
       "theme": "light",
       "view": "dates",
-      "sha256": "5b38a580593dd1607cc5b318c6afdb6ae4e43f1ee605fe80e1f3a6b6f846ba1f"
+      "sha256": "977051b9e7f61040af4f1912e7e36be5ca69d8a2468e1660c7399e9f0b6f7d3a"
     },
     {
       "file": "app_dates_1280_dark.png",
       "viewport": 1280,
       "theme": "dark",
       "view": "dates",
-      "sha256": "596d0a3d4bd67cb9efd4a324bd323ae03344733eb77b1cf80955bc1d9f632c96"
+      "sha256": "3844121bd25c82042495094e3305f0854dcd05d293ece89d92b58308825a914e"
     }
-  ]
+  ],
+  "distinctSha256Count": 12
 }

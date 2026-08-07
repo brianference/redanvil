@@ -233,7 +233,8 @@
   --text: #1c1410;
   --text-on-accent: #ffffff;
   --muted: #6b5e56;
-  --accent: #e05a4f;
+  /* Darkened from #e05a4f so white control text hits ≥4.5:1 (was 3.65:1). */
+  --accent: #c4453c;
   --border: #eadfd4;
   --ok: #1f7a4c;
   --danger: #b42318;
@@ -323,7 +324,8 @@
   --text: #1a1510;
   --text-on-accent: #fffdf8;
   --muted: #6a5d4e;
-  --accent: #c45c26;
+  /* Darkened from #c45c26 so text-on-accent hits ≥4.5:1 on light dates. */
+  --accent: #b55220;
   --border: #e4d5c0;
   --ok: #2f6b3a;
   --chip: #f0e4d2;
@@ -490,10 +492,13 @@ a {
   color: var(--muted);
   text-decoration: none;
   min-height: 44px;
+  min-width: 44px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 0 var(--space-2);
   white-space: nowrap;
+  font-size: 16px;
 }
 
 .topbar__link:hover {
@@ -528,7 +533,7 @@ a {
   color: var(--text);
   font: inherit;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 16px;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -890,9 +895,11 @@ a {
 .site-footer__list a {
   display: inline-flex;
   min-height: 44px;
+  min-width: 44px;
   align-items: center;
   color: var(--muted);
   text-decoration: none;
+  font-size: 16px;
 }
 
 .site-footer__list a:hover {
@@ -1132,12 +1139,9 @@ section h2 {
   flex-direction: column;
   gap: 2px;
   padding: 10px 14px;
-  min-height: 56px;
+  min-height: 72px;
   border-bottom: 1px solid var(--border);
-  font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: var(--muted);
   min-width: 0;
 }
@@ -1149,18 +1153,24 @@ section h2 {
   }
 }
 
+/* Field label only (Where / Check-in / Check-out) — exception to 16px floor. */
 .search-capsule__label {
   display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
 }
 
 .search-capsule__input {
   border: 0;
   background: transparent;
   color: var(--text);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   padding: 0;
-  min-height: 28px;
+  min-height: 44px;
   outline: none;
   width: 100%;
   text-transform: none;
@@ -1175,7 +1185,7 @@ section h2 {
   background: var(--accent);
   color: var(--text-on-accent);
   font-weight: 800;
-  font-size: 15px;
+  font-size: 16px;
   cursor: pointer;
   padding: 0 var(--space-5);
 }
@@ -1223,7 +1233,7 @@ section h2 {
   background: var(--surface);
   color: var(--text);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -1247,7 +1257,7 @@ section h2 {
 .result-meta {
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .result-meta strong {
@@ -1266,7 +1276,7 @@ section h2 {
 }
 
 .view-switch__btn {
-  min-height: 40px;
+  min-height: 44px;
   min-width: 44px;
   padding: 0 14px;
   border: 0;
@@ -1274,7 +1284,7 @@ section h2 {
   background: transparent;
   color: var(--muted);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
 }
 
@@ -1288,7 +1298,7 @@ section h2 {
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--muted);
 }
 
@@ -1316,7 +1326,7 @@ section h2 {
   border-radius: 999px;
   background: var(--chip);
   color: var(--text);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   border: 1px solid var(--border);
 }
@@ -1382,7 +1392,7 @@ section h2 {
   border-radius: 999px;
   padding: 8px 12px;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid var(--border);
   min-height: 36px;
   display: inline-flex;
@@ -1419,7 +1429,7 @@ section h2 {
 .photo-card__hood {
   margin: 2px 0 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .photo-card__avail {
@@ -1427,7 +1437,7 @@ section h2 {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--ok);
   font-weight: 600;
 }
@@ -1507,21 +1517,23 @@ section h2 {
   color: var(--text);
   font-weight: 600;
   min-width: 0;
+  min-height: 44px;
   outline: none;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .map-search__go {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  min-height: 40px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border: 0;
   border-radius: 999px;
   background: var(--accent);
   color: var(--text-on-accent);
   font-weight: 800;
+  font-size: 16px;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -1634,7 +1646,7 @@ section h2 {
 .map-sheet__sub {
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .map-date-row {
@@ -1658,7 +1670,7 @@ section h2 {
   background: var(--bg);
   color: var(--text);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 16px;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -1720,12 +1732,12 @@ section h2 {
 .map-rail__meta {
   margin: 2px 0 6px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .map-rail__avail {
   margin: 4px 0 0;
-  font-size: 11px;
+  font-size: 16px;
   color: var(--ok);
   font-weight: 700;
   display: inline-flex;
@@ -1751,16 +1763,17 @@ section h2 {
 .map-rail__price span {
   display: block;
   font-weight: 500;
-  font-size: 11px;
+  font-size: 16px;
   color: var(--muted);
 }
 
-/* Compact view switch on map overlay at 375 */
+/* Compact view switch on map overlay at 375 — keep 44px hit area + 16px type */
 @media (max-width: 480px) {
   .map-stage__overlay .view-switch__btn {
     padding: 0 10px;
-    font-size: 12px;
-    min-width: 40px;
+    font-size: 16px;
+    min-width: 44px;
+    min-height: 44px;
   }
   .map-search {
     max-width: 100%;
@@ -1850,6 +1863,8 @@ section h2 {
   }
 }
 
+/* Field labels (Check-in / Check-out) stay 11px — exception to 16px floor.
+   Input text is reset to 16px on the input itself. */
 .dates-range__field {
   display: flex;
   flex-direction: column;
@@ -1870,16 +1885,18 @@ section h2 {
   color: var(--text);
   padding: 0 8px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 16px;
   width: 100%;
   min-width: 0;
   font-family: inherit;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 @media (max-width: 480px) {
   .dates-range__field input {
     padding: 0 6px;
-    font-size: 13px;
+    font-size: 16px;
   }
 }
 
@@ -1889,7 +1906,7 @@ section h2 {
   align-items: center;
   font-weight: 800;
   margin-bottom: 8px;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .dates-month__nav {
@@ -1917,11 +1934,12 @@ section h2 {
   min-width: 0;
 }
 
+/* Column headers (Su–Sa) — calendar grid labels, not body/control copy. */
 .cal-dow {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--muted);
-  padding: 4px 0;
+  padding: 6px 0;
   text-transform: uppercase;
   min-width: 0;
   overflow: hidden;
@@ -1929,7 +1947,8 @@ section h2 {
 }
 
 .cal-day {
-  min-height: 34px;
+  /* 44px hit area; visual cell stays in the 7-col grid without clipping at 375. */
+  min-height: 44px;
   min-width: 0;
   width: 100%;
   border-radius: 8px;
@@ -1937,7 +1956,7 @@ section h2 {
   background: transparent;
   color: var(--text);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 16px;
   position: relative;
   cursor: pointer;
   padding: 0;
@@ -1953,8 +1972,8 @@ section h2 {
     padding: 6px 0;
   }
   .cal-day {
-    min-height: 40px;
-    font-size: 14px;
+    min-height: 44px;
+    font-size: 16px;
     border-radius: 10px;
   }
 }
@@ -2002,17 +2021,21 @@ section h2 {
   color: var(--text);
   padding: 0 12px;
   font-weight: 600;
+  font-size: 16px;
   font-family: inherit;
   min-width: 0;
 }
 
 .dates-search-inline button {
   min-height: 44px;
+  min-width: 44px;
   padding: 0 16px;
   border: 0;
   border-radius: 10px;
   background: var(--accent);
   color: var(--text-on-accent);
+  font-family: inherit;
+  font-size: 16px;
   font-weight: 800;
   cursor: pointer;
   flex-shrink: 0;
@@ -2039,7 +2062,7 @@ section h2 {
   flex-wrap: wrap;
   margin-bottom: 8px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .dates-timeline__meta strong {
@@ -2049,7 +2072,7 @@ section h2 {
 .dates-timeline__hint {
   margin: 0 0 12px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .timeline {
@@ -2095,7 +2118,7 @@ section h2 {
 .timeline-row__hood {
   margin: 2px 0 6px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .week-bar {
@@ -2134,11 +2157,11 @@ section h2 {
 .timeline-row__price span {
   font-weight: 500;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .timeline-row__avail {
-  font-size: 12px;
+  font-size: 16px;
   color: var(--ok);
   font-weight: 600;
 }
