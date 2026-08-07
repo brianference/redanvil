@@ -158,6 +158,7 @@ function contentType(p) {
   if (p.endsWith('.svg')) return 'image/svg+xml';
   if (p.endsWith('.json')) return 'application/json';
   if (p.endsWith('.map')) return 'application/json';
+  if (p.endsWith('.woff2')) return 'font/woff2';
   return 'application/octet-stream';
 }
 
@@ -342,18 +343,17 @@ async function main() {
           timeout: 60000
         });
         await setTheme(page, theme);
-        await page.waitForSelector('[data-testid="search-results"], [data-testid="empty-sitters"]', {
-          timeout: 15000
-        });
-        // Scroll results into view on short phones so the matrix shows the view, not only the capsule
-        const results = page.locator('[data-testid="search-results"]');
-        if (await results.count()) {
-          await results.first().scrollIntoViewIfNeeded();
-        }
-        await page.waitForTimeout(400);
+        await page.waitForSelector(
+          '[data-testid="search-results"], [data-testid="empty-sitters"], [data-layout]',
+          { timeout: 15000 }
+        );
+        // Capture the fold architecture (map canvas / calendar / photo hero), not a scrolled widget
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForTimeout(500);
         const name = `app_${view}_${vp.tag}_${theme}.png`;
         const path = join(rendersDir, name);
-        await page.screenshot({ path, fullPage: vp.tag === '375' });
+        // Viewport capture so Map/Dates fold ownership is visible at both widths
+        await page.screenshot({ path, fullPage: false });
         written.push(name);
         await page.close();
       }

@@ -8,10 +8,21 @@ import { Breadcrumbs } from './Breadcrumbs';
 import { ThemeToggle } from './ThemeToggle';
 
 export interface PageProps {
-  /** Page title, rendered as the single h1. */
-  title: string;
+  /**
+   * Page title as the main h1. Omit when a layout architecture owns the fold
+   * (Photos / Map / Dates each render their own h1).
+   */
+  title?: string;
   /** Page body. */
   children: ReactNode;
+  /**
+   * Full-bleed main: no shell padding. Used when Map owns the canvas.
+   */
+  fullBleed?: boolean;
+  /**
+   * Hide breadcrumbs (marketplace layouts open on their architecture, not a doc trail).
+   */
+  hideBreadcrumbs?: boolean;
 }
 
 /**
@@ -51,8 +62,13 @@ function topbarLinkClass(isActive: boolean): string {
   return isActive ? 'topbar__link topbar__link--active' : 'topbar__link';
 }
 
-/** Shared page shell: sticky header, primary nav, breadcrumbs, footer, assistant. */
-export function Page({ title, children }: PageProps): JSX.Element {
+/** Shared page shell: sticky header, primary nav, optional breadcrumbs, footer, assistant. */
+export function Page({
+  title,
+  children,
+  fullBleed = false,
+  hideBreadcrumbs = false
+}: PageProps): JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false);
   // Home stays visible at 375; secondary chrome goes behind the menu control.
   const primaryRoutes = ROUTES.filter((route) => route.path === '/');
@@ -64,6 +80,8 @@ export function Page({ title, children }: PageProps): JSX.Element {
   function closeMenu(): void {
     setMenuOpen(false);
   }
+
+  const mainClass = fullBleed ? 'main main--bleed' : 'main';
 
   return (
     <div className="shell">
@@ -141,10 +159,10 @@ export function Page({ title, children }: PageProps): JSX.Element {
           </ul>
         </nav>
       </header>
-      <Breadcrumbs />
-      <main id="main" className="main">
+      {hideBreadcrumbs ? null : <Breadcrumbs />}
+      <main id="main" className={mainClass}>
         <div className="main__inner">
-          <h1 className="main__title">{title}</h1>
+          {title ? <h1 className="main__title">{title}</h1> : null}
           {children}
         </div>
       </main>

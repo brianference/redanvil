@@ -46,40 +46,41 @@ selected by a segmented control in the results header:
 Owner note: "i like how you added photos" — real sitter faces are a kept
 requirement in every view, not decoration.
 
-### Binding for implementation -- CORRECTED 2026-08-06
+### Binding for implementation -- CORRECTED
 
-The first version of this section was wrong and produced a bad build. It said
-the view switch changes "presentation only", that palettes must not switch per
-view, and that Fraunces must not be confined to one screen. The build followed
-that faithfully and shipped ONE page shell -- one hero, one search capsule, one
-pill row -- with only the results region swapping. That is not what was chosen.
-Three architectures were chosen. The homogenising came from this document.
+The first shipped build treated A/B/C as presentation skins on one page shell.
+That was rejected: the owner chose three architectures and received one
+architecture with three widgets. The binding below replaces the earlier
+"presentation only" / "one palette app-wide" rules.
 
-**Each view keeps its own full-page architecture and its own visual direction,
-as built in `option-a.html`, `option-b.html` and `option-c.html`. Those files
-are the specification. Match them.**
-
-| View | Architecture -- what owns the fold | Visual direction |
-|------|-----------------------------------|------------------|
-| **Photos** | Floating multi-field search capsule, then full-bleed photo cards | Warm coral on cream, soft 20px radii, price-on-photo badges |
-| **Map** | **The map owns the canvas.** Results in a bottom sheet on phone, side rail on desktop | Sage trust green, soft map wash, face pins |
-| **Dates** | **The calendar owns the fold.** Check-in/out plus half-month calendar, then timeline rows | Honey amber on charcoal, Fraunces + Source Sans editorial type, availability strips |
-
-Specifically forbidden, because it is what shipped and was rejected:
-
-- A shared hero paragraph above every view. Map opens on the map. Dates opens on
-  the calendar.
-- A single search capsule reused across all three. Each view's entry control is
-  part of its architecture -- B searches from the map header, C searches under
-  the calendar.
-- One palette everywhere. Each view carries its own, and the shift between them
-  is the point, not a defect.
-- Dropping Fraunces. The Dates view is editorial; that is its identity.
-
-What stays genuinely shared: the sitter data, the filter state, the brand mark,
-the header and footer chrome, and the semantic token layer that makes light and
-dark work. Switching views preserves the query, the dates, the neighbourhood and
-the pet-type filter, and the view is in the URL.
+- **Three real layouts, not one shell.** Each view is a full page architecture
+  matching its option HTML (`option-a.html` / `option-b.html` / `option-c.html`).
+  | View | What owns the fold | Visual direction |
+  |------|--------------------|------------------|
+  | **Photos** | Search capsule, then full-bleed photo cards with faces | Warm coral on cream, 20px radii, price-on-photo badges |
+  | **Map** | **The map owns the canvas** -- results in a bottom sheet on phone, side rail on desktop | Sage trust green, soft map wash, avatar pins |
+  | **Dates** | **The calendar owns the fold** -- check-in/out + half-month calendar, then timeline rows | Honey amber on charcoal, Fraunces + Source Sans, availability strips |
+- **Forbidden (exactly what shipped and was rejected):**
+  - A shared hero paragraph ("Find a trusted pet sitter") above every view.
+    Map opens on the map. Dates opens on the calendar. Neither gets a generic
+    marketing hero above it.
+  - One search capsule reused by all three. Each view's entry control belongs
+    to its own architecture.
+  - One palette everywhere. Each view carries its own; the shift between views
+    is the point.
+  - Dropping Fraunces from the Dates view. That editorial voice is its identity.
+- **Stays shared:** sitter data; filter state (query, dates, neighbourhood,
+  pet type) surviving a view switch; the view in the URL; the brand mark
+  (whichever mark the owner picks in `design-refs/logos/DECISION.md` -- that
+  choice is OPEN as of 2026-08-06, with five candidates in the gallery; until it
+  is recorded, the header keeps the current mark and no other mark is
+  introduced); the semantic token layer so light and dark both work in all three
+  views.
+- Every view keeps: pet-type pills, rating with stars plus review count,
+  visible availability, sitter avatar, and the nightly rate from
+  `rate_per_night` (no invented rates).
+- Self-host any font used under `public/fonts/`. Never add fonts.googleapis.com
+  (`style-src 'self'`).
 
 ### Defects found in visual review -- fix as the first build step, not later
 

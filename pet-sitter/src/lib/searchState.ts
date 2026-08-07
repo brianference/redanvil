@@ -1,6 +1,6 @@
 /**
  * Shared marketplace search state persisted in the URL query string.
- * View switch changes presentation only; filters survive reloads and pasteable links.
+ * View switch selects a full layout architecture; filters survive reloads and pasteable links.
  */
 
 /** Supported result-view modes (URL `view` param). */
