@@ -12,6 +12,7 @@ export type RoleId =
   | 'product'
   | 'brainstorm'
   | 'logo'
+  | 'palette'
   | 'layout'
   | 'content'
   | 'engineer'
@@ -135,6 +136,28 @@ export const ROLES: readonly Role[] = Object.freeze([
       'Produce three distinct brand marks via Grok Imagine, rendered at 16, 32, 96 and 256px ' +
       'on light and dark in a gallery. Report what is legible at each size. Own fe-brand-mark ' +
       'and fe-brand-mark-size. Write DECISION.md naming the chosen mark and why.'
+  },
+  {
+    id: 'palette',
+    owns: ['fe-light-dark', 'fe-a11y-contrast', 'D8'],
+    artifacts: [
+      'design-refs/palettes/gallery.html',
+      'design-refs/palettes/DECISION.md'
+    ],
+    needsWorktree: true,
+    prompt:
+      'Produce FIVE distinct colour-and-type directions as complete themes (bg, surface, text, ' +
+      'muted, border, primary, primary-contrast, success, display face, body face). They must ' +
+      'differ in temperature, contrast strategy and type voice -- not five tints of one hue. ' +
+      'Include one dark-first, one near-monochrome with a single accent, one warm editorial ' +
+      'serif, one cool low-chroma. Draw direction from the app-store reference intake in ' +
+      'design-refs/appstore/SOURCES.md and cite which app informed each; take one idea from ' +
+      'each, never clone a palette or a brand colour. Build a gallery with ONE COLUMN PER ' +
+      'DIRECTION, each showing a LIGHT and a DARK phone of the same real screen so only colour ' +
+      'and type vary. Verify every direction passes WCAG AA in BOTH themes with axe-core, never ' +
+      'by hand, and state the measured ratios. Leave DECISION.md OPEN -- the owner picks. ' +
+      'This role exists because palette was never a choice axis: the base colour shipped ' +
+      'because the orchestrator picked it, and the owner said it looked like other sites.'
   },
   {
     id: 'layout',
