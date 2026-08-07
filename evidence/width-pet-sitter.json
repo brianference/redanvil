@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://pet-sitter-vz1.pages.dev",
-  "checkedAt": "2026-08-06T04:05:15.719Z",
+  "checkedAt": "2026-08-07T03:54:06.823Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -11,10 +11,10 @@
       "route": "/",
       "width": 1440,
       "status": 200,
-      "contentPct": 94,
+      "contentPct": 100,
       "contentBox": {
-        "left": 40,
-        "right": 1400
+        "left": 0,
+        "right": 1440
       },
       "ok": true
     },
@@ -36,7 +36,7 @@
       "contentPct": 94,
       "contentBox": {
         "left": 40,
-        "right": 1394
+        "right": 1400
       },
       "ok": true
     },
@@ -47,7 +47,7 @@
       "contentPct": 94,
       "contentBox": {
         "left": 40,
-        "right": 1399
+        "right": 1400
       },
       "ok": true
     },
@@ -66,10 +66,10 @@
       "route": "/",
       "width": 1920,
       "status": 200,
-      "contentPct": 95,
+      "contentPct": 100,
       "contentBox": {
-        "left": 40,
-        "right": 1880
+        "left": 0,
+        "right": 1920
       },
       "ok": true
     },
@@ -80,7 +80,7 @@
       "contentPct": 95,
       "contentBox": {
         "left": 40,
-        "right": 1871
+        "right": 1876
       },
       "ok": true
     },
@@ -91,7 +91,7 @@
       "contentPct": 95,
       "contentBox": {
         "left": 40,
-        "right": 1880
+        "right": 1876
       },
       "ok": true
     },
@@ -113,7 +113,7 @@
       "contentPct": 95,
       "contentBox": {
         "left": 40,
-        "right": 1879
+        "right": 1880
       },
       "ok": true
     }

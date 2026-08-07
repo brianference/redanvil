@@ -1,14 +1,14 @@
 {
   "baseUrl": "https://pet-sitter-vz1.pages.dev",
-  "checkedAt": "2026-08-07T03:40:22.048Z",
+  "checkedAt": "2026-08-07T03:53:58.602Z",
   "findings": {
     "fe-touch-targets": {
-      "ok": false,
-      "detail": "7 route(s) at 375; /:  |  |  | Photos | Map | Dates; /sitters:  |  |  | Photos | Map | Dates"
+      "ok": true,
+      "detail": "7 route(s) at 375; every interactive element >= 44px"
     },
     "fe-type-floor": {
-      "ok": false,
-      "detail": "7 route(s) at 375, smallest body font 13px; /: 9 sitters found | Availability: 2026-08-01 → 202 | Availability: 2026-08-01 → 202 | Availability: 2026-08-10 → 202 | Availability: 2026-08-01 → 202 | Availability: 2026-08-01 → 202 | Small mammals | Availability: 2026-08-05 → 202 | Liberty Village | Availability: 2026-08-01 → 202 | Distillery District | Availability: 2026-08-15 → 202 | Availability: 2026-08-01 → 202; /sitters: 9 sitters found | Availability: 2026-08-01 → 202 | Availability: 2026-08-01 → 202 | Availability: 2026-08-10 → 202 | Availability: 2026-08-01 → 202 | Availability: 2026-08-01 → 202 | Small mammals | Availability: 2026-08-05 → 202 | Liberty Village | Availability: 2026-08-01 → 202 | Distillery District | Availability: 2026-08-15 → 202 | Availability: 2026-08-01 → 202"
+      "ok": true,
+      "detail": "7 route(s) at 375, smallest body font 16px; nothing under 16px"
     },
     "fe-responsive-375": {
       "ok": true,
@@ -56,5 +56,5 @@
     }
   },
   "consoleErrors": [],
-  "ok": false
+  "ok": true
 }
