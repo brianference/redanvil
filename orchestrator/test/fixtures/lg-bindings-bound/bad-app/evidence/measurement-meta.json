@@ -5,14 +5,14 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-06T04:44:56.047Z",
-        "base": "http://127.0.0.1:56071"
+        "at": "2026-08-06T05:10:55.587Z",
+        "base": "http://127.0.0.1:52011"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/lg-bindings-bound/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T04:44:56.047Z"
+      "recordedAt": "2026-08-06T05:10:55.587Z"
     },
     "notApplicable": false,
     "reason": null
