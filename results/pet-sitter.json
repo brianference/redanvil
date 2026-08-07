@@ -1,9 +1,9 @@
 {
   "kind": "results",
   "slug": "pet-sitter",
-  "finalScore": 100,
+  "finalScore": 0,
   "threshold": 90,
-  "passed": true,
+  "passed": false,
   "evaluated": 87,
   "total": 87,
   "rules": [
@@ -73,7 +73,7 @@
     },
     {
       "ruleId": "fe-breadcrumbs",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "fe-result-in-viewport",
@@ -145,7 +145,7 @@
     },
     {
       "ruleId": "hyg-no-binaries",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "hyg-secret-scan",
@@ -201,7 +201,7 @@
     },
     {
       "ruleId": "hyg-no-duplication",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "ci-actionlint",
@@ -225,7 +225,7 @@
     },
     {
       "ruleId": "proc-conventional-commits",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "proc-artifact-verified",
@@ -233,7 +233,7 @@
     },
     {
       "ruleId": "lg-shipped",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "lg-push-cadence",
@@ -265,11 +265,11 @@
     },
     {
       "ruleId": "fe-favicon-legible",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-known-bad",
@@ -391,24 +391,31 @@
   "iterations": [
     {
       "index": 1,
-      "score": 100,
-      "blockers": []
+      "score": 0,
+      "blockers": [
+        "fe-favicon-legible",
+        "fe-breadcrumbs",
+        "hyg-no-binaries",
+        "hyg-no-duplication",
+        "lg-shipped",
+        "lg-result-reproduces"
+      ]
     }
   ],
-  "deployUrl": "https://pet-sitter-vz1.pages.dev",
-  "finishedAt": "2026-08-06T05:11:14.032Z",
+  "deployUrl": null,
+  "finishedAt": "2026-08-07T04:01:21.173Z",
   "provenance": {
-    "commit": "fbc91290e9f18e723ba6f4adc41211f2e693e354",
-    "dirty": true,
+    "commit": "68f9b7a4b99f79eaa3b7bedcf950bb8b0fe6dd43",
+    "dirty": false,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
     "node": "v22.19.0",
-    "verdictsHash": "b656a030dfd1af5612635ccf64c08fd23db97c70182e5fda32f48cd979bd228b",
+    "verdictsHash": "529e046a383933ba0af35c8284715e38d018ff43c3bf352f8d58cad4f21c5534",
     "notApplicable": [
       "proc-pr-title-ticket",
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-06T05:11:14.105Z"
+    "generatedAt": "2026-08-07T04:01:21.232Z"
   }
 }

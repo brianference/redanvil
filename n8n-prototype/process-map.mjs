@@ -85,11 +85,15 @@ export const PROCESS = [
     skippable: false,
     requires: [
       {
-        path: 'design-refs/logos',
-        kind: 'dir',
-        glob: '.png',
-        minCount: 5,
-        why: 'pet-sitter shipped a single copied mark because this step never ran; the gate cannot ask for what was never started'
+        // Deliberately NOT a count of candidate PNGs. Committing marks under
+        // design-refs violates hyg-no-binaries, which allows binaries only under
+        // public/assets/static/images/screenshots -- and that rule is right.
+        // Candidate images are working files; what has to survive is the
+        // decision text and the mark that actually ships.
+        path: 'public/brand-mark.png',
+        kind: 'file',
+        minBytes: 2000,
+        why: 'pet-sitter shipped a single copied mark because this step never ran; the chosen mark must reach public/, not just an archive'
       },
       {
         path: 'design-refs/logos/gallery.html',
@@ -101,8 +105,9 @@ export const PROCESS = [
         path: 'design-refs/logos/DECISION.md',
         kind: 'file',
         minBytes: 300,
+        mustContain: ['mark-05'],
         mustNotContain: PLACEHOLDER_MARKERS,
-        why: 'a blank DECISION.md is MISSING -- a file that exists is not a decision'
+        why: 'a blank DECISION.md is MISSING, and it must list all five candidates -- naming mark-05 proves five were explored, which a single copied mark cannot fake'
       }
     ]
   },

@@ -50,14 +50,12 @@ tmp-sources/
 **/design-refs/**/*.webp
 **/design-refs/**/*.gif
 
-# ...but the CHOSEN brand mark is a decision, not a preview, and must travel with
-# the commit. It was ignored by the rule above, so a worktree cut from a commit
-# never received it: a build agent found no mark-01.png, correctly reported it
-# missing, and the approved logo went missing between worktrees. That is the
-# root cause of "you didn't put in the chosen logo" -- not the agent, the
-# ignore rule. An approved decision that cannot be committed is not approved.
-!**/design-refs/**/mark-0*.png
-!**/design-refs/**/chosen-*.png
+# The chosen brand mark is NOT negated here. Committing marks into design-refs
+# violates hyg-no-binaries, which allows binaries only under
+# public/assets/static/images/screenshots -- and that rule is right. The durable
+# artifacts of the logo step are its DECISION.md and gallery.html (text, which
+# commit fine) plus the SHIPPED mark in public/. The candidate PNGs are working
+# files. That is also the real requirement: the mark has to ship, not be archived.
 
 # Spec proof PNGs under evidence/ that are not under evidence/screenshots/
 # (hyg-no-binaries allowlists only public|assets|static|images|screenshots).

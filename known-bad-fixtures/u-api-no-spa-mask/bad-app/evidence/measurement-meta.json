@@ -5,21 +5,21 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-06T05:10:27.925Z",
-        "path": "/api/__definitely_absent_33afcec150222911",
+        "at": "2026-08-07T04:00:36.892Z",
+        "path": "/api/__definitely_absent_e799c3ea4bd31a7b",
         "status": 200
       },
       {
         "ok": false,
-        "at": "2026-08-06T05:10:27.926Z",
-        "path": "/api/__definitely_absent_33afcec150222911",
+        "at": "2026-08-07T04:00:36.893Z",
+        "path": "/api/__definitely_absent_e799c3ea4bd31a7b",
         "status": 200
       }
     ],
     "knownBad": {
       "input": "known-bad-fixtures/u-api-no-spa-mask/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-06T05:10:27.926Z"
+      "recordedAt": "2026-08-07T04:00:36.893Z"
     }
   },
   "u-api-not-found": {
