@@ -4,7 +4,8 @@ Five real raster candidates live here. Open **`gallery.html`** to compare.
 
 | File | Role |
 |------|------|
-| `mark-01.png` … `mark-05.png` | Candidate marks (1 = retired coral house) |
+| `../../images/logo-candidates/mark-01.png` | Retired coral house candidate (allowlisted asset path) |
+| `public/brand-mark.png` | Chosen mark-02 silhouette (transparent plate) |
 | `gallery.html` | Large light/dark plates + 24/32/48px header strips |
 | `DECISION.md` | Owner choice — **CHOSEN: mark-02** |
 

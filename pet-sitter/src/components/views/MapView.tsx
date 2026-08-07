@@ -1,10 +1,13 @@
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { pinForNeighbourhood } from '../../lib/mapPins';
 import { en } from '../../i18n/en';
+import { AvailabilityRange } from '../AvailabilityRange';
 import { PetTypePills } from '../PetTypePills';
 import { SitterAvatar } from '../SitterAvatar';
 import { SitterRating } from '../SitterRating';
+import { CompactSearchField } from './CompactSearchField';
+import { ResultsStatus } from './ResultsStatus';
 import type { MarketplaceLayoutProps } from './sharedProps';
 import { ViewSwitch } from './ViewSwitch';
 
@@ -63,47 +66,24 @@ export function MapView(props: MarketplaceLayoutProps): JSX.Element {
     writeState({ from, to });
   }
 
-  /**
-   * Compact search submit from the map overlay.
-   *
-   * @param event - Form event.
-   */
-  function onMapSearch(event: FormEvent): void {
-    onSearchSubmit(event);
-  }
-
   const hasCustomRange = Boolean(state.from || state.to);
 
   return (
     <div className="layout-map" data-layout="map">
       <div className="map-stage" data-testid="search-results" data-view="map">
         <div className="map-stage__overlay">
-          <form
-            className="map-search"
-            role="search"
-            onSubmit={onMapSearch}
-            data-testid={formTestId}
-            aria-label={en.home.searchLabel}
-          >
-            <label className="sr-only" htmlFor={inputId}>
-              {en.home.searchLabel}
-            </label>
-            <input
-              id={inputId}
-              type="search"
-              name="q"
-              className="map-search__input"
-              placeholder={en.views.mapSearchPlaceholder}
-              value={draftQ}
-              onChange={(e) => onQueryChange(e.target.value)}
-              autoComplete="off"
-              data-testid="filter-search"
-              aria-label={en.home.searchLabel}
-            />
-            <button type="submit" className="map-search__go" aria-label={en.home.searchSubmit}>
-              {en.home.searchGo}
-            </button>
-          </form>
+          <CompactSearchField
+            inputId={inputId}
+            value={draftQ}
+            onChange={onQueryChange}
+            onSubmit={onSearchSubmit}
+            formTestId={formTestId}
+            placeholder={en.views.mapSearchPlaceholder}
+            submitLabel={en.home.searchGo}
+            formClassName="map-search"
+            inputClassName="map-search__input"
+            buttonClassName="map-search__go"
+          />
           <ViewSwitch view={state.view} onChange={onViewChange} />
         </div>
 
@@ -170,17 +150,7 @@ export function MapView(props: MarketplaceLayoutProps): JSX.Element {
             ) : null}
           </div>
 
-          {status === 'error' ? (
-            <p className="state state--error" role="alert">
-              {error ?? en.home.loadError}
-            </p>
-          ) : null}
-          {status === 'loading' ? <p className="state">{en.home.loading}</p> : null}
-          {status === 'ready' && sitters.length === 0 ? (
-            <p className="state state--empty" data-testid="empty-sitters" role="status">
-              {en.home.empty}
-            </p>
-          ) : null}
+          <ResultsStatus status={status} error={error} resultCount={sitters.length} />
 
           {status === 'ready' && sitters.length > 0 ? (
             <ul className="map-rail">
@@ -203,11 +173,11 @@ export function MapView(props: MarketplaceLayoutProps): JSX.Element {
                       <p className="map-rail__meta">{s.neighbourhood}</p>
                       <SitterRating avgRating={s.avg_rating} reviewCount={s.verified_reviews} />
                       <PetTypePills petTypes={s.pet_types} />
-                      {s.available_from && s.available_to ? (
-                        <p className="map-rail__avail">
-                          {s.available_from} → {s.available_to}
-                        </p>
-                      ) : null}
+                      <AvailabilityRange
+                        availableFrom={s.available_from}
+                        availableTo={s.available_to}
+                        className="map-rail__avail"
+                      />
                     </div>
                     <div className="map-rail__price">
                       ${s.rate_per_night}

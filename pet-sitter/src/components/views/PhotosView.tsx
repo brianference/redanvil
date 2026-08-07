@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { en } from '../../i18n/en';
+import { AvailabilityRange } from '../AvailabilityRange';
 import { PetTypePills } from '../PetTypePills';
 import { SitterAvatar } from '../SitterAvatar';
 import { SitterRating } from '../SitterRating';
+import { ResultsStatus } from './ResultsStatus';
 import type { MarketplaceLayoutProps } from './sharedProps';
 import { ViewSwitch } from './ViewSwitch';
 
@@ -117,17 +119,7 @@ export function PhotosView(props: MarketplaceLayoutProps): JSX.Element {
         <ViewSwitch view={state.view} onChange={onViewChange} />
       </div>
 
-      {status === 'error' ? (
-        <p className="state state--error" role="alert">
-          {error ?? en.home.loadError}
-        </p>
-      ) : null}
-      {status === 'loading' ? <p className="state">{en.home.loading}</p> : null}
-      {status === 'ready' && sitters.length === 0 ? (
-        <p className="state state--empty" data-testid="empty-sitters" role="status">
-          {en.home.empty}
-        </p>
-      ) : null}
+      <ResultsStatus status={status} error={error} resultCount={sitters.length} />
 
       {status === 'ready' && sitters.length > 0 ? (
         <ul className="photo-grid" data-testid="search-results" data-view="photos">
@@ -150,11 +142,12 @@ export function PhotosView(props: MarketplaceLayoutProps): JSX.Element {
                     <SitterRating avgRating={s.avg_rating} reviewCount={s.verified_reviews} />
                   </div>
                   <PetTypePills petTypes={s.pet_types} />
-                  {s.available_from && s.available_to ? (
-                    <p className="photo-card__avail">
-                      {en.detail.availability}: {s.available_from} → {s.available_to}
-                    </p>
-                  ) : null}
+                  <AvailabilityRange
+                    availableFrom={s.available_from}
+                    availableTo={s.available_to}
+                    className="photo-card__avail"
+                    withLabel
+                  />
                 </div>
               </Link>
             </li>
