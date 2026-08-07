@@ -10,7 +10,7 @@
     ],
     "note": "6 route(s) at 375; every interactive element >= 44px",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-type-floor",
@@ -23,7 +23,7 @@
     ],
     "note": "6 route(s) at 375, smallest body font 16px; nothing under 16px",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-responsive-375",
@@ -36,7 +36,7 @@
     ],
     "note": "no page or element overflow/clip at 375 on 6 route(s) (H>1px V>2px)",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-safe-areas",
@@ -49,7 +49,7 @@
     ],
     "note": "header sticky on all 6 route(s), padding-top 12px",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-premium-nav",
@@ -62,7 +62,7 @@
     ],
     "note": "8 header link(s) [Pet Sitter Finder, Home, Sitters, About, Terms, Privacy, Contact, Sign in], aria-current on \"Home\"",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-noncolor-state",
@@ -75,7 +75,7 @@
     ],
     "note": "active nav item: weight 700, gradient background false, aria-current present true",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-no-attribution",
@@ -88,7 +88,7 @@
     ],
     "note": "no attribution text",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-cross-link",
@@ -101,7 +101,7 @@
     ],
     "note": "cross-site link present",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-seo-og",
@@ -114,7 +114,7 @@
     ],
     "note": "title \"Pet Sitter Finder\", description present, og:image present",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-required-pages",
@@ -127,7 +127,7 @@
     ],
     "note": "/about 200 \"About Pet Sitter Finder\" 836w/9§; /contact 200 \"Contact\" 697w/8§; /terms 200 \"Terms and conditions\" 2606w/17§; /privacy 200 \"Privacy policy\" 2335w/16§; /no-such-page 200 \"Page not found\" 15w/0§",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -140,7 +140,7 @@
     ],
     "note": "0 console/page error(s) across the measured loads",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-design-archetype",
@@ -153,7 +153,7 @@
     ],
     "note": "claimed \"Card grid marketplace\"; widest block 1360px of 1440px, gutters 40/40",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-a11y-contrast",
@@ -165,7 +165,7 @@
     ],
     "note": "axe-core dark+light zero contrast violations",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-desktop-width",
@@ -176,7 +176,7 @@
     ],
     "note": "desktop width >=80%",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-cold-visitor",
@@ -187,7 +187,7 @@
     ],
     "note": "a first-time visitor gets a working app: 5 cold-start check(s) held",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-product-completeness",
@@ -199,7 +199,7 @@
     ],
     "note": "runtime + cold pass",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-pages-compose",
@@ -212,7 +212,7 @@
     ],
     "note": "named components",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "fe-fail-closed-states",
@@ -225,7 +225,7 @@
     ],
     "note": "distinct error states",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "u-conc-idiomatic",
@@ -237,7 +237,7 @@
     ],
     "note": "idiomatic TS",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "u-conc-no-speculative-abstraction",
@@ -249,7 +249,7 @@
     ],
     "note": "shared only when needed",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "u-conc-use-what-exists",
@@ -261,7 +261,7 @@
     ],
     "note": "stdlib+framework",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "u-conc-smallest-diff",
@@ -273,7 +273,7 @@
     ],
     "note": "smallest diff",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "u-test-adequacy",
@@ -286,7 +286,7 @@
     ],
     "note": "tests cover claims",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "u-test-behavioral",
@@ -297,7 +297,7 @@
     ],
     "note": "behavioral acceptance",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   },
   {
     "ruleId": "u-api-real-output",
@@ -309,6 +309,6 @@
     ],
     "note": "live API traffic",
     "reviewedAt": "2026-08-06T05:00:12.131Z",
-    "reviewedCommit": "917e3ac16b6fb96fa1cffd400f3df1f6d1d720de"
+    "reviewedCommit": "9fe6ab0a0641d66f750b6f0b95e67d91f85db221"
   }
 ]
