@@ -1,22 +1,25 @@
 # Logo decision — Pet Sitter Finder
 
-**Chosen mark:** `mark-01.png` (also shipped as `public/brand-mark.png` and `public/favicon.png`).
+**Chosen mark:** `mark-02.png` (animal silhouette — dog + cat side by side).
+
+Shipped as `public/brand-mark.png`, `public/favicon.png` (32×32), and the OG mark.
+
+Authoritative record: `design-refs/logos/DECISION.md` (CHOSEN). The coral house
+candidate (`mark-01.png`) is retired and kept only in the logos candidate set.
 
 ## Why
 
-A single flat coral house with dog and cat silhouettes. Reads as pet care at a glance, works on light and dark shells, and stays legible when scaled to favicon size (high-contrast solid shapes, no fine hairlines).
+Solid two-shape silhouette with no fine interior detail. Survives the small
+header strip where the house mark’s window and pet cutouts turn to mush. Pure
+pet read; no house metaphor competing with the wordmark.
 
 ## Size checks
 
 | Size | Result |
 |------|--------|
-| 256px | Clear house + animals |
-| 96px | Clear house + animals |
-| 32px | House silhouette readable; animals still visible as white cutouts |
-| 16px | House silhouette remains; animals merge into a single negative-space blob |
-
-## Rejected alternatives
-
-Only one production mark was generated in this pass. Further variants can be added later; shipping requires a real raster mark in the header, which this file documents.
+| 256px | Clear dog + cat silhouettes |
+| 96px | Clear dog + cat |
+| 48px | Readable at mobile header size |
+| 32px | Favicon: two solid shapes still distinct |
 
 **Shipped path:** `public/brand-mark.png` (header) and `public/favicon.png`.

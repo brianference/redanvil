@@ -1,8 +1,10 @@
 /**
  * Render the 12 live-app view captures (3 views × 2 vp × 2 themes).
+ * MANIFEST.json records a real sha256 of each file's bytes.
  */
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
+import { createHash } from 'node:crypto';
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -171,7 +173,8 @@ const vps = [
   { w: 1280, h: 820, tag: '1280' }
 ];
 const themes = ['light', 'dark'];
-const written = [];
+/** @type {{ file: string, viewport: number, theme: string, view: string, sha256: string }[]} */
+const renders = [];
 
 for (const view of views) {
   for (const vp of vps) {
@@ -189,14 +192,23 @@ for (const view of views) {
         document.documentElement.setAttribute('data-theme', t);
         localStorage.setItem('theme', t);
       }, theme);
-      await page.waitForSelector('[data-testid="search-results"], [data-layout]', {
+      // Re-apply after hydration so theme sticks, then wait for view chrome.
+      await page.waitForSelector('[data-testid="search-results"], [data-layout], [data-testid="view-switch"]', {
         timeout: 15000
       });
       await page.evaluate(() => window.scrollTo(0, 0));
-      await page.waitForTimeout(400);
+      await page.waitForTimeout(500);
       const name = `app_${view}_${vp.tag}_${theme}.png`;
-      await page.screenshot({ path: join(rendersDir, name), fullPage: false });
-      written.push(name);
+      const outPath = join(rendersDir, name);
+      await page.screenshot({ path: outPath, fullPage: false });
+      const sha256 = createHash('sha256').update(readFileSync(outPath)).digest('hex');
+      renders.push({
+        file: name,
+        viewport: vp.w,
+        theme,
+        view,
+        sha256
+      });
       await page.close();
     }
   }
@@ -204,8 +216,10 @@ for (const view of views) {
 
 await browser.close();
 server.close();
+const distinct = new Set(renders.map((r) => r.sha256));
 writeFileSync(
   join(rendersDir, 'MANIFEST.json'),
-  JSON.stringify({ generatedAt: new Date().toISOString(), appViews: written }, null, 2)
+  JSON.stringify({ generatedAt: new Date().toISOString(), renders }, null, 2)
 );
-console.log('wrote', written.length, written.join(', '));
+console.log('wrote', renders.length, 'renders;', distinct.size, 'distinct sha256');
+console.log(renders.map((r) => r.file).join(', '));

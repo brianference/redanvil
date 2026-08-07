@@ -16,3 +16,9 @@ They are synthetic character portraits, not photographs of real people, and are 
 
 **Tool:** Grok Build `image_gen` (Grok Imagine), aspect ratio `1:1`.  
 **Replacement policy:** These files replace any prior unprovenanced JPGs in this folder. Do not ship unlabeled real-person photographs as named sitters.
+
+**Delivery size:** Originals were 1024×1024 (~200KB each). They are re-encoded in
+place to **176×176 JPEG** (quality ~82) so mobile payloads stay light while
+provenance (same generated portraits, not regenerated) holds. UI renders them
+at roughly 56–88 CSS px.
+
