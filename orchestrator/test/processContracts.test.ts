@@ -209,6 +209,34 @@ describe('contracts do not fire on honest artifacts', () => {
     expect(r.ok).toBe(true);
   });
 
+  it('a checklist item NAMING the markers is not failed for naming them', () => {
+    // Verbatim from pet-sitter's PRD, which this check falsely failed.
+    put(
+      SCRATCH,
+      'checklist/PRD.md',
+      'Body copy about the product.\n'.repeat(30) +
+        '- [x] No placeholder tokens (TBD/TODO/lorem) in body\n'
+    );
+    const r = checkContract(SCRATCH, {
+      path: 'checklist/PRD.md',
+      kind: 'file',
+      mustNotContain: ['TBD', 'TODO'],
+      why: 'x'
+    });
+    expect(r.ok).toBe(true);
+  });
+
+  it('but a genuinely unfilled section still fails', () => {
+    put(SCRATCH, 'unfilled/PRD.md', 'Body copy.\n'.repeat(30) + '## Pricing\n\nTBD\n');
+    const r = checkContract(SCRATCH, {
+      path: 'unfilled/PRD.md',
+      kind: 'file',
+      mustNotContain: ['TBD'],
+      why: 'x'
+    });
+    expect(r.ok).toBe(false);
+  });
+
   it('mustContain is case-insensitive, matching mustNotContain', () => {
     put(SCRATCH, 'case/DECISION.md', 'Specifically forbidden, and DECIDED.\n'.repeat(30));
     const r = checkContract(SCRATCH, {

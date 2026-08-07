@@ -71,7 +71,7 @@ export const PROCESS = [
         // the wizard with Playwright and captures what it produces. A
         // hand-written PRD defeats the point: the app-builder is the product,
         // and using it on every new app is the only real dogfooding.
-        path: 'docs/PRD.md',
+        path: 'docs/pet-sitter-prd.md',
         kind: 'file',
         minBytes: 2000,
         mustContain: ['Design direction'],

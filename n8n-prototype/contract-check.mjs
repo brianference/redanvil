@@ -189,12 +189,21 @@ export function checkContract(appDir, c) {
         reasons.push(`${c.path} does not record "${needle}" -- ${c.why}`);
       }
     }
+    // Strip the places where a marker is being NAMED rather than left unfilled.
+    // Two real false failures came from this: a brief saying "not emoji or letter
+    // placeholders", and a PRD checklist item reading
+    // "- [x] No placeholder tokens (TBD/TODO/lorem) in body". A document
+    // certifying it has no placeholders was failed for listing them.
+    const scannable = text
+      .split('\n')
+      .filter((line) => !/^\s*[-*]\s*\[[ xX]\]/.test(line)) // checklist items are meta
+      .join('\n')
+      .replace(/`[^`\n]*`/g, '') // inline code spans quote markers, never leave them
+      .replace(/\([^)\n]*\)/g, ''); // parentheticals enumerate them: "(TBD/TODO/lorem)"
+
     for (const bad of c.mustNotContain ?? []) {
-      // Whole-word match. A substring match flagged a brief that said "not emoji
-      // or letter placeholders" -- a document forbidding placeholders was failed
-      // for containing the word.
       const pattern = new RegExp(`\\b${bad.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-      if (pattern.test(text)) {
+      if (pattern.test(scannable)) {
         reasons.push(`${c.path} still contains unfilled marker "${bad}" -- ${c.why}`);
       }
     }
