@@ -32,7 +32,7 @@ function rangeChipLabel(from: string, to: string): string {
 /**
  * Map layout (option B): the map owns the canvas.
  * Results live in a bottom sheet (phone) or side rail (desktop).
- * Sage trust green, soft map wash, avatar pins.
+ * Indigo/violet map wash, avatar pins.
  * No marketing hero — opens on the map.
  *
  * @param props - Shared marketplace controller props.

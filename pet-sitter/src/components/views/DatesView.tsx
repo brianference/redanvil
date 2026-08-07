@@ -78,7 +78,7 @@ function weekBarSlots(sitter: SitterSummary, anchor: Date): boolean[] {
 /**
  * Dates layout (option C): the calendar owns the fold.
  * Check-in/out + half-month calendar, then timeline rows with availability strips.
- * Honey amber on charcoal, Fraunces + Source Sans. No marketing hero above the calendar.
+ * Indigo Porch tokens; availability bars use --success. No marketing hero above the calendar.
  *
  * @param props - Shared marketplace controller props.
  */

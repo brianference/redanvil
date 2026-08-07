@@ -1,6 +1,6 @@
 /* Self-hosted fonts only. CSP style-src 'self' — never fonts.googleapis.com. */
 
-/* DM Sans — Photos (option A) */
+/* DM Sans — display face (Indigo Porch) */
 @font-face {
   font-family: 'DM Sans';
   font-style: normal;
@@ -23,7 +23,7 @@
     U+FFFD;
 }
 
-/* Plus Jakarta Sans — Map (option B) */
+/* Plus Jakarta Sans — retained files; not used by Indigo Porch tokens */
 @font-face {
   font-family: 'Plus Jakarta Sans';
   font-style: normal;
@@ -101,7 +101,7 @@
     U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Source Sans 3 — Dates body (option C) */
+/* Source Sans 3 — body face (Indigo Porch) */
 @font-face {
   font-family: 'Source Sans 3';
   font-style: normal;
@@ -179,7 +179,7 @@
     U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Fraunces — Dates display (option C editorial voice) */
+/* Fraunces — retained files; display is now DM Sans per palette choice */
 @font-face {
   font-family: 'Fraunces';
   font-style: normal;
@@ -220,30 +220,36 @@
 }
 
 /*
- * Semantic tokens — same names in every view; VALUES switch per architecture.
- * Default = Photos (option A warm coral on cream).
- * data-view=map → sage; data-view=dates → honey amber + Fraunces.
+ * Indigo Porch (palette-05) — owner-chosen semantic tokens.
+ * Architectures stay distinct (Photos / Map / Dates); colour is one system.
+ * Map wash = indigo/violet family. Availability bars/dots = --success.
+ * Display: DM Sans. Body: Source Sans 3 (self-hosted; style-src 'self').
  */
 :root {
-  --font: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --display: var(--font);
-  --bg: #faf6f1;
+  --font: 'Source Sans 3', system-ui, sans-serif;
+  --display: 'DM Sans', Georgia, serif;
+  --bg: #f4f2f9;
   --surface: #ffffff;
   --surface-elevated: #ffffff;
-  --text: #1c1410;
-  --text-on-accent: #ffffff;
-  --muted: #6b5e56;
-  /* Darkened from #e05a4f so white control text hits ≥4.5:1 (was 3.65:1). */
-  --accent: #c4453c;
-  --border: #eadfd4;
-  --ok: #1f7a4c;
+  --text: #17122a;
+  --muted: #564e6e;
+  --border: #d8d2e8;
+  --primary: #46318a;
+  --primary-contrast: #ffffff;
+  --success: #1f5c3a;
+  /* App components resolve via --accent / --ok; aliases keep call sites stable. */
+  --accent: var(--primary);
+  --text-on-accent: var(--primary-contrast);
+  --ok: var(--success);
   --danger: #b42318;
-  --chip: #f3e8e0;
-  --shadow: 0 8px 28px rgba(28, 20, 16, 0.08);
-  --map-wash: #dfece4;
-  --map-accent: #0f7a55;
-  --amber-dot: #c4892a;
-  --star: #d4a017;
+  --chip: #ebe6f5;
+  --shadow: 0 8px 28px rgba(23, 18, 42, 0.08);
+  /* Map wash: soft violet plate (not sage green). */
+  --map-wash: #e0daf0;
+  --map-accent: #46318a;
+  /* Calendar sitter-dots + week availability strips use success. */
+  --amber-dot: var(--success);
+  --star: #c9a227;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -257,99 +263,55 @@
 }
 
 :root[data-theme='dark'] {
-  --bg: #14110f;
-  --surface: #1f1a17;
-  --surface-elevated: #2a2320;
-  --text: #f7f1eb;
-  --text-on-accent: #1c1410;
-  --muted: #b0a49a;
-  --accent: #f07167;
-  --border: #3a322c;
-  --ok: #5dca8d;
+  --bg: #0e0c16;
+  --surface: #181524;
+  --surface-elevated: #1f1b2c;
+  --text: #f0ecf9;
+  --muted: #a69bc4;
+  --border: #322c4a;
+  --primary: #b8a4f5;
+  --primary-contrast: #0e0c16;
+  --success: #6dd4a0;
+  --accent: var(--primary);
+  --text-on-accent: var(--primary-contrast);
+  --ok: var(--success);
   --danger: #ff6369;
-  --chip: #2a2320;
+  --chip: #221e32;
   --shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-  --map-wash: #1a2820;
-  --map-accent: #3dcf94;
-  --amber-dot: #e0b040;
+  --map-wash: #161222;
+  --map-accent: #b8a4f5;
+  --amber-dot: var(--success);
   --star: #e0b040;
 }
 
-/* Map architecture palette — sage trust green */
+/* Map architecture — indigo/violet wash identity; radii only otherwise. */
 :root[data-view='map'] {
-  --font: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --display: var(--font);
-  --bg: #f3f6f4;
-  --surface: #ffffff;
-  --surface-elevated: #ffffff;
-  --text: #0f1f18;
-  --text-on-accent: #ffffff;
-  --muted: #4d6358;
-  --accent: #0f7a55;
-  --border: #d5e0d9;
-  --ok: #0f7a55;
-  --chip: #e6f2eb;
-  --shadow: 0 12px 32px rgba(15, 31, 24, 0.12);
-  --map-wash: #dfece4;
-  --map-accent: #0f7a55;
-  --star: #c9a227;
+  --shadow: 0 12px 32px rgba(23, 18, 42, 0.12);
+  --map-wash: #d8d0ee;
+  --map-accent: #5a3fa0;
   --radius: 16px;
   --radius-sm: 12px;
 }
 
 :root[data-view='map'][data-theme='dark'] {
-  --bg: #0c1410;
-  --surface: #15201a;
-  --surface-elevated: #1c2b23;
-  --text: #eaf3ee;
-  --text-on-accent: #0c1410;
-  --muted: #9bb0a4;
-  --accent: #3dcf94;
-  --border: #2a3b32;
-  --ok: #3dcf94;
-  --chip: #1c2b23;
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-  --map-wash: #1a2820;
-  --map-accent: #3dcf94;
-  --star: #c9a227;
+  --map-wash: #14101f;
+  --map-accent: #c4b2f8;
 }
 
-/* Dates architecture palette — honey amber + editorial type */
+/* Dates architecture — success-tinted availability; tighter radii. */
 :root[data-view='dates'] {
-  --font: 'Source Sans 3', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --display: 'Fraunces', Georgia, serif;
-  --bg: #f7f1e6;
-  --surface: #fffdf8;
-  --surface-elevated: #fffdf8;
-  --text: #1a1510;
-  --text-on-accent: #fffdf8;
-  --muted: #6a5d4e;
-  /* Darkened from #c45c26 so text-on-accent hits ≥4.5:1 on light dates. */
-  --accent: #b55220;
-  --border: #e4d5c0;
-  --ok: #2f6b3a;
-  --chip: #f0e4d2;
-  --shadow: 0 6px 20px rgba(26, 21, 16, 0.08);
-  --amber-dot: #2f6b3a;
-  --star: #c4892a;
+  --shadow: 0 6px 20px rgba(23, 18, 42, 0.08);
+  --ok: var(--success);
+  --amber-dot: var(--success);
   --radius: 14px;
   --radius-sm: 10px;
 }
 
 :root[data-view='dates'][data-theme='dark'] {
-  --bg: #12100e;
-  --surface: #1c1915;
-  --surface-elevated: #2a241c;
-  --text: #f6efe4;
-  --text-on-accent: #1a1510;
-  --muted: #b5a792;
-  --accent: #e8894a;
-  --border: #3a332a;
-  --ok: #6dba78;
-  --chip: #2a241c;
   --shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-  --amber-dot: #6dba78;
-  --star: #c4892a;
+  --ok: var(--success);
+  --amber-dot: var(--success);
 }
 
 html {
