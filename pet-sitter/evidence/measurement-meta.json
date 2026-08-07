@@ -52,17 +52,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-06T06:34:18.085Z"
+        "at": "2026-08-07T04:13:49.793Z"
       },
       {
         "ok": true,
-        "at": "2026-08-06T06:34:20.212Z"
+        "at": "2026-08-07T04:13:51.396Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/breadcrumbs",
       "failed": true,
-      "recordedAt": "2026-08-06T06:34:20.212Z"
+      "recordedAt": "2026-08-07T04:13:51.396Z"
     }
   },
   "fe-result-in-viewport": {
@@ -439,50 +439,50 @@
     "engine": "chromium",
     "runs": [
       {
-        "ok": false,
-        "at": "2026-08-07T04:01:54.209Z",
+        "ok": true,
+        "at": "2026-08-07T04:19:48.066Z",
         "metrics": {
-          "inkCoverage": 1,
-          "detailEnergy": 180.54256318697705,
-          "contrastOnWhite": 0.2769993085492414,
-          "contrastOnDark": 0.7169518584279015,
-          "inkCount": 1024,
+          "inkCoverage": 0.2890625,
+          "detailEnergy": 116.3243938695834,
+          "contrastOnWhite": 0.7422228259071675,
+          "contrastOnDark": 0.2517283410699754,
+          "inkCount": 296,
           "pixelCount": 1024
         }
       },
       {
-        "ok": false,
-        "at": "2026-08-07T04:01:54.209Z",
+        "ok": true,
+        "at": "2026-08-07T04:19:48.067Z",
         "metrics": {
-          "inkCoverage": 1,
-          "detailEnergy": 180.54256318697705,
-          "contrastOnWhite": 0.2769993085492414,
-          "contrastOnDark": 0.7169518584279015,
-          "inkCount": 1024,
+          "inkCoverage": 0.2890625,
+          "detailEnergy": 116.3243938695834,
+          "contrastOnWhite": 0.7422228259071675,
+          "contrastOnDark": 0.2517283410699754,
+          "inkCount": 296,
           "pixelCount": 1024
         }
       },
       {
-        "ok": false,
-        "at": "2026-08-07T04:01:54.550Z",
+        "ok": true,
+        "at": "2026-08-07T04:19:48.413Z",
         "metrics": {
-          "inkCoverage": 1,
-          "detailEnergy": 161.35067885775968,
-          "contrastOnWhite": 0.28596096127790394,
-          "contrastOnDark": 0.707990205699239,
-          "inkCount": 1024,
+          "inkCoverage": 0.310546875,
+          "detailEnergy": 101.9528217992632,
+          "contrastOnWhite": 0.755728756619555,
+          "contrastOnDark": 0.23822241035758798,
+          "inkCount": 318,
           "pixelCount": 1024
         }
       },
       {
-        "ok": false,
-        "at": "2026-08-07T04:01:54.550Z",
+        "ok": true,
+        "at": "2026-08-07T04:19:48.413Z",
         "metrics": {
-          "inkCoverage": 1,
-          "detailEnergy": 161.35067885775968,
-          "contrastOnWhite": 0.28596096127790394,
-          "contrastOnDark": 0.707990205699239,
-          "inkCount": 1024,
+          "inkCoverage": 0.310546875,
+          "detailEnergy": 101.9528217992632,
+          "contrastOnWhite": 0.755728756619555,
+          "contrastOnDark": 0.23822241035758798,
+          "inkCount": 318,
           "pixelCount": 1024
         }
       }
@@ -491,7 +491,7 @@
     "knownBad": {
       "input": "orchestrator/test/fixtures/fe-favicon-legible/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-07T04:01:54.550Z"
+      "recordedAt": "2026-08-07T04:19:48.413Z"
     }
   },
   "fe-a11y-contrast": {

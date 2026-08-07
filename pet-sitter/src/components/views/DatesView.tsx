@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom';
 import type { SitterSummary } from '../../lib/api';
 import { en } from '../../i18n/en';
+import { AvailabilityRange } from '../AvailabilityRange';
 import { PetTypePills } from '../PetTypePills';
 import { SitterAvatar } from '../SitterAvatar';
 import { SitterRating } from '../SitterRating';
+import { CompactSearchField } from './CompactSearchField';
+import { ResultsStatus } from './ResultsStatus';
 import type { MarketplaceLayoutProps } from './sharedProps';
 import { ViewSwitch } from './ViewSwitch';
 
@@ -226,29 +229,16 @@ export function DatesView(props: MarketplaceLayoutProps): JSX.Element {
             </div>
           </div>
 
-          <form
-            className="dates-search-inline"
-            role="search"
+          <CompactSearchField
+            inputId={inputId}
+            value={draftQ}
+            onChange={onQueryChange}
             onSubmit={onSearchSubmit}
-            data-testid={formTestId}
-            aria-label={en.home.searchLabel}
-          >
-            <label className="sr-only" htmlFor={inputId}>
-              {en.home.searchLabel}
-            </label>
-            <input
-              id={inputId}
-              type="search"
-              name="q"
-              placeholder={en.views.mapSearchPlaceholder}
-              value={draftQ}
-              onChange={(e) => onQueryChange(e.target.value)}
-              autoComplete="off"
-              data-testid="filter-search"
-              aria-label={en.home.searchLabel}
-            />
-            <button type="submit">{en.views.findSitters}</button>
-          </form>
+            formTestId={formTestId}
+            placeholder={en.views.mapSearchPlaceholder}
+            submitLabel={en.views.findSitters}
+            formClassName="dates-search-inline"
+          />
         </section>
 
         <div className="dates-timeline">
@@ -260,17 +250,7 @@ export function DatesView(props: MarketplaceLayoutProps): JSX.Element {
           </div>
           <p className="dates-timeline__hint">{en.views.timelineHint}</p>
 
-          {status === 'error' ? (
-            <p className="state state--error" role="alert">
-              {error ?? en.home.loadError}
-            </p>
-          ) : null}
-          {status === 'loading' ? <p className="state">{en.home.loading}</p> : null}
-          {status === 'ready' && sitters.length === 0 ? (
-            <p className="state state--empty" data-testid="empty-sitters" role="status">
-              {en.home.empty}
-            </p>
-          ) : null}
+          <ResultsStatus status={status} error={error} resultCount={sitters.length} />
 
           {status === 'ready' && sitters.length > 0 ? (
             <ul className="timeline">
@@ -311,11 +291,12 @@ export function DatesView(props: MarketplaceLayoutProps): JSX.Element {
                             ${s.rate_per_night}
                             <span>{en.home.perNight}</span>
                           </span>
-                          {s.available_from && s.available_to ? (
-                            <span className="timeline-row__avail">
-                              {s.available_from} → {s.available_to}
-                            </span>
-                          ) : null}
+                          <AvailabilityRange
+                            availableFrom={s.available_from}
+                            availableTo={s.available_to}
+                            className="timeline-row__avail"
+                            as="span"
+                          />
                         </div>
                       </div>
                     </Link>
