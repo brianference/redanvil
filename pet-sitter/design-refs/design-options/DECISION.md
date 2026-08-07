@@ -46,25 +46,40 @@ selected by a segmented control in the results header:
 Owner note: "i like how you added photos" — real sitter faces are a kept
 requirement in every view, not decoration.
 
-### Binding for implementation
+### Binding for implementation -- CORRECTED 2026-08-06
 
-- One data source, three renderers. The view switch changes presentation only;
-  the query, filters and result set are shared state. Switching views never
-  loses the dates, the neighbourhood, or the pet-type filter.
-- The chosen view persists across reloads, and is reflected in the URL so a view
-  is linkable.
-- `mark-01.png` is the only brand mark in all three. Never introduce another.
-- Every view keeps: pet-type pills, rating with stars plus review count,
-  visible availability, sitter avatar, and the nightly rate. The rate is the
-  app's own seed column `rate_per_night` (`migrations/0003_rebuild.sql:32`,
-  seeded from line 75); option B's `$55/night` for Avery Chen is that row's
-  real value at line 79, not an invented figure. No rate is ever displayed
-  that does not come from a `sitter` row.
-- Palettes do NOT switch per view -- that would read as three different apps.
-  Ship A's warm coral on cream as the app palette, and carry B's sage and C's
-  amber only as accents inside their own view (map wash, availability dots).
-- Fraunces is C's editorial voice; if it is not the app-wide display face, the
-  Dates view must not be the only screen using it.
+The first version of this section was wrong and produced a bad build. It said
+the view switch changes "presentation only", that palettes must not switch per
+view, and that Fraunces must not be confined to one screen. The build followed
+that faithfully and shipped ONE page shell -- one hero, one search capsule, one
+pill row -- with only the results region swapping. That is not what was chosen.
+Three architectures were chosen. The homogenising came from this document.
+
+**Each view keeps its own full-page architecture and its own visual direction,
+as built in `option-a.html`, `option-b.html` and `option-c.html`. Those files
+are the specification. Match them.**
+
+| View | Architecture -- what owns the fold | Visual direction |
+|------|-----------------------------------|------------------|
+| **Photos** | Floating multi-field search capsule, then full-bleed photo cards | Warm coral on cream, soft 20px radii, price-on-photo badges |
+| **Map** | **The map owns the canvas.** Results in a bottom sheet on phone, side rail on desktop | Sage trust green, soft map wash, face pins |
+| **Dates** | **The calendar owns the fold.** Check-in/out plus half-month calendar, then timeline rows | Honey amber on charcoal, Fraunces + Source Sans editorial type, availability strips |
+
+Specifically forbidden, because it is what shipped and was rejected:
+
+- A shared hero paragraph above every view. Map opens on the map. Dates opens on
+  the calendar.
+- A single search capsule reused across all three. Each view's entry control is
+  part of its architecture -- B searches from the map header, C searches under
+  the calendar.
+- One palette everywhere. Each view carries its own, and the shift between them
+  is the point, not a defect.
+- Dropping Fraunces. The Dates view is editorial; that is its identity.
+
+What stays genuinely shared: the sitter data, the filter state, the brand mark,
+the header and footer chrome, and the semantic token layer that makes light and
+dark work. Switching views preserves the query, the dates, the neighbourhood and
+the pet-type filter, and the view is in the URL.
 
 ### Defects found in visual review -- fix as the first build step, not later
 
