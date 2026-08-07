@@ -17,7 +17,7 @@ const PET_FILTERS = [
 
 /**
  * Photos layout (option A): search capsule owns the fold, then full-bleed photo cards.
- * Warm coral on cream, 20px radii, price-on-photo badges.
+ * Indigo Porch tokens, 20px radii, price-on-photo badges.
  *
  * @param props - Shared marketplace controller props.
  */
