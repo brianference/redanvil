@@ -284,6 +284,35 @@
   --star: #e0b040;
 }
 
+/*
+ * Before the boot script / ThemeToggle set data-theme, mirror the OS so a
+ * cold dark visitor never paints the light palette for a frame.
+ * Explicit [data-theme] always wins over this media query.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0e0c16;
+    --surface: #181524;
+    --surface-elevated: #1f1b2c;
+    --text: #f0ecf9;
+    --muted: #a69bc4;
+    --border: #322c4a;
+    --primary: #b8a4f5;
+    --primary-contrast: #0e0c16;
+    --success: #6dd4a0;
+    --accent: var(--primary);
+    --text-on-accent: var(--primary-contrast);
+    --ok: var(--success);
+    --danger: #ff6369;
+    --chip: #221e32;
+    --shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+    --map-wash: #161222;
+    --map-accent: #b8a4f5;
+    --amber-dot: var(--success);
+    --star: #e0b040;
+  }
+}
+
 /* Map architecture — indigo/violet wash identity; radii only otherwise. */
 :root[data-view='map'] {
   --shadow: 0 12px 32px rgba(23, 18, 42, 0.12);
@@ -930,19 +959,33 @@ a {
 
 .assistant__submit {
   margin-top: var(--space-3);
+  min-width: 44px;
   min-height: 44px;
   padding: 0 var(--space-4);
   border: none;
   border-radius: var(--radius);
   background: var(--accent);
   color: var(--text-on-accent);
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.assistant__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.assistant__status {
+  margin-top: var(--space-3);
+  color: var(--muted);
+  font-size: 16px;
 }
 
 .assistant__error {
   color: var(--danger);
   margin-top: var(--space-3);
+  font-size: 16px;
 }
 
 .assistant__answer {
