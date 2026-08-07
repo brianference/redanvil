@@ -112,6 +112,30 @@ export const PROCESS = [
     ]
   },
   {
+    id: 'palette',
+    role: 'palette',
+    summary: 'Five distinct colour + type directions, each shown light AND dark, OPEN decision',
+    dependsOn: ['product'],
+    humanGate: true,
+    skippable: false,
+    requires: [
+      {
+        path: 'design-refs/palettes/gallery.html',
+        kind: 'file',
+        minBytes: 2000,
+        why: 'palette was never a separate choice axis, so the owner was never offered one -- the base colour shipped because I picked it, not because it was chosen'
+      },
+      {
+        path: 'design-refs/palettes/DECISION.md',
+        kind: 'file',
+        minBytes: 400,
+        mustContain: ['palette-05', 'dark'],
+        mustNotContain: PLACEHOLDER_MARKERS,
+        why: 'naming palette-05 proves five directions were explored; requiring "dark" proves each was judged in both themes rather than light-only'
+      }
+    ]
+  },
+  {
     id: 'layout',
     role: 'layout',
     summary: 'Three structurally distinct layout options, gallery, OPEN decision',
@@ -139,8 +163,8 @@ export const PROCESS = [
   {
     id: 'decide',
     role: 'user-picks',
-    summary: 'The owner picks a logo and a layout direction. Nothing builds before this',
-    dependsOn: ['logo', 'layout'],
+    summary: 'The owner picks a logo, a palette and a layout. Nothing builds before this',
+    dependsOn: ['logo', 'layout', 'palette'],
     humanGate: true,
     skippable: false,
     requires: [
@@ -157,6 +181,17 @@ export const PROCESS = [
         minBytes: 300,
         mustContain: ['CHOSEN'],
         why: 'the chosen mark must be named in writing, or a later worktree ships whatever it finds'
+      },
+      {
+        // Added after the owner asked why no colour or theme options were ever
+        // offered. There was no palette step, so nothing required one and the
+        // base colour shipped because I chose it. The choice axis has to exist
+        // in the map before it can be enforced anywhere.
+        path: 'design-refs/palettes/DECISION.md',
+        kind: 'file',
+        minBytes: 400,
+        mustContain: ['CHOSEN'],
+        why: 'the palette must be a recorded owner choice, never a default carried over from whichever layout option happened to win'
       }
     ]
   },
