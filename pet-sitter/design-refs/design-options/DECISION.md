@@ -46,25 +46,38 @@ selected by a segmented control in the results header:
 Owner note: "i like how you added photos" — real sitter faces are a kept
 requirement in every view, not decoration.
 
-### Binding for implementation
+### Binding for implementation -- CORRECTED
 
-- One data source, three renderers. The view switch changes presentation only;
-  the query, filters and result set are shared state. Switching views never
-  loses the dates, the neighbourhood, or the pet-type filter.
-- The chosen view persists across reloads, and is reflected in the URL so a view
-  is linkable.
-- `mark-01.png` is the only brand mark in all three. Never introduce another.
+The first shipped build treated A/B/C as presentation skins on one page shell.
+That was rejected: the owner chose three architectures and received one
+architecture with three widgets. The binding below replaces the earlier
+"presentation only" / "one palette app-wide" rules.
+
+- **Three real layouts, not one shell.** Each view is a full page architecture
+  matching its option HTML (`option-a.html` / `option-b.html` / `option-c.html`).
+  | View | What owns the fold | Visual direction |
+  |------|--------------------|------------------|
+  | **Photos** | Search capsule, then full-bleed photo cards with faces | Warm coral on cream, 20px radii, price-on-photo badges |
+  | **Map** | **The map owns the canvas** -- results in a bottom sheet on phone, side rail on desktop | Sage trust green, soft map wash, avatar pins |
+  | **Dates** | **The calendar owns the fold** -- check-in/out + half-month calendar, then timeline rows | Honey amber on charcoal, Fraunces + Source Sans, availability strips |
+- **Forbidden (exactly what shipped and was rejected):**
+  - A shared hero paragraph ("Find a trusted pet sitter") above every view.
+    Map opens on the map. Dates opens on the calendar. Neither gets a generic
+    marketing hero above it.
+  - One search capsule reused by all three. Each view's entry control belongs
+    to its own architecture.
+  - One palette everywhere. Each view carries its own; the shift between views
+    is the point.
+  - Dropping Fraunces from the Dates view. That editorial voice is its identity.
+- **Stays shared:** sitter data; filter state (query, dates, neighbourhood,
+  pet type) surviving a view switch; the view in the URL; the brand mark
+  (`mark-01.png` only); the semantic token layer so light and dark both work
+  in all three views.
 - Every view keeps: pet-type pills, rating with stars plus review count,
-  visible availability, sitter avatar, and the nightly rate. The rate is the
-  app's own seed column `rate_per_night` (`migrations/0003_rebuild.sql:32`,
-  seeded from line 75); option B's `$55/night` for Avery Chen is that row's
-  real value at line 79, not an invented figure. No rate is ever displayed
-  that does not come from a `sitter` row.
-- Palettes do NOT switch per view -- that would read as three different apps.
-  Ship A's warm coral on cream as the app palette, and carry B's sage and C's
-  amber only as accents inside their own view (map wash, availability dots).
-- Fraunces is C's editorial voice; if it is not the app-wide display face, the
-  Dates view must not be the only screen using it.
+  visible availability, sitter avatar, and the nightly rate from
+  `rate_per_night` (no invented rates).
+- Self-host any font used under `public/fonts/`. Never add fonts.googleapis.com
+  (`style-src 'self'`).
 
 ### Defects found in visual review -- fix as the first build step, not later
 

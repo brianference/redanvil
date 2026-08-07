@@ -1,18 +1,14 @@
 import { Page } from '../components/Page';
 import { SitterSearchList } from '../components/SitterSearchList';
-import { en } from '../i18n/en';
 
 /**
- * Home: marketplace search over sitters with live narrowing and three views.
+ * Home marketplace: three real layout architectures (Photos / Map / Dates).
+ * Each view owns its fold — no shared marketing hero or shared search shell.
  */
 export function Home(): JSX.Element {
   return (
-    <Page title={en.home.title}>
-      <SitterSearchList
-        intro={en.home.intro}
-        formTestId="sitter-search"
-        inputId="sitter-search-input"
-      />
+    <Page fullBleed hideBreadcrumbs>
+      <SitterSearchList formTestId="sitter-search" inputId="sitter-search-input" />
     </Page>
   );
 }
