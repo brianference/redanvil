@@ -201,7 +201,7 @@
     },
     {
       "ruleId": "hyg-no-duplication",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "ci-actionlint",
@@ -225,7 +225,7 @@
     },
     {
       "ruleId": "proc-conventional-commits",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "proc-artifact-verified",
@@ -237,7 +237,7 @@
     },
     {
       "ruleId": "lg-push-cadence",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "lg-bindings-bound",
@@ -265,7 +265,7 @@
     },
     {
       "ruleId": "fe-favicon-legible",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "lg-result-reproduces",
@@ -393,29 +393,28 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "fe-favicon-legible",
         "fe-breadcrumbs",
         "hyg-no-binaries",
-        "hyg-no-duplication",
         "lg-shipped",
+        "lg-push-cadence",
         "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-07T04:01:21.173Z",
+  "finishedAt": "2026-08-07T04:29:29.539Z",
   "provenance": {
-    "commit": "68f9b7a4b99f79eaa3b7bedcf950bb8b0fe6dd43",
-    "dirty": false,
+    "commit": "9695fa833e43d96dec3595a6a0f0e9fcbdafd11b",
+    "dirty": true,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
     "node": "v22.19.0",
-    "verdictsHash": "529e046a383933ba0af35c8284715e38d018ff43c3bf352f8d58cad4f21c5534",
+    "verdictsHash": "ea2fdeb8444ef77c642a9bff5c1f6f510bb94871faa070c6e1771498f2a396c0",
     "notApplicable": [
       "proc-pr-title-ticket",
       "process"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-07T04:01:21.232Z"
+    "generatedAt": "2026-08-07T04:29:29.606Z"
   }
 }

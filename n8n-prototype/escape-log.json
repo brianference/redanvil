@@ -1,0 +1,96 @@
+{
+  "$comment": "Defects that were PRESENT while the gate reported a pass. This is the escape-rate instrument the portfolio package names as missing: 'The rubric can be wrong, and nothing in the loop detects a rule that passes bad code. Escape rate, meaning defects found after a passing gate, is the metric that would catch it, and it is not instrumented yet.' Every entry below is a real event from the 2026-08-05/06 sessions with a verifiable artifact. Rates are COMPUTED by escape-rate.mjs, never written here.",
+  "escapes": [
+    {
+      "id": "logo-role-never-ran",
+      "date": "2026-08-06",
+      "app": "pet-sitter",
+      "gateScoreAtTime": 100,
+      "foundBy": "owner",
+      "defect": "The logo role never ran. design-refs/logos held only a README: no candidate marks, no gallery, no DECISION.md. A single brand-mark.jpg was copied into mark-01.png and shipped.",
+      "whyGateMissed": "The gate scores what was built. It cannot ask for a step that was never started, and no rule required the logo role to have run.",
+      "nowCaughtBy": "process-map logo contract (public/brand-mark.png + gallery.html + DECISION.md naming mark-05) with dependsOn ordering",
+      "evidence": "docs/RCA-skipped-design-step.md"
+    },
+    {
+      "id": "three-designs-flattened",
+      "date": "2026-08-06",
+      "app": "pet-sitter",
+      "gateScoreAtTime": 100,
+      "foundBy": "owner",
+      "defect": "Three chosen architectures shipped as one page shell with only the results region swapping. The map view did not open on a map; the dates view did not open on a calendar.",
+      "whyGateMissed": "The orchestrator's own DECISION.md required the homogenisation ('presentation only', 'one palette app-wide'). The build was compliant, so no rule fired.",
+      "nowCaughtBy": "process-map layout contract requiring the word 'Forbidden' in DECISION.md (mobile-ux R38)",
+      "evidence": "pet-sitter/design-refs/design-options/DECISION.md"
+    },
+    {
+      "id": "palette-never-offered",
+      "date": "2026-08-06",
+      "app": "pet-sitter",
+      "gateScoreAtTime": 100,
+      "foundBy": "owner",
+      "defect": "Colour and type were never a choice axis. The coral base shipped because the orchestrator picked it, bundled with the winning layout.",
+      "whyGateMissed": "No palette step existed in the process, so nothing could require one.",
+      "nowCaughtBy": "process-map palette step + palette role in the registry + mobile-ux E0b",
+      "evidence": "pet-sitter/design-refs/palettes/DECISION.md"
+    },
+    {
+      "id": "csp-blocked-webfont",
+      "date": "2026-08-06",
+      "app": "pet-sitter",
+      "gateScoreAtTime": 100,
+      "foundBy": "post-deploy console capture",
+      "defect": "style-src 'self' blocked the Google Fonts stylesheet, so DM Sans never loaded in production and every route rendered in a fallback face. A console error on all 18 page loads.",
+      "whyGateMissed": "Local renders carry no CSP header, so the defect existed only on the deployed build and no check drove the deployed build's console.",
+      "nowCaughtBy": "evidence/shoot-petsitter.mjs console assertion across 3 views x 3 widths x 2 themes on the production URL",
+      "evidence": "evidence/prod-shots/"
+    },
+    {
+      "id": "placeholder-row-in-production",
+      "date": "2026-08-06",
+      "app": "pet-sitter",
+      "gateScoreAtTime": 100,
+      "foundBy": "post-deploy API check",
+      "defect": "A 'Sample Sitter' row (id='sample', bio 'Sample profile used by resource-link probes') was live in production D1 and served to users as a ninth sitter, rendering as an 'SS' initials map pin.",
+      "whyGateMissed": "Two checks built detail URLs by substituting the literal string 'sample', so the row was inserted to make them resolve. The check was satisfied by faking the data.",
+      "nowCaughtBy": "fe-resource-links and fe-breadcrumbs now resolve a real id from the collection and FAIL with 'no real detail id available' rather than falling back to a literal",
+      "evidence": "orchestrator/scripts/checks/fe-resource-links.mjs"
+    },
+    {
+      "id": "render-matrix-shortfall",
+      "date": "2026-08-05",
+      "app": "pet-sitter",
+      "gateScoreAtTime": 100,
+      "foundBy": "orchestrator review",
+      "defect": "DECISION.md claimed home and detail at 375 and 1280 in both themes. Ten renders existed: detail for one option only, desktop in light only, no dark desktop.",
+      "whyGateMissed": "A requirements list inside a decision document was read as evidence the requirements were met. Nothing counted artifacts against the claim.",
+      "nowCaughtBy": "process-map visual contract requiring 12 DISTINCT sha256 in renders/MANIFEST.json (mobile-ux R36)",
+      "evidence": "pet-sitter/design-refs/design-options/renders/MANIFEST.json"
+    },
+    {
+      "id": "avatars-without-provenance",
+      "date": "2026-08-05",
+      "app": "pet-sitter",
+      "gateScoreAtTime": 100,
+      "foundBy": "orchestrator review",
+      "defect": "Eight avatar photographs of apparent real people, with no SOURCES.md, no metadata and no licence, were about to ship labelled as named pet sitters.",
+      "whyGateMissed": "No rule asked where an image came from. fe-brand-mark checks that a mark exists, not that it is ours.",
+      "nowCaughtBy": "mobile-ux R37 (every image asset carries provenance or it does not ship); avatars regenerated via image_gen with SOURCES.md",
+      "evidence": "pet-sitter/public/avatars/SOURCES.md"
+    }
+  ],
+  "knownBlindSpots": [
+    {
+      "id": "judge-human-agreement",
+      "statement": "There is no measured agreement between judge verdicts and human labels. No true-positive or true-negative rate, no alignment target.",
+      "instrumented": false,
+      "source": "RedAnvil_Portfolio_Package.md, 'Evaluation strategy'"
+    },
+    {
+      "id": "lane-exclusion-attack-surface",
+      "statement": "Excluding inapplicable lanes from the denominator keeps the score honest but means a lane misclassified as inapplicable inflates the score with no visible failure.",
+      "instrumented": false,
+      "source": "RedAnvil_Portfolio_Package.md, 'The tradeoffs worth writing down'"
+    }
+  ]
+}
