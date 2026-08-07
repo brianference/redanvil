@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pet Sitter Finder — brand mark candidates</title>
+  <style>
+    :root {
+      --page: #0b0b0f;
+      --card: #15151d;
+      --border: #2a2a36;
+      --text: #e8e8ed;
+      --muted: #9a9aa8;
+      --accent: #4ade80;
+      --light-bg: #f7f5f2;
+      --dark-bg: #12121a;
+      --wordmark: #e8e8ed;
+      --wordmark-on-light: #1a1a22;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 20px 64px;
+      background: var(--page);
+      color: var(--text);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    h1 { font-size: 1.5rem; margin: 0 0 8px; font-weight: 700; }
+    .lede {
+      color: var(--muted);
+      max-width: 72ch;
+      margin: 0 0 28px;
+    }
+    .lede code { color: var(--accent); font-size: 0.9em; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 28px;
+    }
+    article {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .label {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .num {
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .name { font-weight: 600; font-size: 1.05rem; }
+    .tag {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 8px;
+    }
+    .tag.current {
+      color: #fbbf24;
+      border-color: #a16207;
+    }
+    .desc { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .plates {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 420px) {
+      .plates { grid-template-columns: 1fr; }
+    }
+    .plate {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      min-height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .plate.light { background: var(--light-bg); }
+    .plate.dark { background: var(--dark-bg); }
+    .plate img {
+      width: 240px;
+      height: 240px;
+      object-fit: contain;
+      display: block;
+    }
+    .plate-cap {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 6px;
+    }
+    .header-sim {
+      background: #0f0f16;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .header-sim h3 {
+      margin: 0 0 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .strip {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .lockup {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .lockup.light {
+      background: var(--light-bg);
+      color: var(--wordmark-on-light);
+    }
+    .lockup.dark {
+      background: var(--dark-bg);
+      color: var(--wordmark);
+    }
+    .lockup img {
+      object-fit: contain;
+      flex-shrink: 0;
+      display: block;
+    }
+    .lockup .wm {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+    .lockup.s24 img { width: 24px; height: 24px; }
+    .lockup.s24 .wm { font-size: 0.85rem; }
+    .lockup.s32 img { width: 32px; height: 32px; }
+    .lockup.s32 .wm { font-size: 0.95rem; }
+    .lockup.s48 img { width: 48px; height: 48px; }
+    .lockup.s48 .wm { font-size: 1.05rem; }
+    .size-label {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      min-width: 2.5rem;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    footer {
+      margin-top: 36px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      max-width: 70ch;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pet Sitter Finder — brand mark candidates</h1>
+  <p class="lede">
+    Five real raster candidates for the neighbourhood pet-sitter marketplace.
+    Each mark is shown large (≥240px) on light and dark, then at 24 / 32 / 48px
+    next to the wordmark so header scale is visible. Say a number (1–5) to choose.
+    Choice is open — see <code>DECISION.md</code>.
+  </p>
+
+  <div class="grid">
+    <!-- 1 current -->
+    <article>
+      <div class="label">
+        <span class="num">1</span>
+        <span class="name">House + pets</span>
+        <span class="tag current">current</span>
+      </div>
+      <p class="desc">Coral house with white dog and cat cutouts. Ships today as <code>public/brand-mark.png</code>.</p>
+      <div class="plates">
+        <div>
+          <div class="plate light"><img src="mark-01.png" alt="Mark 1 on light" /></div>
+          <div class="plate-cap">Light</div>
+        </div>
+        <div>
+          <div class="plate dark"><img src="mark-01.png" alt="Mark 1 on dark" /></div>
+          <div class="plate-cap">Dark</div>
+        </div>
+      </div>
+      <div class="header-sim">
+        <h3>Header scale</h3>
+        <div class="strip">
+          <div class="row"><span class="size-label">24px</span>
+            <div class="lockup light s24"><img src="mark-01.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s24"><img src="mark-01.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+          <div class="row"><span class="size-label">32px</span>
+            <div class="lockup light s32"><img src="mark-01.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s32"><img src="mark-01.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+          <div class="row"><span class="size-label">48px</span>
+            <div class="lockup light s48"><img src="mark-01.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s48"><img src="mark-01.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 2 animal silhouette -->
+    <article>
+      <div class="label">
+        <span class="num">2</span>
+        <span class="name">Animal silhouette</span>
+        <span class="tag">new</span>
+      </div>
+      <p class="desc">Bold coral dog + cat sitting side by side. No house — pure animal read at a glance.</p>
+      <div class="plates">
+        <div>
+          <div class="plate light"><img src="mark-02.png" alt="Mark 2 on light" /></div>
+          <div class="plate-cap">Light</div>
+        </div>
+        <div>
+          <div class="plate dark"><img src="mark-02.png" alt="Mark 2 on dark" /></div>
+          <div class="plate-cap">Dark</div>
+        </div>
+      </div>
+      <div class="header-sim">
+        <h3>Header scale</h3>
+        <div class="strip">
+          <div class="row"><span class="size-label">24px</span>
+            <div class="lockup light s24"><img src="mark-02.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s24"><img src="mark-02.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+          <div class="row"><span class="size-label">32px</span>
+            <div class="lockup light s32"><img src="mark-02.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s32"><img src="mark-02.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+          <div class="row"><span class="size-label">48px</span>
+            <div class="lockup light s48"><img src="mark-02.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s48"><img src="mark-02.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 3 paw heart -->
+    <article>
+      <div class="label">
+        <span class="num">3</span>
+        <span class="name">Paw + heart</span>
+        <span class="tag">new</span>
+      </div>
+      <p class="desc">Coral heart with a terracotta paw print. Care + animals in one solid shape.</p>
+      <div class="plates">
+        <div>
+          <div class="plate light"><img src="mark-03.png" alt="Mark 3 on light" /></div>
+          <div class="plate-cap">Light</div>
+        </div>
+        <div>
+          <div class="plate dark"><img src="mark-03.png" alt="Mark 3 on dark" /></div>
+          <div class="plate-cap">Dark</div>
+        </div>
+      </div>
+      <div class="header-sim">
+        <h3>Header scale</h3>
+        <div class="strip">
+          <div class="row"><span class="size-label">24px</span>
+            <div class="lockup light s24"><img src="mark-03.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s24"><img src="mark-03.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+          <div class="row"><span class="size-label">32px</span>
+            <div class="lockup light s32"><img src="mark-03.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s32"><img src="mark-03.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+          <div class="row"><span class="size-label">48px</span>
+            <div class="lockup light s48"><img src="mark-03.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s48"><img src="mark-03.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 4 monogram -->
+    <article>
+      <div class="label">
+        <span class="num">4</span>
+        <span class="name">Monogram P + dog</span>
+        <span class="tag">new</span>
+      </div>
+      <p class="desc">Letter P with a cream dog head in the counter. Brandable monogram for the marketplace.</p>
+      <div class="plates">
+        <div>
+          <div class="plate light"><img src="mark-04.png" alt="Mark 4 on light" /></div>
+          <div class="plate-cap">Light</div>
+        </div>
+        <div>
+          <div class="plate dark"><img src="mark-04.png" alt="Mark 4 on dark" /></div>
+          <div class="plate-cap">Dark</div>
+        </div>
+      </div>
+      <div class="header-sim">
+        <h3>Header scale</h3>
+        <div class="strip">
+          <div class="row"><span class="size-label">24px</span>
+            <div class="lockup light s24"><img src="mark-04.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s24"><img src="mark-04.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+          <div class="row"><span class="size-label">32px</span>
+            <div class="lockup light s32"><img src="mark-04.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s32"><img src="mark-04.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+          <div class="row"><span class="size-label">48px</span>
+            <div class="lockup light s48"><img src="mark-04.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s48"><img src="mark-04.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- 5 abstract trust -->
+    <article>
+      <div class="label">
+        <span class="num">5</span>
+        <span class="name">Trust shield</span>
+        <span class="tag">new</span>
+      </div>
+      <p class="desc">Abstract shield with heart and home motif, coral + sage. Trust and neighbourhood care.</p>
+      <div class="plates">
+        <div>
+          <div class="plate light"><img src="mark-05.png" alt="Mark 5 on light" /></div>
+          <div class="plate-cap">Light</div>
+        </div>
+        <div>
+          <div class="plate dark"><img src="mark-05.png" alt="Mark 5 on dark" /></div>
+          <div class="plate-cap">Dark</div>
+        </div>
+      </div>
+      <div class="header-sim">
+        <h3>Header scale</h3>
+        <div class="strip">
+          <div class="row"><span class="size-label">24px</span>
+            <div class="lockup light s24"><img src="mark-05.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s24"><img src="mark-05.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+          <div class="row"><span class="size-label">32px</span>
+            <div class="lockup light s32"><img src="mark-05.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s32"><img src="mark-05.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+          <div class="row"><span class="size-label">48px</span>
+            <div class="lockup light s48"><img src="mark-05.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+            <div class="lockup dark s48"><img src="mark-05.png" alt="" /><span class="wm">Pet Sitter Finder</span></div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <footer>
+    Choice left <strong>OPEN</strong> for the owner. Reply with a number 1–5 (or mix:
+    “4 for the mark”). Header shipping size is being raised separately to ~72px@1280
+    and ~48px@375 so whichever mark wins reads larger than today’s 56/40.
+  </footer>
+</body>
+</html>

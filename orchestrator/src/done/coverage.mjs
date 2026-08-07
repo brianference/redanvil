@@ -132,7 +132,7 @@ export const CHECKLIST_RULE_MAP = Object.freeze({
   },
   D10: {
     rules: ['fe-brand-mark-size'],
-    note: 'Rendered header mark height ≥48px at 1280 and ≥32px at 375.'
+    note: 'Rendered header mark height ≥72px at 1280 and ≥48px at 375.'
   },
   D11: {
     rules: ['fe-resource-links'],

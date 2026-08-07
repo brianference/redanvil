@@ -80,9 +80,9 @@ export interface QaVisualReport {
 }
 
 /** Minimum rendered brand-mark height at desktop (mirrors fe-brand-mark-size). */
-export const MIN_BRAND_MARK_DESKTOP = 48;
+export const MIN_BRAND_MARK_DESKTOP = 72;
 /** Minimum rendered brand-mark height at mobile. */
-export const MIN_BRAND_MARK_MOBILE = 32;
+export const MIN_BRAND_MARK_MOBILE = 48;
 /** Viewport width at or above which desktop brand-mark floor applies. */
 export const DESKTOP_WIDTH_FLOOR = 1280;
 
@@ -300,8 +300,8 @@ export function knownBadBelowFoldMetrics(): QaVisualMetrics {
     viewportHeight: 900,
     primaryResultY: 1942,
     primaryResultHeight: 40,
-    brandMarkHeight: 48,
-    headerHeight: 64,
+    brandMarkHeight: 72,
+    headerHeight: 88,
     heroHeight: 200,
     truncatedElementCount: 0,
     primaryActionAboveFold: true,
@@ -321,8 +321,8 @@ export function knownGoodInViewMetrics(): QaVisualMetrics {
     viewportHeight: 900,
     primaryResultY: 80,
     primaryResultHeight: 40,
-    brandMarkHeight: 48,
-    headerHeight: 64,
+    brandMarkHeight: 72,
+    headerHeight: 88,
     heroHeight: 200,
     truncatedElementCount: 0,
     primaryActionAboveFold: true,
