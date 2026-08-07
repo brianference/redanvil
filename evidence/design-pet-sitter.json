@@ -1,14 +1,14 @@
 {
   "baseUrl": "https://pet-sitter-vz1.pages.dev",
-  "checkedAt": "2026-08-06T04:05:07.842Z",
+  "checkedAt": "2026-08-07T03:40:22.048Z",
   "findings": {
     "fe-touch-targets": {
-      "ok": true,
-      "detail": "7 route(s) at 375; every interactive element >= 44px"
+      "ok": false,
+      "detail": "7 route(s) at 375; /:  |  |  | Photos | Map | Dates; /sitters:  |  |  | Photos | Map | Dates"
     },
     "fe-type-floor": {
-      "ok": true,
-      "detail": "7 route(s) at 375, smallest body font 16px; nothing under 16px"
+      "ok": false,
+      "detail": "7 route(s) at 375, smallest body font 13px; /: 9 sitters found | Availability: 2026-08-01 → 202 | Availability: 2026-08-01 → 202 | Availability: 2026-08-10 → 202 | Availability: 2026-08-01 → 202 | Availability: 2026-08-01 → 202 | Small mammals | Availability: 2026-08-05 → 202 | Liberty Village | Availability: 2026-08-01 → 202 | Distillery District | Availability: 2026-08-15 → 202 | Availability: 2026-08-01 → 202; /sitters: 9 sitters found | Availability: 2026-08-01 → 202 | Availability: 2026-08-01 → 202 | Availability: 2026-08-10 → 202 | Availability: 2026-08-01 → 202 | Availability: 2026-08-01 → 202 | Small mammals | Availability: 2026-08-05 → 202 | Liberty Village | Availability: 2026-08-01 → 202 | Distillery District | Availability: 2026-08-15 → 202 | Availability: 2026-08-01 → 202"
     },
     "fe-responsive-375": {
       "ok": true,
@@ -20,7 +20,7 @@
     },
     "fe-premium-nav": {
       "ok": true,
-      "detail": "8 header link(s) [Pet Sitter Finder, Home, Sitters, About, Terms, Privacy, Contact, Sign in], aria-current on \"Home\""
+      "detail": "14 header link(s) [Pet Sitter Finder, Home, Sitters, About, Terms, Privacy, Contact, Sign in, Sitters, About, Terms, Privacy, Contact, Sign in], aria-current on \"Home\""
     },
     "fe-noncolor-state": {
       "ok": true,
@@ -44,11 +44,11 @@
     },
     "fe-design-archetype": {
       "ok": true,
-      "detail": "claimed \"Card grid marketplace\"; widest block 1360px of 1440px, gutters 40/40"
+      "detail": "claimed \"Card grid marketplace\"; widest block 1440px of 1440px, gutters 0/0"
     },
     "fe-required-pages": {
       "ok": true,
-      "detail": "/about 200 \"About Pet Sitter Finder\" 836w/9§; /contact 200 \"Contact\" 697w/8§; /terms 200 \"Terms and conditions\" 2606w/17§; /privacy 200 \"Privacy policy\" 2335w/16§; /sitters 200 \"Sitters\" 18w/0§; /no-such-page 200 \"Page not found\" 15w/0§"
+      "detail": "/about 200 \"About Pet Sitter Finder\" 836w/9§; /contact 200 \"Contact\" 697w/8§; /terms 200 \"Terms and conditions\" 2606w/17§; /privacy 200 \"Privacy policy\" 2335w/16§; /sitters 200 \"Trusted sitters near your pet\" 33w/0§; /no-such-page 200 \"Page not found\" 15w/0§"
     },
     "fe-visual-review-recorded": {
       "ok": true,
@@ -56,5 +56,5 @@
     }
   },
   "consoleErrors": [],
-  "ok": true
+  "ok": false
 }
