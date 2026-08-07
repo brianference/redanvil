@@ -6,4 +6,4 @@ package-lock.json
 
 # Scratch app tree used to exercise the slice end to end.
 .demo/
-n8n-prototype/.verify-scratch/
+.verify-scratch/
