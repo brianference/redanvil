@@ -19,6 +19,30 @@
     <meta property="og:url" content="https://pet-sitter-vz1.pages.dev/" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/brand-mark.png" />
+    <!-- Apply theme before first paint: stored choice wins, else OS preference. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var choice =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+          document.documentElement.setAttribute('data-theme', choice);
+        } catch (e) {
+          try {
+            document.documentElement.setAttribute(
+              'data-theme',
+              window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+            );
+          } catch (e2) {
+            /* ignore */
+          }
+        }
+      })();
+    </script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",

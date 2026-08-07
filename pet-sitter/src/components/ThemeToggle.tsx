@@ -4,14 +4,41 @@ import { theme } from '../theme';
 type ThemeChoice = 'light' | 'dark';
 
 /**
- * Saved choice wins; otherwise light (cold visitor: first paint is light).
+ * Saved choice wins; otherwise follow the OS colour scheme.
+ *
+ * Cold visitors with nothing in localStorage must get dark when
+ * prefers-color-scheme is dark (and light when light). A stored
+ * preference still overrides the OS entirely.
  *
  * @param stored - Raw localStorage value, or null.
+ * @param prefersDark - Whether the OS asks for dark.
  * @returns The theme to apply.
  */
-function resolveTheme(stored: string | null): ThemeChoice {
+export function resolveTheme(stored: string | null, prefersDark: boolean): ThemeChoice {
   if (stored === 'light' || stored === 'dark') return stored;
-  return 'light';
+  return prefersDark ? 'dark' : 'light';
+}
+
+/**
+ * Read OS dark preference when matchMedia is available.
+ *
+ * @returns True when the OS prefers dark.
+ */
+function osPrefersDark(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+}
+
+/**
+ * Apply a resolved theme to the document root.
+ *
+ * @param choice - light or dark.
+ */
+function applyTheme(choice: ThemeChoice): void {
+  document.documentElement.dataset.theme = choice;
 }
 
 /**
@@ -20,21 +47,24 @@ function resolveTheme(stored: string | null): ThemeChoice {
  * @returns The toggle button.
  */
 export function ThemeToggle(): JSX.Element {
-  const [mode, setMode] = useState<ThemeChoice>('light');
+  const [mode, setMode] = useState<ThemeChoice>(() => {
+    if (typeof window === 'undefined') return 'light';
+    return resolveTheme(localStorage.getItem('theme'), osPrefersDark());
+  });
 
   useEffect(() => {
-    const next = resolveTheme(localStorage.getItem('theme'));
+    const next = resolveTheme(localStorage.getItem('theme'), osPrefersDark());
+    applyTheme(next);
     setMode(next);
-    document.documentElement.dataset.theme = next;
   }, []);
 
   const toggle = useCallback((): void => {
     // Read the DOM as source of truth so a design-audit paint sample that
     // flips data-theme without going through React still toggles correctly.
     const current: ThemeChoice =
-      document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+      document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
     const next: ThemeChoice = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
+    applyTheme(next);
     localStorage.setItem('theme', next);
     setMode(next);
   }, []);

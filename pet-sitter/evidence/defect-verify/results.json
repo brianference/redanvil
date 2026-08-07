@@ -1,0 +1,48 @@
+{
+  "theme_dark": {
+    "attr": "dark",
+    "bgVar": "#0e0c16",
+    "stored": null
+  },
+  "theme_light": {
+    "attr": "light",
+    "bgVar": "#f4f2f9",
+    "stored": null
+  },
+  "theme_stored_light_os_dark": {
+    "attr": "light",
+    "bgVar": "#f4f2f9",
+    "stored": "light"
+  },
+  "toggle": {
+    "before": "light",
+    "afterClick": {
+      "attr": "dark",
+      "stored": "dark"
+    },
+    "afterReload": {
+      "attr": "dark",
+      "stored": "dark"
+    }
+  },
+  "assistant": {
+    "api": [
+      "GET /api/sitters",
+      "POST /api/assistant"
+    ],
+    "status": 502,
+    "answer": null,
+    "error": "The assistant model failed. Try again in a moment."
+  },
+  "errorState": "The assistant model failed. Try again in a moment.",
+  "axe_light": {
+    "violations": [],
+    "contrastCount": 0,
+    "contrast": []
+  },
+  "axe_dark": {
+    "violations": [],
+    "contrastCount": 0,
+    "contrast": []
+  }
+}
