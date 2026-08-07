@@ -95,6 +95,40 @@ const CASES = [
     }
   },
   {
+    name: 'manifest-of-names-only-must-fail',
+    expectFail: true,
+    setup: () => {
+      mkdirSync(join(ROOT, 'names'), { recursive: true });
+      const names = Array.from({ length: 12 }, (_, i) => `app_view_${i}.png`);
+      writeFileSync(join(ROOT, 'names/MANIFEST.json'), JSON.stringify({ appViews: names }, null, 1));
+      return { path: 'names/MANIFEST.json', kind: 'file', jsonDistinctHashes: 12, why: 'x' };
+    }
+  },
+  {
+    name: 'manifest-with-one-hash-repeated-must-fail',
+    expectFail: true,
+    setup: () => {
+      mkdirSync(join(ROOT, 'dupe'), { recursive: true });
+      const same = 'a'.repeat(64);
+      const rows = Array.from({ length: 12 }, (_, i) => ({ file: `r${i}.png`, sha256: same }));
+      writeFileSync(join(ROOT, 'dupe/MANIFEST.json'), JSON.stringify({ renders: rows }, null, 1));
+      return { path: 'dupe/MANIFEST.json', kind: 'file', jsonDistinctHashes: 12, why: 'x' };
+    }
+  },
+  {
+    name: 'manifest-with-12-distinct-hashes-passes',
+    expectFail: false,
+    setup: () => {
+      mkdirSync(join(ROOT, 'hashed'), { recursive: true });
+      const rows = Array.from({ length: 12 }, (_, i) => ({
+        file: `r${i}.png`,
+        sha256: i.toString(16).padStart(64, '0')
+      }));
+      writeFileSync(join(ROOT, 'hashed/MANIFEST.json'), JSON.stringify({ renders: rows }, null, 1));
+      return { path: 'hashed/MANIFEST.json', kind: 'file', jsonDistinctHashes: 12, why: 'x' };
+    }
+  },
+  {
     name: 'honest-artifact-passes',
     expectFail: false,
     setup: () => {

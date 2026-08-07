@@ -181,10 +181,18 @@ export const PROCESS = [
     skippable: false,
     requires: [
       {
-        path: 'design-refs/design-options/renders',
-        kind: 'dir',
-        glob: '.png',
-        minCount: 12,
+        // The renders themselves are gitignored -- 40 PNGs per rebuild is real
+        // repo bloat. But evidence that cannot travel is not evidence: a fresh
+        // checkout could never verify this step. So the manifest is the
+        // committed artifact, and it must carry a content hash per render.
+        //
+        // A list of filenames would be the "artifact exists != work was done"
+        // trap one level up -- anyone can write twelve names. Twelve DISTINCT
+        // sha256 values cannot be produced without twelve distinct images.
+        path: 'design-refs/design-options/renders/MANIFEST.json',
+        kind: 'file',
+        minBytes: 400,
+        jsonDistinctHashes: 12,
         why: 'R36 -- the claimed matrix was 24 renders and 10 existed; count the artifacts against the claim'
       }
     ]

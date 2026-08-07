@@ -1,6 +1,15 @@
 # Brand mark decision — pet-sitter
 
-Choice is **OPEN**. Owner picks by number (1–5). No mark is selected until then.
+**CHOSEN: 2 -- `mark-02.png`, the animal silhouette (dog + cat side by side).**
+Recorded 2026-08-06, picked by the owner from the five-mark gallery.
+
+Why it holds up: a solid two-shape silhouette with no fine interior detail, so it
+survives the 24px header strip where the house mark's window and pet detail turn
+to mush. Pure pet read, no house metaphor competing with the wordmark.
+
+Ships as `public/brand-mark.png`, `public/favicon.png` and the OG mark. No other
+mark is introduced anywhere; the previous coral house mark (`mark-01.png`) is
+retired and kept in this directory as a candidate record only.
 
 | # | File | Concept | Notes |
 |---|------|---------|--------|
@@ -12,4 +21,4 @@ Choice is **OPEN**. Owner picks by number (1–5). No mark is selected until the
 
 Gallery: `design-refs/logos/gallery.html`
 
-When a mark is chosen: copy it to `public/brand-mark.png` (and favicon/OG as needed), then record the choice and date here.
+Chosen mark wired to `public/brand-mark.png`, `public/favicon.png` and the OG image.

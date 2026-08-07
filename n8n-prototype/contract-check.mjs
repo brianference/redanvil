@@ -23,6 +23,62 @@ import { orderedSteps, PROCESS } from './process-map.mjs';
  * @property {string[]} reasons
  */
 
+/** A sha256 hex digest, used to tell a real evidence record from a list of names. */
+const SHA256_HEX = /^[a-f0-9]{64}$/i;
+
+/**
+ * Verify an evidence manifest records enough DISTINCT content hashes.
+ *
+ * A manifest of filenames proves nothing -- anyone can write twelve names, which
+ * is the "artifact exists != work was done" trap moved up a level. Distinct
+ * sha256 values cannot be produced without distinct files. Twelve identical
+ * hashes means one image recorded twelve times, and that fails here.
+ *
+ * @param {string} full absolute path to the manifest
+ * @param {import('./process-map.mjs').ArtifactContract} c the contract
+ * @returns {string[]} reasons, empty when satisfied
+ */
+function distinctHashReasons(full, c) {
+  const need = c.jsonDistinctHashes ?? 0;
+  /** @type {unknown} */
+  let parsed;
+  try {
+    parsed = JSON.parse(readFileSync(full, 'utf8'));
+  } catch (err) {
+    return [`${c.path} is not parseable JSON (${String(err).slice(0, 60)}) -- ${c.why}`];
+  }
+
+  /** @type {string[]} */
+  const hashes = [];
+  /** @param {unknown} node */
+  const walk = (node) => {
+    if (typeof node === 'string') {
+      if (SHA256_HEX.test(node)) hashes.push(node.toLowerCase());
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const v of node) walk(v);
+      return;
+    }
+    if (node && typeof node === 'object') {
+      for (const v of Object.values(node)) walk(v);
+    }
+  };
+  walk(parsed);
+
+  const distinct = new Set(hashes);
+  if (distinct.size < need) {
+    return [
+      `${c.path} records ${distinct.size} distinct content hash(es), needs ${need}` +
+        (hashes.length === 0
+          ? ' -- it lists names but no hashes, which proves nothing about what was rendered'
+          : '') +
+        ` -- ${c.why}`
+    ];
+  }
+  return [];
+}
+
 /**
  * Check a single artifact contract against the app directory.
  * @param {string} appDir absolute app directory
@@ -59,6 +115,10 @@ export function checkContract(appDir, c) {
   const size = statSync(full).size;
   if (c.minBytes !== undefined && size < c.minBytes) {
     reasons.push(`${c.path} is ${size}B, needs ${c.minBytes}B -- ${c.why}`);
+  }
+
+  if (c.jsonDistinctHashes !== undefined) {
+    reasons.push(...distinctHashReasons(full, c));
   }
 
   // Only read text when there is something to assert about its contents.
