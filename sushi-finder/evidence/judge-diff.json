@@ -1,0 +1,104 @@
+{
+  "reviewedCommit": "105c54005c8627b0650549101c47126a5aff7557",
+  "scopeNote": "sushi-finder/CLAUDE.md is absent; rules applied from docs/PRD.md §13 Coding Standard plus the standard RedAnvil per-app pack (same text sibling apps scaffold into CLAUDE.md). Review covers monorepo HEAD plus the full sushi-finder working tree (tracked design-refs/harness diffs and untracked app: src/, functions/, migrations/, public/, config).",
+  "findings": [
+    {
+      "rule": "Fail closed — failed model call must surface an error, never silent success (PRD §13 / F9; file header claims 502)",
+      "file": "functions/api/assistant.ts",
+      "line": 186,
+      "severity": "blocker",
+      "why": "JSDoc at line 144 claims failed model/binding calls return 502/503. Missing AI binding does return 502 (lines 152–154), but env.AI.run throwing is caught at line 186 and execution falls through to a 200 with D1 grounding (lines 192–206). A live model failure is therefore reported as success. Acceptance test F9 only mocks a 502 at the network layer and never exercises this catch path, so the false contract is green."
+    },
+    {
+      "rule": "Fail closed — unknown/partial state is an explicit error; silent success forbidden (PRD §13)",
+      "file": "functions/api/assistant.ts",
+      "line": 133,
+      "severity": "blocker",
+      "why": "When filters.q is empty and the user message does not contain any catalog title, groundFilters sets items = all (full catalog) instead of empty. buildAnswer then returns a confident “Found N sushi places…” 200 for arbitrary out-of-coverage questions (cities, walk-ins, maps). That is a false success: no match became “here is the whole DB,” not an explicit miss/error."
+    },
+    {
+      "rule": "Desktop width — protect line measure with columns, never starve the container (PRD §7.3 / per-app pack)",
+      "file": "src/theme.css",
+      "line": 552,
+      "severity": "blocker",
+      "why": ".prose { max-width: 72ch } (also 48rem at line 507) and .coverage-boundary / .lead caps (lines 484, 394) starve painted text on legal and about routes. At 1440/1920 the readable content sits in a narrow left band rather than occupying ≥80% of the viewport with multi-column layout. This is the exact anti-pattern the desktop-width blocker names."
+    },
+    {
+      "rule": "Never log / never return secrets or internal failure detail to clients (PRD §13 security)",
+      "file": "functions/api/sushis.ts",
+      "line": 37,
+      "severity": "major",
+      "why": "catch blocks forward err.message into the JSON error body on 500 (also line 63; same pattern in functions/api/sushis/[id].ts lines 46, 91, 113 and assistant.ts line 209). D1/runtime exception text can leak to any anonymous client. Fail closed with a generic message server-side; log detail only in the Worker log stream."
+    },
+    {
+      "rule": "All user-facing copy lives in the locale bundle (src/i18n/en.ts); no hardcoded UI strings (PRD §13)",
+      "file": "src/components/Layout.tsx",
+      "line": 53,
+      "severity": "major",
+      "why": "Footer headings “Explore” and “Legal” (lines 53, 67) and nav aria-label “Primary” (line 21) are hardcoded English outside en.ts. Same class of violations: AssistantPanel.tsx:118 (“catalog match(es) used for grounding”), SushiDetailPage.tsx:153 (“Detail”), HomePage.tsx:13 / SushiListPage.tsx:85 (aria-labels), HomePage.tsx:16 (KPI value “D1”). Locale rule is not optional for chrome."
+    },
+    {
+      "rule": "All user-facing copy in locale bundle (PRD §13) — legal pages",
+      "file": "src/pages/Privacy.tsx",
+      "line": 22,
+      "severity": "major",
+      "why": "Privacy and Terms ship multi-section product policy as inline JSX strings (Privacy.tsx from ~22 onward; Terms.tsx from ~23). en.ts only holds title + updated date. Body copy is therefore not centralizable, not auditable as locale data, and breaks the stated i18n contract while About/Contact already use en.*."
+    },
+    {
+      "rule": "Required SEO: sitemap, robots.txt, unique title/description/OG per route (per-app pack)",
+      "file": "public/",
+      "line": 0,
+      "severity": "major",
+      "why": "public/ has only _headers, logo.png, favicon-32.png. No robots.txt, no sitemap.xml (also absent under dist/). index.html is the sole title/description/OG source; client routes (About, Terms, Privacy, Contact, list, detail) never set document title or route meta. Pack requires full SEO with per-route tags plus sitemap and robots."
+    },
+    {
+      "rule": "Real data only — no false product claims in user-facing surfaces (PRD §13)",
+      "file": "index.html",
+      "line": 9,
+      "severity": "major",
+      "why": "meta description claims discovery “by style, price band, and walk-in policy.” Schema and UI only support title + free-text description and title search (migrations/0001_init.sql; list/search handlers). About copy correctly denies structured filters; the homepage meta sells capabilities the app does not implement."
+    },
+    {
+      "rule": "Frontend: theme tokens only — no ad-hoc style objects for layout chrome where classes exist (PRD §13 theme tokens)",
+      "file": "src/components/Layout.tsx",
+      "line": 49,
+      "severity": "minor",
+      "why": "Inline style={{ color: 'var(--color-muted)', marginTop: '1rem' }} on footer paragraphs (and similar on SushiListPage.tsx:77, SushiDetailPage.tsx:172). Tokens are used, but spacing/color belong in CSS classes so theme and density stay in the design sheet. Not a maxWidth-blocker case, but token discipline is incomplete."
+    },
+    {
+      "rule": "Parameterized SQL — LIKE metacharacters must not expand user input (security / input safety)",
+      "file": "functions/lib/db.ts",
+      "line": 48,
+      "severity": "minor",
+      "why": "Search binds `%${trimmed}%` without escaping SQL LIKE wildcards `%` and `_`. Input is parameterized (no injection), but a query of `%` or `_` widens matches beyond a literal title fragment. Escape or replace LIKE metacharacters before binding."
+    },
+    {
+      "rule": "Theme toggle: visible control with clear state (per-app pack UI baseline)",
+      "file": "src/components/ThemeToggle.tsx",
+      "line": 38,
+      "severity": "minor",
+      "why": "Comment promises a visible label; rendered control is only a Unicode moon glyph. en.theme.light/dark/system exist but are unused as visible text. aria-label covers AT users; sighted users get an opaque icon with no text mode cue."
+    },
+    {
+      "rule": "Contact / real endpoints — no placeholder contact that pretends to be a mailbox (real data)",
+      "file": "src/i18n/en.ts",
+      "line": 124,
+      "severity": "minor",
+      "why": "en.contact.email is contact@example.invalid. Body text admits there is no outbound mail form, so this is not a secret fake metric, but a published “Project contact” that cannot receive mail is still a dead contact surface. Prefer no email line, or a real project contact, not an RFC example.invalid address presented as the contact channel."
+    }
+  ],
+  "verdict": "FAIL — 3 blockers, 5 majors, 4 minors. Do not treat this tree as rule-clean.",
+  "checkedAndClear": [
+    "tsconfig strict + noUncheckedIndexedAccess; eslint no-explicit-any is error",
+    "All D1 access in functions/lib/db.ts uses prepare/bind — no string-concat SQL values",
+    "Zod on create, update, query q, path id, assistant request/filters, and client response parse paths",
+    "No process/Buffer/better-sqlite3/bcrypt/jsonwebtoken in functions/ or src/ product code (process only in test harness env resolution)",
+    "No secrets or API keys in source; wrangler AI/DB bindings only",
+    "Seed rows (0002_seed.sql) name real public restaurants, not lorem/dummy scores",
+    "List/detail/form expose loading, error, empty; delete requires confirm dialog",
+    "Platform is Pages + Functions + D1 (no Express/Supabase)",
+    "SPA middleware fails API 404s as JSON and serves index.html only for non-API GETs",
+    "Tracked harness change (test/acceptance/harness.ts) correctly treats empty BASE_URL env as unset",
+    "Unit tests exist for health status, schemas, and theme helpers (existence checked; not re-run as part of this judge pass)"
+  ]
+}

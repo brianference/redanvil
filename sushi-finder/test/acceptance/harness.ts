@@ -13,11 +13,20 @@
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { expect } from '@playwright/test';
 
-/** Local Pages dev default; override with PLAYWRIGHT_BASE_URL or BASE_URL. */
-export const BASE_URL =
-  process.env.PLAYWRIGHT_BASE_URL?.replace(/\/$/, '') ??
-  process.env.BASE_URL?.replace(/\/$/, '') ??
-  'http://127.0.0.1:8788';
+/**
+ * Local Pages dev default; override with PLAYWRIGHT_BASE_URL or BASE_URL.
+ * Empty-string env vars are treated as unset (Windows shells sometimes export
+ * BASE_URL="" which would otherwise produce an invalid navigation URL).
+ */
+function resolveBaseUrl(): string {
+  const fromPlaywright = process.env.PLAYWRIGHT_BASE_URL?.trim().replace(/\/$/, '');
+  if (fromPlaywright) return fromPlaywright;
+  const fromBase = process.env.BASE_URL?.trim().replace(/\/$/, '');
+  if (fromBase) return fromBase;
+  return 'http://127.0.0.1:8788';
+}
+
+export const BASE_URL = resolveBaseUrl();
 
 /**
  * Launch a browser and return a fresh page factory for one describe block.

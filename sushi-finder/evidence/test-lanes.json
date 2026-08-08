@@ -1,0 +1,23 @@
+{
+  "ranAt": "2026-08-08T06:48:53.547Z",
+  "lanes": [
+    {
+      "lane": "vitest",
+      "exitCode": 0,
+      "ran": true,
+      "tail": "\u001b[2m   Start at \u001b[22m 23:48:48 | \u001b[2m   Duration \u001b[22m 350ms\u001b[2m (transform 52ms, setup 0ms, collect 90ms, tests 8ms, environment 0ms, prepare 361ms)\u001b[22m"
+    },
+    {
+      "lane": "typecheck",
+      "exitCode": 0,
+      "ran": true,
+      "tail": ""
+    },
+    {
+      "lane": "build",
+      "exitCode": 0,
+      "ran": true,
+      "tail": "\u001b[2mdist/\u001b[22m\u001b[36massets/index-CyQWbN67.js   \u001b[39m\u001b[1m\u001b[2m270.42 kB\u001b[22m\u001b[1m\u001b[22m\u001b[2m │ gzip: 82.17 kB\u001b[22m\u001b[2m │ map: 1,045.66 kB\u001b[22m | \u001b[32m✓ built in 707ms\u001b[39m"
+    }
+  ]
+}

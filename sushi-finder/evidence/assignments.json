@@ -1,0 +1,107 @@
+{
+  "unmet": [
+    {
+      "finding": "BLOCKER — Failed AI model call is caught and still returns HTTP 200 with D1 grounding; JSDoc promises 502/503. Live model failure is reported as success (functions/api/assistant.ts ~186).",
+      "owningRole": "engineer",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "Acceptance path F9 only mocks a network-layer 502 and never exercises the AI.run catch path that falsely succeeds — false contract stays green.",
+      "owningRole": "testwriter",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "BLOCKER — Empty filters.q with no catalog title match still sets items = full catalog and answers “Found N sushi places…” for out-of-coverage questions (silent false success; assistant groundFilters ~133).",
+      "owningRole": "engineer",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "BLOCKER — Desktop width: .prose / .coverage-boundary / .lead max-width caps starve legal and about text into a narrow left band at 1440/1920 instead of multi-column ≥80% viewport use (src/theme.css ~552, 507, 484, 394).",
+      "owningRole": "layout",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "MAJOR — catch blocks forward err.message into JSON 500 bodies (sushis.ts, sushis/[id].ts, assistant.ts); D1/runtime detail leaks to anonymous clients.",
+      "owningRole": "engineer",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "MAJOR — User-facing chrome strings hardcoded outside src/i18n/en.ts: Layout footer “Explore”/“Legal”, nav aria-label “Primary”, AssistantPanel grounding line, SushiDetailPage “Detail”, HomePage/SushiListPage aria-labels, HomePage KPI “D1”.",
+      "owningRole": "content",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "MAJOR — Privacy and Terms body policy is inline JSX (Privacy.tsx, Terms.tsx); en.ts holds only title + updated date. Legal copy not centralizable as locale data.",
+      "owningRole": "content",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "MAJOR — Missing SEO pack: no robots.txt, no sitemap.xml under public/ or dist/; client routes never set per-route title/description/OG (only index.html).",
+      "owningRole": "engineer",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "MAJOR — False product claim: index.html meta description sells discovery “by style, price band, and walk-in policy” but schema/UI only support title + free-text description and title search. Homepage meta sells unimplemented capabilities.",
+      "owningRole": "product",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "MINOR — Ad-hoc inline style objects for layout chrome (Layout footer, SushiListPage, SushiDetailPage) instead of CSS classes on theme tokens.",
+      "owningRole": "engineer",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "MINOR — Search LIKE binds `%${trimmed}%` without escaping LIKE metacharacters `%` and `_` (functions/lib/db.ts ~48); parameterized but widens matches beyond literal title fragments.",
+      "owningRole": "engineer",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "MINOR — ThemeToggle renders only a Unicode moon glyph; en.theme.light/dark/system exist but are unused as visible text; sighted users get no mode cue (ThemeToggle.tsx).",
+      "owningRole": "engineer",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "MINOR — en.contact.email is contact@example.invalid presented as project contact; dead contact surface (prefer no email line or a real contact).",
+      "owningRole": "content",
+      "source": "evidence/judge-diff.json"
+    },
+    {
+      "finding": "User refuse: production host https://sushi-finder.pages.dev/ is NXDOMAIN — site not on the public internet; catalog, search, detail, and assistant never load for a first-time visitor with only the advertised URL.",
+      "owningRole": "engineer",
+      "source": "evidence/user-refuse.json"
+    },
+    {
+      "finding": "User refuse: /api/health on the same origin also fails for NXDOMAIN — no backend surface from a visitor’s point of view.",
+      "owningRole": "qa-runtime",
+      "source": "evidence/user-refuse.json"
+    },
+    {
+      "finding": "Logo decision axis still OPEN — candidates mark-01..06 exist but no CHOSEN winner; decide role cannot close (design-refs/logos/DECISION.md).",
+      "owningRole": "product",
+      "source": "evidence/decisions.json"
+    },
+    {
+      "finding": "Palette decision axis still OPEN — palette-01..05 exist and axe-pass but no CHOSEN winner (design-refs/palettes/DECISION.md).",
+      "owningRole": "product",
+      "source": "evidence/decisions.json"
+    },
+    {
+      "finding": "Layout decision axis still OPEN — options A/B/C exist but no DECIDED winner; fold owner / result unit not chosen (design-refs/design-options/DECISION.md).",
+      "owningRole": "product",
+      "source": "evidence/decisions.json"
+    },
+    {
+      "finding": "Dead link in link-check: http://127.0.0.1: (status 0) — scraped from PRD verify lines using placeholder http://127.0.0.1:<port>/api/health; published docs emit an unresolvable URL.",
+      "owningRole": "content",
+      "source": "evidence/link-check.json"
+    }
+  ],
+  "unowned": [],
+  "notes": {
+    "gateResults": "sushi-finder/results/ does not exist (and monorepo results/ has no sushi-finder gate JSON). No gate-row findings to assign.",
+    "testLanes": "evidence/test-lanes.json: vitest, typecheck, build all exit 0 — not unmet.",
+    "judgeVerdict": "FAIL — 3 blockers, 5 majors, 4 minors (evidence/judge-diff.json).",
+    "userRefuseVerdict": "refuse — production unreachable (evidence/user-refuse.json).",
+    "assignmentRules": "Every unmet row has owningRole. Fix ownership: engineer (code/deploy/SEO), content (copy/i18n/legal/docs links), product (false claims + OPEN design picks), layout (desktop-width structure), testwriter (missing fail-path coverage), qa-runtime (deployed-origin probe gap after refuse). debugger is the next pipeline step after PM for root-cause on all of these, not a silent drop-bucket."
+  }
+}

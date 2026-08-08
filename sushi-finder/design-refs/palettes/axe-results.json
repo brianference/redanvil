@@ -1,14 +1,14 @@
 {
   "tool": "axe-core",
   "engine": "chromium",
-  "measuredAt": "2026-08-08T06:05:01.565Z",
+  "measuredAt": "2026-08-08T06:25:37.105Z",
   "scope": "Each palette HTML includes light AND dark phone themes of the same Photos grid screen. axe-core run against the full document (both themes simultaneously).",
   "totalViolations": 0,
   "files": {
     "palette-01.html": {
       "url": "file:///C:/Users/brian/RedAnvil/sushi-finder/design-refs/palettes/palette-01.html",
       "violationCount": 0,
-      "passCount": 29,
+      "passCount": 30,
       "violations": [],
       "criticalRules": {
         "colorContrast": "pass",
@@ -18,7 +18,7 @@
     "palette-02.html": {
       "url": "file:///C:/Users/brian/RedAnvil/sushi-finder/design-refs/palettes/palette-02.html",
       "violationCount": 0,
-      "passCount": 29,
+      "passCount": 30,
       "violations": [],
       "criticalRules": {
         "colorContrast": "pass",
@@ -48,7 +48,7 @@
     "palette-05.html": {
       "url": "file:///C:/Users/brian/RedAnvil/sushi-finder/design-refs/palettes/palette-05.html",
       "violationCount": 0,
-      "passCount": 29,
+      "passCount": 30,
       "violations": [],
       "criticalRules": {
         "colorContrast": "pass",

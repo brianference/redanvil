@@ -1,20 +1,20 @@
 {
-  "recordedAt": "2026-08-08T06:11:29.310Z",
+  "recordedAt": "2026-08-08T16:21:12.731Z",
   "decisions": [
     {
       "axis": "logo",
       "file": "design-refs/logos/DECISION.md",
-      "choice": "listed as a candidate only — not chosen, not shortlisted by default."
+      "choice": "**CHOSEN: 6 — `mark-06.png`, \"Maki finder lens\".** Recorded 2026-08-08 by the owner:"
     },
     {
       "axis": "palette",
       "file": "design-refs/palettes/DECISION.md",
-      "choice": "aligned with the mon-crest logo direction). It is listed as a candidate only — not chosen,"
+      "choice": "**CHOSEN: 5 — `palette-05`, \"Mon Crest\".** Recorded 2026-08-08 by the owner:"
     },
     {
       "axis": "layout",
       "file": "design-refs/design-options/DECISION.md",
-      "choice": "one option. Re-split before DECIDED."
+      "choice": "**DECIDED: all three as switchable views.** Recorded 2026-08-08."
     }
   ]
 }

@@ -28,7 +28,14 @@
       "primaryContrast": "#0c0e12",
       "success": "#3dd68c"
     },
-    "notes": "Designed dark-first for late-night restaurant hunting. Light theme is a derived companion, not the default voice."
+    "notes": "Designed dark-first for late-night restaurant hunting. Light theme is a derived companion, not the default voice.",
+    "layout": "grid2",
+    "cardShape": "elevated",
+    "imageRatio": "square",
+    "chipStyle": "filled",
+    "density": "compact",
+    "treatmentSummary": "2-col elevated cards (16px radius, soft shadow, no border), square photos, filled chips, compact gaps, bold Syne titles.",
+    "inspoSource": "Kura Sushi Rewards — availability / walk-in status as a first-class signal on the result unit (not buried)."
   },
   {
     "id": "palette-02",
@@ -59,7 +66,14 @@
       "primaryContrast": "#0a0a0a",
       "success": "#4ade80"
     },
-    "notes": "Photos and food carry all colour. UI is graphite so the grid of plates is the chroma."
+    "notes": "Photos and food carry all colour. UI is graphite so the grid of plates is the chroma.",
+    "layout": "list",
+    "cardShape": "hard-border",
+    "imageRatio": "four-three",
+    "chipStyle": "outline",
+    "density": "tight",
+    "treatmentSummary": "Single-column list rows, 4px radius, 1px hard border, no shadow, 4:3 thumbs left, outline chips, Inter only, tight density.",
+    "inspoSource": "Sushi Score — sparse utilitarian chrome; data (count/status) carries weight, not decoration."
   },
   {
     "id": "palette-03",
@@ -90,7 +104,14 @@
       "primaryContrast": "#1a1510",
       "success": "#9fd35a"
     },
-    "notes": "Reads like a printed guide to counters, not a delivery app. Warm paper in light; low amber room light in dark."
+    "notes": "Reads like a printed guide to counters, not a delivery app. Warm paper in light; low amber room light in dark.",
+    "layout": "stack",
+    "cardShape": "paper",
+    "imageRatio": "full-bleed",
+    "chipStyle": "underline",
+    "density": "generous",
+    "treatmentSummary": "Stacked full-width magazine cards, 20px radius, no border, soft paper shadow, full-bleed heroes, underline chips, large Fraunces, generous air.",
+    "inspoSource": "Amberjack — Rare Sushi Finds — editorial rare-find framing; search/browse feels like a guide, not a delivery grid."
   },
   {
     "id": "palette-04",
@@ -121,7 +142,14 @@
       "primaryContrast": "#0f1418",
       "success": "#6bcb8e"
     },
-    "notes": "For map-heavy browsing and city hops. No warm food hues in chrome — keep plates vivid against cool UI."
+    "notes": "For map-heavy browsing and city hops. No warm food hues in chrome — keep plates vivid against cool UI.",
+    "layout": "rows",
+    "cardShape": "flat-list",
+    "imageRatio": "thumb",
+    "chipStyle": "segmented",
+    "density": "dense-list",
+    "treatmentSummary": "Dense list rows, 8px flat cards, hairline border, no shadow, 40px thumbs, segmented control chips, compact Plex type.",
+    "inspoSource": "Sushi Shop (livraison) — list/order competence; filters as a segmented control, not pill soup."
   },
   {
     "id": "palette-05",
@@ -152,6 +180,13 @@
       "primaryContrast": "#0c0b1a",
       "success": "#2dd4bf"
     },
-    "notes": "Strongest idea: pairs with the mon-crest logo direction (indigo ring + coral koi). Dark theme is lacquer indigo night; light is rice paper with indigo ink. Not a coral-on-grey food app default."
+    "notes": "Strongest idea: pairs with the mon-crest logo direction (indigo ring + coral koi). Dark theme is lacquer indigo night; light is rice paper with indigo ink. Not a coral-on-grey food app default.",
+    "layout": "mon-grid",
+    "cardShape": "mon-ring",
+    "imageRatio": "square-ring",
+    "chipStyle": "filled-ceremonial",
+    "density": "airy",
+    "treatmentSummary": "2-col mon cards, 14px radius + indigo ring on photo, soft elevation, square images with ring inset, ceremonial filled chips, large Cormorant, airy padding.",
+    "inspoSource": "Sushi Diner / Master Chef store framing — ceremonial badge energy without cloning game chrome; mon ring as photo frame."
   }
 ]

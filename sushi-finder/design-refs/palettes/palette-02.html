@@ -136,34 +136,36 @@
       gap: 28px;
       align-items: flex-start;
     }
+    
     .phone-wrap { margin: 0; }
     .phone-cap {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: var(--page-muted);
-      margin: 0 0 8px;
+      color: var(--page-muted, #8b93a3);
+      margin: 0 0 6px;
       font-family: ui-monospace, Consolas, monospace;
     }
     .phone {
       width: 320px;
-      border-radius: 28px;
-      padding: 10px;
+      border-radius: 24px;
+      padding: 8px;
       background: #0a0a0c;
       border: 1px solid #3a3f4a;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.4);
     }
     .phone-inner {
-      border-radius: 20px;
+      border-radius: 18px;
       overflow: hidden;
       min-height: 640px;
+      max-height: 680px;
       display: flex;
       flex-direction: column;
       background: var(--bg);
       color: var(--text);
       font-family: var(--body);
       font-size: 16px;
-      line-height: 1.4;
+      line-height: 1.35;
     }
     .phone-wrap[data-theme="light"] .phone-inner {
       --bg: var(--light-bg);
@@ -186,181 +188,267 @@
       --success: var(--dark-success);
     }
     .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-      border: 0;
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); border: 0;
     }
     .app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 14px 8px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px 6px; background: var(--surface);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
     }
-    .brand { display: flex; gap: 10px; align-items: center; }
+    .brand { display: flex; gap: 8px; align-items: center; }
     .mark {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: var(--primary);
-      color: var(--primary-contrast);
-      display: grid;
-      place-items: center;
-      font-family: var(--display);
-      font-weight: 700;
-      font-size: 1.05rem;
+      width: 32px; height: 32px; border-radius: 9px; background: var(--primary);
+      color: var(--primary-contrast); display: grid; place-items: center;
+      font-family: var(--display); font-weight: 700; font-size: 0.95rem;
     }
     .app-name {
-      margin: 0;
-      font-family: var(--display);
-      font-weight: 700;
-      font-size: 1.05rem;
-      letter-spacing: -0.02em;
-      color: var(--text);
+      margin: 0; font-family: var(--display); font-weight: 700;
+      letter-spacing: -0.02em; color: var(--text);
     }
-    .app-loc {
-      margin: 0;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
+    .app-loc { margin: 0; font-size: 0.72rem; color: var(--muted); }
     .icon-btn {
-      min-width: 44px;
-      min-height: 44px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 1.1rem;
-      cursor: default;
+      min-width: 40px; min-height: 40px; border: 1px solid var(--border);
+      border-radius: 9px; background: var(--bg); color: var(--text); font-size: 1rem; cursor: default;
     }
-    .search-row { padding: 10px 14px 0; }
+    .search-row { padding: 8px 14px 0; flex-shrink: 0; }
     .search input {
-      width: 100%;
-      min-height: 44px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: var(--surface);
-      color: var(--text);
-      font: inherit;
-      font-size: 16px;
+      width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: 10px;
+      padding: 8px 10px; background: var(--surface); color: var(--text); font: inherit; font-size: inherit;
     }
-    .chips {
-      display: flex;
-      gap: 8px;
-      padding: 12px 14px 4px;
-      overflow-x: auto;
-    }
-    .chip {
-      flex: 0 0 auto;
-      min-height: 36px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font: inherit;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: default;
-    }
-    .chip--on {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: var(--primary-contrast);
-    }
-    .results-meta {
-      margin: 8px 14px 6px;
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-    .results-count {
-      color: var(--text);
-      font-weight: 600;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      padding: 4px 14px 16px;
-      flex: 1;
-    }
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    .photo {
-      height: 88px;
-      border-bottom: 1px solid var(--border);
-    }
-    /* Decorative plate tiles — not product photos; hue only for mock structure */
-    .photo-a { background: linear-gradient(145deg, #3a2a28 0%, #8b3a32 55%, #d4a574 100%); }
-    .photo-b { background: linear-gradient(145deg, #1a2e28 0%, #2f6b55 50%, #c4d4c8 100%); }
-    .photo-c { background: linear-gradient(145deg, #1e2438 0%, #4a5580 50%, #e8d5c4 100%); }
-    .photo-d { background: linear-gradient(145deg, #2a2218 0%, #6b4a2a 50%, #f0c8a0 100%); }
-    .phone-wrap[data-theme="light"] .photo-a { background: linear-gradient(145deg, #f0d0c8 0%, #c45a4a 55%, #8b2e24 100%); }
-    .phone-wrap[data-theme="light"] .photo-b { background: linear-gradient(145deg, #d8ebe4 0%, #3d8f72 50%, #1a4a38 100%); }
-    .phone-wrap[data-theme="light"] .photo-c { background: linear-gradient(145deg, #dde2f0 0%, #5a6aaa 50%, #2a3050 100%); }
-    .phone-wrap[data-theme="light"] .photo-d { background: linear-gradient(145deg, #f5e6d4 0%, #c48a4a 50%, #5a3818 100%); }
-    .card-body { padding: 8px 10px 10px; }
-    .card-title {
-      margin: 0 0 2px;
-      font-family: var(--display);
-      font-size: 0.92rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      color: var(--text);
-      line-height: 1.25;
-    }
-    .card-meta {
-      margin: 0 0 6px;
-      font-size: 0.72rem;
-      color: var(--muted);
-    }
-    .card-row {
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .badge-ok {
-      font-size: 0.68rem;
-      font-weight: 600;
-      color: var(--success);
-    }
-    .rating {
-      font-size: 0.68rem;
-      color: var(--muted);
-    }
+    .results-meta { margin: 6px 14px 4px; font-size: 0.75rem; color: var(--muted); flex-shrink: 0; }
+    .results-count { color: var(--text); font-weight: 600; }
     .tabbar {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      border-top: 1px solid var(--border);
-      background: var(--surface);
-      margin-top: auto;
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      border-top: 1px solid var(--border); background: var(--surface);
+      margin-top: auto; flex-shrink: 0;
     }
     .tab {
-      min-height: 48px;
-      display: grid;
-      place-items: center;
-      text-decoration: none;
-      color: var(--muted);
-      font-size: 0.8rem;
-      font-weight: 600;
+      min-height: 44px; display: grid; place-items: center; text-decoration: none;
+      color: var(--muted); font-size: 0.78rem; font-weight: 600;
     }
-    .tab--on {
-      color: var(--primary);
+    .tab--on { color: var(--primary); }
+    .badge-ok { font-weight: 600; color: var(--success); }
+    .rating { color: var(--muted); }
+    .card-meta { margin: 0 0 4px; color: var(--muted); }
+    .card-row { margin: 0; display: flex; flex-direction: column; gap: 2px; }
+    .card-title { margin: 0 0 2px; font-family: var(--display); color: var(--text); }
+    .photo {
+      background-size: cover; background-position: center; background-repeat: no-repeat;
+      flex-shrink: 0;
     }
+
+    /* ——— chips ——— */
+    .chips { display: flex; gap: 6px; padding: 10px 14px 2px; overflow-x: auto; flex-shrink: 0; }
+    .chip {
+      flex: 0 0 auto; min-height: 32px; padding: 4px 10px;
+      font: inherit; font-size: 0.75rem; font-weight: 600; cursor: default;
+    }
+    /* filled */
+    .chips--filled .chip, .chips--filled-ceremonial .chip {
+      border-radius: 999px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text);
+    }
+    .chips--filled .chip--on, .chips--filled-ceremonial .chip--on {
+      background: var(--primary); border-color: var(--primary); color: var(--primary-contrast);
+    }
+    .chips--filled-ceremonial .chip:not(.chip--on) {
+      background: transparent; border-color: var(--border); color: var(--muted);
+    }
+    /* outline */
+    .chips--outline .chip {
+      border-radius: 6px; border: 1.5px solid var(--border);
+      background: transparent; color: var(--text);
+    }
+    .chips--outline .chip--on {
+      border-color: var(--primary); color: var(--primary);
+      background: transparent; box-shadow: inset 0 -2px 0 var(--primary);
+    }
+    /* underline */
+    .chips--underline {
+      gap: 14px; border-bottom: 1px solid var(--border); padding-bottom: 0;
+    }
+    .chips--underline .chip {
+      border: none; background: transparent; color: var(--muted);
+      border-radius: 0; padding: 6px 2px 10px; min-height: 0;
+      font-weight: 500; letter-spacing: 0.01em;
+    }
+    .chips--underline .chip--on {
+      color: var(--text); font-weight: 700;
+      box-shadow: inset 0 -2px 0 var(--primary);
+    }
+    /* segmented */
+    .chips--segmented {
+      gap: 0; padding: 10px 14px 4px;
+    }
+    .chips--segmented .chip {
+      flex: 1; border-radius: 0; border: 1px solid var(--border);
+      background: var(--surface); color: var(--muted); text-align: center;
+      min-height: 34px; padding: 6px 4px; font-size: 0.72rem;
+    }
+    .chips--segmented .chip:first-child { border-radius: 8px 0 0 8px; }
+    .chips--segmented .chip:last-child { border-radius: 0 8px 8px 0; }
+    .chips--segmented .chip + .chip { border-left: none; }
+    .chips--segmented .chip--on {
+      background: var(--primary); border-color: var(--primary); color: var(--primary-contrast);
+      z-index: 1;
+    }
+
+    /* ——— layout: grid2 elevated (Night Counter) ——— */
+    .treat-grid2 .app-name { font-size: 1.05rem; }
+    .treat-grid2 .results--grid2 {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      padding: 2px 14px 12px; flex: 1; overflow: auto;
+    }
+    .treat-grid2 .card--elev {
+      background: var(--surface); border: none; border-radius: 16px;
+      overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+    }
+    .phone-wrap[data-theme="light"] .treat-grid2 .card--elev {
+      box-shadow: 0 4px 16px rgba(18,21,28,0.1);
+    }
+    .treat-grid2 .photo--sq { aspect-ratio: 1 / 1; width: 100%; }
+    .treat-grid2 .card-body { padding: 8px 9px 10px; }
+    .treat-grid2 .card-title { font-size: 0.88rem; font-weight: 800; line-height: 1.15; }
+    .treat-grid2 .card-meta { font-size: 0.68rem; }
+    .treat-grid2 .badge-ok, .treat-grid2 .rating { font-size: 0.65rem; }
+    .treat-grid2 .search input { border-radius: 12px; }
+
+    /* ——— layout: list hard-border (Ink Line) ——— */
+    .treat-list .app-name { font-size: 0.92rem; font-weight: 700; letter-spacing: -0.01em; }
+    .treat-list .results--list {
+      display: flex; flex-direction: column; gap: 0;
+      padding: 0; flex: 1; overflow: auto;
+      border-top: 1px solid var(--border);
+    }
+    .treat-list .card--list {
+      display: grid; grid-template-columns: 88px 1fr; gap: 0;
+      background: var(--surface); border: none;
+      border-bottom: 1px solid var(--border); border-radius: 0;
+      overflow: hidden;
+    }
+    .treat-list .photo--43 {
+      width: 88px; height: 72px; align-self: stretch; height: 100%;
+      min-height: 72px; border-right: 1px solid var(--border);
+    }
+    .treat-list .card-body { padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; }
+    .treat-list .card-title { font-size: 0.82rem; font-weight: 600; line-height: 1.2; }
+    .treat-list .card-meta { font-size: 0.68rem; margin-bottom: 3px; }
+    .treat-list .badge-ok, .treat-list .rating { font-size: 0.65rem; }
+    .treat-list .card-row { flex-direction: row; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .treat-list .search input { border-radius: 4px; }
+    .treat-list .icon-btn { border-radius: 4px; }
+    .treat-list .mark { border-radius: 4px; }
+
+    /* ——— layout: stack paper (Omakase Paper) ——— */
+    .treat-stack .app-name { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+    .treat-stack .app-loc { font-size: 0.78rem; line-height: 1.5; }
+    .treat-stack .results--stack {
+      display: flex; flex-direction: column; gap: 16px;
+      padding: 8px 16px 16px; flex: 1; overflow: auto;
+    }
+    .treat-stack .card--stack {
+      background: var(--surface); border: none; border-radius: 20px;
+      overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: 0 8px 24px rgba(42,33,24,0.1);
+    }
+    .phone-wrap[data-theme="dark"] .treat-stack .card--stack {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .treat-stack .photo--bleed {
+      width: 100%; aspect-ratio: 16 / 10; min-height: 100px;
+    }
+    .treat-stack .card-body { padding: 14px 14px 16px; }
+    .treat-stack .card-title {
+      font-size: 1.15rem; font-weight: 700; line-height: 1.25; margin-bottom: 4px;
+      letter-spacing: -0.02em;
+    }
+    .treat-stack .card-meta { font-size: 0.8rem; line-height: 1.45; margin-bottom: 8px; }
+    .treat-stack .badge-ok, .treat-stack .rating { font-size: 0.75rem; }
+    .treat-stack .card-row { flex-direction: row; gap: 12px; flex-wrap: wrap; }
+    .treat-stack .search input {
+      border-radius: 999px; border: none; background: var(--bg);
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+    .treat-stack .mark { border-radius: 50%; }
+    .treat-stack .icon-btn { border-radius: 50%; border: none; background: var(--bg); }
+    .treat-stack .results-meta { margin-top: 10px; margin-bottom: 4px; font-size: 0.8rem; }
+
+    /* ——— layout: rows flat-list (Harbor Mist) ——— */
+    .treat-rows .app-name { font-size: 0.9rem; font-weight: 600; letter-spacing: 0; }
+    .treat-rows .results--rows {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 4px 14px 10px; flex: 1; overflow: auto;
+    }
+    .treat-rows .card--row {
+      display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px; box-shadow: none;
+    }
+    .treat-rows .photo--thumb {
+      width: 40px; height: 40px; border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .treat-rows .card-body { padding: 0; min-width: 0; }
+    .treat-rows .row-top {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 6px;
+    }
+    .treat-rows .card-title {
+      font-size: 0.8rem; font-weight: 600; line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .treat-rows .price {
+      font-size: 0.72rem; font-weight: 600; color: var(--primary); flex-shrink: 0;
+    }
+    .treat-rows .card-meta { font-size: 0.68rem; margin-bottom: 2px; }
+    .treat-rows .badge-ok, .treat-rows .rating { font-size: 0.62rem; }
+    .treat-rows .card-row { flex-direction: row; gap: 8px; flex-wrap: wrap; }
+    .treat-rows .search input { border-radius: 6px; min-height: 36px; }
+    .treat-rows .app-header { padding-top: 10px; padding-bottom: 4px; }
+    .treat-rows .mark { border-radius: 6px; width: 28px; height: 28px; font-size: 0.85rem; }
+
+    /* ——— layout: mon-grid (Mon Crest) ——— */
+    .treat-mon-grid .app-name {
+      font-size: 1.15rem; font-weight: 700; letter-spacing: 0.01em; line-height: 1.1;
+    }
+    .treat-mon-grid .results--mon {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      padding: 6px 16px 14px; flex: 1; overflow: auto;
+    }
+    .treat-mon-grid .card--mon {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: 0 2px 10px rgba(26,23,68,0.08);
+    }
+    .phone-wrap[data-theme="dark"] .treat-mon-grid .card--mon {
+      box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+      border-color: #2e2a4a;
+    }
+    .treat-mon-grid .photo-ring {
+      padding: 8px 8px 0; background: var(--surface);
+    }
+    .treat-mon-grid .photo--sq {
+      aspect-ratio: 1 / 1; width: 100%; border-radius: 50%;
+      box-shadow: 0 0 0 2px var(--border), 0 0 0 4px var(--surface);
+      border: 2px solid var(--primary);
+    }
+    .phone-wrap[data-theme="dark"] .treat-mon-grid .photo--sq {
+      box-shadow: 0 0 0 2px #2e2a4a, 0 0 0 4px var(--surface);
+    }
+    .treat-mon-grid .card-body { padding: 10px 10px 12px; text-align: center; }
+    .treat-mon-grid .card-title {
+      font-size: 1rem; font-weight: 700; line-height: 1.2; letter-spacing: 0.01em;
+    }
+    .treat-mon-grid .card-meta { font-size: 0.68rem; }
+    .treat-mon-grid .badge-ok, .treat-mon-grid .rating { font-size: 0.65rem; }
+    .treat-mon-grid .card-row { align-items: center; }
+    .treat-mon-grid .mark {
+      border-radius: 50%; width: 34px; height: 34px;
+      box-shadow: 0 0 0 2px var(--border);
+    }
+    .treat-mon-grid .search input { border-radius: 12px; }
+  
     .axe-note {
       margin-top: 28px;
       max-width: 52rem;
@@ -384,9 +472,13 @@
     <dd>Hard ink-on-paper — pure structure, accent reserved for primary actions and focus</dd>
     <dt>Type voice</dt>
     <dd>Single utilitarian face (Inter) at all sizes — no display flourish</dd>
+    <dt>Component treatment</dt>
+    <dd>Single-column list rows, 4px radius, 1px hard border, no shadow, 4:3 thumbs left, outline chips, Inter only, tight density.</dd>
+    <dt>Reference insight</dt>
+    <dd>Sushi Score — sparse utilitarian chrome; data (count/status) carries weight, not decoration.</dd>
   </dl>
 
-  <p class="type-row">Display: <span>Inter</span> · Body: <span>Inter</span> · Body floor 16px</p>
+  <p class="type-row">Display: <span>Inter</span> · Body: <span>Inter</span> · Body floor 16px (full board)</p>
 
   <div class="token-block">
     <div class="token-card">
@@ -409,10 +501,10 @@
 
   <div class="phones">
     
-      <figure class="phone-wrap" data-theme="light">
+      <figure class="phone-wrap phone-wrap--palette-02 treat-list" data-theme="light" data-palette="palette-02">
         <figcaption class="phone-cap">Light</figcaption>
-        <div class="phone" data-screen="photos-grid" data-theme-label="Light">
-          <div class="phone-inner" aria-label="Sushi Finder photos grid — Light theme, Ink Line">
+        <div class="phone phone--full" data-screen="photos-grid" data-theme-label="Light">
+          <div class="phone-inner treat-list density-tight chips-outline" aria-label="Sushi Finder — Light theme, Ink Line">
             <header class="app-header">
               <div class="brand">
                 <span class="mark" aria-hidden="true">す</span>
@@ -431,43 +523,42 @@
               </label>
             </div>
 
-            <div class="chips" role="list" aria-label="Style filters">
-              <button type="button" class="chip chip--on" role="listitem">Photos</button>
-              <button type="button" class="chip" role="listitem">Map</button>
-              <button type="button" class="chip" role="listitem">Seating</button>
-              <button type="button" class="chip" role="listitem">Counter</button>
-              <button type="button" class="chip" role="listitem">Walk-in</button>
+            
+            <div class="chips chips--outline" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button><button type="button" class="chip" role="listitem">Map</button><button type="button" class="chip" role="listitem">Seating</button><button type="button" class="chip" role="listitem">Counter</button><button type="button" class="chip" role="listitem">Walk-in</button>
             </div>
 
             <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
 
-            <div class="grid" role="list" aria-label="Restaurant photos">
-              <article class="card" role="listitem">
-                <div class="photo photo-a" aria-hidden="true"></div>
+            
+            <div class="results results--list" role="list" aria-label="Restaurant photos">
+              
+              <article class="card card--list" role="listitem">
+                <div class="photo photo--43" style="background-image:url('food/plate-omakase.jpg')" role="img" aria-label="Photo of Sushi Nakazawa"></div>
                 <div class="card-body">
                   <h2 class="card-title">Sushi Nakazawa</h2>
                   <p class="card-meta">Counter · $$$$ · 0.8 km</p>
                   <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
                 </div>
               </article>
-              <article class="card" role="listitem">
-                <div class="photo photo-b" aria-hidden="true"></div>
+              <article class="card card--list" role="listitem">
+                <div class="photo photo--43" style="background-image:url('food/plate-conveyor.jpg')" role="img" aria-label="Photo of Kura Revolving"></div>
                 <div class="card-body">
                   <h2 class="card-title">Kura Revolving</h2>
                   <p class="card-meta">Conveyor · $$ · 1.1 km</p>
                   <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
                 </div>
               </article>
-              <article class="card" role="listitem">
-                <div class="photo photo-c" aria-hidden="true"></div>
+              <article class="card card--list" role="listitem">
+                <div class="photo photo--43" style="background-image:url('food/plate-counter.jpg')" role="img" aria-label="Photo of Sushi Yasuda"></div>
                 <div class="card-body">
                   <h2 class="card-title">Sushi Yasuda</h2>
                   <p class="card-meta">Counter · $$$ · 1.6 km</p>
                   <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
                 </div>
               </article>
-              <article class="card" role="listitem">
-                <div class="photo photo-d" aria-hidden="true"></div>
+              <article class="card card--list" role="listitem">
+                <div class="photo photo--43" style="background-image:url('food/plate-modern.jpg')" role="img" aria-label="Photo of Sugarfish"></div>
                 <div class="card-body">
                   <h2 class="card-title">Sugarfish</h2>
                   <p class="card-meta">Counter · $$$ · 2.0 km</p>
@@ -485,10 +576,10 @@
         </div>
       </figure>
     
-      <figure class="phone-wrap" data-theme="dark">
+      <figure class="phone-wrap phone-wrap--palette-02 treat-list" data-theme="dark" data-palette="palette-02">
         <figcaption class="phone-cap">Dark</figcaption>
-        <div class="phone" data-screen="photos-grid" data-theme-label="Dark">
-          <div class="phone-inner" aria-label="Sushi Finder photos grid — Dark theme, Ink Line">
+        <div class="phone phone--full" data-screen="photos-grid" data-theme-label="Dark">
+          <div class="phone-inner treat-list density-tight chips-outline" aria-label="Sushi Finder — Dark theme, Ink Line">
             <header class="app-header">
               <div class="brand">
                 <span class="mark" aria-hidden="true">す</span>
@@ -507,43 +598,42 @@
               </label>
             </div>
 
-            <div class="chips" role="list" aria-label="Style filters">
-              <button type="button" class="chip chip--on" role="listitem">Photos</button>
-              <button type="button" class="chip" role="listitem">Map</button>
-              <button type="button" class="chip" role="listitem">Seating</button>
-              <button type="button" class="chip" role="listitem">Counter</button>
-              <button type="button" class="chip" role="listitem">Walk-in</button>
+            
+            <div class="chips chips--outline" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button><button type="button" class="chip" role="listitem">Map</button><button type="button" class="chip" role="listitem">Seating</button><button type="button" class="chip" role="listitem">Counter</button><button type="button" class="chip" role="listitem">Walk-in</button>
             </div>
 
             <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
 
-            <div class="grid" role="list" aria-label="Restaurant photos">
-              <article class="card" role="listitem">
-                <div class="photo photo-a" aria-hidden="true"></div>
+            
+            <div class="results results--list" role="list" aria-label="Restaurant photos">
+              
+              <article class="card card--list" role="listitem">
+                <div class="photo photo--43" style="background-image:url('food/plate-omakase.jpg')" role="img" aria-label="Photo of Sushi Nakazawa"></div>
                 <div class="card-body">
                   <h2 class="card-title">Sushi Nakazawa</h2>
                   <p class="card-meta">Counter · $$$$ · 0.8 km</p>
                   <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
                 </div>
               </article>
-              <article class="card" role="listitem">
-                <div class="photo photo-b" aria-hidden="true"></div>
+              <article class="card card--list" role="listitem">
+                <div class="photo photo--43" style="background-image:url('food/plate-conveyor.jpg')" role="img" aria-label="Photo of Kura Revolving"></div>
                 <div class="card-body">
                   <h2 class="card-title">Kura Revolving</h2>
                   <p class="card-meta">Conveyor · $$ · 1.1 km</p>
                   <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
                 </div>
               </article>
-              <article class="card" role="listitem">
-                <div class="photo photo-c" aria-hidden="true"></div>
+              <article class="card card--list" role="listitem">
+                <div class="photo photo--43" style="background-image:url('food/plate-counter.jpg')" role="img" aria-label="Photo of Sushi Yasuda"></div>
                 <div class="card-body">
                   <h2 class="card-title">Sushi Yasuda</h2>
                   <p class="card-meta">Counter · $$$ · 1.6 km</p>
                   <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
                 </div>
               </article>
-              <article class="card" role="listitem">
-                <div class="photo photo-d" aria-hidden="true"></div>
+              <article class="card card--list" role="listitem">
+                <div class="photo photo--43" style="background-image:url('food/plate-modern.jpg')" role="img" aria-label="Photo of Sugarfish"></div>
                 <div class="card-body">
                   <h2 class="card-title">Sugarfish</h2>
                   <p class="card-meta">Counter · $$$ · 2.0 km</p>
@@ -566,7 +656,7 @@
     WCAG AA measured with <strong>axe-core</strong> (not hand-computed) via
     <code>measure-a11y.mjs</code> against both phone themes on this file.
     Results written to <code>axe-results.json</code> and summarised in
-    <code>DECISION.md</code>.
+    <code>DECISION.md</code>. Shared food photos under <code>food/</code>.
   </p>
 </body>
 </html>

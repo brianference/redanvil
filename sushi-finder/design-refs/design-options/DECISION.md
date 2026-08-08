@@ -1,5 +1,41 @@
 # Layout decision — sushi-finder
 
+**DECIDED: all three as switchable views.** Recorded 2026-08-08.
+
+Derived, not invented: the owner's own product prompt says "Browse by photos, by
+map, or by when a seating is available", which is A, B and C exactly. He made the
+same call on pet-sitter -- three architectures shipped as views rather than one
+winner -- and that decision is recorded in that app's DECISION.md.
+
+**Say the word and I will switch to a single option.** This is the one axis he did
+not name explicitly, so it is derived and reversible.
+
+| View | From | What owns the fold |
+|------|------|--------------------|
+| **Photos** (default) | option-a | Dense square photo tile grid |
+| **Map** | option-b | Full-bleed map; pin plus bottom-sheet row |
+| **Seating** | option-c | Tonight seating timeline, Now / 18:00 / 19:00 with open counts |
+
+### Forbidden -- this is what shipped on pet-sitter and was rejected
+
+- A shared hero paragraph above every view. **Map opens on the map. Seating opens
+  on the timeline.** Neither gets a generic marketing hero above it.
+- One search control reused by all three. Each view's entry control belongs to its
+  own architecture: A searches from a capsule, B from the map header, C from the
+  zone bar.
+- One palette flattening the views. The Mon Crest tokens are shared, but each view
+  keeps its own accent identity.
+- Collapsing the three into one shell with three swapped widgets. That is the
+  precise failure this section exists to prevent.
+
+### Shared across views
+
+Restaurant data, filter state (query, city, style, price, walk-in) surviving a view
+switch, the view in the URL, the mark-06 brand mark, and the Mon Crest token layer
+so light and dark both work everywhere.
+
+# Layout decision — sushi-finder
+
 Status: **OPEN** — no winner selected. Owner picks.
 
 Three structurally distinct discovery architectures. They differ in **what owns

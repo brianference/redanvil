@@ -1,0 +1,12 @@
+{
+  "url": "https://sushi-finder.pages.dev/",
+  "attempted": "As a first-time visitor I opened only the production URL advertised by the product (canonical / schema.org url: https://sushi-finder.pages.dev/). DNS lookup returned Non-existent domain (NXDOMAIN). HTTP never started — no HTML, no catalog, no search, no detail page, no assistant. Retried the same host for / and /api/health; both failed the same way. No alternate live hostname was available to me as an end user who only has the deployed URL.",
+  "complaints": [
+    "The production host sushi-finder.pages.dev does not resolve in DNS (nslookup: Non-existent domain). The site is not on the public internet.",
+    "Opening the only URL the product claims returns a hard network failure before any UI appears — I cannot discover sushi restaurants, browse a catalog, open a place, or ask anything.",
+    "Health/API probe to the same origin also fails for the same reason, so there is no backend either from a visitor’s point of view.",
+    "Core promise untested in practice because zero product surface loaded; nothing argued me past a refuse."
+  ],
+  "verdict": "refuse",
+  "why": "Default answer is no. Accept only if the core promise worked end to end. Here the advertised production URL is unreachable (NXDOMAIN), so the product never rendered and the finder flow never started. A missing deploy is a complete product failure for a first-time user who only has the live URL."
+}

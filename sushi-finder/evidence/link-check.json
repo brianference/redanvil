@@ -1,0 +1,118 @@
+{
+  "checkedAt": "2026-08-08T06:52:52.339Z",
+  "checked": 22,
+  "dead": 1,
+  "results": [
+    {
+      "url": "https://redanvil.pages.dev/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "http://127.0.0.1:",
+      "status": 0,
+      "ok": false,
+      "error": "TypeError: fetch failed"
+    },
+    {
+      "url": "https://github.com/BurntSushi/ripgrep",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/TheAlgorithms/Java",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/meilisearch/meilisearch",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/sharkdp/fd",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Leaflet/Leaflet",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/louis-e/arnis",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/react-native-maps/react-native-maps",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/organicmaps/organicmaps",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/spotify/luigi",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/Tonejs/Tone.js",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/agronholm/apscheduler",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/quartznet/quartznet",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/recommenders-team/recommenders",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/ng-bootstrap/ng-bootstrap",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/wbotelhos/raty",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/williamyyu/SimpleRatingBar",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/pocketbase/pocketbase",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/better-auth/better-auth",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/authelia/authelia",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "url": "https://github.com/nextauthjs/next-auth",
+      "status": 200,
+      "ok": true
+    }
+  ]
+}
