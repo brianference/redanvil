@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>var-04 — Editorial stack · Omakase Paper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet" />
+  <style>
+    :root { 
+    --display: "Fraunces", system-ui, serif;
+    --body: "Source Serif 4", system-ui, sans-serif;
+    --light-bg: #f7f0e6;
+    --light-surface: #fffaf3;
+    --light-text: #2a2118;
+    --light-muted: #6b5d4d;
+    --light-border: #e0d4c4;
+    --light-primary: #9a3412;
+    --light-primary-contrast: #fffaf3;
+    --light-success: #3f6212;
+    --dark-bg: #1a1510;
+    --dark-surface: #26201a;
+    --dark-text: #f7efe4;
+    --dark-muted: #b8a894;
+    --dark-border: #3f352b;
+    --dark-primary: #f0a060;
+    --dark-primary-contrast: #1a1510;
+    --dark-success: #9fd35a;
+   }
+    
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 28px 20px 64px;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0b0d12;
+  color: #e8eaef;
+  line-height: 1.45;
+}
+h1 { font-size: 1.35rem; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em; }
+.meta { color: #9aa3b2; font-size: 0.95rem; max-width: 54rem; margin: 0 0 16px; }
+.meta strong { color: #e8eaef; }
+.axes { display: grid; gap: 6px; margin: 0 0 20px; max-width: 54rem; font-size: 0.9rem; }
+.axes dt { color: #7d8799; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }
+.axes dd { margin: 0 0 6px; }
+.phones { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.phone-wrap { margin: 0; }
+.phone-cap {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: #8b93a3; margin: 0 0 6px; font-family: ui-monospace, Consolas, monospace;
+}
+.phone {
+  width: 375px;
+  border-radius: 28px;
+  padding: 10px;
+  background: #0a0a0c;
+  border: 1px solid #3a3f4a;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.45);
+}
+.phone-inner {
+  border-radius: 20px;
+  overflow: hidden;
+  height: 720px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.35;
+  position: relative;
+}
+.phone-wrap[data-theme="light"] .phone-inner {
+  --bg: var(--light-bg);
+  --surface: var(--light-surface);
+  --text: var(--light-text);
+  --muted: var(--light-muted);
+  --border: var(--light-border);
+  --primary: var(--light-primary);
+  --primary-contrast: var(--light-primary-contrast);
+  --success: var(--light-success);
+}
+.phone-wrap[data-theme="dark"] .phone-inner {
+  --bg: var(--dark-bg);
+  --surface: var(--dark-surface);
+  --text: var(--dark-text);
+  --muted: var(--dark-muted);
+  --border: var(--dark-border);
+  --primary: var(--dark-primary);
+  --primary-contrast: var(--dark-primary-contrast);
+  --success: var(--dark-success);
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); border: 0;
+}
+.brand-mark {
+  width: 32px; height: 32px; object-fit: contain; flex-shrink: 0;
+  display: block;
+}
+.app-name { margin: 0; font-family: var(--display); font-weight: 700; color: var(--text); }
+.app-loc { margin: 0; font-size: 0.72rem; color: var(--muted); }
+.icon-btn {
+  min-width: 44px; min-height: 44px; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--bg); color: var(--text);
+  font-size: 1rem; cursor: default; display: grid; place-items: center;
+}
+.tabbar {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid var(--border); background: var(--surface);
+  margin-top: auto; flex-shrink: 0;
+}
+.tab {
+  min-height: 52px; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px; text-decoration: none;
+  color: var(--muted); font-size: 0.72rem; font-weight: 600;
+  padding: 6px 4px;
+}
+.tab--on { color: var(--primary); }
+.tab svg { width: 20px; height: 20px; }
+.badge-ok { font-weight: 600; color: var(--success); }
+.rating { color: var(--muted); }
+.photo {
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+/* ——— Chip scroller: never clip labels; deliberate overflow with affordance ——— */
+.chips-scroller {
+  position: relative;
+  flex-shrink: 0;
+}
+.chips {
+  display: flex;
+  gap: 8px;
+  padding: 10px 36px 10px 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  flex-wrap: nowrap;
+}
+.chips::-webkit-scrollbar { height: 4px; }
+.chips::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.chip {
+  flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  white-space: nowrap;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: default;
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.chips-fade {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 40px;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--bg) 70%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+}
+.chips-fade::after {
+  content: "›";
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--muted);
+  line-height: 1;
+}
+/* filled chips — actual pills, not bare text */
+.chips--filled .chip {
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.chips--filled .chip--on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+  box-shadow: none;
+}
+.chips--filled-ceremonial .chip {
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+.chips--filled-ceremonial .chip--on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+}
+.chips--outline .chip {
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.chips--outline .chip--on {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+.chips--underline {
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+  padding-right: 14px;
+}
+.chips--underline .chip {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 0;
+  padding: 10px 12px 12px;
+  min-height: 44px;
+  font-weight: 500;
+}
+.chips--underline .chip--on {
+  color: var(--text);
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 var(--primary);
+}
+/* segmented — full-width equal segments, no scroll needed */
+.chips-scroller--segmented .chips-fade { display: none; }
+.chips--segmented {
+  gap: 0;
+  padding: 10px 14px;
+  overflow: visible;
+}
+.chips--segmented .chip {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 0;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  text-align: center;
+  padding: 0 6px;
+  font-size: 0.78rem;
+}
+.chips--segmented .chip:first-child { border-radius: 10px 0 0 10px; }
+.chips--segmented .chip:last-child { border-radius: 0 10px 10px 0; }
+.chips--segmented .chip + .chip { border-left: none; }
+.chips--segmented .chip--on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+  z-index: 1;
+}
+.axe-note {
+  margin-top: 28px; max-width: 54rem; font-size: 0.85rem; color: #9aa3b2;
+  border-top: 1px solid #2a2f3a; padding-top: 16px;
+}
+
+    
+    .sk-ed .app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px 10px; background: transparent;
+      flex-shrink: 0; position: absolute; left: 0; right: 0; top: 0; z-index: 3;
+    }
+    .sk-ed .brand { display: flex; gap: 8px; align-items: center; }
+    .sk-ed .app-name {
+      font-size: 1.25rem; font-weight: 700; letter-spacing: -0.03em;
+      color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+    }
+    .sk-ed .app-loc { color: rgba(255,255,255,0.85); }
+    .sk-ed .icon-btn {
+      background: rgba(0,0,0,0.35); border-color: rgba(255,255,255,0.25); color: #fff;
+    }
+    .sk-ed .hero {
+      position: relative; flex: 0 0 48%; min-height: 280px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .sk-ed .hero-photo {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+    }
+    .sk-ed .hero-scrim {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.35) 100%);
+    }
+    .sk-ed .hero-body {
+      position: relative; z-index: 1; padding: 16px 18px 18px; color: #fff;
+    }
+    .sk-ed .hero-kicker {
+      margin: 0 0 4px; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.9;
+    }
+    .sk-ed .hero-title {
+      margin: 0; font-family: var(--display); font-size: 1.85rem;
+      font-weight: 700; line-height: 1.1; letter-spacing: -0.03em;
+    }
+    .sk-ed .hero-blurb {
+      margin: 8px 0 0; font-size: 0.88rem; line-height: 1.45;
+      opacity: 0.92; max-width: 34ch;
+    }
+    .sk-ed .hero-cta {
+      margin-top: 12px; min-height: 44px; padding: 0 18px;
+      border: none; border-radius: 999px;
+      background: var(--primary); color: var(--primary-contrast);
+      font: inherit; font-weight: 700; font-size: 0.88rem; cursor: default;
+    }
+    .sk-ed .stack-wrap {
+      flex: 1; min-height: 0; overflow: auto;
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      margin-top: -14px; position: relative; z-index: 2;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.12);
+    }
+    .sk-ed .stack-inner { padding: 8px 0 0; }
+    .sk-ed .mag-list {
+      display: flex; flex-direction: column; gap: 18px;
+      padding: 8px 18px 20px;
+    }
+    .sk-ed .mag-card {
+      background: var(--surface); border: none; border-radius: 20px;
+      overflow: hidden; text-align: left; padding: 0;
+      font: inherit; color: inherit; cursor: default;
+      box-shadow: 0 8px 24px rgba(42,33,24,0.1);
+    }
+    .phone-wrap[data-theme="dark"] .sk-ed .mag-card {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .sk-ed .mag-photo {
+      width: 100%; aspect-ratio: 16 / 9;
+    }
+    .sk-ed .mag-body { padding: 14px 16px 16px; }
+    .sk-ed .mag-title {
+      margin: 0; font-family: var(--display); font-size: 1.2rem;
+      font-weight: 700; line-height: 1.2; letter-spacing: -0.02em;
+    }
+    .sk-ed .mag-meta {
+      margin: 6px 0 0; font-size: 0.82rem; color: var(--muted); line-height: 1.4;
+    }
+    .sk-ed .mag-row {
+      margin: 10px 0 0; display: flex; gap: 12px; flex-wrap: wrap;
+      font-size: 0.78rem;
+    }
+  
+  </style>
+</head>
+<body>
+  <h1>var-04: Editorial stack</h1>
+  <p class="meta">
+    <strong>Omakase Paper</strong> · Warm editorial serif.
+    Serif display required. Reads as a printed guide, not a delivery grid.
+  </p>
+  <dl class="axes">
+    <dt>Skeleton (owns the fold)</dt>
+    <dd>Full-bleed hero, magazine cards, generous air</dd>
+    <dt>Temperature</dt>
+    <dd>Warm cream paper, toasted browns, brick primary</dd>
+    <dt>Contrast</dt>
+    <dd>Soft magazine contrast — ink on paper</dd>
+    <dt>Type voice</dt>
+    <dd>Serif display (Fraunces) + Source Serif 4 body</dd>
+    <dt>Chip treatment</dt>
+    <dd>underline — rendered as real controls (not bare text); overflow scrolls with › affordance when needed</dd>
+  </dl>
+  <div class="phones">
+    
+    <figure class="phone-wrap" data-theme="light" data-id="var-04">
+      <figcaption class="phone-cap">Light</figcaption>
+      <div class="phone">
+        
+    <div class="phone-inner sk-ed" aria-label="Sushi Finder — light theme, Editorial stack">
+      <div class="hero">
+        <div class="hero-photo" style="background-image:url('food/plate-omakase.jpg')" role="img" aria-label="Photo of Sushi Nakazawa"></div>
+        <div class="hero-scrim" aria-hidden="true"></div>
+        
+    <header class="app-header">
+      <div class="brand">
+        <img class="brand-mark" src="mark-06.png" width="32" height="32" alt="" />
+        <div>
+          <p class="app-name">Sushi Finder</p>
+          <p class="app-loc">Near you · 2.4 km</p>
+        </div>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Open filters">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      </button>
+    </header>
+        <div class="hero-body">
+          <p class="hero-kicker">Tonight’s find</p>
+          <h2 class="hero-title">Sushi Nakazawa</h2>
+          <p class="hero-blurb">Omakase counter inspired by Edomae technique. Fixed tasting menus; premium reserved seating.</p>
+          <button type="button" class="hero-cta">View seating</button>
+        </div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-inner">
+          
+    <div class="chips-scroller">
+      <div class="chips chips--underline" role="list" aria-label="Browse mode and style filters">
+        <button type="button" class="chip chip--on" role="listitem">Guide</button><button type="button" class="chip" role="listitem">Photos</button><button type="button" class="chip" role="listitem">Map</button><button type="button" class="chip" role="listitem">Seating</button><button type="button" class="chip" role="listitem">Counter</button>
+      </div>
+      <div class="chips-fade" aria-hidden="true"></div>
+    </div>
+          <div class="mag-list" role="list" aria-label="More restaurants">
+            
+              <article class="mag-card" role="listitem">
+                <div class="photo mag-photo" style="background-image:url('food/plate-conveyor.jpg')" role="img" aria-label="Photo of Kura Revolving"></div>
+                <div class="mag-body">
+                  <h3 class="mag-title">Kura Revolving</h3>
+                  <p class="mag-meta">Conveyor · $$ · 1.1 km<br/>Conveyor-belt sushi with touchscreen ordering. Broad price band and walk…</p>
+                  <p class="mag-row">
+                    <span class="badge-ok">Walk-in open</span>
+                    <span class="rating">4.4 · 2.1k reviews</span>
+                  </p>
+                </div>
+              </article>
+              <article class="mag-card" role="listitem">
+                <div class="photo mag-photo" style="background-image:url('food/plate-counter.jpg')" role="img" aria-label="Photo of Sushi Yasuda"></div>
+                <div class="mag-body">
+                  <h3 class="mag-title">Sushi Yasuda</h3>
+                  <p class="mag-meta">Counter · $$$ · 1.6 km<br/>Traditional Edomae-leaning counter on East 43rd. Long hinoki bar; focuse…</p>
+                  <p class="mag-row">
+                    <span class="badge-ok">Seats from 18:30</span>
+                    <span class="rating">4.7 · 890 reviews</span>
+                  </p>
+                </div>
+              </article>
+              <article class="mag-card" role="listitem">
+                <div class="photo mag-photo" style="background-image:url('food/plate-modern.jpg')" role="img" aria-label="Photo of Sugarfish"></div>
+                <div class="mag-body">
+                  <h3 class="mag-title">Sugarfish</h3>
+                  <p class="mag-meta">Counter · $$$ · 2.0 km<br/>Set menus and no tipping at many locations. Walk-in lines are common; mi…</p>
+                  <p class="mag-row">
+                    <span class="badge-ok">Walk-in open</span>
+                    <span class="rating">4.5 · 3.4k reviews</span>
+                  </p>
+                </div>
+              </article>
+          </div>
+        </div>
+      </div>
+      
+    <nav class="tabbar" aria-label="Primary">
+      
+        <a class="tab tab--on" href="#" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+          <span>Photos</span>
+        </a>
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11zm0-9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+          <span>Map</span>
+        </a>
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 7h16v2H4zm0 5h10v2H4zm0 5h14v2H4z"/></svg>
+          <span>Seating</span>
+        </a>
+    </nav>
+    </div>
+      </div>
+    </figure>
+    
+    <figure class="phone-wrap" data-theme="dark" data-id="var-04">
+      <figcaption class="phone-cap">Dark</figcaption>
+      <div class="phone">
+        
+    <div class="phone-inner sk-ed" aria-label="Sushi Finder — dark theme, Editorial stack">
+      <div class="hero">
+        <div class="hero-photo" style="background-image:url('food/plate-omakase.jpg')" role="img" aria-label="Photo of Sushi Nakazawa"></div>
+        <div class="hero-scrim" aria-hidden="true"></div>
+        
+    <header class="app-header">
+      <div class="brand">
+        <img class="brand-mark" src="mark-06.png" width="32" height="32" alt="" />
+        <div>
+          <p class="app-name">Sushi Finder</p>
+          <p class="app-loc">Near you · 2.4 km</p>
+        </div>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Open filters">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      </button>
+    </header>
+        <div class="hero-body">
+          <p class="hero-kicker">Tonight’s find</p>
+          <h2 class="hero-title">Sushi Nakazawa</h2>
+          <p class="hero-blurb">Omakase counter inspired by Edomae technique. Fixed tasting menus; premium reserved seating.</p>
+          <button type="button" class="hero-cta">View seating</button>
+        </div>
+      </div>
+      <div class="stack-wrap">
+        <div class="stack-inner">
+          
+    <div class="chips-scroller">
+      <div class="chips chips--underline" role="list" aria-label="Browse mode and style filters">
+        <button type="button" class="chip chip--on" role="listitem">Guide</button><button type="button" class="chip" role="listitem">Photos</button><button type="button" class="chip" role="listitem">Map</button><button type="button" class="chip" role="listitem">Seating</button><button type="button" class="chip" role="listitem">Counter</button>
+      </div>
+      <div class="chips-fade" aria-hidden="true"></div>
+    </div>
+          <div class="mag-list" role="list" aria-label="More restaurants">
+            
+              <article class="mag-card" role="listitem">
+                <div class="photo mag-photo" style="background-image:url('food/plate-conveyor.jpg')" role="img" aria-label="Photo of Kura Revolving"></div>
+                <div class="mag-body">
+                  <h3 class="mag-title">Kura Revolving</h3>
+                  <p class="mag-meta">Conveyor · $$ · 1.1 km<br/>Conveyor-belt sushi with touchscreen ordering. Broad price band and walk…</p>
+                  <p class="mag-row">
+                    <span class="badge-ok">Walk-in open</span>
+                    <span class="rating">4.4 · 2.1k reviews</span>
+                  </p>
+                </div>
+              </article>
+              <article class="mag-card" role="listitem">
+                <div class="photo mag-photo" style="background-image:url('food/plate-counter.jpg')" role="img" aria-label="Photo of Sushi Yasuda"></div>
+                <div class="mag-body">
+                  <h3 class="mag-title">Sushi Yasuda</h3>
+                  <p class="mag-meta">Counter · $$$ · 1.6 km<br/>Traditional Edomae-leaning counter on East 43rd. Long hinoki bar; focuse…</p>
+                  <p class="mag-row">
+                    <span class="badge-ok">Seats from 18:30</span>
+                    <span class="rating">4.7 · 890 reviews</span>
+                  </p>
+                </div>
+              </article>
+              <article class="mag-card" role="listitem">
+                <div class="photo mag-photo" style="background-image:url('food/plate-modern.jpg')" role="img" aria-label="Photo of Sugarfish"></div>
+                <div class="mag-body">
+                  <h3 class="mag-title">Sugarfish</h3>
+                  <p class="mag-meta">Counter · $$$ · 2.0 km<br/>Set menus and no tipping at many locations. Walk-in lines are common; mi…</p>
+                  <p class="mag-row">
+                    <span class="badge-ok">Walk-in open</span>
+                    <span class="rating">4.5 · 3.4k reviews</span>
+                  </p>
+                </div>
+              </article>
+          </div>
+        </div>
+      </div>
+      
+    <nav class="tabbar" aria-label="Primary">
+      
+        <a class="tab tab--on" href="#" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+          <span>Photos</span>
+        </a>
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11zm0-9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+          <span>Map</span>
+        </a>
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 7h16v2H4zm0 5h10v2H4zm0 5h14v2H4z"/></svg>
+          <span>Seating</span>
+        </a>
+    </nav>
+    </div>
+      </div>
+    </figure>
+  </div>
+  <p class="axe-note">
+    WCAG AA measured with <strong>axe-core</strong> (not hand-computed) via
+    <code>measure-a11y.mjs</code> against both phone themes. Brand mark:
+    <code>mark-06.png</code> (Maki finder lens). Shared food photos under
+    <code>food/</code>. Phone content width <strong>375px</strong>.
+  </p>
+</body>
+</html>

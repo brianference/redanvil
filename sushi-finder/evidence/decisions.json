@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-08-08T16:21:12.731Z",
+  "recordedAt": "2026-08-08T17:20:39.628Z",
   "decisions": [
     {
       "axis": "logo",
@@ -14,7 +14,7 @@
     {
       "axis": "layout",
       "file": "design-refs/design-options/DECISION.md",
-      "choice": "**DECIDED: all three as switchable views.** Recorded 2026-08-08."
+      "choice": "**DECIDED: three views, recorded 2026-08-08 from the owner's pick across the"
     }
   ]
 }

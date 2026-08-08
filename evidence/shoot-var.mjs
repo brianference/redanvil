@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+import { pathToFileURL } from 'node:url';
+const b = await chromium.launch();
+const p = await b.newPage();
+await p.setViewportSize({ width: 2700, height: 1400 });
+await p.goto(pathToFileURL('C:/Users/brian/RedAnvil/sushi-finder/design-refs/variations/gallery.html').href, { waitUntil: 'networkidle' });
+await p.waitForTimeout(1200);
+await p.screenshot({ path: 'C:/Users/brian/RedAnvil/sushi-finder/design-refs/variations/gallery-shot.png', fullPage: true });
+console.log('shot written');
+await b.close();

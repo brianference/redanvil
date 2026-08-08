@@ -23,10 +23,30 @@ export const en = {
     system: 'System'
   },
   home: {
-    title: 'Sushi catalog board',
-    lead: 'Browse seeded restaurants, search by title, open detail, and manage the collection. Every row comes from Cloudflare D1 — never invented client-side sample data.',
-    ctaList: 'Open sushis list',
+    title: 'By Photos',
+    lead: 'Browse seeded restaurants by photos, map, or seating policy. Every row comes from Cloudflare D1 — never invented client-side sample data.',
+    ctaList: 'Open full catalog',
     ctaAdd: 'Add a sushi place',
+    viewNav: 'Discovery views',
+    viewPhotos: 'Photos',
+    viewMap: 'Map',
+    viewSeating: 'Seating',
+    mapLabel: 'Catalog places on a simple map board',
+    mapCityLabel: 'Find by city or title',
+    mapCityPlaceholder: 'City or title…',
+    mapEmpty: 'No place with coordinates is selected.',
+    seatingLead:
+      'Seating board uses static walk-in and style fields from D1 — not live table inventory or reservation APIs.',
+    seatingSlots: 'Catalog seating filters',
+    slotNow: 'Now',
+    walkInLabel: 'walk-in in catalog',
+    reserveLabel: 'reserve-leaning',
+    walkInYes: 'Walk-in',
+    walkInNo: 'Reserve',
+    zoneLabel: 'Filter zone or title',
+    zonePlaceholder: 'City or title…',
+    seatingEmpty: 'No places match this seating filter.',
+    seatingEmptyHint: 'Counts are catalog attributes in D1, not live open seats.',
     kpiPlaces: 'Places in catalog',
     kpiPublic: 'Auth required',
     kpiPublicValue: 'None',
@@ -34,7 +54,7 @@ export const en = {
     kpiSearchValue: 'By title',
     coverageTitle: 'Coverage boundary',
     coverageBody:
-      'This app’s data is the sushis table in Cloudflare D1 for this deployment: title, description, and timestamps only. Search matches title fragments. There is no live map, photo CDN, seating inventory, payment, or third-party review feed. A miss is “not in this catalog,” not “no sushi exists in that city.”'
+      'This app’s data is the sushis table in Cloudflare D1 for this deployment. Photos and coordinates are seed fields we host or curate. There is no live map tile vendor as a restaurant data source, no live seating inventory, payment, or third-party review feed. A miss is “not in this catalog,” not “no sushi exists in that city.”'
   },
   sushis: {
     title: 'Catalog',
@@ -49,11 +69,11 @@ export const en = {
     create: 'Create',
     cancel: 'Cancel',
     loading: 'Loading sushis…',
-    empty: 'No sushis yet. Create one to add a place to the catalog.',
+    empty: 'No sushis yet. Use Add sushi above to put a place in the catalog.',
     emptyMatch: 'No results match this search. Try a different title fragment.',
     emptyMatchHint:
       'Search only looks at titles in this deployment’s D1 catalog. It does not query Google Places, Yelp, or a worldwide index.',
-    emptyHint: 'The catalog is empty in D1. Seed data may not be applied, or all rows were deleted.',
+    emptyHint: 'Seed data may not be applied, or all rows were deleted from this D1 binding.',
     error: 'Something went wrong loading sushis.',
     retry: 'Retry',
     kpiTotal: 'Total',

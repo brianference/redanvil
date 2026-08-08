@@ -1,20 +1,48 @@
 # Layout decision — sushi-finder
 
-**DECIDED: all three as switchable views.** Recorded 2026-08-08.
+**DECIDED: three views, recorded 2026-08-08 from the owner's pick across the
+six-variation gallery.**
 
-Derived, not invented: the owner's own product prompt says "Browse by photos, by
-map, or by when a seating is available", which is A, B and C exactly. He made the
-same call on pet-sitter -- three architectures shipped as views rather than one
-winner -- and that decision is recorded in that app's DECISION.md.
+| view | composition | from |
+|------|-------------|------|
+| **1. Photos** (default) | **Editorial stack hero ON TOP of the photo grid** -- a full-bleed featured restaurant with its story, then the dense square tile grid beneath it | var-04 + var-01 |
+| **2. Map** | Full-bleed map canvas, pin cluster with bottom-sheet rows | var-02 |
+| **3. List** | Dense utility rows, 40px thumbs, segmented control | var-05 |
 
-**Say the word and I will switch to a single option.** This is the one axis he did
-not name explicitly, so it is derived and reversible.
+Owner's words: "combine editorial stack on top of photogrid and save the map view
+as another view, utility list also is a third view under the map view".
 
-| View | From | What owns the fold |
-|------|------|--------------------|
-| **Photos** (default) | option-a | Dense square photo tile grid |
-| **Map** | option-b | Full-bleed map; pin plus bottom-sheet row |
-| **Seating** | option-c | Tonight seating timeline, Now / 18:00 / 19:00 with open counts |
+**Read as three views, with List ordered after Map in the switcher.** "Under the
+map view" is taken as position in the view order, not as a panel nested inside the
+Map view. If he meant the latter -- a list rendered beneath the map on the same
+screen -- say so and it is a small change.
+
+**Palette: Mon Crest (palette-05)**, confirmed again here. Indigo ink, coral
+action heat, Cormorant Garamond over Manrope. Its treatment travels with it:
+14px radius cards, indigo ring insets on photos, ceremonial filled chips, airy
+padding.
+
+**Brand mark: mark-06** (maki finder lens). Decided, not open.
+
+### Forbidden -- this is what shipped on pet-sitter and was rejected
+
+- A shared marketing hero above every view. The editorial hero belongs to the
+  Photos view ONLY. **Map opens on the map. List opens on the rows.**
+- One search control reused by all three. Each view's entry control belongs to its
+  own architecture.
+- Collapsing the three into one shell with three swapped widgets.
+
+### Not chosen, but kept
+
+**var-03 Timeline board** and **var-06 Split rail** are not in this app. Both are
+preserved in the shared skeleton library at `/design-system/skeletons/` for future
+apps -- the owner asked that all six be kept, not discarded with the losers.
+
+### Shared across views
+
+Restaurant data, filter state surviving a view switch, the view in the URL, the
+mark-06 brand mark, and the Mon Crest token layer so light and dark work
+everywhere.
 
 ### Forbidden -- this is what shipped on pet-sitter and was rejected
 

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>var-01 — Photo grid · Night Counter Grid</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+  <style>
+    :root { 
+    --display: "Syne", system-ui, serif;
+    --body: "DM Sans", system-ui, sans-serif;
+    --light-bg: #f3f4f7;
+    --light-surface: #ffffff;
+    --light-text: #12151c;
+    --light-muted: #5a6478;
+    --light-border: #d0d5e0;
+    --light-primary: #c23b2e;
+    --light-primary-contrast: #ffffff;
+    --light-success: #0b6b45;
+    --dark-bg: #0c0e12;
+    --dark-surface: #161a22;
+    --dark-text: #eef0f4;
+    --dark-muted: #a0a8b8;
+    --dark-border: #2e3545;
+    --dark-primary: #ff6b5b;
+    --dark-primary-contrast: #0c0e12;
+    --dark-success: #3dd68c;
+   }
+    
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 28px 20px 64px;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0b0d12;
+  color: #e8eaef;
+  line-height: 1.45;
+}
+h1 { font-size: 1.35rem; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em; }
+.meta { color: #9aa3b2; font-size: 0.95rem; max-width: 54rem; margin: 0 0 16px; }
+.meta strong { color: #e8eaef; }
+.axes { display: grid; gap: 6px; margin: 0 0 20px; max-width: 54rem; font-size: 0.9rem; }
+.axes dt { color: #7d8799; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }
+.axes dd { margin: 0 0 6px; }
+.phones { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.phone-wrap { margin: 0; }
+.phone-cap {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: #8b93a3; margin: 0 0 6px; font-family: ui-monospace, Consolas, monospace;
+}
+.phone {
+  width: 375px;
+  border-radius: 28px;
+  padding: 10px;
+  background: #0a0a0c;
+  border: 1px solid #3a3f4a;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.45);
+}
+.phone-inner {
+  border-radius: 20px;
+  overflow: hidden;
+  height: 720px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.35;
+  position: relative;
+}
+.phone-wrap[data-theme="light"] .phone-inner {
+  --bg: var(--light-bg);
+  --surface: var(--light-surface);
+  --text: var(--light-text);
+  --muted: var(--light-muted);
+  --border: var(--light-border);
+  --primary: var(--light-primary);
+  --primary-contrast: var(--light-primary-contrast);
+  --success: var(--light-success);
+}
+.phone-wrap[data-theme="dark"] .phone-inner {
+  --bg: var(--dark-bg);
+  --surface: var(--dark-surface);
+  --text: var(--dark-text);
+  --muted: var(--dark-muted);
+  --border: var(--dark-border);
+  --primary: var(--dark-primary);
+  --primary-contrast: var(--dark-primary-contrast);
+  --success: var(--dark-success);
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); border: 0;
+}
+.brand-mark {
+  width: 32px; height: 32px; object-fit: contain; flex-shrink: 0;
+  display: block;
+}
+.app-name { margin: 0; font-family: var(--display); font-weight: 700; color: var(--text); }
+.app-loc { margin: 0; font-size: 0.72rem; color: var(--muted); }
+.icon-btn {
+  min-width: 44px; min-height: 44px; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--bg); color: var(--text);
+  font-size: 1rem; cursor: default; display: grid; place-items: center;
+}
+.tabbar {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid var(--border); background: var(--surface);
+  margin-top: auto; flex-shrink: 0;
+}
+.tab {
+  min-height: 52px; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px; text-decoration: none;
+  color: var(--muted); font-size: 0.72rem; font-weight: 600;
+  padding: 6px 4px;
+}
+.tab--on { color: var(--primary); }
+.tab svg { width: 20px; height: 20px; }
+.badge-ok { font-weight: 600; color: var(--success); }
+.rating { color: var(--muted); }
+.photo {
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+/* ——— Chip scroller: never clip labels; deliberate overflow with affordance ——— */
+.chips-scroller {
+  position: relative;
+  flex-shrink: 0;
+}
+.chips {
+  display: flex;
+  gap: 8px;
+  padding: 10px 36px 10px 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  flex-wrap: nowrap;
+}
+.chips::-webkit-scrollbar { height: 4px; }
+.chips::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.chip {
+  flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  white-space: nowrap;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: default;
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.chips-fade {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 40px;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--bg) 70%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+}
+.chips-fade::after {
+  content: "›";
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--muted);
+  line-height: 1;
+}
+/* filled chips — actual pills, not bare text */
+.chips--filled .chip {
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.chips--filled .chip--on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+  box-shadow: none;
+}
+.chips--filled-ceremonial .chip {
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+.chips--filled-ceremonial .chip--on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+}
+.chips--outline .chip {
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.chips--outline .chip--on {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+.chips--underline {
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+  padding-right: 14px;
+}
+.chips--underline .chip {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 0;
+  padding: 10px 12px 12px;
+  min-height: 44px;
+  font-weight: 500;
+}
+.chips--underline .chip--on {
+  color: var(--text);
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 var(--primary);
+}
+/* segmented — full-width equal segments, no scroll needed */
+.chips-scroller--segmented .chips-fade { display: none; }
+.chips--segmented {
+  gap: 0;
+  padding: 10px 14px;
+  overflow: visible;
+}
+.chips--segmented .chip {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 0;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  text-align: center;
+  padding: 0 6px;
+  font-size: 0.78rem;
+}
+.chips--segmented .chip:first-child { border-radius: 10px 0 0 10px; }
+.chips--segmented .chip:last-child { border-radius: 0 10px 10px 0; }
+.chips--segmented .chip + .chip { border-left: none; }
+.chips--segmented .chip--on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+  z-index: 1;
+}
+.axe-note {
+  margin-top: 28px; max-width: 54rem; font-size: 0.85rem; color: #9aa3b2;
+  border-top: 1px solid #2a2f3a; padding-top: 16px;
+}
+
+    
+    .sk-photo .app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px 8px; background: var(--surface);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .sk-photo .brand { display: flex; gap: 8px; align-items: center; }
+    .sk-photo .app-name { font-size: 1.05rem; letter-spacing: -0.02em; }
+    .sk-photo .search-row { padding: 8px 14px 0; flex-shrink: 0; }
+    .sk-photo .search input {
+      width: 100%; min-height: 44px; border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 8px 12px; background: var(--surface);
+      color: var(--text); font: inherit; font-size: 0.95rem;
+    }
+    .sk-photo .results-meta {
+      margin: 4px 14px 6px; font-size: 0.75rem; color: var(--muted); flex-shrink: 0;
+    }
+    .sk-photo .results-count { color: var(--text); font-weight: 600; }
+    .sk-photo .tile-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 3px;
+      padding: 0 3px 3px; flex: 1; overflow: auto; min-height: 0;
+    }
+    .sk-photo .tile {
+      position: relative; aspect-ratio: 1 / 1; overflow: hidden;
+      border: none; padding: 0; cursor: default; background: var(--border);
+    }
+    .sk-photo .tile .photo { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .sk-photo .tile-scrim {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 28px 8px 8px;
+      background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 55%, transparent 100%);
+      color: #fff; text-align: left;
+    }
+    .sk-photo .tile-name {
+      margin: 0; font-family: var(--display); font-weight: 800;
+      font-size: 0.88rem; line-height: 1.15; letter-spacing: -0.02em;
+      color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+    .sk-photo .tile-meta {
+      margin: 2px 0 0; font-size: 0.65rem; color: rgba(255,255,255,0.88);
+      font-weight: 500;
+    }
+    .sk-photo .tile-status {
+      position: absolute; top: 6px; left: 6px;
+      background: var(--success); color: #fff;
+      font-size: 0.62rem; font-weight: 700; padding: 3px 6px;
+      border-radius: 4px; line-height: 1.2;
+    }
+    .phone-wrap[data-theme="dark"] .sk-photo .tile-status { color: #0c0e12; }
+  
+  </style>
+</head>
+<body>
+  <h1>var-01: Photo grid</h1>
+  <p class="meta">
+    <strong>Night Counter Grid</strong> · Dark-first.
+    Dark-first photo hunting. Tiles own the fold; labels sit on the plate.
+  </p>
+  <dl class="axes">
+    <dt>Skeleton (owns the fold)</dt>
+    <dd>Dense square tile grid with name on image</dd>
+    <dt>Temperature</dt>
+    <dd>Cool-neutral charcoal with warm coral heat on actions</dd>
+    <dt>Contrast</dt>
+    <dd>High — near-black lacquer surfaces, bright coral CTAs</dd>
+    <dt>Type voice</dt>
+    <dd>Geometric display (Syne) + product sans (DM Sans)</dd>
+    <dt>Chip treatment</dt>
+    <dd>filled — rendered as real controls (not bare text); overflow scrolls with › affordance when needed</dd>
+  </dl>
+  <div class="phones">
+    
+    <figure class="phone-wrap" data-theme="light" data-id="var-01">
+      <figcaption class="phone-cap">Light</figcaption>
+      <div class="phone">
+        
+    <div class="phone-inner sk-photo" aria-label="Sushi Finder — light theme, Photo grid">
+      
+    <header class="app-header">
+      <div class="brand">
+        <img class="brand-mark" src="mark-06.png" width="32" height="32" alt="" />
+        <div>
+          <p class="app-name">Sushi Finder</p>
+          <p class="app-loc">Near you · 2.4 km</p>
+        </div>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Open filters">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      </button>
+    </header>
+      <div class="search-row">
+        <label class="search">
+          <span class="sr-only">Search sushi restaurants</span>
+          <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+        </label>
+      </div>
+      
+    <div class="chips-scroller">
+      <div class="chips chips--filled" role="list" aria-label="Browse mode and style filters">
+        <button type="button" class="chip chip--on" role="listitem">Photos</button><button type="button" class="chip" role="listitem">Map</button><button type="button" class="chip" role="listitem">Seating</button><button type="button" class="chip" role="listitem">Counter</button><button type="button" class="chip" role="listitem">Walk-in</button><button type="button" class="chip" role="listitem">Omakase</button>
+      </div>
+      <div class="chips-fade" aria-hidden="true"></div>
+    </div>
+      <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+      <div class="tile-grid" role="list" aria-label="Restaurant photo grid">
+        
+          <button type="button" class="tile" role="listitem" aria-label="Sushi Nakazawa, Counter, 0.8 km">
+            <div class="photo" style="background-image:url('food/plate-omakase.jpg')"></div>
+            
+            <div class="tile-scrim">
+              <p class="tile-name">Sushi Nakazawa</p>
+              <p class="tile-meta">Counter · $$$$ · 0.8 km</p>
+            </div>
+          </button>
+          <button type="button" class="tile" role="listitem" aria-label="Kura Revolving, Conveyor, 1.1 km">
+            <div class="photo" style="background-image:url('food/plate-conveyor.jpg')"></div>
+            <span class="tile-status">Open</span>
+            <div class="tile-scrim">
+              <p class="tile-name">Kura Revolving</p>
+              <p class="tile-meta">Conveyor · $$ · 1.1 km</p>
+            </div>
+          </button>
+          <button type="button" class="tile" role="listitem" aria-label="Sushi Yasuda, Counter, 1.6 km">
+            <div class="photo" style="background-image:url('food/plate-counter.jpg')"></div>
+            
+            <div class="tile-scrim">
+              <p class="tile-name">Sushi Yasuda</p>
+              <p class="tile-meta">Counter · $$$ · 1.6 km</p>
+            </div>
+          </button>
+          <button type="button" class="tile" role="listitem" aria-label="Sugarfish, Counter, 2.0 km">
+            <div class="photo" style="background-image:url('food/plate-modern.jpg')"></div>
+            <span class="tile-status">Open</span>
+            <div class="tile-scrim">
+              <p class="tile-name">Sugarfish</p>
+              <p class="tile-meta">Counter · $$$ · 2.0 km</p>
+            </div>
+          </button>
+          <button type="button" class="tile" role="listitem" aria-label="Sukiyabashi Jiro, Omakase, 0.4 km">
+            <div class="photo" style="background-image:url('food/plate-omakase.jpg')"></div>
+            
+            <div class="tile-scrim">
+              <p class="tile-name">Sukiyabashi Jiro</p>
+              <p class="tile-meta">Omakase · $$$$$ · 0.4 km</p>
+            </div>
+          </button>
+          <button type="button" class="tile" role="listitem" aria-label="Masa, Omakase, 2.8 km">
+            <div class="photo" style="background-image:url('food/plate-counter.jpg')"></div>
+            
+            <div class="tile-scrim">
+              <p class="tile-name">Masa</p>
+              <p class="tile-meta">Omakase · $$$$$ · 2.8 km</p>
+            </div>
+          </button>
+      </div>
+      
+    <nav class="tabbar" aria-label="Primary">
+      
+        <a class="tab tab--on" href="#" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+          <span>Photos</span>
+        </a>
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11zm0-9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+          <span>Map</span>
+        </a>
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 7h16v2H4zm0 5h10v2H4zm0 5h14v2H4z"/></svg>
+          <span>Seating</span>
+        </a>
+    </nav>
+    </div>
+      </div>
+    </figure>
+    
+    <figure class="phone-wrap" data-theme="dark" data-id="var-01">
+      <figcaption class="phone-cap">Dark</figcaption>
+      <div class="phone">
+        
+    <div class="phone-inner sk-photo" aria-label="Sushi Finder — dark theme, Photo grid">
+      
+    <header class="app-header">
+      <div class="brand">
+        <img class="brand-mark" src="mark-06.png" width="32" height="32" alt="" />
+        <div>
+          <p class="app-name">Sushi Finder</p>
+          <p class="app-loc">Near you · 2.4 km</p>
+        </div>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Open filters">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      </button>
+    </header>
+      <div class="search-row">
+        <label class="search">
+          <span class="sr-only">Search sushi restaurants</span>
+          <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+        </label>
+      </div>
+      
+    <div class="chips-scroller">
+      <div class="chips chips--filled" role="list" aria-label="Browse mode and style filters">
+        <button type="button" class="chip chip--on" role="listitem">Photos</button><button type="button" class="chip" role="listitem">Map</button><button type="button" class="chip" role="listitem">Seating</button><button type="button" class="chip" role="listitem">Counter</button><button type="button" class="chip" role="listitem">Walk-in</button><button type="button" class="chip" role="listitem">Omakase</button>
+      </div>
+      <div class="chips-fade" aria-hidden="true"></div>
+    </div>
+      <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+      <div class="tile-grid" role="list" aria-label="Restaurant photo grid">
+        
+          <button type="button" class="tile" role="listitem" aria-label="Sushi Nakazawa, Counter, 0.8 km">
+            <div class="photo" style="background-image:url('food/plate-omakase.jpg')"></div>
+            
+            <div class="tile-scrim">
+              <p class="tile-name">Sushi Nakazawa</p>
+              <p class="tile-meta">Counter · $$$$ · 0.8 km</p>
+            </div>
+          </button>
+          <button type="button" class="tile" role="listitem" aria-label="Kura Revolving, Conveyor, 1.1 km">
+            <div class="photo" style="background-image:url('food/plate-conveyor.jpg')"></div>
+            <span class="tile-status">Open</span>
+            <div class="tile-scrim">
+              <p class="tile-name">Kura Revolving</p>
+              <p class="tile-meta">Conveyor · $$ · 1.1 km</p>
+            </div>
+          </button>
+          <button type="button" class="tile" role="listitem" aria-label="Sushi Yasuda, Counter, 1.6 km">
+            <div class="photo" style="background-image:url('food/plate-counter.jpg')"></div>
+            
+            <div class="tile-scrim">
+              <p class="tile-name">Sushi Yasuda</p>
+              <p class="tile-meta">Counter · $$$ · 1.6 km</p>
+            </div>
+          </button>
+          <button type="button" class="tile" role="listitem" aria-label="Sugarfish, Counter, 2.0 km">
+            <div class="photo" style="background-image:url('food/plate-modern.jpg')"></div>
+            <span class="tile-status">Open</span>
+            <div class="tile-scrim">
+              <p class="tile-name">Sugarfish</p>
+              <p class="tile-meta">Counter · $$$ · 2.0 km</p>
+            </div>
+          </button>
+          <button type="button" class="tile" role="listitem" aria-label="Sukiyabashi Jiro, Omakase, 0.4 km">
+            <div class="photo" style="background-image:url('food/plate-omakase.jpg')"></div>
+            
+            <div class="tile-scrim">
+              <p class="tile-name">Sukiyabashi Jiro</p>
+              <p class="tile-meta">Omakase · $$$$$ · 0.4 km</p>
+            </div>
+          </button>
+          <button type="button" class="tile" role="listitem" aria-label="Masa, Omakase, 2.8 km">
+            <div class="photo" style="background-image:url('food/plate-counter.jpg')"></div>
+            
+            <div class="tile-scrim">
+              <p class="tile-name">Masa</p>
+              <p class="tile-meta">Omakase · $$$$$ · 2.8 km</p>
+            </div>
+          </button>
+      </div>
+      
+    <nav class="tabbar" aria-label="Primary">
+      
+        <a class="tab tab--on" href="#" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+          <span>Photos</span>
+        </a>
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11zm0-9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+          <span>Map</span>
+        </a>
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 7h16v2H4zm0 5h10v2H4zm0 5h14v2H4z"/></svg>
+          <span>Seating</span>
+        </a>
+    </nav>
+    </div>
+      </div>
+    </figure>
+  </div>
+  <p class="axe-note">
+    WCAG AA measured with <strong>axe-core</strong> (not hand-computed) via
+    <code>measure-a11y.mjs</code> against both phone themes. Brand mark:
+    <code>mark-06.png</code> (Maki finder lens). Shared food photos under
+    <code>food/</code>. Phone content width <strong>375px</strong>.
+  </p>
+</body>
+</html>

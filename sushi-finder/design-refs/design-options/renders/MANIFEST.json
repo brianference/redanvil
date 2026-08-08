@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-08T16:37:43.506Z",
+  "generatedAt": "2026-08-08T17:21:47.812Z",
   "url": "https://sushi-finder.pages.dev",
   "renders": [
     {
@@ -7,84 +7,84 @@
       "route": "/",
       "viewport": 375,
       "theme": "light",
-      "sha256": "f2a0ab9fcc290a4a5f855020e8c314e3b8cf8fc57738fbad162ef2805c152fc8"
+      "sha256": "673d6a60f4e7b3e1b7a0eb7547b24deb747b1686d638116d4c4854ab47fd0058"
     },
     {
       "file": "_about-375-light.png",
       "route": "/about",
       "viewport": 375,
       "theme": "light",
-      "sha256": "f2a0ab9fcc290a4a5f855020e8c314e3b8cf8fc57738fbad162ef2805c152fc8"
+      "sha256": "673d6a60f4e7b3e1b7a0eb7547b24deb747b1686d638116d4c4854ab47fd0058"
     },
     {
       "file": "_-768-light.png",
       "route": "/",
       "viewport": 768,
       "theme": "light",
-      "sha256": "67f28d171be07da65e6b3f743a9659114bf25d9379a49b3cb9f1f11b9e2ffe41"
+      "sha256": "cb9733425e54c64b61bc1cb5ad8abed025e3fe561f8ff6ea50e4a41fe0876ec3"
     },
     {
       "file": "_about-768-light.png",
       "route": "/about",
       "viewport": 768,
       "theme": "light",
-      "sha256": "67f28d171be07da65e6b3f743a9659114bf25d9379a49b3cb9f1f11b9e2ffe41"
+      "sha256": "c5662ba5a3dfae78a3be9c8d6561f95320e635b102aa800272554d701a8b5b0e"
     },
     {
       "file": "_-1280-light.png",
       "route": "/",
       "viewport": 1280,
       "theme": "light",
-      "sha256": "57f45d88e654eeca054ff1cc37c39a437cb6e4b6ea2a6f59cf08a6228670107a"
+      "sha256": "f056f0030499ea218b452fd2aeac91413b09aacfbeaaf93410a147e974d0aa80"
     },
     {
       "file": "_about-1280-light.png",
       "route": "/about",
       "viewport": 1280,
       "theme": "light",
-      "sha256": "57f45d88e654eeca054ff1cc37c39a437cb6e4b6ea2a6f59cf08a6228670107a"
+      "sha256": "94959d2178c3ee6bf704e823f8ad6ac5fb36d097957e380a75f647ce515b1998"
     },
     {
       "file": "_-375-dark.png",
       "route": "/",
       "viewport": 375,
       "theme": "dark",
-      "sha256": "f2a0ab9fcc290a4a5f855020e8c314e3b8cf8fc57738fbad162ef2805c152fc8"
+      "sha256": "53a9a588c3f769cb0878e1e088b5b8460595cee8d32a1b3476306015e8b818cb"
     },
     {
       "file": "_about-375-dark.png",
       "route": "/about",
       "viewport": 375,
       "theme": "dark",
-      "sha256": "f2a0ab9fcc290a4a5f855020e8c314e3b8cf8fc57738fbad162ef2805c152fc8"
+      "sha256": "53a9a588c3f769cb0878e1e088b5b8460595cee8d32a1b3476306015e8b818cb"
     },
     {
       "file": "_-768-dark.png",
       "route": "/",
       "viewport": 768,
       "theme": "dark",
-      "sha256": "67f28d171be07da65e6b3f743a9659114bf25d9379a49b3cb9f1f11b9e2ffe41"
+      "sha256": "63503d93036bbba7d29c2ca2467d232218506c2852729a040abfa7e64620f5aa"
     },
     {
       "file": "_about-768-dark.png",
       "route": "/about",
       "viewport": 768,
       "theme": "dark",
-      "sha256": "67f28d171be07da65e6b3f743a9659114bf25d9379a49b3cb9f1f11b9e2ffe41"
+      "sha256": "1613ec9d6d17ee5bbe6052eea04aec1b3e98cd6a5156c16ce6477670ed132570"
     },
     {
       "file": "_-1280-dark.png",
       "route": "/",
       "viewport": 1280,
       "theme": "dark",
-      "sha256": "57f45d88e654eeca054ff1cc37c39a437cb6e4b6ea2a6f59cf08a6228670107a"
+      "sha256": "98f01d1562b796c513c4ffb03715c5e3ca07d148f2fc25466cbe1b15f7f6ebea"
     },
     {
       "file": "_about-1280-dark.png",
       "route": "/about",
       "viewport": 1280,
       "theme": "dark",
-      "sha256": "57f45d88e654eeca054ff1cc37c39a437cb6e4b6ea2a6f59cf08a6228670107a"
+      "sha256": "3479b337c8e351d797d0b8db1d131460d5320b699da55d7976b2abd0a7b6bf65"
     }
   ]
 }

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "var-01",
+    "skeleton": "Photo grid",
+    "name": "Night Counter Grid",
+    "role": "Dark-first",
+    "fold": "Dense square tile grid with name on image",
+    "display": "Syne",
+    "body": "DM Sans",
+    "chipStyle": "filled",
+    "light": {
+      "bg": "#f3f4f7",
+      "surface": "#ffffff",
+      "text": "#12151c",
+      "muted": "#5a6478",
+      "border": "#d0d5e0",
+      "primary": "#c23b2e",
+      "primaryContrast": "#ffffff",
+      "success": "#0b6b45"
+    },
+    "dark": {
+      "bg": "#0c0e12",
+      "surface": "#161a22",
+      "text": "#eef0f4",
+      "muted": "#a0a8b8",
+      "border": "#2e3545",
+      "primary": "#ff6b5b",
+      "primaryContrast": "#0c0e12",
+      "success": "#3dd68c"
+    }
+  },
+  {
+    "id": "var-02",
+    "skeleton": "Map canvas",
+    "name": "Harbor Map",
+    "role": "Cool low-chroma",
+    "fold": "Full-bleed map with pin cluster and bottom-sheet rows",
+    "display": "IBM Plex Sans",
+    "body": "IBM Plex Sans",
+    "chipStyle": "outline",
+    "light": {
+      "bg": "#f0f4f7",
+      "surface": "#ffffff",
+      "text": "#1e2a32",
+      "muted": "#556874",
+      "border": "#d0dbe3",
+      "primary": "#2f5f6d",
+      "primaryContrast": "#ffffff",
+      "success": "#1b5e45"
+    },
+    "dark": {
+      "bg": "#0f1418",
+      "surface": "#1a2228",
+      "text": "#e4ebf0",
+      "muted": "#92a2ad",
+      "border": "#2c3842",
+      "primary": "#7eb8c9",
+      "primaryContrast": "#0f1418",
+      "success": "#6bcb8e"
+    }
+  },
+  {
+    "id": "var-03",
+    "skeleton": "Timeline board",
+    "name": "Lantern Board",
+    "role": "Dark-first",
+    "fold": "Tonight's seating columns with open seat counts",
+    "display": "Barlow Condensed",
+    "body": "Barlow",
+    "chipStyle": "filled",
+    "light": {
+      "bg": "#f6f1e8",
+      "surface": "#fffdf8",
+      "text": "#1c1410",
+      "muted": "#6b5648",
+      "border": "#e0d2c2",
+      "primary": "#b45309",
+      "primaryContrast": "#fffdf8",
+      "success": "#166534"
+    },
+    "dark": {
+      "bg": "#100e0c",
+      "surface": "#1c1814",
+      "text": "#f5ebe0",
+      "muted": "#b8a090",
+      "border": "#3a322a",
+      "primary": "#f0b429",
+      "primaryContrast": "#100e0c",
+      "success": "#4ade80"
+    }
+  },
+  {
+    "id": "var-04",
+    "skeleton": "Editorial stack",
+    "name": "Omakase Paper",
+    "role": "Warm editorial serif",
+    "fold": "Full-bleed hero, magazine cards, generous air",
+    "display": "Fraunces",
+    "body": "Source Serif 4",
+    "chipStyle": "underline",
+    "light": {
+      "bg": "#f7f0e6",
+      "surface": "#fffaf3",
+      "text": "#2a2118",
+      "muted": "#6b5d4d",
+      "border": "#e0d4c4",
+      "primary": "#9a3412",
+      "primaryContrast": "#fffaf3",
+      "success": "#3f6212"
+    },
+    "dark": {
+      "bg": "#1a1510",
+      "surface": "#26201a",
+      "text": "#f7efe4",
+      "muted": "#b8a894",
+      "border": "#3f352b",
+      "primary": "#f0a060",
+      "primaryContrast": "#1a1510",
+      "success": "#9fd35a"
+    }
+  },
+  {
+    "id": "var-05",
+    "skeleton": "Utility list",
+    "name": "Ink Line",
+    "role": "Near-monochrome + single accent",
+    "fold": "Dense rows, 40px thumbs, segmented control",
+    "display": "Inter",
+    "body": "Inter",
+    "chipStyle": "segmented",
+    "light": {
+      "bg": "#fafafa",
+      "surface": "#ffffff",
+      "text": "#171717",
+      "muted": "#525252",
+      "border": "#e5e5e5",
+      "primary": "#b91c1c",
+      "primaryContrast": "#ffffff",
+      "success": "#15803d"
+    },
+    "dark": {
+      "bg": "#0a0a0a",
+      "surface": "#171717",
+      "text": "#f5f5f5",
+      "muted": "#a3a3a3",
+      "border": "#2e2e2e",
+      "primary": "#f87171",
+      "primaryContrast": "#0a0a0a",
+      "success": "#4ade80"
+    }
+  },
+  {
+    "id": "var-06",
+    "skeleton": "Split rail",
+    "name": "Mon Crest",
+    "role": "Owner's chosen palette",
+    "fold": "List left, persistent restaurant detail right",
+    "display": "Cormorant Garamond",
+    "body": "Manrope",
+    "chipStyle": "filled-ceremonial",
+    "light": {
+      "bg": "#f6f5fc",
+      "surface": "#ffffff",
+      "text": "#1a1744",
+      "muted": "#5b5878",
+      "border": "#ddd9ef",
+      "primary": "#c02636",
+      "primaryContrast": "#ffffff",
+      "success": "#0f766e"
+    },
+    "dark": {
+      "bg": "#0c0b1a",
+      "surface": "#16142a",
+      "text": "#eeeef8",
+      "muted": "#a8a4c4",
+      "border": "#2e2a4a",
+      "primary": "#ff6b75",
+      "primaryContrast": "#0c0b1a",
+      "success": "#2dd4bf"
+    }
+  }
+]

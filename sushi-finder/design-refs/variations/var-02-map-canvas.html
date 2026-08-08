@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>var-02 — Map canvas · Harbor Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { 
+    --display: "IBM Plex Sans", system-ui, serif;
+    --body: "IBM Plex Sans", system-ui, sans-serif;
+    --light-bg: #f0f4f7;
+    --light-surface: #ffffff;
+    --light-text: #1e2a32;
+    --light-muted: #556874;
+    --light-border: #d0dbe3;
+    --light-primary: #2f5f6d;
+    --light-primary-contrast: #ffffff;
+    --light-success: #1b5e45;
+    --dark-bg: #0f1418;
+    --dark-surface: #1a2228;
+    --dark-text: #e4ebf0;
+    --dark-muted: #92a2ad;
+    --dark-border: #2c3842;
+    --dark-primary: #7eb8c9;
+    --dark-primary-contrast: #0f1418;
+    --dark-success: #6bcb8e;
+   }
+    
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 28px 20px 64px;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0b0d12;
+  color: #e8eaef;
+  line-height: 1.45;
+}
+h1 { font-size: 1.35rem; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em; }
+.meta { color: #9aa3b2; font-size: 0.95rem; max-width: 54rem; margin: 0 0 16px; }
+.meta strong { color: #e8eaef; }
+.axes { display: grid; gap: 6px; margin: 0 0 20px; max-width: 54rem; font-size: 0.9rem; }
+.axes dt { color: #7d8799; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }
+.axes dd { margin: 0 0 6px; }
+.phones { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.phone-wrap { margin: 0; }
+.phone-cap {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: #8b93a3; margin: 0 0 6px; font-family: ui-monospace, Consolas, monospace;
+}
+.phone {
+  width: 375px;
+  border-radius: 28px;
+  padding: 10px;
+  background: #0a0a0c;
+  border: 1px solid #3a3f4a;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.45);
+}
+.phone-inner {
+  border-radius: 20px;
+  overflow: hidden;
+  height: 720px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.35;
+  position: relative;
+}
+.phone-wrap[data-theme="light"] .phone-inner {
+  --bg: var(--light-bg);
+  --surface: var(--light-surface);
+  --text: var(--light-text);
+  --muted: var(--light-muted);
+  --border: var(--light-border);
+  --primary: var(--light-primary);
+  --primary-contrast: var(--light-primary-contrast);
+  --success: var(--light-success);
+}
+.phone-wrap[data-theme="dark"] .phone-inner {
+  --bg: var(--dark-bg);
+  --surface: var(--dark-surface);
+  --text: var(--dark-text);
+  --muted: var(--dark-muted);
+  --border: var(--dark-border);
+  --primary: var(--dark-primary);
+  --primary-contrast: var(--dark-primary-contrast);
+  --success: var(--dark-success);
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); border: 0;
+}
+.brand-mark {
+  width: 32px; height: 32px; object-fit: contain; flex-shrink: 0;
+  display: block;
+}
+.app-name { margin: 0; font-family: var(--display); font-weight: 700; color: var(--text); }
+.app-loc { margin: 0; font-size: 0.72rem; color: var(--muted); }
+.icon-btn {
+  min-width: 44px; min-height: 44px; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--bg); color: var(--text);
+  font-size: 1rem; cursor: default; display: grid; place-items: center;
+}
+.tabbar {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid var(--border); background: var(--surface);
+  margin-top: auto; flex-shrink: 0;
+}
+.tab {
+  min-height: 52px; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px; text-decoration: none;
+  color: var(--muted); font-size: 0.72rem; font-weight: 600;
+  padding: 6px 4px;
+}
+.tab--on { color: var(--primary); }
+.tab svg { width: 20px; height: 20px; }
+.badge-ok { font-weight: 600; color: var(--success); }
+.rating { color: var(--muted); }
+.photo {
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+/* ——— Chip scroller: never clip labels; deliberate overflow with affordance ——— */
+.chips-scroller {
+  position: relative;
+  flex-shrink: 0;
+}
+.chips {
+  display: flex;
+  gap: 8px;
+  padding: 10px 36px 10px 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  flex-wrap: nowrap;
+}
+.chips::-webkit-scrollbar { height: 4px; }
+.chips::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.chip {
+  flex: 0 0 auto;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  white-space: nowrap;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: default;
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.chips-fade {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 40px;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--bg) 70%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+}
+.chips-fade::after {
+  content: "›";
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--muted);
+  line-height: 1;
+}
+/* filled chips — actual pills, not bare text */
+.chips--filled .chip {
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.chips--filled .chip--on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+  box-shadow: none;
+}
+.chips--filled-ceremonial .chip {
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+.chips--filled-ceremonial .chip--on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+}
+.chips--outline .chip {
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.chips--outline .chip--on {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+.chips--underline {
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+  padding-right: 14px;
+}
+.chips--underline .chip {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 0;
+  padding: 10px 12px 12px;
+  min-height: 44px;
+  font-weight: 500;
+}
+.chips--underline .chip--on {
+  color: var(--text);
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 var(--primary);
+}
+/* segmented — full-width equal segments, no scroll needed */
+.chips-scroller--segmented .chips-fade { display: none; }
+.chips--segmented {
+  gap: 0;
+  padding: 10px 14px;
+  overflow: visible;
+}
+.chips--segmented .chip {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 0;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  text-align: center;
+  padding: 0 6px;
+  font-size: 0.78rem;
+}
+.chips--segmented .chip:first-child { border-radius: 10px 0 0 10px; }
+.chips--segmented .chip:last-child { border-radius: 0 10px 10px 0; }
+.chips--segmented .chip + .chip { border-left: none; }
+.chips--segmented .chip--on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-contrast);
+  z-index: 1;
+}
+.axe-note {
+  margin-top: 28px; max-width: 54rem; font-size: 0.85rem; color: #9aa3b2;
+  border-top: 1px solid #2a2f3a; padding-top: 16px;
+}
+
+    
+    .sk-map .app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px 8px; background: var(--surface);
+      border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 2;
+    }
+    .sk-map .brand { display: flex; gap: 8px; align-items: center; }
+    .sk-map .app-name { font-size: 0.95rem; font-weight: 600; letter-spacing: 0; }
+    .sk-map .map-stage {
+      position: relative; flex: 1; min-height: 0;
+      background: var(--bg); overflow: hidden;
+    }
+    .sk-map .map-svg { width: 100%; height: 100%; display: block; }
+    .sk-map .pin {
+      position: absolute; transform: translate(-50%, -100%);
+      width: 28px; height: 36px; display: grid; place-items: start center;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+    }
+    .sk-map .pin-dot {
+      width: 28px; height: 28px; border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      background: var(--primary); border: 2px solid var(--primary-contrast);
+      display: grid; place-items: center;
+    }
+    .sk-map .pin-dot span {
+      transform: rotate(45deg); font-size: 0.65rem; font-weight: 700;
+      color: var(--primary-contrast);
+    }
+    .sk-map .pin--active .pin-dot {
+      width: 34px; height: 34px; background: var(--primary);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 35%, transparent);
+    }
+    .sk-map .sheet {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      background: var(--surface);
+      border-radius: 16px 16px 0 0;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -8px 28px rgba(0,0,0,0.18);
+      padding: 8px 0 0;
+      max-height: 42%;
+      display: flex; flex-direction: column;
+    }
+    .sk-map .sheet-handle {
+      width: 36px; height: 4px; border-radius: 2px;
+      background: var(--border); margin: 0 auto 8px;
+    }
+    .sk-map .sheet-head {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 0 14px 8px;
+    }
+    .sk-map .sheet-title {
+      margin: 0; font-size: 0.88rem; font-weight: 700; color: var(--text);
+    }
+    .sk-map .sheet-meta { margin: 0; font-size: 0.72rem; color: var(--muted); }
+    .sk-map .sheet-rows {
+      overflow-y: auto; flex: 1; padding: 0 10px 10px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .sk-map .sheet-row {
+      display: grid; grid-template-columns: 48px 1fr auto; gap: 10px;
+      align-items: center; min-height: 56px;
+      padding: 8px; border-radius: 10px;
+      background: var(--bg); border: 1px solid var(--border);
+      text-align: left; font: inherit; color: inherit; cursor: default;
+    }
+    .sk-map .sheet-row--on {
+      border-color: var(--primary);
+      box-shadow: inset 0 0 0 1px var(--primary);
+    }
+    .sk-map .sheet-thumb {
+      width: 48px; height: 48px; border-radius: 8px; border: 1px solid var(--border);
+    }
+    .sk-map .sheet-name {
+      margin: 0; font-size: 0.84rem; font-weight: 600; line-height: 1.2;
+    }
+    .sk-map .sheet-sub {
+      margin: 2px 0 0; font-size: 0.7rem; color: var(--muted);
+    }
+    .sk-map .sheet-dist {
+      font-size: 0.72rem; font-weight: 600; color: var(--primary); white-space: nowrap;
+    }
+    .sk-map .locate-fab {
+      position: absolute; right: 12px; bottom: calc(42% + 12px);
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); display: grid; place-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: default;
+    }
+  
+  </style>
+</head>
+<body>
+  <h1>var-02: Map canvas</h1>
+  <p class="meta">
+    <strong>Harbor Map</strong> · Cool low-chroma.
+    Map owns the fold. Sheet peels up with nearest counters.
+  </p>
+  <dl class="axes">
+    <dt>Skeleton (owns the fold)</dt>
+    <dd>Full-bleed map with pin cluster and bottom-sheet rows</dd>
+    <dt>Temperature</dt>
+    <dd>Cool slate teal, mist greys, desaturated sea air</dd>
+    <dt>Contrast</dt>
+    <dd>Low-chroma separation — value hierarchy does the work</dd>
+    <dt>Type voice</dt>
+    <dd>Quiet technical (IBM Plex Sans)</dd>
+    <dt>Chip treatment</dt>
+    <dd>outline — rendered as real controls (not bare text); overflow scrolls with › affordance when needed</dd>
+  </dl>
+  <div class="phones">
+    
+    <figure class="phone-wrap" data-theme="light" data-id="var-02">
+      <figcaption class="phone-cap">Light</figcaption>
+      <div class="phone">
+        
+    <div class="phone-inner sk-map" aria-label="Sushi Finder — light theme, Map canvas">
+      
+    <header class="app-header">
+      <div class="brand">
+        <img class="brand-mark" src="mark-06.png" width="32" height="32" alt="" />
+        <div>
+          <p class="app-name">Sushi Finder</p>
+          <p class="app-loc">Near you · 2.4 km</p>
+        </div>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Open filters">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      </button>
+    </header>
+      
+    <div class="chips-scroller">
+      <div class="chips chips--outline" role="list" aria-label="Browse mode and style filters">
+        <button type="button" class="chip chip--on" role="listitem">Map</button><button type="button" class="chip" role="listitem">Photos</button><button type="button" class="chip" role="listitem">Seating</button><button type="button" class="chip" role="listitem">Open now</button><button type="button" class="chip" role="listitem">Counter</button>
+      </div>
+      <div class="chips-fade" aria-hidden="true"></div>
+    </div>
+      <div class="map-stage" role="img" aria-label="Map of nearby sushi restaurants">
+        <svg class="map-svg" viewBox="0 0 360 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect width="360" height="400" fill="var(--bg)"/>
+          <g stroke="var(--border)" stroke-width="1.5" fill="none" opacity="0.9">
+            <path d="M0 80 H360 M0 160 H360 M0 240 H360 M0 320 H360"/>
+            <path d="M60 0 V400 M140 0 V400 M220 0 V400 M300 0 V400"/>
+            <path d="M0 120 Q90 100 180 130 T360 110" stroke="var(--primary)" stroke-opacity="0.25" stroke-width="8"/>
+            <path d="M40 0 V400" stroke="var(--muted)" stroke-opacity="0.2" stroke-width="10"/>
+            <path d="M0 200 H360" stroke="var(--muted)" stroke-opacity="0.15" stroke-width="14"/>
+          </g>
+          <g fill="var(--muted)" fill-opacity="0.35" font-size="9" font-family="var(--body)">
+            <text x="70" y="70">Ginza</text>
+            <text x="230" y="150">East</text>
+            <text x="100" y="280">Harbor</text>
+          </g>
+        </svg>
+        
+          <div class="pin pin--active" style="top:22%;left:38%" aria-hidden="true">
+            <div class="pin-dot"><span>N</span></div>
+          </div>
+          <div class="pin" style="top:34%;left:62%" aria-hidden="true">
+            <div class="pin-dot"><span>K</span></div>
+          </div>
+          <div class="pin" style="top:48%;left:28%" aria-hidden="true">
+            <div class="pin-dot"><span>Y</span></div>
+          </div>
+          <div class="pin" style="top:30%;left:72%" aria-hidden="true">
+            <div class="pin-dot"><span>S</span></div>
+          </div>
+        <button type="button" class="locate-fab" aria-label="Recenter map on me">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        </button>
+        <div class="sheet" role="region" aria-label="Nearby restaurants">
+          <div class="sheet-handle" aria-hidden="true"></div>
+          <div class="sheet-head">
+            <p class="sheet-title">4 places nearby</p>
+            <p class="sheet-meta">Sorted by distance</p>
+          </div>
+          <div class="sheet-rows">
+            
+              <button type="button" class="sheet-row sheet-row--on" aria-label="Sushi Nakazawa, 0.8 km">
+                <div class="photo sheet-thumb" style="background-image:url('food/plate-omakase.jpg')"></div>
+                <div>
+                  <p class="sheet-name">Sushi Nakazawa</p>
+                  <p class="sheet-sub"><span class="badge-ok">Walk-ins limited</span> · Counter</p>
+                </div>
+                <span class="sheet-dist">0.8 km</span>
+              </button>
+              <button type="button" class="sheet-row" aria-label="Kura Revolving, 1.1 km">
+                <div class="photo sheet-thumb" style="background-image:url('food/plate-conveyor.jpg')"></div>
+                <div>
+                  <p class="sheet-name">Kura Revolving</p>
+                  <p class="sheet-sub"><span class="badge-ok">Walk-in open</span> · Conveyor</p>
+                </div>
+                <span class="sheet-dist">1.1 km</span>
+              </button>
+              <button type="button" class="sheet-row" aria-label="Sushi Yasuda, 1.6 km">
+                <div class="photo sheet-thumb" style="background-image:url('food/plate-counter.jpg')"></div>
+                <div>
+                  <p class="sheet-name">Sushi Yasuda</p>
+                  <p class="sheet-sub"><span class="badge-ok">Seats from 18:30</span> · Counter</p>
+                </div>
+                <span class="sheet-dist">1.6 km</span>
+              </button>
+              <button type="button" class="sheet-row" aria-label="Sugarfish, 2.0 km">
+                <div class="photo sheet-thumb" style="background-image:url('food/plate-modern.jpg')"></div>
+                <div>
+                  <p class="sheet-name">Sugarfish</p>
+                  <p class="sheet-sub"><span class="badge-ok">Walk-in open</span> · Counter</p>
+                </div>
+                <span class="sheet-dist">2.0 km</span>
+              </button>
+          </div>
+        </div>
+      </div>
+      
+    <nav class="tabbar" aria-label="Primary">
+      
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+          <span>Photos</span>
+        </a>
+        <a class="tab tab--on" href="#" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11zm0-9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+          <span>Map</span>
+        </a>
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 7h16v2H4zm0 5h10v2H4zm0 5h14v2H4z"/></svg>
+          <span>Seating</span>
+        </a>
+    </nav>
+    </div>
+      </div>
+    </figure>
+    
+    <figure class="phone-wrap" data-theme="dark" data-id="var-02">
+      <figcaption class="phone-cap">Dark</figcaption>
+      <div class="phone">
+        
+    <div class="phone-inner sk-map" aria-label="Sushi Finder — dark theme, Map canvas">
+      
+    <header class="app-header">
+      <div class="brand">
+        <img class="brand-mark" src="mark-06.png" width="32" height="32" alt="" />
+        <div>
+          <p class="app-name">Sushi Finder</p>
+          <p class="app-loc">Near you · 2.4 km</p>
+        </div>
+      </div>
+      <button type="button" class="icon-btn" aria-label="Open filters">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      </button>
+    </header>
+      
+    <div class="chips-scroller">
+      <div class="chips chips--outline" role="list" aria-label="Browse mode and style filters">
+        <button type="button" class="chip chip--on" role="listitem">Map</button><button type="button" class="chip" role="listitem">Photos</button><button type="button" class="chip" role="listitem">Seating</button><button type="button" class="chip" role="listitem">Open now</button><button type="button" class="chip" role="listitem">Counter</button>
+      </div>
+      <div class="chips-fade" aria-hidden="true"></div>
+    </div>
+      <div class="map-stage" role="img" aria-label="Map of nearby sushi restaurants">
+        <svg class="map-svg" viewBox="0 0 360 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect width="360" height="400" fill="var(--bg)"/>
+          <g stroke="var(--border)" stroke-width="1.5" fill="none" opacity="0.9">
+            <path d="M0 80 H360 M0 160 H360 M0 240 H360 M0 320 H360"/>
+            <path d="M60 0 V400 M140 0 V400 M220 0 V400 M300 0 V400"/>
+            <path d="M0 120 Q90 100 180 130 T360 110" stroke="var(--primary)" stroke-opacity="0.25" stroke-width="8"/>
+            <path d="M40 0 V400" stroke="var(--muted)" stroke-opacity="0.2" stroke-width="10"/>
+            <path d="M0 200 H360" stroke="var(--muted)" stroke-opacity="0.15" stroke-width="14"/>
+          </g>
+          <g fill="var(--muted)" fill-opacity="0.35" font-size="9" font-family="var(--body)">
+            <text x="70" y="70">Ginza</text>
+            <text x="230" y="150">East</text>
+            <text x="100" y="280">Harbor</text>
+          </g>
+        </svg>
+        
+          <div class="pin pin--active" style="top:22%;left:38%" aria-hidden="true">
+            <div class="pin-dot"><span>N</span></div>
+          </div>
+          <div class="pin" style="top:34%;left:62%" aria-hidden="true">
+            <div class="pin-dot"><span>K</span></div>
+          </div>
+          <div class="pin" style="top:48%;left:28%" aria-hidden="true">
+            <div class="pin-dot"><span>Y</span></div>
+          </div>
+          <div class="pin" style="top:30%;left:72%" aria-hidden="true">
+            <div class="pin-dot"><span>S</span></div>
+          </div>
+        <button type="button" class="locate-fab" aria-label="Recenter map on me">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        </button>
+        <div class="sheet" role="region" aria-label="Nearby restaurants">
+          <div class="sheet-handle" aria-hidden="true"></div>
+          <div class="sheet-head">
+            <p class="sheet-title">4 places nearby</p>
+            <p class="sheet-meta">Sorted by distance</p>
+          </div>
+          <div class="sheet-rows">
+            
+              <button type="button" class="sheet-row sheet-row--on" aria-label="Sushi Nakazawa, 0.8 km">
+                <div class="photo sheet-thumb" style="background-image:url('food/plate-omakase.jpg')"></div>
+                <div>
+                  <p class="sheet-name">Sushi Nakazawa</p>
+                  <p class="sheet-sub"><span class="badge-ok">Walk-ins limited</span> · Counter</p>
+                </div>
+                <span class="sheet-dist">0.8 km</span>
+              </button>
+              <button type="button" class="sheet-row" aria-label="Kura Revolving, 1.1 km">
+                <div class="photo sheet-thumb" style="background-image:url('food/plate-conveyor.jpg')"></div>
+                <div>
+                  <p class="sheet-name">Kura Revolving</p>
+                  <p class="sheet-sub"><span class="badge-ok">Walk-in open</span> · Conveyor</p>
+                </div>
+                <span class="sheet-dist">1.1 km</span>
+              </button>
+              <button type="button" class="sheet-row" aria-label="Sushi Yasuda, 1.6 km">
+                <div class="photo sheet-thumb" style="background-image:url('food/plate-counter.jpg')"></div>
+                <div>
+                  <p class="sheet-name">Sushi Yasuda</p>
+                  <p class="sheet-sub"><span class="badge-ok">Seats from 18:30</span> · Counter</p>
+                </div>
+                <span class="sheet-dist">1.6 km</span>
+              </button>
+              <button type="button" class="sheet-row" aria-label="Sugarfish, 2.0 km">
+                <div class="photo sheet-thumb" style="background-image:url('food/plate-modern.jpg')"></div>
+                <div>
+                  <p class="sheet-name">Sugarfish</p>
+                  <p class="sheet-sub"><span class="badge-ok">Walk-in open</span> · Counter</p>
+                </div>
+                <span class="sheet-dist">2.0 km</span>
+              </button>
+          </div>
+        </div>
+      </div>
+      
+    <nav class="tabbar" aria-label="Primary">
+      
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+          <span>Photos</span>
+        </a>
+        <a class="tab tab--on" href="#" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11zm0-9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
+          <span>Map</span>
+        </a>
+        <a class="tab" href="#" >
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 7h16v2H4zm0 5h10v2H4zm0 5h14v2H4z"/></svg>
+          <span>Seating</span>
+        </a>
+    </nav>
+    </div>
+      </div>
+    </figure>
+  </div>
+  <p class="axe-note">
+    WCAG AA measured with <strong>axe-core</strong> (not hand-computed) via
+    <code>measure-a11y.mjs</code> against both phone themes. Brand mark:
+    <code>mark-06.png</code> (Maki finder lens). Shared food photos under
+    <code>food/</code>. Phone content width <strong>375px</strong>.
+  </p>
+</body>
+</html>

@@ -169,6 +169,24 @@ export function SushiDetailPage(): JSX.Element {
               </button>
             ) : null}
           </div>
+          {(item.style || item.priceBand || item.city) && (
+            <p style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {item.style ? <span className="chip">{item.style}</span> : null}
+              {item.priceBand ? <span className="chip">{item.priceBand}</span> : null}
+              {item.city ? <span className="chip">{item.city}</span> : null}
+              <span className="chip">{item.walkIn ? en.home.walkInYes : en.home.walkInNo}</span>
+            </p>
+          )}
+          {item.photoUrl ? (
+            <img
+              className="sushi-card__photo"
+              src={item.photoUrl}
+              alt=""
+              width={480}
+              height={480}
+              style={{ maxWidth: 320, marginBottom: 'var(--space-4)' }}
+            />
+          ) : null}
           <h2 style={{ fontSize: 'var(--text-sm)', textTransform: 'uppercase' }}>
             {en.detail.descriptionLabel}
           </h2>

@@ -131,13 +131,6 @@ export function SushiListPage(): JSX.Element {
           <EmptyState
             message={query.trim() ? en.sushis.emptyMatch : en.sushis.empty}
             hint={query.trim() ? en.sushis.emptyMatchHint : en.sushis.emptyHint}
-            action={
-              !query.trim() ? (
-                <Link className="btn btn--primary" to="/sushis/new">
-                  {en.sushis.add}
-                </Link>
-              ) : undefined
-            }
           />
         ) : null}
 
@@ -148,6 +141,10 @@ export function SushiListPage(): JSX.Element {
                 <h2>
                   <Link to={`/sushis/${item.id}`}>{item.title}</Link>
                 </h2>
+                <p>
+                  {item.style ? <span className="chip">{item.style}</span> : null}{' '}
+                  {item.city ? <span className="chip">{item.city}</span> : null}
+                </p>
                 <p>{item.description || en.detail.emptyDescription}</p>
               </li>
             ))}

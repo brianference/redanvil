@@ -56,7 +56,14 @@ export async function onRequestPost(context: AppContext): Promise<Response> {
 
     const created = await createSushi(context.env.DB, {
       title: body.title,
-      description: body.description ?? ''
+      description: body.description ?? '',
+      style: body.style ?? '',
+      priceBand: body.priceBand ?? '',
+      walkIn: body.walkIn ?? false,
+      city: body.city ?? '',
+      lat: body.lat ?? null,
+      lng: body.lng ?? null,
+      photoUrl: body.photoUrl ?? ''
     });
     return json(context.request, created, 201, 'GET, POST, OPTIONS');
   } catch (err) {

@@ -19,8 +19,8 @@ export function ErrorState({
     <div className="state state--error">
       <p role="alert">{message}</p>
       {onRetry && retryLabel ? (
-        <button type="button" className="btn" aria-label={retryLabel} onClick={onRetry}>
-          ↻
+        <button type="button" className="btn" onClick={onRetry}>
+          {retryLabel}
         </button>
       ) : null}
     </div>

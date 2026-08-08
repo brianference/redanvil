@@ -1,12 +1,23 @@
 import { z } from 'zod';
 
-/** Public sushi row (API response shape, PRD §7.2). */
+/** Style facet stored on D1 rows (FEATURES rank 4). */
+export const SushiStyleSchema = z.enum(['omakase', 'conveyor', 'counter', '']);
+export type SushiStyle = z.infer<typeof SushiStyleSchema>;
+
+/** Public sushi row (API response shape, PRD §7.2 + discovery fields). */
 export const SushiRowSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
   description: z.string(),
   createdAt: z.string().min(1),
-  updatedAt: z.string().min(1)
+  updatedAt: z.string().min(1),
+  style: z.string().default(''),
+  priceBand: z.string().default(''),
+  walkIn: z.boolean().default(false),
+  city: z.string().default(''),
+  lat: z.number().nullable().default(null),
+  lng: z.number().nullable().default(null),
+  photoUrl: z.string().default('')
 });
 export type SushiRow = z.infer<typeof SushiRowSchema>;
 
@@ -17,7 +28,14 @@ export const SushiCreateSchema = z.object({
     .trim()
     .min(1, 'title is required')
     .max(200),
-  description: z.string().max(4000).optional().default('')
+  description: z.string().max(4000).optional().default(''),
+  style: z.string().max(40).optional().default(''),
+  priceBand: z.string().max(20).optional().default(''),
+  walkIn: z.boolean().optional().default(false),
+  city: z.string().max(80).optional().default(''),
+  lat: z.number().min(-90).max(90).nullable().optional().default(null),
+  lng: z.number().min(-180).max(180).nullable().optional().default(null),
+  photoUrl: z.string().max(400).optional().default('')
 });
 export type SushiCreate = z.infer<typeof SushiCreateSchema>;
 
@@ -25,11 +43,30 @@ export type SushiCreate = z.infer<typeof SushiCreateSchema>;
 export const SushiUpdateSchema = z
   .object({
     title: z.string().trim().min(1, 'title is required').max(200).optional(),
-    description: z.string().max(4000).optional()
+    description: z.string().max(4000).optional(),
+    style: z.string().max(40).optional(),
+    priceBand: z.string().max(20).optional(),
+    walkIn: z.boolean().optional(),
+    city: z.string().max(80).optional(),
+    lat: z.number().min(-90).max(90).nullable().optional(),
+    lng: z.number().min(-180).max(180).nullable().optional(),
+    photoUrl: z.string().max(400).optional()
   })
-  .refine((value) => value.title !== undefined || value.description !== undefined, {
-    message: 'at least one of title or description is required'
-  });
+  .refine(
+    (value) =>
+      value.title !== undefined ||
+      value.description !== undefined ||
+      value.style !== undefined ||
+      value.priceBand !== undefined ||
+      value.walkIn !== undefined ||
+      value.city !== undefined ||
+      value.lat !== undefined ||
+      value.lng !== undefined ||
+      value.photoUrl !== undefined,
+    {
+      message: 'at least one field is required'
+    }
+  );
 export type SushiUpdate = z.infer<typeof SushiUpdateSchema>;
 
 /** GET /api/sushis list response. */

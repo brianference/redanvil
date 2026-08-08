@@ -20,7 +20,7 @@ export function resolveTheme(mode: ThemeMode): 'light' | 'dark' {
 
 /**
  * Read theme preference from storage.
- * Brand default is dark (PRD brutal utility / night board). Saved choice always wins.
+ * Brand default is dark (Mon Crest dual-temperature night board). Saved choice always wins.
  */
 export function readThemeMode(): ThemeMode {
   try {

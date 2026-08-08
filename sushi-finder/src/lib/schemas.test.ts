@@ -12,9 +12,17 @@ describe('SushiRowSchema', () => {
       title: 'Sukiyabashi Jiro',
       description: 'Omakase in Ginza',
       createdAt: '2026-01-15T10:00:00.000Z',
-      updatedAt: '2026-01-15T10:00:00.000Z'
+      updatedAt: '2026-01-15T10:00:00.000Z',
+      style: 'omakase',
+      priceBand: '$$$$',
+      walkIn: false,
+      city: 'Tokyo',
+      lat: 35.67,
+      lng: 139.76,
+      photoUrl: '/food-omakase.jpg'
     });
     expect(row.id).toBe('sushi_jiro');
+    expect(row.style).toBe('omakase');
   });
 
   it('SushiRowSchema_rejectsMissingId', () => {
