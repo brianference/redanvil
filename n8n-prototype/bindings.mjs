@@ -13,11 +13,50 @@
  * the whole process map exists to prevent, so it fails loudly instead.
  */
 
+/** Shorthand for a judgement role delegated to Grok Build. */
+const grok = (role) => `node n8n-prototype/roles/grok-role.mjs --role=${role} --slug={slug} --repoRoot={root}`;
+
+/** Shorthand for a deterministic local script. */
+const script = (name) => `node n8n-prototype/roles/${name}.mjs --slug={slug} --repoRoot={root}`;
+
 /** @type {Record<string,string>} */
 export const BINDINGS = {
+  // Deterministic scripts.
   prd: 'node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root} --prompt={prompt}',
-  product: 'node n8n-prototype/roles/product.mjs --slug={slug} --repoRoot={root}',
-  reuse: 'node n8n-prototype/roles/reuse.mjs --slug={slug} --repoRoot={root}'
+  product: script('product'),
+  reuse: script('reuse'),
+  inspo: script('inspo'),
+  visual: script('visual'),
+  'qa-runtime': script('qa-runtime'),
+  'qa-data': script('qa-data'),
+  runners: script('runners'),
+
+  // Judgement roles, delegated to Grok Build until n8n's native agents are in
+  // use. n8n 2.33.7 is available and supports them; we ran 2.22.6, so this is a
+  // stopgap that keeps the process complete rather than leaving six holes in it.
+  brainstorm: grok('brainstorm'),
+  testwriter: grok('testwriter'),
+  judge: grok('judge'),
+  'user-refuse': grok('user-refuse'),
+  pm: grok('pm'),
+  debugger: grok('debugger'),
+
+  // Design and build work, delegated to Grok because that is where it is
+  // strongest -- logos and component/layout options -- with a compact spec
+  // rather than 60KB of generated option HTML.
+  logo: 'node n8n-prototype/roles/design-role.mjs --role=logo --slug={slug} --repoRoot={root}',
+  palette: 'node n8n-prototype/roles/design-role.mjs --role=palette --slug={slug} --repoRoot={root}',
+  layout: 'node n8n-prototype/roles/design-role.mjs --role=layout --slug={slug} --repoRoot={root}',
+  build: 'node n8n-prototype/roles/design-role.mjs --role=build --slug={slug} --repoRoot={root}',
+  content: 'node n8n-prototype/roles/design-role.mjs --role=content --slug={slug} --repoRoot={root}',
+
+  // `decide` is a human gate. Its runner only records what the owner chose; it
+  // cannot manufacture a decision, which is the whole point of the step.
+  decide: script('decide'),
+
+  // Ship and re-verify reuse the existing tooling rather than reimplementing it.
+  reverify: 'node .github/scripts/reverify.mjs --app {slug}',
+  ship: script('ship')
 };
 
 /**

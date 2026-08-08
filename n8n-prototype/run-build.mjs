@@ -98,6 +98,17 @@ while (cursor < allSteps.length) {
   // FORCE THE REDO. A step that declares reworkTo routes BACK to an earlier step
   // and the build re-runs from there, rather than halting. Verification without
   // a redo path just stops the line; the point is to make the work happen again.
+  // --continue: record the failure and carry on to the next step instead of
+  // halting. Useful for a full survey of what a build would hit; NOT the default,
+  // because a build that walks past a failed contract and still reports progress
+  // is how "done" stops meaning anything. Failures are collected and reprinted
+  // at the end so continuing never hides them.
+  if (args.continue) {
+    failures.push({ step: step.id, reasons: after?.reasons ?? [] });
+    cursor += 1;
+    continue;
+  }
+
   if (!step.reworkTo) {
     stopped = step.id;
     break;
