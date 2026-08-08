@@ -1,0 +1,11 @@
+{
+  "source": "https://redanvil.pages.dev/",
+  "generatedBy": "roles/prd.mjs driving the deployed wizard with Playwright",
+  "generatedAt": "2026-08-08T04:08:22.954Z",
+  "prompt": "A worldwide sushi finder: discover sushi restaurants near you or in any city, see omakase vs conveyor vs counter style, price band, whether they take walk-ins, and real reviews. Browse by photos, by map, or by when a seating is available.",
+  "wizardAnswers": [
+    "Marketplace",
+    "Forge PRD"
+  ],
+  "characters": 48886
+}

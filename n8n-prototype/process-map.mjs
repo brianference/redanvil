@@ -71,7 +71,7 @@ export const PROCESS = [
         // the wizard with Playwright and captures what it produces. A
         // hand-written PRD defeats the point: the app-builder is the product,
         // and using it on every new app is the only real dogfooding.
-        path: 'docs/pet-sitter-prd.md',
+        path: 'docs/PRD.md',
         kind: 'file',
         minBytes: 2000,
         mustContain: ['Design direction'],
@@ -100,7 +100,7 @@ export const PROCESS = [
         // guessed `docs/product/BRIEF.md`, which never existed, and the checker
         // blocked the whole map on a false failure -- the same class of mistake
         // as referencing a CSS class nobody defined.
-        path: 'docs/pet-sitter-product-brief.md',
+        path: 'docs/PRODUCT-BRIEF.md',
         kind: 'file',
         minBytes: 1200,
         mustNotContain: PLACEHOLDER_MARKERS,
@@ -364,7 +364,7 @@ export const PROCESS = [
     skippable: false,
     requires: [
       {
-        path: 'evidence/api-live-pet-sitter.json',
+        path: 'evidence/api-live.json',
         kind: 'file',
         minBytes: 120,
         why: 'a 200 on the homepage only proves static assets served; every route and binding is probed separately'
@@ -380,7 +380,7 @@ export const PROCESS = [
     skippable: false,
     requires: [
       {
-        path: 'evidence/judge-diff-pet-sitter.json',
+        path: 'evidence/judge-diff.json',
         kind: 'file',
         minBytes: 200,
         why: 'a judge reviewing its own author never dissents -- 258 verdicts with 0 fails, against 6 of 10 from a fresh reviewer'
@@ -404,7 +404,7 @@ export const PROCESS = [
         //
         // `dirty` matters as much as `commit`: measuring a dirty tree produces a
         // green result that describes no commit at all, which is worse than red.
-        path: 'results/pet-sitter.json',
+        path: 'results/RESULTS.json',
         kind: 'file',
         minBytes: 200,
         provenanceMatchesHead: true,
