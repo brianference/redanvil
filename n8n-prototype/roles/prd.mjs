@@ -104,6 +104,17 @@ for (let step = 0; step < 12; step += 1) {
       const pre = document.querySelector('pre, article, [class*=prd], [class*=markdown]');
       return (pre?.textContent ?? document.body.innerText).trim();
     });
+
+    // The wizard emits per-section specs, so the first H1 can be a SECTION
+    // heading rather than the product. sushi-finder captured
+    // "# Implementation Spec - By Photos" and the whole app shipped branded
+    // "By Photos" -- header, footer, page title and footer blurb. Retitle to the
+    // slug so a section name can never become the product name again.
+    const slugTitle = slug
+      .split('-')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+    markdown = markdown.replace(/^#\s+.*$/m, `# ${slugTitle} — product requirements`);
     break;
   }
   const answered = await answerQuestion(page, chosen);

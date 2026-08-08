@@ -4,8 +4,8 @@ pages_build_output_dir = "dist"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "sushi-finder"
-database_id = "local-sushi-finder-db"
+database_name = "sushi-finder-db"
+database_id = "91a74f27-753d-4ce6-bb2d-858baa1fde75"
 migrations_dir = "migrations"
 
 [ai]

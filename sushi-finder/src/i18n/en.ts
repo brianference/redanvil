@@ -1,10 +1,10 @@
 /**
- * All user-facing copy for By Photos (sushi-finder).
+ * All user-facing copy for Sushi Finder (sushi-finder).
  * No hardcoded product strings in components.
  */
 export const en = {
   brand: {
-    name: 'By Photos',
+    name: 'Sushi Finder',
     tagline: 'Sushi places you can search, open, and manage — public catalog on D1.'
   },
   nav: {
@@ -23,14 +23,15 @@ export const en = {
     system: 'System'
   },
   home: {
-    title: 'By Photos',
+    title: 'Sushi Finder',
     lead: 'Browse seeded restaurants by photos, map, or seating policy. Every row comes from Cloudflare D1 — never invented client-side sample data.',
     ctaList: 'Open full catalog',
     ctaAdd: 'Add a sushi place',
     viewNav: 'Discovery views',
     viewPhotos: 'Photos',
     viewMap: 'Map',
-    viewSeating: 'Seating',
+    editorialEyebrow: "Tonight's find",
+    viewSeating: 'List',
     mapLabel: 'Catalog places on a simple map board',
     mapCityLabel: 'Find by city or title',
     mapCityPlaceholder: 'City or title…',
@@ -121,12 +122,12 @@ export const en = {
     emptyAnswer: 'No grounded answer was returned. Try a title from the catalog.'
   },
   footer: {
-    blurb: 'By Photos is a public sushi catalog. No accounts. Data lives in Cloudflare D1 for this deployment.',
+    blurb: 'Sushi Finder is a public sushi catalog. No accounts. Data lives in Cloudflare D1 for this deployment.',
     rights: 'Built as a RedAnvil marketplace MVP.'
   },
   about: {
-    title: 'About By Photos',
-    body: 'By Photos helps people discover sushi restaurants in a curated public catalog. Search by title, open a place for its description, and manage rows when you need to correct or add data. Answers from the in-app assistant are grounded in the same D1 rows — not inventing restaurants.',
+    title: 'About Sushi Finder',
+    body: 'Sushi Finder helps people discover sushi restaurants in a curated public catalog. Search by title, open a place for its description, and manage rows when you need to correct or add data. Answers from the in-app assistant are grounded in the same D1 rows — not inventing restaurants.',
     howTitle: 'How it works',
     howBody:
       'The UI is a Vite + React SPA on Cloudflare Pages. Pages Functions expose JSON under /api. The sushis table in D1 holds id, title, description, created_at, and updated_at. Seed rows name real, well-known restaurants for first paint. GET /api/health is for operators.',

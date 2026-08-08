@@ -1,90 +1,132 @@
 {
-  "generatedAt": "2026-08-08T17:21:47.812Z",
+  "generatedAt": "2026-08-08T19:26:17.419Z",
   "url": "https://sushi-finder.pages.dev",
   "renders": [
     {
-      "file": "_-375-light.png",
-      "route": "/",
+      "file": "_view_photos-375-light.png",
+      "route": "/?view=photos",
       "viewport": 375,
       "theme": "light",
-      "sha256": "673d6a60f4e7b3e1b7a0eb7547b24deb747b1686d638116d4c4854ab47fd0058"
+      "sha256": "649ba399bd5336e048dde1cb7613aa6ee319540d5a216046a96aa4b67834005f"
     },
     {
-      "file": "_about-375-light.png",
-      "route": "/about",
+      "file": "_view_map-375-light.png",
+      "route": "/?view=map",
       "viewport": 375,
       "theme": "light",
-      "sha256": "673d6a60f4e7b3e1b7a0eb7547b24deb747b1686d638116d4c4854ab47fd0058"
+      "sha256": "080e9a712d45a4168aa4945fa8928dbf8486f60bf3401fca760e8eb65c862b26"
     },
     {
-      "file": "_-768-light.png",
-      "route": "/",
+      "file": "_view_list-375-light.png",
+      "route": "/?view=list",
+      "viewport": 375,
+      "theme": "light",
+      "sha256": "6bd265f8c60c583f8fb81fb8f88c24c23aa43d896d342f3f3281c7ac13e3fa12"
+    },
+    {
+      "file": "_view_photos-768-light.png",
+      "route": "/?view=photos",
       "viewport": 768,
       "theme": "light",
-      "sha256": "cb9733425e54c64b61bc1cb5ad8abed025e3fe561f8ff6ea50e4a41fe0876ec3"
+      "sha256": "6f9e764a673291720efa764448010f86a8b5962260d9ef3343cd66de0097bab0"
     },
     {
-      "file": "_about-768-light.png",
-      "route": "/about",
+      "file": "_view_map-768-light.png",
+      "route": "/?view=map",
       "viewport": 768,
       "theme": "light",
-      "sha256": "c5662ba5a3dfae78a3be9c8d6561f95320e635b102aa800272554d701a8b5b0e"
+      "sha256": "451ee68354d82a27a642e6121e71955bd94de9762f2c186687e400d3ae0a1623"
     },
     {
-      "file": "_-1280-light.png",
-      "route": "/",
+      "file": "_view_list-768-light.png",
+      "route": "/?view=list",
+      "viewport": 768,
+      "theme": "light",
+      "sha256": "419ffcd7f5e32db5adf7a423859c6288e58da7a59a4541c449bf96f7e652fff0"
+    },
+    {
+      "file": "_view_photos-1280-light.png",
+      "route": "/?view=photos",
       "viewport": 1280,
       "theme": "light",
-      "sha256": "f056f0030499ea218b452fd2aeac91413b09aacfbeaaf93410a147e974d0aa80"
+      "sha256": "3596b22d7686b587b24e48f832553c2dbdb40ff60055ddb65f543a55cace655e"
     },
     {
-      "file": "_about-1280-light.png",
-      "route": "/about",
+      "file": "_view_map-1280-light.png",
+      "route": "/?view=map",
       "viewport": 1280,
       "theme": "light",
-      "sha256": "94959d2178c3ee6bf704e823f8ad6ac5fb36d097957e380a75f647ce515b1998"
+      "sha256": "ce9afef62a241863752225f209a8536b405f31b56183ca9d8d03c90863926937"
     },
     {
-      "file": "_-375-dark.png",
-      "route": "/",
+      "file": "_view_list-1280-light.png",
+      "route": "/?view=list",
+      "viewport": 1280,
+      "theme": "light",
+      "sha256": "e94e602657b12012d223c863d06c40c1c0f086c59ac3a3222c01318bf39b2ad3"
+    },
+    {
+      "file": "_view_photos-375-dark.png",
+      "route": "/?view=photos",
       "viewport": 375,
       "theme": "dark",
-      "sha256": "53a9a588c3f769cb0878e1e088b5b8460595cee8d32a1b3476306015e8b818cb"
+      "sha256": "638559eb43dc72117b20a2cbf54deaf82a68ed6472d91f7ca832c034521d65c6"
     },
     {
-      "file": "_about-375-dark.png",
-      "route": "/about",
+      "file": "_view_map-375-dark.png",
+      "route": "/?view=map",
       "viewport": 375,
       "theme": "dark",
-      "sha256": "53a9a588c3f769cb0878e1e088b5b8460595cee8d32a1b3476306015e8b818cb"
+      "sha256": "080e9a712d45a4168aa4945fa8928dbf8486f60bf3401fca760e8eb65c862b26"
     },
     {
-      "file": "_-768-dark.png",
-      "route": "/",
+      "file": "_view_list-375-dark.png",
+      "route": "/?view=list",
+      "viewport": 375,
+      "theme": "dark",
+      "sha256": "6bd265f8c60c583f8fb81fb8f88c24c23aa43d896d342f3f3281c7ac13e3fa12"
+    },
+    {
+      "file": "_view_photos-768-dark.png",
+      "route": "/?view=photos",
       "viewport": 768,
       "theme": "dark",
-      "sha256": "63503d93036bbba7d29c2ca2467d232218506c2852729a040abfa7e64620f5aa"
+      "sha256": "6f9e764a673291720efa764448010f86a8b5962260d9ef3343cd66de0097bab0"
     },
     {
-      "file": "_about-768-dark.png",
-      "route": "/about",
+      "file": "_view_map-768-dark.png",
+      "route": "/?view=map",
       "viewport": 768,
       "theme": "dark",
-      "sha256": "1613ec9d6d17ee5bbe6052eea04aec1b3e98cd6a5156c16ce6477670ed132570"
+      "sha256": "451ee68354d82a27a642e6121e71955bd94de9762f2c186687e400d3ae0a1623"
     },
     {
-      "file": "_-1280-dark.png",
-      "route": "/",
-      "viewport": 1280,
+      "file": "_view_list-768-dark.png",
+      "route": "/?view=list",
+      "viewport": 768,
       "theme": "dark",
-      "sha256": "98f01d1562b796c513c4ffb03715c5e3ca07d148f2fc25466cbe1b15f7f6ebea"
+      "sha256": "419ffcd7f5e32db5adf7a423859c6288e58da7a59a4541c449bf96f7e652fff0"
     },
     {
-      "file": "_about-1280-dark.png",
-      "route": "/about",
+      "file": "_view_photos-1280-dark.png",
+      "route": "/?view=photos",
       "viewport": 1280,
       "theme": "dark",
-      "sha256": "3479b337c8e351d797d0b8db1d131460d5320b699da55d7976b2abd0a7b6bf65"
+      "sha256": "3596b22d7686b587b24e48f832553c2dbdb40ff60055ddb65f543a55cace655e"
+    },
+    {
+      "file": "_view_map-1280-dark.png",
+      "route": "/?view=map",
+      "viewport": 1280,
+      "theme": "dark",
+      "sha256": "ce9afef62a241863752225f209a8536b405f31b56183ca9d8d03c90863926937"
+    },
+    {
+      "file": "_view_list-1280-dark.png",
+      "route": "/?view=list",
+      "viewport": 1280,
+      "theme": "dark",
+      "sha256": "e94e602657b12012d223c863d06c40c1c0f086c59ac3a3222c01318bf39b2ad3"
     }
   ]
 }

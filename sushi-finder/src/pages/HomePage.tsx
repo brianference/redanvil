@@ -6,7 +6,7 @@ import { fetchSushis } from '../lib/api';
 import type { SushiRow } from '../lib/schemas';
 
 /** Discovery view ids from design-refs/design-options/DECISION.md. */
-type DiscoveryView = 'photos' | 'map' | 'seating';
+type DiscoveryView = 'photos' | 'map' | 'list';
 
 const VIEW_PARAM = 'view';
 
@@ -16,7 +16,7 @@ const VIEW_PARAM = 'view';
  * @param raw - Search param value.
  */
 function parseView(raw: string | null): DiscoveryView {
-  if (raw === 'map' || raw === 'seating' || raw === 'photos') return raw;
+  if (raw === 'map' || raw === 'list' || raw === 'photos') return raw;
   return 'photos';
 }
 
@@ -42,7 +42,11 @@ export function HomePage(): JSX.Element {
       const data = await fetchSushis(q || undefined);
       setItems(data.items);
       setStatus(data.items.length === 0 ? 'empty' : 'ready');
-      if (data.items[0]) setSelectedId((prev) => prev ?? data.items[0].id);
+      // Bind to a local before the closure: TypeScript cannot carry the
+      // `data.items[0]` narrowing inside the setState callback, because the
+      // array could in principle change between the check and the call.
+      const first = data.items[0];
+      if (first) setSelectedId((prev) => prev ?? first.id);
     } catch (err) {
       setItems([]);
       setError(err instanceof Error ? err.message : en.sushis.error);
@@ -75,6 +79,28 @@ export function HomePage(): JSX.Element {
     [items]
   );
 
+  /**
+   * Bounding box of the plotted places, so the map frames its own data.
+   * Guards a zero span (a single place, or several at one point) to avoid
+   * dividing by zero and stacking every pin in the corner.
+   */
+  const bounds = useMemo(() => {
+    const lats = withCoords.map((i) => i.lat!);
+    const lngs = withCoords.map((i) => i.lng!);
+    const minLat = Math.min(...lats, 0);
+    const maxLat = Math.max(...lats, 0);
+    const minLng = Math.min(...lngs, 0);
+    const maxLng = Math.max(...lngs, 0);
+    return {
+      minLat,
+      maxLat,
+      minLng,
+      maxLng,
+      spanLat: maxLat - minLat || 1,
+      spanLng: maxLng - minLng || 1
+    };
+  }, [withCoords]);
+
   const walkInCount = useMemo(() => items.filter((item) => item.walkIn).length, [items]);
   const reserveCount = useMemo(() => items.filter((item) => !item.walkIn).length, [items]);
 
@@ -104,8 +130,8 @@ export function HomePage(): JSX.Element {
         </button>
         <button
           type="button"
-          aria-pressed={view === 'seating'}
-          onClick={() => setView('seating')}
+          aria-pressed={view === 'list'}
+          onClick={() => setView('list')}
         >
           {en.home.viewSeating}
         </button>
@@ -163,6 +189,41 @@ export function HomePage(): JSX.Element {
         <EmptyState message={en.sushis.empty} hint={en.sushis.emptyHint} />
       ) : null}
 
+      {/*
+        Editorial hero stacked ON TOP of the photo grid. The owner picked this
+        combination from the six-variation gallery -- var-04's full-bleed hero
+        above var-01's tile grid -- so it is one view, not two.
+
+        It belongs to the Photos view ONLY. A hero above every view is the
+        "shared marketing hero" that DECISION.md forbids, because it is what
+        flattened three architectures into one shell on pet-sitter.
+      */}
+      {status === 'ready' && view === 'photos' && items[0] ? (
+        <section className="editorial-hero" aria-labelledby="editorial-hero-title">
+          {items[0].photoUrl ? (
+            <img
+              className="editorial-hero__photo"
+              src={items[0].photoUrl}
+              alt=""
+              width={1200}
+              height={720}
+            />
+          ) : null}
+          <div className="editorial-hero__body">
+            <p className="editorial-hero__eyebrow">{en.home.editorialEyebrow}</p>
+            <h2 id="editorial-hero-title" className="editorial-hero__title">
+              <Link to={`/sushis/${items[0].id}`}>{items[0].title}</Link>
+            </h2>
+            <p className="editorial-hero__lead">{items[0].description}</p>
+            <p className="editorial-hero__meta">
+              {items[0].style ? <span className="chip chip--on">{items[0].style}</span> : null}{' '}
+              {items[0].priceBand ? <span className="chip">{items[0].priceBand}</span> : null}{' '}
+              {items[0].city ? <span className="chip">{items[0].city}</span> : null}
+            </p>
+          </div>
+        </section>
+      ) : null}
+
       {status === 'ready' && view === 'photos' ? (
         <ul className="photo-grid">
           {items.map((item) => (
@@ -193,10 +254,32 @@ export function HomePage(): JSX.Element {
 
       {status === 'ready' && view === 'map' ? (
         <div className="map-canvas" role="img" aria-label={en.home.mapLabel}>
+          {/*
+            Self-hosted SVG backdrop rather than a tile provider. The CSP is
+            `img-src 'self' data:`, so OpenStreetMap or Mapbox tiles are blocked,
+            and widening a security header for a visual is the wrong trade. This
+            is a schematic map -- honest about being one -- replacing the black
+            rectangle the reference file shipped.
+          */}
+          <svg className="map-canvas__grid" viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <pattern id="mapgrid" width="5" height="5" patternUnits="userSpaceOnUse">
+                <path d="M5 0 L0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.15" opacity="0.35" />
+              </pattern>
+            </defs>
+            <rect width="100" height="60" fill="url(#mapgrid)" />
+            <path d="M0 38 Q28 30 52 36 T100 32" fill="none" stroke="currentColor" strokeWidth="0.9" opacity="0.5" />
+            <path d="M18 0 L22 60" fill="none" stroke="currentColor" strokeWidth="0.6" opacity="0.4" />
+            <path d="M62 0 L58 60" fill="none" stroke="currentColor" strokeWidth="0.6" opacity="0.4" />
+            <path d="M0 14 L100 18" fill="none" stroke="currentColor" strokeWidth="0.6" opacity="0.4" />
+          </svg>
           {withCoords.map((item) => {
-            // Project public lat/lng into a simple board (not a live tile provider).
-            const left = ((item.lng! + 180) / 360) * 100;
-            const top = ((90 - item.lat!) / 180) * 100;
+            // Fit the projection to the DATA bounds, not the whole globe. A
+            // world projection put Tokyo and Los Angeles at opposite edges with
+            // everything else invisible -- technically correct and useless. A
+            // 6% inset keeps pins off the border.
+            const left = 6 + ((item.lng! - bounds.minLng) / bounds.spanLng) * 88;
+            const top = 6 + ((bounds.maxLat - item.lat!) / bounds.spanLat) * 88;
             return (
               <button
                 key={item.id}
@@ -244,7 +327,7 @@ export function HomePage(): JSX.Element {
         </div>
       ) : null}
 
-      {status === 'ready' && view === 'seating' ? (
+      {status === 'ready' && view === 'list' ? (
         <>
           <p className="lead">{en.home.seatingLead}</p>
           <div className="seating-timeline" role="tablist" aria-label={en.home.seatingSlots}>

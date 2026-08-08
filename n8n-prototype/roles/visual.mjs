@@ -28,7 +28,13 @@ if (!base) { process.stderr.write('no URL to render -- visual cannot review an a
 
 const WIDTHS = [375, 768, 1280];
 const THEMES = ['light', 'dark'];
-const ROUTES = (args.routes ?? '/,/about').split(',');
+/**
+ * Surfaces to render. Defaults to the app's decided VIEWS, not `/` plus a static
+ * page: `/about` paints identically at every width, so three widths of it
+ * collapsed into one hash and the matrix produced 8 distinct images instead of
+ * 12. Rendering the real views is also what the reviewer needs to see.
+ */
+const ROUTES = (args.routes ?? '/?view=photos,/?view=map,/?view=list').split(',');
 const outDir = join(appDir, 'design-refs', 'design-options', 'renders');
 mkdirSync(outDir, { recursive: true });
 
