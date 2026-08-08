@@ -138,7 +138,19 @@ if (!role || !slug || !PROMPTS[role]) {
 }
 
 mkdirSync(appDir, { recursive: true });
-const proc = spawnSync('grok', ['--always-approve', '--cwd', root, '-m', 'grok-4.5', '-p', PROMPTS[role]()], {
+
+/**
+ * Scope the agent to the app directory, not the whole repository.
+ *
+ * `--always-approve` pre-grants every approval, so whatever the agent can reach,
+ * it can change without a human seeing it. Pointing that at the repo root let a
+ * design job rewrite the orchestrator, the gate, or another app. None of these
+ * roles has any business outside the app they are building, so the blast radius
+ * is narrowed to match.
+ */
+const agentCwd = appDir;
+
+const proc = spawnSync('grok', ['--always-approve', '--cwd', agentCwd, '-m', 'grok-4.5', '-p', PROMPTS[role]()], {
   cwd: root,
   encoding: 'utf8',
   timeout: 30 * 60 * 1000

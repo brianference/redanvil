@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sushi Finder — logo marks 1–5</title>
+  <style>
+    :root {
+      --bg: #12141a;
+      --card-light: #f4f5f7;
+      --card-dark: #0b0b0f;
+      --text: #e8eaef;
+      --muted: #9aa3b2;
+      --wordmark: #1a1d24;
+      --wordmark-dark: #f0f2f6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 24px 64px;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin: 0 0 6px;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0 0 28px;
+      max-width: 52rem;
+    }
+    .grid {
+      display: grid;
+      gap: 28px;
+      max-width: 1100px;
+    }
+    .row {
+      border: 1px solid #2a2f3a;
+      border-radius: 16px;
+      padding: 20px 20px 18px;
+      background: #181b22;
+    }
+    .row-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .num {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      min-width: 1.5rem;
+    }
+    .label {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .file {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    }
+    .concept {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0 0 14px;
+    }
+    .cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .card {
+      width: 240px;
+      height: 240px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    .card.light { background: var(--card-light); }
+    .card.dark { background: var(--card-dark); }
+    .card img {
+      width: 200px;
+      height: 200px;
+      object-fit: contain;
+    }
+    .card-cap {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 6px;
+      width: 240px;
+    }
+    .card-wrap { display: flex; flex-direction: column; align-items: center; }
+    .header-strip {
+      flex: 1;
+      min-width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 8px 0 0 8px;
+    }
+    .header-strip h3 {
+      margin: 0;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .lockup {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+    .lockup.light {
+      background: var(--card-light);
+      color: var(--wordmark);
+    }
+    .lockup.dark {
+      background: var(--card-dark);
+      color: var(--wordmark-dark);
+      border: 1px solid #2a2f3a;
+    }
+    .lockup img {
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .lockup .wm {
+      font-weight: 650;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+    }
+    .sizes {
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .size-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .size-cell span {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .size-bg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card-light);
+      border-radius: 6px;
+      padding: 6px;
+    }
+    .size-bg.dark {
+      background: var(--card-dark);
+      border: 1px solid #2a2f3a;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sushi Finder — brand marks</h1>
+  <p class="sub">
+    Five distinct concepts. Each mark is shown at 240px on light and dark cards,
+    plus a 24 / 32 / 48px strip beside the wordmark for header legibility.
+    Choice is open — see DECISION.md.
+  </p>
+
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const marks = [
+      {
+        n: 1,
+        file: "mark-01.png",
+        title: "Nigiri",
+        concept: "Single tuna nigiri with wasabi — category-readable food icon.",
+      },
+      {
+        n: 2,
+        file: "mark-02.png",
+        title: "Maki cross-section",
+        concept: "Top-down maki roll — bold concentric geometry for small sizes.",
+      },
+      {
+        n: 3,
+        file: "mark-03.png",
+        title: "Fish map pin",
+        concept: "Location pin with fish — discovery + place for a finder app.",
+      },
+      {
+        n: 4,
+        file: "mark-04.png",
+        title: "Chopsticks lift",
+        concept: "Chopsticks holding nigiri — selection and taste metaphor.",
+      },
+      {
+        n: 5,
+        file: "mark-05.png",
+        title: "Mon crest",
+        concept: "Circular mon with koi and wave — indigo/coral badge crest.",
+      },
+    ];
+
+    const grid = document.getElementById("grid");
+    for (const m of marks) {
+      const row = document.createElement("section");
+      row.className = "row";
+      row.innerHTML = `
+        <div class="row-head">
+          <span class="num">${m.n}</span>
+          <span class="label">${m.title}</span>
+          <span class="file">${m.file}</span>
+        </div>
+        <p class="concept">${m.concept}</p>
+        <div class="cards">
+          <div class="card-wrap">
+            <div class="card light"><img src="${m.file}" alt="Mark ${m.n} on light" width="200" height="200" /></div>
+            <div class="card-cap">Light · 240px card</div>
+          </div>
+          <div class="card-wrap">
+            <div class="card dark"><img src="${m.file}" alt="Mark ${m.n} on dark" width="200" height="200" /></div>
+            <div class="card-cap">Dark · 240px card</div>
+          </div>
+          <div class="header-strip">
+            <h3>Header sizes · wordmark</h3>
+            <div class="lockup light">
+              <img src="${m.file}" width="32" height="32" alt="" />
+              <span class="wm" style="font-size:1.05rem">Sushi Finder</span>
+            </div>
+            <div class="lockup dark">
+              <img src="${m.file}" width="32" height="32" alt="" />
+              <span class="wm" style="font-size:1.05rem">Sushi Finder</span>
+            </div>
+            <div class="sizes">
+              ${[24, 32, 48].map((s) => `
+                <div class="size-cell">
+                  <div class="size-bg"><img src="${m.file}" width="${s}" height="${s}" alt="" /></div>
+                  <span>${s}px light</span>
+                </div>
+                <div class="size-cell">
+                  <div class="size-bg dark"><img src="${m.file}" width="${s}" height="${s}" alt="" /></div>
+                  <span>${s}px dark</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+      grid.appendChild(row);
+    }
+  </script>
+</body>
+</html>

@@ -22,8 +22,13 @@ import { BINDINGS, fillBinding, unboundRoles } from './bindings.mjs';
 
 const args = Object.fromEntries(
   process.argv.slice(2).flatMap((a) => {
-    const m = /^--([^=]+)=([\s\S]*)$/.exec(a);
-    return m ? [[m[1], m[2]]] : [];
+    // Bare flags must parse. `--continue` was silently DROPPED by a parser that
+    // only matched --key=value, so survey mode looked like it ran and the build
+    // halted at the first failure instead.
+    const kv = /^--([^=]+)=([\s\S]*)$/.exec(a);
+    if (kv) return [[kv[1], kv[2]]];
+    const bare = /^--([^=]+)$/.exec(a);
+    return bare ? [[bare[1], true]] : [];
   })
 );
 const slug = args.slug;
@@ -56,6 +61,9 @@ console.log(`${unbound.length} role(s) unbound: ${unbound.join(', ') || 'none'}
  * @type {Map<string, number>}
  */
 const cycles = new Map();
+
+/** Failures carried past under --continue, reprinted at the end so none is hidden. */
+const failures = [];
 let stopped = null;
 let cursor = 0;
 
@@ -128,4 +136,8 @@ while (cursor < allSteps.length) {
 const results = evaluateProcess(appDir);
 const done = results.filter((r) => r.status === 'DONE').length;
 console.log(`\n${done}/${results.length} steps DONE${stopped ? `, stopped at ${stopped}` : ''}`);
+if (failures.length) {
+  console.log(`\n${failures.length} step(s) failed and were carried past with --continue:`);
+  for (const f of failures) console.log(`  ${f.step}: ${(f.reasons[0] ?? '').slice(0, 110)}`);
+}
 process.exit(stopped ? 1 : 0);

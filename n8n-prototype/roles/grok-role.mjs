@@ -147,10 +147,22 @@ const brief = existsSync(briefPath) ? readFileSync(briefPath, 'utf8') : '';
 mkdirSync(join(appDir, 'docs'), { recursive: true });
 mkdirSync(join(appDir, 'evidence'), { recursive: true });
 
+/**
+ * Scope the agent as tightly as its job allows.
+ *
+ * `--always-approve` pre-grants every approval, so the working directory IS the
+ * blast radius. Only `judge` genuinely needs the repository — it reviews
+ * `git diff` — and even then it only reads. Every other role works inside the
+ * app it is building, so pointing them at the repo root would let a brainstorm
+ * job rewrite the orchestrator or the gate that scores it.
+ */
+const NEEDS_REPO = new Set(['judge']);
+const agentCwd = NEEDS_REPO.has(role) ? root : appDir;
+
 const prompt = ROLES[role].prompt({ slug, brief });
 const proc = spawnSync(
   'grok',
-  ['--always-approve', '--cwd', root, '-m', 'grok-4.5', '-p', prompt],
+  ['--always-approve', '--cwd', agentCwd, '-m', 'grok-4.5', '-p', prompt],
   { cwd: root, encoding: 'utf8', timeout: 20 * 60 * 1000, shell: false }
 );
 
