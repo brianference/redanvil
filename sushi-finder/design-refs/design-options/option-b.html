@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Option B — Map canvas · sushi-finder layout</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --page-bg: #101218;
+      --page-text: #e8eaef;
+      --page-muted: #9aa3b2;
+      --page-border: #2a2f3a;
+      --page-card: #181b22;
+      --display: "Syne", system-ui, sans-serif;
+      --body: "DM Sans", system-ui, sans-serif;
+      --light-bg: #e8ecf0;
+      --light-surface: #ffffff;
+      --light-text: #12151c;
+      --light-muted: #5a6478;
+      --light-border: #c8d0da;
+      --light-primary: #0d6e6e;
+      --light-primary-contrast: #ffffff;
+      --light-success: #0b6b45;
+      --light-map: #c5d4c8;
+      --light-water: #a8c4d4;
+      --light-road: #f0ebe3;
+      --dark-bg: #0a0e12;
+      --dark-surface: #141a22;
+      --dark-text: #eef0f4;
+      --dark-muted: #9aa8b8;
+      --dark-border: #2a3545;
+      --dark-primary: #3dccc0;
+      --dark-primary-contrast: #0a0e12;
+      --dark-success: #3dd68c;
+      --dark-map: #1a2830;
+      --dark-water: #152838;
+      --dark-road: #243040;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px 20px 64px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--page-bg);
+      color: var(--page-text);
+      line-height: 1.45;
+    }
+    h1 { font-size: 1.35rem; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em; }
+    .meta { color: var(--page-muted); font-size: 0.95rem; max-width: 48rem; margin: 0 0 10px; }
+    .struct {
+      max-width: 48rem;
+      margin: 0 0 22px;
+      padding: 12px 14px;
+      border: 1px solid var(--page-border);
+      border-radius: 10px;
+      background: var(--page-card);
+      font-size: 0.9rem;
+    }
+    .struct strong { color: var(--page-text); }
+    .struct dt {
+      color: var(--page-muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 8px 0 2px;
+    }
+    .struct dd { margin: 0; }
+    .phones { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+    .phone-wrap { margin: 0; }
+    .phone-cap {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--page-muted);
+      margin: 0 0 8px;
+      font-family: ui-monospace, Consolas, monospace;
+    }
+    .phone {
+      width: 320px;
+      border-radius: 28px;
+      padding: 10px;
+      background: #0a0a0c;
+      border: 1px solid #3a3f4a;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    }
+    .phone-inner {
+      border-radius: 20px;
+      overflow: hidden;
+      height: 680px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      font-size: 15px;
+      line-height: 1.35;
+      position: relative;
+    }
+    .phone-wrap[data-theme="light"] .phone-inner {
+      --bg: var(--light-bg);
+      --surface: var(--light-surface);
+      --text: var(--light-text);
+      --muted: var(--light-muted);
+      --border: var(--light-border);
+      --primary: var(--light-primary);
+      --primary-contrast: var(--light-primary-contrast);
+      --success: var(--light-success);
+      --map: var(--light-map);
+      --water: var(--light-water);
+      --road: var(--light-road);
+    }
+    .phone-wrap[data-theme="dark"] .phone-inner {
+      --bg: var(--dark-bg);
+      --surface: var(--dark-surface);
+      --text: var(--dark-text);
+      --muted: var(--dark-muted);
+      --border: var(--dark-border);
+      --primary: var(--dark-primary);
+      --primary-contrast: var(--dark-primary-contrast);
+      --success: var(--dark-success);
+      --map: var(--dark-map);
+      --water: var(--dark-water);
+      --road: var(--dark-road);
+    }
+
+    /* —— Layout B: map owns the fold —— */
+    .map-stage {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+      background: var(--map);
+      overflow: hidden;
+    }
+    /* Stylized map — structure only, not a real basemap product */
+    .map-water {
+      position: absolute;
+      left: -10%;
+      right: 40%;
+      top: 55%;
+      bottom: -5%;
+      background: var(--water);
+      border-radius: 40% 60% 30% 70% / 50% 40% 60% 50%;
+      opacity: 0.85;
+    }
+    .map-road {
+      position: absolute;
+      background: var(--road);
+      border-radius: 2px;
+    }
+    .r1 { left: 8%; top: 28%; width: 88%; height: 6px; transform: rotate(-8deg); }
+    .r2 { left: 22%; top: 12%; width: 6px; height: 70%; transform: rotate(4deg); }
+    .r3 { left: 5%; top: 48%; width: 70%; height: 5px; transform: rotate(12deg); }
+    .r4 { left: 55%; top: 18%; width: 5px; height: 55%; }
+    .block {
+      position: absolute;
+      background: color-mix(in srgb, var(--surface) 55%, var(--map));
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      border-radius: 3px;
+      opacity: 0.7;
+    }
+    .b1 { left: 30%; top: 22%; width: 28px; height: 36px; }
+    .b2 { left: 62%; top: 32%; width: 40px; height: 28px; }
+    .b3 { left: 40%; top: 52%; width: 32px; height: 42px; }
+    .b4 { left: 72%; top: 58%; width: 36px; height: 24px; }
+
+    .float-search {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 4;
+      display: flex;
+      gap: 8px;
+    }
+    .search-pill {
+      flex: 1;
+      min-height: 44px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 0 16px;
+      font: inherit;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .search-pill span { color: var(--muted); }
+    .locate-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      font-size: 1.1rem;
+      cursor: default;
+      flex-shrink: 0;
+    }
+    .pin {
+      position: absolute;
+      z-index: 3;
+      width: 28px;
+      height: 28px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      background: var(--primary);
+      border: 2px solid var(--surface);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    }
+    .pin::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary-contrast);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .pin--active {
+      width: 34px;
+      height: 34px;
+      z-index: 5;
+    }
+    .p1 { left: 38%; top: 36%; }
+    .p2 { left: 58%; top: 44%; }
+    .p3 { left: 48%; top: 58%; }
+    .p4 { left: 68%; top: 30%; }
+    .p5 { left: 28%; top: 50%; }
+
+    .sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 6;
+      background: var(--surface);
+      border-radius: 18px 18px 0 0;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -8px 28px rgba(0,0,0,0.22);
+      max-height: 46%;
+      display: flex;
+      flex-direction: column;
+    }
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--border);
+      margin: 8px auto 4px;
+      flex-shrink: 0;
+    }
+    .sheet-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 4px 14px 8px;
+      gap: 8px;
+    }
+    .sheet-title {
+      margin: 0;
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: -0.01em;
+    }
+    .sheet-meta {
+      margin: 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .sheet-list {
+      overflow-y: auto;
+      padding: 0 10px 12px;
+      flex: 1;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 8px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+    }
+    .row--on {
+      background: color-mix(in srgb, var(--primary) 12%, var(--bg));
+      border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+    }
+    .thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .t1 { background: linear-gradient(145deg, #3a2a28, #8b3a32); }
+    .t2 { background: linear-gradient(145deg, #1a2e28, #2f6b55); }
+    .t3 { background: linear-gradient(145deg, #1e2438, #4a5580); }
+    .t4 { background: linear-gradient(145deg, #2a2218, #6b4a2a); }
+    .row-body { min-width: 0; }
+    .row-name {
+      margin: 0 0 2px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .row-sub {
+      margin: 0;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .row-dist {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: right;
+    }
+    .row-dist b {
+      display: block;
+      color: var(--text);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .walk { color: var(--success); font-weight: 600; }
+    .note {
+      margin-top: 24px;
+      max-width: 48rem;
+      font-size: 0.85rem;
+      color: var(--page-muted);
+      border-top: 1px solid var(--page-border);
+      padding-top: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Option B — Map canvas</h1>
+  <p class="meta">
+    Layout architecture only. Palette and logo stay open; tokens here are stand-ins so structure is readable.
+  </p>
+  <dl class="struct">
+    <dt>Owns the fold</dt>
+    <dd><strong>Full-bleed map canvas</strong> — geography fills the first viewport. Search is a floating pill over the map, not a page hero.</dd>
+    <dt>Result unit</dt>
+    <dd><strong>Map pin + bottom-sheet row</strong> — compact list row (thumb, name, style, distance) tied to a pin.</dd>
+    <dt>Direction (SOURCES.md insight)</dt>
+    <dd>Place-finder metaphor (near you / any city); trust and distance live beside the pin, not under a photo.</dd>
+  </dl>
+
+  <div class="phones">
+    <figure class="phone-wrap" data-theme="light">
+      <p class="phone-cap">Light · 375</p>
+      <div class="phone"><div class="phone-inner" data-app></div></div>
+    </figure>
+    <figure class="phone-wrap" data-theme="dark">
+      <p class="phone-cap">Dark · 375</p>
+      <div class="phone"><div class="phone-inner" data-app></div></div>
+    </figure>
+  </div>
+
+  <p class="note">
+    Separable pieces: map-as-fold, floating location search, pin selection, bottom sheet of dense rows.
+    Recolouring this does not produce option A (photo tiles) or option C (seating board).
+  </p>
+
+  <template id="app-b">
+    <div class="map-stage" role="img" aria-label="Map of sushi places near Tokyo">
+      <div class="map-water" aria-hidden="true"></div>
+      <div class="map-road r1" aria-hidden="true"></div>
+      <div class="map-road r2" aria-hidden="true"></div>
+      <div class="map-road r3" aria-hidden="true"></div>
+      <div class="map-road r4" aria-hidden="true"></div>
+      <div class="block b1" aria-hidden="true"></div>
+      <div class="block b2" aria-hidden="true"></div>
+      <div class="block b3" aria-hidden="true"></div>
+      <div class="block b4" aria-hidden="true"></div>
+
+      <div class="float-search">
+        <div class="search-pill" role="search">
+          <span aria-hidden="true">⌕</span>
+          <span>City or near me…</span>
+        </div>
+        <button type="button" class="locate-btn" aria-label="Use my location">⊙</button>
+      </div>
+
+      <div class="pin p1" aria-hidden="true"></div>
+      <div class="pin pin--active p2" aria-hidden="true"></div>
+      <div class="pin p3" aria-hidden="true"></div>
+      <div class="pin p4" aria-hidden="true"></div>
+      <div class="pin p5" aria-hidden="true"></div>
+
+      <div class="sheet">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="sheet-head">
+          <h2 class="sheet-title">Nearby</h2>
+          <p class="sheet-meta">5 on map · 0.4–1.8 km</p>
+        </div>
+        <div class="sheet-list">
+          <article class="row row--on">
+            <div class="thumb t2" aria-hidden="true"></div>
+            <div class="row-body">
+              <p class="row-name">Kura Revolving</p>
+              <p class="row-sub">Conveyor · <span class="walk">Walk-in</span></p>
+            </div>
+            <div class="row-dist"><b>0.4 km</b>$$</div>
+          </article>
+          <article class="row">
+            <div class="thumb t1" aria-hidden="true"></div>
+            <div class="row-body">
+              <p class="row-name">Sukiyabashi Jiro</p>
+              <p class="row-sub">Omakase · reservation</p>
+            </div>
+            <div class="row-dist"><b>0.7 km</b>$$$$</div>
+          </article>
+          <article class="row">
+            <div class="thumb t3" aria-hidden="true"></div>
+            <div class="row-body">
+              <p class="row-name">Sushisho Masa</p>
+              <p class="row-sub">Counter · tonight 19:30</p>
+            </div>
+            <div class="row-dist"><b>1.1 km</b>$$$</div>
+          </article>
+          <article class="row">
+            <div class="thumb t4" aria-hidden="true"></div>
+            <div class="row-body">
+              <p class="row-name">Umi Ginza</p>
+              <p class="row-sub">Omakase · closed lunch</p>
+            </div>
+            <div class="row-dist"><b>1.8 km</b>$$$$</div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    document.querySelectorAll("[data-app]").forEach((el) => {
+      el.appendChild(document.getElementById("app-b").content.cloneNode(true));
+    });
+  </script>
+</body>
+</html>

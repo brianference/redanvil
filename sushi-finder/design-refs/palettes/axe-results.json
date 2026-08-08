@@ -1,0 +1,59 @@
+{
+  "tool": "axe-core",
+  "engine": "chromium",
+  "measuredAt": "2026-08-08T06:05:01.565Z",
+  "scope": "Each palette HTML includes light AND dark phone themes of the same Photos grid screen. axe-core run against the full document (both themes simultaneously).",
+  "totalViolations": 0,
+  "files": {
+    "palette-01.html": {
+      "url": "file:///C:/Users/brian/RedAnvil/sushi-finder/design-refs/palettes/palette-01.html",
+      "violationCount": 0,
+      "passCount": 29,
+      "violations": [],
+      "criticalRules": {
+        "colorContrast": "pass",
+        "linkName": "pass"
+      }
+    },
+    "palette-02.html": {
+      "url": "file:///C:/Users/brian/RedAnvil/sushi-finder/design-refs/palettes/palette-02.html",
+      "violationCount": 0,
+      "passCount": 29,
+      "violations": [],
+      "criticalRules": {
+        "colorContrast": "pass",
+        "linkName": "pass"
+      }
+    },
+    "palette-03.html": {
+      "url": "file:///C:/Users/brian/RedAnvil/sushi-finder/design-refs/palettes/palette-03.html",
+      "violationCount": 0,
+      "passCount": 29,
+      "violations": [],
+      "criticalRules": {
+        "colorContrast": "pass",
+        "linkName": "pass"
+      }
+    },
+    "palette-04.html": {
+      "url": "file:///C:/Users/brian/RedAnvil/sushi-finder/design-refs/palettes/palette-04.html",
+      "violationCount": 0,
+      "passCount": 29,
+      "violations": [],
+      "criticalRules": {
+        "colorContrast": "pass",
+        "linkName": "pass"
+      }
+    },
+    "palette-05.html": {
+      "url": "file:///C:/Users/brian/RedAnvil/sushi-finder/design-refs/palettes/palette-05.html",
+      "violationCount": 0,
+      "passCount": 29,
+      "violations": [],
+      "criticalRules": {
+        "colorContrast": "pass",
+        "linkName": "pass"
+      }
+    }
+  }
+}

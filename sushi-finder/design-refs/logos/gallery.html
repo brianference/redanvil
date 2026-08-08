@@ -13,6 +13,7 @@
       --muted: #9aa3b2;
       --wordmark: #1a1d24;
       --wordmark-dark: #f0f2f6;
+      --border: #2a2f3a;
     }
     * { box-sizing: border-box; }
     body {
@@ -41,7 +42,7 @@
       max-width: 1100px;
     }
     .row {
-      border: 1px solid #2a2f3a;
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 20px 20px 18px;
       background: #181b22;
@@ -50,7 +51,8 @@
       display: flex;
       align-items: baseline;
       gap: 12px;
-      margin-bottom: 14px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
     }
     .num {
       font-size: 1.5rem;
@@ -79,74 +81,86 @@
       align-items: flex-start;
     }
     .card {
-      width: 240px;
-      height: 240px;
       border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-    }
-    .card.light { background: var(--card-light); }
-    .card.dark { background: var(--card-dark); }
-    .card img {
-      width: 200px;
-      height: 200px;
-      object-fit: contain;
-    }
-    .card-cap {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-align: center;
-      margin-top: 6px;
-      width: 240px;
-    }
-    .card-wrap { display: flex; flex-direction: column; align-items: center; }
-    .header-strip {
-      flex: 1;
-      min-width: 260px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 8px 0 0 8px;
+      align-items: center;
+      gap: 10px;
+      min-width: 280px;
     }
-    .header-strip h3 {
-      margin: 0;
-      font-size: 0.8rem;
+    .card.light {
+      background: var(--card-light);
+      color: #1a1d24;
+      border: 1px solid #e2e5eb;
+    }
+    .card.dark {
+      background: var(--card-dark);
+      color: #f0f2f6;
+      border: 1px solid #2a2f3a;
+    }
+    .card img.hero {
+      width: 240px;
+      height: 240px;
+      object-fit: contain;
+      display: block;
+    }
+    .card-label {
+      font-size: 0.75rem;
       font-weight: 600;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--muted);
+      opacity: 0.65;
     }
-    .lockup {
+    .header-strip {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .header-strip-title {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 0 0 10px;
+    }
+    .headers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-mock {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 10px 14px;
       border-radius: 10px;
+      min-width: 200px;
     }
-    .lockup.light {
+    .header-mock.light {
       background: var(--card-light);
       color: var(--wordmark);
+      border: 1px solid #e2e5eb;
     }
-    .lockup.dark {
+    .header-mock.dark {
       background: var(--card-dark);
       color: var(--wordmark-dark);
       border: 1px solid #2a2f3a;
     }
-    .lockup img {
+    .header-mock img {
       object-fit: contain;
+      display: block;
       flex-shrink: 0;
     }
-    .lockup .wm {
-      font-weight: 650;
-      letter-spacing: -0.03em;
+    .header-mock .wm {
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
       white-space: nowrap;
     }
     .sizes {
       display: flex;
-      align-items: flex-end;
-      gap: 16px;
+      align-items: center;
+      gap: 14px;
+      margin-top: 12px;
       flex-wrap: wrap;
     }
     .size-cell {
@@ -159,110 +173,129 @@
       font-size: 0.7rem;
       color: var(--muted);
     }
-    .size-bg {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--card-light);
-      border-radius: 6px;
-      padding: 6px;
+    .size-cell img {
+      object-fit: contain;
+      display: block;
     }
-    .size-bg.dark {
-      background: var(--card-dark);
-      border: 1px solid #2a2f3a;
+    .size-board {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #0f1116;
+      border: 1px solid var(--border);
+    }
+    .size-board.light-board {
+      background: #eef0f4;
+      border-color: #d8dce4;
+    }
+    footer {
+      margin-top: 36px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      max-width: 52rem;
     }
   </style>
 </head>
 <body>
   <h1>Sushi Finder — brand marks</h1>
   <p class="sub">
-    Five distinct concepts. Each mark is shown at 240px on light and dark cards,
-    plus a 24 / 32 / 48px strip beside the wordmark for header legibility.
-    Choice is open — see DECISION.md.
+    Five Grok Imagine concepts for the worldwide sushi restaurant finder.
+    Each mark is a real raster PNG with true transparent alpha (not emoji, not
+    initials, not SVG scribbles). Compare at 240px on light and dark, then at
+    24 / 32 / 48px beside a wordmark for header legibility. Choice is open —
+    see <code>DECISION.md</code>.
   </p>
 
-  <div class="grid" id="grid"></div>
+  <div class="grid" id="marks"></div>
+
+  <footer>
+    Generated for sushi-finder LOGO role. Corner alpha verified 0 on all five files.
+    Owner picks the winner; nothing is pre-selected.
+  </footer>
 
   <script>
     const marks = [
       {
         n: 1,
         file: "mark-01.png",
-        title: "Nigiri",
-        concept: "Single tuna nigiri with wasabi — category-readable food icon.",
+        label: "Nigiri",
+        concept: "Single tuna nigiri with wasabi — dimensional food craft, instant category read."
       },
       {
         n: 2,
         file: "mark-02.png",
-        title: "Maki cross-section",
-        concept: "Top-down maki roll — bold concentric geometry for small sizes.",
+        label: "Maki cross-section",
+        concept: "Nori ring, rice, salmon/avocado center — geometric disc, strongest small-size silhouette."
       },
       {
         n: 3,
         file: "mark-03.png",
-        title: "Fish map pin",
-        concept: "Location pin with fish — discovery + place for a finder app.",
+        label: "Fish map pin",
+        concept: "Teal location pin with coral fish — finder + place product metaphor."
       },
       {
         n: 4,
         file: "mark-04.png",
-        title: "Chopsticks lift",
-        concept: "Chopsticks holding nigiri — selection and taste metaphor.",
+        label: "Chopsticks lift",
+        concept: "Wood chopsticks holding nori-banded salmon nigiri — narrative / premium direction."
       },
       {
         n: 5,
         file: "mark-05.png",
-        title: "Mon crest",
-        concept: "Circular mon with koi and wave — indigo/coral badge crest.",
-      },
+        label: "Mon crest",
+        concept: "Indigo double ring, coral koi over waves — Japanese mon / badge direction."
+      }
     ];
 
-    const grid = document.getElementById("grid");
+    const root = document.getElementById("marks");
     for (const m of marks) {
       const row = document.createElement("section");
       row.className = "row";
       row.innerHTML = `
         <div class="row-head">
           <span class="num">${m.n}</span>
-          <span class="label">${m.title}</span>
+          <span class="label">${m.label}</span>
           <span class="file">${m.file}</span>
         </div>
         <p class="concept">${m.concept}</p>
         <div class="cards">
-          <div class="card-wrap">
-            <div class="card light"><img src="${m.file}" alt="Mark ${m.n} on light" width="200" height="200" /></div>
-            <div class="card-cap">Light · 240px card</div>
+          <div class="card light">
+            <span class="card-label">Light · 240px</span>
+            <img class="hero" src="${m.file}" alt="Mark ${m.n} on light" width="240" height="240" />
           </div>
-          <div class="card-wrap">
-            <div class="card dark"><img src="${m.file}" alt="Mark ${m.n} on dark" width="200" height="200" /></div>
-            <div class="card-cap">Dark · 240px card</div>
+          <div class="card dark">
+            <span class="card-label">Dark · 240px</span>
+            <img class="hero" src="${m.file}" alt="Mark ${m.n} on dark" width="240" height="240" />
           </div>
-          <div class="header-strip">
-            <h3>Header sizes · wordmark</h3>
-            <div class="lockup light">
-              <img src="${m.file}" width="32" height="32" alt="" />
-              <span class="wm" style="font-size:1.05rem">Sushi Finder</span>
+        </div>
+        <div class="header-strip">
+          <p class="header-strip-title">Header legibility — wordmark + mark at 24 / 32 / 48px</p>
+          <div class="headers">
+            <div class="header-mock light">
+              <img src="${m.file}" alt="" width="32" height="32" />
+              <span class="wm">Sushi Finder</span>
             </div>
-            <div class="lockup dark">
-              <img src="${m.file}" width="32" height="32" alt="" />
-              <span class="wm" style="font-size:1.05rem">Sushi Finder</span>
+            <div class="header-mock dark">
+              <img src="${m.file}" alt="" width="32" height="32" />
+              <span class="wm">Sushi Finder</span>
             </div>
-            <div class="sizes">
-              ${[24, 32, 48].map((s) => `
-                <div class="size-cell">
-                  <div class="size-bg"><img src="${m.file}" width="${s}" height="${s}" alt="" /></div>
-                  <span>${s}px light</span>
-                </div>
-                <div class="size-cell">
-                  <div class="size-bg dark"><img src="${m.file}" width="${s}" height="${s}" alt="" /></div>
-                  <span>${s}px dark</span>
-                </div>
-              `).join("")}
+          </div>
+          <div class="sizes">
+            <div class="size-board light-board">
+              <div class="size-cell"><img src="${m.file}" width="24" height="24" alt="24 light" /><span>24</span></div>
+              <div class="size-cell"><img src="${m.file}" width="32" height="32" alt="32 light" /><span>32</span></div>
+              <div class="size-cell"><img src="${m.file}" width="48" height="48" alt="48 light" /><span>48</span></div>
+            </div>
+            <div class="size-board">
+              <div class="size-cell"><img src="${m.file}" width="24" height="24" alt="24 dark" /><span>24</span></div>
+              <div class="size-cell"><img src="${m.file}" width="32" height="32" alt="32 dark" /><span>32</span></div>
+              <div class="size-cell"><img src="${m.file}" width="48" height="48" alt="48 dark" /><span>48</span></div>
             </div>
           </div>
         </div>
       `;
-      grid.appendChild(row);
+      root.appendChild(row);
     }
   </script>
 </body>

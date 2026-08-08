@@ -38,11 +38,19 @@ for (const a of AXES) {
     continue;
   }
   const text = readFileSync(p, 'utf8');
-  if (!text.toUpperCase().includes(a.token)) {
-    missing.push(`${a.axis}: ${a.file} records no "${a.token}" -- the owner has not picked`);
+  // A STRUCTURED marker, not a bare word. Matching the word alone reported a
+  // decision from the line "not chosen, not shortlisted by default" -- a
+  // document saying nothing was chosen was read as a choice. Same shape as the
+  // brief failed for the phrase "not emoji or letter placeholders". The marker
+  // must be followed by a colon and a value, which prose about choosing is not.
+  const marker = new RegExp(`\\*{0,2}${a.token}\\*{0,2}\\s*:\\s*\\S+`, 'i');
+  const line = text.split('\n').find((l) => marker.test(l)) ?? '';
+  if (!line) {
+    missing.push(
+      `${a.axis}: ${a.file} records no "${a.token}: <value>" -- the owner has not picked`
+    );
     continue;
   }
-  const line = text.split('\n').find((l) => l.toUpperCase().includes(a.token)) ?? '';
   recorded.push({ axis: a.axis, file: a.file, choice: line.trim().slice(0, 160) });
 }
 

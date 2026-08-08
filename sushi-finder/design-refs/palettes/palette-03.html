@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>palette-03 — Omakase Paper · sushi-finder palette</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --page-bg: #101218;
+      --page-text: #e8eaef;
+      --page-muted: #9aa3b2;
+      --page-border: #2a2f3a;
+      --page-card: #181b22;
+      --display: "Fraunces", "Times New Roman", serif;
+      --body: "Source Serif 4", Georgia, serif;
+      
+    --light-bg: #f7f0e6;
+    --light-surface: #fffaf3;
+    --light-text: #2a2118;
+    --light-muted: #6b5d4d;
+    --light-border: #e0d4c4;
+    --light-primary: #9a3412;
+    --light-primary-contrast: #fffaf3;
+    --light-success: #3f6212;
+      
+    --dark-bg: #1a1510;
+    --dark-surface: #26201a;
+    --dark-text: #f7efe4;
+    --dark-muted: #b8a894;
+    --dark-border: #3f352b;
+    --dark-primary: #f0a060;
+    --dark-primary-contrast: #1a1510;
+    --dark-success: #9fd35a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px 20px 64px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--page-bg);
+      color: var(--page-text);
+      line-height: 1.45;
+    }
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0 0 6px;
+      letter-spacing: -0.02em;
+    }
+    .meta {
+      color: var(--page-muted);
+      font-size: 0.95rem;
+      max-width: 52rem;
+      margin: 0 0 20px;
+    }
+    .meta strong { color: var(--page-text); font-weight: 600; }
+    .axes {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 24px;
+      max-width: 52rem;
+      font-size: 0.9rem;
+    }
+    .axes dt {
+      color: var(--page-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 0;
+    }
+    .axes dd { margin: 0 0 8px; }
+    .token-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      max-width: 720px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 640px) {
+      .token-block { grid-template-columns: 1fr; }
+    }
+    .token-card {
+      background: var(--page-card);
+      border: 1px solid var(--page-border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .token-card h2 {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    td {
+      padding: 4px 0;
+      border-bottom: 1px solid #242830;
+      vertical-align: middle;
+    }
+    td:first-child {
+      color: var(--page-muted);
+      width: 42%;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.78rem;
+    }
+    code {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.78rem;
+    }
+    .swatch {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.15);
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .type-row {
+      margin: 0 0 24px;
+      font-size: 0.9rem;
+      color: var(--page-muted);
+    }
+    .type-row span {
+      color: var(--page-text);
+      font-weight: 600;
+    }
+    .phones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 28px;
+      align-items: flex-start;
+    }
+    .phone-wrap { margin: 0; }
+    .phone-cap {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--page-muted);
+      margin: 0 0 8px;
+      font-family: ui-monospace, Consolas, monospace;
+    }
+    .phone {
+      width: 320px;
+      border-radius: 28px;
+      padding: 10px;
+      background: #0a0a0c;
+      border: 1px solid #3a3f4a;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    }
+    .phone-inner {
+      border-radius: 20px;
+      overflow: hidden;
+      min-height: 640px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      font-size: 16px;
+      line-height: 1.4;
+    }
+    .phone-wrap[data-theme="light"] .phone-inner {
+      --bg: var(--light-bg);
+      --surface: var(--light-surface);
+      --text: var(--light-text);
+      --muted: var(--light-muted);
+      --border: var(--light-border);
+      --primary: var(--light-primary);
+      --primary-contrast: var(--light-primary-contrast);
+      --success: var(--light-success);
+    }
+    .phone-wrap[data-theme="dark"] .phone-inner {
+      --bg: var(--dark-bg);
+      --surface: var(--dark-surface);
+      --text: var(--dark-text);
+      --muted: var(--dark-muted);
+      --border: var(--dark-border);
+      --primary: var(--dark-primary);
+      --primary-contrast: var(--dark-primary-contrast);
+      --success: var(--dark-success);
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      border: 0;
+    }
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 14px 8px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .brand { display: flex; gap: 10px; align-items: center; }
+    .mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: var(--primary-contrast);
+      display: grid;
+      place-items: center;
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .app-name {
+      margin: 0;
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .app-loc {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .icon-btn {
+      min-width: 44px;
+      min-height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1.1rem;
+      cursor: default;
+    }
+    .search-row { padding: 10px 14px 0; }
+    .search input {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      font-size: 16px;
+    }
+    .chips {
+      display: flex;
+      gap: 8px;
+      padding: 12px 14px 4px;
+      overflow-x: auto;
+    }
+    .chip {
+      flex: 0 0 auto;
+      min-height: 36px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: default;
+    }
+    .chip--on {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: var(--primary-contrast);
+    }
+    .results-meta {
+      margin: 8px 14px 6px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .results-count {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 4px 14px 16px;
+      flex: 1;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .photo {
+      height: 88px;
+      border-bottom: 1px solid var(--border);
+    }
+    /* Decorative plate tiles — not product photos; hue only for mock structure */
+    .photo-a { background: linear-gradient(145deg, #3a2a28 0%, #8b3a32 55%, #d4a574 100%); }
+    .photo-b { background: linear-gradient(145deg, #1a2e28 0%, #2f6b55 50%, #c4d4c8 100%); }
+    .photo-c { background: linear-gradient(145deg, #1e2438 0%, #4a5580 50%, #e8d5c4 100%); }
+    .photo-d { background: linear-gradient(145deg, #2a2218 0%, #6b4a2a 50%, #f0c8a0 100%); }
+    .phone-wrap[data-theme="light"] .photo-a { background: linear-gradient(145deg, #f0d0c8 0%, #c45a4a 55%, #8b2e24 100%); }
+    .phone-wrap[data-theme="light"] .photo-b { background: linear-gradient(145deg, #d8ebe4 0%, #3d8f72 50%, #1a4a38 100%); }
+    .phone-wrap[data-theme="light"] .photo-c { background: linear-gradient(145deg, #dde2f0 0%, #5a6aaa 50%, #2a3050 100%); }
+    .phone-wrap[data-theme="light"] .photo-d { background: linear-gradient(145deg, #f5e6d4 0%, #c48a4a 50%, #5a3818 100%); }
+    .card-body { padding: 8px 10px 10px; }
+    .card-title {
+      margin: 0 0 2px;
+      font-family: var(--display);
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      line-height: 1.25;
+    }
+    .card-meta {
+      margin: 0 0 6px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .card-row {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .badge-ok {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--success);
+    }
+    .rating {
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+    .tabbar {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      margin-top: auto;
+    }
+    .tab {
+      min-height: 48px;
+      display: grid;
+      place-items: center;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .tab--on {
+      color: var(--primary);
+    }
+    .axe-note {
+      margin-top: 28px;
+      max-width: 52rem;
+      font-size: 0.85rem;
+      color: var(--page-muted);
+      border-top: 1px solid var(--page-border);
+      padding-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>palette-03: Omakase Paper</h1>
+  <p class="meta">
+    <strong>Role:</strong> Warm editorial serif.
+    Reads like a printed guide to counters, not a delivery app. Warm paper in light; low amber room light in dark.
+  </p>
+  <dl class="axes">
+    <dt>Temperature</dt>
+    <dd>Warm — cream paper, toasted browns, brick primary</dd>
+    <dt>Contrast strategy</dt>
+    <dd>Soft magazine contrast — ink on paper, never pure black on pure white</dd>
+    <dt>Type voice</dt>
+    <dd>Editorial serif pair (Fraunces display + Source Serif 4 body)</dd>
+  </dl>
+
+  <p class="type-row">Display: <span>Fraunces</span> · Body: <span>Source Serif 4</span> · Body floor 16px</p>
+
+  <div class="token-block">
+    <div class="token-card">
+      <h2>Light tokens</h2>
+      <table>
+        <tbody>
+          <tr><td>bg</td><td><span class="swatch" style="background:#f7f0e6"></span><code>#f7f0e6</code></td></tr><tr><td>surface</td><td><span class="swatch" style="background:#fffaf3"></span><code>#fffaf3</code></td></tr><tr><td>text</td><td><span class="swatch" style="background:#2a2118"></span><code>#2a2118</code></td></tr><tr><td>muted</td><td><span class="swatch" style="background:#6b5d4d"></span><code>#6b5d4d</code></td></tr><tr><td>border</td><td><span class="swatch" style="background:#e0d4c4"></span><code>#e0d4c4</code></td></tr><tr><td>primary</td><td><span class="swatch" style="background:#9a3412"></span><code>#9a3412</code></td></tr><tr><td>primary-contrast</td><td><span class="swatch" style="background:#fffaf3"></span><code>#fffaf3</code></td></tr><tr><td>success</td><td><span class="swatch" style="background:#3f6212"></span><code>#3f6212</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="token-card">
+      <h2>Dark tokens</h2>
+      <table>
+        <tbody>
+          <tr><td>bg</td><td><span class="swatch" style="background:#1a1510"></span><code>#1a1510</code></td></tr><tr><td>surface</td><td><span class="swatch" style="background:#26201a"></span><code>#26201a</code></td></tr><tr><td>text</td><td><span class="swatch" style="background:#f7efe4"></span><code>#f7efe4</code></td></tr><tr><td>muted</td><td><span class="swatch" style="background:#b8a894"></span><code>#b8a894</code></td></tr><tr><td>border</td><td><span class="swatch" style="background:#3f352b"></span><code>#3f352b</code></td></tr><tr><td>primary</td><td><span class="swatch" style="background:#f0a060"></span><code>#f0a060</code></td></tr><tr><td>primary-contrast</td><td><span class="swatch" style="background:#1a1510"></span><code>#1a1510</code></td></tr><tr><td>success</td><td><span class="swatch" style="background:#9fd35a"></span><code>#9fd35a</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="phones">
+    
+      <figure class="phone-wrap" data-theme="light">
+        <figcaption class="phone-cap">Light</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Light">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Light theme, Omakase Paper">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+    
+      <figure class="phone-wrap" data-theme="dark">
+        <figcaption class="phone-cap">Dark</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Dark">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Dark theme, Omakase Paper">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+  </div>
+
+  <p class="axe-note">
+    WCAG AA measured with <strong>axe-core</strong> (not hand-computed) via
+    <code>measure-a11y.mjs</code> against both phone themes on this file.
+    Results written to <code>axe-results.json</code> and summarised in
+    <code>DECISION.md</code>.
+  </p>
+</body>
+</html>

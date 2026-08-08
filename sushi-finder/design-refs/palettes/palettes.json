@@ -1,0 +1,157 @@
+[
+  {
+    "id": "palette-01",
+    "name": "Night Counter",
+    "role": "Dark-first",
+    "temperature": "Cool-neutral charcoal with warm coral heat on actions",
+    "contrast": "High — near-black lacquer surfaces, bright coral CTAs, strong type",
+    "typeVoice": "Geometric display (Syne) + clean product sans (DM Sans)",
+    "display": "Syne",
+    "body": "DM Sans",
+    "light": {
+      "bg": "#f3f4f7",
+      "surface": "#ffffff",
+      "text": "#12151c",
+      "muted": "#5a6478",
+      "border": "#d0d5e0",
+      "primary": "#c23b2e",
+      "primaryContrast": "#ffffff",
+      "success": "#0b6b45"
+    },
+    "dark": {
+      "bg": "#0c0e12",
+      "surface": "#161a22",
+      "text": "#eef0f4",
+      "muted": "#a0a8b8",
+      "border": "#2e3545",
+      "primary": "#ff6b5b",
+      "primaryContrast": "#0c0e12",
+      "success": "#3dd68c"
+    },
+    "notes": "Designed dark-first for late-night restaurant hunting. Light theme is a derived companion, not the default voice."
+  },
+  {
+    "id": "palette-02",
+    "name": "Ink Line",
+    "role": "Near-monochrome + single accent",
+    "temperature": "Neutral greys only — no hue in surfaces; one vermillion accent",
+    "contrast": "Hard ink-on-paper — pure structure, accent reserved for primary actions and focus",
+    "typeVoice": "Single utilitarian face (Inter) at all sizes — no display flourish",
+    "display": "Inter",
+    "body": "Inter",
+    "light": {
+      "bg": "#fafafa",
+      "surface": "#ffffff",
+      "text": "#171717",
+      "muted": "#525252",
+      "border": "#e5e5e5",
+      "primary": "#b91c1c",
+      "primaryContrast": "#ffffff",
+      "success": "#15803d"
+    },
+    "dark": {
+      "bg": "#0a0a0a",
+      "surface": "#171717",
+      "text": "#f5f5f5",
+      "muted": "#a3a3a3",
+      "border": "#2e2e2e",
+      "primary": "#f87171",
+      "primaryContrast": "#0a0a0a",
+      "success": "#4ade80"
+    },
+    "notes": "Photos and food carry all colour. UI is graphite so the grid of plates is the chroma."
+  },
+  {
+    "id": "palette-03",
+    "name": "Omakase Paper",
+    "role": "Warm editorial serif",
+    "temperature": "Warm — cream paper, toasted browns, brick primary",
+    "contrast": "Soft magazine contrast — ink on paper, never pure black on pure white",
+    "typeVoice": "Editorial serif pair (Fraunces display + Source Serif 4 body)",
+    "display": "Fraunces",
+    "body": "Source Serif 4",
+    "light": {
+      "bg": "#f7f0e6",
+      "surface": "#fffaf3",
+      "text": "#2a2118",
+      "muted": "#6b5d4d",
+      "border": "#e0d4c4",
+      "primary": "#9a3412",
+      "primaryContrast": "#fffaf3",
+      "success": "#3f6212"
+    },
+    "dark": {
+      "bg": "#1a1510",
+      "surface": "#26201a",
+      "text": "#f7efe4",
+      "muted": "#b8a894",
+      "border": "#3f352b",
+      "primary": "#f0a060",
+      "primaryContrast": "#1a1510",
+      "success": "#9fd35a"
+    },
+    "notes": "Reads like a printed guide to counters, not a delivery app. Warm paper in light; low amber room light in dark."
+  },
+  {
+    "id": "palette-04",
+    "name": "Harbor Mist",
+    "role": "Cool low-chroma",
+    "temperature": "Cool — slate teal, mist greys, desaturated sea air",
+    "contrast": "Low-chroma separation — hue shifts small; value hierarchy does the work",
+    "typeVoice": "Quiet technical (IBM Plex Sans) — map-and-list competence",
+    "display": "IBM Plex Sans",
+    "body": "IBM Plex Sans",
+    "light": {
+      "bg": "#f0f4f7",
+      "surface": "#ffffff",
+      "text": "#1e2a32",
+      "muted": "#556874",
+      "border": "#d0dbe3",
+      "primary": "#2f5f6d",
+      "primaryContrast": "#ffffff",
+      "success": "#1b5e45"
+    },
+    "dark": {
+      "bg": "#0f1418",
+      "surface": "#1a2228",
+      "text": "#e4ebf0",
+      "muted": "#92a2ad",
+      "border": "#2c3842",
+      "primary": "#7eb8c9",
+      "primaryContrast": "#0f1418",
+      "success": "#6bcb8e"
+    },
+    "notes": "For map-heavy browsing and city hops. No warm food hues in chrome — keep plates vivid against cool UI."
+  },
+  {
+    "id": "palette-05",
+    "name": "Mon Crest",
+    "role": "Strongest idea — indigo mon + koi coral",
+    "temperature": "Cool indigo ink with warm coral action heat (dual-temperature brand)",
+    "contrast": "Ceremonial high contrast — deep indigo fields, coral as the single hot signal",
+    "typeVoice": "Premium dual: Cormorant Garamond display + Manrope body",
+    "display": "Cormorant Garamond",
+    "body": "Manrope",
+    "light": {
+      "bg": "#f6f5fc",
+      "surface": "#ffffff",
+      "text": "#1a1744",
+      "muted": "#5b5878",
+      "border": "#ddd9ef",
+      "primary": "#c02636",
+      "primaryContrast": "#ffffff",
+      "success": "#0f766e"
+    },
+    "dark": {
+      "bg": "#0c0b1a",
+      "surface": "#16142a",
+      "text": "#eeeef8",
+      "muted": "#a8a4c4",
+      "border": "#2e2a4a",
+      "primary": "#ff6b75",
+      "primaryContrast": "#0c0b1a",
+      "success": "#2dd4bf"
+    },
+    "notes": "Strongest idea: pairs with the mon-crest logo direction (indigo ring + coral koi). Dark theme is lacquer indigo night; light is rice paper with indigo ink. Not a coral-on-grey food app default."
+  }
+]

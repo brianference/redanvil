@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-08-08T06:11:29.310Z",
+  "decisions": [
+    {
+      "axis": "logo",
+      "file": "design-refs/logos/DECISION.md",
+      "choice": "listed as a candidate only — not chosen, not shortlisted by default."
+    },
+    {
+      "axis": "palette",
+      "file": "design-refs/palettes/DECISION.md",
+      "choice": "aligned with the mon-crest logo direction). It is listed as a candidate only — not chosen,"
+    },
+    {
+      "axis": "layout",
+      "file": "design-refs/design-options/DECISION.md",
+      "choice": "one option. Re-split before DECIDED."
+    }
+  ]
+}

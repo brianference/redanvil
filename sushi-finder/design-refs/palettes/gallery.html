@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sushi Finder — palette directions 1–5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px 20px 80px;
+      background: #0b0d12;
+      color: #e8eaef;
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.45;
+    }
+    h1 {
+      font-size: 1.45rem;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    .lede {
+      color: #9aa3b2;
+      max-width: 78ch;
+      margin: 0 0 24px;
+      font-size: 0.95rem;
+    }
+    .lede strong { color: #e8eaef; }
+    .cols {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(300px, 1fr));
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      align-items: start;
+    }
+    @media (max-width: 1600px) {
+      .cols { grid-template-columns: repeat(3, minmax(300px, 1fr)); }
+    }
+    @media (max-width: 1000px) {
+      .cols { grid-template-columns: repeat(2, minmax(300px, 1fr)); }
+    }
+    @media (max-width: 680px) {
+      .cols { grid-template-columns: 1fr; }
+    }
+    .col {
+      background: #151820;
+      border: 1px solid #2a2f3a;
+      border-radius: 16px;
+      overflow: hidden;
+      min-width: 0;
+    }
+    .col-head {
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid #2a2f3a;
+    }
+    .id {
+      margin: 0;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.75rem;
+      color: #7d8799;
+    }
+    .col-head h2 {
+      margin: 4px 0 2px;
+      font-size: 1.15rem;
+    }
+    .role {
+      margin: 0 0 10px;
+      font-size: 0.85rem;
+      color: #c4cad6;
+      font-weight: 600;
+    }
+    .axis {
+      margin: 0 0 4px;
+      font-size: 0.78rem;
+      color: #9aa3b2;
+    }
+    .axis span {
+      display: inline-block;
+      min-width: 4.5rem;
+      color: #6b7385;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
+    .swatches {
+      display: flex;
+      gap: 6px;
+      margin: 10px 0 0;
+    }
+    .swatches i {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.18);
+      display: block;
+    }
+    .link { margin: 10px 0 0; font-size: 0.85rem; }
+    .link a { color: #8eb6ff; }
+    .phones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding: 14px;
+      background: #0c0e12;
+      justify-content: center;
+    }
+    .phone-wrap { margin: 0; }
+    .phone-cap {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8b93a3;
+      margin: 0 0 6px;
+      font-family: ui-monospace, Consolas, monospace;
+    }
+    .phone {
+      width: 260px;
+      border-radius: 24px;
+      padding: 8px;
+      background: #0a0a0c;
+      border: 1px solid #3a3f4a;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+    }
+    .phone-inner {
+      border-radius: 18px;
+      overflow: hidden;
+      min-height: 560px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .phone-wrap[data-theme="light"] .phone-inner {
+      --bg: var(--light-bg);
+      --surface: var(--light-surface);
+      --text: var(--light-text);
+      --muted: var(--light-muted);
+      --border: var(--light-border);
+      --primary: var(--light-primary);
+      --primary-contrast: var(--light-primary-contrast);
+      --success: var(--light-success);
+    }
+    .phone-wrap[data-theme="dark"] .phone-inner {
+      --bg: var(--dark-bg);
+      --surface: var(--dark-surface);
+      --text: var(--dark-text);
+      --muted: var(--dark-muted);
+      --border: var(--dark-border);
+      --primary: var(--dark-primary);
+      --primary-contrast: var(--dark-primary-contrast);
+      --success: var(--dark-success);
+    }
+    
+    .col[data-id="palette-01"] {
+      --display: "Syne", system-ui, sans-serif;
+      --body: "DM Sans", system-ui, sans-serif;
+      
+    --light-bg: #f3f4f7;
+    --light-surface: #ffffff;
+    --light-text: #12151c;
+    --light-muted: #5a6478;
+    --light-border: #d0d5e0;
+    --light-primary: #c23b2e;
+    --light-primary-contrast: #ffffff;
+    --light-success: #0b6b45;
+      
+    --dark-bg: #0c0e12;
+    --dark-surface: #161a22;
+    --dark-text: #eef0f4;
+    --dark-muted: #a0a8b8;
+    --dark-border: #2e3545;
+    --dark-primary: #ff6b5b;
+    --dark-primary-contrast: #0c0e12;
+    --dark-success: #3dd68c;
+    }
+
+    .col[data-id="palette-02"] {
+      --display: "Inter", system-ui, sans-serif;
+      --body: "Inter", system-ui, sans-serif;
+      
+    --light-bg: #fafafa;
+    --light-surface: #ffffff;
+    --light-text: #171717;
+    --light-muted: #525252;
+    --light-border: #e5e5e5;
+    --light-primary: #b91c1c;
+    --light-primary-contrast: #ffffff;
+    --light-success: #15803d;
+      
+    --dark-bg: #0a0a0a;
+    --dark-surface: #171717;
+    --dark-text: #f5f5f5;
+    --dark-muted: #a3a3a3;
+    --dark-border: #2e2e2e;
+    --dark-primary: #f87171;
+    --dark-primary-contrast: #0a0a0a;
+    --dark-success: #4ade80;
+    }
+
+    .col[data-id="palette-03"] {
+      --display: "Fraunces", "Times New Roman", serif;
+      --body: "Source Serif 4", Georgia, serif;
+      
+    --light-bg: #f7f0e6;
+    --light-surface: #fffaf3;
+    --light-text: #2a2118;
+    --light-muted: #6b5d4d;
+    --light-border: #e0d4c4;
+    --light-primary: #9a3412;
+    --light-primary-contrast: #fffaf3;
+    --light-success: #3f6212;
+      
+    --dark-bg: #1a1510;
+    --dark-surface: #26201a;
+    --dark-text: #f7efe4;
+    --dark-muted: #b8a894;
+    --dark-border: #3f352b;
+    --dark-primary: #f0a060;
+    --dark-primary-contrast: #1a1510;
+    --dark-success: #9fd35a;
+    }
+
+    .col[data-id="palette-04"] {
+      --display: "IBM Plex Sans", system-ui, sans-serif;
+      --body: "IBM Plex Sans", system-ui, sans-serif;
+      
+    --light-bg: #f0f4f7;
+    --light-surface: #ffffff;
+    --light-text: #1e2a32;
+    --light-muted: #556874;
+    --light-border: #d0dbe3;
+    --light-primary: #2f5f6d;
+    --light-primary-contrast: #ffffff;
+    --light-success: #1b5e45;
+      
+    --dark-bg: #0f1418;
+    --dark-surface: #1a2228;
+    --dark-text: #e4ebf0;
+    --dark-muted: #92a2ad;
+    --dark-border: #2c3842;
+    --dark-primary: #7eb8c9;
+    --dark-primary-contrast: #0f1418;
+    --dark-success: #6bcb8e;
+    }
+
+    .col[data-id="palette-05"] {
+      --display: "Cormorant Garamond", Georgia, serif;
+      --body: "Manrope", system-ui, sans-serif;
+      
+    --light-bg: #f6f5fc;
+    --light-surface: #ffffff;
+    --light-text: #1a1744;
+    --light-muted: #5b5878;
+    --light-border: #ddd9ef;
+    --light-primary: #c02636;
+    --light-primary-contrast: #ffffff;
+    --light-success: #0f766e;
+      
+    --dark-bg: #0c0b1a;
+    --dark-surface: #16142a;
+    --dark-text: #eeeef8;
+    --dark-muted: #a8a4c4;
+    --dark-border: #2e2a4a;
+    --dark-primary: #ff6b75;
+    --dark-primary-contrast: #0c0b1a;
+    --dark-success: #2dd4bf;
+    }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); border: 0;
+    }
+    .app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 12px 6px; background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .brand { display: flex; gap: 8px; align-items: center; }
+    .mark {
+      width: 32px; height: 32px; border-radius: 9px; background: var(--primary);
+      color: var(--primary-contrast); display: grid; place-items: center;
+      font-family: var(--display); font-weight: 700; font-size: 0.95rem;
+    }
+    .app-name {
+      margin: 0; font-family: var(--display); font-weight: 700; font-size: 0.95rem;
+      letter-spacing: -0.02em; color: var(--text);
+    }
+    .app-loc { margin: 0; font-size: 0.72rem; color: var(--muted); }
+    .icon-btn {
+      min-width: 40px; min-height: 40px; border: 1px solid var(--border);
+      border-radius: 9px; background: var(--bg); color: var(--text); font-size: 1rem; cursor: default;
+    }
+    .search-row { padding: 8px 12px 0; }
+    .search input {
+      width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: 10px;
+      padding: 8px 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 14px;
+    }
+    .chips { display: flex; gap: 6px; padding: 10px 12px 2px; overflow-x: auto; }
+    .chip {
+      flex: 0 0 auto; min-height: 32px; padding: 4px 10px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--surface); color: var(--text);
+      font: inherit; font-size: 0.75rem; font-weight: 600; cursor: default;
+    }
+    .chip--on {
+      background: var(--primary); border-color: var(--primary); color: var(--primary-contrast);
+    }
+    .results-meta { margin: 6px 12px 4px; font-size: 0.75rem; color: var(--muted); }
+    .results-count { color: var(--text); font-weight: 600; }
+    .grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 2px 12px 12px; flex: 1;
+    }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .photo { height: 72px; border-bottom: 1px solid var(--border); }
+    .photo-a { background: linear-gradient(145deg, #3a2a28 0%, #8b3a32 55%, #d4a574 100%); }
+    .photo-b { background: linear-gradient(145deg, #1a2e28 0%, #2f6b55 50%, #c4d4c8 100%); }
+    .photo-c { background: linear-gradient(145deg, #1e2438 0%, #4a5580 50%, #e8d5c4 100%); }
+    .photo-d { background: linear-gradient(145deg, #2a2218 0%, #6b4a2a 50%, #f0c8a0 100%); }
+    .phone-wrap[data-theme="light"] .photo-a { background: linear-gradient(145deg, #f0d0c8 0%, #c45a4a 55%, #8b2e24 100%); }
+    .phone-wrap[data-theme="light"] .photo-b { background: linear-gradient(145deg, #d8ebe4 0%, #3d8f72 50%, #1a4a38 100%); }
+    .phone-wrap[data-theme="light"] .photo-c { background: linear-gradient(145deg, #dde2f0 0%, #5a6aaa 50%, #2a3050 100%); }
+    .phone-wrap[data-theme="light"] .photo-d { background: linear-gradient(145deg, #f5e6d4 0%, #c48a4a 50%, #5a3818 100%); }
+    .card-body { padding: 6px 8px 8px; }
+    .card-title {
+      margin: 0 0 2px; font-family: var(--display); font-size: 0.82rem; font-weight: 700;
+      letter-spacing: -0.01em; color: var(--text); line-height: 1.2;
+    }
+    .card-meta { margin: 0 0 4px; font-size: 0.65rem; color: var(--muted); }
+    .card-row { margin: 0; display: flex; flex-direction: column; gap: 1px; }
+    .badge-ok { font-size: 0.62rem; font-weight: 600; color: var(--success); }
+    .rating { font-size: 0.62rem; color: var(--muted); }
+    .tabbar {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid var(--border);
+      background: var(--surface); margin-top: auto;
+    }
+    .tab {
+      min-height: 44px; display: grid; place-items: center; text-decoration: none;
+      color: var(--muted); font-size: 0.72rem; font-weight: 600;
+    }
+    .tab--on { color: var(--primary); }
+    .foot {
+      margin-top: 24px; color: #9aa3b2; font-size: 0.85rem; max-width: 70ch;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sushi Finder — five palette directions</h1>
+  <p class="lede">
+    Colour is its own choice axis. Each column is one complete direction
+    (tokens + type) on the <strong>same real screen</strong> — Photos grid with
+    search, filters, restaurant cards, and tab bar — in <strong>light</strong>
+    and <strong>dark</strong>. Only colour and type vary.
+    WCAG AA measured with axe-core on every direction × both themes
+    (see <code>axe-results.json</code> and <code>DECISION.md</code>). Choice is
+    <strong>OPEN</strong>.
+  </p>
+  <div class="cols">
+    
+    <section class="col" data-id="palette-01">
+      <header class="col-head">
+        <p class="id">palette-01</p>
+        <h2>Night Counter</h2>
+        <p class="role">Dark-first</p>
+        <p class="axis"><span>Temp</span> Cool-neutral charcoal with warm coral heat on actions</p>
+        <p class="axis"><span>Contrast</span> High — near-black lacquer surfaces, bright coral CTAs, strong type</p>
+        <p class="axis"><span>Type</span> Syne + DM Sans</p>
+        <p class="swatches" aria-hidden="true">
+          <i style="background:#f3f4f7"></i>
+          <i style="background:#c23b2e"></i>
+          <i style="background:#0c0e12"></i>
+          <i style="background:#ff6b5b"></i>
+        </p>
+        <p class="link"><a href="palette-01.html">Open full board (tokens) →</a></p>
+      </header>
+      <div class="phones">
+        
+      <figure class="phone-wrap" data-theme="light">
+        <figcaption class="phone-cap">Light</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Light">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Light theme, Night Counter">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+        
+      <figure class="phone-wrap" data-theme="dark">
+        <figcaption class="phone-cap">Dark</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Dark">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Dark theme, Night Counter">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+      </div>
+    </section>
+    <section class="col" data-id="palette-02">
+      <header class="col-head">
+        <p class="id">palette-02</p>
+        <h2>Ink Line</h2>
+        <p class="role">Near-monochrome + single accent</p>
+        <p class="axis"><span>Temp</span> Neutral greys only — no hue in surfaces; one vermillion accent</p>
+        <p class="axis"><span>Contrast</span> Hard ink-on-paper — pure structure, accent reserved for primary actions and focus</p>
+        <p class="axis"><span>Type</span> Inter + Inter</p>
+        <p class="swatches" aria-hidden="true">
+          <i style="background:#fafafa"></i>
+          <i style="background:#b91c1c"></i>
+          <i style="background:#0a0a0a"></i>
+          <i style="background:#f87171"></i>
+        </p>
+        <p class="link"><a href="palette-02.html">Open full board (tokens) →</a></p>
+      </header>
+      <div class="phones">
+        
+      <figure class="phone-wrap" data-theme="light">
+        <figcaption class="phone-cap">Light</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Light">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Light theme, Ink Line">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+        
+      <figure class="phone-wrap" data-theme="dark">
+        <figcaption class="phone-cap">Dark</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Dark">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Dark theme, Ink Line">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+      </div>
+    </section>
+    <section class="col" data-id="palette-03">
+      <header class="col-head">
+        <p class="id">palette-03</p>
+        <h2>Omakase Paper</h2>
+        <p class="role">Warm editorial serif</p>
+        <p class="axis"><span>Temp</span> Warm — cream paper, toasted browns, brick primary</p>
+        <p class="axis"><span>Contrast</span> Soft magazine contrast — ink on paper, never pure black on pure white</p>
+        <p class="axis"><span>Type</span> Fraunces + Source Serif 4</p>
+        <p class="swatches" aria-hidden="true">
+          <i style="background:#f7f0e6"></i>
+          <i style="background:#9a3412"></i>
+          <i style="background:#1a1510"></i>
+          <i style="background:#f0a060"></i>
+        </p>
+        <p class="link"><a href="palette-03.html">Open full board (tokens) →</a></p>
+      </header>
+      <div class="phones">
+        
+      <figure class="phone-wrap" data-theme="light">
+        <figcaption class="phone-cap">Light</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Light">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Light theme, Omakase Paper">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+        
+      <figure class="phone-wrap" data-theme="dark">
+        <figcaption class="phone-cap">Dark</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Dark">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Dark theme, Omakase Paper">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+      </div>
+    </section>
+    <section class="col" data-id="palette-04">
+      <header class="col-head">
+        <p class="id">palette-04</p>
+        <h2>Harbor Mist</h2>
+        <p class="role">Cool low-chroma</p>
+        <p class="axis"><span>Temp</span> Cool — slate teal, mist greys, desaturated sea air</p>
+        <p class="axis"><span>Contrast</span> Low-chroma separation — hue shifts small; value hierarchy does the work</p>
+        <p class="axis"><span>Type</span> IBM Plex Sans + IBM Plex Sans</p>
+        <p class="swatches" aria-hidden="true">
+          <i style="background:#f0f4f7"></i>
+          <i style="background:#2f5f6d"></i>
+          <i style="background:#0f1418"></i>
+          <i style="background:#7eb8c9"></i>
+        </p>
+        <p class="link"><a href="palette-04.html">Open full board (tokens) →</a></p>
+      </header>
+      <div class="phones">
+        
+      <figure class="phone-wrap" data-theme="light">
+        <figcaption class="phone-cap">Light</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Light">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Light theme, Harbor Mist">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+        
+      <figure class="phone-wrap" data-theme="dark">
+        <figcaption class="phone-cap">Dark</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Dark">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Dark theme, Harbor Mist">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+      </div>
+    </section>
+    <section class="col" data-id="palette-05">
+      <header class="col-head">
+        <p class="id">palette-05</p>
+        <h2>Mon Crest</h2>
+        <p class="role">Strongest idea — indigo mon + koi coral</p>
+        <p class="axis"><span>Temp</span> Cool indigo ink with warm coral action heat (dual-temperature brand)</p>
+        <p class="axis"><span>Contrast</span> Ceremonial high contrast — deep indigo fields, coral as the single hot signal</p>
+        <p class="axis"><span>Type</span> Cormorant Garamond + Manrope</p>
+        <p class="swatches" aria-hidden="true">
+          <i style="background:#f6f5fc"></i>
+          <i style="background:#c02636"></i>
+          <i style="background:#0c0b1a"></i>
+          <i style="background:#ff6b75"></i>
+        </p>
+        <p class="link"><a href="palette-05.html">Open full board (tokens) →</a></p>
+      </header>
+      <div class="phones">
+        
+      <figure class="phone-wrap" data-theme="light">
+        <figcaption class="phone-cap">Light</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Light">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Light theme, Mon Crest">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+        
+      <figure class="phone-wrap" data-theme="dark">
+        <figcaption class="phone-cap">Dark</figcaption>
+        <div class="phone" data-screen="photos-grid" data-theme-label="Dark">
+          <div class="phone-inner" aria-label="Sushi Finder photos grid — Dark theme, Mon Crest">
+            <header class="app-header">
+              <div class="brand">
+                <span class="mark" aria-hidden="true">す</span>
+                <div>
+                  <p class="app-name">Sushi Finder</p>
+                  <p class="app-loc">Near Tokyo · 2.4 km</p>
+                </div>
+              </div>
+              <button type="button" class="icon-btn" aria-label="Open filters">⋮</button>
+            </header>
+
+            <div class="search-row">
+              <label class="search">
+                <span class="sr-only">Search sushi restaurants</span>
+                <input type="search" value="omakase walk-in" readonly aria-readonly="true" />
+              </label>
+            </div>
+
+            <div class="chips" role="list" aria-label="Style filters">
+              <button type="button" class="chip chip--on" role="listitem">Photos</button>
+              <button type="button" class="chip" role="listitem">Map</button>
+              <button type="button" class="chip" role="listitem">Seating</button>
+              <button type="button" class="chip" role="listitem">Counter</button>
+              <button type="button" class="chip" role="listitem">Walk-in</button>
+            </div>
+
+            <p class="results-meta"><span class="results-count">12 open now</span> · sorted by distance</p>
+
+            <div class="grid" role="list" aria-label="Restaurant photos">
+              <article class="card" role="listitem">
+                <div class="photo photo-a" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Nakazawa</h2>
+                  <p class="card-meta">Counter · $$$$ · 0.8 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-ins limited</span><span class="rating">4.9 · 412 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-b" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Kura Revolving</h2>
+                  <p class="card-meta">Conveyor · $$ · 1.1 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.4 · 2.1k reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-c" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sushi Yasuda</h2>
+                  <p class="card-meta">Counter · $$$ · 1.6 km</p>
+                  <p class="card-row"><span class="badge-ok">Seats from 18:30</span><span class="rating">4.7 · 890 reviews</span></p>
+                </div>
+              </article>
+              <article class="card" role="listitem">
+                <div class="photo photo-d" aria-hidden="true"></div>
+                <div class="card-body">
+                  <h2 class="card-title">Sugarfish</h2>
+                  <p class="card-meta">Counter · $$$ · 2.0 km</p>
+                  <p class="card-row"><span class="badge-ok">Walk-in open</span><span class="rating">4.5 · 3.4k reviews</span></p>
+                </div>
+              </article>
+            </div>
+
+            <nav class="tabbar" aria-label="Primary">
+              <a class="tab tab--on" href="#" aria-current="page">Photos</a>
+              <a class="tab" href="#">Map</a>
+              <a class="tab" href="#">Seating</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+      </div>
+    </section>
+  </div>
+  <p class="foot">
+    Full token boards: <a href="palette-01.html" style="color:#8eb6ff">01</a> ·
+    <a href="palette-02.html" style="color:#8eb6ff">02</a> ·
+    <a href="palette-03.html" style="color:#8eb6ff">03</a> ·
+    <a href="palette-04.html" style="color:#8eb6ff">04</a> ·
+    <a href="palette-05.html" style="color:#8eb6ff">05</a>.
+    Decision record: <a href="DECISION.md" style="color:#8eb6ff">DECISION.md</a> (OPEN).
+  </p>
+</body>
+</html>
