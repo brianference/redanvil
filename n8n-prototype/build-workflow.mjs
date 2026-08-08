@@ -22,6 +22,7 @@ import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { orderedSteps } from './process-map.mjs';
+import { BINDINGS, unboundRoles } from './bindings.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -40,6 +41,10 @@ function paramsNode(step, index) {
   // required path is the role's own territory.
   const artifacts = step.requires[0]?.path ?? '.';
   const envKey = `REDANVIL_CMD_${step.id.replace(/-/g, '_').toUpperCase()}`;
+  // The bound command is baked in from bindings.mjs. Previously the generator
+  // emitted only an env-var lookup with an "echo no runner configured" fallback,
+  // so the workflow refused roles the CLI walker could already run.
+  const bound = BINDINGS[step.id] ?? '';
   return {
     id: `p_${step.id}`,
     name: `${step.id} params`,
@@ -53,7 +58,9 @@ function paramsNode(step, index) {
         `const c = $('Slice config').first().json;\n` +
         `return [{ json: { ...c, role: ${JSON.stringify(step.role)}, step: ${JSON.stringify(step.id)},\n` +
         `  artifacts: \`\${c.slug}/${artifacts}\`,\n` +
-        `  cmd: $env.${envKey} || 'echo no runner configured for ${step.id} && exit 1' } }];`
+        `  cmd: $env.${envKey} || ${JSON.stringify(bound || `echo no runner bound for ${step.id} && exit 1`)}
+` +
+        `    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];`
     }
   };
 }
@@ -167,8 +174,10 @@ const workflow = {
 const out = join(HERE, 'workflows', 'redanvil-full-build.json');
 writeFileSync(out, JSON.stringify(workflow, null, 2) + '\n');
 
+const unbound = unboundRoles(steps.map((s) => s.id));
 const gates = steps.filter((s) => s.humanGate).map((s) => s.id);
 console.log(`generated ${out}`);
 console.log(`  ${steps.length} steps -> ${nodes.length} nodes`);
 console.log(`  human gates: ${gates.join(', ')}`);
+console.log(`  UNBOUND (will fail, not skip): ${unbound.join(', ') || 'none'}`);
 console.log(`  order: ${steps.map((s) => s.id).join(' -> ')}`);

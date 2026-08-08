@@ -39,6 +39,16 @@
  * @property {boolean} humanGate whether a person must decide before the next step
  * @property {boolean} skippable always false today; present so a skip is explicit
  * @property {ArtifactContract[]} requires
+ * @property {string} [reworkTo] step this routes BACK to on failure. The map was
+ *   a straight line while the real process is loop-heavy: a blank DECISION.md
+ *   loops to the pick, a failed gate routes to assign, and assign routes through
+ *   the debugger back into build. A linear map cannot express "try again".
+ * @property {number} [maxCycles] how many times this loop may run before the
+ *   build is abandoned. An unbounded rework loop is how a build runs forever
+ *   without anyone deciding to stop.
+ * @property {'script'|'agent'|'human'} [kind] how the role executes. `agent`
+ *   roles are genuinely judgement work and belong in an n8n AI Agent node;
+ *   `script` roles are deterministic and belong in Execute Command.
  */
 
 /**
@@ -105,6 +115,46 @@ export const PROCESS = [
         minBytes: 1200,
         mustNotContain: PLACEHOLDER_MARKERS,
         why: 'a build with no product brief optimises the rubric instead of the user'
+      }
+    ]
+  },
+  {
+    id: 'brainstorm',
+    role: 'brainstorm',
+    summary: 'Ranked features with a data-source note; unsourceable features flagged blocked',
+    dependsOn: ['product'],
+    humanGate: false,
+    skippable: false,
+    kind: 'agent',
+    requires: [
+      {
+        path: 'docs/FEATURES.md',
+        kind: 'file',
+        minBytes: 800,
+        mustContain: ['data source'],
+        mustNotContain: PLACEHOLDER_MARKERS,
+        why: 'a feature with no sourceable data is listed as blocked rather than built -- otherwise it ships as an empty screen'
+      }
+    ]
+  },
+  {
+    id: 'inspo',
+    role: 'design-inspo',
+    summary: 'Reference intake from Mobbin and shipping apps, with sources recorded',
+    dependsOn: ['product'],
+    humanGate: false,
+    skippable: false,
+    kind: 'script',
+    requires: [
+      {
+        // Scraping galleries is allowed as of 2026-08-06 at the owner's
+        // instruction; what is not allowed is redistributing the screenshots.
+        // They stay local and gitignored, and SOURCES.md is the committed record.
+        path: 'design-refs/SOURCES.md',
+        kind: 'file',
+        minBytes: 600,
+        mustContain: ['http'],
+        why: 'a rule pack alone produces the same app every time; direction has to come from real shipping products, cited'
       }
     ]
   },
@@ -218,6 +268,8 @@ export const PROCESS = [
   },
   {
     id: 'decide',
+    reworkTo: 'layout',
+    maxCycles: 5,
     role: 'user-picks',
     summary: 'The owner picks a logo, a palette and a layout. Nothing builds before this',
     dependsOn: ['logo', 'layout', 'palette'],
@@ -253,6 +305,7 @@ export const PROCESS = [
   },
   {
     id: 'testwriter',
+    kind: 'agent',
     role: 'testwriter',
     summary: 'Acceptance tests written from the PRD BEFORE any build',
     dependsOn: ['decide'],
@@ -332,6 +385,8 @@ export const PROCESS = [
   },
   {
     id: 'visual',
+    reworkTo: 'build',
+    maxCycles: 3,
     role: 'qa-visual',
     summary: 'Render every surface at 375/768/1280 in both themes and OPEN the images',
     dependsOn: ['build'],
@@ -357,6 +412,8 @@ export const PROCESS = [
   },
   {
     id: 'qa-runtime',
+    reworkTo: 'build',
+    maxCycles: 3,
     role: 'qa-runtime',
     summary: 'Deployed routes and bindings answer for real',
     dependsOn: ['visual'],
@@ -373,6 +430,9 @@ export const PROCESS = [
   },
   {
     id: 'judge',
+    kind: 'agent',
+    reworkTo: 'build',
+    maxCycles: 3,
     role: 'independent-judge',
     summary: 'Fresh context reviews the diff and may dissent',
     dependsOn: ['qa-runtime'],
@@ -388,10 +448,91 @@ export const PROCESS = [
     ]
   },
   {
+    id: 'qa-data',
+    role: 'qa-data',
+    summary: 'Every citation and link resolves',
+    dependsOn: ['qa-runtime'],
+    humanGate: false,
+    skippable: false,
+    kind: 'script',
+    reworkTo: 'build',
+    maxCycles: 3,
+    requires: [
+      {
+        path: 'evidence/link-check.json',
+        kind: 'file',
+        minBytes: 100,
+        mustContain: ['checked'],
+        why: 'a dead citation is indistinguishable from a fabricated one to a reader'
+      }
+    ]
+  },
+  {
+    id: 'user-refuse',
+    role: 'user-refuse',
+    summary: 'Adversarial acceptance: sees only the URL, default answer is no',
+    dependsOn: ['qa-data'],
+    humanGate: false,
+    skippable: false,
+    kind: 'agent',
+    reworkTo: 'pm',
+    maxCycles: 3,
+    requires: [
+      {
+        path: 'evidence/user-refuse.json',
+        kind: 'file',
+        minBytes: 120,
+        mustContain: ['verdict'],
+        why: 'a reviewer who starts from yes finds nothing; this one starts from no and must be argued out of it'
+      }
+    ]
+  },
+  {
+    id: 'pm',
+    role: 'pm',
+    summary: 'Assign every unmet row to its owning role; an unowned row is a hard error',
+    dependsOn: ['user-refuse'],
+    humanGate: false,
+    skippable: false,
+    kind: 'agent',
+    requires: [
+      {
+        path: 'evidence/assignments.json',
+        kind: 'file',
+        minBytes: 80,
+        mustContain: ['unmet'],
+        why: 'an unmet row with no owning role is how a finding is discovered and then quietly dropped'
+      }
+    ]
+  },
+  {
+    id: 'debugger',
+    role: 'debugger',
+    summary: 'Root cause established BEFORE any fix is written',
+    dependsOn: ['pm'],
+    humanGate: false,
+    skippable: false,
+    kind: 'agent',
+    reworkTo: 'build',
+    maxCycles: 3,
+    requires: [
+      {
+        path: 'evidence/root-cause.md',
+        kind: 'file',
+        minBytes: 300,
+        mustContain: ['root cause'],
+        mustNotContain: PLACEHOLDER_MARKERS,
+        why: 'a fix written before the cause is known treats the symptom, and the defect returns under a different name'
+      }
+    ]
+  },
+  {
     id: 'reverify',
+    reworkTo: 'build',
+    maxCycles: 3,
     role: 'reverify',
     summary: 'Re-measure against the deployed HEAD build and re-stamp verdicts',
-    dependsOn: ['judge'],
+    dependsOn: ['debugger'],
     humanGate: false,
     skippable: false,
     requires: [

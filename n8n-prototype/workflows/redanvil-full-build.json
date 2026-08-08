@@ -1,6 +1,6 @@
 {
   "id": "redanvilFull001",
-  "name": "RedAnvil full build (16 steps, generated)",
+  "name": "RedAnvil full build (22 steps, generated)",
   "active": false,
   "settings": {
     "executionOrder": "v1",
@@ -46,7 +46,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"prd\", step: \"prd\",\n  artifacts: `${c.slug}/docs/pet-sitter-prd.md`,\n  cmd: $env.REDANVIL_CMD_PRD || 'echo no runner configured for prd && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"prd\", step: \"prd\",\n  artifacts: `${c.slug}/docs/PRD.md`,\n  cmd: $env.REDANVIL_CMD_PRD || \"node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root} --prompt={prompt}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -77,7 +77,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"product\", step: \"product\",\n  artifacts: `${c.slug}/docs/pet-sitter-product-brief.md`,\n  cmd: $env.REDANVIL_CMD_PRODUCT || 'echo no runner configured for product && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"product\", step: \"product\",\n  artifacts: `${c.slug}/docs/PRODUCT-BRIEF.md`,\n  cmd: $env.REDANVIL_CMD_PRODUCT || \"node n8n-prototype/roles/product.mjs --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -97,8 +97,8 @@
       }
     },
     {
-      "id": "p_reuse",
-      "name": "reuse params",
+      "id": "p_brainstorm",
+      "name": "brainstorm params",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -108,7 +108,69 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"reuse-scout\", step: \"reuse\",\n  artifacts: `${c.slug}/docs/REUSE-SCAN.md`,\n  cmd: $env.REDANVIL_CMD_REUSE || 'echo no runner configured for reuse && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"brainstorm\", step: \"brainstorm\",\n  artifacts: `${c.slug}/docs/FEATURES.md`,\n  cmd: $env.REDANVIL_CMD_BRAINSTORM || \"echo no runner bound for brainstorm && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+      }
+    },
+    {
+      "id": "r_brainstorm",
+      "name": "Role: brainstorm",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_inspo",
+      "name": "inspo params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"design-inspo\", step: \"inspo\",\n  artifacts: `${c.slug}/design-refs/SOURCES.md`,\n  cmd: $env.REDANVIL_CMD_INSPO || \"echo no runner bound for inspo && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+      }
+    },
+    {
+      "id": "r_inspo",
+      "name": "Role: inspo",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_reuse",
+      "name": "reuse params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"reuse-scout\", step: \"reuse\",\n  artifacts: `${c.slug}/docs/REUSE-SCAN.md`,\n  cmd: $env.REDANVIL_CMD_REUSE || \"node n8n-prototype/roles/reuse.mjs --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -117,7 +179,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        1540,
+        2420,
         0
       ],
       "parameters": {
@@ -133,13 +195,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1760,
+        2640,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"logo\", step: \"logo\",\n  artifacts: `${c.slug}/public/brand-mark.png`,\n  cmd: $env.REDANVIL_CMD_LOGO || 'echo no runner configured for logo && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"logo\", step: \"logo\",\n  artifacts: `${c.slug}/public/brand-mark.png`,\n  cmd: $env.REDANVIL_CMD_LOGO || \"echo no runner bound for logo && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -148,7 +210,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        1980,
+        2860,
         0
       ],
       "parameters": {
@@ -164,7 +226,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1980,
+        2860,
         160
       ],
       "parameters": {
@@ -204,13 +266,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2200,
+        3080,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"palette\", step: \"palette\",\n  artifacts: `${c.slug}/design-refs/palettes/gallery.html`,\n  cmd: $env.REDANVIL_CMD_PALETTE || 'echo no runner configured for palette && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"palette\", step: \"palette\",\n  artifacts: `${c.slug}/design-refs/palettes/gallery.html`,\n  cmd: $env.REDANVIL_CMD_PALETTE || \"echo no runner bound for palette && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -219,7 +281,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        2420,
+        3300,
         0
       ],
       "parameters": {
@@ -235,7 +297,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        2420,
+        3300,
         160
       ],
       "parameters": {
@@ -275,13 +337,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2640,
+        3520,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"layout\", step: \"layout\",\n  artifacts: `${c.slug}/design-refs/design-options`,\n  cmd: $env.REDANVIL_CMD_LAYOUT || 'echo no runner configured for layout && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"layout\", step: \"layout\",\n  artifacts: `${c.slug}/design-refs/design-options`,\n  cmd: $env.REDANVIL_CMD_LAYOUT || \"echo no runner bound for layout && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -290,7 +352,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        2860,
+        3740,
         0
       ],
       "parameters": {
@@ -306,7 +368,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        2860,
+        3740,
         160
       ],
       "parameters": {
@@ -346,13 +408,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3080,
+        3960,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"user-picks\", step: \"decide\",\n  artifacts: `${c.slug}/design-refs/design-options/DECISION.md`,\n  cmd: $env.REDANVIL_CMD_DECIDE || 'echo no runner configured for decide && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"user-picks\", step: \"decide\",\n  artifacts: `${c.slug}/design-refs/design-options/DECISION.md`,\n  cmd: $env.REDANVIL_CMD_DECIDE || \"echo no runner bound for decide && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -361,7 +423,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        3300,
+        4180,
         0
       ],
       "parameters": {
@@ -377,7 +439,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        3300,
+        4180,
         160
       ],
       "parameters": {
@@ -417,13 +479,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3520,
+        4400,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"testwriter\", step: \"testwriter\",\n  artifacts: `${c.slug}/test/acceptance`,\n  cmd: $env.REDANVIL_CMD_TESTWRITER || 'echo no runner configured for testwriter && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"testwriter\", step: \"testwriter\",\n  artifacts: `${c.slug}/test/acceptance`,\n  cmd: $env.REDANVIL_CMD_TESTWRITER || \"echo no runner bound for testwriter && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -432,7 +494,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        3740,
+        4620,
         0
       ],
       "parameters": {
@@ -448,13 +510,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3960,
+        4840,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"engineer\", step: \"build\",\n  artifacts: `${c.slug}/src`,\n  cmd: $env.REDANVIL_CMD_BUILD || 'echo no runner configured for build && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"engineer\", step: \"build\",\n  artifacts: `${c.slug}/src`,\n  cmd: $env.REDANVIL_CMD_BUILD || \"echo no runner bound for build && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -463,7 +525,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        4180,
+        5060,
         0
       ],
       "parameters": {
@@ -479,13 +541,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4400,
+        5280,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"content\", step: \"content\",\n  artifacts: `${c.slug}/src/pages/Terms.tsx`,\n  cmd: $env.REDANVIL_CMD_CONTENT || 'echo no runner configured for content && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"content\", step: \"content\",\n  artifacts: `${c.slug}/src/pages/Terms.tsx`,\n  cmd: $env.REDANVIL_CMD_CONTENT || \"echo no runner bound for content && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -494,7 +556,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        4620,
+        5500,
         0
       ],
       "parameters": {
@@ -510,13 +572,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4840,
+        5720,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"u-test-runners\", step: \"runners\",\n  artifacts: `${c.slug}/evidence/test-lanes.json`,\n  cmd: $env.REDANVIL_CMD_RUNNERS || 'echo no runner configured for runners && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"u-test-runners\", step: \"runners\",\n  artifacts: `${c.slug}/evidence/test-lanes.json`,\n  cmd: $env.REDANVIL_CMD_RUNNERS || \"echo no runner bound for runners && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -525,7 +587,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        5060,
+        5940,
         0
       ],
       "parameters": {
@@ -541,13 +603,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5280,
+        6160,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"qa-visual\", step: \"visual\",\n  artifacts: `${c.slug}/design-refs/design-options/renders/MANIFEST.json`,\n  cmd: $env.REDANVIL_CMD_VISUAL || 'echo no runner configured for visual && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"qa-visual\", step: \"visual\",\n  artifacts: `${c.slug}/design-refs/design-options/renders/MANIFEST.json`,\n  cmd: $env.REDANVIL_CMD_VISUAL || \"echo no runner bound for visual && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -556,7 +618,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        5500,
+        6380,
         0
       ],
       "parameters": {
@@ -572,13 +634,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5720,
+        6600,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"qa-runtime\", step: \"qa-runtime\",\n  artifacts: `${c.slug}/evidence/api-live-pet-sitter.json`,\n  cmd: $env.REDANVIL_CMD_QA_RUNTIME || 'echo no runner configured for qa-runtime && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"qa-runtime\", step: \"qa-runtime\",\n  artifacts: `${c.slug}/evidence/api-live.json`,\n  cmd: $env.REDANVIL_CMD_QA_RUNTIME || \"echo no runner bound for qa-runtime && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -587,7 +649,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        5940,
+        6820,
         0
       ],
       "parameters": {
@@ -603,13 +665,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6160,
+        7040,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"independent-judge\", step: \"judge\",\n  artifacts: `${c.slug}/evidence/judge-diff-pet-sitter.json`,\n  cmd: $env.REDANVIL_CMD_JUDGE || 'echo no runner configured for judge && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"independent-judge\", step: \"judge\",\n  artifacts: `${c.slug}/evidence/judge-diff.json`,\n  cmd: $env.REDANVIL_CMD_JUDGE || \"echo no runner bound for judge && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -618,7 +680,131 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        6380,
+        7260,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_qa-data",
+      "name": "qa-data params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7480,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"qa-data\", step: \"qa-data\",\n  artifacts: `${c.slug}/evidence/link-check.json`,\n  cmd: $env.REDANVIL_CMD_QA_DATA || \"echo no runner bound for qa-data && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+      }
+    },
+    {
+      "id": "r_qa-data",
+      "name": "Role: qa-data",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        7700,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_user-refuse",
+      "name": "user-refuse params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7920,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"user-refuse\", step: \"user-refuse\",\n  artifacts: `${c.slug}/evidence/user-refuse.json`,\n  cmd: $env.REDANVIL_CMD_USER_REFUSE || \"echo no runner bound for user-refuse && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+      }
+    },
+    {
+      "id": "r_user-refuse",
+      "name": "Role: user-refuse",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        8140,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_pm",
+      "name": "pm params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8360,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"pm\", step: \"pm\",\n  artifacts: `${c.slug}/evidence/assignments.json`,\n  cmd: $env.REDANVIL_CMD_PM || \"echo no runner bound for pm && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+      }
+    },
+    {
+      "id": "r_pm",
+      "name": "Role: pm",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        8580,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_debugger",
+      "name": "debugger params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8800,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"debugger\", step: \"debugger\",\n  artifacts: `${c.slug}/evidence/root-cause.md`,\n  cmd: $env.REDANVIL_CMD_DEBUGGER || \"echo no runner bound for debugger && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+      }
+    },
+    {
+      "id": "r_debugger",
+      "name": "Role: debugger",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        9020,
         0
       ],
       "parameters": {
@@ -634,13 +820,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6600,
+        9240,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"reverify\", step: \"reverify\",\n  artifacts: `${c.slug}/results/pet-sitter.json`,\n  cmd: $env.REDANVIL_CMD_REVERIFY || 'echo no runner configured for reverify && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"reverify\", step: \"reverify\",\n  artifacts: `${c.slug}/results/RESULTS.json`,\n  cmd: $env.REDANVIL_CMD_REVERIFY || \"echo no runner bound for reverify && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -649,7 +835,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        6820,
+        9460,
         0
       ],
       "parameters": {
@@ -665,13 +851,13 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7040,
+        9680,
         0
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"ship\", step: \"ship\",\n  artifacts: `${c.slug}/.redanvil/claims.json`,\n  cmd: $env.REDANVIL_CMD_SHIP || 'echo no runner configured for ship && exit 1' } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"ship\", step: \"ship\",\n  artifacts: `${c.slug}/.redanvil/claims.json`,\n  cmd: $env.REDANVIL_CMD_SHIP || \"echo no runner bound for ship && exit 1\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -680,7 +866,7 @@
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
       "position": [
-        7260,
+        9900,
         0
       ],
       "parameters": {
@@ -748,6 +934,50 @@
       ]
     },
     "Role: product": {
+      "main": [
+        [
+          {
+            "node": "brainstorm params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "brainstorm params": {
+      "main": [
+        [
+          {
+            "node": "Role: brainstorm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: brainstorm": {
+      "main": [
+        [
+          {
+            "node": "inspo params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inspo params": {
+      "main": [
+        [
+          {
+            "node": "Role: inspo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: inspo": {
       "main": [
         [
           {
@@ -1056,6 +1286,94 @@
       ]
     },
     "Role: judge": {
+      "main": [
+        [
+          {
+            "node": "qa-data params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "qa-data params": {
+      "main": [
+        [
+          {
+            "node": "Role: qa-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: qa-data": {
+      "main": [
+        [
+          {
+            "node": "user-refuse params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "user-refuse params": {
+      "main": [
+        [
+          {
+            "node": "Role: user-refuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: user-refuse": {
+      "main": [
+        [
+          {
+            "node": "pm params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pm params": {
+      "main": [
+        [
+          {
+            "node": "Role: pm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: pm": {
+      "main": [
+        [
+          {
+            "node": "debugger params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "debugger params": {
+      "main": [
+        [
+          {
+            "node": "Role: debugger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: debugger": {
       "main": [
         [
           {

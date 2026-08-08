@@ -16,17 +16,9 @@ import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { evaluateProcess } from './contract-check.mjs';
 import { orderedSteps } from './process-map.mjs';
+import { BINDINGS, fillBinding, unboundRoles } from './bindings.mjs';
 
-/**
- * Command bound to each role, as a template. `{slug}` and `{root}` are
- * substituted. A role absent from this map has no runner and will fail.
- * @type {Record<string,string>}
- */
-const BINDINGS = {
-  prd: 'node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root} --prompt={prompt}',
-  product: 'node n8n-prototype/roles/product.mjs --slug={slug} --repoRoot={root}',
-  reuse: 'node n8n-prototype/roles/reuse.mjs --slug={slug} --repoRoot={root}'
-};
+// Bindings live in bindings.mjs so the generator and this walker cannot drift.
 
 const args = Object.fromEntries(
   process.argv.slice(2).flatMap((a) => {
@@ -48,21 +40,36 @@ const appDir = resolve(root, slug);
  * @returns {string} the concrete command
  */
 function fill(tpl) {
-  return tpl
-    .replaceAll('{slug}', slug)
-    .replaceAll('{root}', JSON.stringify(root))
-    .replaceAll('{prompt}', JSON.stringify(args.prompt ?? ''));
+  return fillBinding(tpl, { slug, root, prompt: args.prompt });
 }
 
-console.log(`build: ${slug}\n`);
-let stopped = null;
+const allSteps = orderedSteps();
+const unbound = unboundRoles(allSteps.map((x) => x.id));
+console.log(`build: ${slug}`);
+console.log(`${unbound.length} role(s) unbound: ${unbound.join(', ') || 'none'}
+`);
 
-for (const step of orderedSteps()) {
-  if (args.only && args.only !== step.id) continue;
+/**
+ * How many times each step has been re-entered by a rework loop. An unbounded
+ * loop is how a build runs forever without anyone deciding to stop, so every
+ * cycle is counted against the step's maxCycles.
+ * @type {Map<string, number>}
+ */
+const cycles = new Map();
+let stopped = null;
+let cursor = 0;
+
+while (cursor < allSteps.length) {
+  const step = allSteps[cursor];
+  if (args.only && args.only !== step.id) {
+    cursor += 1;
+    continue;
+  }
 
   const before = evaluateProcess(appDir).find((r) => r.step === step.id);
   if (before?.status === 'DONE') {
     console.log(`SKIP  ${step.id.padEnd(11)} already satisfied`);
+    cursor += 1;
     continue;
   }
 
@@ -74,20 +81,37 @@ for (const step of orderedSteps()) {
   }
 
   const cmd = fill(tpl);
-  console.log(`RUN   ${step.id.padEnd(11)} ${cmd.slice(0, 90)}`);
+  console.log(`RUN   ${step.id.padEnd(11)} ${cmd.slice(0, 80)}`);
   const proc = spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', timeout: 25 * 60 * 1000 });
-  if (proc.stdout?.trim()) console.log(`      ${proc.stdout.trim().split('\n').slice(-2).join(' | ')}`);
+  if (proc.stdout?.trim()) console.log(`      ${proc.stdout.trim().split('\n').slice(-1)[0]}`);
 
   const after = evaluateProcess(appDir).find((r) => r.step === step.id);
   if (after?.status === 'DONE') {
     console.log(`OK    ${step.id.padEnd(11)} contract satisfied`);
-  } else {
-    console.log(`FAIL  ${step.id.padEnd(11)} exit ${proc.status}`);
-    for (const reason of after?.reasons ?? []) console.log(`        - ${reason}`);
-    if (proc.stderr?.trim()) console.log(`        stderr: ${proc.stderr.trim().split('\n').slice(-1)[0]}`);
+    cursor += 1;
+    continue;
+  }
+
+  console.log(`FAIL  ${step.id.padEnd(11)} exit ${proc.status}`);
+  for (const reason of after?.reasons ?? []) console.log(`        - ${reason}`);
+
+  // FORCE THE REDO. A step that declares reworkTo routes BACK to an earlier step
+  // and the build re-runs from there, rather than halting. Verification without
+  // a redo path just stops the line; the point is to make the work happen again.
+  if (!step.reworkTo) {
     stopped = step.id;
     break;
   }
+  const used = (cycles.get(step.id) ?? 0) + 1;
+  cycles.set(step.id, used);
+  if (used > (step.maxCycles ?? 3)) {
+    console.log(`ABORT ${step.id.padEnd(11)} reworked ${used - 1}x without satisfying its contract`);
+    stopped = step.id;
+    break;
+  }
+  const target = allSteps.findIndex((x) => x.id === step.reworkTo);
+  console.log(`REDO  ${step.id.padEnd(11)} cycle ${used}/${step.maxCycles ?? 3} -> re-entering at ${step.reworkTo}`);
+  cursor = target >= 0 ? target : cursor + 1;
 }
 
 const results = evaluateProcess(appDir);
