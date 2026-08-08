@@ -565,8 +565,12 @@ export const PROCESS = [
         path: '.redanvil/claims.json',
         kind: 'file',
         minBytes: 80,
-        mustContain: ['deployUrl'],
-        why: 'a wrangler success message is not proof; a recorded deploy URL and a matching asset hash are'
+        // "deployUrl" alone was satisfied by a FAILED deploy: ship wrote a claim
+        // recording servedAsset null and assetHashMatches false, and the contract
+        // passed because the string was present. Requiring the literal
+        // "assetHashMatches": true is the difference between a claim and proof.
+        mustContain: ['deployUrl', '"assetHashMatches": true'],
+        why: 'a wrangler success message is not proof, and neither is a recorded URL; only a served asset hash matching the local build is'
       }
     ]
   }
