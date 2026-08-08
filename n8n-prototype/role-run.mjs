@@ -48,6 +48,13 @@ function parseArgs(argv) {
  */
 async function walk(dir) {
   if (!existsSync(dir)) return [];
+  // An artifact path may name a single file rather than a directory -- several
+  // contracts do (docs/pet-sitter-prd.md, results/pet-sitter.json). Calling
+  // readdir on one throws ENOTDIR, which killed the runner before it could print
+  // its verdict, and the workflow then reported the useless "verdict was not
+  // parseable JSON" instead of the real reason.
+  if (!statSync(dir).isDirectory()) return [dir];
+
   /** @type {string[]} */
   const found = [];
   const entries = await readdir(dir, { withFileTypes: true, recursive: true });

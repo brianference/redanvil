@@ -252,10 +252,31 @@ export const PROCESS = [
     ]
   },
   {
+    id: 'testwriter',
+    role: 'testwriter',
+    summary: 'Acceptance tests written from the PRD BEFORE any build',
+    dependsOn: ['decide'],
+    humanGate: false,
+    skippable: false,
+    requires: [
+      {
+        // The diagram is explicit: "acceptance tests from the PRD BEFORE any
+        // build". Tests written after the build describe what was built, not
+        // what was asked for, which is how a green suite coexists with a missing
+        // feature -- pet-sitter passed its suite with no booking flow at all.
+        path: 'test/acceptance',
+        kind: 'dir',
+        glob: '.ts',
+        minCount: 1,
+        why: 'tests written after the build assert the implementation instead of the requirement'
+      }
+    ]
+  },
+  {
     id: 'build',
     role: 'engineer',
     summary: 'Implement the decided design',
-    dependsOn: ['decide', 'reuse'],
+    dependsOn: ['testwriter', 'reuse'],
     humanGate: false,
     skippable: false,
     requires: [
@@ -265,6 +286,47 @@ export const PROCESS = [
         glob: '.tsx',
         minCount: 3,
         why: 'a build step that changed no source did not build'
+      }
+    ]
+  },
+  {
+    id: 'content',
+    role: 'content',
+    summary: 'Legal pages with real substance, empty states, coverage boundaries',
+    dependsOn: ['build'],
+    humanGate: false,
+    skippable: false,
+    requires: [
+      {
+        path: 'src/pages/Terms.tsx',
+        kind: 'file',
+        minBytes: 1500,
+        mustNotContain: PLACEHOLDER_MARKERS,
+        why: 'legal pages specced as "real content, no boilerplate" once shipped at 81 words'
+      },
+      {
+        path: 'src/pages/Privacy.tsx',
+        kind: 'file',
+        minBytes: 1500,
+        mustNotContain: PLACEHOLDER_MARKERS,
+        why: 'same failure; substance is measured in bytes, not promised in a spec'
+      }
+    ]
+  },
+  {
+    id: 'runners',
+    role: 'u-test-runners',
+    summary: 'Every test lane run independently: vitest unit, browser, vrt, pytest',
+    dependsOn: ['content'],
+    humanGate: false,
+    skippable: false,
+    requires: [
+      {
+        path: 'evidence/test-lanes.json',
+        kind: 'file',
+        minBytes: 120,
+        mustContain: ['vitest', 'exitCode'],
+        why: 'a lane that was never run is not a lane that passed; each records its own exit code'
       }
     ]
   },
@@ -294,10 +356,42 @@ export const PROCESS = [
     ]
   },
   {
+    id: 'qa-runtime',
+    role: 'qa-runtime',
+    summary: 'Deployed routes and bindings answer for real',
+    dependsOn: ['visual'],
+    humanGate: false,
+    skippable: false,
+    requires: [
+      {
+        path: 'evidence/api-live-pet-sitter.json',
+        kind: 'file',
+        minBytes: 120,
+        why: 'a 200 on the homepage only proves static assets served; every route and binding is probed separately'
+      }
+    ]
+  },
+  {
+    id: 'judge',
+    role: 'independent-judge',
+    summary: 'Fresh context reviews the diff and may dissent',
+    dependsOn: ['qa-runtime'],
+    humanGate: false,
+    skippable: false,
+    requires: [
+      {
+        path: 'evidence/judge-diff-pet-sitter.json',
+        kind: 'file',
+        minBytes: 200,
+        why: 'a judge reviewing its own author never dissents -- 258 verdicts with 0 fails, against 6 of 10 from a fresh reviewer'
+      }
+    ]
+  },
+  {
     id: 'reverify',
     role: 'reverify',
     summary: 'Re-measure against the deployed HEAD build and re-stamp verdicts',
-    dependsOn: ['visual'],
+    dependsOn: ['judge'],
     humanGate: false,
     skippable: false,
     requires: [

@@ -1,0 +1,1108 @@
+{
+  "id": "redanvilFull001",
+  "name": "RedAnvil full build (16 steps, generated)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start a build",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "cfg",
+      "name": "Slice config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const repoRoot = $env.REDANVIL_REPO || 'C:/Users/brian/RedAnvil';\nconst runner = $env.REDANVIL_RUNNER || 'C:/Users/brian/RedAnvil/n8n-prototype/role-run.mjs';\nconst slug = $env.REDANVIL_SLUG || 'pet-sitter';\nreturn [{ json: { repoRoot, runner, slug } }];"
+      }
+    },
+    {
+      "id": "p_prd",
+      "name": "prd params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"prd\", step: \"prd\",\n  artifacts: `${c.slug}/docs/pet-sitter-prd.md`,\n  cmd: $env.REDANVIL_CMD_PRD || 'echo no runner configured for prd && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_prd",
+      "name": "Role: prd",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_product",
+      "name": "product params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"product\", step: \"product\",\n  artifacts: `${c.slug}/docs/pet-sitter-product-brief.md`,\n  cmd: $env.REDANVIL_CMD_PRODUCT || 'echo no runner configured for product && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_product",
+      "name": "Role: product",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_reuse",
+      "name": "reuse params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"reuse-scout\", step: \"reuse\",\n  artifacts: `${c.slug}/docs/REUSE-SCAN.md`,\n  cmd: $env.REDANVIL_CMD_REUSE || 'echo no runner configured for reuse && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_reuse",
+      "name": "Role: reuse",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_logo",
+      "name": "logo params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"logo\", step: \"logo\",\n  artifacts: `${c.slug}/public/brand-mark.png`,\n  cmd: $env.REDANVIL_CMD_LOGO || 'echo no runner configured for logo && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_logo",
+      "name": "Role: logo",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "h_logo",
+      "name": "Owner approves: logo",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1980,
+        160
+      ],
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Approve logo",
+        "formDescription": "Five real generated brand marks, a gallery, and an OPEN decision",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "approve"
+                  },
+                  {
+                    "option": "redo"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "requiredField": false
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "p_palette",
+      "name": "palette params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"palette\", step: \"palette\",\n  artifacts: `${c.slug}/design-refs/palettes/gallery.html`,\n  cmd: $env.REDANVIL_CMD_PALETTE || 'echo no runner configured for palette && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_palette",
+      "name": "Role: palette",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        2420,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "h_palette",
+      "name": "Owner approves: palette",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2420,
+        160
+      ],
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Approve palette",
+        "formDescription": "Five distinct colour + type directions, each shown light AND dark, OPEN decision",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "approve"
+                  },
+                  {
+                    "option": "redo"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "requiredField": false
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "p_layout",
+      "name": "layout params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"layout\", step: \"layout\",\n  artifacts: `${c.slug}/design-refs/design-options`,\n  cmd: $env.REDANVIL_CMD_LAYOUT || 'echo no runner configured for layout && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_layout",
+      "name": "Role: layout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        2860,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "h_layout",
+      "name": "Owner approves: layout",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2860,
+        160
+      ],
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Approve layout",
+        "formDescription": "Three structurally distinct layout options, gallery, OPEN decision",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "approve"
+                  },
+                  {
+                    "option": "redo"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "requiredField": false
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "p_decide",
+      "name": "decide params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3080,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"user-picks\", step: \"decide\",\n  artifacts: `${c.slug}/design-refs/design-options/DECISION.md`,\n  cmd: $env.REDANVIL_CMD_DECIDE || 'echo no runner configured for decide && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_decide",
+      "name": "Role: decide",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3300,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "h_decide",
+      "name": "Owner approves: decide",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3300,
+        160
+      ],
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Approve decide",
+        "formDescription": "The owner picks a logo, a palette and a layout. Nothing builds before this",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Decision",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "approve"
+                  },
+                  {
+                    "option": "redo"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "requiredField": false
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "p_testwriter",
+      "name": "testwriter params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"testwriter\", step: \"testwriter\",\n  artifacts: `${c.slug}/test/acceptance`,\n  cmd: $env.REDANVIL_CMD_TESTWRITER || 'echo no runner configured for testwriter && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_testwriter",
+      "name": "Role: testwriter",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3740,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_build",
+      "name": "build params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3960,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"engineer\", step: \"build\",\n  artifacts: `${c.slug}/src`,\n  cmd: $env.REDANVIL_CMD_BUILD || 'echo no runner configured for build && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_build",
+      "name": "Role: build",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        4180,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_content",
+      "name": "content params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4400,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"content\", step: \"content\",\n  artifacts: `${c.slug}/src/pages/Terms.tsx`,\n  cmd: $env.REDANVIL_CMD_CONTENT || 'echo no runner configured for content && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_content",
+      "name": "Role: content",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        4620,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_runners",
+      "name": "runners params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4840,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"u-test-runners\", step: \"runners\",\n  artifacts: `${c.slug}/evidence/test-lanes.json`,\n  cmd: $env.REDANVIL_CMD_RUNNERS || 'echo no runner configured for runners && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_runners",
+      "name": "Role: runners",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        5060,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_visual",
+      "name": "visual params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5280,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"qa-visual\", step: \"visual\",\n  artifacts: `${c.slug}/design-refs/design-options/renders/MANIFEST.json`,\n  cmd: $env.REDANVIL_CMD_VISUAL || 'echo no runner configured for visual && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_visual",
+      "name": "Role: visual",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        5500,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_qa-runtime",
+      "name": "qa-runtime params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5720,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"qa-runtime\", step: \"qa-runtime\",\n  artifacts: `${c.slug}/evidence/api-live-pet-sitter.json`,\n  cmd: $env.REDANVIL_CMD_QA_RUNTIME || 'echo no runner configured for qa-runtime && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_qa-runtime",
+      "name": "Role: qa-runtime",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        5940,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_judge",
+      "name": "judge params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6160,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"independent-judge\", step: \"judge\",\n  artifacts: `${c.slug}/evidence/judge-diff-pet-sitter.json`,\n  cmd: $env.REDANVIL_CMD_JUDGE || 'echo no runner configured for judge && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_judge",
+      "name": "Role: judge",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        6380,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_reverify",
+      "name": "reverify params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6600,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"reverify\", step: \"reverify\",\n  artifacts: `${c.slug}/results/pet-sitter.json`,\n  cmd: $env.REDANVIL_CMD_REVERIFY || 'echo no runner configured for reverify && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_reverify",
+      "name": "Role: reverify",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        6820,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    },
+    {
+      "id": "p_ship",
+      "name": "ship params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7040,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"ship\", step: \"ship\",\n  artifacts: `${c.slug}/.redanvil/claims.json`,\n  cmd: $env.REDANVIL_CMD_SHIP || 'echo no runner configured for ship && exit 1' } }];"
+      }
+    },
+    {
+      "id": "r_ship",
+      "name": "Role: ship",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        7260,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Start a build": {
+      "main": [
+        [
+          {
+            "node": "Slice config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slice config": {
+      "main": [
+        [
+          {
+            "node": "prd params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prd params": {
+      "main": [
+        [
+          {
+            "node": "Role: prd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: prd": {
+      "main": [
+        [
+          {
+            "node": "product params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "product params": {
+      "main": [
+        [
+          {
+            "node": "Role: product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: product": {
+      "main": [
+        [
+          {
+            "node": "reuse params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reuse params": {
+      "main": [
+        [
+          {
+            "node": "Role: reuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: reuse": {
+      "main": [
+        [
+          {
+            "node": "logo params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "logo params": {
+      "main": [
+        [
+          {
+            "node": "Role: logo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: logo": {
+      "main": [
+        [
+          {
+            "node": "Owner approves: logo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owner approves: logo": {
+      "main": [
+        [
+          {
+            "node": "palette params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "palette params": {
+      "main": [
+        [
+          {
+            "node": "Role: palette",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: palette": {
+      "main": [
+        [
+          {
+            "node": "Owner approves: palette",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owner approves: palette": {
+      "main": [
+        [
+          {
+            "node": "layout params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "layout params": {
+      "main": [
+        [
+          {
+            "node": "Role: layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: layout": {
+      "main": [
+        [
+          {
+            "node": "Owner approves: layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owner approves: layout": {
+      "main": [
+        [
+          {
+            "node": "decide params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "decide params": {
+      "main": [
+        [
+          {
+            "node": "Role: decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: decide": {
+      "main": [
+        [
+          {
+            "node": "Owner approves: decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owner approves: decide": {
+      "main": [
+        [
+          {
+            "node": "testwriter params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "testwriter params": {
+      "main": [
+        [
+          {
+            "node": "Role: testwriter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: testwriter": {
+      "main": [
+        [
+          {
+            "node": "build params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "build params": {
+      "main": [
+        [
+          {
+            "node": "Role: build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: build": {
+      "main": [
+        [
+          {
+            "node": "content params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "content params": {
+      "main": [
+        [
+          {
+            "node": "Role: content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: content": {
+      "main": [
+        [
+          {
+            "node": "runners params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "runners params": {
+      "main": [
+        [
+          {
+            "node": "Role: runners",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: runners": {
+      "main": [
+        [
+          {
+            "node": "visual params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "visual params": {
+      "main": [
+        [
+          {
+            "node": "Role: visual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: visual": {
+      "main": [
+        [
+          {
+            "node": "qa-runtime params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "qa-runtime params": {
+      "main": [
+        [
+          {
+            "node": "Role: qa-runtime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: qa-runtime": {
+      "main": [
+        [
+          {
+            "node": "judge params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "judge params": {
+      "main": [
+        [
+          {
+            "node": "Role: judge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: judge": {
+      "main": [
+        [
+          {
+            "node": "reverify params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reverify params": {
+      "main": [
+        [
+          {
+            "node": "Role: reverify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: reverify": {
+      "main": [
+        [
+          {
+            "node": "ship params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ship params": {
+      "main": [
+        [
+          {
+            "node": "Role: ship",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: ship": {
+      "main": [
+        []
+      ]
+    }
+  }
+}
