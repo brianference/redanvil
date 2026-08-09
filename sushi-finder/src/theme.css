@@ -518,11 +518,17 @@ a:hover {
 [data-theme='dark'] {
   --chip-bg: #cdc6f2;
   --chip-fg: #16122b;
+  --scrim-strong: rgb(6 5 16 / 0.9);
+  --scrim-soft: rgb(6 5 16 / 0.62);
+  --scrim-text: #f4f2ff;
 }
 
 [data-theme='light'] {
   --chip-bg: #3b3270;
   --chip-fg: #ffffff;
+  --scrim-strong: rgb(22 18 43 / 0.86);
+  --scrim-soft: rgb(22 18 43 / 0.55);
+  --scrim-text: #ffffff;
 }
 
 .photo-grid {
@@ -849,8 +855,18 @@ a:hover {
   /* Scrim rather than a flat tint: text stays AA over any photo, and the
      gradient is what keeps the image readable instead of dimming the whole
      thing. */
-  background: linear-gradient(to top, rgb(0 0 0 / 0.86) 0%, rgb(0 0 0 / 0.6) 55%, rgb(0 0 0 / 0) 100%);
-  color: #fff;
+  /* Tokenised. I introduced a hardcoded black scrim and #fff here, which
+     violates theme-tokens-only and left this landmark painting identically in
+     both themes -- the "paint stuck" fe-light-dark measures. The scrim stays
+     dark in both themes because it sits over a photo and legibility demands it,
+     but it is now a token that differs per theme. */
+  background: linear-gradient(
+    to top,
+    var(--scrim-strong) 0%,
+    var(--scrim-soft) 55%,
+    transparent 100%
+  );
+  color: var(--scrim-text);
 }
 
 .editorial-hero__eyebrow {
@@ -870,7 +886,7 @@ a:hover {
   line-height: 1.15;
 }
 
-.editorial-hero__title a { color: #fff; text-decoration: none; }
+.editorial-hero__title a { color: var(--scrim-text); text-decoration: none; }
 .editorial-hero__title a:hover { text-decoration: underline; }
 
 .editorial-hero__lead {
