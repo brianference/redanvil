@@ -909,3 +909,15 @@ a:hover {
 .sushi-card h3 {
   font-size: 1.05rem;
 }
+
+/* Footer column headings and the coverage note rendered at 14px. They are
+   headings, which makes the miss easy: a heading that is SMALLER than body text
+   still has to clear the 16px floor, because the floor is about legibility, not
+   hierarchy. */
+.footer-grid h2,
+.coverage-boundary h2 {
+  /* Measured the real ancestry rather than guessing a second time: these sit in
+     .footer-grid and .coverage-boundary, not a `.site-footer` that does not
+     exist. My first selector matched nothing and the floor stayed broken. */
+  font-size: 1rem;
+}

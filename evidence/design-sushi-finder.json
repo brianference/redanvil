@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://sushi-finder.pages.dev",
-  "checkedAt": "2026-08-09T03:06:08.915Z",
+  "checkedAt": "2026-08-09T03:09:27.832Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -8,7 +8,7 @@
     },
     "fe-type-floor": {
       "ok": false,
-      "detail": "6 route(s) at 375, smallest body font 14px; /: Tonight's find; /terms: Last updated 7 August 2026; /privacy: Last updated 7 August 2026"
+      "detail": "6 route(s) at 375, smallest body font 14px; /terms: Last updated 7 August 2026; /privacy: Last updated 7 August 2026"
     },
     "fe-responsive-375": {
       "ok": true,
@@ -31,12 +31,12 @@
       "detail": "no attribution text"
     },
     "fe-cross-link": {
-      "ok": false,
-      "detail": "no cross-site link"
+      "ok": true,
+      "detail": "cross-site link present"
     },
     "fe-seo-og": {
       "ok": true,
-      "detail": "title \"By Photos — sushi restaurant finder\", description present, og:image present"
+      "detail": "title \"Sushi Finder — worldwide sushi discovery\", description present, og:image present"
     },
     "fe-light-dark": {
       "ok": true,
