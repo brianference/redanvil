@@ -37,13 +37,23 @@ const report = JSON.parse(readFileSync(reportPath, 'utf8'));
   width-<slug>.json. Seeding only from the design report left the gate refusing
   the push for rules that HAD been measured, just somewhere else.
 */
+// Track WHICH report decided each rule. Attaching all three to every verdict
+// made fe-desktop-width cite the cold-visitor report, and the schema rightly
+// refused: "evidence/cold-sushi-finder.json is not a desktop_width report".
+// Evidence has to point at the measurement that actually decided the rule.
 const findings = { ...(report.findings ?? {}) };
+/** @type {Record<string,string>} */
+const source = {};
+for (const k of Object.keys(findings)) source[k] = reportPath;
 
 const cold = `evidence/cold-${slug}.json`;
 if (existsSync(cold)) {
   const c = JSON.parse(readFileSync(cold, 'utf8'));
   for (const [k, v] of Object.entries(c.findings ?? {})) {
-    if (!findings[k]) findings[k] = v;
+    if (!findings[k]) {
+      findings[k] = v;
+      source[k] = cold;
+    }
   }
 }
 
@@ -54,6 +64,7 @@ if (existsSync(width)) {
     ok: w.ok === true,
     detail: `painted content >= ${w.minPct}% at ${(w.widths ?? []).join('/')}`
   };
+  source['fe-desktop-width'] = width;
 }
 const ruleIds = Object.keys(findings);
 if (ruleIds.length === 0) {
@@ -104,7 +115,7 @@ for (const ruleId of ruleIds) {
     ruleId,
     passed: f.ok === true,
     method: 'visual',
-    evidence: [reportPath, ...(existsSync(cold) ? [cold] : []), ...(existsSync(width) ? [width] : [])],
+    evidence: [source[ruleId] ?? reportPath],
     note: String(f.detail ?? '').slice(0, 300),
     reviewedAt: now,
     reviewedCommit: 'unstamped'
