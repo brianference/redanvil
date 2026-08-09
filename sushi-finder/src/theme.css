@@ -921,3 +921,15 @@ a:hover {
      exist. My first selector matched nothing and the floor stayed broken. */
   font-size: 1rem;
 }
+
+/* Breadcrumbs and the prose timestamp rendered at 14px on inner pages. The home
+   route has no breadcrumbs, so measuring only `/` reported the type floor clean
+   while /about, /contact, /terms and /privacy all failed. Measure every route
+   the audit measures, not the one that is easiest to load. */
+.breadcrumbs,
+.breadcrumbs a,
+.breadcrumbs__sep,
+.breadcrumbs span,
+.prose__updated {
+  font-size: 1rem;
+}
