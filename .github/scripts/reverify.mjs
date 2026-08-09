@@ -327,6 +327,15 @@ function lastSourceCommit(appDir) {
 step(4, "stamp verdicts to each app's last source commit");
 for (const app of apps) {
   const p = `evidence/verdicts-${app.slug}.json`;
+  // A first-time app has no verdicts yet, and reverify crashed with ENOENT
+  // rather than saying so -- the managed-app path could produce an app the
+  // gate could not even attempt. An empty list is the honest starting state:
+  // nothing recorded, so nothing earns credit, and fail-closed still applies.
+  if (!existsSync(p)) {
+    writeFileSync(p, '[]
+');
+    console.log(`    created ${p} — first run for this app, no verdicts recorded yet`);
+  }
   const list = JSON.parse(readFileSync(p, 'utf8'));
   const stampTo = lastSourceCommit(app.dir);
   let rederived = 0;
