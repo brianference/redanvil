@@ -29,6 +29,11 @@ export const BINDINGS = {
   visual: script('visual'),
   'qa-runtime': script('qa-runtime'),
   'qa-data': script('qa-data'),
+  // Added after the owner asked why the app had no live location data and why
+  // the UI never called its own endpoints. Both roles exist because a rule
+  // without a step is not enforced.
+  integration: script('integration'),
+  'ui-live': script('ui-live'),
   runners: script('runners'),
 
   // Judgement roles, delegated to Grok Build until n8n's native agents are in

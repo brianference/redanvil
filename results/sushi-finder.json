@@ -4,7 +4,7 @@
   "finalScore": 0,
   "threshold": 90,
   "passed": false,
-  "evaluated": 63,
+  "evaluated": 70,
   "total": 81,
   "rules": [
     {
@@ -268,7 +268,19 @@
       "passed": false
     },
     {
+      "ruleId": "fe-touch-targets",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-type-floor",
+      "passed": true
+    },
+    {
       "ruleId": "fe-responsive-375",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-safe-areas",
       "passed": true
     },
     {
@@ -276,7 +288,15 @@
       "passed": true
     },
     {
+      "ruleId": "fe-noncolor-state",
+      "passed": true
+    },
+    {
       "ruleId": "fe-no-attribution",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cross-link",
       "passed": true
     },
     {
@@ -289,6 +309,14 @@
     },
     {
       "ruleId": "fe-visual-review-recorded",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-cold-visitor",
+      "passed": true
+    },
+    {
+      "ruleId": "fe-desktop-width",
       "passed": true
     }
   ],
@@ -307,10 +335,6 @@
         "fe-legal-substance",
         "fe-prior-art",
         "fe-product-completeness",
-        "fe-cold-visitor",
-        "fe-touch-targets",
-        "fe-type-floor",
-        "fe-desktop-width",
         "fe-no-inline-width",
         "hyg-no-binaries",
         "hyg-no-duplication",
@@ -320,14 +344,14 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-09T05:17:48.646Z",
+  "finishedAt": "2026-08-09T21:30:46.331Z",
   "provenance": {
-    "commit": "132a530dd8efd7779bb94823412da88bcd83ce4f",
+    "commit": "b09418719cbbabe5cfb814c3902463b49c948379",
     "dirty": false,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
     "node": "v22.19.0",
-    "verdictsHash": "c25cc7a4f4b4e55aeff5bb8180609bfcf74ba218ff4ef9d02ab2caae17d36950",
+    "verdictsHash": "e4a1fa6c60c1e49a32c0788a65648e8f71e6f94aa21555a5f66e88bb63b3087b",
     "notApplicable": [
       "fe-resource-links",
       "lg-result-reproduces",
@@ -340,6 +364,6 @@
       "u-test-presence"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-09T05:17:48.725Z"
+    "generatedAt": "2026-08-09T21:30:46.395Z"
   }
 }
