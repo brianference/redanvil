@@ -500,6 +500,21 @@ try {
   };
   const lightPaint = await samplePaint(d, 'light');
   const darkPaint = await samplePaint(d, 'dark');
+  // RELOAD before measuring the toggle. samplePaint() sets data-theme directly to
+  // read each theme's colours, which leaves the DOM on whichever it sampled last
+  // while the app's own state still holds the value it booted with. The toggle
+  // then moves the app to a theme the DOM was ALREADY forced to, and a working
+  // control reports as broken -- before=dark after=dark.
+  //
+  // This is the failure this repo keeps rediscovering: a check that sets up the
+  // state it then measures. Reloading hands the app back its own state.
+  await d.reload({ waitUntil: 'networkidle' });
+  await d
+    .locator('main h1, .page-title, [role=main] h1')
+    .first()
+    .waitFor({ state: 'visible', timeout: 15000 })
+    .catch(() => undefined);
+
   const before = await d.evaluate(() => document.documentElement.getAttribute('data-theme'));
   const toggle = d.getByRole('button', { name: /theme|dark|light/i }).first();
   await toggle.click();

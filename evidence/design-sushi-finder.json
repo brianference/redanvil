@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://sushi-finder.pages.dev",
-  "checkedAt": "2026-08-09T03:25:56.598Z",
+  "checkedAt": "2026-08-09T05:03:56.382Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -40,7 +40,7 @@
     },
     "fe-light-dark": {
       "ok": false,
-      "detail": "landmark paint changes between themes (4 regions); toggle ok"
+      "detail": "landmark paint changes between themes (4 regions); toggle FAILED: before=dark after=dark stored=dark persisted=dark — the choice must change the theme AND survive a reload"
     },
     "fe-required-pages": {
       "ok": true,
