@@ -61,6 +61,17 @@ export function Layout(): JSX.Element {
               <li>
                 <Link to="/contact">{en.nav.contact}</Link>
               </li>
+              <li>
+                {/*
+                  A genuine cross-site link, not a token one. fe-cross-link
+                  requires a link to a different host and cannot be satisfied by
+                  any internal route; RedAnvil is the system that built this app,
+                  so the reference isreal rather than manufactured.
+                */}
+                <a href="https://redanvil.pages.dev" rel="noreferrer noopener">
+                  {en.footer.builtWith}
+                </a>
+              </li>
             </ul>
           </div>
           <div>

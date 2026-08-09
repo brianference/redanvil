@@ -1,7 +1,7 @@
 {
   "deployUrl": "https://sushi-finder.pages.dev",
-  "localAsset": "index-4YkMYVw8.js",
-  "servedAsset": "index-DZn6GZf3.js",
-  "assetHashMatches": false,
-  "shippedAt": "2026-08-09T03:02:11.790Z"
+  "localAsset": "index-CKCFm3mg.js",
+  "servedAsset": "index-CKCFm3mg.js",
+  "assetHashMatches": true,
+  "shippedAt": "2026-08-09T03:09:02.750Z"
 }

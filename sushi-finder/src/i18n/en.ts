@@ -124,6 +124,7 @@ export const en = {
   },
   footer: {
     blurb: 'Sushi Finder is a public sushi catalog. No accounts. Data lives in Cloudflare D1 for this deployment.',
+    builtWith: 'RedAnvil',
     rights: 'Built as a RedAnvil marketplace MVP.'
   },
   about: {

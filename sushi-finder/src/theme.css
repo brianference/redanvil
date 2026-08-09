@@ -832,7 +832,9 @@ a:hover {
 
 .editorial-hero__eyebrow {
   margin: 0 0 var(--space-1);
-  font-size: var(--text-sm, 0.9rem);
+  /* 16px floor. 14px eyebrows and chips failed fe-type-floor: small caps are a
+     label style, not a licence to go under the body minimum. */
+  font-size: 1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   opacity: 0.9;
@@ -894,4 +896,16 @@ a:hover {
     width: 56px;
     height: 56px;
   }
+}
+
+
+/* Type floor. fe-type-floor measured 14px on chips and a card heading at 375px.
+   The floor is 16px for anything a person reads, and a chip is read. */
+.chip {
+  font-size: 1rem;
+}
+
+.sushi-card h2,
+.sushi-card h3 {
+  font-size: 1.05rem;
 }
