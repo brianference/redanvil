@@ -26,6 +26,21 @@ describe('F7 — manage Sushi', () => {
   });
 
   afterAll(async () => {
+    // Clean up what this suite created. It ran against PRODUCTION and left four
+    // rows titled "Public create <timestamp>" in the live catalog, which the
+    // pytest lane caught on its first run. A test that pollutes the database it
+    // tests is indistinguishable from a user doing it, and the junk is served to
+    // real visitors.
+    try {
+      const res = await fetch(`${BASE_URL}/api/sushis`);
+      const body = (await res.json()) as { items?: Array<{ id: string; title: string }> };
+      const mine = (body.items ?? []).filter((i) => /^Public create \d+/.test(i.title));
+      for (const row of mine) {
+        await fetch(`${BASE_URL}/api/sushis/${row.id}`, { method: 'DELETE' }).catch(() => undefined);
+      }
+    } catch {
+      /* cleanup is best-effort; the pytest lane asserts the catalog is clean */
+    }
     await closeBrowser();
   });
 

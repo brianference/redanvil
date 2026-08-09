@@ -530,10 +530,23 @@ try {
   record(
     'fe-light-dark',
     paintOk && toggleWorks,
-    paintOk
-      ? `landmark paint changes between themes (${lightPaint.length} regions); toggle ok`
-      : `paint stuck on: ${stuck.map((s) => s.name).join(', ') || 'none sampled'} — ` +
-          'attribute flip is not enough; measure computed backgrounds'
+    /*
+      The detail used to branch ONLY on paintOk, so a run where paint passed and
+      the TOGGLE failed printed "toggle ok" while reporting FAIL. The message
+      named the wrong half and sent two debugging attempts at the paint code
+      before anyone read this predicate. A failure detail that misidentifies the
+      cause is worse than no detail.
+    */
+    [
+      paintOk
+        ? `landmark paint changes between themes (${lightPaint.length} regions)`
+        : `paint stuck on: ${stuck.map((s) => s.name).join(', ') || 'none sampled'} — ` +
+          'attribute flip is not enough; measure computed backgrounds',
+      toggleWorks
+        ? 'toggle ok'
+        : `toggle FAILED: before=${before} after=${after.theme} stored=${after.stored ?? '(null)'} ` +
+          `persisted=${persisted ?? '(null)'} — the choice must change the theme AND survive a reload`
+    ].join('; ')
   );
 
   // --- Design archetype: did it build the shell it was told to build? ---

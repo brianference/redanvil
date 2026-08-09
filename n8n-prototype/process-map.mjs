@@ -402,9 +402,18 @@ export const PROCESS = [
       {
         path: 'evidence/test-lanes.json',
         kind: 'file',
-        minBytes: 120,
-        mustContain: ['vitest', 'exitCode'],
-        why: 'a lane that was never run is not a lane that passed; each records its own exit code'
+        minBytes: 200,
+        // The old contract wanted the STRINGS 'vitest' and 'exitCode' to appear.
+        // A file recording `typecheck exitCode: 2` -- a FAILING lane -- satisfied
+        // it, because the words were present. It also passed an app with 8 tests
+        // total, an unwired acceptance lane, and no pytest at all.
+        //
+        // Now every lane must record success, the acceptance and pytest lanes
+        // must be present, and a minimum test count must be met. A suite that
+        // exists is not a suite that covers anything.
+        mustContain: ['"allLanesPassed": true', '"acceptance"', '"pytest"', '"enoughTests": true'],
+        mustNotContain: ['"exitCode": 1', '"exitCode": 2'],
+        why: 'a lane that was never run is not a lane that passed, and a recorded failure must never satisfy the step that records it'
       }
     ]
   },

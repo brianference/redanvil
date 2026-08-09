@@ -1,23 +1,44 @@
 {
-  "ranAt": "2026-08-08T17:21:39.533Z",
+  "ranAt": "2026-08-09T04:03:31.400Z",
   "lanes": [
     {
       "lane": "vitest",
-      "exitCode": 0,
       "ran": true,
-      "tail": "\u001b[2m   Start at \u001b[22m 10:21:35 | \u001b[2m   Duration \u001b[22m 358ms\u001b[2m (transform 61ms, setup 0ms, collect 110ms, tests 9ms, environment 0ms, prepare 356ms)\u001b[22m"
+      "exitCode": 0,
+      "tests": 3,
+      "tail": "   Start at  21:03:06 |    Duration  372ms (transform 62ms, setup 0ms, collect 104ms, tests 9ms, environment 0ms, prepare 402ms)"
+    },
+    {
+      "lane": "acceptance",
+      "ran": true,
+      "exitCode": 0,
+      "tests": 7,
+      "tail": "   Start at  21:03:07 |    Duration  15.45s (transform 64ms, setup 0ms, collect 1.89s, tests 12.28s, environment 1ms, prepare 478ms)"
     },
     {
       "lane": "typecheck",
-      "exitCode": 2,
       "ran": true,
-      "tail": "src/pages/HomePage.tsx(45,58): error TS2532: Object is possibly 'undefined'."
+      "exitCode": 0,
+      "tests": null,
+      "tail": ""
     },
     {
       "lane": "build",
-      "exitCode": 2,
       "ran": true,
-      "tail": "src/pages/HomePage.tsx(45,58): error TS2532: Object is possibly 'undefined'."
+      "exitCode": 0,
+      "tests": null,
+      "tail": "dist/assets/index-wtA1k7Zk.js   281.53 kB │ gzip: 85.24 kB │ map: 1,084.20 kB | ✓ built in 803ms"
+    },
+    {
+      "lane": "pytest",
+      "ran": true,
+      "exitCode": 0,
+      "tests": 11,
+      "tail": "...........                                                              [100%]\r | 11 passed in 2.53s"
     }
-  ]
+  ],
+  "totalTests": 21,
+  "minTests": 20,
+  "enoughTests": true,
+  "allLanesPassed": true
 }
