@@ -332,8 +332,7 @@ for (const app of apps) {
   // gate could not even attempt. An empty list is the honest starting state:
   // nothing recorded, so nothing earns credit, and fail-closed still applies.
   if (!existsSync(p)) {
-    writeFileSync(p, '[]
-');
+    writeFileSync(p, '[]\n');
     console.log(`    created ${p} — first run for this app, no verdicts recorded yet`);
   }
   const list = JSON.parse(readFileSync(p, 'utf8'));
