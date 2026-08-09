@@ -436,6 +436,35 @@ export const PROCESS = [
     ]
   },
   {
+    id: 'ui-live',
+    role: 'qa-live-ui',
+    summary: 'Drive the DEPLOYED UI and prove it calls the live endpoints and paints a big-enough mark',
+    dependsOn: ['visual'],
+    humanGate: false,
+    skippable: false,
+    kind: 'script',
+    reworkTo: 'build',
+    maxCycles: 3,
+    requires: [
+      {
+        // THREE times now an endpoint existed and the UI never called it:
+        // pet-sitter's assistant button, sushi-finder's Places search, and
+        // sushi-finder's assistant. Every one passed source review, unit tests,
+        // and an endpoint probe, because each of those inspects one side of a
+        // wire that was never connected.
+        //
+        // The only thing that catches it is driving the deployed page and
+        // recording which requests it actually makes. This contract requires
+        // that recording, and requires every live endpoint to appear in it.
+        path: 'evidence/ui-live-calls.json',
+        kind: 'file',
+        minBytes: 200,
+        mustContain: ['"allLiveEndpointsCalled": true', '"brandMarkOk": true'],
+        why: 'an endpoint test and a UI test both pass while the wire between them is missing; and a brand mark rule enforced only by the gate is not enforced during a build'
+      }
+    ]
+  },
+  {
     id: 'qa-runtime',
     reworkTo: 'build',
     maxCycles: 3,

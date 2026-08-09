@@ -873,3 +873,25 @@ a:hover {
   opacity: 0.5;
   pointer-events: none;
 }
+
+/*
+ * Brand mark sizing. It shipped at 32px, below even the old 48px floor, because
+ * fe-brand-mark-size is a GATE rule and this build never ran the gate -- a rule
+ * that is not a process contract is not enforced while building. The owner asked
+ * for 300% bigger; 96px at desktop, 56px on a phone where header height is
+ * scarce, both above the raised 72/48 floors.
+ */
+.brand__mark {
+  width: 96px;
+  height: 96px;
+  max-height: 96px;
+  object-fit: contain;
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .brand__mark {
+    width: 56px;
+    height: 56px;
+  }
+}
