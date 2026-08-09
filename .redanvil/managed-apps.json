@@ -7,6 +7,13 @@
       "entryPoint": "pm",
       "registeredAt": "2026-08-06T01:12:09.000Z",
       "handBuildBlocked": true
+    },
+    {
+      "slug": "sushi-finder",
+      "dir": "sushi-finder",
+      "entryPoint": "pm",
+      "registeredAt": "2026-08-09T03:04:16.671Z",
+      "handBuildBlocked": true
     }
   ]
 }
