@@ -5,14 +5,435 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-09T05:13:04.766Z",
+        "at": "2026-08-09T05:15:08.387Z",
         "report": "evidence/axe/sushi-finder-dark.json"
       },
       {
         "ok": true,
-        "at": "2026-08-09T05:13:07.254Z",
+        "at": "2026-08-09T05:15:10.843Z",
         "report": "evidence/axe/sushi-finder-light.json"
       }
     ]
+  },
+  "fe-search-present": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-09T05:17:26.079Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-09T05:17:29.620Z"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/search-present/dead-search.html",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:29.620Z"
+    }
+  },
+  "fe-brand-mark-size": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-09T05:16:17.314Z",
+        "height1280": 96,
+        "height375": 56
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:16:17.959Z",
+        "height1280": 96,
+        "height375": 56
+      }
+    ],
+    "heights": {
+      "h1280": 96,
+      "h375": 56,
+      "selector": "img.brand__mark"
+    },
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/brand-mark-size/small.html",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:16:17.959Z"
+    }
+  },
+  "fe-breadcrumbs": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-09T05:16:20.369Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:16:22.138Z"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/breadcrumbs",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:16:22.138Z"
+    }
+  },
+  "fe-result-in-viewport": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "notApplicable": false,
+    "reason": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-09T05:16:34.672Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-09T05:16:42.096Z"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/result-in-viewport/below-fold.html",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:16:42.096Z"
+    }
+  },
+  "fe-legal-substance": {
+    "tool": "playwright",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-09T05:16:43.475Z",
+        "summary": "terms 1882w/15h2; privacy 1826w/15h2"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-09T05:16:44.037Z",
+        "summary": "terms 1882w/15h2; privacy 1826w/15h2"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/fe-legal-substance/bad",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:16:44.037Z"
+    }
+  },
+  "fe-structured-data": {
+    "tool": "static-head-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-09T05:16:44.412Z",
+        "type": "WebApplication"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:16:44.413Z",
+        "type": "WebApplication"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/structured-data/bad.html",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:16:44.413Z"
+    }
+  },
+  "proc-design-options": {
+    "tool": "static-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-09T05:16:44.537Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-09T05:16:44.538Z"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/proc-design-options/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:16:44.538Z"
+    }
+  },
+  "lg-bindings-bound": {
+    "tool": "fetch-probe",
+    "engine": null,
+    "notApplicable": false,
+    "reason": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-09T05:16:55.610Z",
+        "base": "https://sushi-finder.pages.dev"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/lg-bindings-bound/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:16:55.610Z"
+    }
+  },
+  "fe-light-dark": {
+    "tool": "playwright-canvas",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-09T05:17:20.617Z",
+        "landmarks": 5
+      },
+      {
+        "ok": false,
+        "at": "2026-08-09T05:17:22.134Z",
+        "landmarks": 5
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/theme-paint/hardcoded-hero.html",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:22.134Z"
+    }
+  },
+  "u-build-succeeds": {
+    "tool": "npm-run-build",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:03.713Z",
+        "status": 0
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:03.714Z",
+        "status": 0
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/u-build-succeeds/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:03.714Z"
+    }
+  },
+  "u-api-not-found": {
+    "tool": "fetch",
+    "engine": null,
+    "notApplicable": false,
+    "reason": null,
+    "mode": "detail-routes",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:07.136Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:07.137Z"
+      }
+    ],
+    "knownBad": {
+      "input": "known-bad-fixtures/u-api-not-found/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:07.137Z"
+    }
+  },
+  "u-api-no-spa-mask": {
+    "tool": "fetch",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:10.520Z",
+        "path": "/api/__definitely_absent_eb5aaa36f095cb64",
+        "status": 404
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:10.520Z",
+        "path": "/api/__definitely_absent_eb5aaa36f095cb64",
+        "status": 404
+      }
+    ],
+    "knownBad": {
+      "input": "known-bad-fixtures/u-api-no-spa-mask/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:10.520Z"
+    }
+  },
+  "u-legal-claims-true": {
+    "tool": "static-bidirectional",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:10.658Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:10.658Z"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/u-legal-claims-true/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:10.658Z"
+    }
+  },
+  "fe-favicon-legible": {
+    "tool": "playwright-canvas",
+    "engine": "chromium",
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:11.394Z",
+        "metrics": {
+          "inkCoverage": 0.4677734375,
+          "detailEnergy": 232.38729963454864,
+          "contrastOnWhite": 0.7409063736484826,
+          "contrastOnDark": 0.25304479332866037,
+          "inkCount": 479,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:11.394Z",
+        "metrics": {
+          "inkCoverage": 0.4677734375,
+          "detailEnergy": 232.38729963454864,
+          "contrastOnWhite": 0.7409063736484826,
+          "contrastOnDark": 0.25304479332866037,
+          "inkCount": 479,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:11.815Z",
+        "metrics": {
+          "inkCoverage": 0.4677734375,
+          "detailEnergy": 232.38729963454864,
+          "contrastOnWhite": 0.7409063736484826,
+          "contrastOnDark": 0.25304479332866037,
+          "inkCount": 479,
+          "pixelCount": 1024
+        }
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:11.815Z",
+        "metrics": {
+          "inkCoverage": 0.4677734375,
+          "detailEnergy": 232.38729963454864,
+          "contrastOnWhite": 0.7409063736484826,
+          "contrastOnDark": 0.25304479332866037,
+          "inkCount": 479,
+          "pixelCount": 1024
+        }
+      }
+    ],
+    "source": "public\\favicon.png, public\\logo.png",
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/fe-favicon-legible/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:11.815Z"
+    }
+  },
+  "meas-known-bad": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-09T05:17:48.038Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-09T05:17:48.038Z"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/meas-known-bad/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:48.038Z"
+    }
+  },
+  "meas-two-run": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-09T05:17:48.166Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-09T05:17:48.167Z"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/meas-two-run/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:48.167Z"
+    }
+  },
+  "meas-recheck-flattering": {
+    "tool": "meta-scan",
+    "engine": null,
+    "notApplicable": true,
+    "reason": "no previous results/<slug>.json — nothing to re-check",
+    "recordedAt": "2026-08-09T05:17:48.290Z",
+    "runs": [],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/meas-recheck-flattering/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:48.289Z"
+    }
+  },
+  "meas-standard-tool": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:48.434Z"
+      },
+      {
+        "ok": true,
+        "at": "2026-08-09T05:17:48.435Z"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/meas-standard-tool/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:48.435Z"
+    }
+  },
+  "meas-engine-named": {
+    "tool": "meta-scan",
+    "engine": null,
+    "runs": [
+      {
+        "ok": false,
+        "at": "2026-08-09T05:17:48.550Z"
+      },
+      {
+        "ok": false,
+        "at": "2026-08-09T05:17:48.551Z"
+      }
+    ],
+    "knownBad": {
+      "input": "orchestrator/test/fixtures/meas-engine-named/bad-app",
+      "failed": true,
+      "recordedAt": "2026-08-09T05:17:48.551Z"
+    }
   }
 }
