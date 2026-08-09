@@ -1,14 +1,14 @@
 {
   "baseUrl": "https://sushi-finder.pages.dev",
-  "checkedAt": "2026-08-09T03:12:50.401Z",
+  "checkedAt": "2026-08-09T03:14:54.530Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
       "detail": "6 route(s) at 375; every interactive element >= 44px"
     },
     "fe-type-floor": {
-      "ok": false,
-      "detail": "6 route(s) at 375, smallest body font 14px; /terms: Last updated 7 August 2026; /privacy: Last updated 7 August 2026"
+      "ok": true,
+      "detail": "6 route(s) at 375, smallest body font 16px; nothing under 16px"
     },
     "fe-responsive-375": {
       "ok": true,
@@ -52,5 +52,5 @@
     }
   },
   "consoleErrors": [],
-  "ok": false
+  "ok": true
 }

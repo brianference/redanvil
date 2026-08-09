@@ -656,7 +656,11 @@ a:hover {
   border: 2px solid var(--color-border);
   padding: var(--space-5);
   background: var(--color-surface);
-  max-width: 48rem;
+  /* A rem cap cannot hold a percentage: 48rem paints 36% of a 1920 viewport and
+     fails the 80% painted-content blocker. Width is a percentage of the
+     container; the line measure is protected by COLUMNS, not by starving the
+     container. */
+  max-width: 100%;
 }
 
 .coverage-boundary h2 {
@@ -679,7 +683,11 @@ a:hover {
 
 .prose {
   overflow-wrap: anywhere;
-  max-width: 48rem;
+  /* A rem cap cannot hold a percentage: 48rem paints 36% of a 1920 viewport and
+     fails the 80% painted-content blocker. Width is a percentage of the
+     container; the line measure is protected by COLUMNS, not by starving the
+     container. */
+  max-width: 100%;
 }
 
 .prose h2 {
@@ -932,4 +940,21 @@ a:hover {
 .breadcrumbs span,
 .prose__updated {
   font-size: 1rem;
+}
+
+
+/* Legal prose: fill the viewport and protect the measure with columns rather
+   than a fixed cap. Column count follows the content so a short page does not
+   leave an empty third column reading as 60% of the screen. */
+@media (min-width: 1100px) {
+  .prose {
+    column-width: 34rem;
+    column-gap: 3rem;
+    max-width: 100%;
+  }
+
+  .prose h2,
+  .prose h3 {
+    break-after: avoid;
+  }
 }
