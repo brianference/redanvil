@@ -1,18 +1,7 @@
 {
   "deployUrl": "https://sushi-finder.pages.dev",
-  "localAsset": "index-BvCmK-72.js",
-  "servedAsset": "index-BvCmK-72.js",
+  "localAsset": "index-CRljE0gO.js",
+  "servedAsset": "index-CRljE0gO.js",
   "assetHashMatches": true,
-  "shippedAt": "2026-08-09T03:17:53.187Z",
-  "coldVisitorProbe": {
-    "path": "/",
-    "expectSelector": "input[type='search'], form[role='search']",
-    "minCount": 1
-  },
-  "searchProbe": {
-    "path": "/",
-    "inputName": "/search|find/i",
-    "query": "Tokyo",
-    "expectFewerResults": false
-  }
+  "shippedAt": "2026-08-09T03:22:45.602Z"
 }

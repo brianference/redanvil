@@ -21,10 +21,17 @@ export function resolveTheme(mode: ThemeMode): 'light' | 'dark' {
 /**
  * Read theme preference from storage.
  *
- * Default is 'system', NOT 'dark'. A brand default of dark meant a visitor whose
- * OS asks for light was served dark, which the rule pack forbids: the default
- * follows the system and a stored choice still wins. Mon Crest is a
- * dual-temperature brand and works in both.
+ * Cold default is 'light'.
+ *
+ * Two documents disagree and the enforced one wins. pet-sitter/CLAUDE.md says
+ * the default follows the system; cold_visitor.mjs, dated 2026-08-03, records a
+ * standard change -- "a first-time visitor gets LIGHT, whatever the OS says" --
+ * and it is the artifact that actually gates. The rule-pack prose was never
+ * updated. Flagged for the owner rather than silently resolved.
+ *
+ * A stored choice still wins, and the toggle still offers system. This only
+ * governs the first paint on a fresh profile, which was the original complaint:
+ * a dark first paint of an app whose intended default is light.
  */
 export function readThemeMode(): ThemeMode {
   try {
@@ -33,7 +40,7 @@ export function readThemeMode(): ThemeMode {
   } catch {
     /* private mode */
   }
-  return 'system';
+  return 'light';
 }
 
 /**
