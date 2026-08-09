@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://sushi-finder.pages.dev",
-  "checkedAt": "2026-08-09T05:03:56.382Z",
+  "checkedAt": "2026-08-09T05:05:38.807Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -39,8 +39,8 @@
       "detail": "title \"Sushi Finder — worldwide sushi discovery\", description present, og:image present"
     },
     "fe-light-dark": {
-      "ok": false,
-      "detail": "landmark paint changes between themes (4 regions); toggle FAILED: before=dark after=dark stored=dark persisted=dark — the choice must change the theme AND survive a reload"
+      "ok": true,
+      "detail": "landmark paint changes between themes (4 regions); toggle ok"
     },
     "fe-required-pages": {
       "ok": true,
@@ -52,5 +52,5 @@
     }
   },
   "consoleErrors": [],
-  "ok": false
+  "ok": true
 }

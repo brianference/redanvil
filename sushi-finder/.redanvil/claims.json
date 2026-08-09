@@ -3,5 +3,16 @@
   "localAsset": "index-wtA1k7Zk.js",
   "servedAsset": "index-wtA1k7Zk.js",
   "assetHashMatches": true,
-  "shippedAt": "2026-08-09T03:25:33.598Z"
+  "shippedAt": "2026-08-09T05:07:23.957Z",
+  "coldVisitorProbe": {
+    "path": "/",
+    "expectSelector": "input[type='search'], form[role='search']",
+    "minCount": 1
+  },
+  "searchProbe": {
+    "path": "/",
+    "inputName": "/search|find/i",
+    "query": "Tokyo",
+    "expectFewerResults": false
+  }
 }

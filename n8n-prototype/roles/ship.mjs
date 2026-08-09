@@ -8,7 +8,7 @@
  * between them has bitten this project repeatedly.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const args = Object.fromEntries(process.argv.slice(2).flatMap((a) => {
@@ -39,8 +39,34 @@ const prodJs = (html.match(/assets\/(index-[A-Za-z0-9_-]+\.js)/) ?? [])[1];
 
 const matched = prodJs === localJs;
 mkdirSync(join(appDir, '.redanvil'), { recursive: true });
-writeFileSync(join(appDir, '.redanvil', 'claims.json'),
-  JSON.stringify({ deployUrl: url, localAsset: localJs, servedAsset: prodJs ?? null, assetHashMatches: matched, shippedAt: new Date().toISOString() }, null, 2) + '\n');
+// MERGE, never overwrite. This wrote a fresh object on every deploy and silently
+// destroyed coldVisitorProbe and searchProbe, so cold_visitor reported "no
+// primary-flow probe" immediately after each ship — a step erasing another
+// step's configuration, which is worse than one that simply fails.
+const claimsPath = join(appDir, '.redanvil', 'claims.json');
+let existingClaims = {};
+if (existsSync(claimsPath)) {
+  try {
+    existingClaims = JSON.parse(readFileSync(claimsPath, 'utf8'));
+  } catch {
+    /* a corrupt claim is replaced rather than merged */
+  }
+}
+writeFileSync(
+  claimsPath,
+  JSON.stringify(
+    {
+      ...existingClaims,
+      deployUrl: url,
+      localAsset: localJs,
+      servedAsset: prodJs ?? null,
+      assetHashMatches: matched,
+      shippedAt: new Date().toISOString()
+    },
+    null,
+    2
+  ) + '\n'
+);
 
 console.log(`ship: local ${localJs} | prod ${prodJs ?? 'NONE'} | ${matched ? 'MATCH' : 'MISMATCH'}`);
 process.exit(matched ? 0 : 1);
