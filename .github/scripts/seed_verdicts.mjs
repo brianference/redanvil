@@ -37,6 +37,25 @@ if (ruleIds.length === 0) {
   process.exit(1);
 }
 
+/**
+ * Rules whose method is `visual` in the rubric -- the only ones a verdict may
+ * supply. A `det` rule is decided by its own check, and the schema rejects any
+ * verdict claiming to answer one. Seeding those turned a legitimate list into an
+ * invalid one: "fe-light-dark: method 'det' is decided by a check".
+ */
+const VISUAL_RULES = new Set([
+  'fe-a11y-contrast',
+  'fe-premium-nav',
+  'fe-required-pages',
+  'fe-no-attribution',
+  'fe-responsive-375',
+  'fe-product-completeness',
+  'fe-visual-review-recorded',
+  'fe-design-archetype',
+  'fe-cold-visitor',
+  'fe-seo-og'
+]);
+
 const existing = existsSync(verdictsPath) ? JSON.parse(readFileSync(verdictsPath, 'utf8')) : [];
 const known = new Set(existing.map((v) => v.ruleId));
 const now = new Date().toISOString();
@@ -44,6 +63,8 @@ const now = new Date().toISOString();
 let added = 0;
 for (const ruleId of ruleIds) {
   if (known.has(ruleId)) continue;
+  // det rules are decided by their check; a verdict may not answer one.
+  if (!VISUAL_RULES.has(ruleId)) continue;
   const f = findings[ruleId];
   existing.push({
     ruleId,

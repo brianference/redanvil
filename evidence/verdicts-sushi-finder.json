@@ -1,27 +1,5 @@
 [
   {
-    "ruleId": "fe-touch-targets",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-sushi-finder.json"
-    ],
-    "note": "6 route(s) at 375; every interactive element >= 44px",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
-  },
-  {
-    "ruleId": "fe-type-floor",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-sushi-finder.json"
-    ],
-    "note": "6 route(s) at 375, smallest body font 16px; nothing under 16px",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
-  },
-  {
     "ruleId": "fe-responsive-375",
     "passed": true,
     "method": "visual",
@@ -29,19 +7,8 @@
       "evidence/design-sushi-finder.json"
     ],
     "note": "no page or element overflow/clip at 375 on 6 route(s) (H>1px V>2px)",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
-  },
-  {
-    "ruleId": "fe-safe-areas",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-sushi-finder.json"
-    ],
-    "note": "header sticky on all 6 route(s), padding-top 12px",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
+    "reviewedAt": "2026-08-09T05:14:29.423Z",
+    "reviewedCommit": "unstamped"
   },
   {
     "ruleId": "fe-premium-nav",
@@ -51,19 +18,8 @@
       "evidence/design-sushi-finder.json"
     ],
     "note": "5 header link(s) [Sushi Finder, Board, Catalog, About, Contact], aria-current on \"Board\"",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
-  },
-  {
-    "ruleId": "fe-noncolor-state",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-sushi-finder.json"
-    ],
-    "note": "active nav item: weight 600, gradient background false, aria-current present true",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
+    "reviewedAt": "2026-08-09T05:14:29.423Z",
+    "reviewedCommit": "unstamped"
   },
   {
     "ruleId": "fe-no-attribution",
@@ -73,19 +29,8 @@
       "evidence/design-sushi-finder.json"
     ],
     "note": "no attribution text",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
-  },
-  {
-    "ruleId": "fe-cross-link",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-sushi-finder.json"
-    ],
-    "note": "cross-site link present",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
+    "reviewedAt": "2026-08-09T05:14:29.423Z",
+    "reviewedCommit": "unstamped"
   },
   {
     "ruleId": "fe-seo-og",
@@ -95,19 +40,8 @@
       "evidence/design-sushi-finder.json"
     ],
     "note": "title \"Sushi Finder — worldwide sushi discovery\", description present, og:image present",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
-  },
-  {
-    "ruleId": "fe-light-dark",
-    "passed": true,
-    "method": "visual",
-    "evidence": [
-      "evidence/design-sushi-finder.json"
-    ],
-    "note": "landmark paint changes between themes (4 regions); toggle ok",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
+    "reviewedAt": "2026-08-09T05:14:29.423Z",
+    "reviewedCommit": "unstamped"
   },
   {
     "ruleId": "fe-required-pages",
@@ -117,8 +51,8 @@
       "evidence/design-sushi-finder.json"
     ],
     "note": "/about 200 \"About Sushi Finder\" 220w/3§; /contact 200 \"Contact\" 62w/0§; /terms 200 \"Terms of use\" 1843w/15§; /privacy 200 \"Privacy policy\" 1785w/15§; /no-such-page 200 \"Page not found\" 19w/0§",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
+    "reviewedAt": "2026-08-09T05:14:29.423Z",
+    "reviewedCommit": "unstamped"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -128,7 +62,7 @@
       "evidence/design-sushi-finder.json"
     ],
     "note": "0 console/page error(s) across the measured loads",
-    "reviewedAt": "2026-08-09T05:12:20.516Z",
-    "reviewedCommit": "ca22754024570aab891142bbd10d0b61abe30c68"
+    "reviewedAt": "2026-08-09T05:14:29.423Z",
+    "reviewedCommit": "unstamped"
   }
 ]
