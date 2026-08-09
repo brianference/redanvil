@@ -5,12 +5,12 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-09T05:08:06.952Z",
+        "at": "2026-08-09T05:10:51.365Z",
         "report": "evidence/axe/sushi-finder-dark.json"
       },
       {
         "ok": true,
-        "at": "2026-08-09T05:08:09.454Z",
+        "at": "2026-08-09T05:10:53.810Z",
         "report": "evidence/axe/sushi-finder-light.json"
       }
     ]
