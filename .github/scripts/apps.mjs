@@ -218,7 +218,12 @@ export function loadManagedApps(repoRoot = process.cwd()) {
       out.push({
         slug: entry.slug,
         dir: entry.dir,
-        url: '',
+        // Was hardcoded to ''. Every managed app was therefore born ungateable:
+        // no URL means no visual check, no runtime probe, no deploy
+        // verification, and reverify reporting "Served: (none) x250" against a
+        // production site that was serving correctly. The registry entry is the
+        // only place that knows where a scaffolded app lives, so read it.
+        url: typeof entry.url === 'string' ? entry.url : '',
         designRoutes: '/about,/contact,/terms,/privacy,/no-such-page',
         widthRoutes: null,
         e2e: false,
