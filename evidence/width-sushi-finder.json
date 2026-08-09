@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://sushi-finder.pages.dev",
-  "checkedAt": "2026-08-09T03:15:04.821Z",
+  "checkedAt": "2026-08-09T03:16:40.794Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -22,45 +22,45 @@
       "route": "/about",
       "width": 1440,
       "status": 200,
-      "contentPct": 48,
+      "contentPct": 93,
       "contentBox": {
         "left": 48,
-        "right": 747
+        "right": 1390
       },
-      "ok": false
+      "ok": true
     },
     {
       "route": "/contact",
       "width": 1440,
       "status": 200,
-      "contentPct": 48,
+      "contentPct": 91,
       "contentBox": {
         "left": 48,
-        "right": 751
+        "right": 1370
       },
-      "ok": false
+      "ok": true
     },
     {
       "route": "/terms",
       "width": 1440,
       "status": 200,
-      "contentPct": 48,
+      "contentPct": 93,
       "contentBox": {
         "left": 48,
-        "right": 750
+        "right": 1392
       },
-      "ok": false
+      "ok": true
     },
     {
       "route": "/privacy",
       "width": 1440,
       "status": 200,
-      "contentPct": 48,
+      "contentPct": 93,
       "contentBox": {
         "left": 48,
-        "right": 751
+        "right": 1392
       },
-      "ok": false
+      "ok": true
     },
     {
       "route": "/saved",
@@ -88,45 +88,45 @@
       "route": "/about",
       "width": 1920,
       "status": 200,
-      "contentPct": 36,
+      "contentPct": 94,
       "contentBox": {
         "left": 48,
-        "right": 747
+        "right": 1870
       },
-      "ok": false
+      "ok": true
     },
     {
       "route": "/contact",
       "width": 1920,
       "status": 200,
-      "contentPct": 36,
+      "contentPct": 93,
       "contentBox": {
         "left": 48,
-        "right": 751
+        "right": 1837
       },
-      "ok": false
+      "ok": true
     },
     {
       "route": "/terms",
       "width": 1920,
       "status": 200,
-      "contentPct": 36,
+      "contentPct": 94,
       "contentBox": {
         "left": 48,
-        "right": 750
+        "right": 1871
       },
-      "ok": false
+      "ok": true
     },
     {
       "route": "/privacy",
       "width": 1920,
       "status": 200,
-      "contentPct": 36,
+      "contentPct": 95,
       "contentBox": {
         "left": 48,
-        "right": 751
+        "right": 1872
       },
-      "ok": false
+      "ok": true
     },
     {
       "route": "/saved",
@@ -140,5 +140,5 @@
       "ok": true
     }
   ],
-  "ok": false
+  "ok": true
 }

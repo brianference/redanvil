@@ -500,14 +500,29 @@ a:hover {
   min-height: 28px;
   padding: 0 var(--space-3);
   border-radius: 999px;
-  background: var(--color-ring);
-  color: var(--color-primary-contrast);
-  font-size: var(--text-sm);
+  /* Dedicated chip tokens rather than reusing --color-ring. Near-black on
+     #6b63a8 measured 3.68:1. It had passed while chips were 14px, because that
+     cleared the large-text 3:1 threshold -- so raising the type floor to 16px
+     TURNED A PASSING ELEMENT INTO A FAILING ONE. Fixing one rule can break
+     another, and only re-measuring catches it. */
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+  font-size: 1rem;
   font-weight: 700;
 }
 
-[data-theme='light'] .chip {
-  color: #ffffff;
+/* Light chip on dark text in dark mode, dark chip on light text in light mode.
+   Both pairs verified with axe-core rather than computed by hand -- hand-rolled
+   contrast produced four wrong answers in one session. */
+:root,
+[data-theme='dark'] {
+  --chip-bg: #cdc6f2;
+  --chip-fg: #16122b;
+}
+
+[data-theme='light'] {
+  --chip-bg: #3b3270;
+  --chip-fg: #ffffff;
 }
 
 .photo-grid {

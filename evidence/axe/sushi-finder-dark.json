@@ -1,0 +1,42 @@
+{
+  "url": "https://sushi-finder.pages.dev",
+  "theme": "dark",
+  "checkedAt": "2026-08-09T03:16:43.125Z",
+  "axeVersion": "4.12.1",
+  "contrastViolationNodes": 8,
+  "contrastDetails": [
+    {
+      "target": ".chip--on",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #0c0b1a, background color: #6b63a8, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".chip:nth-child(3)",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #0c0b1a, background color: #6b63a8, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".sushi-card.sushi-card--mon:nth-child(1) > p:nth-child(3) > .chip:nth-child(1)",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #0c0b1a, background color: #6b63a8, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".sushi-card.sushi-card--mon:nth-child(2) > p:nth-child(3) > .chip:nth-child(1)",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #0c0b1a, background color: #6b63a8, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".sushi-card.sushi-card--mon:nth-child(3) > p:nth-child(3) > .chip:nth-child(1)",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #0c0b1a, background color: #6b63a8, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".sushi-card.sushi-card--mon:nth-child(4) > p:nth-child(3) > .chip:nth-child(1)",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #0c0b1a, background color: #6b63a8, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".sushi-card.sushi-card--mon:nth-child(5) > p:nth-child(3) > .chip:nth-child(1)",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #0c0b1a, background color: #6b63a8, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+    },
+    {
+      "target": ".sushi-card.sushi-card--mon:nth-child(6) > p:nth-child(3) > .chip:nth-child(1)",
+      "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #0c0b1a, background color: #6b63a8, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+    }
+  ],
+  "otherViolations": []
+}
