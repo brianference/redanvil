@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://sushi-finder.pages.dev",
-  "checkedAt": "2026-08-09T21:25:54.140Z",
+  "checkedAt": "2026-08-09T21:27:39.453Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
