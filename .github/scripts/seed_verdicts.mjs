@@ -30,7 +30,31 @@ if (!existsSync(reportPath)) {
 }
 
 const report = JSON.parse(readFileSync(reportPath, 'utf8'));
-const findings = report.findings ?? {};
+
+/*
+  Several fail-closed visual rules are measured by their OWN report, not the
+  design audit: fe-cold-visitor by cold-<slug>.json, fe-desktop-width by
+  width-<slug>.json. Seeding only from the design report left the gate refusing
+  the push for rules that HAD been measured, just somewhere else.
+*/
+const findings = { ...(report.findings ?? {}) };
+
+const cold = `evidence/cold-${slug}.json`;
+if (existsSync(cold)) {
+  const c = JSON.parse(readFileSync(cold, 'utf8'));
+  for (const [k, v] of Object.entries(c.findings ?? {})) {
+    if (!findings[k]) findings[k] = v;
+  }
+}
+
+const width = `evidence/width-${slug}.json`;
+if (existsSync(width)) {
+  const w = JSON.parse(readFileSync(width, 'utf8'));
+  findings['fe-desktop-width'] = {
+    ok: w.ok === true,
+    detail: `painted content >= ${w.minPct}% at ${(w.widths ?? []).join('/')}`
+  };
+}
 const ruleIds = Object.keys(findings);
 if (ruleIds.length === 0) {
   console.error(`${reportPath} recorded no findings — nothing measured, so nothing to seed`);
@@ -53,7 +77,17 @@ const VISUAL_RULES = new Set([
   'fe-visual-review-recorded',
   'fe-design-archetype',
   'fe-cold-visitor',
-  'fe-seo-og'
+  'fe-seo-og',
+  // The gate names these in its refusal as "fail-closed visual rule <id> has no
+  // recorded verdict", so it demands a verdict for each. My first list was
+  // derived from a regex over the rubric that missed them, and the push was
+  // refused for rules the design report had already measured.
+  'fe-touch-targets',
+  'fe-type-floor',
+  'fe-noncolor-state',
+  'fe-safe-areas',
+  'fe-cross-link',
+  'fe-desktop-width'
 ]);
 
 const existing = existsSync(verdictsPath) ? JSON.parse(readFileSync(verdictsPath, 'utf8')) : [];
@@ -70,7 +104,7 @@ for (const ruleId of ruleIds) {
     ruleId,
     passed: f.ok === true,
     method: 'visual',
-    evidence: [reportPath],
+    evidence: [reportPath, ...(existsSync(cold) ? [cold] : []), ...(existsSync(width) ? [width] : [])],
     note: String(f.detail ?? '').slice(0, 300),
     reviewedAt: now,
     reviewedCommit: 'unstamped'
