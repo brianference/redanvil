@@ -304,6 +304,31 @@ export const PROCESS = [
     ]
   },
   {
+    id: 'integration',
+    role: 'integration',
+    summary: 'Wire the real external data source and PROVE it answers today',
+    dependsOn: ['reuse'],
+    humanGate: false,
+    skippable: false,
+    kind: 'script',
+    reworkTo: 'build',
+    maxCycles: 3,
+    requires: [
+      {
+        // The owner asked why the app had no real location data. The answer was
+        // structural: R33 says "prove the integration exists TODAY" but no STEP
+        // required one, so nothing could demand it -- the same hole that let the
+        // logo and palette roles be skipped. An app whose domain is discovery
+        // and whose only data is six seeded rows is a demo, not a product.
+        path: 'evidence/integration-proof.json',
+        kind: 'file',
+        minBytes: 200,
+        mustContain: ['provider', '"live": true'],
+        why: 'a documented API is not a working one; the proof records a real response captured from the live provider, with the key server-side'
+      }
+    ]
+  },
+  {
     id: 'testwriter',
     kind: 'agent',
     role: 'testwriter',
@@ -329,7 +354,7 @@ export const PROCESS = [
     id: 'build',
     role: 'engineer',
     summary: 'Implement the decided design',
-    dependsOn: ['testwriter', 'reuse'],
+    dependsOn: ['testwriter', 'integration'],
     humanGate: false,
     skippable: false,
     requires: [
@@ -462,8 +487,12 @@ export const PROCESS = [
         path: 'evidence/link-check.json',
         kind: 'file',
         minBytes: 100,
-        mustContain: ['checked'],
-        why: 'a dead citation is indistinguishable from a fabricated one to a reader'
+        // "checked" alone passed a run that FOUND a dead link. The role reported
+        // it, exited 1, and the contract shrugged because the word was present.
+        // Requiring zero dead links is the difference between running a check
+        // and honouring it.
+        mustContain: ['"dead": 0'],
+        why: 'a dead citation is indistinguishable from a fabricated one to a reader, so finding one must fail the step'
       }
     ]
   },

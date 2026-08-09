@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { EmptyState, ErrorState, LoadingState } from '../components/states';
 import { en } from '../i18n/en';
-import { fetchSushis } from '../lib/api';
+import { fetchPlaces, fetchSushis } from '../lib/api';
 import type { SushiRow } from '../lib/schemas';
 
 /** Discovery view ids from design-refs/design-options/DECISION.md. */
@@ -33,6 +33,8 @@ export function HomePage(): JSX.Element {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error' | 'empty'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  /** True when the current results came from Google Places rather than the catalogue. */
+  const [liveResults, setLiveResults] = useState(false);
   const [seatingSlot, setSeatingSlot] = useState<'now' | '18' | '19'>('now');
 
   const load = useCallback(async (q: string) => {
@@ -40,12 +42,25 @@ export function HomePage(): JSX.Element {
     setError(null);
     try {
       const data = await fetchSushis(q || undefined);
-      setItems(data.items);
-      setStatus(data.items.length === 0 ? 'empty' : 'ready');
+      let rows = data.items;
+      let live = false;
+
+      // A worldwide finder must ask the worldwide source. The curated D1
+      // catalogue holds six places, so a real query like a zip code returned an
+      // empty list while Google had twelve results for it. Fall through to
+      // Places whenever a search finds nothing locally.
+      if (q.trim().length >= 2 && rows.length === 0) {
+        rows = await fetchPlaces(q.trim());
+        live = rows.length > 0;
+      }
+
+      setItems(rows);
+      setLiveResults(live);
+      setStatus(rows.length === 0 ? 'empty' : 'ready');
       // Bind to a local before the closure: TypeScript cannot carry the
       // `data.items[0]` narrowing inside the setState callback, because the
       // array could in principle change between the check and the call.
-      const first = data.items[0];
+      const first = rows[0];
       if (first) setSelectedId((prev) => prev ?? first.id);
     } catch (err) {
       setItems([]);
@@ -105,9 +120,13 @@ export function HomePage(): JSX.Element {
   const reserveCount = useMemo(() => items.filter((item) => !item.walkIn).length, [items]);
 
   const seatingRows = useMemo(() => {
-    // Static catalog policy only — not live inventory (FEATURES B3).
-    if (seatingSlot === 'now') return items.filter((item) => item.walkIn);
-    if (seatingSlot === '18') return items.filter((item) => item.style === 'counter' || item.walkIn);
+    // The List view shows EVERY result. It previously filtered by walkIn, which
+    // was left over from the old "seating" semantics -- and live Google Places
+    // rows carry walkIn=false, so a real search rendered an empty list while the
+    // map beside it showed 37 places. A filter that silently drops every live
+    // result is worse than no filter.
+    if (seatingSlot === 'now') return items;
+    if (seatingSlot === '18') return items.filter((item) => item.walkIn || !item.style);
     return items.filter((item) => item.style === 'omakase' || !item.walkIn);
   }, [items, seatingSlot]);
 
@@ -116,6 +135,12 @@ export function HomePage(): JSX.Element {
   return (
     <main id="main">
       <h1 className="page-title">{en.home.title}</h1>
+
+      {liveResults ? (
+        <p className="live-note" role="status">
+          {en.home.liveResults}
+        </p>
+      ) : null}
 
       <nav className="view-tabs" aria-label={en.home.viewNav}>
         <button

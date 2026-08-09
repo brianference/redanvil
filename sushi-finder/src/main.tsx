@@ -6,7 +6,9 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { applyThemeMode, readThemeMode } from './theme';
 import './theme.css';
 
-applyThemeMode(readThemeMode());
+// Initial apply must NOT persist: writing here records a choice the visitor
+// never made and pins the theme, making the OS preference unreachable.
+applyThemeMode(readThemeMode(), false);
 
 const rootEl = document.getElementById('root');
 if (!rootEl) {

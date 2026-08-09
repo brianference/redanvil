@@ -130,3 +130,77 @@ because it was written down.
 - Nothing beyond `prd` has been exercised inside n8n itself — the walk was done by
   `run-build.mjs` because of the broker port collision. That collision is the
   first thing Phase 1 fixes.
+
+---
+
+## 6. Learnings folded back in (2026-08-08, sushi-finder build)
+
+Every item here is a defect that reached a deployed page, and each produced a
+change to the map or a contract rather than a note.
+
+### The recurring shape: an endpoint exists and the UI never calls it
+
+Twice now. pet-sitter shipped a working 172-line assistant Worker whose button
+made zero requests. sushi-finder shipped `/api/places` returning twelve real
+results for zip 85331 while all three views rendered nothing, because the client
+only ever asked D1. Both passed every check that looks at source or at an
+endpoint in isolation.
+
+**The only thing that catches it is driving the deployed UI and recording which
+requests it actually makes.** `evidence/verify-85331.mjs` does that: fill the real
+search box, wait on a real response, assert the API list contains the endpoint.
+An endpoint test and a UI test both pass while the wire between them is missing.
+
+### New step: `integration`
+
+R33 said "prove the integration exists TODAY" and no step required one, so the
+app's entire premise -- worldwide discovery -- rested on six seeded rows. The
+step now sits between `decide` and `build`, and `build` depends on it. Its
+contract wants a captured live response, `"live": true`, and a named provider.
+A documented API is not a working one.
+
+### Contracts that ran and verified nothing
+
+- **ship** passed while `assetHashMatches` was false. It required the string
+  `deployUrl`, which a FAILED deploy also writes. Now requires
+  `"assetHashMatches": true`.
+- **qa-data** found a dead link, exited 1, and passed its contract because it
+  only required the word `checked`. Now requires `"dead": 0`.
+
+Both are the session's dominant failure mode: a check that executes perfectly and
+cannot fail.
+
+### False positives, the mirror image
+
+Four now, all the same shape -- a document failed for NAMING the thing it
+forbids, or a checker measuring the wrong object:
+
+1. a brief saying "not emoji or letter placeholders"
+2. a PRD checklist reading "No placeholder tokens (TBD/TODO/lorem)"
+3. a decision doc saying "not chosen, not shortlisted by default", which
+   reported three decisions the owner had never made
+4. `qa-data` reporting `http://127.0.0.1:<port>/api/health` as a dead citation
+   when it is a verification command inside a code span
+
+Markers now require `TOKEN: value`; the link checker strips code spans and skips
+local and templated hosts.
+
+### The duplicate-hash contract earned its keep
+
+`visual` requires distinct content hashes. It reported 10 of 18, which looked
+like a breakpoint problem and was not: light and dark were byte-identical because
+the app wrote `'dark'` to localStorage on first load, pinning every visitor to
+dark and making the OS preference unreachable. It had recorded a choice the user
+never made. A rendering check found a state-management bug that no source review
+would have.
+
+**Initial theme application must never persist.** Only a deliberate toggle writes.
+
+### Delegation
+
+Grok hit `403 personal-team-blocked:spending-limit` mid-build, blocking 11 of 23
+roles. Before that, one variations job spent 436K tokens over 8 turns, left its
+own generator un-run, and edited five app source files a design task had no
+business touching -- because it was dispatched against the app directly instead
+of an isolated worktree. Design roles are now scoped to the app directory, and
+`judge` is the only role that gets the repository, because it reads `git diff`.

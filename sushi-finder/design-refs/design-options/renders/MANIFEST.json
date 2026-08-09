@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-08T19:26:17.419Z",
+  "generatedAt": "2026-08-08T20:11:26.807Z",
   "url": "https://sushi-finder.pages.dev",
   "renders": [
     {
@@ -7,70 +7,70 @@
       "route": "/?view=photos",
       "viewport": 375,
       "theme": "light",
-      "sha256": "649ba399bd5336e048dde1cb7613aa6ee319540d5a216046a96aa4b67834005f"
+      "sha256": "f0851f87c52de47eb42db8a09daf7a490adfaac8a57e548159496ffceaa6cb64"
     },
     {
       "file": "_view_map-375-light.png",
       "route": "/?view=map",
       "viewport": 375,
       "theme": "light",
-      "sha256": "080e9a712d45a4168aa4945fa8928dbf8486f60bf3401fca760e8eb65c862b26"
+      "sha256": "24c414e37b78884f9c03afa73d30252e07fbf430e2ca2beecf53dfc70a712fe5"
     },
     {
       "file": "_view_list-375-light.png",
       "route": "/?view=list",
       "viewport": 375,
       "theme": "light",
-      "sha256": "6bd265f8c60c583f8fb81fb8f88c24c23aa43d896d342f3f3281c7ac13e3fa12"
+      "sha256": "2a9e1b69b31a30f3676aa44fe9afe9954ab8b299ec86d3565aa4b73684cfe89e"
     },
     {
       "file": "_view_photos-768-light.png",
       "route": "/?view=photos",
       "viewport": 768,
       "theme": "light",
-      "sha256": "6f9e764a673291720efa764448010f86a8b5962260d9ef3343cd66de0097bab0"
+      "sha256": "6dec43011536b28074e0539ba316f1b0e6c537c87f874411cbc0d852a0f9dd92"
     },
     {
       "file": "_view_map-768-light.png",
       "route": "/?view=map",
       "viewport": 768,
       "theme": "light",
-      "sha256": "451ee68354d82a27a642e6121e71955bd94de9762f2c186687e400d3ae0a1623"
+      "sha256": "c32dbba710d9a8b859946b014c9d907cafddb1cd64072935305dcf619dbe9baa"
     },
     {
       "file": "_view_list-768-light.png",
       "route": "/?view=list",
       "viewport": 768,
       "theme": "light",
-      "sha256": "419ffcd7f5e32db5adf7a423859c6288e58da7a59a4541c449bf96f7e652fff0"
+      "sha256": "418333e8ed08858f96173a9f69d032a9d23d275a9cdfba70fd80fd06befa9fef"
     },
     {
       "file": "_view_photos-1280-light.png",
       "route": "/?view=photos",
       "viewport": 1280,
       "theme": "light",
-      "sha256": "3596b22d7686b587b24e48f832553c2dbdb40ff60055ddb65f543a55cace655e"
+      "sha256": "6e41df573a1b73fd5baf22cadfa6e4b4d9cf8b6c5b8f8c4ee0f076dd9cd75c2e"
     },
     {
       "file": "_view_map-1280-light.png",
       "route": "/?view=map",
       "viewport": 1280,
       "theme": "light",
-      "sha256": "ce9afef62a241863752225f209a8536b405f31b56183ca9d8d03c90863926937"
+      "sha256": "7e926fbe57c5f7e9f63d6934c8498e43222f64acb79a16a19d292ad64fbaad6e"
     },
     {
       "file": "_view_list-1280-light.png",
       "route": "/?view=list",
       "viewport": 1280,
       "theme": "light",
-      "sha256": "e94e602657b12012d223c863d06c40c1c0f086c59ac3a3222c01318bf39b2ad3"
+      "sha256": "abbc6302798a0ec8714e76f9db52e30ce0de942318ccb993fb125ce95733370e"
     },
     {
       "file": "_view_photos-375-dark.png",
       "route": "/?view=photos",
       "viewport": 375,
       "theme": "dark",
-      "sha256": "638559eb43dc72117b20a2cbf54deaf82a68ed6472d91f7ca832c034521d65c6"
+      "sha256": "649ba399bd5336e048dde1cb7613aa6ee319540d5a216046a96aa4b67834005f"
     },
     {
       "file": "_view_map-375-dark.png",
@@ -112,7 +112,7 @@
       "route": "/?view=photos",
       "viewport": 1280,
       "theme": "dark",
-      "sha256": "3596b22d7686b587b24e48f832553c2dbdb40ff60055ddb65f543a55cace655e"
+      "sha256": "78d8259864ce6d062b0844e691d26e0d4191a4de1932cdd33f9a18f1492483c8"
     },
     {
       "file": "_view_map-1280-dark.png",

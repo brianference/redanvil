@@ -1,0 +1,105 @@
+{
+  "url": "https://sushi-finder.pages.dev",
+  "checkedAt": "2026-08-09T00:07:09.026Z",
+  "routesProbed": 6,
+  "realEndpoints": 5,
+  "spaFallbacks": [],
+  "results": [
+    {
+      "path": "/",
+      "methods": {
+        "GET": {
+          "status": 200,
+          "contentType": "text/html; charset=utf-8",
+          "bodyHead": "<!doctype html>\r\n<html lang=\"en\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"width=devi"
+        },
+        "POST": {
+          "status": 405,
+          "contentType": "",
+          "bodyHead": ""
+        }
+      },
+      "looksLikeSpaFallback": false
+    },
+    {
+      "path": "/api/assistant",
+      "methods": {
+        "GET": {
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "bodyHead": "{\"error\":\"no such endpoint: /api/assistant\"}"
+        },
+        "POST": {
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "bodyHead": "{\"error\":\"message is required\"}"
+        }
+      },
+      "looksLikeSpaFallback": false
+    },
+    {
+      "path": "/api/health.test",
+      "methods": {
+        "GET": {
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "bodyHead": "{\"error\":\"no such endpoint: /api/health.test\"}"
+        },
+        "POST": {
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "bodyHead": "{\"error\":\"no such endpoint: /api/health.test\"}"
+        }
+      },
+      "looksLikeSpaFallback": false
+    },
+    {
+      "path": "/api/health",
+      "methods": {
+        "GET": {
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "bodyHead": "{\"status\":\"ok\"}"
+        },
+        "POST": {
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "bodyHead": "{\"error\":\"no such endpoint: /api/health\"}"
+        }
+      },
+      "looksLikeSpaFallback": false
+    },
+    {
+      "path": "/api/places",
+      "methods": {
+        "GET": {
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "bodyHead": "{\"error\":\"a search of at least two characters is required\"}"
+        },
+        "POST": {
+          "status": 404,
+          "contentType": "application/json; charset=utf-8",
+          "bodyHead": "{\"error\":\"no such endpoint: /api/places\"}"
+        }
+      },
+      "looksLikeSpaFallback": false
+    },
+    {
+      "path": "/api/sushis",
+      "methods": {
+        "GET": {
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "bodyHead": "{\"items\":[{\"id\":\"sushi_kura\",\"title\":\"Kura Revolving Sushi Bar\",\"description\":\"Conveyor-belt (kaiten) sushi chain with t"
+        },
+        "POST": {
+          "status": 400,
+          "contentType": "application/json; charset=utf-8",
+          "bodyHead": "{\"error\":\"title is required\"}"
+        }
+      },
+      "looksLikeSpaFallback": false
+    }
+  ]
+}

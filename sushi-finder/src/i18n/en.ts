@@ -30,6 +30,7 @@ export const en = {
     viewNav: 'Discovery views',
     viewPhotos: 'Photos',
     viewMap: 'Map',
+    liveResults: 'Live results from Google Places for this search.',
     editorialEyebrow: "Tonight's find",
     viewSeating: 'List',
     mapLabel: 'Catalog places on a simple map board',

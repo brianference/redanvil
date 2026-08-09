@@ -19,8 +19,21 @@ const urls = new Set();
 if (existsSync(docsDir)) {
   for (const e of readdirSync(docsDir, { withFileTypes: true, recursive: true })) {
     if (!e.isFile() || !/\.(md|json)$/.test(e.name)) continue;
-    const text = readFileSync(join(e.parentPath ?? e.path, e.name), 'utf8');
-    for (const m of text.matchAll(/https?:\/\/[^\s)\]"'<>]+/g)) urls.add(m[0].replace(/[.,]$/, ''));
+    let text = readFileSync(join(e.parentPath ?? e.path, e.name), 'utf8');
+    // Strip code spans and fenced blocks first. A URL inside `curl -sf
+    // http://127.0.0.1:<port>/api/health` is a verification COMMAND, not a
+    // citation, and reporting it as a dead link is checking the wrong thing --
+    // the same false-positive shape as failing a document for naming the
+    // markers it forbids.
+    text = text.replace(/```[\s\S]*?```/g, ' ').replace(/`[^`\n]*`/g, ' ');
+    for (const m of text.matchAll(/https?:\/\/[^\s)\]"'<>]+/g)) {
+      const url = m[0].replace(/[.,]$/, '');
+      // Local and placeholder hosts are examples by definition; they are not
+      // expected to resolve from CI or from a reader's machine.
+      if (/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|example\.(com|org))/i.test(url)) continue;
+      if (/<[a-z-]+>/i.test(url)) continue; // templated, e.g. https://<project>.pages.dev
+      urls.add(url);
+    }
   }
 }
 

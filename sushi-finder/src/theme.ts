@@ -20,7 +20,11 @@ export function resolveTheme(mode: ThemeMode): 'light' | 'dark' {
 
 /**
  * Read theme preference from storage.
- * Brand default is dark (Mon Crest dual-temperature night board). Saved choice always wins.
+ *
+ * Default is 'system', NOT 'dark'. A brand default of dark meant a visitor whose
+ * OS asks for light was served dark, which the rule pack forbids: the default
+ * follows the system and a stored choice still wins. Mon Crest is a
+ * dual-temperature brand and works in both.
  */
 export function readThemeMode(): ThemeMode {
   try {
@@ -29,7 +33,7 @@ export function readThemeMode(): ThemeMode {
   } catch {
     /* private mode */
   }
-  return 'dark';
+  return 'system';
 }
 
 /**
@@ -37,11 +41,17 @@ export function readThemeMode(): ThemeMode {
  *
  * @param mode - Preference to store.
  */
-export function applyThemeMode(mode: ThemeMode): 'light' | 'dark' {
-  try {
-    localStorage.setItem(STORAGE_KEY, mode);
-  } catch {
-    /* private mode */
+export function applyThemeMode(mode: ThemeMode, persist = true): 'light' | 'dark' {
+  // `persist` exists because the initial apply MUST NOT write. Persisting on
+  // every call stored 'dark' on first load, which pinned every visitor to dark
+  // forever and made the OS preference unreachable -- the app had recorded a
+  // choice the user never made. Only a deliberate toggle persists.
+  if (persist) {
+    try {
+      localStorage.setItem(STORAGE_KEY, mode);
+    } catch {
+      /* private mode */
+    }
   }
   const resolved = resolveTheme(mode);
   document.documentElement.setAttribute('data-theme', resolved);

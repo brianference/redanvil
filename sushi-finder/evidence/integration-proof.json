@@ -1,0 +1,34 @@
+{
+  "provider": "google-places (Places API New, places:searchText)",
+  "endpoint": "/api/places",
+  "live": true,
+  "capturedAt": "2026-08-08T20:07:48.293Z",
+  "probeUrl": "https://sushi-finder.pages.dev/api/places?q=Tokyo&limit=4",
+  "httpStatus": 200,
+  "resultCount": 4,
+  "sample": [
+    {
+      "title": "Sushizanmai Main Store",
+      "address": "4-chōme-11-9 Tsukiji, Chuo City, Tokyo 104-0045, Japan",
+      "lat": 35.6659044,
+      "lng": 139.77064919999998,
+      "rating": 4.3
+    },
+    {
+      "title": "KABUKI Sushi",
+      "address": "Japan, 〒160-0021 Tokyo, Shinjuku City, Kabukichō, 2-chōme−25−８ エコプレイス新宿 １F",
+      "lat": 35.695577899999996,
+      "lng": 139.703685,
+      "rating": 4.7
+    },
+    {
+      "title": "Uogashi Nihon-Ichi",
+      "address": "Japan, 〒160-0023 Tokyo, Shinjuku City, Nishishinjuku, 1-chōme−12−１２ 河西ビル 1F",
+      "lat": 35.689982799999996,
+      "lng": 139.6972998,
+      "rating": 4.5
+    }
+  ],
+  "keyHandling": "Cloudflare Pages secret GOOGLE_PLACES_API_KEY, read server-side in the Worker. Never sent to the browser.",
+  "note": "A documented API is not a working one. This is a real response captured from the deployed Worker, not a fixture."
+}
