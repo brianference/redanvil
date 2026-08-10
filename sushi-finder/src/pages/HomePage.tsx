@@ -102,17 +102,27 @@ export function HomePage(): JSX.Element {
   const bounds = useMemo(() => {
     const lats = withCoords.map((i) => i.lat!);
     const lngs = withCoords.map((i) => i.lng!);
-    const minLat = Math.min(...lats, 0);
-    const maxLat = Math.max(...lats, 0);
-    const minLng = Math.min(...lngs, 0);
-    const maxLng = Math.max(...lngs, 0);
+    // Do NOT seed with 0. `Math.min(...lats, 0)` was meant to guard an empty
+    // array and instead injected the equator and the prime meridian into every
+    // real bounding box: for Arizona latitudes around 33.8 the range became
+    // 0..33.8, so all 18 pins for zip 85331 collapsed onto one point at the
+    // canvas edge. Guard emptiness separately.
+    if (lats.length === 0) {
+      return { minLat: 0, maxLat: 1, minLng: 0, maxLng: 1, spanLat: 1, spanLng: 1 };
+    }
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
     return {
       minLat,
       maxLat,
       minLng,
       maxLng,
-      spanLat: maxLat - minLat || 1,
-      spanLng: maxLng - minLng || 1
+      // A minimum span keeps a single-town cluster from stacking: without it,
+      // eighteen places within 0.05 degrees all render at the same pixel.
+      spanLat: Math.max(maxLat - minLat, 0.02),
+      spanLng: Math.max(maxLng - minLng, 0.02)
     };
   }, [withCoords]);
 

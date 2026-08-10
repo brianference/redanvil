@@ -1,9 +1,9 @@
 {
   "deployUrl": "https://sushi-finder.pages.dev",
-  "localAsset": "index-wtA1k7Zk.js",
-  "servedAsset": "index-wtA1k7Zk.js",
+  "localAsset": "index-BmTdQ_Cj.js",
+  "servedAsset": "index-BmTdQ_Cj.js",
   "assetHashMatches": true,
-  "shippedAt": "2026-08-09T05:07:23.957Z",
+  "shippedAt": "2026-08-10T06:35:02.442Z",
   "coldVisitorProbe": {
     "path": "/",
     "expectSelector": "input[type='search'], form[role='search']",

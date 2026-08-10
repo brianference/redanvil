@@ -15,6 +15,14 @@
       "registeredAt": "2026-08-09T03:04:16.671Z",
       "handBuildBlocked": true,
       "url": "https://sushi-finder.pages.dev"
+    },
+    {
+      "slug": "furniture-listings",
+      "dir": "furniture-listings",
+      "entryPoint": "pm",
+      "url": "https://furniture-listings.pages.dev",
+      "registeredAt": "2026-08-10T04:30:51.476Z",
+      "handBuildBlocked": true
     }
   ]
 }

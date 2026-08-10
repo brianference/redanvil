@@ -989,3 +989,11 @@ a:hover {
     break-after: avoid;
   }
 }
+
+/* The map read as a letterbox strip at 420px on desktop. A map view whose fold
+   is supposed to be the map needs the height to match that claim. */
+@media (min-width: 900px) {
+  .map-canvas {
+    min-height: 620px;
+  }
+}
