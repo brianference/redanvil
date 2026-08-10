@@ -117,6 +117,70 @@ jobs:
       - name: Every gated app meets the finish line
         run: node .github/scripts/meets_the_bar.mjs
 
+  # sushi-finder's acceptance suite drives a real browser against a real Pages
+  # serve, so it needs a server this repo's other lanes never start. It used to
+  # be dragged into the orchestrator job by a root vitest glob of
+  # `**/test/**/*.test.ts`, where it failed every run for five days -- and the
+  # error it produced named a browser-lifecycle fault rather than the missing
+  # server, so the true cause never surfaced. The root config is scoped to the
+  # orchestrator now; this is the lane that actually runs the suite.
+  sushi-finder-acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20
+      # sushi-finder is NOT a root npm workspace -- it carries its own lockfile,
+      # so the root `npm ci` does not install it.
+      - name: Install app deps
+        run: npm ci
+        working-directory: sushi-finder
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: sushi-finder
+      # The suite reads real rows through /api/sushis, so the local D1 has to be
+      # migrated and seeded before the server starts or every list assertion
+      # measures an empty database.
+      - name: Apply D1 migrations to the local database
+        run: npm run db:migrate:local
+        working-directory: sushi-finder
+      - name: Build
+        run: npm run build
+        working-directory: sushi-finder
+      # Wait on a real readiness signal (/api/health answering 200), never a
+      # fixed sleep: a sleep that is too short reports the app broken and a
+      # sleep that is long enough is mostly wasted. Fails the job if the server
+      # never comes up, rather than letting the suite discover it as 23 confusing
+      # navigation errors.
+      - name: Start the Pages preview and wait for it
+        working-directory: sushi-finder
+        run: |
+          # nohup + disown so the server outlives this step's shell; each step
+          # is its own process, and a plain `&` child can take the SIGHUP.
+          nohup npm run preview > preview.log 2>&1 &
+          disown
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://127.0.0.1:8788/api/health; then
+              echo "preview ready after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "preview never became ready; last 40 log lines:"; tail -40 preview.log; exit 1
+      # No silent caps. assistant.test.ts is the one spec this lane cannot run:
+      # /api/assistant is backed by the Workers AI binding, which wrangler
+      # connects to the real Cloudflare account even in local dev, so it needs
+      # credentials this repo does not hold. Saying so on every run keeps an
+      # uncovered spec from reading as a covered one. Everything else runs, and
+      # any NEW spec is included automatically -- only this one file is excluded.
+      - name: Declare what this lane does not cover
+        run: echo "NOT COVERED HERE: test/acceptance/assistant.test.ts (needs Workers AI credentials)"
+      - name: Acceptance tests
+        working-directory: sushi-finder
+        run: npx vitest run --config vitest.acceptance.config.ts --exclude node_modules --exclude dist --exclude 'test/acceptance/assistant.test.ts'
+
   # Note: linting is NOT repeated here. The root `npm run lint` in the
   # orchestrator job runs `eslint .` over the whole repo, which already covers
   # every file in both apps.
