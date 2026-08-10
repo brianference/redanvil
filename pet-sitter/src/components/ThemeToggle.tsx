@@ -16,7 +16,17 @@ type ThemeChoice = 'light' | 'dark';
  */
 export function resolveTheme(stored: string | null, prefersDark: boolean): ThemeChoice {
   if (stored === 'light' || stored === 'dark') return stored;
-  return prefersDark ? 'dark' : 'light';
+  // A cold visitor gets LIGHT, whatever the OS says.
+  //
+  // I changed this to follow prefers-color-scheme earlier today, citing the rule
+  // pack — and only afterwards found cold_visitor.mjs, dated 2026-08-03, which
+  // records a deliberate standard change in the other direction and is the
+  // artifact that actually gates. My change broke pet-sitter's cold_visitor row.
+  //
+  // The rule-pack prose was never updated when the standard changed; that
+  // contradiction is flagged for the owner. The enforced check wins.
+  void prefersDark;
+  return 'light';
 }
 
 /**
