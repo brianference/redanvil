@@ -172,7 +172,6 @@ for (const theme of ['light', 'dark']) {
   }, theme);
   await page.addScriptTag({ path: axePath });
   const axeResult = await page.evaluate(async () => {
-    // eslint-disable-next-line no-undef
     const r = await axe.run(document, {
       runOnly: { type: 'tag', values: ['wcag2aa', 'wcag21aa'] }
     });
