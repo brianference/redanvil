@@ -356,13 +356,6 @@
     },
     {
       "app": "sushi-finder",
-      "rule": "u-sec-timeouts",
-      "reason": "Places fetch has no explicit timeout; a slow provider would hang the Worker until the platform kills it.",
-      "since": "2026-08-09",
-      "fixedBy": "next release — AbortSignal.timeout on the Places call"
-    },
-    {
-      "app": "sushi-finder",
       "rule": "fe-i18n-central-copy",
       "reason": "New strings (liveResults, editorialEyebrow, builtWith) are in en.ts, but hero and map copy added inline during the inline build is not all centralised.",
       "since": "2026-08-09",
@@ -381,20 +374,6 @@
       "reason": "The three view renderers share card markup that was not extracted, because the views were hand-written inline after Grok credits ran out.",
       "since": "2026-08-09",
       "fixedBy": "next release — extract shared card/rating/pill components"
-    },
-    {
-      "app": "sushi-finder",
-      "rule": "fe-seo-assets",
-      "reason": "OG image ships but sitemap.xml and JSON-LD are not generated.",
-      "since": "2026-08-09",
-      "fixedBy": "next release — add sitemap and JSON-LD to the content role"
-    },
-    {
-      "app": "sushi-finder",
-      "rule": "fe-no-inline-width",
-      "reason": "Inline width style objects remain from the scaffold.",
-      "since": "2026-08-09",
-      "fixedBy": "next release — move widths into CSS classes"
     },
     {
       "app": "sushi-finder",
@@ -437,13 +416,6 @@
       "reason": "Engine not named in the measurement metadata.",
       "since": "2026-08-09",
       "fixedBy": "next release — stamp the browser engine"
-    },
-    {
-      "app": "sushi-finder",
-      "rule": "lg-push-cadence",
-      "reason": "66 commits accumulated before this push, against the owners standing instruction to release incrementally. Recorded rather than hidden.",
-      "since": "2026-08-09",
-      "fixedBy": "immediately — push per feature, not per session"
     }
   ]
 }
