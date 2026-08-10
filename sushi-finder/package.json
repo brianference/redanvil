@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "wrangler pages dev ./dist --port 8788 --ip 127.0.0.1 --persist-to .wrangler/state",
-    "db:migrate:local": "wrangler d1 migrations apply sushi-finder --local --persist-to .wrangler/state",
+    "db:migrate:local": "wrangler d1 migrations apply sushi-finder-db --local --persist-to .wrangler/state",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
