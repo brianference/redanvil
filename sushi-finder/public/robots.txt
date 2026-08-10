@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Create/edit routes are operator surfaces, not content. Crawling them wastes
+# budget and can surface half-written rows.
+Disallow: /sushis/new
+Disallow: /sushis/*/edit
+
+Sitemap: https://sushi-finder.pages.dev/sitemap.xml

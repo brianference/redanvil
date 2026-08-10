@@ -15,6 +15,9 @@ import { errorJson, json, optionsResponse } from '../lib/http';
  * and Google bills per call.
  */
 
+/** Upstream budget. Past this the provider is treated as unreachable. */
+const UPSTREAM_TIMEOUT_MS = 8000;
+
 const QuerySchema = z.object({
   q: z.string().trim().min(2).max(120),
   limit: z.coerce.number().int().min(1).max(20).default(12)
@@ -79,6 +82,11 @@ export async function onRequestGet(context: AppContext): Promise<Response> {
   let upstream: Response;
   try {
     upstream = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      // An explicit timeout. Without one a slow provider holds the Worker open
+      // until the platform kills it, and the visitor sees a spinner rather than
+      // an error they can act on. Failing fast with a typed 502 is the honest
+      // outcome; hanging is not.
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -97,7 +105,16 @@ export async function onRequestGet(context: AppContext): Promise<Response> {
       })
     });
   } catch (err) {
-    return errorJson(request, `places provider unreachable: ${String(err).slice(0, 120)}`, 502);
+    // A timeout is an unreachable provider, said plainly, so the UI can show a
+    // real error state instead of an empty success.
+    const timedOut = err instanceof Error && err.name === 'TimeoutError';
+    return errorJson(
+      request,
+      timedOut
+        ? `places provider did not respond within ${UPSTREAM_TIMEOUT_MS}ms`
+        : `places provider unreachable: ${String(err).slice(0, 120)}`,
+      502
+    );
   }
 
   if (!upstream.ok) {

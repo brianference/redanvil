@@ -179,12 +179,11 @@ export function SushiDetailPage(): JSX.Element {
           )}
           {item.photoUrl ? (
             <img
-              className="sushi-card__photo"
+              className="sushi-card__photo detail-photo"
               src={item.photoUrl}
               alt=""
               width={480}
               height={480}
-              style={{ maxWidth: 320, marginBottom: 'var(--space-4)' }}
             />
           ) : null}
           <h2 style={{ fontSize: 'var(--text-sm)', textTransform: 'uppercase' }}>

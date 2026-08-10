@@ -6,6 +6,16 @@ const errs = [];
 p.on('console', m => m.type() === 'error' && errs.push(m.text().slice(0, 90)));
 p.on('pageerror', e => errs.push(String(e).slice(0, 90)));
 await p.goto('https://redanvil.pages.dev/examples', { waitUntil: 'networkidle' });
+// Scroll so lazy images below the fold actually load. Measuring without this
+// reported three "broken images" that all fetch 200 — the probe was wrong, not
+// the page, and a probe that invents defects is worse than no probe.
+await p.evaluate(async () => {
+  for (let y = 0; y < document.body.scrollHeight; y += 600) {
+    window.scrollTo(0, y);
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  window.scrollTo(0, 0);
+});
 await p.waitForTimeout(1500);
 const r = await p.evaluate(() => ({
   cards: [...document.querySelectorAll('a,article,li')].map(e => (e.textContent||'').trim()).filter(t => /Sushi Finder|Pet Sitter|AZ Planting|QuickFlight/.test(t)).length,

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Static routes only. Detail pages (/sushis/:id) are deliberately absent: the
+  catalogue is six curated rows plus live Google Places results that change per
+  query, and listing URLs whose content is fetched at request time would promise
+  crawlers pages that may not resolve.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://sushi-finder.pages.dev/</loc><lastmod>2026-08-10</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://sushi-finder.pages.dev/sushis</loc><lastmod>2026-08-10</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://sushi-finder.pages.dev/about</loc><lastmod>2026-08-10</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://sushi-finder.pages.dev/contact</loc><lastmod>2026-08-10</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://sushi-finder.pages.dev/terms</loc><lastmod>2026-08-10</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://sushi-finder.pages.dev/privacy</loc><lastmod>2026-08-10</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>

@@ -997,3 +997,19 @@ a:hover {
     min-height: 620px;
   }
 }
+
+/* Detail photo. The cap lived in a JS style object, where a media query cannot
+   lift it -- an inline style beats a class, so an inline cap is unliftable by
+   definition. In a class the width can grow with the viewport. */
+.detail-photo {
+  max-width: 320px;
+  width: 100%;
+  height: auto;
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 900px) {
+  .detail-photo {
+    max-width: 420px;
+  }
+}

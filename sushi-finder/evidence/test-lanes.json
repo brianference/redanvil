@@ -1,19 +1,19 @@
 {
-  "ranAt": "2026-08-09T04:03:31.400Z",
+  "ranAt": "2026-08-10T17:27:29.702Z",
   "lanes": [
     {
       "lane": "vitest",
       "ran": true,
       "exitCode": 0,
       "tests": 3,
-      "tail": "   Start at  21:03:06 |    Duration  372ms (transform 62ms, setup 0ms, collect 104ms, tests 9ms, environment 0ms, prepare 402ms)"
+      "tail": "   Start at  10:27:01 |    Duration  940ms (transform 79ms, setup 0ms, collect 166ms, tests 9ms, environment 0ms, prepare 1.38s)"
     },
     {
       "lane": "acceptance",
       "ran": true,
       "exitCode": 0,
       "tests": 7,
-      "tail": "   Start at  21:03:07 |    Duration  15.45s (transform 64ms, setup 0ms, collect 1.89s, tests 12.28s, environment 1ms, prepare 478ms)"
+      "tail": "   Start at  10:27:03 |    Duration  16.84s (transform 86ms, setup 0ms, collect 2.54s, tests 13.03s, environment 1ms, prepare 460ms)"
     },
     {
       "lane": "typecheck",
@@ -27,14 +27,14 @@
       "ran": true,
       "exitCode": 0,
       "tests": null,
-      "tail": "dist/assets/index-wtA1k7Zk.js   281.53 kB │ gzip: 85.24 kB │ map: 1,084.20 kB | ✓ built in 803ms"
+      "tail": "dist/assets/index-BsnueseK.js   281.59 kB │ gzip: 85.25 kB │ map: 1,085.32 kB | ✓ built in 791ms"
     },
     {
       "lane": "pytest",
       "ran": true,
       "exitCode": 0,
       "tests": 11,
-      "tail": "...........                                                              [100%]\r | 11 passed in 2.53s"
+      "tail": "...........                                                              [100%]\r | 11 passed in 2.89s"
     }
   ],
   "totalTests": 21,
