@@ -164,7 +164,11 @@ const kickerStyle: CSSProperties = {
   fontSize: theme.type.scale[1],
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  color: theme.color.accent,
+  // accentFg, not accent. The fill accent used as TEXT measured 3.86:1 on the
+  // dark card surface (#d33b40 on #15151d) and failed AA. accentFg exists for
+  // exactly this: the token's own comment says it is the text-on-surface accent
+  // and may differ from the fill accent in dark mode.
+  color: theme.color.accentFg,
   fontWeight: 700
 };
 
