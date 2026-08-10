@@ -7,6 +7,13 @@
 declare module '../../.github/scripts/meets_the_bar.mjs' {
   export const DEFAULT_THRESHOLD: number;
   export const FAIL_CLOSED_VISUAL_RULES: readonly string[];
+  export const ALL_RUBRIC_RULES: readonly string[];
+
+  export function rubricCoverageReasons(
+    result: { rules?: ReadonlyArray<{ ruleId: string }> } | null,
+    notApplicable: ReadonlySet<string>,
+    waived: ReadonlyMap<string, unknown> | ReadonlySet<string>
+  ): string[];
 
   export interface MeetBarVerdict {
     ok: boolean;

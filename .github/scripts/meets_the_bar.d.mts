@@ -7,6 +7,14 @@ export declare const DEFAULT_THRESHOLD: number;
 
 export declare const FAIL_CLOSED_VISUAL_RULES: readonly string[];
 
+export declare const ALL_RUBRIC_RULES: readonly string[];
+
+export declare function rubricCoverageReasons(
+  result: { rules?: ReadonlyArray<{ ruleId: string }> } | null,
+  notApplicable: ReadonlySet<string>,
+  waived: ReadonlyMap<string, unknown> | ReadonlySet<string>
+): string[];
+
 export interface MeetBarVerdict {
   ok: boolean;
   slug: string;

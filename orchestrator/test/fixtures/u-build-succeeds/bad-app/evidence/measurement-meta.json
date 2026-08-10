@@ -5,19 +5,19 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-09T21:30:00.887Z",
+        "at": "2026-08-10T18:49:09.151Z",
         "status": 1
       },
       {
         "ok": false,
-        "at": "2026-08-09T21:30:00.888Z",
+        "at": "2026-08-10T18:49:09.152Z",
         "status": 1
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/u-build-succeeds/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-09T21:30:00.888Z"
+      "recordedAt": "2026-08-10T18:49:09.152Z"
     }
   }
 }

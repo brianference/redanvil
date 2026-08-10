@@ -59,6 +59,120 @@ export const FAIL_CLOSED_VISUAL_RULES = Object.freeze([
   'fe-desktop-width'
 ]);
 
+/**
+ * Every rule id in the rubric, in rubric order.
+ *
+ * Mirrored here for the same reason as FAIL_CLOSED_VISUAL_RULES — the pre-push
+ * hook and CI must run without TypeScript — and guarded the same way, by a unit
+ * test that compares it against `loadRubric()` so drift fails closed.
+ *
+ * This exists because only the 16 visual rules were ever checked for presence.
+ * A rule of any other method that produced no recorded outcome vanished from the
+ * output: not passed, not failed, not N/A, just absent, and absence read as
+ * fine. Measured on 2026-08-10, sushi-finder's result was missing 18 of 96 rules
+ * and reported exactly 3 of them (the visual ones); app-builder was missing 6
+ * and reported none. Removing a waiver made its rule silent rather than failing,
+ * which is the opposite of what unwaiving should do.
+ */
+export const ALL_RUBRIC_RULES = Object.freeze([
+  'u-typing-strict',
+  'u-typing-no-any',
+  'u-typing-scoped-ignores',
+  'u-conc-dead-code',
+  'u-conc-idiomatic',
+  'u-conc-no-speculative-abstraction',
+  'u-conc-use-what-exists',
+  'u-conc-no-padding',
+  'u-conc-file-size',
+  'u-conc-smallest-diff',
+  'u-val-input-validation',
+  'u-sec-param-sql',
+  'u-sec-no-stub-paths',
+  'u-sec-timeouts',
+  'u-sec-headers-cors',
+  'u-sec-sast',
+  'u-sec-safe-href',
+  'u-plat-worker-runtime',
+  'u-plat-runtime-parity',
+  'u-data-no-placeholder',
+  'u-plat-migrations',
+  'fe-seo-assets',
+  'fe-icon-button-labels',
+  'u-test-presence',
+  'u-test-runners',
+  'u-test-acceptance',
+  'u-test-feature-audit',
+  'u-test-coverage-ratchet',
+  'u-api-real-output',
+  'u-build-succeeds',
+  'u-api-not-found',
+  'u-api-no-spa-mask',
+  'u-claims-covered',
+  'u-test-adequacy',
+  'u-test-behavioral',
+  'fe-theme-tokens-only',
+  'fe-a11y-contrast',
+  'fe-i18n-central-copy',
+  'u-no-placeholders',
+  'fe-visible-response',
+  'fe-search-present',
+  'fe-assistant-present',
+  'fe-brand-mark',
+  'fe-favicon-legible',
+  'fe-brand-mark-size',
+  'fe-breadcrumbs',
+  'fe-result-in-viewport',
+  'fe-resource-links',
+  'fe-legal-substance',
+  'fe-structured-data',
+  'u-legal-claims-true',
+  'fe-prior-art',
+  'u-integration-scan',
+  'u-competitor-scan',
+  'fe-no-unsanitized-html',
+  'fe-pages-compose',
+  'fe-fail-closed-states',
+  'fe-light-dark',
+  'fe-premium-nav',
+  'fe-required-pages',
+  'fe-no-attribution',
+  'fe-responsive-375',
+  'fe-product-completeness',
+  'fe-visual-review-recorded',
+  'fe-design-archetype',
+  'fe-cold-visitor',
+  'fe-seo-og',
+  'fe-cross-link',
+  'fe-touch-targets',
+  'fe-type-floor',
+  'fe-noncolor-state',
+  'fe-safe-areas',
+  'fe-desktop-width',
+  'fe-no-inline-width',
+  'ci-actionlint',
+  'ci-sha-pinned',
+  'ci-least-privilege',
+  'ci-no-injection',
+  'ci-exit-code-integrity',
+  'hyg-secret-scan',
+  'hyg-no-binaries',
+  'hyg-no-duplication',
+  'hyg-env-ignored',
+  'proc-pr-title-ticket',
+  'proc-conventional-commits',
+  'proc-artifact-verified',
+  'proc-design-options',
+  'lg-shipped',
+  'lg-push-cadence',
+  'lg-result-reproduces',
+  'lg-bindings-bound',
+  'meas-known-bad',
+  'meas-two-run',
+  'meas-recheck-flattering',
+  'meas-standard-tool',
+  'meas-engine-named'
+]);
+
 /** One minute of slack: report written moments before the commit that contains it. */
 const EVIDENCE_SLACK_MS = 60_000;
 
@@ -444,6 +558,40 @@ function loadVerdicts(path) {
 }
 
 /**
+ * Reasons that rubric rules produced no recorded outcome at all.
+ *
+ * An unmeasured rule must be as loud as a failing one. The gate already refuses
+ * on a rule recorded `passed: false`, and on a missing verdict for the 16 visual
+ * rules — but a rule that simply never appeared in the result was invisible, so
+ * a checker that silently stopped running looked identical to one that passed.
+ *
+ * Two absences are legitimate and are not reported here:
+ *  - `provenance.notApplicable` — the gate measured and found no subject (an app
+ *    with no search control cannot have a search control audited).
+ *  - a waived rule — the defect is accepted for this release and is printed by
+ *    the caller's WAIVED line, so reporting it again is the same finding twice.
+ *
+ * Anything else absent is a hole, and it fails closed.
+ *
+ * @param {{rules?: ReadonlyArray<{ruleId: string}>} | null} result Parsed result.
+ * @param {ReadonlySet<string>} notApplicable Rule ids the gate recorded as n/a.
+ * @param {ReadonlyMap<string, object> | ReadonlySet<string>} waived Waived rule ids.
+ * @returns {string[]}
+ */
+export function rubricCoverageReasons(result, notApplicable, waived) {
+  if (!result || !Array.isArray(result.rules)) return [];
+  const recorded = new Set(result.rules.map((r) => r.ruleId));
+  const missing = ALL_RUBRIC_RULES.filter(
+    (id) => !recorded.has(id) && !notApplicable.has(id) && !waived.has(id)
+  );
+  if (missing.length === 0) return [];
+  return [
+    `${missing.length} rubric rule(s) produced no recorded outcome — an unmeasured ` +
+      `rule fails closed: ${missing.slice(0, 8).join(', ')}${missing.length > 8 ? ', …' : ''}`
+  ];
+}
+
+/**
  * Reasons that visual fail-closed rules are missing, stale, or cite old evidence.
  *
  * @param {string} repoRoot Repository root.
@@ -699,6 +847,15 @@ export function evaluateApp(repoRoot, app, opts = {}) {
       }
       visual.push(r);
     }
+  }
+
+  // Unmeasured rules fail closed. Read notApplicable from the RAW result for the
+  // same reason the isDone filter below does: parseResultShape drops it, so the
+  // parsed object reports every n/a rule as an unmeasured hole.
+  const naIds = raw?.provenance?.notApplicable;
+  const notApplicableIds = new Set(Array.isArray(naIds) ? naIds : []);
+  for (const r of rubricCoverageReasons(result, notApplicableIds, waived)) {
+    if (!reasons.includes(r)) reasons.push(r);
   }
 
   let screenshotsPresent = true;

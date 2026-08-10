@@ -22,9 +22,11 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { loadRubric } from '../src/rubric/index';
 import {
+  ALL_RUBRIC_RULES,
   DEFAULT_THRESHOLD,
   FAIL_CLOSED_VISUAL_RULES,
   appsAffectedByFiles,
+  rubricCoverageReasons,
   evidenceAgeReasons,
   evaluateApp,
   fixCommandFor,
@@ -61,6 +63,62 @@ describe('finish-line constants', () => {
       .sort();
     const fromModule = [...FAIL_CLOSED_VISUAL_RULES].sort();
     expect(fromModule).toEqual(fromRubric);
+  });
+
+  it('ALL_RUBRIC_RULES matches the rubric exactly, in order', () => {
+    expect([...ALL_RUBRIC_RULES]).toEqual(loadRubric().map((r) => r.id));
+  });
+
+  describe('unmeasured rubric rules fail closed', () => {
+    const everyRule = () => ({
+      rules: ALL_RUBRIC_RULES.map((ruleId) => ({ ruleId, passed: true }))
+    });
+
+    it('a fully measured result reports nothing', () => {
+      expect(rubricCoverageReasons(everyRule(), new Set(), new Set())).toEqual([]);
+    });
+
+    // The input that must FAIL. Confirming the good case still passes proves
+    // nothing on its own — this is the case the check exists for, and before the
+    // check existed a dropped rule produced no output at all.
+    it('a rule absent from the result is reported by name', () => {
+      const result = everyRule();
+      result.rules = result.rules.filter((r) => r.ruleId !== 'u-sec-timeouts');
+      const reasons = rubricCoverageReasons(result, new Set(), new Set());
+      expect(reasons).toHaveLength(1);
+      expect(reasons[0]).toContain('u-sec-timeouts');
+      expect(reasons[0]).toContain('fails closed');
+    });
+
+    it('counts every absent rule, not just the first', () => {
+      const dropped = ['u-sec-timeouts', 'fe-seo-assets', 'fe-no-inline-width'];
+      const result = everyRule();
+      result.rules = result.rules.filter((r) => !dropped.includes(r.ruleId));
+      expect(rubricCoverageReasons(result, new Set(), new Set())[0]).toContain('3 rubric rule(s)');
+    });
+
+    it('a rule the gate recorded as not applicable is not a hole', () => {
+      const result = everyRule();
+      result.rules = result.rules.filter((r) => r.ruleId !== 'fe-result-in-viewport');
+      expect(
+        rubricCoverageReasons(result, new Set(['fe-result-in-viewport']), new Set())
+      ).toEqual([]);
+    });
+
+    // A waived rule is already printed as WAIVED by the caller. Reporting it here
+    // too would be the same defect counted twice by two evaluators.
+    it('a waived rule is not reported again as unmeasured', () => {
+      const result = everyRule();
+      result.rules = result.rules.filter((r) => r.ruleId !== 'hyg-no-duplication');
+      expect(rubricCoverageReasons(result, new Set(), new Set(['hyg-no-duplication']))).toEqual([]);
+    });
+
+    it('accepts a Map of waivers as well as a Set', () => {
+      const result = everyRule();
+      result.rules = result.rules.filter((r) => r.ruleId !== 'hyg-no-duplication');
+      const waived = new Map([['hyg-no-duplication', { reason: 'scaffold boilerplate' }]]);
+      expect(rubricCoverageReasons(result, new Set(), waived)).toEqual([]);
+    });
   });
 
   it('fix command names reverify for the slug', () => {
