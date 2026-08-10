@@ -115,6 +115,52 @@ describe('ci-actionlint', () => {
     expect(r.status, r.stderr).toBe(0);
   });
 
+  // Regression: this exact line shipped on 2026-08-10 and GitHub failed the run
+  // in 0s with "workflow file issue" before any job started, while this check
+  // reported PASS. A plain YAML scalar cannot contain ": ".
+  it('FAIL: a workflow GitHub cannot parse exits 1, however good the text looks', () => {
+    const app = makeAppDir();
+    commitWorkflow(
+      app,
+      [
+        'on: push',
+        'permissions:',
+        '  contents: read',
+        'jobs:',
+        '  b:',
+        '    runs-on: ubuntu-latest',
+        '    steps:',
+        '      - name: Declare what this lane does not cover',
+        '        run: echo "NOT COVERED HERE: test/acceptance/assistant.test.ts (needs creds)"',
+        ''
+      ].join('\n')
+    );
+    const r = runLint(app);
+    expect(r.status, r.stderr).toBe(1);
+    expect(`${r.stdout}${r.stderr}`).toContain('invalid YAML');
+  });
+
+  it('PASS: the same line quoted parses and is accepted', () => {
+    const app = makeAppDir();
+    commitWorkflow(
+      app,
+      [
+        'on: push',
+        'permissions:',
+        '  contents: read',
+        'jobs:',
+        '  b:',
+        '    runs-on: ubuntu-latest',
+        '    steps:',
+        '      - name: Declare what this lane does not cover',
+        `        run: 'echo "NOT COVERED HERE: test/acceptance/assistant.test.ts"'`,
+        ''
+      ].join('\n')
+    );
+    const r = runLint(app);
+    expect(r.status, r.stderr).toBe(0);
+  });
+
   it('FAIL: unpinned uses: tag exits 1 with actionable message', () => {
     const app = makeAppDir();
     commitWorkflow(

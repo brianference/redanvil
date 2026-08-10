@@ -27,11 +27,13 @@
     "test:pytest": "node .github/scripts/run_pytest.mjs orchestrator"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "axe-core": "^4.12.1",
     "eslint": "^9.0.0",
+    "js-yaml": "^5.2.3",
     "playwright": "^1.61.1",
     "prettier": "^3.3.0",
     "tsx": "^4.16.0",

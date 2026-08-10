@@ -16,6 +16,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { load } from 'js-yaml';
 
 /** NUL separator for `git ls-files -z`. */
 const NUL = String.fromCharCode(0);
@@ -202,6 +203,40 @@ function lintWorkflow(relPath, content, eol) {
 }
 
 /**
+ * A workflow GitHub cannot parse is not a workflow.
+ *
+ * Every other rule in this file is a regex over raw text, which says nothing
+ * about whether the document loads. On 2026-08-10 an unquoted
+ * `run: echo "NOT COVERED HERE: ..."` shipped: a plain YAML scalar cannot
+ * contain ": ", so GitHub failed the run in 0 seconds with "workflow file
+ * issue" before a single job started — and this check had reported PASS on that
+ * exact commit. A lint that green-lights an unloadable file is worse than no
+ * lint, because it is trusted.
+ *
+ * js-yaml rather than a hand-rolled scan: YAML has a specification, and the
+ * bespoke-parser route is how four different wrong answers got produced the last
+ * time a format with a spec was matched by regex. Parse failure is reported with
+ * the parser's own message, which names the line.
+ *
+ * @param {string} rel Repo-relative workflow path.
+ * @param {string} body Raw file contents.
+ * @returns {string[]}
+ */
+function parseViolations(rel, body) {
+  if (body === '') return [];
+  try {
+    const doc = load(body);
+    if (doc === null || typeof doc !== 'object') {
+      return [`${rel}: does not parse to a YAML mapping — GitHub cannot load this workflow`];
+    }
+    return [];
+  } catch (cause) {
+    const detail = cause instanceof Error ? cause.message.split('\n')[0] : String(cause);
+    return [`${rel}: invalid YAML — GitHub cannot load this workflow (${detail})`];
+  }
+}
+
+/**
  * Run the ci-actionlint check against an app directory.
  *
  * @param {string} appDir Absolute or relative path to the app root.
@@ -229,6 +264,7 @@ export function runCiActionlint(appDir, io) {
       violations.push(`${rel}: cannot read workflow file`);
       continue;
     }
+    violations.push(...parseViolations(rel, body));
     violations.push(...lintWorkflow(rel, body, lineEnd));
   }
 

@@ -176,7 +176,10 @@ jobs:
       # uncovered spec from reading as a covered one. Everything else runs, and
       # any NEW spec is included automatically -- only this one file is excluded.
       - name: Declare what this lane does not cover
-        run: echo "NOT COVERED HERE: test/acceptance/assistant.test.ts (needs Workers AI credentials)"
+        # Single-quoted: a plain YAML scalar cannot contain ": ", and an
+        # unquoted `echo "NOT COVERED HERE: ..."` made the whole workflow
+        # unparseable — GitHub failed the run in 0s before any job started.
+        run: 'echo "NOT COVERED HERE: test/acceptance/assistant.test.ts (needs Workers AI credentials)"'
       - name: Acceptance tests
         working-directory: sushi-finder
         run: npx vitest run --config vitest.acceptance.config.ts --exclude node_modules --exclude dist --exclude 'test/acceptance/assistant.test.ts'
