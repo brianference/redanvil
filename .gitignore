@@ -72,3 +72,6 @@ az-planting-calendar/evidence/*.png
 __pycache__/
 *.pyc
 pet-sitter/design-refs/appstore/*.jpg
+
+# Scratch output of verify_results.mjs — a reproduction, not a result.
+results/*.verify.json
