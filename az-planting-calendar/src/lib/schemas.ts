@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { blankToUndefined } from '../../../design-system/text';
 
 /** Planting method: seed or transplant (az1005 legend). */
 export const MethodSchema = z.enum(['S', 'T']);
@@ -175,11 +176,7 @@ const CropNameQuerySchema = z
   .string()
   .max(100)
   .optional()
-  .transform((value) => {
-    if (value === undefined) return undefined;
-    const trimmed = value.trim();
-    return trimmed.length === 0 ? undefined : trimmed;
-  });
+  .transform(blankToUndefined);
 
 /** Query: optional ISO date YYYY-MM-DD for plantable-now. */
 export const PlantableQuerySchema = z.object({
@@ -212,11 +209,7 @@ export const ZonesQuerySchema = z.object({
     .string()
     .max(80)
     .optional()
-    .transform((value) => {
-      if (value === undefined) return undefined;
-      const trimmed = value.trim();
-      return trimmed.length === 0 ? undefined : trimmed;
-    })
+    .transform(blankToUndefined)
 });
 export type ZonesQuery = z.infer<typeof ZonesQuerySchema>;
 

@@ -133,11 +133,12 @@ jobs:
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: 20
-      # sushi-finder is NOT a root npm workspace -- it carries its own lockfile,
-      # so the root `npm ci` does not install it.
-      - name: Install app deps
+      # sushi-finder is a root npm workspace as of 2026-08-10, so it installs
+      # from the root lockfile and has none of its own. It was made one so react
+      # hoists to a single copy and the shared design-system hooks are safe to
+      # import; a per-app `npm ci` here now fails outright with no lockfile.
+      - name: Install workspace deps
         run: npm ci
-        working-directory: sushi-finder
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
         working-directory: sushi-finder

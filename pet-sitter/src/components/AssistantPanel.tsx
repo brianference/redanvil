@@ -1,66 +1,38 @@
-import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { askAssistant } from '../lib/api';
-import { askAssistantForOutcome } from '../../../design-system/assistant';
 import { en } from '../i18n/en';
+import { askAssistant } from '../lib/api';
+import { useAssistantPanel } from '../../../design-system/hooks/useAssistantPanel';
 
 /**
  * Shell-reachable AI assistant grounded in app sitters data.
  *
  * Always POSTs the question to /api/assistant. Loading and error are real UI
  * states; an empty or missing answer is treated as failure, never success.
+ * State lives in the shared `useAssistantPanel` hook; only this app's markup —
+ * which renders grounding rows as links to each sitter — is here.
  */
 export function AssistantPanel(): JSX.Element {
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState('');
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [links, setLinks] = useState<Array<{ id: string; name: string }>>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  /**
-   * Submit a question to /api/assistant.
-   *
-   * @param event - Form submit.
-   */
-  async function onSubmit(event: FormEvent): Promise<void> {
-    event.preventDefault();
-    const text = message.trim();
-    if (text.length === 0) return;
-    setLoading(true);
-    setError(null);
-    setAnswer(null);
-    setLinks([]);
-    const outcome = await askAssistantForOutcome({
-      ask: () => askAssistant(text),
-      selectItems: (result) =>
-        Array.isArray(result.sitters)
-          ? result.sitters.map((s) => ({ id: s.id, name: s.name }))
-          : [],
-      errorMessage: en.assistant.error
-    });
-    if (outcome.status === 'error') setError(outcome.message);
-    else {
-      setAnswer(outcome.answer);
-      setLinks(outcome.items);
-    }
-    setLoading(false);
-  }
+  const panel = useAssistantPanel({
+    ask: (message) => askAssistant(message),
+    selectItems: (result) =>
+      Array.isArray(result.sitters) ? result.sitters.map((s) => ({ id: s.id, name: s.name })) : [],
+    errorMessage: en.assistant.error
+  });
 
   return (
     <div className="assistant" data-testid="assistant-panel">
       <button
         type="button"
         className="assistant__toggle"
-        aria-expanded={open}
+        aria-expanded={panel.open}
         aria-controls="assistant-panel-body"
         aria-label={en.assistant.openLabel}
         data-testid="assistant-open"
-        onClick={() => setOpen((v) => !v)}
+        onClick={panel.toggle}
       >
-        {open ? en.assistant.close : en.assistant.open}
+        {panel.open ? en.assistant.close : en.assistant.open}
       </button>
-      {open ? (
+      {panel.open ? (
         <div
           id="assistant-panel-body"
           className="assistant__panel"
@@ -72,7 +44,7 @@ export function AssistantPanel(): JSX.Element {
           <form
             className="assistant__form"
             onSubmit={(e) => {
-              void onSubmit(e);
+              void panel.submit(e);
             }}
             data-testid="assistant-form"
           >
@@ -84,38 +56,38 @@ export function AssistantPanel(): JSX.Element {
               className="assistant__input"
               name="assistant-message"
               rows={3}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              value={panel.message}
+              onChange={(e) => panel.setMessage(e.target.value)}
               maxLength={500}
               required
-              disabled={loading}
+              disabled={panel.loading}
               data-testid="assistant-input"
             />
             <button
               type="submit"
               className="assistant__submit"
-              disabled={loading || message.trim().length === 0}
+              disabled={panel.loading || panel.message.trim().length === 0}
               data-testid="assistant-submit"
             >
-              {loading ? en.assistant.loading : en.assistant.submit}
+              {panel.loading ? en.assistant.loading : en.assistant.submit}
             </button>
           </form>
-          {loading ? (
+          {panel.loading ? (
             <p className="assistant__status" role="status" data-testid="assistant-loading">
               {en.assistant.loading}
             </p>
           ) : null}
-          {error ? (
+          {panel.error ? (
             <p className="assistant__error" role="alert" data-testid="assistant-error">
-              {error}
+              {panel.error}
             </p>
           ) : null}
-          {answer && !loading ? (
+          {panel.answer && !panel.loading ? (
             <div className="assistant__answer" data-testid="assistant-answer">
-              <p style={{ whiteSpace: 'pre-wrap' }}>{answer}</p>
-              {links.length > 0 ? (
+              <p style={{ whiteSpace: 'pre-wrap' }}>{panel.answer}</p>
+              {panel.links.length > 0 ? (
                 <ul>
-                  {links.map((l) => (
+                  {panel.links.map((l) => (
                     <li key={l.id}>
                       <Link to={`/sitters/${l.id}`}>{l.name}</Link>
                     </li>

@@ -41,10 +41,30 @@ export const MIN_BLOCK = 8;
  * linkify, useDocumentMeta, shellStyles, shellChromeCss) now live once in
  * design-system/ and take tokens and copy from each app. See `isDeclarationSkeleton`.
  *
+ * 143 -> 38 (2026-08-10) covers the three generated apps, in two stages. First
+ * the React-free units every app had rewritten: the JSON transport (http.ts, 37
+ * lines), theme resolve/read/apply/cycle (theme.ts, 17), the assistant ask
+ * (assistant.ts), and a blank-query normaliser (text.ts, 8).
+ *
+ * Then the part that needed a structural change rather than a patch. Extracting
+ * only the assistant's async body left two IDENTICAL CALL SITES and moved the
+ * needle 4 lines, because two components doing the same thing look the same; the
+ * state had to move with it, and a shared hook imports React. sushi-finder and
+ * pet-sitter carried their own react copies, which is exactly the configuration
+ * that made an earlier attempt at this throw "Cannot read properties of null".
+ * Making them workspaces hoisted react to one copy and let useAssistantPanel and
+ * mountApp move.
+ *
+ * What is left is markup: two assistant panels whose JSX opens the same way, two
+ * App route tables, and the Layout/Page shells. Unifying those means one
+ * over-parameterised component serving apps with different test ids, class names
+ * and link targets -- a speculative abstraction traded for a counter, which base
+ * rule 2 rules out. Lower this again when that stops being true.
+ *
  * Lower it again whenever real duplication is removed; never raise it to make a
  * run pass. Override with `--max N` for local experiments.
  */
-export const DEFAULT_BUDGET = 40;
+export const DEFAULT_BUDGET = 38;
 
 /** Source extensions scanned under each app's `src/`. */
 const SRC_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);

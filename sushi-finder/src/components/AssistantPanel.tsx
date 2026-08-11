@@ -1,79 +1,41 @@
-import { FormEvent, useState } from 'react';
 import { ErrorState, LoadingState } from './states';
 import { en } from '../i18n/en';
 import { askAssistant } from '../lib/api';
-import { askAssistantForOutcome } from '../../../design-system/assistant';
+import { useAssistantPanel } from '../../../design-system/hooks/useAssistantPanel';
 
 /**
  * Shell-reachable AI assistant grounded in D1 sushi data.
  * Failed model calls surface as errors — never empty success.
+ *
+ * State lives in the shared `useAssistantPanel` hook; only this app's markup is
+ * here. `onEmptySubmit: 'send'` is deliberate — the acceptance suite asserts the
+ * boundary answers 400 for an empty body, so the request has to actually go.
  */
 export function AssistantPanel(): JSX.Element {
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState('');
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [links, setLinks] = useState<Array<{ id: string; title: string }>>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  /**
-   * Submit a question to /api/assistant.
-   *
-   * @param event - Form submit.
-   */
-  async function onSubmit(event: FormEvent): Promise<void> {
-    event.preventDefault();
-    const text = message.trim();
-    if (text.length === 0) {
-      // Always POST empty body so the boundary can return 400 (acceptance F9).
-      setLoading(true);
-      setError(null);
-      setAnswer(null);
-      setLinks([]);
-      try {
-        await askAssistant('');
-        setError(en.assistant.emptyMessage);
-      } catch (err) {
-        setError(err instanceof Error && err.message ? err.message : en.assistant.emptyMessage);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setAnswer(null);
-    setLinks([]);
-    const outcome = await askAssistantForOutcome({
-      ask: () => askAssistant(text),
-      selectItems: (result) =>
-        Array.isArray(result.items)
-          ? result.items.map((item) => ({ id: item.id, title: item.title }))
-          : [],
-      errorMessage: en.assistant.error
-    });
-    if (outcome.status === 'error') setError(outcome.message);
-    else {
-      setAnswer(outcome.answer);
-      setLinks(outcome.items);
-    }
-    setLoading(false);
-  }
+  const panel = useAssistantPanel({
+    ask: (message) => askAssistant(message),
+    selectItems: (result) =>
+      Array.isArray(result.items)
+        ? result.items.map((item) => ({ id: item.id, title: item.title }))
+        : [],
+    errorMessage: en.assistant.error,
+    onEmptySubmit: 'send',
+    emptyMessage: en.assistant.emptyMessage
+  });
 
   return (
     <div className="assistant">
       <button
         type="button"
         className="btn btn--primary"
-        aria-expanded={open}
+        aria-expanded={panel.open}
         aria-controls="assistant-panel-body"
-        aria-label={open ? en.assistant.closeLabel : en.assistant.openLabel}
-        onClick={() => setOpen((value) => !value)}
+        aria-label={panel.open ? en.assistant.closeLabel : en.assistant.openLabel}
+        onClick={panel.toggle}
       >
-        {open ? en.assistant.close : en.assistant.open}
+        {panel.open ? en.assistant.close : en.assistant.open}
       </button>
-      {open ? (
+      {panel.open ? (
         <div
           id="assistant-panel-body"
           className="assistant__panel"
@@ -84,7 +46,7 @@ export function AssistantPanel(): JSX.Element {
           <p className="assistant__hint">{en.assistant.coverageHint}</p>
           <form
             onSubmit={(event) => {
-              void onSubmit(event);
+              void panel.submit(event);
             }}
           >
             <div className="field">
@@ -93,26 +55,27 @@ export function AssistantPanel(): JSX.Element {
                 id="assistant-input"
                 name="assistant-message"
                 rows={3}
-                value={message}
-                onChange={(event) => setMessage(event.target.value)}
+                value={panel.message}
+                onChange={(event) => panel.setMessage(event.target.value)}
                 maxLength={500}
-                disabled={loading}
+                disabled={panel.loading}
               />
             </div>
-            <button type="submit" className="btn btn--primary" disabled={loading}>
-              {loading ? en.assistant.loading : en.assistant.submit}
+            <button type="submit" className="btn btn--primary" disabled={panel.loading}>
+              {panel.loading ? en.assistant.loading : en.assistant.submit}
             </button>
           </form>
-          {loading ? <LoadingState message={en.assistant.loading} /> : null}
-          {error ? <ErrorState message={error} /> : null}
-          {answer && !loading ? (
+          {panel.loading ? <LoadingState message={en.assistant.loading} /> : null}
+          {panel.error ? <ErrorState message={panel.error} /> : null}
+          {panel.answer && !panel.loading ? (
             <div className="assistant__log" role="log" aria-live="polite">
               {/* Single text node with the grounded answer (no extra title links —
                   those would duplicate the title and fail strict accessible queries). */}
-              <p>{answer}</p>
-              {links.length > 0 ? (
+              <p>{panel.answer}</p>
+              {panel.links.length > 0 ? (
                 <p className="assistant__hint">
-                  {links.length} catalog match{links.length === 1 ? '' : 'es'} used for grounding.
+                  {panel.links.length} catalog match{panel.links.length === 1 ? '' : 'es'} used for
+                  grounding.
                 </p>
               ) : null}
             </div>

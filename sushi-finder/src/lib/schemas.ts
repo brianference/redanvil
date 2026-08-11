@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { blankToUndefined } from '../../../design-system/text';
 
 /** Style facet stored on D1 rows (FEATURES rank 4). */
 export const SushiStyleSchema = z.enum(['omakase', 'conveyor', 'counter', '']);
@@ -81,11 +82,7 @@ export const SushisQuerySchema = z.object({
     .string()
     .max(100)
     .optional()
-    .transform((value) => {
-      if (value === undefined) return undefined;
-      const trimmed = value.trim();
-      return trimmed.length === 0 ? undefined : trimmed;
-    })
+    .transform(blankToUndefined)
 });
 export type SushisQuery = z.infer<typeof SushisQuerySchema>;
 

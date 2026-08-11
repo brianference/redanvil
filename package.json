@@ -9,7 +9,9 @@
     "orchestrator",
     "app-builder",
     "dashboard",
-    "az-planting-calendar"
+    "az-planting-calendar",
+    "sushi-finder",
+    "pet-sitter"
   ],
   "scripts": {
     "prepare": "node scripts/install-hooks.mjs",
