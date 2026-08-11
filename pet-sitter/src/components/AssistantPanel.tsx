@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { askAssistant } from '../lib/api';
+import { askAssistantForOutcome } from '../../../design-system/assistant';
 import { en } from '../i18n/en';
 
 /**
@@ -30,24 +31,20 @@ export function AssistantPanel(): JSX.Element {
     setError(null);
     setAnswer(null);
     setLinks([]);
-    try {
-      const result = await askAssistant(text);
-      const grounded = typeof result.answer === 'string' ? result.answer.trim() : '';
-      if (grounded.length === 0) {
-        setError(en.assistant.error);
-        return;
-      }
-      setAnswer(grounded);
-      setLinks(
+    const outcome = await askAssistantForOutcome({
+      ask: () => askAssistant(text),
+      selectItems: (result) =>
         Array.isArray(result.sitters)
           ? result.sitters.map((s) => ({ id: s.id, name: s.name }))
-          : []
-      );
-    } catch (err) {
-      setError(err instanceof Error && err.message ? err.message : en.assistant.error);
-    } finally {
-      setLoading(false);
+          : [],
+      errorMessage: en.assistant.error
+    });
+    if (outcome.status === 'error') setError(outcome.message);
+    else {
+      setAnswer(outcome.answer);
+      setLinks(outcome.items);
     }
+    setLoading(false);
   }
 
   return (

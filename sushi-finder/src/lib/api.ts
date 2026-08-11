@@ -6,45 +6,12 @@ import {
   type SushiListResponse,
   type SushiRow
 } from './schemas';
-
-/** Ceiling for same-origin JSON requests (ms). */
-const FETCH_TIMEOUT_MS = 20_000;
-
-/**
- * Fetch JSON and parse with a Zod schema.
- *
- * @param path - Absolute path on this origin.
- * @param init - Optional fetch init.
- * @param schema - Zod schema for the response body.
- */
-async function requestJson<T>(
-  path: string,
-  init: RequestInit | undefined,
-  schema: { parse: (data: unknown) => T }
-): Promise<T> {
-  const res = await fetch(path, {
-    ...init,
-    headers: {
-      accept: 'application/json',
-      ...(init?.headers ?? {})
-    },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
-  });
-  if (!res.ok) {
-    let message = `Request failed (${res.status})`;
-    try {
-      const body = (await res.json()) as { error?: string };
-      if (body.error) message = body.error;
-    } catch {
-      /* ignore */
-    }
-    const error = new Error(message) as Error & { status?: number };
-    error.status = res.status;
-    throw error;
-  }
-  const data: unknown = await res.json();
-  return schema.parse(data);
-}
+import {
+  postJson,
+  queryString,
+  requestJson,
+  requestVoid
+} from '../../../design-system/http';
 
 /**
  * GET /api/sushis — optional title search.
@@ -52,10 +19,7 @@ async function requestJson<T>(
  * @param q - Title fragment.
  */
 export async function fetchSushis(q?: string): Promise<SushiListResponse> {
-  const sp = new URLSearchParams();
-  if (q && q.trim()) sp.set('q', q.trim());
-  const qs = sp.toString();
-  return requestJson(`/api/sushis${qs ? `?${qs}` : ''}`, undefined, SushiListResponseSchema);
+  return requestJson(`/api/sushis${queryString({ q: q?.trim() })}`, SushiListResponseSchema);
 }
 
 /**
@@ -64,7 +28,7 @@ export async function fetchSushis(q?: string): Promise<SushiListResponse> {
  * @param id - Sushi id.
  */
 export async function fetchSushi(id: string): Promise<SushiRow> {
-  return requestJson(`/api/sushis/${encodeURIComponent(id)}`, undefined, SushiRowSchema);
+  return requestJson(`/api/sushis/${encodeURIComponent(id)}`, SushiRowSchema);
 }
 
 /**
@@ -76,15 +40,7 @@ export async function createSushi(input: {
   title: string;
   description: string;
 }): Promise<SushiRow> {
-  return requestJson(
-    '/api/sushis',
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(input)
-    },
-    SushiRowSchema
-  );
+  return postJson('/api/sushis', input, SushiRowSchema);
 }
 
 /**
@@ -97,15 +53,11 @@ export async function updateSushi(
   id: string,
   input: { title?: string; description?: string }
 ): Promise<SushiRow> {
-  return requestJson(
-    `/api/sushis/${encodeURIComponent(id)}`,
-    {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(input)
-    },
-    SushiRowSchema
-  );
+  return requestJson(`/api/sushis/${encodeURIComponent(id)}`, SushiRowSchema, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(input)
+  });
 }
 
 /**
@@ -114,23 +66,7 @@ export async function updateSushi(
  * @param id - Sushi id.
  */
 export async function deleteSushi(id: string): Promise<void> {
-  const res = await fetch(`/api/sushis/${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-    headers: { accept: 'application/json' },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
-  });
-  if (!res.ok) {
-    let message = `Request failed (${res.status})`;
-    try {
-      const body = (await res.json()) as { error?: string };
-      if (body.error) message = body.error;
-    } catch {
-      /* ignore */
-    }
-    const error = new Error(message) as Error & { status?: number };
-    error.status = res.status;
-    throw error;
-  }
+  return requestVoid(`/api/sushis/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 /**
@@ -139,15 +75,7 @@ export async function deleteSushi(id: string): Promise<void> {
  * @param message - User question.
  */
 export async function askAssistant(message: string): Promise<AssistantResponse> {
-  return requestJson(
-    '/api/assistant',
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ message })
-    },
-    AssistantResponseSchema
-  );
+  return postJson('/api/assistant', { message }, AssistantResponseSchema);
 }
 
 /**

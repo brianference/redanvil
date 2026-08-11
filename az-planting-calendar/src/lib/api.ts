@@ -13,52 +13,7 @@ import {
   type PlantableResponse,
   type ZonesResponse
 } from './schemas';
-
-/** Ceiling for same-origin JSON requests (ms). */
-const FETCH_TIMEOUT_MS = 20_000;
-
-/**
- * Fetch JSON and parse with a Zod schema.
- *
- * @param path - Absolute path on this origin.
- * @param schema - Zod schema for the response body.
- */
-async function getJson<T>(
-  path: string,
-  schema: { parse: (data: unknown) => T }
-): Promise<T> {
-  const res = await fetch(path, {
-    headers: { accept: 'application/json' },
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
-  });
-  if (!res.ok) {
-    let message = `Request failed (${res.status})`;
-    try {
-      const body = (await res.json()) as { error?: string };
-      if (body.error) message = body.error;
-    } catch {
-      /* ignore */
-    }
-    throw new Error(message);
-  }
-  const data: unknown = await res.json();
-  return schema.parse(data);
-}
-
-/**
- * Build a query string from optional filters.
- *
- * @param params - Key/value pairs; nullish values omitted.
- */
-function qs(params: Record<string, string | number | undefined>): string {
-  const sp = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    if (v === undefined || v === '') continue;
-    sp.set(k, String(v));
-  }
-  const s = sp.toString();
-  return s ? `?${s}` : '';
-}
+import { postJson, queryString as qs, requestJson as getJson } from '../../../design-system/http';
 
 /** GET /api/plantable */
 export async function fetchPlantable(query: PlantableQuery = {}): Promise<PlantableResponse> {
@@ -120,25 +75,5 @@ export async function askAssistant(
   message: string,
   zone?: string
 ): Promise<AssistantResponse> {
-  const res = await fetch('/api/assistant', {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify({ message, zone }),
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
-  });
-  if (!res.ok) {
-    let errMessage = `Request failed (${res.status})`;
-    try {
-      const body = (await res.json()) as { error?: string };
-      if (body.error) errMessage = body.error;
-    } catch {
-      /* ignore parse errors */
-    }
-    throw new Error(errMessage);
-  }
-  const data: unknown = await res.json();
-  return AssistantResponseSchema.parse(data);
+  return postJson('/api/assistant', { message, zone }, AssistantResponseSchema);
 }
