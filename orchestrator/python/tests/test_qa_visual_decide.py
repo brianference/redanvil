@@ -52,7 +52,12 @@ def base_obs(**overrides: object) -> dict:
         "viewportHeight": 900,
         "primaryResultY": 80,
         "primaryResultHeight": 40,
-        "brandMarkHeight": 48,
+        # 72, not 48: decide-qa-visual.mjs raised the brand-mark floor to 72 at
+        # viewportWidth >= 1280 and this baseline was never updated, so the
+        # "observation that passes when nothing is overridden badly" had in fact
+        # been failing on every run. A baseline that does not pass cannot show
+        # what any override actually changed.
+        "brandMarkHeight": 72,
         "headerHeight": 64,
         "heroHeight": 200,
         "truncatedElementCount": 0,
@@ -94,7 +99,7 @@ def test_control_above_fold_with_visible_result_passes(
                 viewportHeight=viewport_height,
                 primaryResultY=y_in,
                 primaryActionAboveFold=True,
-                brandMarkHeight=48,
+                brandMarkHeight=72,
                 truncatedElementCount=0,
             )
         ]
@@ -150,17 +155,22 @@ def test_never_pass_when_primary_result_off_screen(
 
 def test_known_bad_below_fold_fixture() -> None:
     """Session defect encoded as fixture: y=1942 in 900px viewport fails."""
+    # brandMarkHeight is deliberately compliant (72 at this width). It used to be
+    # 48, which is itself below the floor, so this fixture failed for two reasons
+    # at once and would still have gone green if the below-fold rule it exists to
+    # pin had stopped working entirely.
     result = decide(
         [
             base_obs(
                 viewportHeight=900,
                 primaryResultY=1942,
-                brandMarkHeight=48,
+                brandMarkHeight=72,
                 primaryActionAboveFold=True,
             )
         ]
     )
     assert result["verdict"] == "fail"
+    assert any("outside viewport" in r for r in result["failReasons"]), result
 
 
 def test_known_good_in_view_fixture() -> None:
