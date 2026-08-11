@@ -149,6 +149,15 @@ component trades real duplication for a speculative abstraction. What remains at
 | `sushi-finder-acceptance` | **green** |
 | `apps (app-builder)`, `apps (dashboard)` | **green** |
 | `results-provenance` | red — app-builder step now PASSES; fails on dashboard |
+
+`results-provenance` failed two different ways on consecutive runs. On 31461235053
+it failed cleanly on "Verify dashboard results" with the stale-rubric message. On
+31461701913 the runner died with **Out of memory** after the app-builder step
+passed, so no log was captured for the failing step at all. Do not read the second
+as the first: the dashboard is stale either way, but an OOM is an infrastructure
+signal of its own, and it appeared on the run that took 7m02s against the
+previous 6m44s. Worth watching whether the workspace install raised the job's
+memory ceiling.
 | `quickflight-provenance` | red — verdicts hash stale |
 | `apps-meet-the-bar` | red — the gate refusing, by design |
 
