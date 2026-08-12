@@ -1,54 +1,54 @@
 {
   "kind": "independent-diff-review",
   "slug": "sushi-finder",
-  "commit": "12b59da4bd30e1b34fd9c4584a069657184e375c",
-  "reviewedAt": "2026-08-12T18:52:01.661Z",
-  "diffHash": "b60a7bddb00803f623f1c74657d3a1cc9e60b2c2219362c5595ef3d9fb387bf3",
+  "commit": "5c19b034983fc5f3a8b3e4746ae71c331738f62a",
+  "reviewedAt": "2026-08-12T22:38:40.333Z",
+  "diffHash": "2e0ea2ec8493d455a2303fc143b3d83229899a681612ecf3cc568cfd0606a9e7",
   "completed": true,
   "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "Accept verdict with zero product changes",
-      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:2",
-      "detail": "The entire commit only rewrites refusal-sushi-finder.json. verdict is flipped from refuse to accept with no app, test, screenshot, or route changes in the diff. An acceptance claim cannot be verified from a hand-edited evidence file alone; FAIL.",
+      "title": "Excludes constant not in diff",
+      "citation": "orchestrator/src/loop/independentReview.ts:415",
+      "detail": "The unstaged branch now runs `git diff HEAD -- ...REVIEW_ARTIFACT_EXCLUDES`, but REVIEW_ARTIFACT_EXCLUDES is not defined or shown in this diff. Cannot verify the pathspecs, that they match the commit-walk branch, or that they cover nested fixture evidence under known-bad-fixtures/** and orchestrator/test/fixtures/**. Unverified exclusion list means the fix does not pass.",
       "passed": false
     },
     {
-      "title": "Prior search failure not remediated",
-      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:3",
-      "detail": "complaints is emptied to []. The prior record listed search showing no results and inability to complete the app purpose. Nothing in this diff changes search UI, API, or e2e coverage, so clearing complaints is unsubstantiated; FAIL.",
+      "title": "New regression test not proven green",
+      "citation": "orchestrator/test/independentReview.test.ts:521",
+      "detail": "Author added `a working tree dirtied only by evidence falls through to the product commit`, but this review has no test run output, exit code, or log. Presence of a test is not proof it passes. PASS requires verification; this claim fails closed.",
       "passed": false
     },
     {
-      "title": "purposeAccomplished unverifiable",
-      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:4",
-      "detail": "purposeAccomplished is set true. No measurement, Playwright run, curl of a live endpoint, or code path proving end-to-end purpose is present in the diff; FAIL as unverified.",
+      "title": "Test covers only root evidence path",
+      "citation": "orchestrator/test/independentReview.test.ts:531",
+      "detail": "The only dirty artifact is `evidence/measurement-meta.json` at the temp repo root. No case for nested fixture paths, mixed product+artifact unstaged edits, or empty fallthrough when HEAD has no non-artifact product files. Coverage gap is explicit in the test body.",
       "passed": false
     },
     {
-      "title": "primaryResultOffScreen unverifiable",
-      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:6",
-      "detail": "primaryResultOffScreen flipped true→false with no screenshots, layout CSS, or scroll/viewport fix in the diff. Visual off-screen claims cannot pass without rendered evidence; FAIL.",
+      "title": "Two-run timestamps collapsed to identical",
+      "citation": "orchestrator/test/fixtures/lg-result-reproduces/evidence/measurement-meta.json:8",
+      "detail": "Both runs now use `at: 2026-08-12T22:29:35.406Z`; previously they were 712Z vs 713Z. Same collapse appears in u-build-succeeds (both 22:29:27.684Z) and proc-design-options (both 22:29:57.922Z). Re-stamping wiped the 1ms separation that proved two distinct runs; that is the known meas-two-run false-pass/fail class.",
       "passed": false
     },
     {
-      "title": "looksFinished hand-authored",
-      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:9",
-      "detail": "looksFinished set true while looksBuggy/advertisedBroken stay false only by rewrite of this JSON. No UI, brand, or polish changes accompany the flag; FAIL as fabricated status.",
+      "title": "Commit is mostly evidence re-stamp noise",
+      "citation": "known-bad-fixtures/u-api-no-spa-mask/bad-app/evidence/measurement-meta.json:8",
+      "detail": "Aside from independentReview.ts and one test, the commit only rewrites measurement-meta timestamps and nonces (e.g. path `/api/__definitely_absent_0e63c3b6ce04ce87`). That is the exact dirt the comment says used to poison the judge. Shipping a fix for evidence-only noise inside a commit dominated by evidence-only noise, without proving excludes strip these nested paths, is unverified and fails.",
       "passed": false
     },
     {
-      "title": "Timestamp only proves rewrite time",
-      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:11",
-      "detail": "writtenAt updates to 2026-08-12T18:50:50.863Z. That proves the file was rewritten, not that search works or the product improved. Does not support accept; FAIL as non-evidence.",
+      "title": "Product fix itself is one unproven line",
+      "citation": "orchestrator/src/loop/independentReview.ts:415",
+      "detail": "The only behavioral product change is adding `-- ...REVIEW_ARTIFACT_EXCLUDES` to the unstaged `git diff HEAD`. Comment asserts parity with the commit path and end of the evidence-only judge finding. Neither parity nor end-to-end judge behavior is demonstrated in the diff. Claim does not pass.",
       "passed": false
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"Accept verdict with zero product changes\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:2\\\",\\n      \\\"detail\\\": \\\"The entire commit only rewrites refusal-sushi-finder.json. verdict is flipped from refuse to accept with no app, test, screenshot, or route changes in the diff. An acceptance claim cannot be verified from a hand-edited evidence file alone; FAIL.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Prior search failure not remediated\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:3\\\",\\n      \\\"detail\\\": \\\"complaints is emptied to []. The prior record listed search showing no results and inability to complete the app purpose. Nothing in this diff changes search UI, API, or e2e coverage, so clearing complaints is unsubstantiated; FAIL.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"purposeAccomplished unverifiable\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:4\\\",\\n      \\\"detail\\\": \\\"purposeAccomplished is set true. No measurement, Playwright run, curl of a live endpoint, or code path proving end-to-end purpose is present in the diff; FAIL as unverified.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"primaryResultOffScreen unverifiable\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:6\\\",\\n      \\\"detail\\\": \\\"primaryResultOffScreen flipped true→false with no screenshots, layout CSS, or scroll/viewport fix in the diff. Visual off-screen claims cannot pass without rendered evidence; FAIL.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"looksFinished hand-authored\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:9\\\",\\n      \\\"detail\\\": \\\"looksFinished set true while looksBuggy/advertisedBroken stay false only by rewrite of this JSON. No UI, brand, or polish changes accompany the flag; FAIL as fabricated status.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Timestamp only proves rewrite time\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:11\\\",\\n      \\\"detail\\\": \\\"writtenAt updates to 2026-08-12T18:50:50.863Z. That proves the file was rewritten, not that search works or the product improved. Does not support accept; FAIL as non-evidence.\\\",\\n      \\\"passed\\\": false\\n    }\\n  ]\\n}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"6b7d76c7-5978-439d-916c-2369fd58562b\",\n  \"requestId\": \"c4062ac0-99a5-4cca-bc1e-20d0f29e41fd\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff for sushi-finder at a specific commit. They explicitly said:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"unverified verdict flip\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.\",\n  \"usage\": {\n    \"input_tokens\": 27819,\n    \"cache_read_input_tokens\": 128,\n    \"output_tokens\": 1182,\n    \"reasoning_tokens\": 590,\n    \"total_tokens\": 29129\n  },\n  \"num_turns\": 1,\n  \"total_cost_usd\": 0.0627684,\n  \"total_cost_usd_ticks\": 627684000,\n  \"modelUsage\": {\n    \"grok-4.5-build\": {\n      \"inputTokens\": 27819,\n      \"outputTokens\": 1182,\n      \"cacheReadInputTokens\": 128,\n      \"modelCalls\": 1,\n      \"costUSD\": 0.0627684\n    }\n  },\n  \"structuredOutput\": {\n    \"foundNothingExplicit\": false,\n    \"findings\": [\n      {\n        \"title\": \"Accept verdict with zero product changes\",\n        \"citation\": \"sushi-finder/evidence/refusal-sushi-finder.json:2\",\n        \"detail\": \"The entire commit only rewrites refusal-sushi-finder.json. verdict is flipped from refuse to accept with no app, test, screenshot, or route changes in the diff. An acceptance claim cannot be verified from a hand-edited evidence file alone; FAIL.\",\n        \"passed\": false\n      },\n      {\n        \"title\": \"Prior search failure not remediated\",\n        \"citation\": \"sushi-finder/evidence/refusal-",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"Excludes constant not in diff\\\",\\n      \\\"citation\\\": \\\"orchestrator/src/loop/independentReview.ts:415\\\",\\n      \\\"detail\\\": \\\"The unstaged branch now runs `git diff HEAD -- ...REVIEW_ARTIFACT_EXCLUDES`, but REVIEW_ARTIFACT_EXCLUDES is not defined or shown in this diff. Cannot verify the pathspecs, that they match the commit-walk branch, or that they cover nested fixture evidence under known-bad-fixtures/** and orchestrator/test/fixtures/**. Unverified exclusion list means the fix does not pass.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"New regression test not proven green\\\",\\n      \\\"citation\\\": \\\"orchestrator/test/independentReview.test.ts:521\\\",\\n      \\\"detail\\\": \\\"Author added `a working tree dirtied only by evidence falls through to the product commit`, but this review has no test run output, exit code, or log. Presence of a test is not proof it passes. PASS requires verification; this claim fails closed.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Test covers only root evidence path\\\",\\n      \\\"citation\\\": \\\"orchestrator/test/independentReview.test.ts:531\\\",\\n      \\\"detail\\\": \\\"The only dirty artifact is `evidence/measurement-meta.json` at the temp repo root. No case for nested fixture paths, mixed product+artifact unstaged edits, or empty fallthrough when HEAD has no non-artifact product files. Coverage gap is explicit in the test body.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Two-run timestamps collapsed to identical\\\",\\n      \\\"citation\\\": \\\"orchestrator/test/fixtures/lg-result-reproduces/evidence/measurement-meta.json:8\\\",\\n      \\\"detail\\\": \\\"Both runs now use `at: 2026-08-12T22:29:35.406Z`; previously they were 712Z vs 713Z. Same collapse appears in u-build-succeeds (both 22:29:27.684Z) and proc-design-options (both 22:29:57.922Z). Re-stamping wiped the 1ms separation that proved two distinct runs; that is the known meas-two-run false-pass/fail class.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Commit is mostly evidence re-stamp noise\\\",\\n      \\\"citation\\\": \\\"known-bad-fixtures/u-api-no-spa-mask/bad-app/evidence/measurement-meta.json:8\\\",\\n      \\\"detail\\\": \\\"Aside from independentReview.ts and one test, the commit only rewrites measurement-meta timestamps and nonces (e.g. path `/api/__definitely_absent_0e63c3b6ce04ce87`). That is the exact dirt the comment says used to poison the judge. Shipping a fix for evidence-only noise inside a commit dominated by evidence-only noise, without proving excludes strip these nested paths, is unverified and fails.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Product fix itself is one unproven line\\\",\\n      \\\"citation\\\": \\\"orchestrator/src/loop/independentReview.ts:415\\\",\\n      \\\"detail\\\": \\\"The only behavioral product change is adding `-- ...REVIEW_ARTIFACT_EXCLUDES` to the unstaged `git diff HEAD`. Comment asserts parity with the commit path and end of the evidence-only judge finding. Neither parity nor end-to-end judge behavior is demonstrated in the diff. Claim does not pass.\\\",\\n      \\\"passed\\\": false\\n    }\\n  ]\\n}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"2adba036-3925-44f5-8f63-e6d3861d655d\",\n  \"requestId\": \"e1af3505-af14-47f0-bc6a-d473b144fc81\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff. They explicitly said:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"missing REVIEW_ARTIFACT_EXCLUDES definition\\\",\\n      \\\"citation\\\": \\\"orchestrator/src/loop/independentReview.ts:406\\\",\\n      \\\"detail\\\": \\\"The diff applies ...REVIEW_ARTIFACT_EXCLUDES but the variable is never defined in the shown snippet; author must have added it elsewhere or it will break.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"incomplete exclusion fix\\\",\\n      \\\"citation\\\": \\\"orchestrator/src/loop/independ",
   "mode": "grok",
   "chunkCount": 1,
-  "coverageChars": 1010,
-  "diffChars": 1010,
+  "coverageChars": 14417,
+  "diffChars": 14417,
   "coverageComplete": true
 }

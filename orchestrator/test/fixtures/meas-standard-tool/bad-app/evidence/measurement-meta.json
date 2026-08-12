@@ -19,17 +19,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-12T19:08:27.167Z"
+        "at": "2026-08-12T22:29:46.714Z"
       },
       {
         "ok": false,
-        "at": "2026-08-12T19:08:27.168Z"
+        "at": "2026-08-12T22:29:46.715Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-standard-tool/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T19:08:27.168Z"
+      "recordedAt": "2026-08-12T22:29:46.715Z"
     }
   }
 }

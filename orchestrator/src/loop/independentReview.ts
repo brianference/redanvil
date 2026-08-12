@@ -406,8 +406,13 @@ export function collectDiff(dir: string, range?: string, paths?: string[]): stri
         maxBuffer: 32 * 1024 * 1024
       });
     }
-    // Working tree changes relative to HEAD (what the author just did).
-    const unstaged = execFileSync('git', ['diff', 'HEAD'], {
+    // Working tree changes relative to HEAD (what the author just did), with the
+    // same artifact exclusions as the commit path below. Excluding them in only
+    // ONE of the two branches was the same bug one branch over: a tree dirtied
+    // purely by regenerated evidence/measurement-meta files still handed the
+    // judge an evidence-only diff, and it drew the same "no code, evidence-only
+    // re-stamp" finding as before the fix.
+    const unstaged = execFileSync('git', ['diff', 'HEAD', '--', ...REVIEW_ARTIFACT_EXCLUDES], {
       cwd: dir,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],

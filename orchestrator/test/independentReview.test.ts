@@ -515,6 +515,58 @@ describe('collectDiff merge commits (first-parent)', () => {
     }
   });
 
+  // The same exclusion has to apply to BOTH branches of collectDiff. It was
+  // added to the commit walk only, and a tree dirtied purely by regenerated
+  // measurement-meta files still handed the judge an evidence-only diff, which
+  // drew the identical "evidence-only re-stamp, no code" finding.
+  it('a working tree dirtied only by evidence falls through to the product commit', () => {
+    const dir = initGitRepo('redanvil-wt-artifact-');
+    try {
+      writeFileSync(join(dir, 'thing.ts'), 'export const thing = 1;\n');
+      mkdirSync(join(dir, 'evidence'), { recursive: true });
+      writeFileSync(join(dir, 'evidence', 'measurement-meta.json'), '{"at":"first"}\n');
+      git(dir, ['add', '-A']);
+      git(dir, ['commit', '-qm', 'feat: thing']);
+
+      // Only the artifact changes in the working tree, as a test run would do.
+      writeFileSync(join(dir, 'evidence', 'measurement-meta.json'), '{"at":"second"}\n');
+
+      const diff = collectDiff(dir);
+      expect(diff, 'must not review the re-stamped evidence').not.toMatch(/measurement-meta/);
+      expect(diff, 'falls through to the product commit').toMatch(/thing\.ts/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  // The real-world paths are NESTED -- sushi-finder/evidence/,
+  // known-bad-fixtures/<x>/bad-app/evidence/ -- not a root evidence/ dir, and the
+  // first version of these tests only covered the root case. Flagged by the
+  // independent judge as coverage that did not reach the shape it was written for.
+  it('excludes nested app evidence and results, not just root ones', () => {
+    const dir = initGitRepo('redanvil-nested-artifact-');
+    try {
+      mkdirSync(join(dir, 'src'), { recursive: true });
+      writeFileSync(join(dir, 'src', 'real.ts'), 'export const real = 1;\n');
+      git(dir, ['add', '-A']);
+      git(dir, ['commit', '-qm', 'feat: real code']);
+
+      mkdirSync(join(dir, 'my-app', 'evidence'), { recursive: true });
+      mkdirSync(join(dir, 'my-app', 'results'), { recursive: true });
+      writeFileSync(join(dir, 'my-app', 'evidence', 'judge.json'), '{"ok":true}\n');
+      writeFileSync(join(dir, 'my-app', 'results', 'app.json'), '{"finalScore":99}\n');
+      git(dir, ['add', '-A']);
+      git(dir, ['commit', '-qm', 'chore(evidence): nested artifacts']);
+
+      const diff = collectDiff(dir);
+      expect(diff, 'nested evidence must be excluded').not.toMatch(/judge\.json/);
+      expect(diff, 'nested results must be excluded').not.toMatch(/finalScore/);
+      expect(diff, 'falls through to the real commit').toMatch(/real\.ts/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('working-tree changes still win over HEAD patch', () => {
     const dir = initGitRepo('redanvil-wt-diff-');
     try {
