@@ -30,7 +30,7 @@ import {
   type DiffChunk,
   type IndependentReviewReport
 } from '../src/loop/independentReview';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -459,6 +459,57 @@ describe('collectDiff merge commits (first-parent)', () => {
       expect(fromCollect.trim().length).toBeGreaterThan(0);
       expect(fromCollect).toMatch(/only\.txt/);
       expect(fromCollect).toMatch(/line two/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  // Recording a verdict is not a product change, and a commit containing only a
+  // verdict cannot substantiate itself. While evidence stayed in scope, F5
+  // reviewed whatever sat at HEAD and every evidence commit drew the same
+  // finding — "an acceptance claim cannot be verified from a hand-edited
+  // evidence file alone" — which made a passing review guarantee the next
+  // review failed. Measured on sushi-finder 2026-08-12.
+  it('skips a gate-artifact-only commit and reviews the newest product commit', () => {
+    const dir = initGitRepo('redanvil-artifact-skip-');
+    try {
+      writeFileSync(join(dir, 'feature.ts'), 'export const answer = 42;\n');
+      git(dir, ['add', 'feature.ts']);
+      git(dir, ['commit', '-qm', 'feat: the real change']);
+
+      mkdirSync(join(dir, 'evidence'), { recursive: true });
+      writeFileSync(join(dir, 'evidence', 'judge-diff-x.json'), '{"verdict":"accept"}\n');
+      mkdirSync(join(dir, 'results'), { recursive: true });
+      writeFileSync(join(dir, 'results', 'x.json'), '{"finalScore":100}\n');
+      git(dir, ['add', '-A']);
+      git(dir, ['commit', '-qm', 'chore(evidence): record the verdict']);
+
+      const diff = collectDiff(dir);
+      expect(diff, 'must review the product commit').toMatch(/feature\.ts/);
+      expect(diff).toMatch(/answer = 42/);
+      expect(diff, 'must not review the evidence file').not.toMatch(/judge-diff-x\.json/);
+      expect(diff, 'must not review the results file').not.toMatch(/"finalScore"/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('still reviews a normal commit that also touches evidence', () => {
+    const dir = initGitRepo('redanvil-artifact-mixed-');
+    try {
+      writeFileSync(join(dir, 'seed.ts'), 'export const seed = 1;\n');
+      git(dir, ['add', 'seed.ts']);
+      git(dir, ['commit', '-qm', 'init']);
+
+      writeFileSync(join(dir, 'seed.ts'), 'export const seed = 2;\n');
+      mkdirSync(join(dir, 'evidence'), { recursive: true });
+      writeFileSync(join(dir, 'evidence', 'note.json'), '{"a":1}\n');
+      git(dir, ['add', '-A']);
+      git(dir, ['commit', '-qm', 'fix: bump seed and record evidence']);
+
+      const diff = collectDiff(dir);
+      expect(diff).toMatch(/seed = 2/);
+      expect(diff, 'evidence is stripped, the code change is not').not.toMatch(/note\.json/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

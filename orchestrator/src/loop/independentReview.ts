@@ -306,6 +306,78 @@ export function headParents(dir: string): string[] {
 }
 
 /**
+ * Paths that are OUTPUTS of the gate, not the work the gate reviews.
+ *
+ * Recording a verdict is not a product change, and a commit containing only a
+ * verdict cannot substantiate itself. Left in scope, F5 reviewed whatever
+ * happened to be at HEAD, so every evidence commit drew the same finding —
+ * "an acceptance claim cannot be verified from a hand-edited evidence file
+ * alone" — and it was right each time. That is unfalsifiable by construction:
+ * the act of recording a passing review guaranteed the next review failed.
+ */
+const REVIEW_ARTIFACT_EXCLUDES: readonly string[] = Object.freeze([
+  ':(exclude)**/evidence/**',
+  ':(exclude)evidence/**',
+  ':(exclude)results/**',
+  ':(exclude)**/results/**',
+  ':(exclude)**/.redanvil/**'
+]);
+
+/** How far back to look for a commit that changed something reviewable. */
+const MAX_COMMIT_WALK = 25;
+
+/**
+ * Diff of one commit with gate artifacts excluded.
+ *
+ * @param dir - Git directory.
+ * @param ref - Commit to show.
+ * @returns Patch text, empty when the commit touched only artifacts.
+ */
+function productDiffOfCommit(dir: string, ref: string): string {
+  try {
+    return execFileSync(
+      'git',
+      ['show', '--format=', '--patch', ref, '--', ...REVIEW_ARTIFACT_EXCLUDES],
+      {
+        cwd: dir,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+        maxBuffer: 32 * 1024 * 1024
+      }
+    );
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Walk back from HEAD to the newest commit that changed reviewable code.
+ *
+ * @param dir - Git directory.
+ * @returns Patch text, or empty when nothing reviewable is found in range.
+ */
+function newestProductCommitDiff(dir: string): string {
+  let refs: string[];
+  try {
+    refs = execFileSync('git', ['rev-list', `--max-count=${MAX_COMMIT_WALK}`, 'HEAD'], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    })
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
+  } catch {
+    return '';
+  }
+  for (const ref of refs) {
+    const patch = productDiffOfCommit(dir, ref);
+    if (patch.trim().length > 0) return patch;
+  }
+  return '';
+}
+
+/**
  * Unified diff for the review. Prefers staged+unstaged against HEAD, else
  * last commit, else empty.
  *
@@ -354,6 +426,13 @@ export function collectDiff(dir: string, range?: string, paths?: string[]): stri
         maxBuffer: 32 * 1024 * 1024
       });
     }
+    // Skip past gate artifacts to the newest commit that changed reviewable
+    // code. Falls back to the plain HEAD patch so a repo whose recent history is
+    // entirely artifacts still gets SOMETHING to review rather than an empty
+    // diff, which reports as "nothing to review" and never passes F5 either.
+    const productPatch = newestProductCommitDiff(dir);
+    if (productPatch.trim().length > 0) return productPatch;
+
     return execFileSync('git', ['show', '--format=', '--patch', 'HEAD'], {
       cwd: dir,
       encoding: 'utf8',
