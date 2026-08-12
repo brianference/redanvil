@@ -113,7 +113,11 @@ jobs:
   dashboard-provenance:
     runs-on: ubuntu-latest
     env:
-      NODE_OPTIONS: --max-old-space-size=4096
+      # 2048, not 4096. On its own runner it STILL died with "Out of memory" at
+      # 4096: a standard runner has ~7GB shared with Chromium, so a generous cap
+      # lets V8 grow until the kernel kills the process instead of collecting.
+      # A tighter ceiling makes it GC and finish.
+      NODE_OPTIONS: --max-old-space-size=2048
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
