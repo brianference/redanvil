@@ -97,10 +97,15 @@ reported none.
 `ALL_RUBRIC_RULES` mirrors the rubric (same pattern as
 `FAIL_CLOSED_VISUAL_RULES`, same drift test, proven to fail by dropping one id).
 `rubricCoverageReasons` reports any rule with no recorded outcome, exempting only
-`provenance.notApplicable` (measured, no subject) and waived rules (already
-printed as WAIVED — reporting twice is the double-counting that made dated
-waivers re-block one layer down). The gate now names 11 for sushi-finder and 1
-for app-builder.
+`provenance.notApplicable` (measured, no subject). The gate names 11 for
+sushi-finder and 1 for app-builder.
+
+It originally exempted waived rules too, on the reasoning that the caller already
+prints a WAIVED line. **That was a hole**, found by an independent review on
+2026-08-12: the caller only prints waivers that absorbed a RECORDED failure, so a
+rule that was waived AND never recorded produced no output anywhere. Waived and
+unmeasured is now its own reason, worded to keep the two claims distinct — a
+waiver accepts a KNOWN defect, not an unchecked one.
 
 ---
 
