@@ -79,10 +79,6 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Verify results were produced by the gate
         run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json process
-      # The dashboard ships to production too. Gating only app-builder left half
-      # the deployed surface with no measured score at all.
-      - name: Verify dashboard results were produced by the gate
-        run: node .github/scripts/verify_results.mjs dashboard results/dashboard.json evidence/verdicts-dashboard.json process
       # The dashboard fetches results/all.json directly, so the artifact the
       # public site displays must be derived from the verified per-run files
       # rather than hand-maintained alongside them.
@@ -104,6 +100,34 @@ jobs:
       # PRD path that shipped a 400. Best-effort: needs a browser (installed above).
       - name: E2E smoke against production
         run: node .github/scripts/e2e_smoke_app_builder.mjs https://redanvil.pages.dev/
+
+  # The dashboard ships to production too, and gating only app-builder left half
+  # the deployed surface with no measured score at all.
+  #
+  # It gets its OWN runner because two full gate reproductions in one job kept
+  # killing it: three runs died with "Out of memory" or a cancelled step, always
+  # on this one and always AFTER app-builder's had passed. Capping the heap was
+  # not enough. The cost was not just this check — the five steps after it (feed,
+  # design rules, repo CI blockers, scaffold gate, e2e smoke) were reported
+  # `skipped` every time, so a memory limit was silently removing real coverage.
+  dashboard-provenance:
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20
+      - name: Install workspace deps
+        run: npm ci
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify dashboard results were produced by the gate
+        run: node .github/scripts/verify_results.mjs dashboard results/dashboard.json evidence/verdicts-dashboard.json process
 
   # The finish line cannot be bypassed with --no-verify. For every app listed in
   # .github/scripts/apps.mjs (the same APPS reverify / pre-push use): score >= 90,
