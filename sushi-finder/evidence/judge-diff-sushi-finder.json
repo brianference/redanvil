@@ -1,54 +1,48 @@
 {
   "kind": "independent-diff-review",
   "slug": "sushi-finder",
-  "commit": "3fe0f0c26dace9d98ba72862146bf4d02b8a1c16",
-  "reviewedAt": "2026-08-12T17:11:02.920Z",
-  "diffHash": "9b9a6a8f8d1b7887dfa8791df5d6c877f01698a1af6cf36769787f7fd884ae1a",
+  "commit": "12b59da4bd30e1b34fd9c4584a069657184e375c",
+  "reviewedAt": "2026-08-12T18:41:25.329Z",
+  "diffHash": "f730f6363cb982323259cd7309464ebd4293f7d83fc9cdeddad92f12dbfd4958",
   "completed": true,
   "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "forceError still untested",
-      "citation": "orchestrator/test/designSystemShared.test.ts:10",
-      "detail": "New suite covers askAssistantForOutcome/queryString/blankToUndefined only. It never imports useAssistantPanel, never passes forceError, and never exercises empty-submit run('', emptyMessage, emptyMessage). Prior review FAIL on forceError is not closed by this commit.",
+      "title": "forceError claimed, not tested",
+      "citation": "pet-sitter/src/lib/useAssistantPanel.browser.test.ts:4",
+      "detail": "Header says a prior review failed a forceError-in-browser claim and that 'this is that claim turned into a test'. The suite only covers empty-submit policies and a happy-path ask (describe 'useAssistantPanel — empty submit'). No forceError path, flag, or case appears anywhere in the 167 lines. Author narrative and artifact disagree.",
       "passed": false
     },
     {
-      "title": "acceptance coverage claim unverified",
-      "citation": "orchestrator/test/designSystemShared.test.ts:11",
-      "detail": "Comment asserts the hook is covered by sushi-finder acceptance in a real browser. No acceptance test, Playwright spec, or browser harness appears in this diff. Claim is comment-only; FAIL closed.",
+      "title": "ignore test can false-pass",
+      "citation": "pet-sitter/src/lib/useAssistantPanel.browser.test.ts:77",
+      "detail": "submit uses optional chaining: await latest?.submit(event). If latest is still null, submit is a silent no-op. The 'ignore' case then still passes: asked stays 0, error and answer stay null — the same as never invoking the hook. That makes the ignore assertions compatible with a failed mount/submit race, so the check can pass without proving onEmptySubmit: 'ignore'. Send/happy-path cases fail harder on expected side effects; ignore does not.",
       "passed": false
     },
     {
-      "title": "evidence cites code absent from diff",
-      "citation": "evidence/judge-diff-sushi-finder.json:14",
-      "detail": "Findings cite design-system/hooks/useAssistantPanel.ts:107, .github/scripts/meets_the_bar.mjs:594, and evidence/measurement-meta.json:5. This unified diff only adds the evidence JSON and orchestrator/test/designSystemShared.test.ts. No forceError or waived-unmeasured implementation is present to verify.",
+      "title": "Browser lane execution not verified",
+      "citation": "pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1",
+      "detail": "File is named .browser.test.ts and comments assert it runs under pet-sitter's @vitest/browser + chromium lane. The diff adds only this file: no vitest config, no include pattern, no run output. From the diff alone it is impossible to verify the file is discovered or executed in a real browser, so the 'real DOM / browser lane' claim does not pass.",
       "passed": false
     },
     {
-      "title": "self-review of same commit",
-      "citation": "evidence/judge-diff-sushi-finder.json:4",
-      "detail": "Evidence claims reviewedAt commit 3fe0f0c26dace9d98ba72862146bf4d02b8a1c16 while being introduced by that same commit. ok:false findings about files not in the tree of this diff cannot prove a product fix; packaging a prior FAIL is not a fix.",
+      "title": "Hook behavior unproven by this diff",
+      "citation": "pet-sitter/src/lib/useAssistantPanel.browser.test.ts:20",
+      "detail": "Tests import useAssistantPanel from design-system/hooks/useAssistantPanel but the hook implementation is not in the diff. Assertions (empty POST still fires under send, answer forced null with EMPTY, API error preferred over emptyMessage, trim of answer, links from selectItems) encode expected behavior that cannot be confirmed here. Adding a test file is not proof the shared hook implements those policies.",
       "passed": false
     },
     {
-      "title": "blank-answer rule unit-tested",
-      "citation": "orchestrator/test/designSystemShared.test.ts:33",
-      "detail": "Tests pin '', whitespace, undefined, null, and non-string answers to status error with fallback message — the shared product rule is verified for askAssistantForOutcome alone.",
-      "passed": true
-    },
-    {
-      "title": "queryString/blankToUndefined covered",
-      "citation": "orchestrator/test/designSystemShared.test.ts:78",
-      "detail": "queryString omits blanks, avoids bare ?, encodes values, keeps 0; blankToUndefined trims and maps empty/whitespace to undefined. Verified from this diff for those pure helpers only.",
-      "passed": true
+      "title": "No sushi-finder artifact in commit",
+      "citation": "pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1",
+      "detail": "Reviewed commit only introduces a pet-sitter test. Zero sushi-finder source, route, acceptance, or screenshot changes appear. Any sushi-finder product claim for this commit is unsupported by the diff.",
+      "passed": false
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\\"foundNothingExplicit\\\":false,\\\"findings\\\":[{\\\"title\\\":\\\"forceError still untested\\\",\\\"citation\\\":\\\"orchestrator/test/designSystemShared.test.ts:10\\\",\\\"detail\\\":\\\"New suite covers askAssistantForOutcome/queryString/blankToUndefined only. It never imports useAssistantPanel, never passes forceError, and never exercises empty-submit run('', emptyMessage, emptyMessage). Prior review FAIL on forceError is not closed by this commit.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"acceptance coverage claim unverified\\\",\\\"citation\\\":\\\"orchestrator/test/designSystemShared.test.ts:11\\\",\\\"detail\\\":\\\"Comment asserts the hook is covered by sushi-finder acceptance in a real browser. No acceptance test, Playwright spec, or browser harness appears in this diff. Claim is comment-only; FAIL closed.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"evidence cites code absent from diff\\\",\\\"citation\\\":\\\"evidence/judge-diff-sushi-finder.json:14\\\",\\\"detail\\\":\\\"Findings cite design-system/hooks/useAssistantPanel.ts:107, .github/scripts/meets_the_bar.mjs:594, and evidence/measurement-meta.json:5. This unified diff only adds the evidence JSON and orchestrator/test/designSystemShared.test.ts. No forceError or waived-unmeasured implementation is present to verify.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"self-review of same commit\\\",\\\"citation\\\":\\\"evidence/judge-diff-sushi-finder.json:4\\\",\\\"detail\\\":\\\"Evidence claims reviewedAt commit 3fe0f0c26dace9d98ba72862146bf4d02b8a1c16 while being introduced by that same commit. ok:false findings about files not in the tree of this diff cannot prove a product fix; packaging a prior FAIL is not a fix.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"blank-answer rule unit-tested\\\",\\\"citation\\\":\\\"orchestrator/test/designSystemShared.test.ts:33\\\",\\\"detail\\\":\\\"Tests pin '', whitespace, undefined, null, and non-string answers to status error with fallback message — the shared product rule is verified for askAssistantForOutcome alone.\\\",\\\"passed\\\":true},{\\\"title\\\":\\\"queryString/blankToUndefined covered\\\",\\\"citation\\\":\\\"orchestrator/test/designSystemShared.test.ts:78\\\",\\\"detail\\\":\\\"queryString omits blanks, avoids bare ?, encodes values, keeps 0; blankToUndefined trims and maps empty/whitespace to undefined. Verified from this diff for those pure helpers only.\\\",\\\"passed\\\":true}]}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"de99425e-f814-4d34-bcdd-c546587209db\",\n  \"requestId\": \"b427d02a-7eba-46a0-934e-57a18b70ebd9\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff. They explicitly said:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"missing useAssistantPanel test coverage\\\",\\n      \\\"citation\\\": \\\"orchestrator/test/designSystemShared.test.ts:1\\\",\\n      \\\"detail\\\": \\\"New test file only covers askAssistantForOutcome, queryString and blankToUndefined. The commit claims forceError branch in useAssistantPanel.ts:107-108 is now tested via meets_the_bar, but the diff contains zero tests for the hook itself or its empty-submit / forceError paths.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"evidence file circular 3fe0f0c\\\",\\n      \\\"citation\\\": \\\"evidence/judge-diff-sushi-finder.json:5\\\",\\n      \\\"detail\\\": \\\"The commit adds judge-diff-sushi-finder.json which is a prior review of the exact same commit hash 3fe0f0c. That prior review asserts changes to 3 files (useAssistantPanel.ts, meets_the_bar.mjs, measurement-meta.json) that are absent from this diff. Cannot verify any of the claimed fixes.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"forceError untested in new suite\\\",\\n      \\\"citation\\\": \\\"orchestrator/test designSystemShared.test.ts:10\\\",\\n      \\\"detail\\\": \\\"Comment at line 10 states hook is covered by acceptance suite; no acceptance tests appear in this diff. forceError path (107-108) remains untested.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"no remediation of 400-handling forceError\\\",\\n      \\\"citation\\\": \\\"evidence/judge-d",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\\"foundNothingExplicit\\\":false,\\\"findings\\\":[{\\\"title\\\":\\\"forceError claimed, not tested\\\",\\\"citation\\\":\\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:4\\\",\\\"detail\\\":\\\"Header says a prior review failed a forceError-in-browser claim and that 'this is that claim turned into a test'. The suite only covers empty-submit policies and a happy-path ask (describe 'useAssistantPanel — empty submit'). No forceError path, flag, or case appears anywhere in the 167 lines. Author narrative and artifact disagree.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"ignore test can false-pass\\\",\\\"citation\\\":\\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:77\\\",\\\"detail\\\":\\\"submit uses optional chaining: await latest?.submit(event). If latest is still null, submit is a silent no-op. The 'ignore' case then still passes: asked stays 0, error and answer stay null — the same as never invoking the hook. That makes the ignore assertions compatible with a failed mount/submit race, so the check can pass without proving onEmptySubmit: 'ignore'. Send/happy-path cases fail harder on expected side effects; ignore does not.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Browser lane execution not verified\\\",\\\"citation\\\":\\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1\\\",\\\"detail\\\":\\\"File is named .browser.test.ts and comments assert it runs under pet-sitter's @vitest/browser + chromium lane. The diff adds only this file: no vitest config, no include pattern, no run output. From the diff alone it is impossible to verify the file is discovered or executed in a real browser, so the 'real DOM / browser lane' claim does not pass.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Hook behavior unproven by this diff\\\",\\\"citation\\\":\\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:20\\\",\\\"detail\\\":\\\"Tests import useAssistantPanel from design-system/hooks/useAssistantPanel but the hook implementation is not in the diff. Assertions (empty POST still fires under send, answer forced null with EMPTY, API error preferred over emptyMessage, trim of answer, links from selectItems) encode expected behavior that cannot be confirmed here. Adding a test file is not proof the shared hook implements those policies.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"No sushi-finder artifact in commit\\\",\\\"citation\\\":\\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1\\\",\\\"detail\\\":\\\"Reviewed commit only introduces a pet-sitter test. Zero sushi-finder source, route, acceptance, or screenshot changes appear. Any sushi-finder product claim for this commit is unsupported by the diff.\\\",\\\"passed\\\":false}]}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"6dffc9cc-c68c-4f1c-a511-85564b2589bf\",\n  \"requestId\": \"7e78b85d-b85a-4c4f-b442-606c373a7510\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff. They explicitly say:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"missing forceError test\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1\\\",\\n      \\\"detail\\\": \\\"Header comment claims previous review failed on forceError coverage claim, and 12b59da4bd30e1b34fd9c4584a069657184e375c turns that claim into a test. But the test suite only covers empty-submit policies; no test exercises forceError path.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"wrong repo in sushi-finder diff\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1\\\",\\n      \\\"detail\\\": \\\"Diff is for sushi-finder commit but adds test in pet-sitter. If author claimed sushi-finder changes, this test belongs to pet-sitter and is irrelevant to 12b59da4bd30e1b34fd9c4584a069657184e375c.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"tick() insufficient for React 18\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts: 40\\\",\\n      \\\"detail\\\": \\\"tick() does 4 Promise.resolve() + setTimeout(0). React 18 concurrent mode and async state updates require more reliable flushing;",
   "mode": "grok",
   "chunkCount": 1,
-  "coverageChars": 11135,
-  "diffChars": 11135,
+  "coverageChars": 5736,
+  "diffChars": 5736,
   "coverageComplete": true
 }

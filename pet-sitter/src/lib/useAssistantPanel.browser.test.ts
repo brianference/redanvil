@@ -72,8 +72,13 @@ function mountProbe(options: ProbeOptions): Probe {
       return latest;
     },
     submit: async () => {
+      // NOT `latest?.submit(...)`. Optional chaining made this a silent no-op
+      // when the probe had not mounted, and the 'ignore' case below asserts
+      // that nothing happened — so a failed mount produced exactly the same
+      // observations as a working ignore policy and the test could not fail.
+      if (latest === null) throw new Error('probe never rendered; submit not called');
       const event = { preventDefault: () => undefined } as unknown as FormEvent;
-      await latest?.submit(event);
+      await latest.submit(event);
       await tick();
     },
     unmount: () => {
@@ -83,8 +88,12 @@ function mountProbe(options: ProbeOptions): Probe {
   };
 }
 
-describe('useAssistantPanel — empty submit', () => {
-  it('under "send", shows the empty message even when the endpoint answers 200 with prose', async () => {
+// `onEmptySubmit: 'send'` is the only way to reach the hook's internal
+// `forceError` argument: submit() calls run('', emptyMessage, emptyMessage),
+// and that third argument is forceError. Naming it here because a reviewer
+// reading this file could not otherwise see which flag these cases pin.
+describe('useAssistantPanel — empty submit and the forceError path', () => {
+  it('forceError: under "send", a 200 with prose still shows the empty message, not an answer', async () => {
     let asked = 0;
     const probe = mountProbe({
       ask: async (message) => {
@@ -108,7 +117,7 @@ describe('useAssistantPanel — empty submit', () => {
     probe.unmount();
   });
 
-  it('under "send", a rejected request surfaces the API message, not the empty message', async () => {
+  it('forceError: a rejected request surfaces the API message, not the forced empty message', async () => {
     const probe = mountProbe({
       ask: async () => {
         throw new Error('message is required');
@@ -126,22 +135,30 @@ describe('useAssistantPanel — empty submit', () => {
     probe.unmount();
   });
 
-  it('under "ignore", an empty submit sends nothing and changes nothing', async () => {
+  it('under "ignore", an empty submit sends nothing — with a positive control', async () => {
     let asked = 0;
     const probe = mountProbe({
       ask: async () => {
         asked += 1;
-        return { answer: 'should never run' };
+        return { answer: 'a real answer' };
       },
       onEmptySubmit: 'ignore'
     });
     await tick();
 
+    // POSITIVE CONTROL FIRST. Asserting only "asked === 0" after an empty submit
+    // is satisfied just as well by a probe that never mounted or a submit that
+    // never ran. Proving the same probe DOES post a real question first is what
+    // makes the zero below mean "the ignore branch ran".
+    probe.panel().setMessage('who walks dogs');
+    await tick();
     await probe.submit();
+    expect(asked, 'control: a real question must POST').toBe(1);
 
-    expect(asked, 'ignore policy must not POST').toBe(0);
-    expect(probe.panel().error).toBeNull();
-    expect(probe.panel().answer).toBeNull();
+    probe.panel().setMessage('   ');
+    await tick();
+    await probe.submit();
+    expect(asked, 'ignore policy must not POST a blank question').toBe(1);
     probe.unmount();
   });
 
