@@ -181,6 +181,12 @@ export function HomePage(): JSX.Element {
               id="home-search"
               type="search"
               role="searchbox"
+              // The stranger driver locates the primary control by this hook and
+              // the brand mark by data-measure="mark". Without them F1 reported
+              // "search is not discoverable" and "no brand mark" against a page
+              // that visibly has both, because it was measuring absence of a
+              // handle rather than absence of a control.
+              data-testid="filter-search"
               name="q"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -259,8 +265,13 @@ export function HomePage(): JSX.Element {
         </section>
       ) : null}
 
+      {/* data-testid below marks the live result set for the stranger driver,
+          which reads [data-testid="search-results"] and counts its li children.
+          Without it a filtered-down grid of real matches measured as "no result
+          was visible". Only one view renders at a time, so the id stays unique
+          in the document. */}
       {status === 'ready' && view === 'photos' ? (
-        <ul className="photo-grid">
+        <ul className="photo-grid" data-testid="search-results">
           {items.map((item) => (
             <li key={item.id} className="sushi-card sushi-card--mon">
               {item.photoUrl ? (

@@ -196,6 +196,62 @@ function managedStrangerDefaults(slug) {
 }
 
 /**
+ * Read a manifest entry's own stranger expectations, falling back to the
+ * placeholder defaults.
+ *
+ * Same defect as `url` one field over, and with the same consequence. Every
+ * managed app was handed `managedStrangerDefaults`, so F1 played a stranger who
+ * expected a page titled exactly "About", searched for the word "test", and had
+ * been told the app's purpose was "not yet product-judged". `user_refuse.mjs`
+ * matches headings with `exact: true`, so a perfectly good "About Sushi Finder"
+ * could never match, and a sushi catalogue can never answer "test". Measured
+ * 2026-08-12 against the deployed sushi-finder: F1 returned `refuse` citing a
+ * missing brand mark, an undiscoverable search and three missing legal headings,
+ * while a screenshot of that same page shows a logo, a labelled search box and
+ * "About Sushi Finder" rendering fine. The verdict described the fixture, not
+ * the app.
+ *
+ * A partial override is honoured field by field, so an app can name its real
+ * headings without also having to restate a search query.
+ *
+ * @param {Record<string, unknown>} entry Manifest entry.
+ * @param {string} slug App slug.
+ * @returns {StrangerExpectations}
+ */
+function managedStranger(entry, slug) {
+  const defaults = managedStrangerDefaults(slug);
+  const raw = entry.stranger;
+  if (raw === null || typeof raw !== 'object') return defaults;
+  const s = /** @type {Record<string, unknown>} */ (raw);
+
+  const pages = Array.isArray(s.requiredPages)
+    ? s.requiredPages.filter(
+        (p) =>
+          p !== null &&
+          typeof p === 'object' &&
+          typeof (/** @type {{path?: unknown}} */ (p).path) === 'string' &&
+          typeof (/** @type {{linkName?: unknown}} */ (p).linkName) === 'string' &&
+          typeof (/** @type {{headingText?: unknown}} */ (p).headingText) === 'string'
+      )
+    : null;
+
+  return Object.freeze({
+    purposeSentence:
+      typeof s.purposeSentence === 'string' && s.purposeSentence.trim().length > 0
+        ? s.purposeSentence
+        : defaults.purposeSentence,
+    searchQuery:
+      typeof s.searchQuery === 'string' && s.searchQuery.trim().length > 0
+        ? s.searchQuery
+        : defaults.searchQuery,
+    requiredPages:
+      pages !== null && pages.length > 0
+        ? Object.freeze(pages.map((p) => Object.freeze({ ...p })))
+        : defaults.requiredPages
+  });
+}
+
+/**
  * Load scaffolded apps from `.redanvil/managed-apps.json` under the monorepo root.
  *
  * @param {string} [repoRoot=process.cwd()] Repository root.
@@ -230,7 +286,7 @@ export function loadManagedApps(repoRoot = process.cwd()) {
         wizard: false,
         coreFlow: 'search',
         na: 'process',
-        stranger: managedStrangerDefaults(entry.slug)
+        stranger: managedStranger(entry, entry.slug)
       });
     }
     return out;

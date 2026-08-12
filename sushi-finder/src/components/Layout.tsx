@@ -15,7 +15,14 @@ export function Layout(): JSX.Element {
       <header className="shell__header">
         <div className="shell__header-inner">
           <Link className="brand" to="/">
-            <img className="brand__mark" src="/brand-mark.png" alt="" width={96} height={96} />
+            <img
+              className="brand__mark"
+              data-measure="mark"
+              src="/brand-mark.png"
+              alt=""
+              width={96}
+              height={96}
+            />
             <span>{en.brand.name}</span>
           </Link>
           <nav className="nav" aria-label="Primary">
@@ -43,7 +50,14 @@ export function Layout(): JSX.Element {
         <div className="footer-grid">
           <div>
             <Link className="brand" to="/">
-              <img className="brand__mark" src="/brand-mark.png" alt="" width={96} height={96} />
+              <img
+              className="brand__mark"
+              data-measure="mark"
+              src="/brand-mark.png"
+              alt=""
+              width={96}
+              height={96}
+            />
               <span>{en.brand.name}</span>
             </Link>
             <p style={{ color: 'var(--color-muted)', marginTop: '1rem' }}>{en.footer.blurb}</p>

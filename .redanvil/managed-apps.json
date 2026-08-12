@@ -14,7 +14,33 @@
       "entryPoint": "pm",
       "registeredAt": "2026-08-09T03:04:16.671Z",
       "handBuildBlocked": true,
-      "url": "https://sushi-finder.pages.dev"
+      "url": "https://sushi-finder.pages.dev",
+      "stranger": {
+        "purposeSentence": "Sushi Finder helps you find a sushi restaurant worth going to: browse a photo board, map or list, search the catalogue by name, and open a place to see its style, price band, walk-in status and city.",
+        "searchQuery": "sushi",
+        "requiredPages": [
+          {
+            "path": "/about",
+            "linkName": "About",
+            "headingText": "About Sushi Finder"
+          },
+          {
+            "path": "/terms",
+            "linkName": "Terms",
+            "headingText": "Terms of use"
+          },
+          {
+            "path": "/privacy",
+            "linkName": "Privacy",
+            "headingText": "Privacy policy"
+          },
+          {
+            "path": "/contact",
+            "linkName": "Contact",
+            "headingText": "Contact"
+          }
+        ]
+      }
     },
     {
       "slug": "furniture-listings",

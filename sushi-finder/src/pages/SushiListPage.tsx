@@ -108,6 +108,8 @@ export function SushiListPage(): JSX.Element {
               id="sushi-search"
               type="search"
               role="searchbox"
+              // Same measurement hook as the home search; see HomePage.tsx.
+              data-testid="filter-search"
               name="q"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
