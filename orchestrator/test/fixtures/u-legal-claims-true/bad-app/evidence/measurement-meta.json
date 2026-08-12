@@ -5,17 +5,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-12T22:29:32.044Z"
+        "at": "2026-08-12T23:40:35.202Z"
       },
       {
         "ok": false,
-        "at": "2026-08-12T22:29:32.045Z"
+        "at": "2026-08-12T23:40:35.203Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/u-legal-claims-true/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T22:29:32.045Z"
+      "recordedAt": "2026-08-12T23:40:35.203Z"
     }
   }
 }
