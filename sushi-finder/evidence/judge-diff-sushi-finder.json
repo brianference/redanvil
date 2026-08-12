@@ -2,47 +2,53 @@
   "kind": "independent-diff-review",
   "slug": "sushi-finder",
   "commit": "12b59da4bd30e1b34fd9c4584a069657184e375c",
-  "reviewedAt": "2026-08-12T18:41:25.329Z",
-  "diffHash": "f730f6363cb982323259cd7309464ebd4293f7d83fc9cdeddad92f12dbfd4958",
+  "reviewedAt": "2026-08-12T18:52:01.661Z",
+  "diffHash": "b60a7bddb00803f623f1c74657d3a1cc9e60b2c2219362c5595ef3d9fb387bf3",
   "completed": true,
   "ok": false,
   "foundNothingExplicit": false,
   "findings": [
     {
-      "title": "forceError claimed, not tested",
-      "citation": "pet-sitter/src/lib/useAssistantPanel.browser.test.ts:4",
-      "detail": "Header says a prior review failed a forceError-in-browser claim and that 'this is that claim turned into a test'. The suite only covers empty-submit policies and a happy-path ask (describe 'useAssistantPanel — empty submit'). No forceError path, flag, or case appears anywhere in the 167 lines. Author narrative and artifact disagree.",
+      "title": "Accept verdict with zero product changes",
+      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:2",
+      "detail": "The entire commit only rewrites refusal-sushi-finder.json. verdict is flipped from refuse to accept with no app, test, screenshot, or route changes in the diff. An acceptance claim cannot be verified from a hand-edited evidence file alone; FAIL.",
       "passed": false
     },
     {
-      "title": "ignore test can false-pass",
-      "citation": "pet-sitter/src/lib/useAssistantPanel.browser.test.ts:77",
-      "detail": "submit uses optional chaining: await latest?.submit(event). If latest is still null, submit is a silent no-op. The 'ignore' case then still passes: asked stays 0, error and answer stay null — the same as never invoking the hook. That makes the ignore assertions compatible with a failed mount/submit race, so the check can pass without proving onEmptySubmit: 'ignore'. Send/happy-path cases fail harder on expected side effects; ignore does not.",
+      "title": "Prior search failure not remediated",
+      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:3",
+      "detail": "complaints is emptied to []. The prior record listed search showing no results and inability to complete the app purpose. Nothing in this diff changes search UI, API, or e2e coverage, so clearing complaints is unsubstantiated; FAIL.",
       "passed": false
     },
     {
-      "title": "Browser lane execution not verified",
-      "citation": "pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1",
-      "detail": "File is named .browser.test.ts and comments assert it runs under pet-sitter's @vitest/browser + chromium lane. The diff adds only this file: no vitest config, no include pattern, no run output. From the diff alone it is impossible to verify the file is discovered or executed in a real browser, so the 'real DOM / browser lane' claim does not pass.",
+      "title": "purposeAccomplished unverifiable",
+      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:4",
+      "detail": "purposeAccomplished is set true. No measurement, Playwright run, curl of a live endpoint, or code path proving end-to-end purpose is present in the diff; FAIL as unverified.",
       "passed": false
     },
     {
-      "title": "Hook behavior unproven by this diff",
-      "citation": "pet-sitter/src/lib/useAssistantPanel.browser.test.ts:20",
-      "detail": "Tests import useAssistantPanel from design-system/hooks/useAssistantPanel but the hook implementation is not in the diff. Assertions (empty POST still fires under send, answer forced null with EMPTY, API error preferred over emptyMessage, trim of answer, links from selectItems) encode expected behavior that cannot be confirmed here. Adding a test file is not proof the shared hook implements those policies.",
+      "title": "primaryResultOffScreen unverifiable",
+      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:6",
+      "detail": "primaryResultOffScreen flipped true→false with no screenshots, layout CSS, or scroll/viewport fix in the diff. Visual off-screen claims cannot pass without rendered evidence; FAIL.",
       "passed": false
     },
     {
-      "title": "No sushi-finder artifact in commit",
-      "citation": "pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1",
-      "detail": "Reviewed commit only introduces a pet-sitter test. Zero sushi-finder source, route, acceptance, or screenshot changes appear. Any sushi-finder product claim for this commit is unsupported by the diff.",
+      "title": "looksFinished hand-authored",
+      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:9",
+      "detail": "looksFinished set true while looksBuggy/advertisedBroken stay false only by rewrite of this JSON. No UI, brand, or polish changes accompany the flag; FAIL as fabricated status.",
+      "passed": false
+    },
+    {
+      "title": "Timestamp only proves rewrite time",
+      "citation": "sushi-finder/evidence/refusal-sushi-finder.json:11",
+      "detail": "writtenAt updates to 2026-08-12T18:50:50.863Z. That proves the file was rewritten, not that search works or the product improved. Does not support accept; FAIL as non-evidence.",
       "passed": false
     }
   ],
-  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\\"foundNothingExplicit\\\":false,\\\"findings\\\":[{\\\"title\\\":\\\"forceError claimed, not tested\\\",\\\"citation\\\":\\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:4\\\",\\\"detail\\\":\\\"Header says a prior review failed a forceError-in-browser claim and that 'this is that claim turned into a test'. The suite only covers empty-submit policies and a happy-path ask (describe 'useAssistantPanel — empty submit'). No forceError path, flag, or case appears anywhere in the 167 lines. Author narrative and artifact disagree.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"ignore test can false-pass\\\",\\\"citation\\\":\\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:77\\\",\\\"detail\\\":\\\"submit uses optional chaining: await latest?.submit(event). If latest is still null, submit is a silent no-op. The 'ignore' case then still passes: asked stays 0, error and answer stay null — the same as never invoking the hook. That makes the ignore assertions compatible with a failed mount/submit race, so the check can pass without proving onEmptySubmit: 'ignore'. Send/happy-path cases fail harder on expected side effects; ignore does not.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Browser lane execution not verified\\\",\\\"citation\\\":\\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1\\\",\\\"detail\\\":\\\"File is named .browser.test.ts and comments assert it runs under pet-sitter's @vitest/browser + chromium lane. The diff adds only this file: no vitest config, no include pattern, no run output. From the diff alone it is impossible to verify the file is discovered or executed in a real browser, so the 'real DOM / browser lane' claim does not pass.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"Hook behavior unproven by this diff\\\",\\\"citation\\\":\\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:20\\\",\\\"detail\\\":\\\"Tests import useAssistantPanel from design-system/hooks/useAssistantPanel but the hook implementation is not in the diff. Assertions (empty POST still fires under send, answer forced null with EMPTY, API error preferred over emptyMessage, trim of answer, links from selectItems) encode expected behavior that cannot be confirmed here. Adding a test file is not proof the shared hook implements those policies.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"No sushi-finder artifact in commit\\\",\\\"citation\\\":\\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1\\\",\\\"detail\\\":\\\"Reviewed commit only introduces a pet-sitter test. Zero sushi-finder source, route, acceptance, or screenshot changes appear. Any sushi-finder product claim for this commit is unsupported by the diff.\\\",\\\"passed\\\":false}]}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"6dffc9cc-c68c-4f1c-a511-85564b2589bf\",\n  \"requestId\": \"7e78b85d-b85a-4c4f-b442-606c373a7510\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff. They explicitly say:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"missing forceError test\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1\\\",\\n      \\\"detail\\\": \\\"Header comment claims previous review failed on forceError coverage claim, and 12b59da4bd30e1b34fd9c4584a069657184e375c turns that claim into a test. But the test suite only covers empty-submit policies; no test exercises forceError path.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"wrong repo in sushi-finder diff\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts:1\\\",\\n      \\\"detail\\\": \\\"Diff is for sushi-finder commit but adds test in pet-sitter. If author claimed sushi-finder changes, this test belongs to pet-sitter and is irrelevant to 12b59da4bd30e1b34fd9c4584a069657184e375c.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"tick() insufficient for React 18\\\",\\n      \\\"citation\\\": \\\"pet-sitter/src/lib/useAssistantPanel.browser.test.ts: 40\\\",\\n      \\\"detail\\\": \\\"tick() does 4 Promise.resolve() + setTimeout(0). React 18 concurrent mode and async state updates require more reliable flushing;",
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"Accept verdict with zero product changes\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:2\\\",\\n      \\\"detail\\\": \\\"The entire commit only rewrites refusal-sushi-finder.json. verdict is flipped from refuse to accept with no app, test, screenshot, or route changes in the diff. An acceptance claim cannot be verified from a hand-edited evidence file alone; FAIL.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Prior search failure not remediated\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:3\\\",\\n      \\\"detail\\\": \\\"complaints is emptied to []. The prior record listed search showing no results and inability to complete the app purpose. Nothing in this diff changes search UI, API, or e2e coverage, so clearing complaints is unsubstantiated; FAIL.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"purposeAccomplished unverifiable\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:4\\\",\\n      \\\"detail\\\": \\\"purposeAccomplished is set true. No measurement, Playwright run, curl of a live endpoint, or code path proving end-to-end purpose is present in the diff; FAIL as unverified.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"primaryResultOffScreen unverifiable\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:6\\\",\\n      \\\"detail\\\": \\\"primaryResultOffScreen flipped true→false with no screenshots, layout CSS, or scroll/viewport fix in the diff. Visual off-screen claims cannot pass without rendered evidence; FAIL.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"looksFinished hand-authored\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:9\\\",\\n      \\\"detail\\\": \\\"looksFinished set true while looksBuggy/advertisedBroken stay false only by rewrite of this JSON. No UI, brand, or polish changes accompany the flag; FAIL as fabricated status.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"Timestamp only proves rewrite time\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.json:11\\\",\\n      \\\"detail\\\": \\\"writtenAt updates to 2026-08-12T18:50:50.863Z. That proves the file was rewritten, not that search works or the product improved. Does not support accept; FAIL as non-evidence.\\\",\\n      \\\"passed\\\": false\\n    }\\n  ]\\n}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"6b7d76c7-5978-439d-916c-2369fd58562b\",\n  \"requestId\": \"c4062ac0-99a5-4cca-bc1e-20d0f29e41fd\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff for sushi-finder at a specific commit. They explicitly said:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"unverified verdict flip\\\",\\n      \\\"citation\\\": \\\"sushi-finder/evidence/refusal-sushi-finder.\",\n  \"usage\": {\n    \"input_tokens\": 27819,\n    \"cache_read_input_tokens\": 128,\n    \"output_tokens\": 1182,\n    \"reasoning_tokens\": 590,\n    \"total_tokens\": 29129\n  },\n  \"num_turns\": 1,\n  \"total_cost_usd\": 0.0627684,\n  \"total_cost_usd_ticks\": 627684000,\n  \"modelUsage\": {\n    \"grok-4.5-build\": {\n      \"inputTokens\": 27819,\n      \"outputTokens\": 1182,\n      \"cacheReadInputTokens\": 128,\n      \"modelCalls\": 1,\n      \"costUSD\": 0.0627684\n    }\n  },\n  \"structuredOutput\": {\n    \"foundNothingExplicit\": false,\n    \"findings\": [\n      {\n        \"title\": \"Accept verdict with zero product changes\",\n        \"citation\": \"sushi-finder/evidence/refusal-sushi-finder.json:2\",\n        \"detail\": \"The entire commit only rewrites refusal-sushi-finder.json. verdict is flipped from refuse to accept with no app, test, screenshot, or route changes in the diff. An acceptance claim cannot be verified from a hand-edited evidence file alone; FAIL.\",\n        \"passed\": false\n      },\n      {\n        \"title\": \"Prior search failure not remediated\",\n        \"citation\": \"sushi-finder/evidence/refusal-",
   "mode": "grok",
   "chunkCount": 1,
-  "coverageChars": 5736,
-  "diffChars": 5736,
+  "coverageChars": 1010,
+  "diffChars": 1010,
   "coverageComplete": true
 }
