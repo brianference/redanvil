@@ -155,14 +155,23 @@ component trades real duplication for a speculative abstraction. What remains at
 | `apps (app-builder)`, `apps (dashboard)` | **green** |
 | `results-provenance` | red — app-builder step now PASSES; fails on dashboard |
 
-`results-provenance` failed two different ways on consecutive runs. On 31461235053
-it failed cleanly on "Verify dashboard results" with the stale-rubric message. On
-31461701913 the runner died with **Out of memory** after the app-builder step
-passed, so no log was captured for the failing step at all. Do not read the second
-as the first: the dashboard is stale either way, but an OOM is an infrastructure
-signal of its own, and it appeared on the run that took 7m02s against the
-previous 6m44s. Worth watching whether the workspace install raised the job's
-memory ceiling.
+**`results-provenance` is unstable, and the instability is hiding the real
+issue.** Three consecutive runs failed three different ways:
+
+| Run | What happened |
+|---|---|
+| 31461235053 | Clean failure on "Verify dashboard results" — the stale-rubric message. The app-builder step **passed**. |
+| 31461701913 | Runner died, **Out of memory**, after the app-builder step passed. No log for the failing step. |
+| 31621535625 | The app-builder step's conclusion is **`cancelled`**, everything after it `skipped`. |
+
+Read the third one carefully before concluding anything: the step shows as X in
+`gh run view`, which looks exactly like the app-builder verification regressing.
+It did not — `gh api .../jobs/<id>` reports `"conclusion": "cancelled"`, not
+`"failure"`. The app-builder result is fine; the job is being killed.
+
+The dashboard staleness is real and unaffected by any of this. But an OOM and a
+cancellation on a job that used to take 6-7 minutes want their own look — the
+suspect is the root `npm ci` now installing six workspaces instead of four.
 | `quickflight-provenance` | red — verdicts hash stale |
 | `apps-meet-the-bar` | red — the gate refusing, by design |
 
