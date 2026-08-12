@@ -1,0 +1,54 @@
+{
+  "kind": "independent-diff-review",
+  "slug": "sushi-finder",
+  "commit": "3fe0f0c26dace9d98ba72862146bf4d02b8a1c16",
+  "reviewedAt": "2026-08-12T17:11:02.920Z",
+  "diffHash": "9b9a6a8f8d1b7887dfa8791df5d6c877f01698a1af6cf36769787f7fd884ae1a",
+  "completed": true,
+  "ok": false,
+  "foundNothingExplicit": false,
+  "findings": [
+    {
+      "title": "forceError still untested",
+      "citation": "orchestrator/test/designSystemShared.test.ts:10",
+      "detail": "New suite covers askAssistantForOutcome/queryString/blankToUndefined only. It never imports useAssistantPanel, never passes forceError, and never exercises empty-submit run('', emptyMessage, emptyMessage). Prior review FAIL on forceError is not closed by this commit.",
+      "passed": false
+    },
+    {
+      "title": "acceptance coverage claim unverified",
+      "citation": "orchestrator/test/designSystemShared.test.ts:11",
+      "detail": "Comment asserts the hook is covered by sushi-finder acceptance in a real browser. No acceptance test, Playwright spec, or browser harness appears in this diff. Claim is comment-only; FAIL closed.",
+      "passed": false
+    },
+    {
+      "title": "evidence cites code absent from diff",
+      "citation": "evidence/judge-diff-sushi-finder.json:14",
+      "detail": "Findings cite design-system/hooks/useAssistantPanel.ts:107, .github/scripts/meets_the_bar.mjs:594, and evidence/measurement-meta.json:5. This unified diff only adds the evidence JSON and orchestrator/test/designSystemShared.test.ts. No forceError or waived-unmeasured implementation is present to verify.",
+      "passed": false
+    },
+    {
+      "title": "self-review of same commit",
+      "citation": "evidence/judge-diff-sushi-finder.json:4",
+      "detail": "Evidence claims reviewedAt commit 3fe0f0c26dace9d98ba72862146bf4d02b8a1c16 while being introduced by that same commit. ok:false findings about files not in the tree of this diff cannot prove a product fix; packaging a prior FAIL is not a fix.",
+      "passed": false
+    },
+    {
+      "title": "blank-answer rule unit-tested",
+      "citation": "orchestrator/test/designSystemShared.test.ts:33",
+      "detail": "Tests pin '', whitespace, undefined, null, and non-string answers to status error with fallback message — the shared product rule is verified for askAssistantForOutcome alone.",
+      "passed": true
+    },
+    {
+      "title": "queryString/blankToUndefined covered",
+      "citation": "orchestrator/test/designSystemShared.test.ts:78",
+      "detail": "queryString omits blanks, avoids bare ?, encodes values, keeps 0; blankToUndefined trims and maps empty/whitespace to undefined. Verified from this diff for those pure helpers only.",
+      "passed": true
+    }
+  ],
+  "rawExcerpt": "--- chunk 1/1 ---\n{\n  \"text\": \"{\\\"foundNothingExplicit\\\":false,\\\"findings\\\":[{\\\"title\\\":\\\"forceError still untested\\\",\\\"citation\\\":\\\"orchestrator/test/designSystemShared.test.ts:10\\\",\\\"detail\\\":\\\"New suite covers askAssistantForOutcome/queryString/blankToUndefined only. It never imports useAssistantPanel, never passes forceError, and never exercises empty-submit run('', emptyMessage, emptyMessage). Prior review FAIL on forceError is not closed by this commit.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"acceptance coverage claim unverified\\\",\\\"citation\\\":\\\"orchestrator/test/designSystemShared.test.ts:11\\\",\\\"detail\\\":\\\"Comment asserts the hook is covered by sushi-finder acceptance in a real browser. No acceptance test, Playwright spec, or browser harness appears in this diff. Claim is comment-only; FAIL closed.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"evidence cites code absent from diff\\\",\\\"citation\\\":\\\"evidence/judge-diff-sushi-finder.json:14\\\",\\\"detail\\\":\\\"Findings cite design-system/hooks/useAssistantPanel.ts:107, .github/scripts/meets_the_bar.mjs:594, and evidence/measurement-meta.json:5. This unified diff only adds the evidence JSON and orchestrator/test/designSystemShared.test.ts. No forceError or waived-unmeasured implementation is present to verify.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"self-review of same commit\\\",\\\"citation\\\":\\\"evidence/judge-diff-sushi-finder.json:4\\\",\\\"detail\\\":\\\"Evidence claims reviewedAt commit 3fe0f0c26dace9d98ba72862146bf4d02b8a1c16 while being introduced by that same commit. ok:false findings about files not in the tree of this diff cannot prove a product fix; packaging a prior FAIL is not a fix.\\\",\\\"passed\\\":false},{\\\"title\\\":\\\"blank-answer rule unit-tested\\\",\\\"citation\\\":\\\"orchestrator/test/designSystemShared.test.ts:33\\\",\\\"detail\\\":\\\"Tests pin '', whitespace, undefined, null, and non-string answers to status error with fallback message — the shared product rule is verified for askAssistantForOutcome alone.\\\",\\\"passed\\\":true},{\\\"title\\\":\\\"queryString/blankToUndefined covered\\\",\\\"citation\\\":\\\"orchestrator/test/designSystemShared.test.ts:78\\\",\\\"detail\\\":\\\"queryString omits blanks, avoids bare ?, encodes values, keeps 0; blankToUndefined trims and maps empty/whitespace to undefined. Verified from this diff for those pure helpers only.\\\",\\\"passed\\\":true}]}\",\n  \"stopReason\": \"EndTurn\",\n  \"sessionId\": \"de99425e-f814-4d34-bcdd-c546587209db\",\n  \"requestId\": \"b427d02a-7eba-46a0-934e-57a18b70ebd9\",\n  \"thought\": \"The user wants me to act as an independent code judge reviewing a git diff. They explicitly said:\\n{\\n  \\\"foundNothingExplicit\\\": false,\\n  \\\"findings\\\": [\\n    {\\n      \\\"title\\\": \\\"missing useAssistantPanel test coverage\\\",\\n      \\\"citation\\\": \\\"orchestrator/test/designSystemShared.test.ts:1\\\",\\n      \\\"detail\\\": \\\"New test file only covers askAssistantForOutcome, queryString and blankToUndefined. The commit claims forceError branch in useAssistantPanel.ts:107-108 is now tested via meets_the_bar, but the diff contains zero tests for the hook itself or its empty-submit / forceError paths.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"evidence file circular 3fe0f0c\\\",\\n      \\\"citation\\\": \\\"evidence/judge-diff-sushi-finder.json:5\\\",\\n      \\\"detail\\\": \\\"The commit adds judge-diff-sushi-finder.json which is a prior review of the exact same commit hash 3fe0f0c. That prior review asserts changes to 3 files (useAssistantPanel.ts, meets_the_bar.mjs, measurement-meta.json) that are absent from this diff. Cannot verify any of the claimed fixes.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"forceError untested in new suite\\\",\\n      \\\"citation\\\": \\\"orchestrator/test designSystemShared.test.ts:10\\\",\\n      \\\"detail\\\": \\\"Comment at line 10 states hook is covered by acceptance suite; no acceptance tests appear in this diff. forceError path (107-108) remains untested.\\\",\\n      \\\"passed\\\": false\\n    },\\n    {\\n      \\\"title\\\": \\\"no remediation of 400-handling forceError\\\",\\n      \\\"citation\\\": \\\"evidence/judge-d",
+  "mode": "grok",
+  "chunkCount": 1,
+  "coverageChars": 11135,
+  "diffChars": 11135,
+  "coverageComplete": true
+}
