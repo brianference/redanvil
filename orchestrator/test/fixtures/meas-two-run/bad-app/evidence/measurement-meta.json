@@ -15,17 +15,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-11T05:16:04.508Z"
+        "at": "2026-08-12T19:02:28.192Z"
       },
       {
         "ok": false,
-        "at": "2026-08-11T05:16:04.509Z"
+        "at": "2026-08-12T19:02:28.192Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-two-run/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-11T05:16:04.509Z"
+      "recordedAt": "2026-08-12T19:02:28.192Z"
     }
   }
 }

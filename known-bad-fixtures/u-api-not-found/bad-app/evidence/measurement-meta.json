@@ -5,17 +5,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-11T05:15:49.632Z"
+        "at": "2026-08-12T19:02:13.224Z"
       },
       {
         "ok": false,
-        "at": "2026-08-11T05:15:49.632Z"
+        "at": "2026-08-12T19:02:13.224Z"
       }
     ],
     "knownBad": {
       "input": "known-bad-fixtures/u-api-not-found/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-11T05:15:49.632Z"
+      "recordedAt": "2026-08-12T19:02:13.225Z"
     },
     "notApplicable": false,
     "reason": null,

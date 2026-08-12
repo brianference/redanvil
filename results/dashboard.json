@@ -4,8 +4,8 @@
   "finalScore": 0,
   "threshold": 90,
   "passed": false,
-  "evaluated": 83,
-  "total": 83,
+  "evaluated": 84,
+  "total": 84,
   "rules": [
     {
       "ruleId": "u-typing-strict",
@@ -25,7 +25,7 @@
     },
     {
       "ruleId": "u-test-runners",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "u-test-coverage-ratchet",
@@ -65,7 +65,7 @@
     },
     {
       "ruleId": "fe-breadcrumbs",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "fe-result-in-viewport",
@@ -73,7 +73,7 @@
     },
     {
       "ruleId": "fe-resource-links",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "fe-legal-substance",
@@ -145,6 +145,10 @@
     },
     {
       "ruleId": "u-sec-sast",
+      "passed": true
+    },
+    {
+      "ruleId": "u-sec-safe-href",
       "passed": true
     },
     {
@@ -253,11 +257,11 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-known-bad",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-two-run",
@@ -377,19 +381,23 @@
       "index": 1,
       "score": 0,
       "blockers": [
-        "lg-shipped"
+        "u-test-runners",
+        "fe-breadcrumbs",
+        "fe-resource-links",
+        "lg-shipped",
+        "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-06T00:27:02.991Z",
+  "finishedAt": "2026-08-12T18:56:59.642Z",
   "provenance": {
-    "commit": "bf9f6e4245fdbd84258e8427a468be3329e5b035",
+    "commit": "e6543eb20e778bff2a2ef84f3bfec1e583a42cff",
     "dirty": false,
-    "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
-    "rubricRuleCount": 95,
+    "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
+    "rubricRuleCount": 96,
     "node": "v22.19.0",
-    "verdictsHash": "3e827154a512cbd19dbb547d0bbaecc1664f9d0e341bf3aa452cdb4990386f2a",
+    "verdictsHash": "94fd6ec06b8e4819bd38035d1b1c96eabbb1efe0f5c7e4c46448b9a5c29c5038",
     "notApplicable": [
       "fe-assistant-present",
       "proc-pr-title-ticket",
@@ -398,6 +406,6 @@
       "u-plat-migrations"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-06T00:27:03.050Z"
+    "generatedAt": "2026-08-12T18:56:59.709Z"
   }
 }
