@@ -54,9 +54,15 @@ been worse than the red one.
 `NOT COVERED HERE: test/acceptance/assistant.test.ts (needs Workers AI
 credentials)` on every run rather than dropping it silently. `/api/assistant` is
 backed by the Workers AI binding, which wrangler connects to the real Cloudflare
-account even in local dev. **The Cloudflare token in the environment is dead** —
-`/user/tokens/verify` returns 401 — so this could not be provisioned. That token
-being dead probably affects deploys too; worth regenerating.
+account even in local dev, and no Cloudflare credentials are wired into CI.
+
+**Correction, 2026-08-12:** an earlier version of this paragraph said the
+Cloudflare token was dead because `/user/tokens/verify` returns 401. That was
+wrong. The same token returns **200** on `/accounts` and on the Pages projects
+endpoint — it is valid and scoped for Pages, and both apps were deployed with it.
+The 401 is that one endpoint being outside the token's scope, not a dead token.
+One probe, generalised. Wiring it into CI as a secret would let this lane run the
+assistant spec.
 
 ---
 
