@@ -257,7 +257,7 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "meas-known-bad",
@@ -384,15 +384,14 @@
         "u-test-runners",
         "fe-breadcrumbs",
         "fe-resource-links",
-        "lg-shipped",
-        "lg-result-reproduces"
+        "lg-shipped"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-12T18:56:59.642Z",
+  "finishedAt": "2026-08-12T19:06:33.049Z",
   "provenance": {
-    "commit": "e6543eb20e778bff2a2ef84f3bfec1e583a42cff",
+    "commit": "dae7f247888fa6bb8fd406fa026bb714708560cc",
     "dirty": false,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
@@ -406,6 +405,6 @@
       "u-plat-migrations"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-12T18:56:59.709Z"
+    "generatedAt": "2026-08-12T19:06:33.120Z"
   }
 }
