@@ -1,12 +1,38 @@
-import { NavLink, Outlet, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import { en } from '../i18n/en';
 import { AssistantPanel } from './AssistantPanel';
 import { ThemeToggle } from './ThemeToggle';
 
 /**
  * Premium shell: sticky nav, brand mark, theme, assistant, multi-column footer.
+ *
+ * The nav is a disclosure below 768px. It used to be a wrapping flex row with no
+ * mobile treatment, so at 375 the four links broke into a ragged stack around
+ * the brand mark and pushed the theme and assistant controls onto their own row.
+ * Nothing overlapped, which is why the responsive check passed, but the rule
+ * pack asks for overflow in a menu and a screenshot is what showed it.
  */
 export function Layout(): JSX.Element {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  // Close on navigation: leaving the panel open over the new page is the classic
+  // mobile-menu bug, and it hides the content the user just asked for.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // Escape closes, because a disclosure the keyboard cannot dismiss is a trap.
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
   return (
     <div className="shell">
       <a className="skip-link" href="#main">
@@ -25,7 +51,22 @@ export function Layout(): JSX.Element {
             />
             <span>{en.brand.name}</span>
           </Link>
-          <nav className="nav" aria-label="Primary">
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-expanded={menuOpen}
+            aria-controls="primary-nav"
+            aria-label={menuOpen ? en.nav.closeMenu : en.nav.openMenu}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <span className="nav-toggle__bars" aria-hidden="true" />
+            <span className="nav-toggle__text">{en.nav.menu}</span>
+          </button>
+          <nav
+            id="primary-nav"
+            className={menuOpen ? 'nav nav--open' : 'nav'}
+            aria-label="Primary"
+          >
             <NavLink to="/" end>
               {en.nav.home}
             </NavLink>

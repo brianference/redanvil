@@ -14,7 +14,10 @@ export const en = {
     terms: 'Terms',
     privacy: 'Privacy',
     contact: 'Contact',
-    skip: 'Skip to main content'
+    skip: 'Skip to main content',
+    menu: 'Menu',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu'
   },
   theme: {
     toggle: 'Toggle theme',
