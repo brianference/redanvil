@@ -565,13 +565,23 @@ function loadVerdicts(path) {
  * rules — but a rule that simply never appeared in the result was invisible, so
  * a checker that silently stopped running looked identical to one that passed.
  *
- * Two absences are legitimate and are not reported here:
- *  - `provenance.notApplicable` — the gate measured and found no subject (an app
- *    with no search control cannot have a search control audited).
- *  - a waived rule — the defect is accepted for this release and is printed by
- *    the caller's WAIVED line, so reporting it again is the same finding twice.
+ * Only one absence is legitimate: `provenance.notApplicable`, where the gate
+ * measured and found no subject (an app with no search control cannot have a
+ * search control audited).
  *
- * Anything else absent is a hole, and it fails closed.
+ * A waiver is NOT such a licence, and this originally treated it as one. The
+ * reasoning was that the caller already prints a WAIVED line, so reporting the
+ * rule here would be the same finding twice — but the caller only prints
+ * waivers that absorbed a RECORDED failure (`waivedFailing` is drawn from rules
+ * with `passed === false`). A rule that is waived AND never recorded is in
+ * neither set, so it produced no output anywhere: the most invisible state in
+ * the gate belonged to rules someone had already flagged as suspect. Caught by
+ * an independent review on 2026-08-12; no app triggers it today, which is
+ * exactly why it could have sat there.
+ *
+ * The two cases are reported separately because they are different claims.
+ * "Never measured" is worse than "measured and accepted": a waiver is a decision
+ * to ship a KNOWN defect, and it cannot honestly cover a rule nobody has run.
  *
  * @param {{rules?: ReadonlyArray<{ruleId: string}>} | null} result Parsed result.
  * @param {ReadonlySet<string>} notApplicable Rule ids the gate recorded as n/a.
@@ -581,14 +591,26 @@ function loadVerdicts(path) {
 export function rubricCoverageReasons(result, notApplicable, waived) {
   if (!result || !Array.isArray(result.rules)) return [];
   const recorded = new Set(result.rules.map((r) => r.ruleId));
-  const missing = ALL_RUBRIC_RULES.filter(
-    (id) => !recorded.has(id) && !notApplicable.has(id) && !waived.has(id)
-  );
-  if (missing.length === 0) return [];
-  return [
-    `${missing.length} rubric rule(s) produced no recorded outcome — an unmeasured ` +
-      `rule fails closed: ${missing.slice(0, 8).join(', ')}${missing.length > 8 ? ', …' : ''}`
-  ];
+  const absent = ALL_RUBRIC_RULES.filter((id) => !recorded.has(id) && !notApplicable.has(id));
+  const unmeasured = absent.filter((id) => !waived.has(id));
+  const waivedUnmeasured = absent.filter((id) => waived.has(id));
+
+  /** @type {string[]} */
+  const reasons = [];
+  if (unmeasured.length > 0) {
+    reasons.push(
+      `${unmeasured.length} rubric rule(s) produced no recorded outcome — an unmeasured ` +
+        `rule fails closed: ${unmeasured.slice(0, 8).join(', ')}${unmeasured.length > 8 ? ', …' : ''}`
+    );
+  }
+  if (waivedUnmeasured.length > 0) {
+    reasons.push(
+      `${waivedUnmeasured.length} waived rule(s) were never measured — a waiver accepts a ` +
+        `KNOWN defect, not an unchecked one: ${waivedUnmeasured.slice(0, 8).join(', ')}` +
+        `${waivedUnmeasured.length > 8 ? ', …' : ''}`
+    );
+  }
+  return reasons;
 }
 
 /**

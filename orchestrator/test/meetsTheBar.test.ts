@@ -105,19 +105,38 @@ describe('finish-line constants', () => {
       ).toEqual([]);
     });
 
-    // A waived rule is already printed as WAIVED by the caller. Reporting it here
-    // too would be the same defect counted twice by two evaluators.
-    it('a waived rule is not reported again as unmeasured', () => {
+    // This originally asserted the OPPOSITE — that a waived rule is silent — on
+    // the reasoning that the caller already prints a WAIVED line. It does not:
+    // the caller only prints waivers that absorbed a RECORDED failure, so a rule
+    // that is waived AND never recorded produced no output anywhere. An
+    // independent review found it; the test that was supposed to cover this had
+    // encoded the hole instead.
+    it('a waived rule that was never measured is still reported, and named as such', () => {
       const result = everyRule();
       result.rules = result.rules.filter((r) => r.ruleId !== 'hyg-no-duplication');
-      expect(rubricCoverageReasons(result, new Set(), new Set(['hyg-no-duplication']))).toEqual([]);
+      const reasons = rubricCoverageReasons(result, new Set(), new Set(['hyg-no-duplication']));
+      expect(reasons).toHaveLength(1);
+      expect(reasons[0]).toContain('hyg-no-duplication');
+      expect(reasons[0]).toContain('never measured');
+    });
+
+    // The two absences are different claims and must not collapse into one line.
+    it('separates never-measured from waived-and-never-measured', () => {
+      const result = everyRule();
+      result.rules = result.rules.filter(
+        (r) => r.ruleId !== 'hyg-no-duplication' && r.ruleId !== 'u-sec-timeouts'
+      );
+      const reasons = rubricCoverageReasons(result, new Set(), new Set(['hyg-no-duplication']));
+      expect(reasons).toHaveLength(2);
+      expect(reasons.find((r) => r.includes('no recorded outcome'))).toContain('u-sec-timeouts');
+      expect(reasons.find((r) => r.includes('never measured'))).toContain('hyg-no-duplication');
     });
 
     it('accepts a Map of waivers as well as a Set', () => {
       const result = everyRule();
       result.rules = result.rules.filter((r) => r.ruleId !== 'hyg-no-duplication');
       const waived = new Map([['hyg-no-duplication', { reason: 'scaffold boilerplate' }]]);
-      expect(rubricCoverageReasons(result, new Set(), waived)).toEqual([]);
+      expect(rubricCoverageReasons(result, new Set(), waived)[0]).toContain('never measured');
     });
   });
 

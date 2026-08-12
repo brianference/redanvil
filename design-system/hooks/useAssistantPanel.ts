@@ -89,8 +89,12 @@ export function useAssistantPanel<TResult, TItem>(options: {
    *
    * @param text - The question to send.
    * @param blankFallback - Error to use when the reply is unusable.
+   * @param forceError - When set, the panel shows this instead of any answer,
+   *   however the request resolves. Used for the empty submit: the request goes
+   *   so the boundary can answer 400, but a blank question must never render an
+   *   answer even if a loose endpoint returns 200 with prose.
    */
-  async function run(text: string, blankFallback: string): Promise<void> {
+  async function run(text: string, blankFallback: string, forceError?: string): Promise<void> {
     setLoading(true);
     setError(null);
     setAnswer(null);
@@ -100,7 +104,9 @@ export function useAssistantPanel<TResult, TItem>(options: {
       selectItems,
       errorMessage: blankFallback
     });
-    if (outcome.status === 'error') {
+    if (forceError !== undefined) {
+      setError(outcome.status === 'error' ? outcome.message : forceError);
+    } else if (outcome.status === 'error') {
       setError(outcome.message);
     } else {
       setAnswer(outcome.answer);
@@ -123,7 +129,7 @@ export function useAssistantPanel<TResult, TItem>(options: {
       const text = message.trim();
       if (text.length === 0) {
         if (onEmptySubmit === 'ignore') return;
-        await run('', emptyMessage);
+        await run('', emptyMessage, emptyMessage);
         return;
       }
       await run(text, errorMessage);
