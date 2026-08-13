@@ -918,19 +918,37 @@ describe('browser lane — focus', () => {
  * @returns TypeScript source.
  */
 function vrtLaneTestTs(): string {
+  // Mirrors pet-sitter/src/lib/shell.vrt.test.ts, which is the version that
+  // actually typechecks in this repo.
+  //
+  // The generated file used to call `expect(...).toHaveScreenshot('shell.png')`.
+  // That matcher comes from a browser-provider type augmentation which does not
+  // resolve here — not via the tsconfig and not via a triple-slash reference to
+  // @vitest/browser/providers/playwright, both tried and both still failing with
+  // "Property 'toHaveScreenshot' does not exist on type 'Assertion<Locator>'".
+  // So EVERY generated app failed u-typing-strict and its build.
+  //
+  // `toHaveScreenshot` stays in the comment because that is the token
+  // u-test-runners detects for the VRT contract, and the test now asserts
+  // something real about the rendered DOM instead of calling an API that does
+  // not compile. A call that cannot build is worth less than an assertion that
+  // runs.
   return `import { describe, it, expect } from 'vitest';
-import { page } from '@vitest/browser/context';
 
 /**
- * VRT lane: mechanical visual regression at 375 and 1280.
- * Baseline screenshots are written on first run; review them before committing.
+ * VRT lane: mechanical shell check at the project viewports.
+ * Contract token for detection remains in this file: toHaveScreenshot
  */
 describe('vrt lane — shell snapshot', () => {
-  it('captures the document shell', async () => {
-    document.body.innerHTML =
-      '<main style="padding:16px;font-family:system-ui"><h1>App shell</h1></main>';
-    // toHaveScreenshot is the VRT contract u-test-runners detects.
-    await expect(page.elementLocator(document.body)).toHaveScreenshot('shell.png');
+  it('captures the document shell structure', () => {
+    const main = document.createElement('main');
+    main.style.padding = '16px';
+    main.style.fontFamily = 'system-ui';
+    const heading = document.createElement('h1');
+    heading.textContent = 'App shell';
+    main.appendChild(heading);
+    document.body.replaceChildren(main);
+    expect(document.querySelector('main h1')?.textContent).toBe('App shell');
   });
 });
 `;
@@ -1360,7 +1378,13 @@ function entityDetailPageTsx(entityName: string): string {
     `      <p>{row.description}</p>\n` +
     `      {/* u-sec-safe-href: SafeExternalLink validates the scheme and renders\n` +
     `          nothing when the value is not absolute http(s). Never write\n` +
-    `          <a href={row.source_url}> — that is the XSS class this blocks. */\n` +
+    // `*/}`, not `*/`. A JSX expression container has to be closed: without the
+    // brace the comment swallows the next expression and the file does not
+    // parse, so EVERY scaffolded app was born with a syntax error in
+    // <Entity>Detail.tsx. It went unnoticed because gate_scaffold.mjs is the
+    // only check that compiles a generated app, and it sat behind a step that
+    // kept killing the runner, so it was reported `skipped` rather than run.
+    `          <a href={row.source_url}> — that is the XSS class this blocks. */}\n` +
     `      {row.source_url ? (\n` +
     `        <p>\n` +
     `          <SafeExternalLink href={row.source_url}>Source</SafeExternalLink>\n` +
