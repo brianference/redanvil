@@ -57,13 +57,17 @@ const bodyStyle: CSSProperties = {
   minWidth: 0
 };
 
+// A run title is a slug — one hyphenated token — so it wraps mid-token rather
+// than ellipsising, the same as `metaTextStyle` below. As nowrap + ellipsis it
+// clipped "az-planting-calendar" by 13px at 375 on the runner, which
+// fe-responsive-375 counts as a defect whether or not the truncation was
+// deliberate. `anywhere` is what actually breaks a slug; normal wrapping finds
+// no break opportunity in it.
 const titleStyle: CSSProperties = {
   fontSize: theme.type.scale[2],
   fontWeight: 650,
   lineHeight: 1.25,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
+  overflowWrap: 'anywhere',
   color: theme.color.text,
   textDecoration: 'none',
   display: 'inline-flex',
