@@ -182,14 +182,18 @@ ${SHARED_SHELL_CSS}
           flex-wrap: wrap;
           gap: ${theme.space.sm}px;
         }
+        /* 44px and 16px, not 36px and 14px. These are real buttons that filter
+           the catalogue, and they failed fe-touch-targets and fe-type-floor on
+           /examples at 375 -- the two rules exist for controls exactly like
+           this one. */
         .ex-chip {
-          min-height: 36px;
+          min-height: 44px;
           padding: 0 ${theme.space.md}px;
           border-radius: ${theme.radius.pill}px;
           border: 1px solid ${theme.color.border};
           background: ${theme.color.chipBg};
           color: ${theme.color.text};
-          font-size: ${theme.type.scale[1]}px;
+          font-size: ${theme.type.scale[2]}px;
           font-weight: 600;
           cursor: pointer;
         }
@@ -202,9 +206,13 @@ ${SHARED_SHELL_CSS}
           outline: none;
           box-shadow: ${theme.shadow.focus};
         }
+        /* minmax(0, 1fr), never a bare 1fr. A 1fr track takes its automatic
+           minimum from the item's min-content, so one unbreakable token inside
+           a card widens the whole track past its container -- which is how a
+           URL in a prompt pushed this page 36px wider than the viewport. */
         .ex-catalog__grid {
           display: grid;
-          grid-template-columns: 1fr;
+          grid-template-columns: minmax(0, 1fr);
           gap: ${theme.space.lg}px;
           width: 100%;
         }
@@ -226,11 +234,17 @@ ${SHARED_SHELL_CSS}
           overflow: hidden;
           min-width: 0;
         }
+        /* The back device is translated down 12px for the staggered look, which
+           put 12px outside this element's box and made fe-responsive-375 report
+           a real vertical overflow on all four cards. The padding takes those
+           12px inside the box and the negative margin pulls the meta panel back
+           up, so the devices still sit flush against it and nothing moves. */
         .ex-card__stack {
           display: grid;
           grid-template-columns: 1.1fr 0.9fr;
           gap: ${theme.space.sm}px;
-          padding: ${theme.space.md}px ${theme.space.md}px 0;
+          padding: ${theme.space.md}px ${theme.space.md}px 12px;
+          margin-bottom: -12px;
           align-items: end;
         }
         .ex-card__device {
@@ -282,7 +296,7 @@ ${SHARED_SHELL_CSS}
         }
         .ex-card__built-grid {
           display: grid;
-          grid-template-columns: 1fr;
+          grid-template-columns: minmax(0, 1fr);
           gap: ${theme.space.lg}px;
         }
         @media (min-width: 900px) {

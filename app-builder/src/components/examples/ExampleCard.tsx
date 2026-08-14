@@ -161,7 +161,10 @@ export function ExampleCard({ example }: ExampleCardProps): JSX.Element {
 
 const kickerStyle: CSSProperties = {
   margin: 0,
-  fontSize: theme.type.scale[1],
+  // 16px, not 14px. fe-type-floor measured this eyebrow at 14px on /examples;
+  // uppercase with wide tracking reads smaller still, so it was the worst
+  // offender on the page rather than a borderline one.
+  fontSize: theme.type.scale[2],
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
   // accentFg, not accent. The fill accent used as TEXT measured 3.86:1 on the
@@ -188,7 +191,9 @@ const taglineStyle: CSSProperties = {
 };
 
 const statStyle: CSSProperties = {
-  fontSize: theme.type.scale[1],
+  // 16px, not 14px -- these stat pills carry real numbers ("4,162 airports")
+  // and were under the body floor.
+  fontSize: theme.type.scale[2],
   fontWeight: 600,
   padding: `${theme.space.xs}px ${theme.space.sm}px`,
   borderRadius: theme.radius.sm,
@@ -281,6 +286,10 @@ const panelTitleStyle: CSSProperties = {
   color: theme.color.text
 };
 
+// A prompt is arbitrary user text and one of these contains a bare 71-character
+// URL (an almanac planting-calendar link). Normal wrapping finds no break
+// opportunity inside it, so its min-content width was 348px in a 252px panel and
+// the overflow propagated all the way up to <main> and the body.
 const quoteStyle: CSSProperties = {
   margin: `${theme.space.md}px 0 0`,
   padding: theme.space.md,
@@ -289,7 +298,9 @@ const quoteStyle: CSSProperties = {
   borderRadius: `0 ${theme.radius.sm}px ${theme.radius.sm}px 0`,
   fontSize: theme.type.scale[2],
   lineHeight: 1.6,
-  color: theme.color.text
+  color: theme.color.text,
+  overflowWrap: 'anywhere',
+  minWidth: 0
 };
 
 const answersStyle: CSSProperties = {
@@ -304,11 +315,20 @@ const answerRowStyle: CSSProperties = {
   gap: theme.space.sm,
   fontSize: theme.type.scale[2],
   borderTop: `1px solid ${theme.color.border}`,
-  paddingTop: theme.space.xs
+  paddingTop: theme.space.xs,
+  minWidth: 0
 };
 
-const dtStyle: CSSProperties = { color: theme.color.muted, minWidth: 100 };
-const ddStyle: CSSProperties = { margin: 0, color: theme.color.text, fontWeight: 600 };
+// The answer values are transcribed from each app and carry URLs and slugs, so
+// they wrap mid-token for the same reason the quote does.
+const dtStyle: CSSProperties = { color: theme.color.muted, minWidth: 100, flexShrink: 0 };
+const ddStyle: CSSProperties = {
+  margin: 0,
+  color: theme.color.text,
+  fontWeight: 600,
+  minWidth: 0,
+  overflowWrap: 'anywhere'
+};
 
 const noteStyle: CSSProperties = {
   margin: `${theme.space.sm}px 0 ${theme.space.md}px`,
