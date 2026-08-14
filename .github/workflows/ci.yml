@@ -51,8 +51,16 @@ jobs:
     # a step that actually succeeded. Capping the heap makes V8 collect rather
     # than grow until the runner is killed; without it the failure looks like a
     # verification regression and sends the next reader after the wrong thing.
+    #
+    # 2048, not 4096. The reasoning below in dashboard-provenance was correct and
+    # was never propagated here: on 2026-08-14 that job ran verify_results at
+    # 2048 and PASSED ("dashboard reproduced at 0/100, 84/84 rules, 92 outcomes
+    # matched") while this job ran the same script for app-builder at 4096 and
+    # was killed after 2m44s with no output and the step recorded as `cancelled`
+    # rather than `failure`. A generous cap is not a safety margin here, it is
+    # permission for V8 to grow past what the runner has alongside Chromium.
     env:
-      NODE_OPTIONS: --max-old-space-size=4096
+      NODE_OPTIONS: --max-old-space-size=2048
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
