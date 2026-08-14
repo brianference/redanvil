@@ -86,8 +86,56 @@ npx wrangler pages deploy ./dist --project-name=redanvil
 
 CI (GitHub Actions) typechecks, tests, and builds everything on every push.
 
+## Scores, and why every app currently reads 0
+
+Every app in the dashboard shows a score of **0** against a threshold of 90. That
+is the gate working, not the project rotting, and it is worth understanding
+before reading anything else here.
+
+The rubric is 96 rules, and 69 of them are blockers. A blocker does not shade the
+score down a few points -- it zeroes the whole thing. So 0 means "at least one
+blocking rule is open", never "nothing works". All six apps are deployed and
+serving right now:
+
+| App | Live | State |
+| --- | --- | --- |
+| App builder | https://redanvil.pages.dev | 12/12 design rules pass, axe clean in both themes |
+| Dashboard | https://redanvil-dashboard.pages.dev | 12/12 design rules pass |
+| AZ Planting Calendar | https://az-planting-calendar.pages.dev | 12/12 design rules pass, 121 tests across 3 lanes |
+| Sushi Finder | https://sushi-finder.pages.dev | live, gate blockers open |
+| Pet Sitter | https://pet-sitter.pages.dev | live, gate blockers open |
+| QuickFlight | https://quickflight.pages.dev | live, re-gated against the current rubric |
+
+The most common open blockers are `lg-shipped` (the app must be pushed AND the
+score must already meet the bar, which is circular for an app still below it),
+`lg-result-reproduces`, and rules that were added to the rubric after an app was
+last measured. **An unmeasured rule fails closed** -- it does not quietly pass --
+so growing the rubric retroactively lowers scores until each app is re-gated.
+That is deliberate. The alternative is a number that flatters whatever was
+checked last.
+
+An earlier version of this section claimed the app-builder passed at 100/100
+across 41 of 41 applicable rules. That was true when it was written, against a
+41-rule rubric. The rubric is 96 rules now and the same app scores 0. The old
+number is left here as a correction rather than quietly deleted, because a
+portfolio that only shows its best measurement is the thing this gate exists to
+prevent.
+
 ## Status
 
-The orchestrator engine, scoring gate, scaffolder, and both live apps are shipped and verified. The app-builder passes the gate at 100/100 across 41 of 41 applicable rules -- and that number is now backed end to end: 19 deterministic checks, a judge tier where each verdict cites file:line evidence, and a visual tier measured on the rendered page (contrast via axe-core, recorded as evidence). Every verdict's evidence path is checked to exist on disk, the verdicts file is hashed into provenance, and CI reproduces the whole thing rule by rule. The repo's own CI-lane blockers (SHA-pinned actions, least-privilege permissions, no injection) are scored separately in CI, since generated apps have no workflows. The core flow (chat -> wizard -> Forge PRD) is smoke-tested against production in CI by e2e_smoke.mjs (role-based, web-first assertions, real-signal waits, trace recorded), and contrast is measured with axe-core -- both mandated by the deploy design-gate hook. The generated PRD is an agentic spec: YAML frontmatter, CREATE TABLE DDL, GIVEN/WHEN/THEN acceptance, dependency-ordered tasks with verify commands. Ongoing work: fan out the judge tier across parallel subagents with adversarial verification, and a scheduled drift re-gate (see docs/claude-primitives-integration.md).
+The orchestrator engine, scoring gate, scaffolder, and both web surfaces are
+shipped and running. What the gate measures is real end to end: deterministic
+checks, a judge tier where each verdict cites file:line evidence, and a visual
+tier measured on the rendered page with contrast via axe-core. Every verdict's
+evidence path is checked to exist on disk, the verdicts file is hashed into
+provenance, verdicts expire when the code they vouch for changes, and CI
+reproduces the whole result rule by rule rather than trusting the committed
+file. The repo's own CI-lane blockers are scored separately, since generated
+apps have no workflows.
+
+Open work, stated plainly: no app clears the finish line yet; a `results-provenance`
+CI job is killed intermittently by its runner with no log persisted; and verdict
+freshness is pinned to repo HEAD rather than to the commit that produced the
+evidence, so an edit to shared code marks unrelated apps stale.
 
 Built with Claude Code and Grok Build.

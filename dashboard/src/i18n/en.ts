@@ -49,6 +49,13 @@ export const en = {
       kpiTotal: 'Total runs',
       kpiPassed: 'Passed',
       kpiAvgScore: 'Avg score',
+      // Without this line a first-time visitor sees a column of FAIL badges and
+      // a zero average and reads the project as broken or abandoned. A score of
+      // 0 is what the rubric is designed to return while any blocker is open:
+      // blockers zero the whole score rather than shading it, so 0 means "not
+      // finished", never "nothing works". Every app on this page is live.
+      scoreNote:
+        'A score of 0 means at least one blocking rule is still open. Blockers zero the whole score rather than averaging it away, so 0 reads as "not finished yet" -- not "broken". Every app listed here is deployed and serving.',
       recentHeading: 'Recent builds',
       recentMeta: (count: number): string => (count === 1 ? '1 shown' : `${count} shown`),
       searchLabel: 'Search runs',

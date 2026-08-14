@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { useMemo, useState } from 'react';
 import { KpiStrip } from '../components/KpiStrip';
 import { Page } from '../components/Page';
@@ -64,6 +65,7 @@ export function HomeBody({ state, query, onQueryChange }: HomeBodyProps): JSX.El
   return (
     <Page title={title}>
       <KpiStrip summary={stats} />
+      <p style={scoreNoteStyle}>{en.pages.home.scoreNote}</p>
       <RunSearch value={query} onChange={onQueryChange} />
       {filteredRuns.length === 0 && query.trim().length > 0 ? (
         <p role="status" style={{ color: theme.color.muted }}>
@@ -88,3 +90,18 @@ export function Home(): JSX.Element {
   const [query, setQuery] = useState('');
   return <HomeBody state={state} query={query} onQueryChange={setQuery} />;
 }
+
+/**
+ * Context line under the KPI strip.
+ *
+ * Muted and small on purpose: it explains the zeros without competing with the
+ * numbers themselves, and it sits above the list so it is read before the FAIL
+ * badges rather than after them.
+ */
+const scoreNoteStyle: CSSProperties = {
+  margin: `0 0 ${theme.space.md}px`,
+  maxWidth: '60ch',
+  fontSize: theme.type.scale[2],
+  lineHeight: 1.55,
+  color: theme.color.muted
+};
