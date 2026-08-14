@@ -44,23 +44,32 @@ jobs:
   # hand-authored one is to run the gate again and compare rule-by-rule.
   results-provenance:
     runs-on: ubuntu-latest
-    # This job reproduces TWO full gate runs, each driving Playwright, in one
-    # runner. It killed the runner with "Out of memory" twice on 2026-08-12 --
-    # once with no log at all, and once mid-way through the dashboard step after
-    # the app-builder step had passed, which renders in `gh run view` as an X on
-    # a step that actually succeeded. Capping the heap makes V8 collect rather
-    # than grow until the runner is killed; without it the failure looks like a
-    # verification regression and sends the next reader after the wrong thing.
+    # NO NODE_OPTIONS heap cap, deliberately, and the history is worth keeping
+    # because the cap looked obviously right for two days and was not.
     #
-    # 2048, not 4096. The reasoning below in dashboard-provenance was correct and
-    # was never propagated here: on 2026-08-14 that job ran verify_results at
-    # 2048 and PASSED ("dashboard reproduced at 0/100, 84/84 rules, 92 outcomes
-    # matched") while this job ran the same script for app-builder at 4096 and
-    # was killed after 2m44s with no output and the step recorded as `cancelled`
-    # rather than `failure`. A generous cap is not a safety margin here, it is
-    # permission for V8 to grow past what the runner has alongside Chromium.
-    env:
-      NODE_OPTIONS: --max-old-space-size=2048
+    # This job once reproduced TWO full gate runs in one runner and died with
+    # "Out of memory" on 2026-08-12. The response was a 4096 cap, then a 2048
+    # cap. Neither worked, and the job kept dying two ways that looked unrelated:
+    # killed after ~2 minutes with no output and the step recorded as `cancelled`
+    # rather than `failure`, or hung for 48 minutes and finished with NO
+    # PERSISTED LOG AT ALL. Runs at the same 2048 cap both passed and died, so
+    # the cap was never the variable anyone thought it was.
+    #
+    # What settled it was the sibling job. `quickflight-provenance` runs the same
+    # verify_results.mjs, installs MORE browsers (chromium + webkit), runs a full
+    # Playwright suite first, and passes in ~6 minutes with no cap at all. The
+    # two jobs that failed were exactly the two that set one.
+    #
+    # A cap below what the work needs does not make V8 "collect rather than
+    # grow" — it makes it collect CONSTANTLY near the ceiling, which is both the
+    # ~2 minute kill and the 48 minute non-progress. The script itself is fine:
+    # it reproduces dashboard locally in 143s at 92/92 outcomes matched. Node's
+    # own default (about half of system memory) is the right ceiling on a runner
+    # whose memory is shared with Chromium.
+    #
+    # timeout-minutes bounds the damage whatever the cause: a lost runner now
+    # fails in 20 minutes instead of burning 48.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -124,12 +133,13 @@ jobs:
   # `skipped` every time, so a memory limit was silently removing real coverage.
   dashboard-provenance:
     runs-on: ubuntu-latest
-    env:
-      # 2048, not 4096. On its own runner it STILL died with "Out of memory" at
-      # 4096: a standard runner has ~7GB shared with Chromium, so a generous cap
-      # lets V8 grow until the kernel kills the process instead of collecting.
-      # A tighter ceiling makes it GC and finish.
-      NODE_OPTIONS: --max-old-space-size=2048
+    # No heap cap here either — see the long note on results-provenance. This job
+    # is the reason the cap theory looked right: it passed at 2048 on
+    # 2026-08-14 ("dashboard reproduced at 0/100, 84/84 rules, 92 outcomes
+    # matched"). It then hung for 49 minutes at the SAME cap in the next run,
+    # with no log persisted, while running the script bare — no sampler, nothing
+    # of mine wrapping it. One setting, both outcomes.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
