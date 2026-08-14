@@ -257,7 +257,7 @@
     },
     {
       "ruleId": "lg-result-reproduces",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "meas-known-bad",
@@ -384,19 +384,20 @@
         "u-test-runners",
         "fe-breadcrumbs",
         "fe-resource-links",
-        "lg-shipped"
+        "lg-shipped",
+        "lg-result-reproduces"
       ]
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-12T19:06:33.049Z",
+  "finishedAt": "2026-08-14T06:35:04.950Z",
   "provenance": {
-    "commit": "dae7f247888fa6bb8fd406fa026bb714708560cc",
+    "commit": "bf93eef665a3d0e6e582990a8c28396e5e749694",
     "dirty": false,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
     "node": "v22.19.0",
-    "verdictsHash": "94fd6ec06b8e4819bd38035d1b1c96eabbb1efe0f5c7e4c46448b9a5c29c5038",
+    "verdictsHash": "06f296466e4b66ba48b71c714e2757cc723146207fde16d5c2dfafd94039f2ac",
     "notApplicable": [
       "fe-assistant-present",
       "proc-pr-title-ticket",
@@ -405,6 +406,6 @@
       "u-plat-migrations"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-12T19:06:33.120Z"
+    "generatedAt": "2026-08-14T06:35:05.030Z"
   }
 }

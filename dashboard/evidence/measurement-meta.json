@@ -5,17 +5,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-12T23:40:57.510Z"
+        "at": "2026-08-14T06:34:41.641Z"
       },
       {
         "ok": false,
-        "at": "2026-08-12T23:41:01.045Z"
+        "at": "2026-08-14T06:34:45.163Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/search-present/dead-search.html",
       "failed": true,
-      "recordedAt": "2026-08-12T23:41:01.045Z"
+      "recordedAt": "2026-08-14T06:34:45.163Z"
     }
   },
   "fe-brand-mark-size": {
@@ -24,13 +24,13 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:39:30.939Z",
+        "at": "2026-08-14T06:33:28.847Z",
         "height1280": 112,
         "height375": 112
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:39:31.668Z",
+        "at": "2026-08-14T06:33:29.501Z",
         "height1280": 112,
         "height375": 112
       }
@@ -43,7 +43,7 @@
     "knownBad": {
       "input": "orchestrator/test/fixtures/brand-mark-size/small.html",
       "failed": true,
-      "recordedAt": "2026-08-12T23:39:31.668Z"
+      "recordedAt": "2026-08-14T06:33:29.501Z"
     }
   },
   "fe-breadcrumbs": {
@@ -90,19 +90,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:39:54.602Z",
+        "at": "2026-08-14T06:33:48.780Z",
         "summary": "terms 1550w/16h2; privacy 1625w/16h2"
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:39:55.142Z",
+        "at": "2026-08-14T06:33:49.314Z",
         "summary": "terms 1550w/16h2; privacy 1625w/16h2"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/fe-legal-substance/bad",
       "failed": true,
-      "recordedAt": "2026-08-12T23:39:55.142Z"
+      "recordedAt": "2026-08-14T06:33:49.314Z"
     }
   },
   "fe-structured-data": {
@@ -111,19 +111,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:39:55.602Z",
+        "at": "2026-08-14T06:33:49.652Z",
         "type": "WebSite"
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:39:55.603Z",
+        "at": "2026-08-14T06:33:49.653Z",
         "type": "WebSite"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/structured-data/bad.html",
       "failed": true,
-      "recordedAt": "2026-08-12T23:39:55.603Z"
+      "recordedAt": "2026-08-14T06:33:49.653Z"
     }
   },
   "proc-design-options": {
@@ -132,17 +132,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:39:55.770Z"
+        "at": "2026-08-14T06:33:49.775Z"
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:39:55.771Z"
+        "at": "2026-08-14T06:33:49.775Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/proc-design-options/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:39:55.771Z"
+      "recordedAt": "2026-08-14T06:33:49.775Z"
     }
   },
   "u-api-real-output": {
@@ -151,19 +151,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:40:04.181Z",
+        "at": "2026-08-14T06:33:55.309Z",
         "routes": 1
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:40:04.182Z",
+        "at": "2026-08-14T06:33:55.310Z",
         "routes": 1
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/u-api-real-output/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:40:04.182Z"
+      "recordedAt": "2026-08-14T06:33:55.310Z"
     }
   },
   "fe-light-dark": {
@@ -172,19 +172,19 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-12T23:40:52.016Z",
+        "at": "2026-08-14T06:34:36.222Z",
         "landmarks": 5
       },
       {
         "ok": false,
-        "at": "2026-08-12T23:40:53.540Z",
+        "at": "2026-08-14T06:34:37.738Z",
         "landmarks": 5
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/theme-paint/hardcoded-hero.html",
       "failed": true,
-      "recordedAt": "2026-08-12T23:40:53.540Z"
+      "recordedAt": "2026-08-14T06:34:37.738Z"
     }
   },
   "u-build-succeeds": {
@@ -193,19 +193,19 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:40:20.105Z",
+        "at": "2026-08-14T06:34:09.767Z",
         "status": 0
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:40:20.106Z",
+        "at": "2026-08-14T06:34:09.767Z",
         "status": 0
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/u-build-succeeds/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:40:20.106Z"
+      "recordedAt": "2026-08-14T06:34:09.767Z"
     }
   },
   "u-api-no-spa-mask": {
@@ -214,21 +214,21 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:40:24.544Z",
-        "path": "/api/__definitely_absent_bda44c1acb50e843",
+        "at": "2026-08-14T06:34:13.154Z",
+        "path": "/api/__definitely_absent_15d6be289f85455b",
         "status": 404
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:40:24.545Z",
-        "path": "/api/__definitely_absent_bda44c1acb50e843",
+        "at": "2026-08-14T06:34:13.154Z",
+        "path": "/api/__definitely_absent_15d6be289f85455b",
         "status": 404
       }
     ],
     "knownBad": {
       "input": "known-bad-fixtures/u-api-no-spa-mask/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:40:24.545Z"
+      "recordedAt": "2026-08-14T06:34:13.154Z"
     }
   },
   "u-legal-claims-true": {
@@ -237,17 +237,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:40:24.738Z"
+        "at": "2026-08-14T06:34:13.286Z"
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:40:24.739Z"
+        "at": "2026-08-14T06:34:13.287Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/u-legal-claims-true/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:40:24.739Z"
+      "recordedAt": "2026-08-14T06:34:13.287Z"
     }
   },
   "fe-favicon-legible": {
@@ -256,7 +256,7 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:40:25.458Z",
+        "at": "2026-08-14T06:34:13.899Z",
         "metrics": {
           "inkCoverage": 0.59765625,
           "detailEnergy": 196.53267649178392,
@@ -268,7 +268,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:40:25.458Z",
+        "at": "2026-08-14T06:34:13.899Z",
         "metrics": {
           "inkCoverage": 0.59765625,
           "detailEnergy": 196.53267649178392,
@@ -280,7 +280,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:40:25.816Z",
+        "at": "2026-08-14T06:34:14.213Z",
         "metrics": {
           "inkCoverage": 0.603515625,
           "detailEnergy": 187.48894800427564,
@@ -292,7 +292,7 @@
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:40:25.816Z",
+        "at": "2026-08-14T06:34:14.213Z",
         "metrics": {
           "inkCoverage": 0.603515625,
           "detailEnergy": 187.48894800427564,
@@ -307,7 +307,7 @@
     "knownBad": {
       "input": "orchestrator/test/fixtures/fe-favicon-legible/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:40:25.816Z"
+      "recordedAt": "2026-08-14T06:34:14.213Z"
     }
   },
   "lg-result-reproduces": {
@@ -316,13 +316,13 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-12T23:40:28.640Z",
+        "at": "2026-08-14T06:34:16.190Z",
         "recomputed": 0,
         "recorded": 0
       },
       {
         "ok": false,
-        "at": "2026-08-12T23:40:28.641Z",
+        "at": "2026-08-14T06:34:16.190Z",
         "recomputed": 0,
         "recorded": 0
       }
@@ -330,7 +330,7 @@
     "knownBad": {
       "input": "orchestrator/test/fixtures/lg-result-reproduces",
       "failed": true,
-      "recordedAt": "2026-08-12T23:40:30.024Z"
+      "recordedAt": "2026-08-14T06:34:17.184Z"
     }
   },
   "meas-known-bad": {
@@ -339,17 +339,17 @@
     "runs": [
       {
         "ok": false,
-        "at": "2026-08-12T23:41:20.566Z"
+        "at": "2026-08-14T06:35:04.313Z"
       },
       {
         "ok": false,
-        "at": "2026-08-12T23:41:20.567Z"
+        "at": "2026-08-14T06:35:04.314Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-known-bad/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:41:20.567Z"
+      "recordedAt": "2026-08-14T06:35:04.314Z"
     }
   },
   "meas-two-run": {
@@ -358,17 +358,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:41:20.723Z"
+        "at": "2026-08-14T06:35:04.434Z"
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:41:20.724Z"
+        "at": "2026-08-14T06:35:04.434Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-two-run/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:41:20.724Z"
+      "recordedAt": "2026-08-14T06:35:04.434Z"
     }
   },
   "meas-recheck-flattering": {
@@ -377,17 +377,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:41:20.890Z"
+        "at": "2026-08-14T06:35:04.557Z"
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:41:20.890Z"
+        "at": "2026-08-14T06:35:04.558Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-recheck-flattering/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:41:20.890Z"
+      "recordedAt": "2026-08-14T06:35:04.558Z"
     }
   },
   "meas-standard-tool": {
@@ -396,17 +396,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:41:21.071Z"
+        "at": "2026-08-14T06:35:04.704Z"
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:41:21.071Z"
+        "at": "2026-08-14T06:35:04.705Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-standard-tool/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:41:21.071Z"
+      "recordedAt": "2026-08-14T06:35:04.705Z"
     }
   },
   "meas-engine-named": {
@@ -415,17 +415,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:41:21.228Z"
+        "at": "2026-08-14T06:35:04.826Z"
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:41:21.229Z"
+        "at": "2026-08-14T06:35:04.826Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/meas-engine-named/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:41:21.229Z"
+      "recordedAt": "2026-08-14T06:35:04.826Z"
     }
   },
   "fe-result-in-viewport": {
@@ -434,17 +434,17 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:39:45.679Z"
+        "at": "2026-08-14T06:33:40.029Z"
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:39:52.751Z"
+        "at": "2026-08-14T06:33:47.089Z"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/result-in-viewport/below-fold.html",
       "failed": true,
-      "recordedAt": "2026-08-12T23:39:52.751Z"
+      "recordedAt": "2026-08-14T06:33:47.089Z"
     },
     "notApplicable": false,
     "reason": null
@@ -455,14 +455,14 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:40:12.495Z",
+        "at": "2026-08-14T06:34:03.021Z",
         "note": "no D1/AI/KV/R2 bindings declared"
       }
     ],
     "knownBad": {
       "input": "orchestrator/test/fixtures/lg-bindings-bound/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:40:12.496Z"
+      "recordedAt": "2026-08-14T06:34:03.022Z"
     },
     "notApplicable": false,
     "reason": null
@@ -473,25 +473,25 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T23:40:22.338Z",
-        "path": "/api/__definitely_absent_337856be34c311df"
+        "at": "2026-08-14T06:34:11.356Z",
+        "path": "/api/__definitely_absent_c33d1f439fc1c6f7"
       },
       {
         "ok": true,
-        "at": "2026-08-12T23:40:22.339Z",
-        "path": "/api/__definitely_absent_337856be34c311df"
+        "at": "2026-08-14T06:34:11.357Z",
+        "path": "/api/__definitely_absent_c33d1f439fc1c6f7"
       }
     ],
     "knownBad": {
       "input": "known-bad-fixtures/u-api-not-found/bad-app",
       "failed": true,
-      "recordedAt": "2026-08-12T23:40:22.339Z"
+      "recordedAt": "2026-08-14T06:34:11.357Z"
     },
     "notApplicable": false,
     "reason": null,
     "recordedAt": "2026-08-04T03:47:26.717Z",
     "mode": "absent-api-path",
-    "path": "/api/__definitely_absent_337856be34c311df"
+    "path": "/api/__definitely_absent_c33d1f439fc1c6f7"
   },
   "fe-a11y-contrast": {
     "tool": "axe-core",
@@ -499,12 +499,12 @@
     "runs": [
       {
         "ok": true,
-        "at": "2026-08-12T19:03:50.195Z",
+        "at": "2026-08-14T06:32:27.884Z",
         "report": "evidence/axe/dashboard-dark.json"
       },
       {
         "ok": true,
-        "at": "2026-08-12T19:03:52.320Z",
+        "at": "2026-08-14T06:32:29.938Z",
         "report": "evidence/axe/dashboard-light.json"
       }
     ]
