@@ -802,23 +802,36 @@ function playwrightConfigTs(): string {
 }
 
 /**
- * Vitest multi-project config for the scaffold.
+ * Vitest config for the scaffold: coverage only.
  *
- * Four independent lanes the process map requires (unit / browser / vrt / pytest).
- * Playwright acceptance stays under tests/ and is NOT swallowed by vitest.
+ * The lanes live in `vitest.workspace.ts`, NOT in a `test.projects` block here.
+ * `test.projects` is a vitest 3.x key and the scaffold pins 2.1.9, which does
+ * not read it and does not complain about it either — it silently fell back to
+ * the default include and ran everything in the `node` environment. Every app
+ * this scaffold has ever generated was born with a failing suite:
  *
- * Named projects matter for the gate: a failure reports which lane failed, so
- * "tests passed" can never mean "the unit lane passed and nobody ran the rest".
+ *   - the five Playwright specs under `tests/` were collected by vitest and
+ *     died with "Playwright Test did not expect test() to be called here",
+ *     even though all three lanes exclude `tests/**` — the exclusion was never
+ *     applied because the lanes did not exist;
+ *   - `*.browser.test.ts` and `*.vrt.test.ts` ran without a DOM and died with
+ *     "document is not defined";
+ *   - `u-test-runners` reported "3 of 3 lane(s) failed", which read as three
+ *     broken lanes rather than one config key silently doing nothing.
+ *
+ * Measured on a fresh scaffold: 7 test files failed and 1 passed before,
+ * 3 files and 4 tests passed after, and `vitest run --project unit` went from
+ * "No test files found" to running the unit lane. Keep the lane definitions in
+ * the workspace file for as long as the pinned vitest is 2.x; moving them back
+ * under `test.projects` reintroduces this silently.
  */
 function vitestConfigTs(): string {
   return `import { defineConfig } from 'vitest/config';
 
-/** VRT specs: toHaveScreenshot at 375 and 1280. */
-const vrtPattern = '**/*.{vrt,visual}.test.{ts,tsx}';
-
 export default defineConfig({
   test: {
-    // Coverage is collected once for the whole run from the root config.
+    // Lanes are defined in vitest.workspace.ts — vitest 2.x reads the workspace
+    // file, and ignores a \`test.projects\` block here without warning.
     coverage: {
       provider: 'v8',
       // json-summary is what writes coverage/coverage-summary.json, which is
@@ -831,59 +844,71 @@ export default defineConfig({
       // browser it did not launch.
       include: ['src/lib/**', 'src/hooks/**', 'functions/**'],
       exclude: ['**/*.test.ts', '**/*.browser.test.ts', '**/*.{vrt,visual}.test.ts']
-    },
-    projects: [
-      {
-        test: {
-          name: 'unit',
-          environment: 'node',
-          include: ['src/**/*.test.ts', 'functions/**/*.test.ts'],
-          exclude: [
-            '**/*.browser.test.ts',
-            vrtPattern,
-            'tests/**',
-            'node_modules/**',
-            'dist/**'
-          ]
-        }
-      },
-      {
-        test: {
-          name: 'browser',
-          // Real-DOM behaviour jsdom fakes badly: focus order, combobox keyboard,
-          // scroll containers, scrollIntoView.
-          browser: {
-            enabled: true,
-            headless: true,
-            provider: 'playwright',
-            name: 'chromium',
-            instances: [{ browser: 'chromium' }]
-          },
-          include: ['**/*.browser.test.ts'],
-          exclude: ['tests/**', 'node_modules/**', 'dist/**']
-        }
-      },
-      {
-        test: {
-          name: 'vrt',
-          // Visual regression at 375 and 1280 via toHaveScreenshot.
-          browser: {
-            enabled: true,
-            headless: true,
-            provider: 'playwright',
-            name: 'chromium',
-            instances: [
-              { browser: 'chromium', viewport: { width: 375, height: 900 } },
-              { browser: 'chromium', viewport: { width: 1280, height: 900 } }
-            ]
-          },
-          include: [vrtPattern],
-          exclude: ['tests/**', 'node_modules/**', 'dist/**']
-        }
-      }
-    ]
+    }
   }
 });
+`;
+}
+
+/**
+ * Vitest workspace for the scaffold — the three lanes the process map requires.
+ *
+ * Named lanes matter for the gate: a failure reports which lane failed, so
+ * "tests passed" can never mean "the unit lane passed and nobody ran the rest".
+ * Playwright acceptance stays under tests/ and is NOT swallowed by vitest.
+ *
+ * @returns TypeScript source.
+ */
+function vitestWorkspaceTs(): string {
+  return `import { defineWorkspace } from 'vitest/config';
+
+/** VRT specs: toHaveScreenshot at 375 and 1280. */
+const vrtPattern = '**/*.{vrt,visual}.test.{ts,tsx}';
+
+export default defineWorkspace([
+  {
+    test: {
+      name: 'unit',
+      environment: 'node',
+      include: ['src/**/*.test.ts', 'functions/**/*.test.ts'],
+      exclude: ['**/*.browser.test.ts', vrtPattern, 'tests/**', 'node_modules/**', 'dist/**']
+    }
+  },
+  {
+    test: {
+      name: 'browser',
+      // Real-DOM behaviour jsdom fakes badly: focus order, combobox keyboard,
+      // scroll containers, scrollIntoView.
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: 'playwright',
+        name: 'chromium',
+        instances: [{ browser: 'chromium' }]
+      },
+      include: ['**/*.browser.test.ts'],
+      exclude: ['tests/**', 'node_modules/**', 'dist/**']
+    }
+  },
+  {
+    test: {
+      name: 'vrt',
+      // Visual regression at 375 and 1280 via toHaveScreenshot.
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: 'playwright',
+        name: 'chromium',
+        instances: [
+          { browser: 'chromium', viewport: { width: 375, height: 900 } },
+          { browser: 'chromium', viewport: { width: 1280, height: 900 } }
+        ]
+      },
+      include: [vrtPattern],
+      exclude: ['tests/**', 'node_modules/**', 'dist/**']
+    }
+  }
+]);
 `;
 }
 
@@ -1268,6 +1293,7 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     '.redanvil/coverage-state.json': coverageStateJson(),
     'playwright.config.ts': playwrightConfigTs(),
     'vitest.config.ts': vitestConfigTs(),
+    'vitest.workspace.ts': vitestWorkspaceTs(),
     'src/components/ScrollToTop.tsx': scrollToTopComponent(),
     'src/components/DocPage.tsx': docPageComponent(),
     'src/components/Page.tsx': pageShellTsx(),

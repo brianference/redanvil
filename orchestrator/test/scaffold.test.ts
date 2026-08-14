@@ -122,11 +122,27 @@ describe('scaffoldApp', () => {
   });
 
   it('ships independent vitest unit, browser, and VRT lanes', async () => {
+    // The lanes must live in the WORKSPACE file. This assertion used to read
+    // vitest.config.ts and passed for as long as the lane names appeared
+    // anywhere in it — including while they sat in a `test.projects` block that
+    // the pinned vitest 2.1.9 does not read, so every generated app ran its
+    // Playwright specs and its DOM tests in the node environment and its suite
+    // failed 7 files out of 8. The names being present was never the property
+    // worth asserting; being in the file vitest actually loads is.
+    const workspace = await readFile(join(out, 'vitest.workspace.ts'), 'utf8');
+    expect(workspace).toContain('defineWorkspace');
+    expect(workspace).toContain("name: 'unit'");
+    expect(workspace).toContain("name: 'browser'");
+    expect(workspace).toContain("name: 'vrt'");
+    expect(workspace).toMatch(/browser\s*:\s*\{[\s\S]*enabled\s*:\s*true/);
+    // Every lane must keep Playwright's own specs out of vitest.
+    expect(workspace.match(/'tests\/\*\*'/g) ?? []).toHaveLength(3);
+
+    // The regression guard: a `projects` key here is silently inert on vitest
+    // 2.x, so reintroducing one is the exact defect above coming back.
     const config = await readFile(join(out, 'vitest.config.ts'), 'utf8');
-    expect(config).toContain("name: 'unit'");
-    expect(config).toContain("name: 'browser'");
-    expect(config).toContain("name: 'vrt'");
-    expect(config).toMatch(/browser\s*:\s*\{[\s\S]*enabled\s*:\s*true/);
+    expect(config).not.toMatch(/\bprojects\s*:/);
+    expect(config).toContain('coverage');
 
     const pkg = JSON.parse(await readFile(join(out, 'package.json'), 'utf8'));
     expect(pkg.scripts['test:unit']).toContain('--project unit');
