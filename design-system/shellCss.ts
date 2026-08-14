@@ -207,9 +207,30 @@ export function shellCss(c: ShellCssTokens, m: ShellCssMetrics): string {
           width: 100%;
           max-width: 40rem;
         }
+        /* Two-up until there is room for three. A rigid three-up left each tile
+           a 57px content box at 320, so every KPI label ellipsised (measured on
+           production; at 375 the same page renders "THIS WE…" and "IN LIBRA…").
+           The scheduled re-gate reported this on an Ubuntu runner while the
+           identical script on Windows found one clip of the six: the app loads
+           no Inter webfont, so the Inter/system-ui/sans-serif stack resolves to
+           a different face per platform and the layout was tuned to one of them.
+           Column count is the fix; a narrower label would only move the
+           breakpoint. */
         .ra-saved-grid {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        @media (min-width: 480px) {
+          .ra-saved-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+          }
+        }
+        /* A card is a grid item, so its automatic minimum is its min-content
+           width — 290px of icon, badges and date that cannot shrink. That
+           forced a 306px track inside a 253px container and pushed the
+           overflow all the way up to <main>. */
+        .ra-saved-list > li {
+          min-width: 0;
         }
         @media (min-width: 1024px) {
           .ra-saved-col {

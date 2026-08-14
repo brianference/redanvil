@@ -88,6 +88,11 @@ export const kpiValStyle: CSSProperties = {
 };
 
 /** KPI uppercase label under the value. */
+// A KPI label wraps rather than ellipsising. The column count in `.ra-saved-grid`
+// is what buys it room; wrapping is the guard for the case that count cannot
+// cover, because `text-overflow: ellipsis` turns a font wider than the one this
+// was laid out against into a clipped label, and fe-responsive-375 counts a clip
+// as a defect whether or not it was deliberate.
 export const kpiLblStyle: CSSProperties = {
   fontSize: theme.type.scale[1],
   fontWeight: 600,
@@ -95,9 +100,7 @@ export const kpiLblStyle: CSSProperties = {
   marginTop: 3,
   textTransform: 'uppercase',
   letterSpacing: '0.04em',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis'
+  overflowWrap: 'anywhere'
 };
 
 /** Section head row (title + count meta). */
@@ -176,7 +179,7 @@ export const buildBodyStyle: CSSProperties = {
   gap: 2
 };
 
-/** Title link to the PRD detail page. */
+/** Title link to the PRD detail page. Wraps; see `metaEllipsisStyle`. */
 export const buildTitleLinkStyle: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -184,9 +187,7 @@ export const buildTitleLinkStyle: CSSProperties = {
   fontSize: theme.type.scale[2],
   fontWeight: 650,
   lineHeight: 1.25,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
+  overflowWrap: 'anywhere',
   color: theme.color.text,
   textDecoration: 'none',
   maxWidth: '100%'
@@ -203,11 +204,15 @@ export const buildMetaStyle: CSSProperties = {
   minWidth: 0
 };
 
-/** Ellipsis for the slug meta span. */
+// The slug meta wraps instead of ellipsising. As a nowrap span it measured a
+// 152px min-content contribution, which was most of the card's 290px floor —
+// and once `.ra-saved-list > li` is allowed to shrink to the viewport, an
+// ellipsis here would simply move the clip from the card to this span.
+// `anywhere` matters: a slug is one unbroken token, so normal wrapping would
+// not break it and the 152px floor would survive.
+/** Slug meta span: wraps, including mid-token. */
 export const metaEllipsisStyle: CSSProperties = {
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
+  overflowWrap: 'anywhere',
   minWidth: 0
 };
 
@@ -227,6 +232,10 @@ export const badgeStyle: CSSProperties = {
   lineHeight: 1.3
 };
 
+// `flex-shrink: 0` held this pill at its 126px content width inside a 107px
+// column, which was the last clip left at 320 once the card could shrink. The
+// status pill beside it keeps flex-shrink: 0 because "Ready" is one short word
+// with nothing to reflow; this one carries a phrase, so it is allowed to give.
 /** Public-source pill badge. */
 export const sourceBadgeStyle: CSSProperties = {
   display: 'inline-flex',
@@ -238,7 +247,8 @@ export const sourceBadgeStyle: CSSProperties = {
   background: theme.color.chipBg,
   color: theme.color.muted,
   border: `1px solid ${theme.color.border}`,
-  flexShrink: 0,
+  minWidth: 0,
+  overflowWrap: 'anywhere',
   lineHeight: 1.3
 };
 
