@@ -85,8 +85,12 @@ jobs:
       # that had browsers. Install before verify (and reuse for e2e smoke below).
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
+      # Wrapped in the memory sampler because this step is killed intermittently
+      # and records as `cancelled` with no output at all. Two runs at the same
+      # 2048 cap disagreed, so the next failure needs to carry evidence rather
+      # than invite a third guess.
       - name: Verify results were produced by the gate
-        run: node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json process
+        run: bash .github/scripts/run_with_memlog.sh node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json process
       # The dashboard fetches results/all.json directly, so the artifact the
       # public site displays must be derived from the verified per-run files
       # rather than hand-maintained alongside them.
