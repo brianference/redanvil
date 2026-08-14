@@ -419,6 +419,54 @@ Worth carrying: **there is a third instance of this pattern still open.** Any
 latent `fe-responsive-375` failure, waiting for a font or a string long enough.
 Grepping for that pair across all six apps would find them before Drift does.
 
+### Every generated app was born with a failing test suite
+
+`results-provenance` had been failing on `tooling still FAIL: u-test-presence`,
+with `u-test-runners: 3 of 3 lane(s) failed` beside it. Neither message named
+the cause.
+
+The scaffold declared its three lanes in a `test.projects` block. **That is a
+vitest 3.x key and the scaffold pins 2.1.9**, which neither reads it nor warns
+about it. The block was inert, so vitest used its default include and ran
+everything in the `node` environment: the five Playwright specs under `tests/`
+were collected by vitest ("Playwright Test did not expect test() to be called
+here") even though all three lanes exclude `tests/**`, and the `.browser` and
+`.vrt` tests ran with no DOM ("document is not defined").
+
+Proven rather than inferred: `vitest run --project unit` reported **"No test
+files found"** — vitest did not know the lane existed. With the lanes moved to
+`vitest.workspace.ts`, which 2.x does read, the same command runs the unit lane.
+A fresh scaffold went from **7 test files failed / 1 passed to 3 passed / 0
+failed**, and the scaffold gate now exits 0.
+
+**The test that should have caught this asserted the lane names appeared in
+`vitest.config.ts`.** They did. It never checked that vitest reads that file, so
+it was green for the entire life of the bug. It now reads the workspace file and
+asserts `vitest.config.ts` contains no `projects:` key — falsification tested by
+reintroducing `projects: []` and watching it fail.
+
+This is the second scaffold-wide defect in two sessions, after the JSX comment
+syntax error. Both were invisible because the only check that compiles and runs
+a generated app sat behind a step that was already failing.
+
+### The runner death moved rather than being fixed
+
+`dashboard-provenance` is **green** for the first time, and genuinely so —
+"dashboard reproduced at 0/100, 84/84 rules, 92 outcomes matched", not a skip.
+I did not fix its memory problem and should not be read as having done so.
+
+In the same run, `results-provenance` was killed: `verify_results.mjs
+app-builder` ran 2m44s at `--max-old-space-size=4096` and produced no output,
+with the step recorded as `cancelled` rather than `failure`. The contrast is the
+evidence — same runner image, same script, dashboard at **2048** passed while
+app-builder at **4096** died. `dashboard-provenance` already carried a comment
+saying exactly why (a ~7GB runner shared with Chromium, so a generous cap is
+permission to grow rather than collect); that reasoning was applied to one job
+on 2026-08-12 and never propagated. Now set to 2048 here too. **This is a
+hypothesis with one run of supporting contrast, and CI is the test** — if the
+job still dies at 2048, the cap is not the variable and the two full gate runs
+sharing one job need splitting.
+
 ### The gate deadlocks against its own pre-push hook
 
 `lg-shipped` fails with `2 unpushed commit(s) on master — remote does not
