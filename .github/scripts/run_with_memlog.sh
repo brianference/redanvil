@@ -14,12 +14,25 @@
 # exits, which is exactly the case that does not happen here.
 set -u
 
+# Bounded, NOT `while true`. The first version of this looped forever and left
+# the step running for 39 minutes against a 2m13s baseline before it was
+# cancelled by hand. If the kernel kills the shell rather than the child, the
+# EXIT trap never runs -- SIGKILL cannot be trapped -- so the sampler is orphaned
+# still holding the step's stdout open, and Actions waits on that pipe with no
+# process left to produce output. An unbounded background writer turns a fast,
+# visible failure into an indefinite hang, which is strictly worse than the
+# problem it was added to diagnose. 90 samples at 10s is 15 minutes, comfortably
+# past the ~2-3 minute mark where this step dies, and it terminates on its own.
+readonly MAX_SAMPLES=90
+
 log_memory() {
-  while true; do
+  local i=0
+  while [ "$i" -lt "$MAX_SAMPLES" ]; do
     # available is the number that matters: a runner dies when the KERNEL runs
     # out, not when one process is large.
     echo "[mem $(date -u +%H:%M:%S)] $(free -m | awk '/^Mem:/ {print "used="$3"MB available="$7"MB"}')"
     sleep 10
+    i=$((i + 1))
   done
 }
 
