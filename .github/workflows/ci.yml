@@ -94,12 +94,46 @@ jobs:
       # that had browsers. Install before verify (and reuse for e2e smoke below).
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
-      # Wrapped in the memory sampler because this step is killed intermittently
-      # and records as `cancelled` with no output at all. Two runs at the same
-      # 2048 cap disagreed, so the next failure needs to carry evidence rather
-      # than invite a third guess.
+      # Wrapped in the memory sampler so a kill leaves a trace. It has not
+      # produced one yet: every run that dies here persists NO LOG AT ALL, which
+      # is itself the finding — the runner is lost rather than a process failing
+      # inside a healthy one.
       - name: Verify results were produced by the gate
         run: bash .github/scripts/run_with_memlog.sh node .github/scripts/verify_results.mjs app-builder results/app-builder.json evidence/verdicts-app-builder.json process
+
+  # Split out of results-provenance on 2026-08-14. These five checks have nothing
+  # to do with reproducing app-builder's result; they sat behind it only because
+  # they were written into the same job. Every time that verification killed its
+  # runner, all five reported `skipped`, so a runner problem was silently
+  # deleting real coverage — including `Gate a freshly scaffolded app`, the ONLY
+  # check that compiles and runs a generated app. Two scaffold-wide defects
+  # shipped behind it: a JSX comment that broke every generated file, and test
+  # lanes declared with a key the pinned vitest ignores. Neither was visible
+  # while this step was skipped.
+  #
+  # Splitting is also the diagnostic, and it is NOT being claimed as the cure:
+  # dashboard-provenance has had its own runner since 2026-08-12 and still hung
+  # for 49 minutes on 2026-08-14. What the split buys is localisation — if these
+  # five pass here while the verification keeps dying next door, the problem is
+  # that one step rather than the job around it, and these five stop being
+  # collateral damage either way.
+  repo-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20
+      - name: Install workspace deps
+        run: npm ci
+      # The scaffold gate builds and runs a generated app, and the e2e smoke
+      # drives production; both need a browser.
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
       # The dashboard fetches results/all.json directly, so the artifact the
       # public site displays must be derived from the verified per-run files
       # rather than hand-maintained alongside them.
