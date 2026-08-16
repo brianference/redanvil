@@ -1,6 +1,422 @@
 [
   {
     "kind": "results",
+    "slug": "az-planting-calendar",
+    "finalScore": 0,
+    "threshold": 90,
+    "passed": false,
+    "evaluated": 85,
+    "total": 85,
+    "rules": [
+      {
+        "ruleId": "u-typing-strict",
+        "passed": true
+      },
+      {
+        "ruleId": "u-typing-no-any",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-dead-code",
+        "passed": true
+      },
+      {
+        "ruleId": "u-test-presence",
+        "passed": true
+      },
+      {
+        "ruleId": "u-test-runners",
+        "passed": false
+      },
+      {
+        "ruleId": "u-test-coverage-ratchet",
+        "passed": true
+      },
+      {
+        "ruleId": "hyg-env-ignored",
+        "passed": true
+      },
+      {
+        "ruleId": "u-test-acceptance",
+        "passed": true
+      },
+      {
+        "ruleId": "u-test-feature-audit",
+        "passed": true
+      },
+      {
+        "ruleId": "u-no-placeholders",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-visible-response",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-search-present",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-assistant-present",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-brand-mark",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-brand-mark-size",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-breadcrumbs",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-result-in-viewport",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-resource-links",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-legal-substance",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-structured-data",
+        "passed": true
+      },
+      {
+        "ruleId": "proc-design-options",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-prior-art",
+        "passed": true
+      },
+      {
+        "ruleId": "u-integration-scan",
+        "passed": true
+      },
+      {
+        "ruleId": "u-competitor-scan",
+        "passed": true
+      },
+      {
+        "ruleId": "u-typing-scoped-ignores",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-param-sql",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-no-stub-paths",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-timeouts",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-headers-cors",
+        "passed": true
+      },
+      {
+        "ruleId": "u-val-input-validation",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-theme-tokens-only",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-no-unsanitized-html",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-i18n-central-copy",
+        "passed": true
+      },
+      {
+        "ruleId": "hyg-no-binaries",
+        "passed": true
+      },
+      {
+        "ruleId": "hyg-secret-scan",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-sast",
+        "passed": true
+      },
+      {
+        "ruleId": "u-sec-safe-href",
+        "passed": true
+      },
+      {
+        "ruleId": "u-plat-worker-runtime",
+        "passed": true
+      },
+      {
+        "ruleId": "u-plat-runtime-parity",
+        "passed": true
+      },
+      {
+        "ruleId": "u-api-real-output",
+        "passed": true
+      },
+      {
+        "ruleId": "u-data-no-placeholder",
+        "passed": true
+      },
+      {
+        "ruleId": "u-plat-migrations",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-seo-assets",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-icon-button-labels",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-no-inline-width",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-no-padding",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-file-size",
+        "passed": true
+      },
+      {
+        "ruleId": "hyg-no-duplication",
+        "passed": true
+      },
+      {
+        "ruleId": "ci-actionlint",
+        "passed": true
+      },
+      {
+        "ruleId": "ci-sha-pinned",
+        "passed": true
+      },
+      {
+        "ruleId": "ci-least-privilege",
+        "passed": true
+      },
+      {
+        "ruleId": "ci-no-injection",
+        "passed": true
+      },
+      {
+        "ruleId": "ci-exit-code-integrity",
+        "passed": true
+      },
+      {
+        "ruleId": "proc-conventional-commits",
+        "passed": true
+      },
+      {
+        "ruleId": "proc-artifact-verified",
+        "passed": true
+      },
+      {
+        "ruleId": "lg-shipped",
+        "passed": false
+      },
+      {
+        "ruleId": "lg-push-cadence",
+        "passed": true
+      },
+      {
+        "ruleId": "lg-bindings-bound",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-light-dark",
+        "passed": true
+      },
+      {
+        "ruleId": "u-build-succeeds",
+        "passed": true
+      },
+      {
+        "ruleId": "u-api-not-found",
+        "passed": true
+      },
+      {
+        "ruleId": "u-api-no-spa-mask",
+        "passed": true
+      },
+      {
+        "ruleId": "u-legal-claims-true",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-favicon-legible",
+        "passed": true
+      },
+      {
+        "ruleId": "lg-result-reproduces",
+        "passed": false
+      },
+      {
+        "ruleId": "meas-known-bad",
+        "passed": true
+      },
+      {
+        "ruleId": "meas-two-run",
+        "passed": true
+      },
+      {
+        "ruleId": "meas-recheck-flattering",
+        "passed": true
+      },
+      {
+        "ruleId": "meas-standard-tool",
+        "passed": true
+      },
+      {
+        "ruleId": "meas-engine-named",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-a11y-contrast",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-desktop-width",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-cold-visitor",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-product-completeness",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-visual-review-recorded",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-premium-nav",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-required-pages",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-no-attribution",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-responsive-375",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-touch-targets",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-type-floor",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-noncolor-state",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-safe-areas",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-cross-link",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-seo-og",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-design-archetype",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-fail-closed-states",
+        "passed": true
+      },
+      {
+        "ruleId": "fe-pages-compose",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-idiomatic",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-no-speculative-abstraction",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-smallest-diff",
+        "passed": true
+      },
+      {
+        "ruleId": "u-conc-use-what-exists",
+        "passed": true
+      },
+      {
+        "ruleId": "u-test-adequacy",
+        "passed": true
+      },
+      {
+        "ruleId": "u-test-behavioral",
+        "passed": true
+      }
+    ],
+    "iterations": [
+      {
+        "index": 1,
+        "score": 0,
+        "blockers": [
+          "u-test-runners",
+          "lg-shipped",
+          "lg-result-reproduces"
+        ]
+      }
+    ],
+    "deployUrl": null,
+    "finishedAt": "2026-08-14T17:15:54.348Z",
+    "provenance": {
+      "commit": "46f36def3a575705e86012a32d3f805f7c0b4bb6",
+      "dirty": false,
+      "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
+      "rubricRuleCount": 96,
+      "node": "v22.19.0",
+      "verdictsHash": "afd8bc8d1868661162fe4f82123c4c6d8ca0b5ce21af884a90dfe63a3879256f",
+      "notApplicable": [
+        "proc-pr-title-ticket",
+        "process",
+        "u-claims-covered",
+        "u-test-presence"
+      ],
+      "staleVerdicts": [],
+      "generatedAt": "2026-08-14T17:15:54.410Z"
+    }
+  },
+  {
+    "kind": "results",
     "slug": "dashboard",
     "finalScore": 0,
     "threshold": 90,
@@ -1618,416 +2034,6 @@
       ],
       "staleVerdicts": [],
       "generatedAt": "2026-08-07T04:29:29.606Z"
-    }
-  },
-  {
-    "kind": "results",
-    "slug": "az-planting-calendar",
-    "finalScore": 0,
-    "threshold": 90,
-    "passed": false,
-    "evaluated": 84,
-    "total": 84,
-    "rules": [
-      {
-        "ruleId": "u-typing-strict",
-        "passed": true
-      },
-      {
-        "ruleId": "u-typing-no-any",
-        "passed": true
-      },
-      {
-        "ruleId": "u-conc-dead-code",
-        "passed": true
-      },
-      {
-        "ruleId": "u-test-presence",
-        "passed": true
-      },
-      {
-        "ruleId": "u-test-runners",
-        "passed": true
-      },
-      {
-        "ruleId": "u-test-coverage-ratchet",
-        "passed": true
-      },
-      {
-        "ruleId": "hyg-env-ignored",
-        "passed": true
-      },
-      {
-        "ruleId": "u-test-acceptance",
-        "passed": true
-      },
-      {
-        "ruleId": "u-test-feature-audit",
-        "passed": true
-      },
-      {
-        "ruleId": "u-no-placeholders",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-visible-response",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-search-present",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-assistant-present",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-brand-mark",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-brand-mark-size",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-breadcrumbs",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-result-in-viewport",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-resource-links",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-legal-substance",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-structured-data",
-        "passed": true
-      },
-      {
-        "ruleId": "proc-design-options",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-prior-art",
-        "passed": true
-      },
-      {
-        "ruleId": "u-integration-scan",
-        "passed": true
-      },
-      {
-        "ruleId": "u-competitor-scan",
-        "passed": true
-      },
-      {
-        "ruleId": "u-typing-scoped-ignores",
-        "passed": true
-      },
-      {
-        "ruleId": "u-sec-param-sql",
-        "passed": true
-      },
-      {
-        "ruleId": "u-sec-no-stub-paths",
-        "passed": true
-      },
-      {
-        "ruleId": "u-sec-timeouts",
-        "passed": true
-      },
-      {
-        "ruleId": "u-sec-headers-cors",
-        "passed": true
-      },
-      {
-        "ruleId": "u-val-input-validation",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-theme-tokens-only",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-no-unsanitized-html",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-i18n-central-copy",
-        "passed": true
-      },
-      {
-        "ruleId": "hyg-no-binaries",
-        "passed": true
-      },
-      {
-        "ruleId": "hyg-secret-scan",
-        "passed": true
-      },
-      {
-        "ruleId": "u-sec-sast",
-        "passed": true
-      },
-      {
-        "ruleId": "u-plat-worker-runtime",
-        "passed": true
-      },
-      {
-        "ruleId": "u-plat-runtime-parity",
-        "passed": true
-      },
-      {
-        "ruleId": "u-api-real-output",
-        "passed": true
-      },
-      {
-        "ruleId": "u-data-no-placeholder",
-        "passed": true
-      },
-      {
-        "ruleId": "u-plat-migrations",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-seo-assets",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-icon-button-labels",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-no-inline-width",
-        "passed": true
-      },
-      {
-        "ruleId": "u-conc-no-padding",
-        "passed": true
-      },
-      {
-        "ruleId": "u-conc-file-size",
-        "passed": true
-      },
-      {
-        "ruleId": "hyg-no-duplication",
-        "passed": true
-      },
-      {
-        "ruleId": "ci-actionlint",
-        "passed": true
-      },
-      {
-        "ruleId": "ci-sha-pinned",
-        "passed": true
-      },
-      {
-        "ruleId": "ci-least-privilege",
-        "passed": true
-      },
-      {
-        "ruleId": "ci-no-injection",
-        "passed": true
-      },
-      {
-        "ruleId": "ci-exit-code-integrity",
-        "passed": true
-      },
-      {
-        "ruleId": "proc-conventional-commits",
-        "passed": true
-      },
-      {
-        "ruleId": "proc-artifact-verified",
-        "passed": true
-      },
-      {
-        "ruleId": "lg-shipped",
-        "passed": false
-      },
-      {
-        "ruleId": "lg-push-cadence",
-        "passed": true
-      },
-      {
-        "ruleId": "lg-bindings-bound",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-light-dark",
-        "passed": true
-      },
-      {
-        "ruleId": "u-build-succeeds",
-        "passed": true
-      },
-      {
-        "ruleId": "u-api-not-found",
-        "passed": true
-      },
-      {
-        "ruleId": "u-api-no-spa-mask",
-        "passed": true
-      },
-      {
-        "ruleId": "u-legal-claims-true",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-favicon-legible",
-        "passed": true
-      },
-      {
-        "ruleId": "lg-result-reproduces",
-        "passed": true
-      },
-      {
-        "ruleId": "meas-known-bad",
-        "passed": true
-      },
-      {
-        "ruleId": "meas-two-run",
-        "passed": true
-      },
-      {
-        "ruleId": "meas-recheck-flattering",
-        "passed": true
-      },
-      {
-        "ruleId": "meas-standard-tool",
-        "passed": true
-      },
-      {
-        "ruleId": "meas-engine-named",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-a11y-contrast",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-desktop-width",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-cold-visitor",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-product-completeness",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-visual-review-recorded",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-premium-nav",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-required-pages",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-no-attribution",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-responsive-375",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-touch-targets",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-type-floor",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-noncolor-state",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-safe-areas",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-cross-link",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-seo-og",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-design-archetype",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-fail-closed-states",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-pages-compose",
-        "passed": true
-      },
-      {
-        "ruleId": "u-conc-idiomatic",
-        "passed": true
-      },
-      {
-        "ruleId": "u-conc-no-speculative-abstraction",
-        "passed": true
-      },
-      {
-        "ruleId": "u-conc-smallest-diff",
-        "passed": true
-      },
-      {
-        "ruleId": "u-conc-use-what-exists",
-        "passed": true
-      },
-      {
-        "ruleId": "u-test-adequacy",
-        "passed": true
-      },
-      {
-        "ruleId": "u-test-behavioral",
-        "passed": true
-      }
-    ],
-    "iterations": [
-      {
-        "index": 1,
-        "score": 0,
-        "blockers": [
-          "lg-shipped"
-        ]
-      }
-    ],
-    "deployUrl": null,
-    "finishedAt": "2026-08-06T00:24:01.029Z",
-    "provenance": {
-      "commit": "b214e91815e6f393093ca6c6448b42f7f32153e3",
-      "dirty": false,
-      "rubricHash": "91cd9cec0c2b2972f3b622d94a6f7d7a6ae98b161535451a7d37f8658e9eb92e",
-      "rubricRuleCount": 95,
-      "node": "v22.19.0",
-      "verdictsHash": "208f77da1b8d903c3c43f3eaf4ab91d4354efc8695dd9038fed62118c5c77bb3",
-      "notApplicable": [
-        "proc-pr-title-ticket",
-        "process",
-        "u-claims-covered",
-        "u-test-presence"
-      ],
-      "staleVerdicts": [],
-      "generatedAt": "2026-08-06T00:24:01.086Z"
     }
   }
 ]

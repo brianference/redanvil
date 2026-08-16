@@ -424,7 +424,17 @@ for (const app of apps) {
   );
   const line = g.out.split('\n').find((l) => l.includes('gate:')) ?? g.out.slice(-400);
   console.log(`    ${line.trim()}`);
-  if (g.code !== 0) fail(`${app.slug} gate failed`);
+  if (g.code !== 0) {
+    // The gate WROTE results/<slug>.json before deciding it was below the bar,
+    // and results/all.json is derived from those files. Bailing out here left
+    // the feed describing the previous scores, which broke the CI feed check on
+    // the next push -- twice, both times hours after the re-gate that caused it,
+    // both times looking like an unrelated failure. The rebuild downstream of
+    // this line only ever ran when the gate PASSED, which is the one case where
+    // the feed was least likely to be wrong.
+    run('node', ['.github/scripts/build_feed.mjs']);
+    fail(`${app.slug} gate failed`);
+  }
 
   const v = script('verify_results.mjs', [
     app.slug,
