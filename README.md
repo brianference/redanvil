@@ -103,7 +103,7 @@ serving right now:
 | Dashboard | https://redanvil-dashboard.pages.dev | 12/12 design rules pass |
 | AZ Planting Calendar | https://az-planting-calendar.pages.dev | 12/12 design rules pass, 121 tests across 3 lanes |
 | Sushi Finder | https://sushi-finder.pages.dev | live, gate blockers open |
-| Pet Sitter | https://pet-sitter.pages.dev | live, gate blockers open |
+| Pet Sitter | https://pet-sitter-vz1.pages.dev | live, gate blockers open |
 | QuickFlight | https://quickflight.pages.dev | live, re-gated against the current rubric |
 
 The most common open blockers are `lg-shipped` (the app must be pushed AND the
