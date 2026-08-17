@@ -277,15 +277,15 @@
     },
     {
       "ruleId": "fe-touch-targets",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-type-floor",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-responsive-375",
-      "passed": false
+      "passed": true
     },
     {
       "ruleId": "fe-safe-areas",
@@ -388,9 +388,6 @@
         "fe-structured-data",
         "u-legal-claims-true",
         "fe-prior-art",
-        "fe-responsive-375",
-        "fe-touch-targets",
-        "fe-type-floor",
         "hyg-no-binaries",
         "hyg-no-duplication",
         "lg-shipped",
@@ -399,14 +396,14 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-14T06:22:18.962Z",
+  "finishedAt": "2026-08-17T04:49:32.763Z",
   "provenance": {
-    "commit": "7d4e78759f5afa5116ae07c9dd0942bae95e3c6e",
+    "commit": "3693c80bc7ff311a07e4308f4edcd5a92d3c2757",
     "dirty": false,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
     "node": "v22.19.0",
-    "verdictsHash": "aa650da1299b9fda072de3864529af423a5a7110dd910f2589afe6ac3daf3f05",
+    "verdictsHash": "d3704741ff0bb4cca96ecf9657e563eb754b51bf3ebf6af5affc303385699f87",
     "notApplicable": [
       "fe-result-in-viewport",
       "proc-pr-title-ticket",
@@ -416,6 +413,6 @@
       "u-integration-scan"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-14T06:22:19.045Z"
+    "generatedAt": "2026-08-17T04:49:32.825Z"
   }
 }
