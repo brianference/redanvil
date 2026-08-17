@@ -187,7 +187,7 @@ jobs:
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
       - name: Verify dashboard results were produced by the gate
-        run: node .github/scripts/verify_results.mjs dashboard results/dashboard.json evidence/verdicts-dashboard.json process
+        run: bash .github/scripts/run_with_memlog.sh node .github/scripts/verify_results.mjs dashboard results/dashboard.json evidence/verdicts-dashboard.json process
 
   # The finish line cannot be bypassed with --no-verify. For every app listed in
   # .github/scripts/apps.mjs (the same APPS reverify / pre-push use): score >= 90,

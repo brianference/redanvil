@@ -27,10 +27,22 @@ readonly MAX_SAMPLES=90
 
 log_memory() {
   local i=0
+  local used
   while [ "$i" -lt "$MAX_SAMPLES" ]; do
     # available is the number that matters: a runner dies when the KERNEL runs
     # out, not when one process is large.
+    used=$(free -m | awk '/^Mem:/ {print $3}')
     echo "[mem $(date -u +%H:%M:%S)] $(free -m | awk '/^Mem:/ {print "used="$3"MB available="$7"MB"}')"
+    # Name the culprit. The first trace this produced showed memory climbing
+    # ~2GB every 10s from 2.4GB to 12.6GB, which proved the runner was OOMing
+    # but not WHAT was allocating -- the gate buffers its output, so no rule
+    # name reaches the log before the kill. Once past 3GB, print the top RSS
+    # consumers so the next failure names the process instead of implying one.
+    if [ "${used:-0}" -gt 3000 ]; then
+      ps -eo rss=,comm=,args= --sort=-rss 2>/dev/null | head -5 |
+        awk '{ printf "[top %6.0fMB] %s\n", $1/1024, substr($0, index($0,$2)) }' |
+        cut -c1-160
+    fi
     sleep 10
     i=$((i + 1))
   done
