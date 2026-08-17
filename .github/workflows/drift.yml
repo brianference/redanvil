@@ -62,10 +62,18 @@ jobs:
 
       # The twelve design rules that used to rest on a prose note. Measuring
       # them daily is what stops the number and the claim drifting apart again.
+      # --claims is REQUIRED, not optional. This step overwrites the very file
+      # the re-gate below validates verdicts against, and without --claims
+      # design_audit never emits fe-design-archetype. The verdict cites this
+      # file, the validator checks the finding is in it, and the whole re-gate
+      # died with "is a design audit but does not mention fe-design-archetype"
+      # -- a failure caused by an earlier step in the same job, not by drift.
+      # reverify.mjs was fixed for exactly this in August; the drift workflow
+      # kept the old command.
       - name: Design audit — app-builder
-        run: node .github/scripts/design_audit.mjs https://redanvil.pages.dev/ --routes /about,/contact,/terms,/privacy,/saved,/no-such-page --out evidence/design-app-builder.json
+        run: node .github/scripts/design_audit.mjs https://redanvil.pages.dev/ --routes /about,/contact,/terms,/privacy,/saved,/examples,/no-such-page --claims app-builder/.redanvil/claims.json --out evidence/design-app-builder.json
       - name: Design audit — dashboard
-        run: node .github/scripts/design_audit.mjs https://redanvil-dashboard.pages.dev/ --routes /about,/contact,/terms,/privacy,/no-such-page --out evidence/design-dashboard.json
+        run: node .github/scripts/design_audit.mjs https://redanvil-dashboard.pages.dev/ --routes /about,/contact,/terms,/privacy,/no-such-page --claims dashboard/.redanvil/claims.json --out evidence/design-dashboard.json
       - name: Desktop width — app-builder
         run: node .github/scripts/desktop_width.mjs https://redanvil.pages.dev/
       - name: Desktop width — dashboard
