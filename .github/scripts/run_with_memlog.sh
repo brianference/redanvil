@@ -42,6 +42,15 @@ log_memory() {
       ps -eo rss=,comm=,args= --sort=-rss 2>/dev/null | head -5 |
         awk '{ printf "[top %6.0fMB] %s\n", $1/1024, substr($0, index($0,$2)) }' |
         cut -c1-160
+      # RSS did not explain it. At used=13118MB the five largest processes
+      # totalled ~590MB, the biggest being node at 145MB -- so the memory is
+      # NOT in any process. That points at memory the kernel counts as used but
+      # no process owns: tmpfs and shared memory. Chromium puts its shared
+      # buffers in /dev/shm, and a tmpfs-backed /tmp charges every byte written
+      # to it against RAM. Print both, plus the shared column, so the next
+      # failure distinguishes "a process leaked" from "a filesystem filled RAM".
+      free -m | awk '/^Mem:/ { printf "[memdetail] shared=%sMB buff_cache=%sMB\n", $5, $6 }'
+      df -m /dev/shm /tmp 2>/dev/null | awk 'NR>1 { printf "[fs] %s used=%sMB avail=%sMB\n", $6, $3, $4 }'
     fi
     sleep 10
     i=$((i + 1))
