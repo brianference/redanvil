@@ -35,7 +35,36 @@ const DANGLING_TAIL = new Set([
   'that',
   'which',
   'vs',
-  'versus'
+  'versus',
+  // Possessive determiners. These ALWAYS introduce the noun they belong to, so
+  // a title ending on one is cut mid-phrase by construction. Missing them let
+  // "an app to remind you when your dogs ears need cleaned…" title itself
+  // "App to Remind You When Your" -- and because isTitleFragment returned false,
+  // every downstream guard agreed it was a finished name and shipped it as the
+  // product's H1.
+  'your',
+  'my',
+  'our',
+  'their',
+  'its',
+  'his',
+  'her',
+  // Subordinating/relative words, same failure shape as 'that' and 'which'
+  // which were already here.
+  'when',
+  'where',
+  'while',
+  'who',
+  'whose',
+  'if',
+  // Copulas and bare auxiliaries cannot end a noun phrase either.
+  'is',
+  'are',
+  'was',
+  'were',
+  'be',
+  'need',
+  'needs'
 ]);
 
 /** Soft max words for a product title (noun phrase, not a sentence). */

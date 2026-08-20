@@ -150,7 +150,7 @@ mkdirSync(appDir, { recursive: true });
  */
 const agentCwd = appDir;
 
-const proc = spawnSync('grok', ['--always-approve', '--cwd', agentCwd, '-m', 'grok-4.5', '-p', PROMPTS[role]()], {
+const proc = spawnSync('grok', ['--always-approve', '--cwd', agentCwd, '-m', 'grok-4.6', '-p', PROMPTS[role]()], {
   cwd: root,
   encoding: 'utf8',
   timeout: 30 * 60 * 1000

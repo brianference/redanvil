@@ -42,15 +42,38 @@ log_memory() {
       ps -eo rss=,comm=,args= --sort=-rss 2>/dev/null | head -5 |
         awk '{ printf "[top %6.0fMB] %s\n", $1/1024, substr($0, index($0,$2)) }' |
         cut -c1-160
-      # RSS did not explain it. At used=13118MB the five largest processes
-      # totalled ~590MB, the biggest being node at 145MB -- so the memory is
-      # NOT in any process. That points at memory the kernel counts as used but
-      # no process owns: tmpfs and shared memory. Chromium puts its shared
-      # buffers in /dev/shm, and a tmpfs-backed /tmp charges every byte written
-      # to it against RAM. Print both, plus the shared column, so the next
-      # failure distinguishes "a process leaked" from "a filesystem filled RAM".
+      # The tmpfs/shm hypothesis is DISPROVEN by its own trace, and the reasoning
+      # that produced it was wrong in a specific way worth naming. Run
+      # 31998485260 recorded shared=45MB, /dev/shm used=0MB, and buff_cache flat
+      # at ~5GB while `used` climbed 2016MB -> 12665MB. No filesystem filled RAM.
+      #
+      # "The memory is NOT in any process" was an over-read of `head -5`. Sorting
+      # by RSS and taking the top five cannot see a THOUSAND processes of 5MB:
+      # they sum to 5GB while every individual one is far too small to print. So
+      # top-5 being small never ruled a process explanation out -- it only ruled
+      # out a single fat one.
+      #
+      # The signal that was in the log all along is the ending:
+      #   fork: retry: Resource temporarily unavailable
+      # That is EAGAIN from fork(2) -- the pid/thread limit, i.e. process
+      # exhaustion. Climbing memory plus fork EAGAIN plus a small top-5 is the
+      # signature of unbounded spawning, not a leak and not a heap cap.
+      #
+      # So COUNT them and SUM them. total_rss vs `used` is the discriminator that
+      # settles it in one run: if total_rss tracks `used`, the memory is in
+      # processes after all and `nproc` names how many; if total_rss stays small
+      # while `used` climbs, it is genuinely kernel-side and this is still open.
       free -m | awk '/^Mem:/ { printf "[memdetail] shared=%sMB buff_cache=%sMB\n", $5, $6 }'
-      df -m /dev/shm /tmp 2>/dev/null | awk 'NR>1 { printf "[fs] %s used=%sMB avail=%sMB\n", $6, $3, $4 }'
+      ps -eo rss= 2>/dev/null |
+        awk '{ s += $1; n += 1 } END { printf "[procs] count=%d total_rss=%.0fMB\n", n, s/1024 }'
+      # Which executable is multiplying. A fork bomb shows one name with a huge
+      # count; a normal runner shows a flat spread in the low tens.
+      ps -eo comm= 2>/dev/null | sort | uniq -c | sort -rn | head -5 |
+        awk '{ printf "[byname] %5d x %s\n", $1, $2 }'
+      # -P forces one line per filesystem. Without it a long device name WRAPS,
+      # $6 lands on the wrong field, and the /tmp row silently never printed --
+      # which is why the previous run only ever showed /dev/shm.
+      df -Pm /dev/shm /tmp 2>/dev/null | awk 'NR>1 { printf "[fs] %s used=%sMB avail=%sMB\n", $6, $3, $4 }'
     fi
     sleep 10
     i=$((i + 1))

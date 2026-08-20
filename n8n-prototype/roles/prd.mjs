@@ -36,41 +36,156 @@ function parseArgs(argv) {
 }
 
 /**
- * Preferred answers, tried in order against whatever the wizard offers.
+ * Rules that map a prompt to one option of a wizard group.
  *
- * The wizard asks its questions as button groups rather than named fields, so an
- * answer is chosen by label. Anything unmatched falls through to the first
- * option, and every choice is recorded in provenance so the PRD's inputs are
- * auditable rather than implied.
+ * WHY THIS REPLACED A STATIC PREFERENCE LIST. The old `PREFERRED` array was
+ * tried in order against a FLAT list of every button on the page and clicked
+ * exactly one. Two things followed, and both were silent:
+ *
+ *   1. `'Marketplace'` was the first entry, so EVERY app this pipeline ever
+ *      built was typed a Marketplace no matter what was asked for. A dog-care
+ *      reminder came back as `appType: "Marketplace"` whose problem statement
+ *      read "users need to assign Reminder without double-booking".
+ *   2. The builder renders all five groups on ONE form, not as a step sequence.
+ *      Clicking one button answered app type and left sign-in, storage,
+ *      realtime and integrations on their defaults forever.
+ *
+ * That is worse than a crash: every downstream role faithfully builds the wrong
+ * product, and the gate passes it because nothing in the rubric knows what was
+ * asked for. Answers are now derived from the prompt, per group, and every
+ * choice is still recorded in provenance so the inputs stay auditable.
+ *
+ * Matching is by word boundary on a lowercased prompt. Order matters: the first
+ * rule that hits wins, so the most specific signal is listed first.
+ *
+ * @type {Array<{group: RegExp, rules: Array<{option: string, test: RegExp}>, fallback: string}>}
  */
-const PREFERRED = [
-  'Marketplace',
-  'Mobile app',
-  'Yes',
-  'Consumer',
-  'Public',
-  'Search',
-  'Map'
+const ANSWER_RULES = [
+  {
+    group: /app type/i,
+    rules: [
+      { option: 'Marketplace', test: /\b(marketplace|buyers?|sellers?|vendors?|listings?|commission)\b/ },
+      { option: 'API', test: /\b(api|endpoint|developers?|integration layer|webhook service)\b/ },
+      { option: 'Internal tool', test: /\b(internal|admin|staff|back[- ]office|employees?|ops team)\b/ },
+      { option: 'Mobile app', test: /\b(mobile|ios|android|phone app|on my phone)\b/ }
+    ],
+    // SaaS is the honest default for a full-stack web app: it is what the
+    // enforced stack (Pages + Functions + D1) actually produces.
+    fallback: 'SaaS'
+  },
+  {
+    group: /sign-in|sign in|auth/i,
+    rules: [
+      {
+        option: 'Yes',
+        test: /\b(sign[- ]?in|log[- ]?in|account|accounts|per[- ]user|my own|private|personal|profile)\b/
+      }
+    ],
+    fallback: 'No'
+  },
+  {
+    group: /d1 tables|storage|data/i,
+    rules: [
+      { option: 'Relational + search', test: /\b(search|full[- ]text|filter|query|relations?|join)\b/ }
+    ],
+    fallback: 'Simple (D1 tables)'
+  },
+  {
+    group: /live refresh|push-style|realtime|real-time/i,
+    rules: [
+      { option: 'Yes', test: /\b(real[- ]?time|live|push|instant|streaming|collaborat)\w*\b/ }
+    ],
+    fallback: 'No'
+  }
+];
+
+/** Integration chips, each picked only when the prompt actually names it. */
+const INTEGRATION_RULES = [
+  { option: 'Stripe', test: /\b(stripe|payments?|checkout|billing|subscriptions?)\b/ },
+  { option: 'Email', test: /\b(e[- ]?mail|notify|notification|reminder|digest)\b/ },
+  { option: 'SMS', test: /\b(sms|text message|texts?)\b/ },
+  { option: 'Webhooks', test: /\b(webhooks?|callback)\b/ }
 ];
 
 /**
- * Click the best available answer in the current question, if any.
+ * Read the wizard's option groups straight from the DOM.
+ *
+ * Buttons are grouped by their shared parent element and labelled by walking
+ * back to the nearest preceding text, which is how the builder actually marks
+ * up each question -- verified by dumping the live page rather than assumed
+ * from the component source.
+ *
  * @param {import('playwright').Page} page the wizard page
- * @param {string[]} chosen accumulator of recorded choices
- * @returns {Promise<boolean>} whether an answer was clicked
+ * @returns {Promise<Array<{label: string, options: string[]}>>} groups in DOM order
  */
-async function answerQuestion(page, chosen) {
-  const labels = await page.evaluate(() =>
-    [...document.querySelectorAll('button')]
-      .map((b) => (b.textContent || '').trim())
-      .filter((t) => t && !/^(☾|☰|✕|Back|Next|Send description)$/.test(t))
-  );
-  if (labels.length === 0) return false;
+async function readGroups(page) {
+  return page.evaluate(() => {
+    const buttons = [...document.querySelectorAll('button')].filter((b) => {
+      const t = (b.textContent || '').trim();
+      return t && !/^(☾|☰|✕|Back|Next|Send description|Forge PRD)$/.test(t);
+    });
+    /** @type {Map<Element, string[]>} */
+    const byParent = new Map();
+    for (const b of buttons) {
+      const parent = b.parentElement;
+      if (!parent) continue;
+      if (!byParent.has(parent)) byParent.set(parent, []);
+      byParent.get(parent).push((b.textContent || '').trim());
+    }
+    return [...byParent.entries()].map(([parent, options]) => {
+      let label = '';
+      let el = parent.previousElementSibling;
+      while (el && !label) {
+        label = (el.textContent || '').trim();
+        el = el.previousElementSibling;
+      }
+      return { label, options };
+    });
+  });
+}
 
-  const pick = PREFERRED.find((p) => labels.includes(p)) ?? labels[0];
-  await page.getByRole('button', { name: pick, exact: true }).first().click();
-  chosen.push(pick);
-  return true;
+/**
+ * Answer every group the wizard is showing, deriving each choice from the prompt.
+ *
+ * @param {import('playwright').Page} page the wizard page
+ * @param {string} prompt the app description the whole build derives from
+ * @param {string[]} chosen accumulator of recorded choices, for provenance
+ * @returns {Promise<boolean>} whether anything was answered
+ */
+async function answerQuestion(page, prompt, chosen) {
+  const groups = await readGroups(page);
+  if (groups.length === 0) return false;
+  const text = prompt.toLowerCase();
+  let answered = false;
+
+  for (const group of groups) {
+    /** @type {string[]} */
+    const picks = [];
+    const spec = ANSWER_RULES.find((r) => r.group.test(group.label));
+
+    if (spec) {
+      const matched = spec.rules.find((r) => r.test.test(text) && group.options.includes(r.option));
+      const pick = matched?.option ?? spec.fallback;
+      if (group.options.includes(pick)) picks.push(pick);
+    } else if (group.options.some((o) => INTEGRATION_RULES.some((r) => r.option === o))) {
+      // Integrations are multi-select chips, so every match is clicked and a
+      // prompt naming none of them correctly selects none.
+      for (const rule of INTEGRATION_RULES) {
+        if (rule.test.test(text) && group.options.includes(rule.option)) picks.push(rule.option);
+      }
+    }
+
+    for (const pick of picks) {
+      await page
+        .getByRole('button', { name: pick, exact: true })
+        .first()
+        .click()
+        .catch(() => {});
+      chosen.push(`${group.label || 'group'}: ${pick}`);
+      answered = true;
+    }
+  }
+  return answered;
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -117,7 +232,21 @@ for (let step = 0; step < 12; step += 1) {
     markdown = markdown.replace(/^#\s+.*$/m, `# ${slugTitle} — product requirements`);
     break;
   }
-  const answered = await answerQuestion(page, chosen);
+  const answered = await answerQuestion(page, prompt, chosen);
+
+  // Submitting is now EXPLICIT. It used to happen by accident: the old
+  // answer picker fell through to "the first button on the page", and on the
+  // final step the only button left was "Forge PRD", so the form was submitted
+  // by the same line that was supposed to be answering a question. Excluding
+  // that button from the answer groups -- correct on its own terms, since it is
+  // not an answer -- silently removed the only thing that pressed submit, and
+  // the role produced 0 chars. Click it deliberately instead.
+  const forge = page.getByRole('button', { name: /forge prd/i }).first();
+  if (await forge.count()) {
+    await forge.click().catch(() => {});
+    continue;
+  }
+
   const next = page.getByRole('button', { name: /^next$/i }).first();
   if (await next.count()) await next.click().catch(() => {});
   else if (!answered) break;

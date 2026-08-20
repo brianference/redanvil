@@ -31,7 +31,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const repoRoot = $env.REDANVIL_REPO || 'C:/Users/brian/RedAnvil';\nconst runner = $env.REDANVIL_RUNNER || 'C:/Users/brian/RedAnvil/n8n-prototype/role-run.mjs';\nconst slug = $env.REDANVIL_SLUG || 'pet-sitter';\nreturn [{ json: { repoRoot, runner, slug } }];"
+        "jsCode": "const repoRoot = $env.REDANVIL_REPO || 'C:/Users/brian/RedAnvil';\nconst runner = $env.REDANVIL_RUNNER || 'C:/Users/brian/RedAnvil/n8n-prototype/role-run.mjs';\nconst slug = $env.REDANVIL_SLUG || 'pet-sitter';\nconst prompt = $env.REDANVIL_PROMPT;\nif (!prompt) {\n  throw new Error('REDANVIL_PROMPT is not set. The prd role drives the live app builder with it, and every later role builds what that PRD says, so there is no safe default.');\n}\nreturn [{ json: { repoRoot, runner, slug, prompt } }];"
       }
     },
     {

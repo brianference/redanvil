@@ -132,11 +132,27 @@ const nodes = [
     parameters: {
       mode: 'runOnceForAllItems',
       language: 'javaScript',
+      // `prompt` is REQUIRED and has no default. Every `<role> params` node
+      // substitutes `{prompt}` from `c.prompt ?? ''`, so when the config node
+      // omitted it the very first step ran
+      //   prd.mjs --slug=... --prompt=""
+      // and prd.mjs refuses an empty prompt at its `if (!slug || !prompt)`
+      // guard. The full build therefore could not clear step 1, and the failure
+      // read as a broken role rather than as config that was never passed
+      // through -- the prompt is the ONE input the whole build derives from.
+      //
+      // It throws rather than defaulting: a placeholder prompt would forge a
+      // PRD for an app nobody asked for, and every later role would faithfully
+      // build it. Failing here is the cheap failure.
       jsCode:
         "const repoRoot = $env.REDANVIL_REPO || 'C:/Users/brian/RedAnvil';\n" +
         "const runner = $env.REDANVIL_RUNNER || 'C:/Users/brian/RedAnvil/n8n-prototype/role-run.mjs';\n" +
         "const slug = $env.REDANVIL_SLUG || 'pet-sitter';\n" +
-        'return [{ json: { repoRoot, runner, slug } }];'
+        "const prompt = $env.REDANVIL_PROMPT;\n" +
+        "if (!prompt) {\n" +
+        "  throw new Error('REDANVIL_PROMPT is not set. The prd role drives the live app builder with it, and every later role builds what that PRD says, so there is no safe default.');\n" +
+        "}\n" +
+        'return [{ json: { repoRoot, runner, slug, prompt } }];'
     }
   }
 ];

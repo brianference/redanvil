@@ -55,6 +55,35 @@ requirement, which is how a green suite coexists with a missing feature.
 Cover the primary flow the brief names as the one that must work. Use
 role-based queries, web-first assertions, and never a fixed sleep.
 
+Then write the INTEGRATION layer in pytest, to ${slug}/test/integration/test_*.py.
+Vitest above covers units and component behaviour; pytest covers whether the
+parts actually work TOGETHER — real D1 reads and writes, the Pages Functions
+endpoints, and the browser against a served build. A suite that only ever mocks
+its collaborators passes while the seams are broken, and the seams are where
+this project's real defects have been.
+
+Requirements, all of them:
+- Mark every integration test @pytest.mark.integration and declare the marker in
+  pytest.ini, so \`pytest -m integration\` and \`pytest -m "not integration"\`
+  both select correctly and the slow lane never blocks the fast one.
+- Put shared setup in fixtures in conftest.py — a temp/seeded database and a
+  base URL — never module-level globals. Scope them (session for the server,
+  function for anything a test mutates) so tests cannot leak state into
+  each other.
+- Drive the React UI with pytest-playwright's \`page\` fixture, which runs a real
+  browser engine and auto-waits for elements to be actionable. That auto-waiting
+  is the point: React renders asynchronously, and a fixed sleep is what makes
+  these suites flaky.
+- Assert real HTTP responses against the running Functions API. Do not mock the
+  layer under test; mock only third-party calls you do not own, with
+  \`responses\`.
+- Every test must be able to FAIL for the reason it claims. A test that passes
+  against a broken backend is not an integration test.
+
+Do not add pytest-xdist parallelism until the suite is green serially — parallel
+runs turn one shared-state bug into an intermittent failure that is far harder
+to read. Use pytest-asyncio only if the code under test is genuinely async.
+
 Context: ${brief.slice(0, 600)}`
   },
   judge: {
@@ -162,7 +191,7 @@ const agentCwd = NEEDS_REPO.has(role) ? root : appDir;
 const prompt = ROLES[role].prompt({ slug, brief });
 const proc = spawnSync(
   'grok',
-  ['--always-approve', '--cwd', agentCwd, '-m', 'grok-4.5', '-p', prompt],
+  ['--always-approve', '--cwd', agentCwd, '-m', 'grok-4.6', '-p', prompt],
   { cwd: root, encoding: 'utf8', timeout: 20 * 60 * 1000, shell: false }
 );
 

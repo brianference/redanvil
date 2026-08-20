@@ -1207,7 +1207,7 @@ export function buildIndependentReviewGrokArgs(opts: {
     '--session-id',
     opts.sessionId,
     '-m',
-    opts.model ?? 'grok-4.5',
+    opts.model ?? 'grok-4.6',
     // One turn: the full unified diff is already in the prompt file, so the
     // model answers from that. Multi-turn tool use under --json-schema emits
     // one intermediate body per turn, hits the ceiling mid-review, and leaves

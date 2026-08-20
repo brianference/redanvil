@@ -14,14 +14,22 @@ const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), 'prd.character
  * real generator — never by hand. Full golden payloads live in
  * `prd.characterization.fixtures/*.json`.
  *
- * Last regenerated because entity detail slices now require safeHttpUrl /
- * SafeExternalLink for data-driven external links (u-sec-safe-href), and the
- * file tree lists src/lib/safeHttpUrl.ts. That prose lands in every generated
- * PRD the same way, so all five goldens move together.
+ * Last regenerated because DANGLING_TAIL gained the possessive determiners
+ * ('your', 'my', 'our', …) plus the subordinating and copula words. Only
+ * `mobile-no-auth-two-entities` moved: its prompt ("…remind you when your dog
+ * needs grooming…") titled itself "App to Remind You When Your", and this
+ * golden had been PINNING that truncation as correct output since it was
+ * written. The other four digests are unchanged, which is the evidence that the
+ * change is confined to titles that were cut mid-phrase.
+ *
+ * A golden test freezes whatever the generator did on the day it ran, bug and
+ * all. When one moves, the question to answer is "is the NEW output right?",
+ * not "which value makes the suite green" -- here the new title is
+ * "App to Remind You", a phrase that ends where a phrase can end.
  */
 const EXPECTED_DIGESTS: Readonly<Record<string, string>> = {
   'dashboard-auth-two-entities': '77ec762927a533edc35b5468c535f74782865b7a95111fb58be56723ab066c04',
-  'mobile-no-auth-two-entities': '2df07c8d6a529527a230e25eb6371f2b884af4253057c70fa39c2f4e803b0f2e',
+  'mobile-no-auth-two-entities': '09dcc1b5b8fcd34d29524a0a626c03d663f191dda5769e7c82ef7ffb80951649',
   'marketplace-auth-scoped': '3919febc3a063e962e79c99368dafe8baa3df42d2b7252b0b39684875b019d83',
   'empty-entities-no-auth': '5d7eef4047ade3540e859ee5c3adfc2fe984dddcf8fa0ee7695bb77c42cac69d',
   'long-prompt-many-entities': '2824582f4a8a69fc8ad3a1326e4376d6461e811b5fb5d886da12331e4c3f7436'

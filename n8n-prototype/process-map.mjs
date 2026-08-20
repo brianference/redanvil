@@ -347,6 +347,22 @@ export const PROCESS = [
         glob: '.ts',
         minCount: 1,
         why: 'tests written after the build assert the implementation instead of the requirement'
+      },
+      {
+        // Integration layer, in pytest. Acceptance tests above run in vitest and
+        // mostly exercise the app in isolation; this one has to prove the parts
+        // work TOGETHER -- real D1 reads and writes, the Pages Functions
+        // endpoints, and a real browser against a served build.
+        //
+        // It is a separate requirement rather than prose in the role prompt
+        // because a requirement that lives only in a prompt is not enforced by
+        // anything: the role can skip it and still be counted as having run.
+        // Declared here, an absent integration suite fails the contract.
+        path: 'test/integration',
+        kind: 'dir',
+        glob: '.py',
+        minCount: 1,
+        why: 'a suite that mocks every collaborator passes while the seams between them are broken'
       }
     ]
   },
