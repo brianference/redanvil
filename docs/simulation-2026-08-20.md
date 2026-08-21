@@ -302,3 +302,41 @@ treadmill.
 **Clear by:** app-builder reaching the finish line, or the hook learning to
 ignore `lg-shipped`'s unpushed-commit condition when the push in flight is the
 one that would satisfy it.
+
+---
+
+## Addendum, 2026-08-21: the OOM log cannot be read at all
+
+`dashboard-provenance` OOMed again in CI run 32520448158 — 25m0s, annotation
+"Out of memory." — and this was the first run carrying the new process-count
+instrumentation. The log is **not retrievable**:
+
+```
+gh run view --job 96891280414 --log
+  log not found: 96891280414
+```
+
+This invalidates the approach, not just the run. `run_with_memlog.sh` was built
+on the premise that a sampler printing as it goes "leaves a trace instead of
+nothing", and that premise holds only when the STEP is killed and the runner
+survives to upload its log. When the runner itself is OOM-killed, GitHub never
+receives the log, and every sample the script faithfully printed dies with it.
+
+So the instrumentation added on 2026-08-17 and improved on 2026-08-20 cannot
+answer the question it was written for, and no further refinement of it will.
+Anything that only writes to stdout shares the flaw.
+
+What would actually work, none of it attempted yet:
+
+- Stream samples OFF the runner as they are taken, so nothing depends on the
+  runner surviving — a webhook, or an artifact upload per sample rather than at
+  the end.
+- Remove the memory pressure instead of observing it: split the job, or stop
+  running two full gate passes in one job.
+- A larger runner, which is a workaround and would hide the growth rather than
+  explain it.
+
+Status: the OOM is REPRODUCED and CHARACTERIZED (climbs ~2GB/10s, ends in fork
+EAGAIN, top-5 RSS never explains it) and the ROOT CAUSE REMAINS UNKNOWN. Three
+sessions have now proposed a mechanism and been wrong; this addendum exists so a
+fourth does not start by trusting the third.
