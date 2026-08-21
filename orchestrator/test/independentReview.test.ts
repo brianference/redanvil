@@ -292,7 +292,7 @@ describe('independentReview pure helpers', () => {
         '--cwd',
         'C:\\apps\\demo',
         '-m',
-        'grok-4.5',
+        'grok-4.6',
         '--max-turns',
         '1',
         '--json-schema',

@@ -17,8 +17,8 @@ describe('grokArgs', () => {
     expect(argv[argv.indexOf('--session-id') + 1]).toBe('run-1');
   });
 
-  it('defaults to the grok-4.5 model and puts the prompt last', () => {
-    expect(argv[argv.indexOf('-m') + 1]).toBe('grok-4.5');
+  it('defaults to the grok-4.6 model and puts the prompt last', () => {
+    expect(argv[argv.indexOf('-m') + 1]).toBe('grok-4.6');
     expect(argv[argv.length - 1]).toBe('do the thing');
     expect(argv[argv.length - 2]).toBe('-p');
   });

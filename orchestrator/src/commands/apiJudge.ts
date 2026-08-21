@@ -34,7 +34,7 @@ import { runGrok, parseGrokJson, newSessionId } from '../grok/harness';
 /** Where the det half writes captured live traffic. */
 const EVIDENCE_DIR = 'evidence';
 /** Grok's model for this pass. */
-const JUDGE_MODEL = 'grok-4.5';
+const JUDGE_MODEL = 'grok-4.6';
 /** Wall-clock ceiling for the judge call. */
 const JUDGE_TIMEOUT_MS = 300_000;
 
