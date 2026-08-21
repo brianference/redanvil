@@ -22,12 +22,18 @@ const script = (name) => `node n8n-prototype/roles/${name}.mjs --slug={slug} --r
 /** @type {Record<string,string>} */
 export const BINDINGS = {
   // Deterministic scripts.
-  // NO `--prompt` here on purpose. The prompt reaches prd.mjs through
-  // REDANVIL_PROMPT in the environment, because this command string is parsed by
-  // a shell TWICE (n8n's Execute Command, then role-run's `shell: true`) and each
-  // pass ate a level of quoting -- a full sentence arrived as `--prompt=A`.
-  // Environment variables cross a shell boundary without being re-parsed.
-  prd: 'node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root}',
+  // BASE64, not plain `--prompt`. This command string is parsed by a shell
+  // TWICE -- n8n's Execute Command, then role-run's `shell: true` -- and each
+  // pass ate a level of quoting until a full sentence arrived as `--prompt=A`,
+  // its own first letter.
+  //
+  // An environment variable was tried first and is not enough on its own: the
+  // n8n SERVER's environment is fixed when it boots, so a per-run prompt
+  // arriving in a webhook body has no way to reach the child through it. Base64
+  // has no spaces, quotes or shell metacharacters, so it crosses both shells
+  // byte-for-byte and carries no injection surface. prd.mjs decodes it, and
+  // still honours REDANVIL_PROMPT for a hand-run.
+  prd: 'node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root} --promptB64={promptB64}',
   product: script('product'),
   reuse: script('reuse'),
   inspo: script('inspo'),
@@ -79,6 +85,11 @@ export function fillBinding(tpl, ctx) {
   return tpl
     .replaceAll('{slug}', ctx.slug)
     .replaceAll('{root}', JSON.stringify(ctx.root))
+    // Must substitute {promptB64} too. The CLI walker and the n8n generator read
+    // the SAME bindings map, and this file exists because those two once held
+    // separate copies and drifted. A placeholder handled in one and not the
+    // other reintroduces exactly that split.
+    .replaceAll('{promptB64}', Buffer.from(String(ctx.prompt ?? ''), 'utf8').toString('base64'))
     .replaceAll('{prompt}', JSON.stringify(ctx.prompt ?? ''));
 }
 

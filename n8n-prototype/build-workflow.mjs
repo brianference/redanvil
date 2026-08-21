@@ -60,7 +60,19 @@ function paramsNode(step, index) {
         `  artifacts: \`\${c.slug}/${artifacts}\`,\n` +
         `  cmd: $env.${envKey} || ${JSON.stringify(bound || `echo no runner bound for ${step.id} && exit 1`)}
 ` +
-        `    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];`
+        // {promptB64} is BASE64 on purpose. The prompt has to cross two shells
+        // -- n8n's Execute Command, then role-run's `shell: true` -- and each
+        // one eats a level of quoting. A quoted sentence arrived as `--prompt=A`,
+        // its own first letter, which left the builder's Send button disabled
+        // and killed the run 30s later on a click timeout.
+        //
+        // Base64 contains no spaces, quotes or shell metacharacters, so it
+        // survives any number of shell hops byte-for-byte. The receiving role
+        // decodes it. This also removes the injection surface that free text in
+        // a command string would otherwise carry.
+        `    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot))` +
+        `.replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64'))` +
+        `.replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];`
     }
   };
 }

@@ -214,7 +214,37 @@ const slug = args.slug;
  * carrying spaces or punctuation should travel this way rather than being
  * interpolated into a command string.
  */
-const prompt = process.env.REDANVIL_PROMPT || args.prompt;
+/**
+ * Decode a base64 prompt, returning '' rather than throwing on junk.
+ * @param {string|undefined} value base64 text
+ * @returns {string} the decoded prompt, or ''
+ */
+function decodePromptB64(value) {
+  if (!value) return '';
+  try {
+    return Buffer.from(String(value), 'base64').toString('utf8');
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * The prompt, in order of trust: base64 argv, then the environment, then plain
+ * `--prompt` for a hand-run.
+ *
+ * `--promptB64` is how the n8n path delivers it. The command string is parsed
+ * by a shell TWICE -- Execute Command, then role-run's `shell: true` -- and each
+ * pass ate a level of quoting, so a full sentence arrived as `--prompt=A`. One
+ * character is below the builder's 8-character minimum, the Send button never
+ * enabled, and the role died 30s later on a click timeout that looked like a
+ * Playwright problem and was a quoting problem.
+ *
+ * Base64 has no spaces, quotes or shell metacharacters, so it crosses both
+ * shells byte-for-byte. REDANVIL_PROMPT stays supported, but it cannot be the
+ * only route: the n8n server's environment is fixed at boot, so a per-run prompt
+ * from a webhook body has no way to reach a child process through it.
+ */
+const prompt = decodePromptB64(args.promptB64) || process.env.REDANVIL_PROMPT || args.prompt;
 if (!slug || !prompt) {
   process.stderr.write('usage: prd.mjs --slug=X --prompt="..." [--repoRoot=.]\n');
   process.exit(2);
