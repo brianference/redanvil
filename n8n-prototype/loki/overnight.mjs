@@ -134,6 +134,96 @@ function headCommit(cwd) {
 }
 
 /**
+ * Headless coding agents available on THIS platform, in preference order.
+ *
+ * The overnight loop needs an agent that runs with no UI attached, because it is
+ * driven by a scheduler at 3am. That single requirement disqualifies most of the
+ * field: a VS Code extension (Cline, the LOKI extension) and a desktop app
+ * (Tonkotsu) are driven by an editor or a window, and there is nothing for a
+ * cron job to talk to. `opencode-ai` does ship a win32 binary and would work,
+ * but it is a third install with its own auth and its own spend for a capability
+ * already present twice over.
+ *
+ * Both entries below are installed, authenticated and verified on this machine:
+ * `claude -p` returns HEADLESS_OK and `grok -p` returns a completion. That is
+ * why no third-party orchestrator is adopted here.
+ *
+ * @type {Array<{name: string, bin: string, args: (prompt: string, cwd: string) => string[]}>}
+ */
+const AGENTS = [
+  {
+    name: 'claude',
+    bin: 'claude',
+    // -p is print/headless mode: run the prompt, emit the result, exit.
+    args: (prompt) => ['-p', prompt]
+  },
+  {
+    name: 'grok',
+    bin: 'grok',
+    args: (prompt, cwd) => ['--always-approve', '--cwd', cwd, '-m', 'grok-4.6', '-p', prompt]
+  }
+];
+
+/**
+ * Create an isolated git worktree for one item.
+ *
+ * Isolation is not optional here. Several items run in one night, each editing
+ * source, and a failed item must leave the main tree exactly as it found it.
+ *
+ * NOTE ON CLEANUP: these worktrees are deliberately NOT removed automatically.
+ * `git worktree remove --force` follows a node_modules junction on Windows and
+ * deletes the REAL node_modules it points at, which has happened here before.
+ * Cleaning up is a morning job with eyes on it, not a 3am job.
+ *
+ * @param {string} slug work item id
+ * @returns {{path: string, branch: string}|null} worktree, or null if it failed
+ */
+function createWorktree(slug) {
+  const branch = `overnight/${slug}`;
+  const path = resolve(REPO_ROOT, '..', `redanvil-wt-${slug}`);
+  if (existsSync(path)) return { path, branch };
+
+  const made = run('git', ['worktree', 'add', '-B', branch, path, 'HEAD'], { timeout: 120_000 });
+  if (made.status !== 0) return null;
+  return { path, branch };
+}
+
+/**
+ * Ask a headless agent to fix the named failing rules, in a worktree.
+ *
+ * The prompt names the SPECIFIC failing rule ids rather than saying "improve the
+ * app", because an unbounded instruction produces unbounded edits and there is
+ * nobody awake to review them. It also tells the agent the gate is the judge,
+ * which keeps it from optimising for its own self-report -- the failure mode
+ * this whole project is built around.
+ *
+ * @param {string} app slug
+ * @param {string[]} blockers failing rule ids
+ * @param {string} cwd worktree to work in
+ * @returns {{agent: string|null, status: number|null, output: string}} result
+ */
+function dispatchFix(app, blockers, cwd) {
+  const prompt =
+    `In ${app}, these RedAnvil gate rules are failing:\n\n` +
+    `${blockers.map((b) => `  - ${b}`).join('\n')}\n\n` +
+    `Fix the underlying causes. Rules to know:\n` +
+    `- The gate is the judge. Your own report of success counts for nothing, so do not write one.\n` +
+    `- Never weaken, waive or delete a check to make it pass. Fix what it is measuring.\n` +
+    `- No fake, placeholder or lorem-ipsum data, and no hand-authored metrics.\n` +
+    `- Do not touch evidence/, results/ or any verdict file. Those are the gate's, not yours.\n` +
+    `- Keep the change scoped to the failing rules above.\n` +
+    `Run the app's own tests before you finish.`;
+
+  for (const agent of AGENTS) {
+    const probe = run(process.platform === 'win32' ? 'where' : 'which', [agent.bin], { timeout: 10_000 });
+    if (probe.status !== 0) continue;
+    const res = run(agent.bin, agent.args(prompt, cwd), { cwd, timeout: ITEM_TIMEOUT_MS });
+    return { agent: agent.name, status: res.status, output: `${res.stdout}\n${res.stderr}`.slice(-4000) };
+  }
+  return { agent: null, status: null, output: 'no headless agent found on PATH' };
+}
+
+/**
  * Build the night's work queue.
  *
  * Order is deliberate and matches the owner's stated priority: close gate
@@ -330,12 +420,32 @@ function processItem(item, ctx) {
   let gate = item.app ? gateApp(item.app, REPO_ROOT) : null;
   if (gate) notes.push(`baseline: ${gate.blockers.length} blocker(s)`);
 
-  const executor = ctx.lokiAvailable ? 'loki' : 'grok';
-  notes.push(
-    ctx.lokiAvailable
-      ? 'dispatched to loki'
-      : 'loki unavailable on this platform (loki-mode is darwin/linux only); dispatched to grok'
-  );
+  let executor = ctx.lokiAvailable ? 'loki' : 'none';
+  const assessments = [];
+
+  // Dispatch a real fix, in a worktree, for an app with named failing rules.
+  // Measuring without acting is a monitoring loop; this is the half that makes
+  // it a development loop.
+  if (item.app && gate && gate.blockers.length > 0 && !ctx.lokiAvailable) {
+    const wt = createWorktree(item.id);
+    if (!wt) {
+      notes.push('could not create a worktree; skipped editing rather than touching the main tree');
+    } else {
+      notes.push(`worktree ${wt.branch} at ${wt.path}`);
+      const fix = dispatchFix(item.app, gate.blockers.slice(0, 6), wt.path);
+      executor = fix.agent ?? 'none';
+      notes.push(`${fix.agent ?? 'no agent'} exited ${fix.status}`);
+      // The agent's own words are an ASSESSMENT and are recorded as one. They
+      // never touch `verified`, which is computed from facts alone.
+      if (fix.output.trim()) {
+        assessments.push({ source: fix.agent ?? 'unknown', claim: fix.output.trim().slice(-1200) });
+      }
+    }
+  } else if (ctx.lokiAvailable) {
+    notes.push('dispatched to loki');
+  } else {
+    notes.push('nothing to dispatch: no failing blockers, or no app directory');
+  }
 
   // The executor is intentionally the ONLY branch between the two worlds.
   // Everything above and below is identical, so switching to Loki changes who
