@@ -99,12 +99,23 @@ serving right now:
 
 | App | Live | State |
 | --- | --- | --- |
-| App builder | https://redanvil.pages.dev | 12/12 design rules pass, axe clean in both themes |
-| Dashboard | https://redanvil-dashboard.pages.dev | 12/12 design rules pass |
+| App builder | https://redanvil.pages.dev | axe clean in both themes (0 violations, 2026-08-21); 26 gate blockers open |
+| Dashboard | https://redanvil-dashboard.pages.dev | live; gate blockers open |
 | AZ Planting Calendar | https://az-planting-calendar.pages.dev | 12/12 design rules pass, 121 tests across 3 lanes |
 | Sushi Finder | https://sushi-finder.pages.dev | live, gate blockers open |
 | Pet Sitter | https://pet-sitter-vz1.pages.dev | live, gate blockers open |
 | QuickFlight | https://quickflight.pages.dev | live, re-gated against the current rubric |
+
+A note on the two rows above, because the distinction matters when reading a 0.
+They previously read "12/12 design rules pass". That was recorded from a real run
+and then went stale: design verdicts are pinned to the commit they were measured
+at, and every later commit — including commits that touch nothing those rules
+look at — invalidates them. Fail-closed means an unrecorded verdict FAILS, so
+rules whose subject is visibly fine (`fe-premium-nav`, `fe-required-pages`,
+`fe-no-attribution` — all confirmed by screenshot on 2026-08-21) still count as
+blockers until re-measured. That is the rubric working as designed, but "12/12
+pass" stated as present tense was a claim the gate no longer supported, so it is
+gone. The axe result is dated because it was re-run.
 
 The most common open blockers are `lg-shipped` (the app must be pushed AND the
 score must already meet the bar, which is circular for an app still below it),
