@@ -14,7 +14,12 @@ REM that tonight skips work because last night finished it.
 setlocal
 
 set "REDANVIL_REPO=C:\Users\brian\RedAnvil"
-set "PATH=%USERPROFILE%\.local\bin;%USERPROFILE%\.grok\bin;C:\Program Files\GitHub CLI;%PATH%"
+REM git is on this list because a pre-flight check caught it MISSING. The loop
+REM calls `git rev-parse HEAD` for every receipt and `git worktree add` for every
+REM item, so without it no worktree is created, commitBefore/commitAfter come
+REM back null, diffChanged is false, and no item can ever reach VERIFIED. It
+REM would have failed quietly all night and looked like the agent doing nothing.
+set "PATH=%USERPROFILE%\.local\bin;%USERPROFILE%\.grok\bin;C:\Program Files\Git\cmd;C:\Program Files\nodejs;C:\Program Files\GitHub CLI;%PATH%"
 
 cd /d "%REDANVIL_REPO%" || exit /b 1
 
