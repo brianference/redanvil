@@ -154,15 +154,121 @@ const AGENTS = [
   {
     name: 'claude',
     bin: 'claude',
-    // -p is print/headless mode: run the prompt, emit the result, exit.
-    args: (prompt) => ['-p', prompt]
+    // -p is print/headless mode. --output-format json returns a STRUCTURED
+    // envelope (is_error, api_error_status, permission_denials, total_cost_usd)
+    // instead of prose, so a rate limit is detected by reading a field rather
+    // than by pattern-matching an error sentence that can change wording.
+    args: (prompt) => ['-p', prompt, '--output-format', 'json'],
+    structured: true,
+    // Claude enforces usage windows. When one is hit, the night must WAIT, not
+    // spin: retrying immediately burns the hours the limit was going to clear in.
+    hasUsageLimits: true
   },
   {
     name: 'grok',
     bin: 'grok',
-    args: (prompt, cwd) => ['--always-approve', '--cwd', cwd, '-m', 'grok-4.6', '-p', prompt]
+    args: (prompt, cwd) => ['--always-approve', '--cwd', cwd, '-m', 'grok-4.6', '-p', prompt],
+    structured: false,
+    // Grok has no session limit, which is exactly why it is the fallback: when
+    // Claude's window closes, work continues instead of stopping.
+    hasUsageLimits: false
   }
 ];
+
+/** Where the night's progress is checkpointed, so a restart resumes. */
+const CHECKPOINT = join(STATE_DIR, 'checkpoint.json');
+
+/** Spend ceiling for one night. A trivial claude call cost $0.27; caps matter. */
+const COST_CAP_USD = Number(process.env.OVERNIGHT_COST_CAP_USD ?? 25);
+
+/**
+ * Read the checkpoint, or an empty one.
+ *
+ * A night that cannot resume is a night that redoes finished work after every
+ * crash, rate limit or reboot -- and the loop runs unattended for hours, so a
+ * crash at hour six must not throw away hours one through five.
+ *
+ * @returns {{completed: string[], spentUsd: number, startedAt: string|null}} state
+ */
+function readCheckpoint() {
+  try {
+    const state = JSON.parse(readFileSync(CHECKPOINT, 'utf8'));
+    return {
+      completed: Array.isArray(state.completed) ? state.completed : [],
+      spentUsd: Number(state.spentUsd ?? 0),
+      startedAt: state.startedAt ?? null
+    };
+  } catch {
+    return { completed: [], spentUsd: 0, startedAt: null };
+  }
+}
+
+/**
+ * Persist progress after EVERY item, not at the end.
+ * @param {{completed: string[], spentUsd: number, startedAt: string|null}} state checkpoint
+ */
+function writeCheckpoint(state) {
+  mkdirSync(STATE_DIR, { recursive: true });
+  writeFileSync(CHECKPOINT, `${JSON.stringify(state, null, 2)}\n`);
+}
+
+/**
+ * Classify an agent invocation from its structured envelope.
+ *
+ * Fields are read from the real `--output-format json` result, confirmed by
+ * running it: `is_error`, `api_error_status`, `permission_denials`,
+ * `total_cost_usd`, `subtype`.
+ *
+ * @param {{status: number|null, stdout: string, stderr: string}} res spawn result
+ * @returns {{ok: boolean, rateLimited: boolean, costUsd: number, detail: string}} verdict
+ */
+function classifyClaude(res) {
+  const combined = `${res.stdout}\n${res.stderr}`;
+  let envelope = null;
+  try {
+    envelope = JSON.parse(res.stdout);
+  } catch {
+    // Not JSON: the process died before it could emit an envelope at all.
+  }
+
+  if (envelope) {
+    const apiStatus = envelope.api_error_status;
+    // 429 is the rate limit; 529 is overloaded. Both mean "wait", not "fail".
+    const rateLimited = apiStatus === 429 || apiStatus === 529;
+    return {
+      ok: envelope.is_error !== true,
+      rateLimited,
+      costUsd: Number(envelope.total_cost_usd ?? 0),
+      detail:
+        `subtype=${envelope.subtype} api_error_status=${apiStatus ?? 'none'} ` +
+        `permission_denials=${(envelope.permission_denials ?? []).length}`
+    };
+  }
+
+  // No envelope. Fall back to text signals, kept broad on purpose: missing a
+  // rate limit costs the whole night, a false positive costs one wait.
+  const rateLimited = /rate.?limit|usage limit|429|too many requests|quota|overloaded/i.test(combined);
+  return {
+    ok: res.status === 0,
+    rateLimited,
+    costUsd: 0,
+    detail: `no json envelope; exit ${res.status}`
+  };
+}
+
+/**
+ * Sleep, synchronously, for a whole number of milliseconds.
+ *
+ * Atomics.wait on a throwaway buffer blocks this thread without a busy loop and
+ * without dragging an async runtime through the whole file. The night is a
+ * sequential script; blocking IS the behaviour we want when a limit says wait.
+ *
+ * @param {number} ms duration
+ */
+function sleepSync(ms) {
+  const shared = new Int32Array(new SharedArrayBuffer(4));
+  Atomics.wait(shared, 0, 0, Math.max(0, ms));
+}
 
 /**
  * Create an isolated git worktree for one item.
@@ -214,13 +320,48 @@ function dispatchFix(app, blockers, cwd) {
     `- Keep the change scoped to the failing rules above.\n` +
     `Run the app's own tests before you finish.`;
 
+  // Escalating waits for a usage window. A Claude limit clears on its own after
+  // a while, so the correct response is to WAIT and then continue -- stopping
+  // the night wastes every hour the window was going to reopen in, and retrying
+  // in a tight loop wastes them just as thoroughly while looking busy.
+  const LIMIT_BACKOFF_MS = [5 * 60_000, 15 * 60_000, 30 * 60_000, 60 * 60_000];
+
   for (const agent of AGENTS) {
     const probe = run(process.platform === 'win32' ? 'where' : 'which', [agent.bin], { timeout: 10_000 });
     if (probe.status !== 0) continue;
-    const res = run(agent.bin, agent.args(prompt, cwd), { cwd, timeout: ITEM_TIMEOUT_MS });
-    return { agent: agent.name, status: res.status, output: `${res.stdout}\n${res.stderr}`.slice(-4000) };
+
+    for (let attempt = 0; attempt <= LIMIT_BACKOFF_MS.length; attempt += 1) {
+      const res = run(agent.bin, agent.args(prompt, cwd), { cwd, timeout: ITEM_TIMEOUT_MS });
+      const verdict = agent.structured
+        ? classifyClaude(res)
+        : { ok: res.status === 0, rateLimited: false, costUsd: 0, detail: `exit ${res.status}` };
+
+      if (verdict.ok || !verdict.rateLimited) {
+        return {
+          agent: agent.name,
+          status: res.status,
+          ok: verdict.ok,
+          costUsd: verdict.costUsd,
+          output: `${verdict.detail}\n${res.stdout}\n${res.stderr}`.slice(-4000)
+        };
+      }
+
+      // Rate limited. Wait, unless the waits are exhausted -- then hand the work
+      // to the next agent rather than idling until morning.
+      if (attempt === LIMIT_BACKOFF_MS.length) {
+        process.stdout.write(
+          `    ${agent.name} still limited after ${LIMIT_BACKOFF_MS.length} waits; handing off\n`
+        );
+        break;
+      }
+      const waitMs = LIMIT_BACKOFF_MS[attempt];
+      process.stdout.write(
+        `    ${agent.name} rate limited (${verdict.detail}); waiting ${Math.round(waitMs / 60000)}m then retrying\n`
+      );
+      sleepSync(waitMs);
+    }
   }
-  return { agent: null, status: null, output: 'no headless agent found on PATH' };
+  return { agent: null, status: null, ok: false, costUsd: 0, output: 'no headless agent could run' };
 }
 
 /**
@@ -349,6 +490,7 @@ function writeReceipt(input) {
     executor: input.executor,
     status: verified ? 'VERIFIED' : 'UNVERIFIED',
     facts,
+    costUsd: Number(input.costUsd ?? 0),
     assessments: input.assessments ?? [],
     notes: input.notes ?? []
   };
@@ -421,6 +563,7 @@ function processItem(item, ctx) {
   if (gate) notes.push(`baseline: ${gate.blockers.length} blocker(s)`);
 
   let executor = ctx.lokiAvailable ? 'loki' : 'none';
+  let itemCostUsd = 0;
   const assessments = [];
 
   // Dispatch a real fix, in a worktree, for an app with named failing rules.
@@ -434,7 +577,8 @@ function processItem(item, ctx) {
       notes.push(`worktree ${wt.branch} at ${wt.path}`);
       const fix = dispatchFix(item.app, gate.blockers.slice(0, 6), wt.path);
       executor = fix.agent ?? 'none';
-      notes.push(`${fix.agent ?? 'no agent'} exited ${fix.status}`);
+      itemCostUsd = fix.costUsd ?? 0;
+      notes.push(`${fix.agent ?? 'no agent'} exited ${fix.status}, cost $${itemCostUsd.toFixed(4)}`);
       // The agent's own words are an ASSESSMENT and are recorded as one. They
       // never touch `verified`, which is computed from facts alone.
       if (fix.output.trim()) {
@@ -484,6 +628,8 @@ function processItem(item, ctx) {
     gateScore: gate?.score ?? null,
     gatePassed: gate?.passed ?? false,
     blockers: gate?.blockers ?? [],
+    costUsd: itemCostUsd,
+    assessments,
     notes
   });
 }
@@ -503,8 +649,27 @@ process.stdout.write(
     `${dryRun ? ' [DRY RUN]' : ''}${allowDeploy ? ' [DEPLOY ALLOWED]' : ''}\n`
 );
 
+const checkpoint = readCheckpoint();
+if (!checkpoint.startedAt) checkpoint.startedAt = new Date().toISOString();
+if (checkpoint.completed.length > 0) {
+  process.stdout.write(
+    `resuming: ${checkpoint.completed.length} item(s) already done, $${checkpoint.spentUsd.toFixed(2)} spent\n`
+  );
+}
+
 const receipts = [];
 for (const item of queue) {
+  // Resume rather than redo. A night that restarts after a crash, a reboot or a
+  // usage window must not repeat work it already finished and paid for.
+  if (checkpoint.completed.includes(item.id)) {
+    process.stdout.write(`\n--- ${item.id}: already done, skipping\n`);
+    continue;
+  }
+  if (checkpoint.spentUsd >= COST_CAP_USD) {
+    process.stdout.write(`\ncost cap $${COST_CAP_USD} reached; stopping before ${item.id}\n`);
+    break;
+  }
+
   process.stdout.write(`\n--- ${item.id}: ${item.summary}\n`);
   try {
     const receiptPath = processItem(item, {
@@ -515,6 +680,11 @@ for (const item of queue) {
     receipts.push(receiptPath);
     const receipt = JSON.parse(readFileSync(receiptPath, 'utf8'));
     process.stdout.write(`    ${receipt.status}  -> ${receiptPath}\n`);
+
+    // Checkpoint after EVERY item, not at the end. The end may never arrive.
+    checkpoint.completed.push(item.id);
+    checkpoint.spentUsd += Number(receipt.costUsd ?? 0);
+    writeCheckpoint(checkpoint);
   } catch (err) {
     // One broken item must never end the night.
     process.stdout.write(`    ERROR (continuing): ${String(err)}\n`);
