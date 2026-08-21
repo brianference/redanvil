@@ -19,7 +19,7 @@
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 
@@ -153,9 +153,56 @@ async function runRole(opts) {
   const substantive = thin.length === 0;
   const countedAsRun = exitOk && producedWork && substantive;
 
+  /**
+   * The command's own last words. spawnSync has captured stderr all along and
+   * the verdict threw it away, so a failing role reached the workflow as a bare
+   * "exited 1" with the one line that explains WHY discarded -- the same trap
+   * this project already documents for n8n's Execute Command node, reproduced
+   * one level up in our own runner.
+   *
+   * Tail, not head: the usage line or the thrown error is at the end. Bounded,
+   * because a role that fails after printing a megabyte should not paste a
+   * megabyte into every verdict.
+   */
+  const errTail = String(proc.stderr ?? '')
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0)
+    .slice(-3)
+    .join(' | ')
+    .slice(0, 500);
+  const spawnErr = proc.error ? ` (spawn error: ${proc.error.message})` : '';
+
+  /**
+   * A three-line tail names the error CLASS but not the selector, url or step
+   * that produced it -- "TimeoutError" is a symptom shared by a dozen causes.
+   * Persist the whole stream so the next failure is diagnosable from the
+   * artifact rather than by re-running the role and hoping it reproduces.
+   */
+  let failureLog = '';
+  if (proc.status !== 0) {
+    try {
+      const logDir = resolve(opts.repoRoot, 'evidence', 'role-failures');
+      mkdirSync(logDir, { recursive: true });
+      failureLog = join(logDir, `${opts.role}-${startedAt.replace(/[:.]/g, '-')}.log`);
+      writeFileSync(
+        failureLog,
+        `cmd: ${opts.cmd}\ncwd: ${opts.repoRoot}\nexit: ${proc.status}\n\n` +
+          `--- stderr ---\n${String(proc.stderr ?? '')}\n\n--- stdout ---\n${String(proc.stdout ?? '')}\n`
+      );
+    } catch {
+      failureLog = '';
+    }
+  }
+
   /** Reasons are the evidence trail; an empty list means nothing objected. */
   const reasons = [];
-  if (!exitOk) reasons.push(`role command exited ${proc.status ?? 'null'}`);
+  if (!exitOk) {
+    reasons.push(
+      `role command exited ${proc.status ?? 'null'}${spawnErr}` +
+        (errTail ? ` -- stderr: ${errTail}` : ' -- stderr was empty') +
+        (failureLog ? ` -- full output: ${relative(opts.repoRoot, failureLog)}` : '')
+    );
+  }
   if (!producedWork) reasons.push(`no artifact under ${opts.artifacts} changed -- role did nothing`);
   if (!substantive) reasons.push(`placeholder artifacts under ${SUBSTANCE_FLOOR_BYTES}B: ${thin.join(', ')}`);
 
@@ -166,6 +213,7 @@ async function runRole(opts) {
     finishedAt: new Date().toISOString(),
     commit: headCommit(opts.repoRoot),
     exitCode: proc.status,
+    stderrTail: errTail,
     artifactDir: opts.artifacts,
     added: delta.added,
     modified: delta.modified,

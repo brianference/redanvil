@@ -46,7 +46,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"prd\", step: \"prd\",\n  artifacts: `${c.slug}/docs/PRD.md`,\n  cmd: $env.REDANVIL_CMD_PRD || \"node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root} --prompt={prompt}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"prd\", step: \"prd\",\n  artifacts: `${c.slug}/docs/PRD.md`,\n  cmd: $env.REDANVIL_CMD_PRD || \"node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {

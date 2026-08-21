@@ -22,7 +22,12 @@ const script = (name) => `node n8n-prototype/roles/${name}.mjs --slug={slug} --r
 /** @type {Record<string,string>} */
 export const BINDINGS = {
   // Deterministic scripts.
-  prd: 'node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root} --prompt={prompt}',
+  // NO `--prompt` here on purpose. The prompt reaches prd.mjs through
+  // REDANVIL_PROMPT in the environment, because this command string is parsed by
+  // a shell TWICE (n8n's Execute Command, then role-run's `shell: true`) and each
+  // pass ate a level of quoting -- a full sentence arrived as `--prompt=A`.
+  // Environment variables cross a shell boundary without being re-parsed.
+  prd: 'node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root}',
   product: script('product'),
   reuse: script('reuse'),
   inspo: script('inspo'),

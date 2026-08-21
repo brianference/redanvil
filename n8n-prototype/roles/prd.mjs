@@ -190,7 +190,31 @@ async function answerQuestion(page, prompt, chosen) {
 
 const args = parseArgs(process.argv.slice(2));
 const slug = args.slug;
-const prompt = args.prompt;
+/**
+ * The prompt comes from the ENVIRONMENT first, and `--prompt` is only a
+ * convenience for running this role by hand.
+ *
+ * Under n8n the prompt crossed TWO shell layers -- the Execute Command node runs
+ * the outer command through a shell, and `role-run.mjs` then re-spawns the inner
+ * command with `shell: true`. Each layer consumed a level of quoting, so
+ *
+ *   --prompt="A reminder app for dog owners that tracks..."
+ *
+ * arrived as
+ *
+ *   --prompt=A
+ *
+ * with every remaining word split off into its own argv entry. One character is
+ * below the builder's 8-character minimum, so the Send button stayed disabled
+ * forever and the role died on a 30s click timeout. The recorded `cmd` in
+ * evidence/role-failures is what finally showed it.
+ *
+ * An environment variable crosses a shell boundary without being re-parsed, so
+ * the text arrives whole no matter how many layers it passes through. Any value
+ * carrying spaces or punctuation should travel this way rather than being
+ * interpolated into a command string.
+ */
+const prompt = process.env.REDANVIL_PROMPT || args.prompt;
 if (!slug || !prompt) {
   process.stderr.write('usage: prd.mjs --slug=X --prompt="..." [--repoRoot=.]\n');
   process.exit(2);
@@ -205,8 +229,56 @@ await page.setViewportSize({ width: 1280, height: 1000 });
 /** @type {string[]} */
 const chosen = [];
 await page.goto(BUILDER_URL, { waitUntil: 'networkidle' });
-await page.locator('#composer-prompt').fill(prompt);
-await page.getByRole('button', { name: /send description/i }).click();
+
+/**
+ * Fill the composer, then WAIT FOR THE BUTTON TO ACTUALLY ENABLE before
+ * clicking, re-filling if the value did not survive.
+ *
+ * This is a hydration race, and it is the reason the whole build failed under
+ * n8n while the identical command succeeded from a shell. `networkidle` means
+ * the network went quiet, NOT that React finished hydrating. When `fill()` lands
+ * first, hydration re-renders the controlled textarea from its own empty initial
+ * state and silently discards the text; the Send button is disabled while the
+ * composer is empty, so it never enables and the click times out after 30s:
+ *
+ *   locator.click: Timeout 30000ms exceeded.
+ *     waiting for getByRole('button', { name: /send description/i })
+ *     57 x waiting for element to be visible, enabled and stable
+ *
+ * The element was always found. It was never *enabled*. Whoever runs this from a
+ * warm shell wins the race and never sees it, which is exactly why it read as
+ * "works locally, broken in n8n" rather than as a bug in the role.
+ *
+ * Bounded retries on a real signal, never a fixed sleep: re-fill and re-check
+ * until the button reports enabled, then click.
+ */
+const composer = page.locator('#composer-prompt');
+const sendButton = page.getByRole('button', { name: /send description/i });
+await composer.waitFor({ state: 'visible' });
+
+let composerReady = false;
+for (let attempt = 0; attempt < 10 && !composerReady; attempt += 1) {
+  await composer.fill(prompt);
+  try {
+    // Short per-attempt budget: if hydration ate the value, retrying costs a
+    // second rather than the full 30s the bare click used to burn.
+    await sendButton.waitFor({ state: 'visible', timeout: 3000 });
+    composerReady = (await sendButton.isEnabled()) && (await composer.inputValue()) === prompt;
+  } catch {
+    composerReady = false;
+  }
+}
+
+if (!composerReady) {
+  process.stderr.write(
+    'the composer never accepted the prompt -- Send stayed disabled after 10 fills, ' +
+      'so the app never received the description this build derives from\n'
+  );
+  await browser.close();
+  process.exit(1);
+}
+
+await sendButton.click();
 
 // Walk the question sequence. Bounded, because an unbounded loop against a
 // wizard that stops advancing would hang the role rather than fail it.
