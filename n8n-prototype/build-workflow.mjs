@@ -97,6 +97,52 @@ function roleNode(step, index) {
 }
 
 /**
+ * Telegram notification sent immediately BEFORE a gate blocks.
+ *
+ * Without this, a gate pausing at 02:00 is invisible until someone happens to
+ * look at n8n, which for an overnight run means the build sits idle until
+ * morning. The message carries the signed resume link, so approving is a tap.
+ *
+ * `$execution.resumeFormUrl` is the real thing, read out of n8n's source
+ * (n8n-core get-additional-keys.js) rather than guessed: it is built from
+ * formWaitingBaseUrl + executionId and ALREADY has the resume token appended.
+ * That token is the authorization -- an unsigned /form-waiting/<id> returns 401
+ * and a hand-built link is rejected as "invalid or expired", which is exactly
+ * what happened when this was constructed by hand instead of read.
+ *
+ * NEITHER SECRET IS IN THIS FILE. The bot token lives in an n8n credential
+ * (encrypted in n8n's own store) and the chat id comes from the environment, so
+ * the generated workflow JSON stays safe to commit to a public repo.
+ *
+ * @param {import('./process-map.mjs').ProcessStep} step the step being gated
+ * @param {number} index position in the ordered map
+ * @returns {object} an n8n Telegram sendMessage node
+ */
+function notifyNode(step, index) {
+  return {
+    id: `n_${step.id}`,
+    name: `Notify: ${step.id} needs approval`,
+    type: 'n8n-nodes-base.telegram',
+    typeVersion: 1.2,
+    position: [X_STEP * (index * 2 + 3), 20],
+    parameters: {
+      chatId: '={{ $env.REDANVIL_TELEGRAM_CHAT_ID }}',
+      text:
+        `=RedAnvil needs a decision: *${step.id}*\n\n` +
+        `${step.summary}\n\n` +
+        `App: {{ $('Slice config').first().json.slug }}\n` +
+        `Approve or request a redo:\n{{ $execution.resumeFormUrl }}`,
+      additionalFields: { appendAttribution: false, parse_mode: 'Markdown' }
+    },
+    credentials: { telegramApi: { id: 'redanvil-telegram', name: 'RedAnvil Telegram' } },
+    // A failed notification must NEVER kill a build. If Telegram is down, or the
+    // credential is missing, the gate should still block and wait -- losing the
+    // message is an inconvenience, losing the run is hours of work.
+    onError: 'continueRegularOutput'
+  };
+}
+
+/**
  * Build the blocking approval node for a human gate.
  * @param {import('./process-map.mjs').ProcessStep} step the step
  * @param {number} index position in the ordered map
@@ -257,9 +303,13 @@ steps.forEach((step, i) => {
   previous = role.name;
 
   if (step.humanGate) {
+    // Notify BEFORE the wait, never after. A message sent after the gate
+    // resolves announces a decision that has already been made.
+    const notify = notifyNode(step, i);
     const approve = approvalNode(step, i);
-    nodes.push(approve);
-    connections[previous] = { main: [[{ node: approve.name, type: 'main', index: 0 }]] };
+    nodes.push(notify, approve);
+    connections[previous] = { main: [[{ node: notify.name, type: 'main', index: 0 }]] };
+    connections[notify.name] = { main: [[{ node: approve.name, type: 'main', index: 0 }]] };
     previous = approve.name;
   }
 });

@@ -238,6 +238,31 @@
       }
     },
     {
+      "id": "n_logo",
+      "name": "Notify: logo needs approval",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2860,
+        20
+      ],
+      "parameters": {
+        "chatId": "={{ $env.REDANVIL_TELEGRAM_CHAT_ID }}",
+        "text": "=RedAnvil needs a decision: *logo*\n\nFive real generated brand marks, a gallery, and an OPEN decision\n\nApp: {{ $('Slice config').first().json.slug }}\nApprove or request a redo:\n{{ $execution.resumeFormUrl }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "redanvil-telegram",
+          "name": "RedAnvil Telegram"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
       "id": "h_logo",
       "name": "Owner approves: logo",
       "type": "n8n-nodes-base.wait",
@@ -307,6 +332,31 @@
         "mode": "once",
         "options": {}
       }
+    },
+    {
+      "id": "n_palette",
+      "name": "Notify: palette needs approval",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3300,
+        20
+      ],
+      "parameters": {
+        "chatId": "={{ $env.REDANVIL_TELEGRAM_CHAT_ID }}",
+        "text": "=RedAnvil needs a decision: *palette*\n\nFive distinct colour + type directions, each shown light AND dark, OPEN decision\n\nApp: {{ $('Slice config').first().json.slug }}\nApprove or request a redo:\n{{ $execution.resumeFormUrl }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "redanvil-telegram",
+          "name": "RedAnvil Telegram"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "id": "h_palette",
@@ -380,6 +430,31 @@
       }
     },
     {
+      "id": "n_layout",
+      "name": "Notify: layout needs approval",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3740,
+        20
+      ],
+      "parameters": {
+        "chatId": "={{ $env.REDANVIL_TELEGRAM_CHAT_ID }}",
+        "text": "=RedAnvil needs a decision: *layout*\n\nThree structurally distinct layout options, gallery, OPEN decision\n\nApp: {{ $('Slice config').first().json.slug }}\nApprove or request a redo:\n{{ $execution.resumeFormUrl }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "redanvil-telegram",
+          "name": "RedAnvil Telegram"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
       "id": "h_layout",
       "name": "Owner approves: layout",
       "type": "n8n-nodes-base.wait",
@@ -449,6 +524,31 @@
         "mode": "once",
         "options": {}
       }
+    },
+    {
+      "id": "n_decide",
+      "name": "Notify: decide needs approval",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4180,
+        20
+      ],
+      "parameters": {
+        "chatId": "={{ $env.REDANVIL_TELEGRAM_CHAT_ID }}",
+        "text": "=RedAnvil needs a decision: *decide*\n\nThe owner picks a logo, a palette and a layout. Nothing builds before this\n\nApp: {{ $('Slice config').first().json.slug }}\nApprove or request a redo:\n{{ $execution.resumeFormUrl }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "redanvil-telegram",
+          "name": "RedAnvil Telegram"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "id": "h_decide",
@@ -1115,6 +1215,17 @@
       "main": [
         [
           {
+            "node": "Notify: logo needs approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify: logo needs approval": {
+      "main": [
+        [
+          {
             "node": "Owner approves: logo",
             "type": "main",
             "index": 0
@@ -1145,6 +1256,17 @@
       ]
     },
     "Role: palette": {
+      "main": [
+        [
+          {
+            "node": "Notify: palette needs approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify: palette needs approval": {
       "main": [
         [
           {
@@ -1181,6 +1303,17 @@
       "main": [
         [
           {
+            "node": "Notify: layout needs approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify: layout needs approval": {
+      "main": [
+        [
+          {
             "node": "Owner approves: layout",
             "type": "main",
             "index": 0
@@ -1211,6 +1344,17 @@
       ]
     },
     "Role: decide": {
+      "main": [
+        [
+          {
+            "node": "Notify: decide needs approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify: decide needs approval": {
       "main": [
         [
           {
