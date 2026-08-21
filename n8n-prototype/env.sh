@@ -13,6 +13,19 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export N8N_USER_FOLDER="${N8N_USER_FOLDER:-$HERE/.n8n-home}"
 export N8N_DIAGNOSTICS_ENABLED=false
 
+# Bind to LOOPBACK ONLY. n8n defaults to `::`, which is every interface -- the
+# startup banner says "n8n ready on ::, port 5678" and that is not a formality.
+# This instance runs Execute Command by design, so every workflow it exposes is
+# a path to running processes on this machine, and the build webhook takes a
+# POST body. Reachable from the network, that combination is remote code
+# execution rather than an internal convenience.
+#
+# Loopback is the floor, not the whole answer: anything on this host can still
+# reach it. Before this webhook is exposed to anything beyond localhost it needs
+# real authentication on the node (headerAuth or basicAuth with a credential),
+# which is NOT configured here.
+export N8N_LISTEN_ADDRESS="${N8N_LISTEN_ADDRESS:-127.0.0.1}"
+
 # Execute Command ships blocked from n8n 2.0. The whole role mechanism is built
 # on it, so it is deliberately re-enabled.
 export NODES_EXCLUDE="[]"

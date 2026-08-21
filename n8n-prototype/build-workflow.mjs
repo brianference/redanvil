@@ -124,6 +124,43 @@ const nodes = [
     parameters: {}
   },
   {
+    // The trigger that makes HUMAN GATES POSSIBLE.
+    //
+    // `n8n execute` cannot run a Wait node with `resume: form`. It throws
+    // "context.getNodeParameter is not a function", because form resume needs
+    // the server's webhook context and the CLI has none. A CLI-driven build can
+    // therefore NEVER pause for an owner decision -- it dies at the first gate.
+    //
+    // Starting the run through the server instead puts the execution in the
+    // process that owns the webhooks, so the Wait node suspends properly and n8n
+    // serves a real form URL that resumes it.
+    //
+    // Identity read out of the installed package, not the docs:
+    //   type n8n-nodes-base.webhook, versions [1, 1.1, 2, 2.1]
+    // The docs have been wrong about node ids in this project before.
+    id: 'hook',
+    name: 'Start via webhook',
+    type: 'n8n-nodes-base.webhook',
+    typeVersion: 2.1,
+    position: [0, 220],
+    // A FIXED, VALID UUID. Fixed so the callback URL survives regeneration and
+    // the overnight loop never has to rediscover it. Valid because n8n looks the
+    // webhook up by this id when it builds the node's execution context -- the
+    // first attempt used a readable-but-malformed id ending "-redanvilbuild",
+    // and the request reached the node with `context` undefined:
+    //   TypeError: Cannot read properties of undefined (reading 'getNode')
+    // which reads like a bug in the node and is actually a bad id in our JSON.
+    webhookId: 'daccb558-a999-48b4-9d11-9ac2067ac177',
+    parameters: {
+      httpMethod: 'POST',
+      path: 'redanvil-build',
+      // Respond immediately. The build runs for hours; holding the HTTP
+      // connection open for it would time out long before the first gate.
+      responseMode: 'onReceived',
+      options: {}
+    }
+  },
+  {
     id: 'cfg',
     name: 'Slice config',
     type: 'n8n-nodes-base.code',
@@ -144,13 +181,44 @@ const nodes = [
       // It throws rather than defaulting: a placeholder prompt would forge a
       // PRD for an app nobody asked for, and every later role would faithfully
       // build it. Failing here is the cheap failure.
+      // The WEBHOOK BODY WINS over the environment.
+      //
+      // Environment variables are per-process, so an env-only build meant every
+      // run in one n8n process built the same slug from the same prompt, and
+      // changing either meant restarting the server. A POST body makes each run
+      // self-contained, which is what lets a queue drive many different builds
+      // through one running instance.
+      //
+      // Env stays as the fallback so a manual editor run and the existing CLI
+      // path keep working unchanged.
+      // `repoRoot` and `runner` are ENV-ONLY and are deliberately NOT read from
+      // the request body.
+      //
+      // Both resolve to executable paths that end up inside a command string run
+      // with `shell: true`. Taking either from an unauthenticated POST is remote
+      // code execution, not a configuration convenience -- an attacker sets
+      // `runner` to anything on disk and n8n runs it. The first version of this
+      // node did exactly that, and n8n binds on `::` (all interfaces), so it was
+      // not even limited to this machine.
+      //
+      // `slug` IS accepted, because a queue needs to name what it is building,
+      // but it is interpolated into that same command string and used as a path
+      // component, so it is validated against a strict allowlist first rather
+      // than escaped. `prompt` is the only free text, and it reaches the role
+      // through REDANVIL_PROMPT in the environment rather than through argv, so
+      // no amount of quoting in it can break out.
       jsCode:
+        "const body = ($json && $json.body) ? $json.body : {};\n" +
         "const repoRoot = $env.REDANVIL_REPO || 'C:/Users/brian/RedAnvil';\n" +
         "const runner = $env.REDANVIL_RUNNER || 'C:/Users/brian/RedAnvil/n8n-prototype/role-run.mjs';\n" +
-        "const slug = $env.REDANVIL_SLUG || 'pet-sitter';\n" +
-        "const prompt = $env.REDANVIL_PROMPT;\n" +
+        "const requestedSlug = typeof body.slug === 'string' ? body.slug : '';\n" +
+        "if (requestedSlug && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(requestedSlug)) {\n" +
+        "  throw new Error('slug must match /^[a-z0-9][a-z0-9-]{0,63}$/ -- it becomes a path component and a shell argument');\n" +
+        "}\n" +
+        "const slug = requestedSlug || $env.REDANVIL_SLUG || 'pet-sitter';\n" +
+        "const prompt = typeof body.prompt === 'string' && body.prompt.trim() ? body.prompt : $env.REDANVIL_PROMPT;\n" +
         "if (!prompt) {\n" +
-        "  throw new Error('REDANVIL_PROMPT is not set. The prd role drives the live app builder with it, and every later role builds what that PRD says, so there is no safe default.');\n" +
+        "  throw new Error('No prompt: POST a { prompt } body to the webhook, or set REDANVIL_PROMPT. The prd role drives the live app builder with it, and every later role builds what that PRD says, so there is no safe default.');\n" +
         "}\n" +
         'return [{ json: { repoRoot, runner, slug, prompt } }];'
     }
@@ -158,7 +226,14 @@ const nodes = [
 ];
 
 /** @type {Record<string, {main: object[][]}>} */
-const connections = { 'Start a build': { main: [[{ node: 'Slice config', type: 'main', index: 0 }]] } };
+// Both triggers feed the same config node: the manual one for driving a run from
+// the editor, the webhook for anything programmatic (the overnight loop, a
+// queued job from the site). The pipeline after this point is identical, so a
+// run cannot behave differently depending on how it was started.
+const connections = {
+  'Start a build': { main: [[{ node: 'Slice config', type: 'main', index: 0 }]] },
+  'Start via webhook': { main: [[{ node: 'Slice config', type: 'main', index: 0 }]] }
+};
 let previous = 'Slice config';
 
 steps.forEach((step, i) => {

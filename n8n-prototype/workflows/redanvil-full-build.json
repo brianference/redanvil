@@ -20,6 +20,23 @@
       "parameters": {}
     },
     {
+      "id": "hook",
+      "name": "Start via webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        220
+      ],
+      "webhookId": "daccb558-a999-48b4-9d11-9ac2067ac177",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "redanvil-build",
+        "responseMode": "onReceived",
+        "options": {}
+      }
+    },
+    {
       "id": "cfg",
       "name": "Slice config",
       "type": "n8n-nodes-base.code",
@@ -31,7 +48,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const repoRoot = $env.REDANVIL_REPO || 'C:/Users/brian/RedAnvil';\nconst runner = $env.REDANVIL_RUNNER || 'C:/Users/brian/RedAnvil/n8n-prototype/role-run.mjs';\nconst slug = $env.REDANVIL_SLUG || 'pet-sitter';\nconst prompt = $env.REDANVIL_PROMPT;\nif (!prompt) {\n  throw new Error('REDANVIL_PROMPT is not set. The prd role drives the live app builder with it, and every later role builds what that PRD says, so there is no safe default.');\n}\nreturn [{ json: { repoRoot, runner, slug, prompt } }];"
+        "jsCode": "const body = ($json && $json.body) ? $json.body : {};\nconst repoRoot = $env.REDANVIL_REPO || 'C:/Users/brian/RedAnvil';\nconst runner = $env.REDANVIL_RUNNER || 'C:/Users/brian/RedAnvil/n8n-prototype/role-run.mjs';\nconst requestedSlug = typeof body.slug === 'string' ? body.slug : '';\nif (requestedSlug && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(requestedSlug)) {\n  throw new Error('slug must match /^[a-z0-9][a-z0-9-]{0,63}$/ -- it becomes a path component and a shell argument');\n}\nconst slug = requestedSlug || $env.REDANVIL_SLUG || 'pet-sitter';\nconst prompt = typeof body.prompt === 'string' && body.prompt.trim() ? body.prompt : $env.REDANVIL_PROMPT;\nif (!prompt) {\n  throw new Error('No prompt: POST a { prompt } body to the webhook, or set REDANVIL_PROMPT. The prd role drives the live app builder with it, and every later role builds what that PRD says, so there is no safe default.');\n}\nreturn [{ json: { repoRoot, runner, slug, prompt } }];"
       }
     },
     {
@@ -941,6 +958,17 @@
   ],
   "connections": {
     "Start a build": {
+      "main": [
+        [
+          {
+            "node": "Slice config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start via webhook": {
       "main": [
         [
           {
