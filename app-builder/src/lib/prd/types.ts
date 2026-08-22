@@ -56,9 +56,27 @@ export const PRD_SECTION_HEADINGS = [
   '14. PRD Self-Check'
 ] as const;
 
+/**
+ * Stable identity of a derived feature, assigned where the feature is constructed.
+ * Positional ids (F1, F3, F8, …) are not identity — they move when capability
+ * features are prepended.
+ */
+export type FeatureRole =
+  | 'accounts'
+  | 'public-access'
+  | 'entity-browse'
+  | 'entity-detail'
+  | 'entity-manage'
+  | 'search-filter'
+  | 'assistant'
+  | 'required-pages'
+  | 'capability';
+
 /** One feature used while assembling Core Features, Acceptance Criteria, and Test Plan. */
 export interface FeatureSpec {
   id: string;
+  /** What this feature is. Set at construction; never inferred from id or name. */
+  role: FeatureRole;
   name: string;
   behavior: string;
   /** True when this feature is in the minimum set that solves the stated problem. */
