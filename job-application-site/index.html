@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Applications</title>
+<style>
+  :root {
+    --bg: #f3f2ef;
+    --card: #ffffff;
+    --ink: #191919;
+    --muted: #666666;
+    --line: #e0e0e0;
+    --chip: #ffffff;
+    --blue: #0a66c2;
+    --blue-hover: #004182;
+    --blue-soft: #e8f1fa;
+    --green-bg: #e7f6ee;
+    --green: #0d7a3e;
+    --gray-pill: #f3f2f1;
+    --pink: #c0374b;
+    --shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { color: var(--blue-hover); text-decoration: underline; }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    padding: 18px 20px 16px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+  h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); margin-top: 4px; font-size: 13px; }
+  .stats { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .stat {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+    min-width: 112px; padding: 10px 14px;
+  }
+  .stat b { display: block; font-size: 22px; line-height: 1.1; }
+  .stat span { color: var(--muted); font-size: 12px; }
+  .filters { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .search {
+    flex: 1 1 240px; min-width: 180px; max-width: 420px;
+    padding: 9px 12px; border: 1px solid var(--line); border-radius: 24px;
+    font: 13px inherit; background: #fff;
+  }
+  .search:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    appearance: none; background: var(--chip); border: 1px solid #cfcfcf;
+    border-radius: 24px; padding: 7px 14px; font: 13px/1 inherit; color: var(--ink);
+    cursor: pointer;
+  }
+  .chip[aria-pressed="true"] {
+    border-color: var(--blue); color: var(--blue); background: var(--blue-soft);
+    font-weight: 600;
+  }
+  main { max-width: 1120px; margin: 18px auto 72px; padding: 0 16px; }
+  h2 { font-size: 18px; margin: 22px 0 10px; display: flex; gap: 8px; align-items: baseline; }
+  h2 .n { color: var(--muted); font-weight: 500; font-size: 14px; }
+  .empty {
+    background: var(--card); border: 1px dashed var(--line); border-radius: var(--radius);
+    padding: 18px; color: var(--muted);
+  }
+  .err { color: #b42318; margin: 8px 0 0; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 760px) {
+    .lanes { display: grid; grid-template-columns: 1.15fr .85fr; gap: 20px; align-items: start; }
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .card-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .company { font-size: 13px; color: var(--ink); }
+  .title { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .loc { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 4px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600;
+    background: var(--gray-pill); color: #333;
+  }
+  .pill.match { background: var(--green-bg); color: var(--green); }
+  .pill.submitted { background: var(--green-bg); color: var(--green); }
+  .pill.queued { background: var(--gray-pill); color: #444; }
+  .pill.source { font-weight: 500; color: var(--muted); }
+  .card-foot {
+    display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 2px;
+  }
+  .apply {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--blue); font-weight: 650; font-size: 13px;
+  }
+  .apply:hover { color: var(--blue-hover); }
+  .when { color: var(--muted); font-size: 12px; }
+  .new { color: var(--pink); font-size: 12px; font-weight: 700; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Applications</h1>
+    <div class="sub" id="meta">Live queue from D1 · rows render only after /api/jobs</div>
+    <div class="stats">
+      <div class="stat"><b id="stat-sub">—</b><span>Submitted</span></div>
+      <div class="stat"><b id="stat-ft">—</b><span>Full-time</span></div>
+      <div class="stat"><b id="stat-pt">—</b><span>PT/C2C</span></div>
+    </div>
+    <div class="filters">
+      <input class="search" id="q" type="search" placeholder="Search company, title, URL, source, status" autocomplete="off"/>
+      <div class="chips" role="group" aria-label="Lane filters">
+        <button type="button" class="chip" data-kind="all" aria-pressed="true">All</button>
+        <button type="button" class="chip" data-kind="submitted" aria-pressed="false">Submitted</button>
+        <button type="button" class="chip" data-kind="ft" aria-pressed="false">Full-time</button>
+        <button type="button" class="chip" data-kind="ptc2c" aria-pressed="false">PT/C2C</button>
+      </div>
+    </div>
+    <p class="err" id="err" hidden></p>
+  </div>
+</header>
+<main>
+  <h2>Submitted <span class="n" id="count-sub">0</span></h2>
+  <div class="grid" id="sub-box"><div class="empty">Loading…</div></div>
+  <div class="lanes">
+    <section>
+      <h2>Full-time <span class="n" id="count-ft">0</span></h2>
+      <div class="grid" id="ft-box"><div class="empty">Loading…</div></div>
+    </section>
+    <section>
+      <h2>PT/C2C <span class="n" id="count-pt">0</span></h2>
+      <div class="grid" id="pt-box"><div class="empty">Loading…</div></div>
+    </section>
+  </div>
+</main>
+<script>
+(function () {
+  const API_CANDIDATES = (function () {
+    const here = location.origin;
+    const list = [];
+    if (here && here !== "null" && here.indexOf("file:") !== 0) list.push(here + "/api/jobs");
+    list.push("https://apply-dashboard.pages.dev/api/jobs");
+    return list;
+  })();
+
+  let all = [];
+  let kind = "all";
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function laneOf(j) {
+    const l = (j.lane || "").toLowerCase();
+    if (l === "submitted") return "submitted";
+    if (l === "ptc2c" || l === "pt" || l === "c2c") return "ptc2c";
+    return "ft";
+  }
+  function salaryText(j) {
+    const s = j.salary || j.pay || j.comp || "";
+    return s ? String(s) : "";
+  }
+  function cardHtml(j) {
+    const url = j.url || "";
+    const pct = j.match_pct;
+    const loc = j.work_type || "";
+    const salary = salaryText(j);
+    const status = (j.status || "").toLowerCase();
+    const submitted = !!j.submitted_at || status === "submitted" || laneOf(j) === "submitted";
+    const matchGood = pct != null && Number(pct) >= 50;
+    const pills = [];
+    if (salary) pills.push('<span class="pill' + (matchGood ? ' match' : '') + '">' + esc(salary) + '</span>');
+    if (pct != null && pct !== "") {
+      pills.push('<span class="pill' + (matchGood ? ' match' : '') + '">' + esc(pct) + '% match' + (matchGood ? ' ✓' : '') + '</span>');
+    }
+    if (submitted) pills.push('<span class="pill submitted">Submitted</span>');
+    else if (status) pills.push('<span class="pill queued">' + esc(j.status) + '</span>');
+    if (j.source) pills.push('<span class="pill source">' + esc(j.source) + '</span>');
+    const when = j.submitted_at
+      ? '<span class="when">Submitted ' + esc(j.submitted_at) + '</span>'
+      : (j.posted ? '<span class="when">' + esc(j.posted) + '</span>' : '<span class="when"></span>');
+    const cta = url
+      ? '<a class="apply" href="' + esc(url) + '" target="_blank" rel="noopener">View posting →</a>'
+      : '<span class="apply" style="color:var(--muted)">No posting URL</span>';
+    return '<article class="card">' +
+      '<div class="card-top"><div>' +
+        (submitted ? '<div class="new">Applied</div>' : '') +
+        '<h3 class="title">' + esc(j.title || "Untitled") + '</h3>' +
+        '<div class="company">' + esc(j.company || "") + '</div>' +
+        (loc ? '<div class="loc">📍 ' + esc(loc) + '</div>' : '') +
+      '</div></div>' +
+      '<div class="pills">' + pills.join("") + '</div>' +
+      '<div class="card-foot">' + cta + when + '</div>' +
+    '</article>';
+  }
+  function listHtml(jobs, emptyMsg) {
+    if (!jobs.length) return '<div class="empty">' + emptyMsg + '</div>';
+    return jobs.map(cardHtml).join("");
+  }
+  function render() {
+    const s = (document.getElementById("q").value || "").trim().toLowerCase();
+    const vis = all.filter(j => {
+      const lane = laneOf(j);
+      if (kind !== "all" && kind !== lane) return false;
+      if (!s) return true;
+      const hay = [j.company, j.title, j.url, j.source, j.status, j.lane, j.work_type, j.salary].join(" ").toLowerCase();
+      return hay.indexOf(s) !== -1;
+    });
+    const sub = vis.filter(j => laneOf(j) === "submitted");
+    const ft = vis.filter(j => laneOf(j) === "ft");
+    const pt = vis.filter(j => laneOf(j) === "ptc2c");
+    document.getElementById("stat-sub").textContent = all.filter(j => laneOf(j)==="submitted").length;
+    document.getElementById("stat-ft").textContent = all.filter(j => laneOf(j)==="ft").length;
+    document.getElementById("stat-pt").textContent = all.filter(j => laneOf(j)==="ptc2c").length;
+    document.getElementById("count-sub").textContent = sub.length;
+    document.getElementById("count-ft").textContent = ft.length;
+    document.getElementById("count-pt").textContent = pt.length;
+    document.getElementById("sub-box").innerHTML = listHtml(sub, "None — no submitted jobs in D1.");
+    document.getElementById("ft-box").innerHTML = listHtml(ft, "No full-time rows.");
+    document.getElementById("pt-box").innerHTML = listHtml(pt, "No PT/C2C rows.");
+  }
+
+  async function load() {
+    const err = document.getElementById("err");
+    let last = null;
+    for (const endpoint of API_CANDIDATES) {
+      try {
+        const res = await fetch(endpoint, { cache: "no-store" });
+        if (!res.ok) { last = "HTTP " + res.status + " " + endpoint; continue; }
+        const data = await res.json();
+        all = Array.isArray(data.jobs) ? data.jobs : [];
+        document.getElementById("meta").textContent =
+          "Live · " + all.length + " D1 rows";
+        err.hidden = true;
+        render();
+        return;
+      } catch (e) {
+        last = String(e && e.message ? e.message : e);
+      }
+    }
+    err.hidden = false;
+    err.textContent = "Could not load /api/jobs. Empty state — no invented rows. " + (last || "");
+    all = [];
+    document.getElementById("stat-sub").textContent = "0";
+    document.getElementById("stat-ft").textContent = "0";
+    document.getElementById("stat-pt").textContent = "0";
+    const empty = "<div class=\"empty\">Empty — API unavailable. No placeholder jobs.</div>";
+    document.getElementById("sub-box").innerHTML = empty;
+    document.getElementById("ft-box").innerHTML = empty;
+    document.getElementById("pt-box").innerHTML = empty;
+  }
+
+  document.getElementById("q").addEventListener("input", render);
+  document.querySelectorAll(".chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      kind = btn.getAttribute("data-kind") || "all";
+      document.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+      render();
+    });
+  });
+  load();
+})();
+</script>
+</body>
+</html>
