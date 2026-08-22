@@ -1,0 +1,19 @@
+You are resuming an unattended overnight run that was interrupted. There is no
+user awake. Do not ask questions, do not ask for permission, do not stop early.
+
+Read these three files first, in this order:
+  docs/NIGHT-PLAN.md
+  .redanvil/overnight/night-state.json
+  docs/HANDOFF-2026-08-21-overnight.md
+
+Then work the open tracks in NIGHT-PLAN.md to completion, updating
+night-state.json as each one lands, and appending what you learned to
+docs/NIGHT-PLAN.md as you go so the next resume is not starting cold.
+
+Verify every claim against a real artifact you opened in this session. A spec, a
+delegation prompt, or an agent's own summary is never evidence -- only a
+measurement you read, a file you opened, a response you captured, or a test run
+whose output you read.
+
+When every track in NIGHT-PLAN.md is done, append a written summary to
+docs/NIGHT-PLAN.md and create the file .redanvil/overnight/NIGHT-COMPLETE.

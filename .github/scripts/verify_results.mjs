@@ -123,10 +123,31 @@ if (fresh.finalScore !== committed.finalScore) {
 }
 
 if (fresh.evaluated !== committed.evaluated || fresh.total !== committed.total) {
-  fail(
+  // NAME THE RULES, do not just print the counts.
+  //
+  // "committed 83/83, reproduced 61/83" has been the whole of this failure for
+  // days, and it is unactionable: it says 22 rules went missing without saying
+  // which 22, so every reading of it has been a guess. The project's own
+  // hardest-won lesson is that the fix for a stuck diagnosis is usually to
+  // print the evidence the code already has rather than to reason harder --
+  // `--prompt=A` ended three sessions of hypotheses the moment it was printed.
+  // Both rule lists are in memory right here; withholding them costs nothing
+  // and buys nothing.
+  const committedIds = new Set(committed.rules.map((r) => r.ruleId));
+  const freshIds = new Set(fresh.rules.map((r) => r.ruleId));
+  const onlyCommitted = [...committedIds].filter((id) => !freshIds.has(id)).sort();
+  const onlyFresh = [...freshIds].filter((id) => !committedIds.has(id)).sort();
+  const detail = [
     `coverage mismatch: committed ${committed.evaluated}/${committed.total}, ` +
-      `reproduced ${fresh.evaluated}/${fresh.total}.`
-  );
+      `reproduced ${fresh.evaluated}/${fresh.total}.`,
+    onlyCommitted.length
+      ? `measured when the result was committed but NOT reproduced here (${onlyCommitted.length}): ${onlyCommitted.join(', ')}`
+      : 'no rule measured at commit time is missing from the reproduction.',
+    onlyFresh.length
+      ? `reproduced here but absent from the committed result (${onlyFresh.length}): ${onlyFresh.join(', ')}`
+      : 'the reproduction introduced no rule the committed result lacks.'
+  ].join('\n  ');
+  fail(detail);
 }
 
 /**

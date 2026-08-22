@@ -1,0 +1,14 @@
+{
+  "night": "2026-08-21",
+  "concept": "a job application site",
+  "slug": "job-application-site",
+  "autonomous": true,
+  "gatePolicy": "auto-resolve, record alternatives, owner re-picks in the morning",
+  "tracks": {
+    "auto-gates": { "status": "delegated", "worktree": "C:/Users/brian/RedAnvil-wt/autogates" },
+    "hardening": { "status": "delegated", "worktree": "C:/Users/brian/RedAnvil-wt/hardening" },
+    "full-build": { "status": "blocked-on-auto-gates", "executionId": null },
+    "ci-red": { "status": "not-started" }
+  },
+  "updatedAt": "2026-08-21T00:00:00Z"
+}
