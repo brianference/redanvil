@@ -1,0 +1,46 @@
+Build a job application site for a person who is job hunting.
+
+The core problem: someone applying to twenty or thirty roles loses track of which
+ones they sent, when they sent them, what stage each is at, and which ones have
+gone quiet long enough to chase. Spreadsheets are what people actually use, and
+they are bad at it because they do not know when a posting closes, they do not
+remember the job description after the tab is closed, and they never remind
+anyone to follow up.
+
+The site does three things.
+
+First, it shows real, current job openings pulled from a genuine public jobs API
+and lets the visitor search and filter them by title, location, remote-or-onsite,
+and posting date. The listings must come from a live source over the network, not
+from a file committed to the repo and not from invented rows. Verify that the
+source you choose really exists, really returns the fields you rely on, and
+really permits this use before you build against it -- check its live response
+and its terms, and record what you checked in the reuse scan. If the first source
+you try does not hold up, use a different real one and say why. Do not fabricate
+listings under any circumstances; an empty result from a real API is correct and
+a full page of invented jobs is a failure.
+
+Second, it lets the visitor save a listing as an application they are tracking,
+and move it through stages: saved, applied, screening, interviewing, offer,
+rejected. Each tracked application keeps a snapshot of the job description as it
+was when saved, because postings disappear, plus the date applied, a free-text
+notes field, and a link back to the original posting.
+
+Third, it tells the visitor what needs attention today: applications with no
+movement past a threshold the visitor sets, upcoming interview dates they have
+entered, and postings they saved but never applied to. This is the screen the
+site opens on, because a tracker nobody opens is a spreadsheet with extra steps.
+
+Accounts are needed, since the tracked applications are personal. Keep the
+sign-in simple and real -- an email-based account with the data stored in
+Cloudflare D1. Never Supabase.
+
+It has to work on a phone first. Someone reads a job posting on their phone on
+the train and saves it there; they do the longer note-writing at a desk later.
+Both themes, light and dark, must be legible, and the light theme must actually
+be light rather than a dark hero dropped into a pale page.
+
+What this is NOT: it is not an applicant tracking system for employers, it is
+not a marketplace, it is not a resume builder, and it does not auto-apply to
+anything on the visitor's behalf. It is one job seeker's view of their own
+search.
