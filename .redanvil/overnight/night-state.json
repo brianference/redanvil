@@ -5,10 +5,47 @@
   "autonomous": true,
   "gatePolicy": "auto-resolve, record alternatives, owner re-picks in the morning",
   "tracks": {
-    "auto-gates": { "status": "delegated", "worktree": "C:/Users/brian/RedAnvil-wt/autogates" },
-    "hardening": { "status": "delegated", "worktree": "C:/Users/brian/RedAnvil-wt/hardening" },
-    "full-build": { "status": "blocked-on-auto-gates", "executionId": null },
-    "ci-red": { "status": "not-started" }
+    "auto-gates": {
+      "status": "merged",
+      "commit": "5c195cb",
+      "evidence": "6/6 tests; guard-deletion probe fails the isolating case",
+      "liveProof": "realistic fixture: logo->mark-03 via recommendation prose, palette->palette-01, layout->option-a, all exit 0; contract tokens mark-05/palette-05/dark/Forbidden survived the append; decide.mjs recorded 3 axes exit 0"
+    },
+    "hardening": {
+      "status": "merged",
+      "commit": "5ac5e34",
+      "evidence": "35/35 via npm run test:n8n; measureRoot regression fails test 6 alone"
+    },
+    "prd-typing": {
+      "status": "merged",
+      "commit": "8f35e16",
+      "evidence": "real PRD regenerated: appType SaaS, title/slug correct, entities Account"
+    },
+    "auth-identity": {
+      "status": "merged",
+      "commit": "e3e4fde",
+      "evidence": "regenerated PRD: hasAuth true, 'fully public' sentence gone, 0 pronoun feature names; reverting isAccountsFeature to the positional identity fails a dedicated test"
+    },
+    "ci-red": {
+      "status": "diagnosed; orchestrator regression found and fixed (d0e9ccb), green in CI",
+      "finding": "all 22 missing rules are recorded-verdict rules dropped as stale; results-provenance is structurally red, not intermittently"
+    },
+    "full-build": {
+      "status": "blocked-on-auth-identity",
+      "stoppedAt": "execution 64, step 3 of 24",
+      "reason": "PRD said hasAuth:false and 'fully public' against a prompt requiring accounts"
+    },
+    "prd-entities": {
+      "status": "delegated-retry",
+      "worktree": "C:/Users/brian/RedAnvil-wt/entities",
+      "defect": "prd.mjs never fills #wizard-entities, so generate.ts falls back to a heuristic and produced entities:['Account'] with an all-Account feature set",
+      "note": "first Grok run died silently with a 413-byte log and no diff; retried"
+    }
   },
-  "updatedAt": "2026-08-21T00:00:00Z"
+  "updatedAt": "2026-08-22T06:10:00Z",
+  "deployed": {
+    "app-builder": "https://redanvil.pages.dev",
+    "assetHash": "index-SeyevhA7.js",
+    "verified": "prod hash == local dist; e2e_smoke_app_builder PASS"
+  }
 }

@@ -183,3 +183,54 @@ This is a HYPOTHESIS consistent with both runs, not a diagnosis. What would
 settle it: run the suite with a deliberately dirty tree and see whether those
 two cases fail on demand. Until that is done the correct status is UNRESOLVED,
 and the suite must not be run while another process is touching git.
+
+## CI after the night's pushes
+
+Run 32555572351 (`d0e9ccb`): `orchestrator` **success**. That lane had failed on
+the previous run with TS7016 because `prdTyping.test.ts` imports `prd.mjs` and
+the orchestrator tsconfig sets noImplicitAny -- a regression this night
+introduced and this night fixed, confirmed in CI rather than assumed from a
+local typecheck.
+
+Also green: `repo-checks`, `apps (app-builder)`, `apps (dashboard)`,
+`dashboard-provenance`, `sushi-finder-acceptance`.
+
+Two lanes remain red, and BOTH are now understood rather than lumped together:
+
+- `apps-meet-the-bar` -- EXPECTED. The gate honestly refusing 6/6 apps below
+  the finish line. Written down with the job name so it cannot absorb the next
+  unrelated failure.
+- `results-provenance` -- STRUCTURAL, diagnosed above. All 22 missing rules are
+  recorded verdicts dropped as stale. It cannot go green by re-gating.
+
+Nothing else is red. That is the first time this repo's CI has had every
+failing lane explained by a named cause.
+
+## The four gates are proven to chain unattended, before the build reaches them
+
+Built a realistic app tree (five padded PNG marks, a logos gallery and an OPEN
+DECISION.md whose prose says "mark-03 is the strongest at favicon size", five
+palette ids in a gallery, three layout options plus a gallery) and ran the real
+resolver against it rather than a synthetic fixture:
+
+```
+auto-decide: logo    -> mark-03    (recommendation line)
+auto-decide: palette -> palette-01 (first in sorted order)
+auto-decide: layout  -> option-a   (first in sorted order)
+```
+
+All exit 0. It read the recommendation out of real prose rather than defaulting,
+which is the branch a synthetic fixture would not have exercised.
+`public/brand-mark.png` was created, and `evidence/auto-gate-decisions.json`
+accumulated all three axes with alternatives and `provisional: true`.
+
+Every process-map contract token SURVIVED the append -- `mark-05`,
+`palette-05`, `dark`, `Forbidden` all still present. That is why the resolver
+appends instead of rewriting; a rewrite would have destroyed the step contracts
+it was meant to satisfy.
+
+Then `decide.mjs` -- which cannot manufacture a decision, only record one --
+accepted them: "decide: 3 axis/axes recorded -- logo, palette, layout", exit 0.
+
+So steps 6, 7, 8 and 9 of the 24 are known to chain without a human before the
+build has run them.
