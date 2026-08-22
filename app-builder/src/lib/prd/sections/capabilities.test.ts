@@ -38,6 +38,18 @@ describe('capability detection', () => {
     expect(extractSubject('a simple tool', ['invoices'])).toBe('invoice');
   });
 
+  it('does not use a pronoun as the capability subject', () => {
+    expect(extractSubject('loses track of which ones they sent', ['Application'])).toBe(
+      'Application'
+    );
+    expect(extractSubject('someone loses track of them after sending', ['Application'])).toBe(
+      'Application'
+    );
+    expect(extractSubject('search those listings by title', ['Listing']).toLowerCase()).toMatch(
+      /listing/
+    );
+  });
+
   it('is deterministic — a spec that changes on regeneration is not a spec', () => {
     expect(detectCapabilities(FLIGHT, ['flight times'])).toEqual(
       detectCapabilities(FLIGHT, ['flight times'])

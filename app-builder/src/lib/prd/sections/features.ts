@@ -45,6 +45,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
     features.push(
       {
         id: 'F1',
+        role: 'entity-browse',
         name: `Browse & search ${primary}`,
         behavior: `Users can open the ${primaryTable} list, search by title, and see matching rows or an empty state.`,
         mvp: true,
@@ -72,6 +73,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
       },
       {
         id: 'F2',
+        role: 'entity-detail',
         name: `${primary} detail`,
         behavior: `Clicking a list row opens the full ${primary} record with title, description, and a back link. Any external URL from data is rendered only after safeHttpUrl/safeHref validation (no anchor when unsafe).`,
         mvp: true,
@@ -96,6 +98,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
   if (hasAuth) {
     features.push({
       id: 'F3',
+      role: 'accounts',
       name: 'Accounts',
       behavior:
         'Register and sign in with Web Crypto (PBKDF2 + HMAC-SHA256 sessions); data is scoped to the signed-in user.',
@@ -119,6 +122,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
   } else {
     features.push({
       id: 'F3',
+      role: 'public-access',
       name: 'Public access',
       behavior: 'No login required; all product pages and APIs are public.',
       mvp: true,
@@ -143,6 +147,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
   if (primary && primaryTable) {
     features.push({
       id: 'F4',
+      role: 'entity-manage',
       name: `Manage ${primary}`,
       behavior: `Create, edit, and delete ${primaryTable} with confirmation before delete.`,
       mvp: true,
@@ -176,6 +181,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
     const id = `F${5 + index}`;
     features.push({
       id,
+      role: 'entity-manage',
       name: `Manage ${pascal}`,
       behavior: `Create, edit, and delete ${table} with confirmation before delete.`,
       mvp: false,
@@ -213,6 +219,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
 
   features.push({
     id: `F${features.length + 1}`,
+    role: 'search-filter',
     name: `Search and filter ${collectionTitle}`,
     behavior: `Users can search or filter the ${collectionLabel} collection with a control whose accessible name matches /search|find|filter/i; the query must narrow the visible results (a decorative box fails).`,
     mvp: true,
@@ -239,6 +246,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
 
   features.push({
     id: `F${features.length + 1}`,
+    role: 'assistant',
     name: `Ask the assistant about ${assistantSubject}`,
     behavior: `A chat affordance reachable from the shell posts to functions/api/assistant.ts (or equivalent). The Worker calls Cloudflare Workers AI (env.AI) and grounds the answer in this app's own data -- not general knowledge. A failed model call surfaces an error state, never an empty success. No secrets in code; the binding comes from env.`,
     mvp: true,
@@ -268,6 +276,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
 
   features.push({
     id: `F${features.length + 1}`,
+    role: 'required-pages',
     name: 'Required pages & SEO',
     behavior:
       'Ship Home, About, Terms, Privacy, Contact with per-route SEO, sitemap, and robots.txt.',
@@ -408,8 +417,27 @@ export function entitiesRequiredByFeatures(
 }
 
 /**
+ * Whether this feature is the accounts/session feature, identified by the
+ * role discriminant set where it was constructed. Ids are positional and
+ * names are display copy — neither is identity.
+ *
+ * @param feature - A derived feature spec.
+ * @returns True when the feature is the accounts feature.
+ */
+export function isAccountsFeature(feature: FeatureSpec): boolean {
+  return feature.role === 'accounts';
+}
+
+/**
  * Whether auth tables/routes stay in the PRD after feature selection.
- * Legacy path (no selection filter applied upstream) keeps the wizard flag as-is.
+ *
+ * An explicit wizard Yes is kept even when the accounts feature is missing
+ * from the selection. Silently rewriting that Yes as hasAuth: false is the
+ * measured defect (provenance Yes, front matter false). An explicit No
+ * always wins, whatever is selected.
+ *
+ * The accounts feature is identified by {@link isAccountsFeature} (role),
+ * not by a positional id. Ids are reassigned after capability features lead.
  *
  * @param wizardHasAuth - Auth flag from the Scope step.
  * @param selectedFeatures - Features that will appear in the PRD.
@@ -419,10 +447,15 @@ export function authRequiredByFeatures(
   wizardHasAuth: boolean,
   selectedFeatures: FeatureSpec[]
 ): boolean {
-  if (!wizardHasAuth) {
-    return false;
-  }
-  return selectedFeatures.some((feature) => feature.id === 'F3' && feature.name === 'Accounts');
+  // An explicit No always wins. An explicit Yes is ALWAYS kept -- including
+  // when the accounts feature is absent from the selection, which is the
+  // contradiction that produced the measured defect. `selectedFeatures` is
+  // therefore not consulted: writing `some(isAccountsFeature) ? true : true`
+  // would read as a decision while making none. generate.ts uses
+  // isAccountsFeature separately to SAY in the PRD that auth was kept despite
+  // the selection, which is where that distinction belongs.
+  void selectedFeatures;
+  return wizardHasAuth;
 }
 
 /**
@@ -467,7 +500,7 @@ function rationaleForFeature(
   if (feature.name.endsWith(' detail')) {
     return `From entity ${primary} (open a single record)`;
   }
-  if (feature.name === 'Accounts' || feature.name === 'Public access') {
+  if (feature.role === 'accounts' || feature.role === 'public-access') {
     return hasAuth
       ? 'From sign-in = Yes (accounts and session-scoped data)'
       : 'From sign-in = No (public pages and APIs)';

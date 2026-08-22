@@ -306,11 +306,14 @@ describe('generatePrd', () => {
     expect(md).not.toContain('DriverCreateSchema');
     expect(md).not.toContain('GET | `/api/drivers`');
 
-    // Deselected Accounts feature (and auth-only schema) absent
-    expect(md).not.toMatch(/### F3 — Accounts/);
-    expect(md).not.toContain('CREATE TABLE IF NOT EXISTS users');
-    expect(md).not.toContain('POST | `/api/auth/register`');
-    expect(md).toContain('hasAuth: false');
+    // Accounts FEATURE section omitted (deselected). An explicit Yes is kept:
+    // front matter stays hasAuth true and auth schema remains, with the
+    // contradiction stated in the document rather than papered over as false.
+    expect(md).not.toMatch(/### F\d+ — Accounts/);
+    expect(md).toContain('CREATE TABLE IF NOT EXISTS users');
+    expect(md).toContain('POST | `/api/auth/register`');
+    expect(md).toContain('hasAuth: true');
+    expect(md).toMatch(/sign-in was answered Yes/);
 
     // Beyond-MVP pages feature was not selected either
     expect(md).not.toMatch(/### F\d+ — Required pages & SEO/);

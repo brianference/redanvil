@@ -279,6 +279,98 @@ const ENTITY_STOP = new Set([
 ]);
 
 /**
+ * Pronouns that cannot be the head (or a remaining content word) of a domain
+ * entity or a feature subject. A phrase-shape heuristic matching these is how
+ * "loses track of which ones they sent" became a feature name.
+ */
+const PRONOUN_HEADS = new Set([
+  'ones',
+  'one',
+  'those',
+  'them',
+  'it',
+  'they',
+  'which',
+  'anyone',
+  'anybody',
+  'someone',
+  'somebody',
+  'everyone',
+  'everybody',
+  'nobody',
+  'you'
+]);
+
+/**
+ * Leading determiners stripped before the remaining words are checked for
+ * pronouns. "those listings" is headed by listings; a bare "those" is not.
+ */
+const NP_DETERMINERS = new Set(['a', 'an', 'the', 'this', 'that', 'these', 'those', 'which']);
+
+/**
+ * Content words of a short noun phrase after leading determiners are dropped.
+ *
+ * @param phrase - Entity or subject candidate.
+ * @returns Lowercased remaining words, or empty.
+ */
+function nounPhraseContentWords(phrase: string): string[] {
+  const words = phrase
+    .trim()
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+  while (words.length > 1 && NP_DETERMINERS.has(words[0]!)) {
+    words.shift();
+  }
+  return words;
+}
+
+/**
+ * Whether a phrase is unusable as a domain entity or feature subject because
+ * a remaining content word is a pronoun (`ones`, `them`, `they`, …).
+ *
+ * "those listings" is allowed (determiner + noun). "ones they sent" is not.
+ *
+ * @param phrase - Entity or subject candidate.
+ * @returns True when the phrase cannot be a domain noun.
+ */
+export function hasPronounHead(phrase: string): boolean {
+  const words = nounPhraseContentWords(phrase);
+  if (words.length === 0) return true;
+  return words.some((word) => PRONOUN_HEADS.has(word));
+}
+
+/**
+ * Whether a phrase is a lone attributive adjective, not a domain noun.
+ * Same check {@link deriveEntities} uses so extractSubject cannot title a
+ * feature "Search real" from "shows real, current job openings".
+ *
+ * @param phrase - Subject candidate.
+ * @returns True when the whole phrase is one listed adjective.
+ */
+export function isBareAdjective(phrase: string): boolean {
+  const words = phrase
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+  return words.length === 1 && TITLE_BARE_ADJECTIVES.has(words[0]!);
+}
+
+/**
+ * Whether a single token is an entity-mining stopword (verbs, function words,
+ * generic software words). A capture that is only this cannot be a subject.
+ *
+ * @param word - One token.
+ * @returns True when the token is not a domain noun.
+ */
+export function isEntityStopWord(word: string): boolean {
+  return ENTITY_STOP.has(word.trim().toLowerCase());
+}
+
+/**
  * Strip generator directives and bare URLs from product-facing prose.
  * Carries named references (URLs, "reverse engineer …" clauses) for §7.
  *
@@ -399,6 +491,8 @@ export function deriveEntities(prompt: string): string[] {
     if (ENTITY_STOP.has(key)) return;
     // A lone adjective is not a domain noun ("Real" from "real, current job openings").
     if (TITLE_BARE_ADJECTIVES.has(key)) return;
+    // A pronoun is not a domain noun ("ones they sent" from "which ones they sent").
+    if (hasPronounHead(raw) || hasPronounHead(pascal)) return;
     // "Never Supabase" is two capitalised words whose first is a stopword.
     const firstRaw = raw.trim().split(/\s+/)[0]?.toLowerCase() ?? '';
     if (ENTITY_STOP.has(firstRaw)) return;

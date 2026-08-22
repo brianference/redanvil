@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import type { FeatureRole, FeatureSpec } from '../types';
 import {
+  authRequiredByFeatures,
   buildFeatureSuggestions,
   buildFeatures,
   defaultSelectedFeatureIds,
-  filterFeaturesBySelection
+  filterFeaturesBySelection,
+  isAccountsFeature
 } from './features';
 
 describe('buildFeatureSuggestions', () => {
@@ -53,6 +56,40 @@ describe('buildFeatures standard features', () => {
     const features = buildFeatures([], false, 'a simple utility');
     expect(features.some((f) => f.name.startsWith('Search and filter '))).toBe(true);
     expect(features.some((f) => f.name.startsWith('Ask the assistant about '))).toBe(true);
+  });
+});
+
+/**
+ * Minimal FeatureSpec for identity tests. Every required field is present;
+ * only role/id/name vary.
+ *
+ * @param role - Discriminant under test.
+ * @param id - Positional id (must not be identity).
+ * @param name - Display name (must not be identity).
+ * @returns A FeatureSpec stub.
+ */
+function spec(role: FeatureRole, id: string, name: string): FeatureSpec {
+  return {
+    id,
+    role,
+    name,
+    behavior: 'stub',
+    mvp: true,
+    acceptance: [],
+    tests: { unit: [], integration: [], e2e: [] }
+  };
+}
+
+describe('isAccountsFeature / authRequiredByFeatures identity', () => {
+  it('identifies accounts by role at a non-F3 id, not by display name', () => {
+    expect(isAccountsFeature(spec('accounts', 'F8', 'Sign in'))).toBe(true);
+    expect(isAccountsFeature(spec('entity-browse', 'F3', 'Accounts'))).toBe(false);
+    expect(authRequiredByFeatures(true, [spec('accounts', 'F8', 'Sign in')])).toBe(true);
+    expect(authRequiredByFeatures(true, [spec('entity-browse', 'F3', 'Accounts')])).toBe(true);
+  });
+
+  it('returns false when wizardHasAuth is false even if an accounts feature is selected', () => {
+    expect(authRequiredByFeatures(false, [spec('accounts', 'F8', 'Sign in')])).toBe(false);
   });
 });
 

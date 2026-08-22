@@ -49,7 +49,7 @@ export function buildSlices(opts: {
     // hence `public_access` and `compute_airline_flight_totals` tables.
     const isPrimaryBrowse = feature.name === `Browse & search ${primary}`;
     const isPrimaryDetail = feature.name === `${primary} detail`;
-    const isAccess = feature.name === 'Accounts' || feature.name === 'Public access';
+    const isAccess = feature.role === 'accounts' || feature.role === 'public-access';
     const isPrimaryManage = feature.name === `Manage ${primary}`;
     const isPages = feature.name.startsWith('Required pages');
     const isSearchFilter = feature.name.startsWith('Search and filter ');

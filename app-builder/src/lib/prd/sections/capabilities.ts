@@ -1,5 +1,5 @@
 import type { FeatureSpec } from '../types';
-import { requirementLines } from '../naming';
+import { hasPronounHead, isBareAdjective, isEntityStopWord, requirementLines } from '../naming';
 
 /**
  * What the app actually DOES, extracted from the prompt.
@@ -143,30 +143,58 @@ const GENERIC_SUBJECTS =
   /^(?:an?\s+)?(?:simple\s+|full[- ]stack\s+|mobile[- ]first\s+|web\s+)*(?:app|application|tool|system|site|website|platform|dashboard|record|thing|product|service)s?$/i;
 
 /**
+ * Whether a captured subject phrase is a usable domain noun.
+ *
+ * @param raw - Cleaned capture from the prompt.
+ * @returns True when the phrase can name a feature subject.
+ */
+function isUsableSubject(raw: string): boolean {
+  if (raw.length <= 2) return false;
+  if (GENERIC_SUBJECTS.test(raw)) return false;
+  if (hasPronounHead(raw)) return false;
+  if (isBareAdjective(raw)) return false;
+  const words = raw.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 1 && isEntityStopWord(words[0]!)) return false;
+  const first = raw.split(/\s+/)[0]?.toLowerCase() ?? '';
+  // Coordinating residue from "search and filter them".
+  if (first === 'and' || first === 'or' || first === 'but') return false;
+  return true;
+}
+
+/**
  * The thing the app acts on.
  *
  * Prefers the prompt, because that is where the domain lives, but falls back to
  * the primary entity when the prompt only yields a word for "software" — the
  * first version produced "Schedule app" and "Alerts for record", which name
- * nothing.
+ * nothing. A pronoun-headed capture (`ones they sent`, `them`) is skipped the
+ * same way a generic "app" is skipped.
  *
  * @param prompt - Raw prompt text.
  * @param entities - Domain entity names, primary first.
  * @returns A short subject phrase.
  */
 export function extractSubject(prompt: string, entities: readonly string[] = []): string {
-  const m =
-    /\b(?:find|finds|search(?:es)? for|searches|compare[s]?|track(?:s|ing)?|schedul\w*|book[s]?|show[s]?|list[s]?|display[s]?|browse[s]?|view[s]?|remind(?:s|ers?)?(?:\s+you)?(?:\s+when)?)\s+(?:the\s+|what\s+is\s+|you\s+when\s+(?:your\s+)?)?(?:[a-z]+\s+){0,3}?([a-z][a-z0-9 ]{2,40}?)(?:\s+(?:with|by|that|which|for|based|in|marked|needs)\b|[.,]|$)/i.exec(
-      prompt
-    );
-  const raw = (m?.[1] ?? '')
-    .replace(/\b(lowest|highest|cheapest|best|fastest|cost|price|current)\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  const fromPrompt = raw.length > 2 && !GENERIC_SUBJECTS.test(raw) ? raw : '';
-  if (fromPrompt.length > 0) return fromPrompt;
+  const subjectRe =
+    /\b(?:find|finds|search(?:es)? for|searches|compare[s]?|track(?:s|ing)?|schedul\w*|book[s]?|show[s]?|list[s]?|display[s]?|browse[s]?|view[s]?|remind(?:s|ers?)?(?:\s+you)?(?:\s+when)?)\s+(?:the\s+|what\s+is\s+|you\s+when\s+(?:your\s+)?)?(?:[a-z]+\s+){0,3}?([a-z][a-z0-9 ]{2,40}?)(?:\s+(?:with|by|that|which|for|based|in|marked|needs)\b|[.,]|$)/i;
+  let searchFrom = 0;
+  while (searchFrom < prompt.length) {
+    const slice = prompt.slice(searchFrom);
+    const match = subjectRe.exec(slice);
+    if (match === null) break;
+    const raw = (match[1] ?? '')
+      .replace(/\b(lowest|highest|cheapest|best|fastest|cost|price|current)\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (isUsableSubject(raw)) return raw;
+    const relIndex = match.index;
+    searchFrom += relIndex + Math.max(1, match[0].length);
+  }
   const entity = (entities[0] ?? '').trim();
-  return entity.length > 0 ? entity.replace(/s$/i, '') : 'record';
+  if (entity.length > 0 && !hasPronounHead(entity)) {
+    return entity.replace(/s$/i, '');
+  }
+  return 'record';
 }
 
 /**
@@ -225,7 +253,7 @@ export function capabilityFeatures(
   capabilities: readonly Capability[],
   startIndex: number
 ): FeatureSpec[] {
-  const out: FeatureSpec[] = [];
+  const out: Array<Omit<FeatureSpec, 'role'>> = [];
   let n = startIndex;
 
   for (const cap of capabilities) {
@@ -477,5 +505,5 @@ export function capabilityFeatures(
     }
   }
 
-  return out;
+  return out.map((feature) => ({ ...feature, role: 'capability' as const }));
 }

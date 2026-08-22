@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import {
   deriveEntities,
   entityPascal,
+  hasPronounHead,
   isTitleFragment,
   primaryEntity,
   requirementLines,
@@ -146,6 +147,20 @@ describe('job-application-site prompt (overnight, exact file)', () => {
     expect(JOB_APPLICATION_PROMPT).toMatch(/Spreadsheets are what people actually use/);
     const entities = deriveEntities(JOB_APPLICATION_PROMPT);
     expect(entities.map((e) => e.toLowerCase())).not.toContain('spreadsheet');
+  });
+
+  it('rejects a pronoun-headed phrase as an entity, not only one wording', () => {
+    expect(hasPronounHead('ones they sent')).toBe(true);
+    expect(hasPronounHead('them')).toBe(true);
+    expect(hasPronounHead('those')).toBe(true);
+    expect(hasPronounHead('those listings')).toBe(false);
+    expect(hasPronounHead('Application')).toBe(false);
+    const ones = deriveEntities(
+      'a tracker of ones they filed last week and ones they filed this week'
+    );
+    expect(ones.every((entity) => !hasPronounHead(entity))).toBe(true);
+    const them = deriveEntities('a log of them they sent after the tab closed');
+    expect(them.every((entity) => !hasPronounHead(entity))).toBe(true);
   });
 
   it('still derives Spreadsheet when the product IS a spreadsheet app', () => {

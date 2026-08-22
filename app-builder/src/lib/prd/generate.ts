@@ -20,6 +20,7 @@ import {
   buildFeatures,
   entitiesRequiredByFeatures,
   filterFeaturesBySelection,
+  isAccountsFeature,
   renderAcceptanceCriteria,
   renderCoreFeatures,
   renderTestPlan
@@ -173,7 +174,11 @@ export function generatePrd(
   const entityNames = selectionActive
     ? entitiesRequiredByFeatures(derivedEntityNames, features)
     : derivedEntityNames;
+  // Picked behaviour: keep the user's sign-in answer. Feature selection may
+  // omit the accounts *section*, but an explicit Yes is never rewritten as
+  // hasAuth: false in front matter (measured: provenance Yes, yaml false).
   const hasAuth = selectionActive ? authRequiredByFeatures(wizardHasAuth, features) : wizardHasAuth;
+  const accountsSelected = features.some(isAccountsFeature);
   const hasDomainTables = dataStorage !== 'none' && entityNames.length > 0;
   const mvpFeatures = features.filter((f) => f.mvp);
   const featureIds = features.map((f) => f.id).join(', ');
@@ -252,7 +257,9 @@ export function generatePrd(
     `The app solves the problem with a ${appType.toLowerCase()} built on Cloudflare Pages (Vite + React + TypeScript SPA), Pages Functions for the API, and Cloudflare D1 for persistence (${storageLabel(dataStorage)}).`,
     `Domain entities in scope: **${entityListLabel}**.`,
     hasAuth
-      ? 'Authentication uses Web Crypto only (PBKDF2 + HMAC session cookies); all domain rows are scoped to the signed-in user.'
+      ? wizardHasAuth && selectionActive && !accountsSelected
+        ? 'Authentication remains in scope because sign-in was answered Yes, even though no accounts feature is in the selected set. Authentication uses Web Crypto only (PBKDF2 + HMAC session cookies); all domain rows are scoped to the signed-in user.'
+        : 'Authentication uses Web Crypto only (PBKDF2 + HMAC session cookies); all domain rows are scoped to the signed-in user.'
       : 'The product is fully public — no register/login, no session middleware, no user-owned scoping.',
     `Users complete MVP flows (${mvpIds || 'none'}) first: browse and manage the primary entity, open detail, and ${hasAuth ? 'sign in' : 'use the app anonymously'}.`,
     'Each capability is delivered as a vertical slice (DB + API + UI + tests) so something works end-to-end after every slice, not only at the end of a horizontal phase plan.'
