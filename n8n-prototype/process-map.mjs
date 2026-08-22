@@ -25,6 +25,10 @@
  * @property {number} [minBytes] substance floor for a file
  * @property {number} [minCount] minimum matching entries for a directory
  * @property {string} [glob] extension filter for a directory count, e.g. '.png'
+ * @property {boolean} [topLevel] count only files directly in the directory,
+ *   never in subdirectories. Set it wherever a role leaves scratch behind: the
+ *   logo role writes a `logos/raw/` working directory, and a recursive count
+ *   lets throwaway candidates there stand in for the five finished marks.
  * @property {string[]} [mustContain] substrings that must appear in a text file
  * @property {string[]} [mustNotContain] substrings that disqualify it (placeholders)
  * @property {string} why the failure this contract exists to prevent
@@ -202,6 +206,21 @@ export const PROCESS = [
         why: 'pet-sitter shipped a single copied mark because this step never ran; the chosen mark must reach public/, not just an archive'
       },
       {
+        // COUNT THE MARKS. The DECISION.md `mustContain: ['mark-05']` below was
+        // the only thing standing for "five were explored", and its own comment
+        // claimed a single copied mark "cannot fake" it. It can: mark-05 is a
+        // string, and prose naming it satisfies a substring check with one PNG
+        // on disk, or none. That is a check that cannot fail, which is not a
+        // check. `layout` has counted its options since it was written; logo
+        // and palette never did, and the inconsistency is the whole bug.
+        path: 'design-refs/logos',
+        kind: 'dir',
+        glob: '.png',
+        minCount: 5,
+        topLevel: true,
+        why: 'five real marks is the requirement; a proxy for it in prose is satisfied by one mark and a sentence'
+      },
+      {
         path: 'design-refs/logos/gallery.html',
         kind: 'file',
         minBytes: 800,
@@ -225,6 +244,17 @@ export const PROCESS = [
     humanGate: true,
     skippable: false,
     requires: [
+      {
+        // Same defect as logo: the role is asked for palette-01..05.html and
+        // nothing counted them, so five directions rested entirely on the word
+        // "palette-05" appearing in a document. Six files = five directions
+        // plus the gallery, which the next contract requires separately.
+        path: 'design-refs/palettes',
+        kind: 'dir',
+        glob: '.html',
+        minCount: 6,
+        why: 'five colour+type directions must EXIST as files; a gallery and a sentence can describe five that were never built'
+      },
       {
         path: 'design-refs/palettes/gallery.html',
         kind: 'file',

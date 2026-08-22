@@ -146,7 +146,13 @@ export function checkContract(appDir, c) {
       reasons.push(`${c.path} is not a directory`);
       return { path: c.path, ok: false, reasons };
     }
-    const entries = readdirSync(full, { recursive: true, withFileTypes: true })
+    // `topLevel` exists because the recursive count is satisfiable by scratch.
+    // The logo role leaves a `logos/raw/` working directory behind, so counting
+    // recursively would let twenty throwaway candidates in raw/ stand in for the
+    // five finished marks -- the count would pass while the artifact the owner
+    // picks from does not exist. A contract satisfied by a scratch directory is
+    // the same failure as one satisfied by prose, one level less obvious.
+    const entries = readdirSync(full, { recursive: c.topLevel !== true, withFileTypes: true })
       .filter((e) => e.isFile())
       .map((e) => e.name)
       .filter((n) => (c.glob ? n.toLowerCase().endsWith(c.glob) : true));
