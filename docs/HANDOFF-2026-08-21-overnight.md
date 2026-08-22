@@ -83,6 +83,22 @@ User approved delegating these to Grok Build.
 **4. Trigger the n8n full build for a new concept.** Not specced yet. Needs a
 concept, and needs something to POST the webhook tonight.
 
+**5. CI is red on master, and not for the reason it looks like.** The last three
+pushes all failed. Read the log rather than assuming it is the gate honestly
+refusing unfinished apps -- two of the three failing jobs are a different problem:
+
+```
+RESULTS VERIFICATION FAILED: coverage mismatch: committed 83/83, reproduced 61/83.
+```
+
+`results-provenance` (job 96940080897) and `quickflight-provenance` (job
+96940080920) both fail this way; `orchestrator` passes. The committed results claim
+all 83 rules were measured, but re-running the gate in CI measures only 61. **22
+rules measure on this machine and do not measure in CI.** Until that is diagnosed,
+the local gate's coverage number is not trustworthy, which matters directly for an
+autonomous night that gates its own work. Do not treat this as a known issue -- it
+was not diagnosed before, only assumed.
+
 ## Open decision, blocks tonight
 
 The process map has **four human gates**: `logo`, `palette`, `layout`, `decide`.
