@@ -30,12 +30,31 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const X_STEP = 220;
 
 /**
+ * Opt-in unattended resolution of the four human gates. Unset (the default)
+ * must leave the generated JSON byte-identical to today's file.
+ */
+const AUTO_GATES =
+  process.env.REDANVIL_AUTO_GATES === '1' || process.env.REDANVIL_AUTO_GATES === 'true';
+
+/**
+ * Decision.md path per auto-resolved axis. Paths taken from decide.mjs AXES
+ * and process-map.mjs -- not invented.
+ * @type {Record<string, string>}
+ */
+const AUTO_AXIS_ARTIFACT = {
+  logo: 'design-refs/logos/DECISION.md',
+  palette: 'design-refs/palettes/DECISION.md',
+  layout: 'design-refs/design-options/DECISION.md'
+};
+
+/**
  * Build the parameter-shaping Code node for one step.
  * @param {import('./process-map.mjs').ProcessStep} step the step
  * @param {number} index position in the ordered map
+ * @param {string} [boundCmd] bound command override used by auto-gate runners
  * @returns {object} an n8n Code node
  */
-function paramsNode(step, index) {
+function paramsNode(step, index, boundCmd) {
   // Each role owns a DISTINCT artifact directory. Point two roles at the same
   // path and each takes credit for the other's work, so the contract's first
   // required path is the role's own territory.
@@ -44,7 +63,7 @@ function paramsNode(step, index) {
   // The bound command is baked in from bindings.mjs. Previously the generator
   // emitted only an env-var lookup with an "echo no runner configured" fallback,
   // so the workflow refused roles the CLI walker could already run.
-  const bound = BINDINGS[step.id] ?? '';
+  const bound = boundCmd ?? BINDINGS[step.id] ?? '';
   return {
     id: `p_${step.id}`,
     name: `${step.id} params`,
@@ -127,11 +146,15 @@ function notifyNode(step, index) {
     position: [X_STEP * (index * 2 + 3), 20],
     parameters: {
       chatId: '={{ $env.REDANVIL_TELEGRAM_CHAT_ID }}',
-      text:
-        `=RedAnvil needs a decision: *${step.id}*\n\n` +
-        `${step.summary}\n\n` +
-        `App: {{ $('Slice config').first().json.slug }}\n` +
-        `Approve or request a redo:\n{{ $execution.resumeFormUrl }}`,
+      text: AUTO_GATES
+        ? `=RedAnvil auto-resolved *${step.id}* -- pending owner review\n\n` +
+          `${step.summary}\n\n` +
+          `App: {{ $('Slice config').first().json.slug }}\n` +
+          `This is a provisional pick, not a preference.`
+        : `=RedAnvil needs a decision: *${step.id}*\n\n` +
+          `${step.summary}\n\n` +
+          `App: {{ $('Slice config').first().json.slug }}\n` +
+          `Approve or request a redo:\n{{ $execution.resumeFormUrl }}`,
       additionalFields: { appendAttribution: false, parse_mode: 'Markdown' }
     },
     credentials: { telegramApi: { id: 'redanvil-telegram', name: 'RedAnvil Telegram' } },
@@ -306,11 +329,32 @@ steps.forEach((step, i) => {
     // Notify BEFORE the wait, never after. A message sent after the gate
     // resolves announces a decision that has already been made.
     const notify = notifyNode(step, i);
-    const approve = approvalNode(step, i);
-    nodes.push(notify, approve);
+    nodes.push(notify);
     connections[previous] = { main: [[{ node: notify.name, type: 'main', index: 0 }]] };
-    connections[notify.name] = { main: [[{ node: approve.name, type: 'main', index: 0 }]] };
-    previous = approve.name;
+    previous = notify.name;
+
+    const autoArtifact = AUTO_AXIS_ARTIFACT[step.id];
+    if (AUTO_GATES && autoArtifact) {
+      // Instead of the Wait node: a params + Role pair so role-run still
+      // refuses a step whose DECISION.md did not change.
+      const autoStep = {
+        id: `auto-${step.id}`,
+        role: 'auto-decide',
+        requires: [{ path: autoArtifact }]
+      };
+      const autoCmd = `node n8n-prototype/roles/auto-decide.mjs --axis=${step.id} --slug={slug} --repoRoot={root}`;
+      const autoParams = paramsNode(autoStep, i, autoCmd);
+      const autoRole = roleNode(autoStep, i);
+      nodes.push(autoParams, autoRole);
+      connections[previous] = { main: [[{ node: autoParams.name, type: 'main', index: 0 }]] };
+      connections[autoParams.name] = { main: [[{ node: autoRole.name, type: 'main', index: 0 }]] };
+      previous = autoRole.name;
+    } else if (!AUTO_GATES) {
+      const approve = approvalNode(step, i);
+      nodes.push(approve);
+      connections[previous] = { main: [[{ node: approve.name, type: 'main', index: 0 }]] };
+      previous = approve.name;
+    }
   }
 });
 connections[previous] = { main: [[]] };
@@ -332,5 +376,6 @@ const gates = steps.filter((s) => s.humanGate).map((s) => s.id);
 console.log(`generated ${out}`);
 console.log(`  ${steps.length} steps -> ${nodes.length} nodes`);
 console.log(`  human gates: ${gates.join(', ')}`);
+console.log(`  auto gates: ${AUTO_GATES ? 'on' : 'off'}`);
 console.log(`  UNBOUND (will fail, not skip): ${unbound.join(', ') || 'none'}`);
 console.log(`  order: ${steps.map((s) => s.id).join(' -> ')}`);
