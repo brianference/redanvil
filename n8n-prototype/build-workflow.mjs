@@ -91,6 +91,7 @@ function paramsNode(step, index, boundCmd) {
         // a command string would otherwise carry.
         `    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot))` +
         `.replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64'))` +
+        `.replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64'))` +
         `.replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];`
     }
   };
@@ -301,7 +302,11 @@ const nodes = [
         "if (!prompt) {\n" +
         "  throw new Error('No prompt: POST a { prompt } body to the webhook, or set REDANVIL_PROMPT. The prd role drives the live app builder with it, and every later role builds what that PRD says, so there is no safe default.');\n" +
         "}\n" +
-        'return [{ json: { repoRoot, runner, slug, prompt } }];'
+        // The domain entities the wizard's own entities field takes. Optional,
+        // and empty is legal: the builder then falls back to deriving them from
+        // the prompt, which is what it did before this existed.
+        "const entities = typeof body.entities === 'string' ? body.entities : ($env.REDANVIL_ENTITIES || '');\n" +
+        'return [{ json: { repoRoot, runner, slug, prompt, entities } }];'
     }
   }
 ];

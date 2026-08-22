@@ -443,10 +443,89 @@ async function clickAndReadBack(page, groupIndex, pick) {
  * @param {Array<{group: string, intended: string, actual: string}>} chosen accumulator of recorded choices, for provenance
  * @returns {Promise<boolean>} whether anything was answered
  */
-async function answerQuestion(page, prompt, chosen) {
+/** Most entities the field will accept. A scope statement, not a noun dump. */
+const MAX_ENTITIES = 5;
+
+/**
+ * Normalise a caller-supplied entity list.
+ *
+ * Rejects rather than repairs where the input is not a domain noun: a
+ * pronoun-headed phrase is the defect family of bugs #8 and #10, and it has
+ * already reached a shipped document once as `Ones They Sent grid`.
+ *
+ * @param {string} raw comma-separated entity names
+ * @returns {string} the cleaned, comma-separated list; empty when nothing survives
+ */
+export function sanitiseEntities(raw) {
+  const PRONOUN_HEAD = /^(ones?|those|these|them|they|it|its|which|what|that|this|there)$/i;
+  const seen = new Set();
+  const kept = [];
+  for (const part of String(raw).split(',')) {
+    const name = part.trim().replace(/\s+/g, ' ');
+    if (!name) continue;
+    if (!/^[A-Za-z][A-Za-z0-9 -]{0,39}$/.test(name)) continue;
+    if (PRONOUN_HEAD.test(name.split(' ')[0])) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    kept.push(name);
+    if (kept.length === MAX_ENTITIES) break;
+  }
+  return kept.join(', ');
+}
+
+/**
+ * Type the domain entities into the wizard's entities field and read the value
+ * back.
+ *
+ * WHY THIS EXISTS. `generate.ts` reads
+ *   `listed.length > 0 ? listed : deriveEntities(prompt)`
+ * where `listed` is this control. The wizard has always had it
+ * (`ScopeStep.tsx`, `<input id="wizard-entities">`) and this role has never
+ * filled it, so the builder fell back to guessing domain nouns out of free
+ * prose. Measured on the job-application-site prompt, the guess was
+ * `entities: ["Account"]` -- the AUTH entity -- and every MVP feature became
+ * Account CRUD for a product about tracking job applications.
+ *
+ * Stating the entities beats improving the guess. There is a control whose
+ * entire purpose is to say what the product stores records about, and an
+ * automated caller can fill it exactly as a person would.
+ *
+ * The value is read back and compared, for the same reason every chip answer
+ * is: a control that did not take must fail the role rather than produce a
+ * document that silently describes something else.
+ *
+ * @param {import('playwright').Page} page the wizard page
+ * @param {string} entities comma-separated entity names, already validated
+ * @returns {Promise<string>} the value the field actually holds
+ */
+async function fillEntities(page, entities) {
+  const field = page.locator('#wizard-entities');
+  if ((await field.count()) === 0) return '';
+  await field.fill(entities);
+  // Wait on the control holding the value, never a fixed sleep: React owns
+  // this input and `fill` returning says nothing about the commit landing.
+  await page.waitForFunction(
+    (expected) =>
+      /** @type {HTMLInputElement | null} */ (document.querySelector('#wizard-entities'))
+        ?.value === expected,
+    entities,
+    { timeout: 10_000 }
+  );
+  return await field.inputValue();
+}
+
+async function answerQuestion(page, prompt, chosen, entities = '') {
   const groups = await readGroups(page);
   if (groups.length === 0) return false;
   let answered = false;
+
+  if (entities) {
+    const actual = await fillEntities(page, entities);
+    assertAnswerTook('Entities', entities, actual);
+    chosen.push({ group: 'Entities', intended: entities, actual });
+    answered = true;
+  }
 
   for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
     const group = groups[groupIndex];
@@ -548,6 +627,12 @@ async function main() {
     process.stderr.write('usage: prd.mjs --slug=X --prompt="..." [--repoRoot=.]\n');
     process.exit(2);
   }
+  // Base64 for the same reason the prompt is: this crosses n8n's Execute
+  // Command and then role-run's `shell: true`, and a comma-separated list with
+  // spaces would be eaten a level of quoting at a time.
+  const entities = sanitiseEntities(
+    decodePromptB64(args.entitiesB64) || process.env.REDANVIL_ENTITIES || args.entities || ''
+  );
   const repoRoot = resolve(args.repoRoot ?? process.cwd());
   const docsDir = join(repoRoot, slug, 'docs');
 
@@ -652,7 +737,7 @@ for (let step = 0; step < 12; step += 1) {
     markdown = markdown.replace(/^#\s+.*$/m, `# ${slugTitle} — product requirements`);
     break;
   }
-  const answered = await answerQuestion(page, prompt, chosen);
+  const answered = await answerQuestion(page, prompt, chosen, entities);
 
   // Submitting is now EXPLICIT. It used to happen by accident: the old
   // answer picker fell through to "the first button on the page", and on the

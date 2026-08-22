@@ -131,3 +131,12 @@ export declare const ANSWER_RULES: Array<{
 
 /** Integration chips, each picked only when the prompt names it. */
 export declare const INTEGRATION_RULES: Array<{ option: string; test: RegExp }>;
+
+/**
+ * Normalise a caller-supplied entity list: trims, dedupes case-insensitively,
+ * caps the count, and REJECTS pronoun-headed phrases and anything carrying
+ * characters a shell would treat as syntax.
+ * @param raw - Comma-separated entity names.
+ * @returns The cleaned list, or an empty string when nothing survives.
+ */
+export declare function sanitiseEntities(raw: string): string;

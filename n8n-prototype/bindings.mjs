@@ -33,7 +33,7 @@ export const BINDINGS = {
   // has no spaces, quotes or shell metacharacters, so it crosses both shells
   // byte-for-byte and carries no injection surface. prd.mjs decodes it, and
   // still honours REDANVIL_PROMPT for a hand-run.
-  prd: 'node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root} --promptB64={promptB64}',
+  prd: 'node n8n-prototype/roles/prd.mjs --slug={slug} --repoRoot={root} --promptB64={promptB64} --entitiesB64={entitiesB64}',
   product: script('product'),
   reuse: script('reuse'),
   inspo: script('inspo'),
@@ -78,7 +78,7 @@ export const BINDINGS = {
 /**
  * Substitute placeholders in a bound command.
  * @param {string} tpl the template
- * @param {{slug: string, root: string, prompt?: string}} ctx substitution values
+ * @param {{slug: string, root: string, prompt?: string, entities?: string}} ctx substitution values
  * @returns {string} the concrete command
  */
 export function fillBinding(tpl, ctx) {
@@ -90,6 +90,9 @@ export function fillBinding(tpl, ctx) {
     // separate copies and drifted. A placeholder handled in one and not the
     // other reintroduces exactly that split.
     .replaceAll('{promptB64}', Buffer.from(String(ctx.prompt ?? ''), 'utf8').toString('base64'))
+    // Same base64 treatment, same reason: a comma-separated list with spaces
+    // crosses two shells and would arrive as its own first word.
+    .replaceAll('{entitiesB64}', Buffer.from(String(ctx.entities ?? ''), 'utf8').toString('base64'))
     .replaceAll('{prompt}', JSON.stringify(ctx.prompt ?? ''));
 }
 
