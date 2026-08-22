@@ -71,6 +71,65 @@ const DANGLING_TAIL = new Set([
 const TITLE_MAX_WORDS = 6;
 
 /**
+ * Attributive adjectives that are not a product name on their own.
+ * The shows/finds capture stops at a comma, so "shows real, current job
+ * openings" titled itself "Real". A single leading adjective lifted out of
+ * the middle of a sentence is a fragment, not a name.
+ */
+const TITLE_BARE_ADJECTIVES = new Set([
+  'real',
+  'current',
+  'simple',
+  'new',
+  'live',
+  'genuine',
+  'public',
+  'original',
+  'personal',
+  'local',
+  'actual',
+  'extra',
+  'entire',
+  'whole',
+  'single',
+  'upcoming',
+  'dark',
+  'light',
+  'pale',
+  'full',
+  'empty',
+  'open',
+  'closed',
+  'best',
+  'lowest',
+  'highest',
+  'cheapest',
+  'first',
+  'last',
+  'next',
+  'other',
+  'same',
+  'own',
+  'true',
+  'false',
+  'free',
+  'paid',
+  'remote',
+  'onsite',
+  'good',
+  'great',
+  'bad',
+  'old',
+  'latest',
+  'earliest',
+  'specific',
+  'general',
+  'common',
+  'official',
+  'native'
+]);
+
+/**
  * Words that name software packaging rather than a domain entity. Used when
  * deriving entities and titles so "app" / "tool" never become the product noun.
  */
@@ -194,7 +253,29 @@ const ENTITY_STOP = new Set([
   'times',
   'total',
   'vs',
-  'versus'
+  'versus',
+  // Sentence-initial function words / ordinals / imperatives. CapitalRe
+  // otherwise lifts "If", "Do", "Second", "Each", "Verify" out of
+  // "If the first source…", "Do not fabricate…", "Second, it lets…".
+  'if',
+  'do',
+  'first',
+  'second',
+  'third',
+  'each',
+  'both',
+  'verify',
+  'never',
+  'keep',
+  'someone',
+  'it',
+  'one',
+  'they',
+  'them',
+  'have',
+  'sent',
+  'does',
+  'let'
 ]);
 
 /**
@@ -273,6 +354,23 @@ export function requirementLines(prompt: string): string[] {
 }
 
 /**
+ * Drop clauses that describe what the product replaces or competes with.
+ * "Spreadsheets are what people actually use" is the status quo, not a
+ * domain table; mining it produced entities: ["Spreadsheet"].
+ *
+ * @param text - Product prompt after generator-directive stripping.
+ * @returns Text with replacement/competitor sentences removed.
+ */
+function stripReplacementClauses(text: string): string {
+  const replacementRe =
+    /\b(what people actually use|with extra steps|instead of|rather than|replaces?\b|competes? with|are bad at)\b/i;
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .filter((sentence) => !replacementRe.test(sentence))
+    .join(' ');
+}
+
+/**
  * Derive domain entity names from the prompt when the wizard left entities empty.
  *
  * Pulls capitalised terms and repeated content nouns (e.g. Crop, PlantingWindow).
@@ -283,11 +381,13 @@ export function requirementLines(prompt: string): string[] {
  */
 export function deriveEntities(prompt: string): string[] {
   const { productPrompt } = stripGeneratorDirectives(prompt);
-  if (productPrompt.trim().length === 0) return [];
+  const minedPrompt = stripReplacementClauses(productPrompt);
+  if (minedPrompt.trim().length === 0) return [];
 
   const found: string[] = [];
   const seen = new Set<string>();
 
+  /** Accept a candidate noun if it is domain-like, unique, and not a stopword. */
   const push = (raw: string): void => {
     const pascal = entityPascal(raw);
     if (pascal.length === 0) return;
@@ -297,6 +397,11 @@ export function deriveEntities(prompt: string): string[] {
     if (seen.has(key)) return;
     // Skip pure stopword entities and numeric ids alone.
     if (ENTITY_STOP.has(key)) return;
+    // A lone adjective is not a domain noun ("Real" from "real, current job openings").
+    if (TITLE_BARE_ADJECTIVES.has(key)) return;
+    // "Never Supabase" is two capitalised words whose first is a stopword.
+    const firstRaw = raw.trim().split(/\s+/)[0]?.toLowerCase() ?? '';
+    if (ENTITY_STOP.has(firstRaw)) return;
     if (/^\d+$/.test(pascal)) return;
     seen.add(key);
     found.push(pascal);
@@ -305,7 +410,7 @@ export function deriveEntities(prompt: string): string[] {
   // Capitalised multi-word and single-token domain names (Crop, PlantingWindow, Zone).
   const capitalRe = /\b([A-Z][a-zA-Z0-9]+(?:\s+[A-Z][a-zA-Z0-9]+)*)\b/g;
   let m: RegExpExecArray | null;
-  while ((m = capitalRe.exec(productPrompt)) !== null) {
+  while ((m = capitalRe.exec(minedPrompt)) !== null) {
     const token = m[1] ?? '';
     // Skip all-caps acronyms longer than 6 (likely codes) unless alphanumeric ids.
     if (/^[A-Z]{2,6}\d*$/.test(token)) {
@@ -332,11 +437,11 @@ export function deriveEntities(prompt: string): string[] {
     { re: /\bstatus\s+pages?\b/i, name: 'StatusPage' }
   ];
   for (const { re, name } of compoundPatterns) {
-    if (re.test(productPrompt)) push(name);
+    if (re.test(minedPrompt)) push(name);
   }
 
   // Repeated lowercase content nouns (appear 2+ times) as soft signal.
-  const words = productPrompt
+  const words = minedPrompt
     .toLowerCase()
     .replace(/https?:\/\/\S+/g, ' ')
     .replace(/[^a-z0-9\s-]/g, ' ')
@@ -384,6 +489,8 @@ export function isTitleFragment(title: string): boolean {
   if (words.length === 0) return true;
   const last = words[words.length - 1]!.toLowerCase();
   if (DANGLING_TAIL.has(last)) return true;
+  // "Real", "Current", "Live" — a lone adjective is not a product name.
+  if (words.length === 1 && TITLE_BARE_ADJECTIVES.has(last)) return true;
   if (words.length > TITLE_MAX_WORDS) return true;
   const first = words[0]!;
   // Mid-sentence residue: "And Book Trusted…" from stripping only the first verb.
@@ -448,7 +555,11 @@ export function titleFromPrompt(prompt: string): string {
     /\b(?:app|application|tool|system)\s+(?:for|that|to)\s+(?:finds?\s+|tracks?\s+|shows?\s+|lists?\s+|manages?\s+|schedules?\s+|books?\s+)(.+?)(?:\s+with\b|[.,]|$)/i
   ];
   for (const re of patterns) {
-    const hit = re.exec(firstLine) ?? re.exec(productPrompt);
+    // First line only. Searching the whole blob is how "shows real, current
+    // job openings" titled a job tracker "Real", and how "applicant tracking
+    // system for employers" — in the What-this-is-NOT paragraph — titled it
+    // "System for Employers".
+    const hit = re.exec(firstLine);
     const raw = stripLeadingVerbPhrase(
       (hit?.[1] ?? '')
         .replace(/\b(lowest|highest|cheapest|best|fastest|cost|price|current)\b/gi, '')
@@ -466,7 +577,7 @@ export function titleFromPrompt(prompt: string): string {
     .replace(/[^a-zA-Z0-9 ]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  const words = stripLeadingVerbPhrase(cleaned).split(/\s+/).filter(Boolean);
+  const words = stripAudienceTail(stripLeadingVerbPhrase(cleaned)).split(/\s+/).filter(Boolean);
   while (words.length > 1 && DANGLING_TAIL.has(words[words.length - 1]!.toLowerCase())) {
     words.pop();
   }
@@ -483,6 +594,24 @@ export function titleFromPrompt(prompt: string): string {
     if (!isTitleFragment(tailTitle)) return tailTitle;
   }
   return titled;
+}
+
+/**
+ * Cut a trailing "for a/an/the <audience>" so a first-line fallback like
+ * "job application site for a person who is job hunting" becomes
+ * "job application site". Requires at least two words before `for` so
+ * "app for X" is not reduced to the generic "app".
+ *
+ * @param phrase - Verb-stripped first-line residue.
+ * @returns Phrase without the audience tail, or the original.
+ */
+function stripAudienceTail(phrase: string): string {
+  const cut = /^(.*?)\s+for\s+(?:a|an|the)\s+/i.exec(phrase);
+  const left = (cut?.[1] ?? '').trim();
+  if (left.split(/\s+/).filter(Boolean).length >= 2 && !GENERIC_DOMAIN.test(left)) {
+    return left;
+  }
+  return phrase;
 }
 
 /**

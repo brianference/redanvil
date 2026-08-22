@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import {
   deriveEntities,
@@ -8,6 +11,24 @@ import {
   stripGeneratorDirectives,
   titleFromPrompt
 } from './naming';
+
+/**
+ * The overnight prompt that produced title "Real" / entities ["Spreadsheet"].
+ * Read from disk so a paraphrase cannot silently replace it.
+ */
+const JOB_APPLICATION_PROMPT = readFileSync(
+  join(
+    dirname(fileURLToPath(import.meta.url)),
+    '..',
+    '..',
+    '..',
+    '..',
+    '.redanvil',
+    'overnight',
+    'concept-job-application-site.txt'
+  ),
+  'utf8'
+);
 
 const PLANTING = [
   'Show what is plantable in the current half-month window, seed vs transplant marked.',
@@ -103,5 +124,37 @@ describe('primaryEntity / entityPascal', () => {
 
   it('normalises the primary entity', () => {
     expect(primaryEntity(['trips', 'drivers'])).toBe('Trip');
+  });
+});
+
+describe('job-application-site prompt (overnight, exact file)', () => {
+  it('does not title the product "Real" (adjective lifted from mid-sentence)', () => {
+    // Known-bad output from this prompt: title "Real" / slug "real", taken
+    // from "shows real, current job openings". A single leading adjective is
+    // not a product name.
+    expect(JOB_APPLICATION_PROMPT).toMatch(/shows real, current job openings/);
+    expect(isTitleFragment('Real')).toBe(true);
+    const title = titleFromPrompt(JOB_APPLICATION_PROMPT);
+    expect(title.toLowerCase()).not.toBe('real');
+    expect(isTitleFragment(title)).toBe(false);
+    expect(title.toLowerCase()).toMatch(/job/);
+  });
+
+  it('does not take Spreadsheet from the thing the product replaces', () => {
+    // Known-bad output: entities ["Spreadsheet"], from "Spreadsheets are what
+    // people actually use" — a sentence about the status quo, not a domain table.
+    expect(JOB_APPLICATION_PROMPT).toMatch(/Spreadsheets are what people actually use/);
+    const entities = deriveEntities(JOB_APPLICATION_PROMPT);
+    expect(entities.map((e) => e.toLowerCase())).not.toContain('spreadsheet');
+  });
+
+  it('still derives Spreadsheet when the product IS a spreadsheet app', () => {
+    // Negative control for the replacement-clause skip: deleting that skip
+    // must not be the only thing this file asserts, and a real spreadsheet
+    // product must still get the noun.
+    const entities = deriveEntities(
+      'A spreadsheet app for budget formulas, with one spreadsheet per month'
+    );
+    expect(entities.map((e) => e.toLowerCase())).toContain('spreadsheet');
   });
 });
