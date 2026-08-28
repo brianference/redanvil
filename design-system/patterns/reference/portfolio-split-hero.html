@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Portfolio — Split hero — Brian Ference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<script>
+  (function () {
+    var theme = null;
+    try {
+      var q = new URLSearchParams(location.search).get("theme");
+      if (q === "dark" || q === "light") theme = q;
+    } catch (e) {}
+    if (theme) document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+  :root {
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --text: #1a232b;
+    --muted: #44525c;
+    --border: #d0d7de;
+    --primary: #2c5266;
+    --primary-contrast: #ffffff;
+    --primary-soft: rgba(44, 82, 102, 0.10);
+    --shadow: 0 1px 2px rgba(26, 35, 43, 0.06), 0 12px 32px rgba(26, 35, 43, 0.08);
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: #131a20;
+    --surface: #1c242b;
+    --text: #e8eef2;
+    --muted: #a3b2bc;
+    --border: #33404a;
+    --primary: #8fb4c8;
+    --primary-contrast: #131a20;
+    --primary-soft: rgba(143, 180, 200, 0.16);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 16px 36px rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 16px/1.5 "IBM Plex Sans", system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: var(--primary); }
+  a:hover { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  .skip {
+    position: absolute;
+    left: 8px;
+    top: -40px;
+    z-index: 100;
+    background: var(--primary);
+    color: var(--primary-contrast);
+    padding: 8px 14px;
+    min-height: 44px;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .skip:focus { top: 8px; }
+
+  header.site { background: var(--surface); border-bottom: 1px solid var(--border); }
+  header.site .top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: max(12px, env(safe-area-inset-top)) 12px 10px;
+  }
+  header.site .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: inherit;
+    text-decoration: none;
+    min-width: 0;
+    min-height: 44px;
+  }
+  header.site .brand:hover { text-decoration: none; }
+  header.site .brand img {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    display: block;
+    flex: 0 0 auto;
+  }
+  header.site .brand .name { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  header.site .brand strong {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  header.site .brand em {
+    font: 600 11px/1.2 "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-style: normal;
+  }
+  header.site .spacer { flex: 1 1 auto; }
+  header.site .tools { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  header.site .theme {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    padding: 0;
+  }
+  header.site .theme:hover { border-color: var(--primary); color: var(--primary); }
+  header.site .signin {
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font: 600 14px/1 "IBM Plex Sans", system-ui, sans-serif;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: var(--primary-contrast);
+    text-decoration: none;
+  }
+  header.site .signin:hover { filter: brightness(1.06); text-decoration: none; }
+  header.site nav.tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 12px;
+    border-top: 1px solid var(--border);
+  }
+  header.site nav.tabs a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 8px 6px;
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    border-bottom: 3px solid transparent;
+    text-align: center;
+  }
+  header.site nav.tabs a:hover { color: var(--text); text-decoration: none; }
+  header.site nav.tabs a[aria-current="page"] {
+    color: var(--text);
+    font-weight: 700;
+    border-bottom-color: var(--primary);
+  }
+
+  .kicker {
+    font: 600 11px/1 "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 10px;
+  }
+  .where {
+    font: 500 12px/1.3 "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 16px;
+  }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+  .pill, .visit, .source {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .pill, .source {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+  }
+  .pill:hover, .source:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
+  .visit {
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: var(--primary-contrast);
+  }
+  .visit:hover { filter: brightness(1.06); text-decoration: none; }
+
+  .hero {
+    display: grid;
+    gap: 20px;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 28px 16px 12px;
+  }
+  .hero-shot {
+    display: block;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    background: var(--surface);
+  }
+  .hero-shot img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top center; }
+  .hero-copy h1 {
+    margin: 0 0 8px;
+    font-size: clamp(32px, 5vw, 48px);
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    font-weight: 700;
+  }
+  .hero-copy .headline {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+  .hero-copy .bio {
+    margin: 0 0 28px;
+    color: var(--muted);
+    max-width: 48ch;
+  }
+  .hero-copy h2 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+  .hero-copy .blurb { margin: 0 0 16px; color: var(--muted); max-width: 48ch; }
+
+  .band { padding: 8px 0 64px; }
+  .row {
+    display: grid;
+    gap: 20px;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 28px 16px;
+    align-items: center;
+  }
+  .row + .row { border-top: 1px solid var(--border); }
+  .row .shot {
+    display: block;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    background: var(--surface);
+  }
+  .row .shot img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top center; }
+  .row .copy h3 {
+    margin: 0 0 10px;
+    font-size: 26px;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+  .row .copy p { margin: 0 0 16px; color: var(--muted); max-width: 42ch; }
+  .row .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  @media (min-width: 900px) {
+    .hero {
+      grid-template-columns: minmax(22rem, 0.85fr) minmax(0, 1.35fr);
+      gap: 40px;
+      padding: 40px 28px 20px;
+      align-items: center;
+    }
+    .hero-copy { order: -1; }
+    .row {
+      grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.85fr);
+      gap: 40px;
+      padding: 40px 28px;
+    }
+    .row.alt { grid-template-columns: minmax(18rem, 0.85fr) minmax(0, 1.35fr); }
+    .row.alt .shot { order: 2; }
+    .row.alt .copy { order: 1; }
+  }
+
+  @media (max-width: 720px) {
+    header.site .brand img { width: 48px; height: 48px; border-radius: 12px; }
+    header.site .brand strong { font-size: 18px; white-space: nowrap; }
+    header.site .brand em { display: none; }
+    header.site nav.tabs a { font-size: 13px; min-height: 44px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; filter: none !important; }
+  }
+</style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to work</a>
+  <header class="site">
+    <div class="top">
+      <a class="brand" href="/" aria-label="AI PM Jobs — home">
+        <img src="mark-01.png" alt="" width="80" height="80"/>
+        <span class="name">
+          <strong>AI PM Jobs</strong>
+          <em>Ranked product-management roles</em>
+        </span>
+      </a>
+      <div class="spacer"></div>
+      <div class="tools">
+        <button type="button" class="theme" data-theme-toggle aria-label="Switch to dark theme">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"/>
+          </svg>
+        </button>
+        <a class="signin" href="/login/">Sign in</a>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <a href="/">Jobs</a>
+      <a href="/experiments/">Experiments</a>
+      <a href="/portfolio/" aria-current="page">Portfolio</a>
+      <a href="/profile/">Profile</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="who">
+      <a class="hero-shot" href="https://redanvil.pages.dev">
+        <img src="./img/redanvil.png" alt="Screenshot of RedAnvil" width="1280" height="800"/>
+      </a>
+      <div class="hero-copy">
+        <p class="kicker">Portfolio</p>
+        <h1 id="who">Brian Ference</h1>
+        <p class="headline">AI Product Manager and Builder | MBA, PMP, PMC, SMC</p>
+        <p class="where">Cave Creek, Arizona</p>
+        <div class="links">
+          <a class="pill" href="https://www.linkedin.com/in/brianference/">LinkedIn</a>
+          <a class="pill" href="https://github.com/brianference">GitHub</a>
+        </div>
+        <p class="bio">A Senior AI Product Manager who incorporates LLM features into products, builds through vibe coding, and ships to production. At Equity Methods I own the firm-wide Claude program end to end: a 19-skill library published to GitHub, trained on our own charters rather than generic templates, with an anti-hallucination protocol that forces source verification before any factual claim ships.</p>
+        <p class="kicker">Featured</p>
+        <h2>RedAnvil</h2>
+        <p class="blurb">An app factory. One prompt becomes a PRD, then a full-stack app with a database, API and tests, with human review of design and logo and a rule gate that sends the build back when it is not good enough.</p>
+        <div class="links">
+          <a class="visit" href="https://redanvil.pages.dev">Visit</a>
+          <a class="source" href="https://github.com/brianference/redanvil">Source</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" aria-label="More work">
+      <article class="row" id="p-daisydog">
+        <a class="shot" href="https://daisydog.org"><img src="./img/daisydog.png" alt="Screenshot of DaisyDog" width="1280" height="800" loading="lazy"/></a>
+        <div class="copy">
+          <h3>DaisyDog</h3>
+          <p>A child-safe AI companion. The safety rules were written as acceptance criteria before any feature work started, rather than filtered on afterwards.</p>
+          <div class="actions"><a class="visit" href="https://daisydog.org">Visit</a><a class="source" href="https://github.com/brianference/daisydog">Source</a></div>
+        </div>
+      </article>
+      <article class="row alt" id="p-trip-one">
+        <a class="shot" href="https://trip-one.pages.dev"><img src="./img/trip-one.png" alt="Screenshot of Trip One" width="1280" height="800" loading="lazy"/></a>
+        <div class="copy">
+          <h3>Trip One</h3>
+          <p>Grounded AI trip planner. Real places only, chat refine, maps and weather, with schema-validated generation so the failure mode is less rather than wrong.</p>
+          <div class="actions"><a class="visit" href="https://trip-one.pages.dev">Visit</a><a class="source" href="https://github.com/brianference/trip-one">Source</a></div>
+        </div>
+      </article>
+      <article class="row" id="p-scholarship-one">
+        <a class="shot" href="https://scholarship-one.pages.dev"><img src="./img/scholarship-one.png" alt="Screenshot of Scholarship One" width="1280" height="800" loading="lazy"/></a>
+        <div class="copy">
+          <h3>Scholarship One</h3>
+          <p>AI scholarship matcher with grounded recommendations, deadlines and an essay coach.</p>
+          <div class="actions"><a class="visit" href="https://scholarship-one.pages.dev">Visit</a><a class="source" href="https://github.com/brianference/scholarship-one">Source</a></div>
+        </div>
+      </article>
+      <article class="row alt" id="p-az-planting-calendar">
+        <a class="shot" href="https://az-planting-calendar.pages.dev"><img src="./img/az-planting-calendar.png" alt="Screenshot of AZ Planting Calendar" width="1280" height="800" loading="lazy"/></a>
+        <div class="copy">
+          <h3>AZ Planting Calendar</h3>
+          <p>What to plant now in the Maricopa County low desert, on a half-month timeline. Windows come from UA Cooperative Extension az1005 and frost dates from NOAA 1991-2020 normals, and the assistant answers from that database rather than from general knowledge.</p>
+          <div class="actions"><a class="visit" href="https://az-planting-calendar.pages.dev">Visit</a></div>
+        </div>
+      </article>
+      <article class="row" id="p-quickflight">
+        <a class="shot" href="https://quickflight.pages.dev"><img src="./img/quickflight.png" alt="Screenshot of QuickFlight" width="1280" height="800" loading="lazy"/></a>
+        <div class="copy">
+          <h3>QuickFlight</h3>
+          <p>Search the lowest-cost flights for a route and set of dates.</p>
+          <div class="actions"><a class="visit" href="https://quickflight.pages.dev">Visit</a></div>
+        </div>
+      </article>
+      <article class="row alt" id="p-sushi-finder">
+        <a class="shot" href="https://sushi-finder.pages.dev"><img src="./img/sushi-finder.png" alt="Screenshot of Sushi Finder" width="1280" height="800" loading="lazy"/></a>
+        <div class="copy">
+          <h3>Sushi Finder</h3>
+          <p>Worldwide sushi discovery.</p>
+          <div class="actions"><a class="visit" href="https://sushi-finder.pages.dev">Visit</a></div>
+        </div>
+      </article>
+      <article class="row" id="p-pet-sitter">
+        <a class="shot" href="https://pet-sitter-vz1.pages.dev"><img src="./img/pet-sitter.png" alt="Screenshot of Pet Sitter Finder" width="1280" height="800" loading="lazy"/></a>
+        <div class="copy">
+          <h3>Pet Sitter Finder</h3>
+          <p>Find and book a pet sitter.</p>
+          <div class="actions"><a class="visit" href="https://pet-sitter-vz1.pages.dev">Visit</a></div>
+        </div>
+      </article>
+      <article class="row alt" id="p-kanban-board">
+        <a class="shot" href="https://kanban-board-public.pages.dev"><img src="./img/kanban-board.png" alt="Screenshot of FlowBoard" width="1280" height="800" loading="lazy"/></a>
+        <div class="copy">
+          <h3>FlowBoard</h3>
+          <p>Project kanban for makers and teams, with Python and CLI tooling behind the public board.</p>
+          <div class="actions"><a class="visit" href="https://kanban-board-public.pages.dev">Visit</a><a class="source" href="https://github.com/brianference/kanban-board">Source</a></div>
+        </div>
+      </article>
+      <article class="row" id="p-coleramsey">
+        <a class="shot" href="https://coleramseymusic.com"><img src="./img/coleramsey.png" alt="Screenshot of Cole Ramsey Music" width="1280" height="800" loading="lazy"/></a>
+        <div class="copy">
+          <h3>Cole Ramsey Music</h3>
+          <p>An AI music label taken from nothing to two released albums and twenty-six songs, run as release trains with fixed dates for writing, production, artwork and distribution.</p>
+          <div class="actions"><a class="visit" href="https://coleramseymusic.com">Visit</a></div>
+        </div>
+      </article>
+    </section>
+  </main>
+<script>
+  (function () {
+    function setTheme(next) {
+      document.documentElement.setAttribute("data-theme", next);
+      var label = next === "dark" ? "Switch to light theme" : "Switch to dark theme";
+      document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+        btn.setAttribute("aria-label", label);
+      });
+    }
+    document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var cur = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+        setTheme(cur === "dark" ? "light" : "dark");
+      });
+    });
+    var start = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    setTheme(start);
+  })();
+</script>
+</body>
+</html>

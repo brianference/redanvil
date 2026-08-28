@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AI PM Jobs — Masthead tabs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --text: #1a232b;
+    --muted: #44525c;
+    --border: #d0d7de;
+    --primary: #2c5266;
+    --primary-contrast: #ffffff;
+    --primary-soft: rgba(44, 82, 102, 0.10);
+    --success: #1b5e48;
+    --shadow: 0 1px 2px rgba(26, 35, 43, 0.06), 0 8px 24px rgba(26, 35, 43, 0.08);
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: #131a20;
+    --surface: #1c242b;
+    --text: #e8eef2;
+    --muted: #a3b2bc;
+    --border: #33404a;
+    --primary: #8fb4c8;
+    --primary-contrast: #131a20;
+    --primary-soft: rgba(143, 180, 200, 0.16);
+    --success: #7ad7a8;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 16px/1.45 "IBM Plex Sans", system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  .state-tag {
+    margin: 0;
+    padding: 12px 16px 10px;
+    font: 600 11px/1 "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--bg);
+    border-bottom: 1px dashed var(--border);
+  }
+  .demo { background: var(--bg); }
+  .demo + .demo { margin-top: 8px; border-top: 4px solid var(--border); }
+
+  header.site { background: var(--surface); border-bottom: 1px solid var(--border); }
+  .top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: max(12px, env(safe-area-inset-top)) 12px 10px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: inherit;
+    text-decoration: none;
+    min-width: 0;
+    min-height: 44px;
+  }
+  .brand:hover { text-decoration: none; }
+  .brand img {
+    width: 80px;
+    height: 80px;
+    border-radius: 16px;
+    display: block;
+    flex: 0 0 auto;
+  }
+  .brand .name { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .brand strong {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  .brand em {
+    font: 600 11px/1.2 "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-style: normal;
+  }
+  .spacer { flex: 1 1 auto; }
+
+  .tools { display: flex; align-items: center; gap: 8px; position: relative; flex: 0 0 auto; }
+
+  .theme {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    padding: 0;
+  }
+  .theme:hover { border-color: var(--primary); color: var(--primary); }
+
+  .signin, .who {
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    font: 600 14px/1 "IBM Plex Sans", system-ui, sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .signin {
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: var(--primary-contrast);
+  }
+  .signin:hover { filter: brightness(1.06); }
+  .who {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    max-width: min(42ch, 48vw);
+  }
+  .who .mail {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font: 500 13px/1 "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  nav.tabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 12px;
+    border-top: 1px solid var(--border);
+  }
+  nav.tabs a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 8px 6px;
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    border-bottom: 3px solid transparent;
+    text-align: center;
+  }
+  nav.tabs a:hover { color: var(--text); text-decoration: none; }
+  nav.tabs a[aria-current="page"] {
+    color: var(--text);
+    font-weight: 700;
+    border-bottom-color: var(--primary);
+  }
+
+  .panel, .menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 40;
+    width: min(320px, calc(100vw - 24px));
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 16px;
+  }
+  .panel[hidden], .menu[hidden] { display: none; }
+  .panel { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+  .why { margin: 0 0 4px; color: var(--muted); font-size: 14px; line-height: 1.4; }
+  .panel label {
+    font: 600 11px/1 "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .panel input {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--bg);
+    color: var(--text);
+    font: 400 16px/1.4 "IBM Plex Sans", system-ui, sans-serif;
+  }
+  .pw { position: relative; }
+  .pw input { padding-right: 72px; }
+  .pw-toggle {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    height: 36px;
+    min-width: 60px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+    font: 600 13px/1 "IBM Plex Sans", system-ui, sans-serif;
+  }
+  .pw-toggle:hover { background: var(--primary-soft); }
+  .submit {
+    height: 44px;
+    margin-top: 4px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--primary);
+    color: var(--primary-contrast);
+    font: 600 15px/1 "IBM Plex Sans", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .forgot {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+    text-align: center;
+    min-height: 44px;
+    display: grid;
+    place-items: center;
+  }
+  .forgot:hover { text-decoration: underline; }
+
+  .menu { padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+  .menu a, .menu button {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    text-decoration: none;
+    font: 600 15px/1 "IBM Plex Sans", system-ui, sans-serif;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+  }
+  .menu a:hover, .menu button:hover { background: var(--primary-soft); text-decoration: none; }
+  .menu .out {
+    margin-top: 4px;
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 8px 8px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  main.list { max-width: 1120px; margin: 0 auto; padding: 12px 12px 20px; }
+  .job {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .pct {
+    font: 700 20px/1 "IBM Plex Sans", system-ui, sans-serif;
+    letter-spacing: -0.03em;
+  }
+  .pct small {
+    display: block;
+    font: 600 10px/1 "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .co { font: 600 12px/1.2 "IBM Plex Mono", ui-monospace, monospace; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+  .title { font-weight: 650; font-size: 15px; line-height: 1.3; margin-top: 2px; }
+  .meta { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .status {
+    font: 600 11px/1 "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--success);
+    padding-top: 4px;
+  }
+
+  @media (max-width: 720px) {
+    .brand img { width: 48px; height: 48px; border-radius: 12px; }
+    .brand strong { font-size: 18px; white-space: nowrap; }
+    .brand em { display: none; }
+    .who { max-width: 16ch; padding: 0 10px; }
+    .who .mail { max-width: 11ch; }
+    nav.tabs a { font-size: 13px; min-height: 44px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; filter: none !important; }
+  }
+</style>
+<script>
+  (function () {
+    var theme = null;
+    try {
+      var q = new URLSearchParams(location.search).get("theme");
+      if (q === "dark" || q === "light") theme = q;
+    } catch (e) {}
+    if (theme) document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+</head>
+<body>
+  <section class="demo" data-state="out">
+    <p class="state-tag">Signed out</p>
+    <header class="site">
+      <div class="top">
+        <a class="brand" href="/" aria-label="AI PM Jobs — home">
+          <img src="mark-01.png" alt="" width="80" height="80"/>
+          <span class="name">
+            <strong>AI PM Jobs</strong>
+            <em>Ranked product-management roles</em>
+          </span>
+        </a>
+        <div class="spacer"></div>
+        <div class="tools">
+          <button type="button" class="theme" data-theme-toggle aria-label="Switch to dark theme">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button type="button" class="signin" data-open="panel" aria-expanded="false" aria-controls="out-panel" title="Sign in to record applications and outcomes">Sign in</button>
+          <div class="panel" id="out-panel" hidden>
+            <p class="why">Sign in to record applications and outcomes.</p>
+            <label for="out-email">Email</label>
+            <input id="out-email" type="email" autocomplete="username" name="email"/>
+            <label for="out-password">Password</label>
+            <div class="pw">
+              <input id="out-password" type="password" autocomplete="current-password" name="password"/>
+              <button type="button" class="pw-toggle" aria-pressed="false" aria-label="Show password">Show</button>
+            </div>
+            <button type="button" class="submit">Sign in</button>
+            <a class="forgot" href="/login/?reset=1">Forgot your password</a>
+          </div>
+        </div>
+      </div>
+      <nav class="tabs" aria-label="Sections">
+        <a href="/" aria-current="page">Jobs</a>
+        <a href="/experiments/">Experiments</a>
+        <a href="/portfolio/">Portfolio</a>
+        <a href="/profile/">Profile</a>
+      </nav>
+    </header>
+    <main class="list">
+      <article class="job">
+        <div class="pct">92<small>Match</small></div>
+        <div>
+          <div class="co">Reddit</div>
+          <div class="title">Staff Technical Product Manager, Ads ML Platform</div>
+          <div class="meta">Remote - United States · $217k–$304k</div>
+        </div>
+        <div class="status">Applied</div>
+      </article>
+      <article class="job">
+        <div class="pct">88<small>Match</small></div>
+        <div>
+          <div class="co">LaunchDarkly</div>
+          <div class="title">Staff Product Manager - Data Products and Agent Interface</div>
+          <div class="meta">Remote - US · $215k–$295k</div>
+        </div>
+        <div class="status">Applied</div>
+      </article>
+    </main>
+  </section>
+
+  <section class="demo" data-state="in">
+    <p class="state-tag">Signed in</p>
+    <header class="site">
+      <div class="top">
+        <a class="brand" href="/" aria-label="AI PM Jobs — home">
+          <img src="mark-01.png" alt="" width="80" height="80"/>
+          <span class="name">
+            <strong>AI PM Jobs</strong>
+            <em>Ranked product-management roles</em>
+          </span>
+        </a>
+        <div class="spacer"></div>
+        <div class="tools">
+          <button type="button" class="theme" data-theme-toggle aria-label="Switch to dark theme">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button type="button" class="who" data-open="menu" aria-expanded="false" aria-controls="in-menu" aria-haspopup="true">
+            <span class="mail">brianference@protonmail.com</span>
+          </button>
+          <div class="menu" id="in-menu" hidden role="menu">
+            <a href="/profile/" role="menuitem">Profile</a>
+            <a href="/portfolio/" role="menuitem">Portfolio</a>
+            <a href="/experiments/" role="menuitem">Experiments</a>
+            <button type="button" class="out" role="menuitem">Sign out</button>
+          </div>
+        </div>
+      </div>
+      <nav class="tabs" aria-label="Sections">
+        <a href="/" aria-current="page">Jobs</a>
+        <a href="/experiments/">Experiments</a>
+        <a href="/portfolio/">Portfolio</a>
+        <a href="/profile/">Profile</a>
+      </nav>
+    </header>
+    <main class="list">
+      <article class="job">
+        <div class="pct">92<small>Match</small></div>
+        <div>
+          <div class="co">Reddit</div>
+          <div class="title">Staff Technical Product Manager, Ads ML Platform</div>
+          <div class="meta">Remote - United States · $217k–$304k</div>
+        </div>
+        <div class="status">Applied</div>
+      </article>
+      <article class="job">
+        <div class="pct">88<small>Match</small></div>
+        <div>
+          <div class="co">Webflow</div>
+          <div class="title">Staff Product Manager, AI</div>
+          <div class="meta">U.S. Remote · $213k–$255k</div>
+        </div>
+        <div class="status">Applied</div>
+      </article>
+    </main>
+  </section>
+
+<script>
+  (function () {
+    function setTheme(next) {
+      document.documentElement.setAttribute("data-theme", next);
+      var label = next === "dark" ? "Switch to light theme" : "Switch to dark theme";
+      document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+        btn.setAttribute("aria-label", label);
+      });
+    }
+    document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var cur = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+        setTheme(cur === "dark" ? "light" : "dark");
+      });
+    });
+    var start = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    setTheme(start);
+
+    function closeAll(except) {
+      document.querySelectorAll("[data-open]").forEach(function (btn) {
+        if (btn === except) return;
+        btn.setAttribute("aria-expanded", "false");
+        var id = btn.getAttribute("aria-controls");
+        var panel = id && document.getElementById(id);
+        if (panel) panel.hidden = true;
+      });
+    }
+    document.querySelectorAll("[data-open]").forEach(function (btn) {
+      var id = btn.getAttribute("aria-controls");
+      var panel = id && document.getElementById(id);
+      if (!panel) return;
+      btn.addEventListener("click", function (event) {
+        event.stopPropagation();
+        var open = btn.getAttribute("aria-expanded") === "true";
+        closeAll();
+        btn.setAttribute("aria-expanded", String(!open));
+        panel.hidden = open;
+        if (!open) {
+          var first = panel.querySelector("input, a, button");
+          if (first) first.focus();
+        }
+      });
+      panel.addEventListener("click", function (event) { event.stopPropagation(); });
+    });
+    document.addEventListener("click", function () { closeAll(); });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeAll();
+    });
+
+    document.querySelectorAll(".pw-toggle").forEach(function (toggle) {
+      toggle.addEventListener("click", function () {
+        var input = toggle.parentElement.querySelector("input");
+        var showing = input.getAttribute("type") === "text";
+        input.setAttribute("type", showing ? "password" : "text");
+        toggle.setAttribute("aria-pressed", String(!showing));
+        toggle.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+        toggle.textContent = showing ? "Show" : "Hide";
+        input.focus();
+      });
+    });
+    document.querySelectorAll(".submit").forEach(function (btn) {
+      btn.addEventListener("click", function (event) { event.preventDefault(); });
+    });
+  })();
+</script>
+</body>
+</html>
