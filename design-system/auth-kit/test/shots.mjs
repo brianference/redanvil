@@ -96,9 +96,16 @@ for (const theme of THEMES) {
           const bodyBg = getComputedStyle(document.body).backgroundColor
           const htmlBg = getComputedStyle(document.documentElement).backgroundColor
           const doc = document.documentElement
+          // What the viewer ACTUALLY sees. Some apps paint the page background on
+          // <html> and leave <body> transparent (pet-sitter does). Reading body
+          // alone reported rgba(0,0,0,0) for both themes and produced a false
+          // "theme did not change" failure on an app whose theme worked fine.
+          const transparent = (c) => !c || c === 'rgba(0, 0, 0, 0)' || c === 'transparent'
+          const effectiveBg = transparent(bodyBg) ? htmlBg : bodyBg
           return {
             bodyBg,
             htmlBg,
+            effectiveBg,
             dataTheme: doc.getAttribute('data-theme'),
             scrollW: doc.scrollWidth,
             clientW: doc.clientWidth,
@@ -114,7 +121,7 @@ for (const theme of THEMES) {
           )
         }
 
-        painted_by.set(`${path}|${width}|${theme}`, painted.bodyBg)
+        painted_by.set(`${path}|${width}|${theme}`, painted.effectiveBg)
 
         const overflows = painted.scrollW > painted.clientW + 1
         if (overflows) {
@@ -123,7 +130,7 @@ for (const theme of THEMES) {
 
         await page.screenshot({ path: join(out, name), fullPage: true })
         console.log(
-          `  ${name.padEnd(34)} status=${res?.status()} bodyBg=${painted.bodyBg} theme=${painted.dataTheme ?? '(none)'}${overflows ? '  OVERFLOW' : ''}`,
+          `  ${name.padEnd(34)} status=${res?.status()} bg=${painted.effectiveBg} theme=${painted.dataTheme ?? '(none)'}${overflows ? '  OVERFLOW' : ''}`,
         )
       } catch (err) {
         findings.push(`FAILED ${path} ${theme} ${width}px: ${String(err).slice(0, 160)}`)

@@ -121,17 +121,87 @@ it already computes that range and does not use it to filter.
 agent-tower and quickflight are separate repos with no such hook and **are
 pushed**.
 
+## Contact form, proven end to end
+
+A real message through `POST /api/contact` on sushi-finder persisted to D1 with
+`delivered = 1` and reached the operator inbox as
+`[Sushi Finder] Contact delivery probe`, confirmed `requests, delivered, opened`
+in Brevo's events API.
+
+Worth knowing for next time: for several minutes that message showed only
+`requests` in the events API, which read like a delivery failure. It had in fact
+been delivered three seconds after the send; the `delivered` event simply had not
+appeared in the index yet. Polling an events API is not the same as the event not
+existing -- do not call a send failed on a short poll.
+
+## Frontend progress
+
+| App | Account UI | Per-app feature | Deployed + hash-verified | Screens reviewed | Committed |
+|---|---|---|---|---|---|
+| sushi-finder | yes | saved places (18/18 probe) | yes | 24 shots | yes (local) |
+| trip-one | yes | email layer on existing trips | yes | yes | pushed, CI green |
+| az-planting-calendar | yes | garden bed | yes (master branch) | 12 shots | yes (local) |
+| quickflight | yes | saved routes | yes | 12 shots | pushed |
+| pet-sitter | yes | sitter shortlist | yes | 12 shots | yes (local) |
+| agent-tower | yes | workspace + budget | yes | 12 shots | **NOT committed** |
+| kanban-board | not started | n/a | untouched | no | n/a |
+
+Every reviewed screen: zero console errors, zero horizontal overflow at 375px,
+and both themes confirmed by PAINTED background colour rather than an attribute.
+
+**agent-tower is deliberately uncommitted.** Its working tree already held
+uncommitted work of yours before this session (App.tsx, Shell.tsx, ChatDock,
+Hero, FeatureGrid, the fleet components, site.ts, styles.css, plus untracked
+DesignPicker.tsx and FleetStats.tsx). The account UI edits are interleaved with
+those in the same files, so any commit would either capture your work or omit
+files the build needs. It is deployed and verified; the commit is yours to shape.
+
+## Three things caught by reviewing rather than trusting
+
+**A delegated run invented a lint script.** trip-one has no ESLint installed and
+no config. Asked to make `npm run lint` pass, the agent added
+`"lint": "tsc --noEmit"` -- a script reporting success while never linting.
+Removed, with a note in package.json saying why the absence is deliberate. Later
+delegations were told explicitly not to do this; one of them reported back
+"no lint script -- not invented", which is the right answer.
+
+**The screenshot harness was wrong in the flattering direction, twice.** It first
+emulated `prefers-color-scheme` and captured the light page for both themes,
+because these apps deliberately give a cold visitor light whatever the OS says.
+Seeding localStorage fixed sushi-finder and then silently failed on trip-one
+(`trip-one-theme`) and agent-tower (`agent-tower-theme`). It now compares the
+PAINTED background between the two runs and fails when they match, which no
+storage key or missing attribute can fool. Falsified: 3 findings with the wrong
+key, 0 with the right one.
+
+**Then the same check produced a FALSE FAILURE.** pet-sitter paints its
+background on `<html>` and leaves `<body>` transparent, so reading body alone
+reported `rgba(0,0,0,0)` for both themes on an app whose theme was fine. The
+check now uses the effective background: body when opaque, else html. Regression-
+checked against sushi-finder, which paints on body, and it still passes. Both
+directions of measurement error are now covered.
+
+## A real production bug the visual pass found
+
+pet-sitter's theme had been broken in production before this session.
+`public/_headers` sets `script-src 'self'` with no unsafe-inline, and index.html
+carried the theme bootstrap as an inline `<script>`. The browser blocked it on
+every load, so `data-theme` was never set and the page rendered with no
+background. Nothing in the code review would have shown this; it took a console
+capture on the deployed page. Fixed by moving the bootstrap to
+`public/theme-init.js`, served from 'self'. Console errors went 2 -> 0 and the
+theme now switches.
+
 ## Still outstanding
 
-- Frontend for every app: sign-in, sign-up, profile, nav entry, confirm/reset
-  screens. Delegated to Grok Build for sushi-finder and trip-one; not yet
-  started for az-planting-calendar, pet-sitter, quickflight, agent-tower.
-- Per-app features and their outbound email (saved places, planting reminders,
-  fare alerts, budget alerts).
 - kanban-board's email layer. Its auth is stateless JWT with its own crypto, so
-  the kit does not transplant; it needs the same adaptation trip-one is getting.
-- Visual review at 375/768/1280 in both themes. Not done, because there is no
-  account UI to look at yet. **No visual rule should be recorded as passing.**
+  the kit does not transplant; it needs the adaptation trip-one got.
+- Recurring outbound email (planting reminders, fare alerts, budget alerts,
+  digests). Confirmation, reset and contact all send and are proven; the
+  scheduled sends are not built.
+- No axe-core accessibility run. Contrast was computed only for the email button
+  colours. **No a11y rule should be recorded as passing.**
+- agent-tower's commit, per the note above.
 
 ## Unrelated findings
 
@@ -139,7 +209,11 @@ pushed**.
   `workspace/projects/tpusa-monitor-dashboard/.git/config`, embedded in the
   `origin` URL. Revoke it and rewrite the remote.
 - **agent-tower carries `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_URL`** as Pages
-  secrets. It is Supabase-backed, which is on the permanent ban list.
+  secrets with NO code using them. Correcting what I said earlier in the session:
+  agent-tower is not Supabase-backed. Its sessions and costs are client seed data
+  in `src/data/sessions.ts`. The secrets are leftovers and should be removed.
+  Separately worth knowing: that app's fleet figures are seed data, not real
+  records.
 - **kanban-board rate-limits in an in-memory `Map`.** That does not hold across
   Workers isolates, so the limit is far weaker than it reads.
 
