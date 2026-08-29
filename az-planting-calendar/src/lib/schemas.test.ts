@@ -2,13 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
   AssistantRequestSchema,
   AssistantResponseSchema,
+  BedItemSchema,
+  BedListSchema,
   CropSchema,
   CropsQuerySchema,
   FilterQuerySchema,
   HealthResponseSchema,
   MethodSchema,
+  OkResponseSchema,
   PlantableQuerySchema,
   PlantingWindowSchema,
+  SessionResponseSchema,
   SourceSchema
 } from './schemas';
 
@@ -138,5 +142,53 @@ describe('Assistant schemas', () => {
     expect(() =>
       AssistantResponseSchema.parse({ answer: '', crops: [], filters: {} })
     ).toThrow();
+  });
+});
+
+describe('SessionResponseSchema', () => {
+  it('accepts a signed-out snapshot', () => {
+    expect(
+      SessionResponseSchema.parse({ email: null, emailVerified: false, enabled: true })
+    ).toEqual({ email: null, emailVerified: false, enabled: true });
+  });
+
+  it('rejects a missing email key', () => {
+    expect(() =>
+      SessionResponseSchema.parse({ emailVerified: false, enabled: true })
+    ).toThrow();
+  });
+});
+
+describe('BedListSchema', () => {
+  it('accepts an empty bed', () => {
+    expect(BedListSchema.parse({ items: [] })).toEqual({ items: [] });
+    expect(OkResponseSchema.parse({ ok: true }).ok).toBe(true);
+  });
+
+  it('requires window labels on a bed item', () => {
+    const item = BedItemSchema.parse({
+      cropId: 'crop-tomatoes',
+      cropName: 'Tomatoes',
+      zone: 'zone-cave-creek-85331',
+      zoneName: 'Cave Creek',
+      usdaZone: '9b',
+      addedAt: 1,
+      plantedAt: null,
+      notes: null,
+      nextHalfMonth: 14,
+      nextHalfMonthLabel: 'Aug 1',
+      inWindow: true,
+      windows: [
+        {
+          start_half_month: 14,
+          end_half_month: 16,
+          method: 'T',
+          startLabel: 'Aug 1',
+          endLabel: 'Sep 1'
+        }
+      ]
+    });
+    expect(item.cropId).toBe('crop-tomatoes');
+    expect(item.usdaZone).toBe('9b');
   });
 });

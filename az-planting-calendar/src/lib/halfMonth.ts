@@ -157,3 +157,47 @@ function assertHalf(value: number): void {
     throw new RangeError(`half-month must be integer 0..23, got ${value}`);
   }
 }
+
+/** Window bounds used to find the next plantable half-month. */
+export interface WindowBounds {
+  start_half_month: number;
+  end_half_month: number;
+}
+
+/**
+ * Soonest half-month (including `nowHalf`) when any window is plantable.
+ * Walks forward around the year so a November–February window still sorts
+ * ahead of next summer when today is August.
+ *
+ * @param windows - Crop planting windows (az1005 half-month indices).
+ * @param nowHalf - Current half-month index 0..23.
+ * @returns The next plantable half-month, or null when there are no windows.
+ */
+export function nextPlantableHalfMonth(
+  windows: ReadonlyArray<WindowBounds>,
+  nowHalf: number
+): number | null {
+  assertHalf(nowHalf);
+  if (windows.length === 0) return null;
+  for (let offset = 0; offset < HALF_MONTHS_PER_YEAR; offset += 1) {
+    const half = (nowHalf + offset) % HALF_MONTHS_PER_YEAR;
+    for (const window of windows) {
+      if (halfMonthInWindow(window.start_half_month, window.end_half_month, half)) {
+        return half;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Forward distance in half-months from `from` to `to`, wrapping at year end.
+ *
+ * @param from - Starting half-month 0..23.
+ * @param to - Target half-month 0..23.
+ */
+export function halfMonthOffset(from: number, to: number): number {
+  assertHalf(from);
+  assertHalf(to);
+  return (to - from + HALF_MONTHS_PER_YEAR) % HALF_MONTHS_PER_YEAR;
+}

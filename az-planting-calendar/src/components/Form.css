@@ -1,0 +1,235 @@
+/*
+ * Auth, account, and contact form surfaces. Tokens only — no raw hex.
+ * Matches prose cards (surface, hairline, radius, touch).
+ */
+
+.auth-form,
+.account-panel {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: var(--space-5);
+  border: var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.auth-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  min-width: 0;
+}
+
+.auth-form__label {
+  font-weight: 600;
+  font-size: var(--type-sm);
+  color: var(--text-muted);
+}
+
+.auth-form__input,
+.auth-form__textarea {
+  min-height: var(--touch);
+  width: 100%;
+  max-width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+}
+
+.auth-form__textarea {
+  min-height: calc(var(--touch) * 4);
+  resize: vertical;
+}
+
+.auth-form__hint {
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--text-faint);
+}
+
+.auth-form__error {
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.auth-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.auth-form__alt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+}
+
+.auth-form__alt a {
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.form-status {
+  margin: 0 0 var(--space-4);
+  overflow-wrap: anywhere;
+}
+
+.form-status--error {
+  color: var(--danger);
+}
+
+.form-status--success {
+  color: var(--seed);
+}
+
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0 var(--space-4);
+  border: var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  font-size: var(--type-sm);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.ui-btn:hover {
+  background: var(--surface);
+  border-color: var(--text-muted);
+}
+
+.ui-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ui-btn--primary {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+}
+
+.ui-btn--primary:hover {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.ui-btn--compact {
+  width: 100%;
+  padding: 0 var(--space-2);
+}
+
+.sr-only {
+  position: absolute;
+  overflow: hidden;
+  clip-path: inset(50%);
+  width: var(--space-1);
+  height: var(--space-1);
+  padding: 0;
+  border: 0;
+  white-space: nowrap;
+}
+
+.account-email {
+  margin: 0 0 var(--space-2);
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.account-verified {
+  margin: 0 0 var(--space-3);
+  color: var(--seed);
+}
+
+.account-unverified {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+}
+
+.account-heading {
+  margin: var(--space-6) 0 var(--space-3);
+  font-size: var(--type-lg);
+}
+
+.account-panel .account-heading {
+  margin-top: 0;
+}
+
+.bed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.bed-card {
+  border: var(--hairline);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-4);
+  min-width: 0;
+}
+
+.bed-card h3 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--type-lg);
+  overflow-wrap: anywhere;
+}
+
+.bed-card__meta {
+  margin: 0 0 var(--space-2);
+  font-size: var(--type-sm);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.bed-card__windows {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.bed-card__window {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.bed-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.bed-control {
+  display: inline-flex;
+}

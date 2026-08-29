@@ -14,6 +14,12 @@ function labelForSegment(segment: string): string {
   if (segment === 'terms') return en.nav.terms;
   if (segment === 'privacy') return en.nav.privacy;
   if (segment === 'contact') return en.nav.contact;
+  if (segment === 'signin') return en.nav.signIn;
+  if (segment === 'signup') return en.auth.signUpTitle;
+  if (segment === 'forgot') return en.auth.forgotTitle;
+  if (segment === 'reset') return en.auth.resetTitle;
+  if (segment === 'confirm') return en.auth.confirmTitle;
+  if (segment === 'account') return en.nav.account;
   if (segment === 'crop') return en.detail.back.replace(/back to home/i, 'Crop').trim() || 'Crop';
   // Crop id: humanize crop-tomatoes → Tomatoes
   if (segment.startsWith('crop-')) {

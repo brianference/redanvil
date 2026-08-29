@@ -31,7 +31,9 @@ export const en = {
     menuClose: 'Close',
     /** Accessible name for the header theme control (includes current mode). */
     themeToggleAria: (modeLabel: string) => `Theme: ${modeLabel}. Click to switch light, dark, or system.`,
-    skipToContent: 'Skip to content'
+    skipToContent: 'Skip to content',
+    signIn: 'Sign in',
+    account: 'Account'
   },
 
   hero: {
@@ -286,7 +288,7 @@ export const en = {
     title: 'About this calendar',
     description:
       'Why this app exists, which zone it covers, and how planting windows are sourced from University of Arizona Extension.',
-    updated: 'Last updated 1 August 2026',
+    updated: 'Last updated 29 August 2026',
     intro:
       'AZ Planting Calendar is a free, public web tool for Arizona low-desert home gardeners. It answers one practical question: what can I plant right now in the Cave Creek area, as seed or as transplant, using half-month windows from a published University of Arizona Cooperative Extension calendar—not invented dates.',
     sections: [
@@ -330,7 +332,7 @@ export const en = {
       },
       {
         heading: 'How the site is built',
-        body: 'The interface is a static single-page application hosted on Cloudflare Pages. Planting data for the app is served from Cloudflare Pages Functions backed by a Cloudflare D1 database that holds crops, planting windows, sources, and the default zone record. There are no user accounts and no visitor profiles in that database. The public JSON APIs expose plantable crops, the year grid, crop detail, crop list with optional name search, zone metadata, a health check for operators, and an optional planting assistant. The assistant loads crop and window rows from D1, then sends your question plus that grounded context to Cloudflare Workers AI so the reply is based on this app’s dataset rather than general knowledge. A model failure returns a visible error, not an empty success.'
+        body: 'The interface is a static single-page application hosted on Cloudflare Pages. Planting data for the app is served from Cloudflare Pages Functions backed by a Cloudflare D1 database that holds crops, planting windows, sources, and the default zone record. An optional account stores a garden bed (crops you mean to plant) keyed to your user id; planting windows themselves stay the public az1005 dataset. Visitors who never sign in still have full use of plantable-now, the year grid, and crop detail. The public JSON APIs expose plantable crops, the year grid, crop detail, crop list with optional name search, zone metadata, a health check for operators, an optional planting assistant, and authenticated garden-bed routes. The assistant loads crop and window rows from D1, then sends your question plus that grounded context to Cloudflare Workers AI so the reply is based on this app’s dataset rather than general knowledge. A model failure returns a visible error, not an empty success.'
       },
       {
         heading: 'Honesty about limits',
@@ -342,22 +344,22 @@ export const en = {
   terms: {
     title: 'Terms of use',
     description:
-      'Terms for using the AZ Planting Calendar web app: planning tool only, sourced Extension data, no accounts, no warranties for garden outcomes.',
-    updated: 'Last updated 1 August 2026',
+      'Terms for using the AZ Planting Calendar web app: planning tool only, sourced Extension data, optional free account for a garden bed, no warranties for garden outcomes.',
+    updated: 'Last updated 29 August 2026',
     intro:
-      'These terms govern use of the AZ Planting Calendar website and its public JSON API (the “Service”), a free planning tool for Arizona low-desert home gardening focused on Cave Creek, Arizona 85331. By loading the site, following its routes, or calling its API, you agree to these terms. If you do not agree, do not use the Service. There are no paid plans and no user accounts on this product.',
+      'These terms govern use of the AZ Planting Calendar website and its public JSON API (the “Service”), a free planning tool for Arizona low-desert home gardening focused on Cave Creek, Arizona 85331. By loading the site, following its routes, or calling its API, you agree to these terms. If you do not agree, do not use the Service. There are no paid plans. Creating an account is optional and free; it lets you keep a garden bed of crops and their planting windows for your planning zone.',
     sections: [
       {
         heading: 'Acceptance and eligibility',
-        body: 'You must be able to form a binding agreement under the laws that apply to you. If you use the Service on behalf of an organization, you confirm you are allowed to accept these terms for that organization. There is no registration step, no sign-in, and no age-gated account flow because the product does not create accounts. Loading pages, changing filters, opening crop detail, or requesting /api routes is acceptance of these terms for that use. If you cannot accept them, leave the site and stop calling the API.'
+        body: 'You must be able to form a binding agreement under the laws that apply to you. If you use the Service on behalf of an organization, you confirm you are allowed to accept these terms for that organization. You can use the public calendar without an account. If you register, the same eligibility rules apply. Loading pages, changing filters, opening crop detail, requesting /api routes, or creating an account is acceptance of these terms for that use. If you cannot accept them, leave the site and stop calling the API.'
       },
       {
         heading: 'What the service is',
         body: 'AZ Planting Calendar is an informational web application that shows which vegetable crops are listed as plantable (by seed or by transplant) in a given half-month for the default Maricopa County low-desert zone represented in the dataset, with Cave Creek 85331 as the default planning context. The home page presents a plantable-now list driven by a calendar date, a full-year half-month grid, filters for method and month, and crop detail pages that include days-to-harvest ranges when present in the seed data and citations to the source publication. The Service also exposes read-only JSON endpoints under /api for plantable crops, grid data, crop detail, zone metadata, and health. The Service does not sell seeds, take orders, book landscaping labor, manage irrigation hardware, or provide live weather forecasts.'
       },
       {
-        heading: 'No accounts and no paid product',
-        body: 'The Service does not offer registration, login, passwords, session cookies for identity, OAuth, social sign-in, billing, or subscription tiers. There is no user profile table for visitors and no authenticated write path for planting data through this UI. Because there are no accounts, there is nothing to close when you stop visiting; residual state is limited to what your browser keeps (for example a theme preference in localStorage) and optional filter or date parameters you place in a URL you share.'
+        heading: 'Optional accounts and no paid product',
+        body: 'The Service does not offer billing or subscription tiers. Registration is optional: an email and password create a free account used only to keep a garden bed of crops for your planning zone. Sign-in sets an HttpOnly session cookie on this origin. There is no OAuth or social sign-in. Public planting tables stay world-readable. Residual browser state without an account is limited to a theme preference in localStorage and optional filter or date parameters you place in a URL you share.'
       },
       {
         heading: 'Central disclaimer — garden planning, not professional advice',
@@ -404,7 +406,7 @@ export const en = {
       },
       {
         heading: 'Termination',
-        body: 'You may stop using the Service at any time by leaving the site and stopping API calls. Because there are no accounts, there is no account termination step. We may refuse further automated access or shut down endpoints if you violate these terms, if continued operation is unlawful, or if we discontinue the project. Provisions that by their nature should survive (including disclaimers, liability limits, indemnity, and intellectual-property notices) continue after your use ends.'
+        body: 'You may stop using the Service at any time by leaving the site and stopping API calls. If you created an account, sign out from the Account page; use the Contact page to request deletion of your user row and garden bed. We may refuse further automated access or shut down endpoints if you violate these terms, if continued operation is unlawful, or if we discontinue the project. Provisions that by their nature should survive (including disclaimers, liability limits, indemnity, and intellectual-property notices) continue after your use ends.'
       },
       {
         heading: 'Changes to these terms',
@@ -424,18 +426,18 @@ export const en = {
   privacy: {
     title: 'Privacy',
     description:
-      'Privacy practices for AZ Planting Calendar: no accounts, no tracking cookies set by the app, theme preference on your device only, planting data from public Extension sources.',
-    updated: 'Last updated 1 August 2026',
+      'Privacy practices for AZ Planting Calendar: optional account for a garden bed, session cookie only when signed in, theme preference on your device, planting data from public Extension sources.',
+    updated: 'Last updated 29 August 2026',
     intro:
-      'This privacy notice applies to the AZ Planting Calendar website and its public JSON API. The product is a free garden-planning tool. There are no user accounts and no sign-in. Visitors do not submit forms that create a profile. Planting windows come from public University of Arizona Cooperative Extension materials stored as application data, not from private profiles about you. We do not run ads or third-party product-analytics trackers in this UI.',
+      'This privacy notice applies to the AZ Planting Calendar website and its public JSON API. The product is a free garden-planning tool. You can use the calendar without an account. If you register, we store the email you give us, a password hash, a session cookie, and the crops you add to your garden bed. Planting windows come from public University of Arizona Cooperative Extension materials stored as application data. We do not run ads or third-party product-analytics trackers in this UI.',
     sections: [
       {
         heading: 'Who we are and how to reach us',
         body: 'AZ Planting Calendar is a small personal open project for low-desert home gardeners, with a default planning context of Cave Creek, Arizona 85331. There is no company registration page, postal address, data-protection officer listing, or phone line published with this app. Contact is via a public GitHub issue on the RedAnvil repository that hosts the app, as described on the Contact page. For privacy access, correction, or deletion questions, start the issue title with “AZ Planting Calendar: privacy request” and include enough detail to investigate (for example a path you visited, approximate time, and what you saw).'
       },
       {
-        heading: 'No accounts',
-        body: 'This app does not offer registration, login, passwords, session cookies for identity, OAuth, or social sign-in. There is no users table for visitors. Cloudflare D1 in this project stores crops, planting windows, sources, and zone metadata used to answer planting questions—not visitor identities. Server-side code for visitor-facing traffic is limited to static Pages assets plus read-only Pages Functions under /api that return planting data or a health status. Nothing in that path creates a login session for you.'
+        heading: 'Accounts are optional',
+        body: 'You can read plantable-now, the year grid, and crop detail without registering. If you create an account we store your email (lowercase), a PBKDF2 password hash and salt, email-verification state, session rows, and garden-bed rows (crop id, planning zone, added time, optional planted time and notes). There is no OAuth or social sign-in. Cloudflare D1 also stores public crops, planting windows, sources, and zone metadata used to answer planting questions. Authenticated write paths are limited to your own garden bed and to contact messages you submit.'
       },
       {
         heading: 'What application data the site shows',
@@ -443,10 +445,12 @@ export const en = {
       },
       {
         heading: 'What we collect from visitors',
-        body: 'From visitors, this app does not collect names, email addresses, passwords, payment details, phone numbers, or form fields that create a user profile. There is no newsletter signup, checkout, or registration form on the site. Optional contact happens when you open a public GitHub issue; that traffic is handled by GitHub under GitHub’s terms, not by an in-app message store in this product.',
+        body: 'Without an account this app does not collect names, email addresses, passwords, payment details, or phone numbers. Optional contact happens through the Contact form on this site (stored in D1 and emailed to the operator) or a public GitHub issue. If you register, the fields below also apply.',
         items: [
-          'Theme preference on your device only: localStorage key theme with value light, dark, or system, set when you use the theme control—nothing else is written to localStorage by this app',
-          'Optional view state you put in the page URL (for example date, method, month, or search query parameters) so a shared link opens the same plantable or filter view—these are not stored as a server-side profile',
+          'Theme preference on your device only: localStorage key theme with value light, dark, or system, set when you use the theme control',
+          'Optional view state you put in the page URL (for example date, method, month, or search query parameters) so a shared link opens the same plantable or filter view',
+          'If you register: email, password hash, session cookie, email confirmation tokens, and garden-bed rows you add or remove',
+          'If you use the Contact form: name, email, subject, and message, stored so a mail outage cannot lose the report',
           'Assistant questions you choose to submit: the free-text sentence is POSTed to this app’s /api/assistant function, which loads crop and window rows from D1 and sends your sentence plus that context to Cloudflare Workers AI for a single response. This app does not keep a chat archive of those messages',
           'Request metadata that Cloudflare may log while serving Pages and Functions (for example IP address, user agent, path, and timestamps under Cloudflare’s own practices)',
           'Ordinary browser behaviour such as HTTP cache entries for static assets you load'
@@ -456,15 +460,15 @@ export const en = {
         heading: 'What we do not collect',
         body: 'We do not run advertising pixels, third-party product-analytics SDKs, heatmaps, or retargeting scripts in this UI. We do not sell personal data. There is no mailing list and no marketing profile built from your use of this calendar.',
         items: [
-          'No identity or billing fields collected by this app',
+          'No billing or payment fields',
           'No RedAnvil- or app-set tracking or advertising cookies',
           'No social login or OAuth identity from this app',
-          'No server-side store of visitor browsing history in a visitor profile table (the project does not have one)'
+          'No server-side store of visitor browsing history in a visitor profile table'
         ]
       },
       {
         heading: 'Cookies and local storage — only what this app actually uses',
-        body: 'Application code for AZ Planting Calendar does not set advertising cookies and does not use session cookies for accounts (there are no accounts). The only intentional client persistence this app implements is localStorage for theme preference under the key theme (values light, dark, or system). Your browser may still keep ordinary HTTP cache entries for CSS, JavaScript, images, and API responses. Clear site data in the browser to remove the theme key and cached assets. We do not claim cookie banners for cookies we do not set. If the hosting platform or your browser stores technical cookies for security or load balancing, those follow the host’s or browser’s practices, not a first-party analytics product in this codebase.'
+        body: 'Application code for AZ Planting Calendar does not set advertising cookies. When you sign in, an HttpOnly, Secure, SameSite=Lax session cookie is set on this origin so the garden bed can load; signing out clears it. The only intentional client persistence besides that cookie is localStorage for theme preference under the key theme (values light, dark, or system). Your browser may still keep ordinary HTTP cache entries for CSS, JavaScript, images, and API responses. Clear site data in the browser to remove the theme key and cached assets. If the hosting platform or your browser stores technical cookies for security or load balancing, those follow the host’s or browser’s practices, not a first-party analytics product in this codebase.'
       },
       {
         heading: 'Why we collect and how we use information',
@@ -529,9 +533,9 @@ export const en = {
     title: 'Contact',
     description:
       'How to report a wrong planting window, broken citation, or privacy question for AZ Planting Calendar.',
-    updated: 'Last updated 1 August 2026',
+    updated: 'Last updated 29 August 2026',
     intro:
-      'This page explains how to reach the maintainer of AZ Planting Calendar. The product is a small free tool, not a commercial support desk. There is no in-app ticket system, no chat widget, and no user accounts through which to send messages. Contact is open via the project’s public GitHub repository.',
+      'This page explains how to reach the maintainer of AZ Planting Calendar. Send a message with the form below, or open an issue on the project’s public GitHub repository. The product is a small free tool, not a commercial support desk.',
     sections: [
       {
         heading: 'How to reach the maintainer',
@@ -557,13 +561,139 @@ export const en = {
       },
       {
         heading: 'Privacy and security messages',
-        body: 'For privacy access, correction, or deletion questions, put “privacy request” in the issue title and describe what you believe is stored and where you saw it. This app has no user accounts; theme preference lives only in your browser localStorage under the key theme (values light, dark, or system). Clearing site data removes it without contacting anyone. For security concerns, describe impact and steps to reproduce without pasting live secrets into a public thread.'
+        body: 'For privacy access, correction, or deletion questions, put “privacy request” in the issue title or the form subject and describe what you believe is stored and where you saw it. Theme preference lives only in your browser localStorage under the key theme (values light, dark, or system); clearing site data removes it. If you have an account, say so and include the email you registered with so the garden-bed rows can be found. For security concerns, describe impact and steps to reproduce without pasting live secrets into a public thread.'
       },
       {
         heading: 'Response expectations',
         body: 'This is a best-effort home-garden project. Replies may take time. There is no uptime or support SLA. A transcription error with a solid citation is more likely to be acted on than a general request for a crop with no verifiable source. The project is not affiliated with the University of Arizona; cite Extension publications directly when you need official guidance.'
       }
-    ] as const satisfies readonly LegalSectionCopy[]
+    ] as const satisfies readonly LegalSectionCopy[],
+    formLead: 'Send a message about a wrong window, a broken citation, or a privacy request.',
+    fieldName: 'Name',
+    fieldEmail: 'Your email',
+    fieldSubject: 'Subject',
+    fieldMessage: 'Message',
+    fieldWebsite: 'Website',
+    messageHint: 'At least 10 characters.',
+    submit: 'Send message',
+    submitting: 'Sending…',
+    success: 'Message sent. We will get back to you.',
+    error: 'Could not send the message. Check the fields and try again.',
+    nameRequired: 'Tell us your name.',
+    emailRequired: 'Enter your email address.',
+    subjectRequired: 'Add a subject.',
+    messageRequired: 'Add a little more detail.'
+  },
+
+  auth: {
+    signInTitle: 'Sign in',
+    signUpTitle: 'Create an account',
+    forgotTitle: 'Forgot password',
+    resetTitle: 'Choose a new password',
+    confirmTitle: 'Confirm your email',
+    emailLabel: 'Email',
+    passwordLabel: 'Password',
+    passwordHint: 'Use at least 12 characters, and no more than 200.',
+    passwordTooShort: 'Use at least 12 characters.',
+    passwordTooLong: 'That password is too long.',
+    emailRequired: 'Enter your email address.',
+    passwordRequired: 'Enter your password.',
+    submitSignIn: 'Sign in',
+    submitSignUp: 'Create account',
+    submitForgot: 'Send reset link',
+    submitReset: 'Save new password',
+    submitting: 'Working…',
+    needAccount: 'Need an account? Create one',
+    haveAccount: 'Already have an account? Sign in',
+    forgotLink: 'Forgot your password?',
+    forgotLead:
+      'Enter your email. If an account exists for it, we will send a reset link. The confirmation is the same whether or not the address is on file.',
+    forgotDone: 'If that email is on file, a reset link is on its way. Check your inbox.',
+    resetMissingToken: 'This reset link is missing its token. Request a new one.',
+    resetRequestNew: 'Request a new reset link',
+    confirmMissingToken: 'This confirmation link is missing its token.',
+    confirmSuccess: 'Your email is confirmed.',
+    confirmExpired:
+      'This confirmation link is invalid or has expired. Request a new one from your account.',
+    confirmBack: 'Back to account',
+    confirmWorking: 'Confirming your email…',
+    /**
+     * Rate-limit copy when Retry-After is present.
+     *
+     * @param seconds - Seconds from the Retry-After header.
+     */
+    rateLimited: (seconds: number) =>
+      `Too many attempts. Wait ${seconds} seconds and try again.`,
+    rateLimitedGeneric: 'Too many attempts. Wait a few minutes and try again.',
+    genericError: 'Something went wrong. Try again.',
+    signInLead:
+      'Sign in to keep a garden bed of crops and see the planting window for your zone.',
+    signUpLead:
+      'Create an account to keep a garden bed. Passwords must be at least 12 characters.'
+  },
+
+  account: {
+    title: 'Your account',
+    signedInAs: 'Signed in as',
+    emailConfirmed: 'Email confirmed',
+    emailUnconfirmed: 'Email not yet confirmed',
+    signOut: 'Sign out',
+    signingOut: 'Signing out…',
+    bedTitle: 'Garden bed',
+    bedEmpty: 'You have not added any crops to your bed yet.',
+    bedEmptyHint: 'Open the year grid or a crop page and add a crop to keep it here.',
+    gridLink: 'Open year grid',
+    openCrop: 'Crop detail',
+    loading: 'Loading your account…',
+    add: 'Add to bed',
+    remove: 'Remove',
+    inBed: 'In bed',
+    /**
+     * Accessible name for adding a named crop.
+     *
+     * @param name - Crop name.
+     */
+    addAria: (name: string) => `Add ${name} to your garden bed`,
+    /**
+     * Accessible name for removing a named crop.
+     *
+     * @param name - Crop name.
+     */
+    removeAria: (name: string) => `Remove ${name} from your garden bed`,
+    signInToAdd: 'Sign in to add',
+    /**
+     * Accessible name for the signed-out add control.
+     *
+     * @param name - Crop name.
+     */
+    signInToAddAria: (name: string) => `Sign in to add ${name} to your garden bed`,
+    error: 'Could not update your garden bed.',
+    retry: 'Retry',
+    compactAdd: 'Add',
+    compactRemove: 'Remove',
+    plantableNow: 'Plantable now',
+    /**
+     * Next planting window label.
+     *
+     * @param label - Half-month label such as "Sep 1".
+     */
+    nextWindow: (label: string) => `Next window ${label}`,
+    /**
+     * Planning zone line on a bed card.
+     *
+     * @param zoneName - Zone display name.
+     * @param usdaZone - USDA hardiness zone, or null when unsourced.
+     */
+    zoneLine: (zoneName: string, usdaZone: string | null) =>
+      usdaZone ? `${zoneName} · USDA ${usdaZone}` : zoneName,
+    noWindows: 'No planting windows on file for this crop.',
+    /**
+     * Inclusive window range.
+     *
+     * @param start - Start label.
+     * @param end - End label.
+     */
+    windowRange: (start: string, end: string) => (start === end ? start : `${start} – ${end}`)
   },
 
   notFound: {
@@ -584,13 +714,26 @@ export const en = {
       'How planting windows are sourced for the Arizona low desert and Cave Creek 85331 from University of Arizona Extension.',
     termsTitle: 'Terms — AZ Planting Calendar',
     termsDescription:
-      'Terms of use for the free AZ Planting Calendar planning tool: no accounts, sourced Extension data, garden planning only.',
+      'Terms of use for the free AZ Planting Calendar planning tool: optional account for a garden bed, sourced Extension data, garden planning only.',
     privacyTitle: 'Privacy — AZ Planting Calendar',
     privacyDescription:
-      'Privacy practices for AZ Planting Calendar: no accounts, no tracking cookies set by the app, theme on device only.',
+      'Privacy practices for AZ Planting Calendar: optional account, session cookie when signed in, theme on device only.',
     contactTitle: 'Contact — AZ Planting Calendar',
     contactDescription:
-      'Report data errors or privacy questions for the Maricopa low-desert planting calendar.'
+      'Report data errors or privacy questions for the Maricopa low-desert planting calendar.',
+    signInTitle: 'Sign in — AZ Planting Calendar',
+    signInDescription: 'Sign in to keep a garden bed of crops and their planting windows.',
+    signUpTitle: 'Create an account — AZ Planting Calendar',
+    signUpDescription:
+      'Create a free account to keep a garden bed of crops for your Arizona low-desert zone.',
+    forgotTitle: 'Forgot password — AZ Planting Calendar',
+    forgotDescription: 'Request a password reset link for your AZ Planting Calendar account.',
+    resetTitle: 'Choose a new password — AZ Planting Calendar',
+    resetDescription: 'Set a new password for your AZ Planting Calendar account.',
+    confirmTitle: 'Confirm your email — AZ Planting Calendar',
+    confirmDescription: 'Confirm the email address on your AZ Planting Calendar account.',
+    accountTitle: 'Your account — AZ Planting Calendar',
+    accountDescription: 'Your garden bed and account for AZ Planting Calendar.'
   }
 } as const;
 

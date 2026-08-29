@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { BedControl } from './BedControl';
 import { HALF_MONTH_LABELS } from '../lib/halfMonth';
 import { en } from '../i18n/en';
 import type { GridResponse } from '../lib/schemas';
@@ -101,7 +102,10 @@ export function YearGrid({
               {data.crops.map((row) => (
                 <tr key={row.crop.id}>
                   <th scope="row" className="year-grid__sticky year-grid__crop">
-                    <Link to={`/crop/${row.crop.id}`}>{row.crop.name}</Link>
+                    <div className="year-grid__crop-cell">
+                      <Link to={`/crop/${row.crop.id}`}>{row.crop.name}</Link>
+                      <BedControl cropId={row.crop.id} cropName={row.crop.name} compact />
+                    </div>
                   </th>
                   {row.cells.map((cell) => {
                     const mark =

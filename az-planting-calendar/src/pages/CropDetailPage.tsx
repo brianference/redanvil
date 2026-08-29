@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
+import { BedControl } from '../components/BedControl';
 import { CropArt } from '../components/CropArt';
 import { MethodChip } from '../components/MethodChip';
 import { useAsyncLoad } from '../hooks/useAsyncLoad';
@@ -8,6 +9,7 @@ import { en } from '../i18n/en';
 import { fetchCropDetail } from '../lib/api';
 import { halfMonthLabel } from '../lib/halfMonth';
 import type { CropGuide } from '../lib/schemas';
+import '../components/Form.css';
 import './ProsePage.css';
 
 /**
@@ -50,7 +52,10 @@ export function CropDetailPage() {
               size="detail"
               priority
             />
-            <h1>{data.crop.name}</h1>
+            <div className="detail-hero__title">
+              <h1>{data.crop.name}</h1>
+              <BedControl cropId={data.crop.id} cropName={data.crop.name} />
+            </div>
           </div>
           <dl className="detail-meta mono">
             <div>

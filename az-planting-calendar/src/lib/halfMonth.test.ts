@@ -5,8 +5,10 @@ import {
   formatFrostDate,
   halfMonthInWindow,
   halfMonthLabel,
+  halfMonthOffset,
   halfMonthToIsoDate,
   monthToHalfMonths,
+  nextPlantableHalfMonth,
   HALF_MONTHS_PER_YEAR
 } from './halfMonth';
 
@@ -89,5 +91,30 @@ describe('labels and month helpers', () => {
   it('formats MM-DD frost dates for display', () => {
     expect(formatFrostDate('02-20')).toBe('Feb 20');
     expect(formatFrostDate('12-06')).toBe('Dec 6');
+  });
+});
+
+describe('nextPlantableHalfMonth', () => {
+  it('returns null when there are no windows', () => {
+    expect(nextPlantableHalfMonth([], 10)).toBeNull();
+  });
+
+  it('returns now when the crop is currently plantable', () => {
+    expect(nextPlantableHalfMonth([{ start_half_month: 14, end_half_month: 16 }], 15)).toBe(15);
+  });
+
+  it('walks forward and wraps the year', () => {
+    // August (14) looking at a Nov–Feb window (20–3) should land on Nov 1 (20).
+    expect(nextPlantableHalfMonth([{ start_half_month: 20, end_half_month: 3 }], 14)).toBe(20);
+    // January looking at a late-year window that already passed wraps to next year.
+    expect(nextPlantableHalfMonth([{ start_half_month: 20, end_half_month: 21 }], 0)).toBe(20);
+  });
+});
+
+describe('halfMonthOffset', () => {
+  it('measures forward distance including wrap', () => {
+    expect(halfMonthOffset(14, 14)).toBe(0);
+    expect(halfMonthOffset(14, 20)).toBe(6);
+    expect(halfMonthOffset(22, 1)).toBe(3);
   });
 });

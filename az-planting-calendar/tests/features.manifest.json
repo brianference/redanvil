@@ -106,6 +106,26 @@
       "routes": ["/crop/crop-tomatoes"],
       "test": "acceptance.spec.ts > crop detail shows a working citation link",
       "whyNotCrawled": "Only on crop detail; crawler default routes are static pages"
+    },
+    {
+      "role": "link",
+      "name": "Sign in",
+      "routes": ["/", "/about", "/grid", "/contact"],
+      "test": "src/lib/authForm.test.ts",
+      "whyNotCrawled": "Account nav is in PrimaryNavLinks on both the compact header mobile menu and the inner-page topbar"
+    },
+    {
+      "role": "textbox",
+      "name": "contact-name",
+      "routes": ["/contact"],
+      "test": "src/lib/authForm.test.ts"
+    },
+    {
+      "role": "button",
+      "name": "bed-control",
+      "routes": ["/grid", "/crop/crop-tomatoes"],
+      "test": "functions/api/bed.test.ts",
+      "whyNotCrawled": "Add/remove is on crop detail and each year-grid row; unit tests cover the bed API sort and 401"
     }
   ]
 }

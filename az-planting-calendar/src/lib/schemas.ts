@@ -259,3 +259,78 @@ export const AssistantResponseSchema = z.object({
   filters: AssistantFiltersSchema
 });
 export type AssistantResponse = z.infer<typeof AssistantResponseSchema>;
+
+/** Minimum password length enforced by the auth API. */
+export const PASSWORD_MIN_LENGTH = 12;
+
+/** Maximum password length enforced by the auth API. */
+export const PASSWORD_MAX_LENGTH = 200;
+
+/** GET /api/auth/session. */
+export const SessionResponseSchema = z.object({
+  email: z.string().nullable(),
+  emailVerified: z.boolean(),
+  enabled: z.boolean()
+});
+export type SessionResponse = z.infer<typeof SessionResponseSchema>;
+
+/** POST /api/auth/register success. */
+export const RegisterResponseSchema = z.object({
+  ok: z.literal(true),
+  email: z.string(),
+  emailVerified: z.boolean()
+});
+export type RegisterResponse = z.infer<typeof RegisterResponseSchema>;
+
+/** POST /api/auth/login success. */
+export const LoginResponseSchema = z.object({
+  ok: z.literal(true),
+  email: z.string()
+});
+export type LoginResponse = z.infer<typeof LoginResponseSchema>;
+
+/** POST /api/auth/confirm and password reset success. */
+export const AuthOkEmailSchema = z.object({
+  ok: z.literal(true),
+  email: z.string().nullable()
+});
+export type AuthOkEmail = z.infer<typeof AuthOkEmailSchema>;
+
+/** POST /api/auth/signout, reset-request, contact, and bed delete success. */
+export const OkResponseSchema = z.object({
+  ok: z.literal(true)
+});
+export type OkResponse = z.infer<typeof OkResponseSchema>;
+
+/** One planting window attached to a garden-bed crop. */
+export const BedWindowSchema = z.object({
+  start_half_month: HalfMonthSchema,
+  end_half_month: HalfMonthSchema,
+  method: MethodSchema,
+  startLabel: z.string().min(1),
+  endLabel: z.string().min(1)
+});
+export type BedWindow = z.infer<typeof BedWindowSchema>;
+
+/** One crop on the signed-in gardener's bed. */
+export const BedItemSchema = z.object({
+  cropId: z.string().min(1),
+  cropName: z.string().min(1),
+  zone: z.string().min(1),
+  zoneName: z.string().nullable(),
+  usdaZone: z.string().nullable(),
+  addedAt: z.number().int(),
+  plantedAt: z.number().int().nullable(),
+  notes: z.string().nullable(),
+  nextHalfMonth: HalfMonthSchema.nullable(),
+  nextHalfMonthLabel: z.string().nullable(),
+  inWindow: z.boolean(),
+  windows: z.array(BedWindowSchema)
+});
+export type BedItem = z.infer<typeof BedItemSchema>;
+
+/** GET /api/bed. */
+export const BedListSchema = z.object({
+  items: z.array(BedItemSchema)
+});
+export type BedList = z.infer<typeof BedListSchema>;

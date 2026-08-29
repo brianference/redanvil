@@ -108,6 +108,14 @@
   display: none;
 }
 
+.year-grid__crop-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
 .year-grid__crop a {
   color: var(--text);
   text-decoration: none;
