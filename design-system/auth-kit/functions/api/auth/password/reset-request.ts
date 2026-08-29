@@ -6,6 +6,7 @@ import { passwordResetHtml, sendEmail } from '../../../_lib/email'
 import { parseBody, resetRequestSchema } from '../../../_lib/validate'
 import { guard } from '../../../_lib/ratelimit'
 import { APP } from '../../../_lib/appconfig'
+import { APP_BIND, APP_FILTER } from '../../../_lib/tenancy'
 
 const RESET_TTL_MS = 60 * 60 * 1000
 
@@ -17,7 +18,9 @@ export async function onRequestPost({ request, env }: FnCtx) {
   const limited = await guard(env, request, 'reset-request', email)
   if (limited) return limited
 
-  const user = await env.DB.prepare('select id from users where email = ?').bind(email).first<{ id: string }>()
+  const user = await env.DB.prepare(`select id from users where email = ?${APP_FILTER}`)
+    .bind(email, ...APP_BIND)
+    .first<{ id: string }>()
 
   // Only send when the account exists, but always answer 200 with the same body,
   // so the endpoint cannot be used to discover which emails are registered.

@@ -28,6 +28,17 @@ export type AppConfig = {
    * filler that gets a sender marked as spam.
    */
   accountPurpose: string
+  /**
+   * Tenancy scope. Set this ONLY when the app shares its D1 database with other
+   * apps (see migrations/0001_auth_core_shared.sql). When set, every lookup by
+   * email is additionally filtered by `users.app = scope`, and new rows are
+   * stamped with it.
+   *
+   * Leave it undefined for an app with its own database. The queries then behave
+   * exactly as they did before this field existed, so the apps already in
+   * production are unaffected and need no migration.
+   */
+  scope?: string
 }
 
 export const APP: AppConfig = {

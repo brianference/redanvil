@@ -6,6 +6,8 @@ import { hashPassword } from '../../_lib/password'
 import { parseBody, registerSchema } from '../../_lib/validate'
 import { guard } from '../../_lib/ratelimit'
 import { sendVerificationEmail } from '../../_lib/verification'
+import { APP_BIND, APP_FILTER, APP_INSERT_COL, APP_INSERT_VAL } from '../../_lib/tenancy'
+import { APP } from '../../_lib/appconfig'
 
 export async function onRequestPost({ request, env }: FnCtx) {
   const parsed = await parseBody(request, registerSchema)
@@ -16,8 +18,10 @@ export async function onRequestPost({ request, env }: FnCtx) {
   if (limited) return limited
 
   const now = Date.now()
-  const existing = await env.DB.prepare('select id, password_hash as passwordHash from users where email = ?')
-    .bind(email)
+  const existing = await env.DB.prepare(
+    `select id, password_hash as passwordHash from users where email = ?${APP_FILTER}`,
+  )
+    .bind(email, ...APP_BIND)
     .first<{ id: string; passwordHash: string | null }>()
 
   // An account already carrying a password is a genuine conflict. An account
@@ -51,10 +55,10 @@ export async function onRequestPost({ request, env }: FnCtx) {
   } else {
     userId = crypto.randomUUID()
     await env.DB.prepare(
-      `insert into users (id, email, created_at, updated_at, password_hash, password_salt, password_iters)
-       values (?, ?, ?, ?, ?, ?, ?)`,
+      `insert into users (${APP_INSERT_COL}id, email, created_at, updated_at, password_hash, password_salt, password_iters)
+       values (${APP_INSERT_VAL}?, ?, ?, ?, ?, ?, ?)`,
     )
-      .bind(userId, email, now, now, hash, salt, iterations)
+      .bind(...(APP.scope ? [APP.scope] : []), userId, email, now, now, hash, salt, iterations)
       .run()
   }
 

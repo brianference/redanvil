@@ -6,6 +6,7 @@ import { contactNotificationHtml, sendEmail } from '../_lib/email'
 import { contactSchema, parseBody } from '../_lib/validate'
 import { guard } from '../_lib/ratelimit'
 import { APP } from '../_lib/appconfig'
+import { APP_INSERT_COL, APP_INSERT_VAL } from '../_lib/tenancy'
 
 /** Where submissions are delivered. Overridable per app without touching code. */
 const DEFAULT_OPERATOR_EMAIL = 'brianference@protonmail.com'
@@ -27,10 +28,10 @@ export async function onRequestPost({ request, env }: FnCtx) {
   // Persist first. If Brevo is down or unconfigured the message is still kept,
   // which is why `delivered` is tracked separately.
   await env.DB.prepare(
-    `insert into contact_messages (id, name, email, subject, message, user_id, created_at, delivered)
-     values (?, ?, ?, ?, ?, ?, ?, 0)`,
+    `insert into contact_messages (${APP_INSERT_COL}id, name, email, subject, message, user_id, created_at, delivered)
+     values (${APP_INSERT_VAL}?, ?, ?, ?, ?, ?, ?, 0)`,
   )
-    .bind(id, name, email, subject, message, session?.userId ?? null, Date.now())
+    .bind(...(APP.scope ? [APP.scope] : []), id, name, email, subject, message, session?.userId ?? null, Date.now())
     .run()
 
   const result = await sendEmail(

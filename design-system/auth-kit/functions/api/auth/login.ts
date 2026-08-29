@@ -5,6 +5,7 @@ import { createSession, SESSION_TTL_SECONDS } from '../../_lib/auth'
 import { hashPassword, needsRehash, verifyPassword } from '../../_lib/password'
 import { loginSchema, parseBody } from '../../_lib/validate'
 import { clearSubject, guard } from '../../_lib/ratelimit'
+import { APP_BIND, APP_FILTER } from '../../_lib/tenancy'
 
 /** One message for every failure mode, so the endpoint cannot enumerate accounts. */
 const GENERIC_FAILURE = 'That email and password combination did not match.'
@@ -19,9 +20,9 @@ export async function onRequestPost({ request, env }: FnCtx) {
 
   const user = await env.DB.prepare(
     `select id, password_hash as hash, password_salt as salt, password_iters as iterations
-       from users where email = ?`,
+       from users where email = ?${APP_FILTER}`,
   )
-    .bind(email)
+    .bind(email, ...APP_BIND)
     .first<{ id: string; hash: string | null; salt: string | null; iterations: number | null }>()
 
   const ok = await verifyPassword(password, {
