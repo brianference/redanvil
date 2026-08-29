@@ -119,3 +119,65 @@ export type AssistantResponse = z.infer<typeof AssistantResponseSchema>;
 export const HealthResponseSchema = z.object({
   status: z.literal('ok')
 });
+
+/** Minimum password length enforced by the auth API. */
+export const PASSWORD_MIN_LENGTH = 12;
+
+/** Maximum password length enforced by the auth API. */
+export const PASSWORD_MAX_LENGTH = 200;
+
+/** GET /api/auth/session. */
+export const SessionResponseSchema = z.object({
+  email: z.string().nullable(),
+  emailVerified: z.boolean(),
+  enabled: z.boolean()
+});
+export type SessionResponse = z.infer<typeof SessionResponseSchema>;
+
+/** POST /api/auth/register success. */
+export const RegisterResponseSchema = z.object({
+  ok: z.literal(true),
+  email: z.string(),
+  emailVerified: z.boolean()
+});
+export type RegisterResponse = z.infer<typeof RegisterResponseSchema>;
+
+/** POST /api/auth/login success. */
+export const LoginResponseSchema = z.object({
+  ok: z.literal(true),
+  email: z.string()
+});
+export type LoginResponse = z.infer<typeof LoginResponseSchema>;
+
+/** POST /api/auth/confirm and password reset success. */
+export const AuthOkEmailSchema = z.object({
+  ok: z.literal(true),
+  email: z.string().nullable()
+});
+export type AuthOkEmail = z.infer<typeof AuthOkEmailSchema>;
+
+/** POST /api/auth/signout, reset-request, and contact success. */
+export const OkResponseSchema = z.object({
+  ok: z.literal(true)
+});
+export type OkResponse = z.infer<typeof OkResponseSchema>;
+
+/** One saved sushi place for the signed-in user. */
+export const SavedPlaceSchema = z.object({
+  sushiId: z.string().min(1),
+  title: z.string().min(1),
+  city: z.string(),
+  style: z.string(),
+  photoUrl: z.string(),
+  savedAt: z.number(),
+  beenThere: z.boolean(),
+  visitedAt: z.number().nullable(),
+  notes: z.string().nullable()
+});
+export type SavedPlace = z.infer<typeof SavedPlaceSchema>;
+
+/** GET /api/saves. */
+export const SavedPlaceListSchema = z.object({
+  items: z.array(SavedPlaceSchema)
+});
+export type SavedPlaceList = z.infer<typeof SavedPlaceListSchema>;

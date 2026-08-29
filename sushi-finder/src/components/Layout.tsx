@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
+import { useSession } from '../hooks/useSession';
 import { en } from '../i18n/en';
 import { AssistantPanel } from './AssistantPanel';
 import { ThemeToggle } from './ThemeToggle';
@@ -16,6 +17,7 @@ import { ThemeToggle } from './ThemeToggle';
 export function Layout(): JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false);
   const { pathname } = useLocation();
+  const { email } = useSession();
 
   // Close on navigation: leaving the panel open over the new page is the classic
   // mobile-menu bug, and it hides the content the user just asked for.
@@ -73,6 +75,11 @@ export function Layout(): JSX.Element {
             <NavLink to="/sushis">{en.nav.sushis}</NavLink>
             <NavLink to="/about">{en.nav.about}</NavLink>
             <NavLink to="/contact">{en.nav.contact}</NavLink>
+            {email ? (
+              <NavLink to="/account">{en.nav.account}</NavLink>
+            ) : (
+              <NavLink to="/signin">{en.nav.signIn}</NavLink>
+            )}
           </nav>
           <div className="shell__actions">
             <ThemeToggle />

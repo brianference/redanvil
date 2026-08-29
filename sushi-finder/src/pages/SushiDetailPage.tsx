@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Breadcrumbs } from '../components/Breadcrumbs';
+import { FormStatus } from '../components/FormStatus';
+import { SaveControl } from '../components/SaveControl';
 import { EmptyState, ErrorState, LoadingState } from '../components/states';
+import { useSaves } from '../hooks/useSaves';
 import { en } from '../i18n/en';
 import { deleteSushi, fetchSushi } from '../lib/api';
 import type { SushiRow } from '../lib/schemas';
@@ -17,6 +20,7 @@ export function SushiDetailPage(): JSX.Element {
   const [status, setStatus] = useState<'loading' | 'ready' | 'not-found' | 'error'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const saves = useSaves();
 
   const load = useCallback(async () => {
     if (!id) {
@@ -160,6 +164,7 @@ export function SushiDetailPage(): JSX.Element {
             <Link className="btn" to="/sushis">
               {en.detail.back}
             </Link>
+            <SaveControl sushiId={item.id} title={item.title} />
             <Link className="btn" to={`/sushis/${item.id}/edit`}>
               {en.detail.edit}
             </Link>
@@ -169,6 +174,7 @@ export function SushiDetailPage(): JSX.Element {
               </button>
             ) : null}
           </div>
+          <FormStatus message={saves.error} tone="error" />
           {(item.style || item.priceBand || item.city) && (
             <p style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
               {item.style ? <span className="chip">{item.style}</span> : null}

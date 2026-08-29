@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Breadcrumbs } from '../components/Breadcrumbs';
+import { FormStatus } from '../components/FormStatus';
+import { SaveControl } from '../components/SaveControl';
 import { EmptyState, ErrorState, LoadingState } from '../components/states';
+import { useSaves } from '../hooks/useSaves';
 import { en } from '../i18n/en';
 import { fetchSushis } from '../lib/api';
 import type { SushiRow } from '../lib/schemas';
@@ -18,6 +21,7 @@ export function SushiListPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const hasLoadedOnce = useRef(false);
   const requestSeq = useRef(0);
+  const saves = useSaves();
 
   const load = useCallback(async (q: string) => {
     const seq = ++requestSeq.current;
@@ -136,6 +140,8 @@ export function SushiListPage(): JSX.Element {
           />
         ) : null}
 
+        <FormStatus message={saves.error} tone="error" />
+
         {listStatus === 'ready' ? (
           <ul className="sushi-list">
             {visibleItems.map((item) => (
@@ -148,6 +154,9 @@ export function SushiListPage(): JSX.Element {
                   {item.city ? <span className="chip">{item.city}</span> : null}
                 </p>
                 <p>{item.description || en.detail.emptyDescription}</p>
+                <div className="sushi-card__actions">
+                  <SaveControl sushiId={item.id} title={item.title} />
+                </div>
               </li>
             ))}
           </ul>
