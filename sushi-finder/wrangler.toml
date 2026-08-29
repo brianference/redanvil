@@ -1,12 +1,40 @@
 name = "sushi-finder"
+
 compatibility_date = "2025-07-18"
+
 pages_build_output_dir = "dist"
 
+
+
 [[d1_databases]]
+
 binding = "DB"
+
 database_name = "sushi-finder-db"
+
 database_id = "91a74f27-753d-4ce6-bb2d-858baa1fde75"
+
 migrations_dir = "migrations"
 
+
+
 [ai]
+
 binding = "AI"
+
+
+
+# Plain-text configuration. NOTE: [vars] is replace-not-merge: any var missing
+
+# from this block is dropped from the deployment. Secrets (BREVO_API_KEY,
+
+# RATE_LIMIT_SALT) are set with `wrangler pages secret put` and never appear here.
+
+[vars]
+
+SITE_URL   = "https://sushi-finder.pages.dev"
+
+MAIL_FROM  = "no-reply@txeas.com"
+
+CONTACT_TO = "brianference@protonmail.com"
+
