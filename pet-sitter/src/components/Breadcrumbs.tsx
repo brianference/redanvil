@@ -27,8 +27,18 @@ export function Breadcrumbs(): JSX.Element | null {
     crumbs.push({ label: en.nav.privacy, to: '/privacy' });
   } else if (segments[0] === 'contact') {
     crumbs.push({ label: en.nav.contact, to: '/contact' });
-  } else if (segments[0] === 'login') {
-    crumbs.push({ label: en.nav.login, to: '/login' });
+  } else if (segments[0] === 'signin') {
+    crumbs.push({ label: en.nav.login, to: '/signin' });
+  } else if (segments[0] === 'signup') {
+    crumbs.push({ label: en.auth.signUpTitle, to: '/signup' });
+  } else if (segments[0] === 'forgot') {
+    crumbs.push({ label: en.auth.forgotTitle, to: '/forgot' });
+  } else if (segments[0] === 'reset') {
+    crumbs.push({ label: en.auth.resetTitle, to: '/reset' });
+  } else if (segments[0] === 'confirm') {
+    crumbs.push({ label: en.auth.confirmTitle, to: '/confirm' });
+  } else if (segments[0] === 'account') {
+    crumbs.push({ label: en.nav.account, to: '/account' });
   } else {
     crumbs.push({ label: segments[0] ?? path, to: path });
   }

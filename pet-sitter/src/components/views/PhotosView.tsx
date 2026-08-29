@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { en } from '../../i18n/en';
 import { AvailabilityRange } from '../AvailabilityRange';
 import { PetTypePills } from '../PetTypePills';
+import { ShortlistControl } from '../ShortlistControl';
 import { SitterAvatar } from '../SitterAvatar';
 import { SitterRating } from '../SitterRating';
 import { ResultsStatus } from './ResultsStatus';
@@ -150,6 +151,9 @@ export function PhotosView(props: MarketplaceLayoutProps): JSX.Element {
                   />
                 </div>
               </Link>
+              <div className="photo-card__actions">
+                <ShortlistControl sitterId={s.id} name={s.name} />
+              </div>
             </li>
           ))}
         </ul>

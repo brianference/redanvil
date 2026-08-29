@@ -3,6 +3,7 @@ import type { SitterSummary } from '../../lib/api';
 import { en } from '../../i18n/en';
 import { AvailabilityRange } from '../AvailabilityRange';
 import { PetTypePills } from '../PetTypePills';
+import { ShortlistControl } from '../ShortlistControl';
 import { SitterAvatar } from '../SitterAvatar';
 import { SitterRating } from '../SitterRating';
 import { CompactSearchField } from './CompactSearchField';
@@ -257,7 +258,7 @@ export function DatesView(props: MarketplaceLayoutProps): JSX.Element {
               {sitters.map((s) => {
                 const slots = weekBarSlots(s, stripAnchor);
                 return (
-                  <li key={s.id}>
+                  <li key={s.id} className="timeline-item">
                     <Link
                       to={`/sitters/${s.id}`}
                       className="timeline-row"
@@ -300,6 +301,9 @@ export function DatesView(props: MarketplaceLayoutProps): JSX.Element {
                         </div>
                       </div>
                     </Link>
+                    <div className="timeline-row__actions">
+                      <ShortlistControl sitterId={s.id} name={s.name} />
+                    </div>
                   </li>
                 );
               })}

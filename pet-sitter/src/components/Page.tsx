@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { useSession } from '../hooks/useSession';
 import { en } from '../i18n/en';
 import { ROUTES, type AppRoute } from '../lib/routes';
 import { AssistantPanel } from './AssistantPanel';
@@ -45,11 +46,26 @@ function navLabel(route: AppRoute): string {
       return en.nav.privacy;
     case 'Contact':
       return en.nav.contact;
-    case 'Login':
+    case 'SignIn':
       return en.nav.login;
     default:
       return route.name;
   }
+}
+
+/**
+ * Path and label for a primary-nav route, swapping Sign in for Account when signed in.
+ *
+ * @param route - Canonical app route.
+ * @param email - Signed-in address, or null.
+ */
+function accountAwareNav(route: AppRoute, email: string | null): { to: string; label: string } {
+  if (route.name === 'SignIn') {
+    return email
+      ? { to: '/account', label: en.nav.account }
+      : { to: '/signin', label: en.nav.login };
+  }
+  return { to: route.path, label: navLabel(route) };
 }
 
 /**
@@ -70,6 +86,7 @@ export function Page({
   hideBreadcrumbs = false
 }: PageProps): JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { email } = useSession();
   // Home stays visible at 375; secondary chrome goes behind the menu control.
   const primaryRoutes = ROUTES.filter((route) => route.path === '/');
   const secondaryRoutes = ROUTES.filter((route) => route.path !== '/');
@@ -106,17 +123,20 @@ export function Page({
             ))}
           </ul>
           <ul className="topbar__list topbar__list--desktop-secondary">
-            {secondaryRoutes.map((route) => (
-              <li key={route.path}>
-                <NavLink
-                  data-testid="nav-link"
-                  to={route.path}
-                  className={({ isActive }) => topbarLinkClass(isActive)}
-                >
-                  {navLabel(route)}
-                </NavLink>
-              </li>
-            ))}
+            {secondaryRoutes.map((route) => {
+              const item = accountAwareNav(route, email);
+              return (
+                <li key={item.to}>
+                  <NavLink
+                    data-testid="nav-link"
+                    to={item.to}
+                    className={({ isActive }) => topbarLinkClass(isActive)}
+                  >
+                    {item.label}
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </nav>
         <div className="topbar__actions">
@@ -144,18 +164,21 @@ export function Page({
           data-testid="primary-nav-menu"
         >
           <ul className="topbar__list topbar__list--menu">
-            {secondaryRoutes.map((route) => (
-              <li key={route.path}>
-                <NavLink
-                  data-testid="nav-link"
-                  to={route.path}
-                  className={({ isActive }) => topbarLinkClass(isActive)}
-                  onClick={closeMenu}
-                >
-                  {navLabel(route)}
-                </NavLink>
-              </li>
-            ))}
+            {secondaryRoutes.map((route) => {
+              const item = accountAwareNav(route, email);
+              return (
+                <li key={item.to}>
+                  <NavLink
+                    data-testid="nav-link"
+                    to={item.to}
+                    className={({ isActive }) => topbarLinkClass(isActive)}
+                    onClick={closeMenu}
+                  >
+                    {item.label}
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </header>
@@ -182,7 +205,9 @@ export function Page({
                   <Link to="/sitters">{en.nav.sitters}</Link>
                 </li>
                 <li>
-                  <Link to="/login">{en.nav.login}</Link>
+                  <Link to={email ? '/account' : '/signin'}>
+                    {email ? en.nav.account : en.nav.login}
+                  </Link>
                 </li>
               </ul>
             </section>

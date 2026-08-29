@@ -14,7 +14,7 @@ export const ROUTES: readonly AppRoute[] = [
   { path: '/terms', name: 'Terms' },
   { path: '/privacy', name: 'Privacy' },
   { path: '/contact', name: 'Contact' },
-  { path: '/login', name: 'Login' }
+  { path: '/signin', name: 'SignIn' }
 ] as const;
 
 /**

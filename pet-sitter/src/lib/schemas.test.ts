@@ -1,7 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   AssistantRequestSchema,
-  AuthBodySchema,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  SessionResponseSchema,
+  ShortlistResponseSchema,
   SittersQuerySchema
 } from './schemas';
 
@@ -38,25 +41,47 @@ describe('SittersQuerySchema', () => {
   });
 });
 
-describe('AuthBodySchema', () => {
-  it('accepts sign-out without credentials', () => {
-    expect(AuthBodySchema.safeParse({ action: 'sign-out' }).success).toBe(true);
+describe('password length constants', () => {
+  it('matches the server floor and ceiling', () => {
+    expect(PASSWORD_MIN_LENGTH).toBe(12);
+    expect(PASSWORD_MAX_LENGTH).toBe(200);
+  });
+});
+
+describe('SessionResponseSchema', () => {
+  it('accepts a signed-out snapshot', () => {
+    const r = SessionResponseSchema.safeParse({
+      email: null,
+      emailVerified: false,
+      enabled: true
+    });
+    expect(r.success).toBe(true);
+  });
+});
+
+describe('ShortlistResponseSchema', () => {
+  it('accepts a profile with a shortlist row', () => {
+    const r = ShortlistResponseSchema.safeParse({
+      profile: { display_name: 'Ada', role: 'owner' },
+      items: [
+        {
+          sitter_id: 'sit-leslieville-01',
+          name: 'Avery Chen',
+          neighbourhood: 'Leslieville',
+          rate_per_night: 55,
+          added_at: 1,
+          note: null
+        }
+      ]
+    });
+    expect(r.success).toBe(true);
   });
 
-  it('requires email and password for sign-in and register', () => {
-    expect(
-      AuthBodySchema.safeParse({
-        action: 'sign-in',
-        email: 'a@example.com',
-        password: 'long-enough-password'
-      }).success
-    ).toBe(true);
-    expect(
-      AuthBodySchema.safeParse({
-        action: 'register',
-        email: 'not-an-email',
-        password: 'short'
-      }).success
-    ).toBe(false);
+  it('rejects an unknown role', () => {
+    const r = ShortlistResponseSchema.safeParse({
+      profile: { display_name: 'Ada', role: 'admin' },
+      items: []
+    });
+    expect(r.success).toBe(false);
   });
 });

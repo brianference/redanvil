@@ -10,7 +10,7 @@ describe('ROUTES', () => {
       '/terms',
       '/privacy',
       '/contact',
-      '/login'
+      '/signin'
     ]);
   });
 

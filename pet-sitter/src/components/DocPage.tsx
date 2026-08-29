@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Page } from './Page';
 
 /** A headed section of a document. */
@@ -18,10 +19,12 @@ export interface Doc {
 export interface DocPageProps {
   /** The document to render. */
   doc: Doc;
+  /** Optional extra content (for example the contact form). */
+  children?: ReactNode;
 }
 
 /** Renders a document as real headed sections rather than one paragraph. */
-export function DocPage({ doc }: DocPageProps): JSX.Element {
+export function DocPage({ doc, children }: DocPageProps): JSX.Element {
   return (
     <Page title={doc.title}>
       <p className="page-intro">{doc.intro}</p>
@@ -38,6 +41,7 @@ export function DocPage({ doc }: DocPageProps): JSX.Element {
           )}
         </section>
       ))}
+      {children}
       <p className="page-updated">Last updated: {doc.updated}</p>
     </Page>
   );

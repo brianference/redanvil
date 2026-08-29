@@ -4,6 +4,7 @@ import { pinForNeighbourhood } from '../../lib/mapPins';
 import { en } from '../../i18n/en';
 import { AvailabilityRange } from '../AvailabilityRange';
 import { PetTypePills } from '../PetTypePills';
+import { ShortlistControl } from '../ShortlistControl';
 import { SitterAvatar } from '../SitterAvatar';
 import { SitterRating } from '../SitterRating';
 import { CompactSearchField } from './CompactSearchField';
@@ -155,7 +156,7 @@ export function MapView(props: MarketplaceLayoutProps): JSX.Element {
           {status === 'ready' && sitters.length > 0 ? (
             <ul className="map-rail">
               {sitters.map((s) => (
-                <li key={s.id}>
+                <li key={s.id} className="map-rail__item">
                   <Link
                     to={`/sitters/${s.id}`}
                     className={
@@ -184,6 +185,9 @@ export function MapView(props: MarketplaceLayoutProps): JSX.Element {
                       <span>{en.home.perNight}</span>
                     </div>
                   </Link>
+                  <div className="map-rail__actions">
+                    <ShortlistControl sitterId={s.id} name={s.name} />
+                  </div>
                 </li>
               ))}
             </ul>

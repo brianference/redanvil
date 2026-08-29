@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { PetTypePills } from '../components/PetTypePills';
+import { ShortlistControl } from '../components/ShortlistControl';
 import { SafeExternalLink } from '../components/SafeExternalLink';
 import { SitterAvatar } from '../components/SitterAvatar';
 import { SitterRating } from '../components/SitterRating';
@@ -95,6 +96,9 @@ export function SitterDetail(): JSX.Element {
             </p>
             <SitterRating avgRating={avgRating} reviewCount={sitter.verified_reviews} />
             <PetTypePills petTypes={sitter.pet_types} />
+            <div className="detail__shortlist">
+              <ShortlistControl sitterId={sitter.id} name={sitter.name} />
+            </div>
           </div>
         </div>
         {sitter.available_from && sitter.available_to ? (
