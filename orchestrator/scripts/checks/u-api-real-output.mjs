@@ -136,7 +136,9 @@ export function discoverRoutes(appDir) {
  */
 export function fillParams(route, params = {}) {
   const missing = [];
-  const path = route.replace(/\[([^\]]+)\]/g, (_m, name) => {
+  // `[[name]]` is Pages' optional catch-all; the name is the inner token, and an
+  // empty value is legal (it means the directory itself, e.g. `/api`).
+  const path = route.replace(/\[\[?([^\]]+)\]\]?/g, (_m, name) => {
     const value = params[name];
     if (value === undefined) {
       missing.push(name);
@@ -144,7 +146,8 @@ export function fillParams(route, params = {}) {
     }
     return encodeURIComponent(String(value));
   });
-  return { path, missing };
+  // An optional catch-all filled with '' leaves a trailing slash; the directory itself is the target.
+  return { path: path.replace(/\/$/, '') || '/', missing };
 }
 
 /**

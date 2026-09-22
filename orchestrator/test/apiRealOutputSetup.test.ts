@@ -19,3 +19,12 @@ describe('u-api-real-output setup capture', () => {
     expect(setupCapturedParams(bare).size).toBe(0);
   });
 });
+
+describe('fillParams understands the optional catch-all', () => {
+  it('fills [[catchall]] by its inner name and maps an empty value to the directory', () => {
+    expect(fillParams('/api/[[catchall]]', { catchall: 'zzz' })).toEqual({ path: '/api/zzz', missing: [] });
+    expect(fillParams('/api/[[catchall]]', { catchall: '' })).toEqual({ path: '/api', missing: [] });
+    // Known-bad: no value at all is still reported under the inner name.
+    expect(fillParams('/api/[[catchall]]', {}).missing).toEqual(['catchall']);
+  });
+});
