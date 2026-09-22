@@ -148,6 +148,39 @@ export function fillParams(route, params = {}) {
 }
 
 /**
+ * Read a dotted path out of a parsed response body (`reminder.id`).
+ *
+ * Detail and action routes (`/api/reminders/[id]/undo`) cannot show a 2xx on a
+ * fresh seed unless something creates the row first. An example may declare
+ * `setup` calls whose responses fill route parameters, so the success path is
+ * proven against a real row this same run created, never a hand-typed id that
+ * happens to exist today.
+ *
+ * @param {unknown} body - Parsed JSON body.
+ * @param {string} path - Dotted path.
+ * @returns {unknown} The value, or undefined when any segment is missing.
+ */
+export function readPath(body, path) {
+  return String(path)
+    .split('.')
+    .reduce((acc, key) => (acc !== null && typeof acc === 'object' ? acc[key] : undefined), body);
+}
+
+/**
+ * Names of route parameters an example's `setup` steps promise to supply.
+ *
+ * @param {object} example - The declared example.
+ * @returns {Set<string>} Parameter names captured by setup.
+ */
+export function setupCapturedParams(example) {
+  const names = new Set();
+  for (const step of Array.isArray(example?.setup) ? example.setup : []) {
+    for (const name of Object.keys(step?.capture ?? {})) names.add(name);
+  }
+  return names;
+}
+
+/**
  * Append an example's declared query string to a path.
  *
  * A GET route that filters or searches cannot be exercised without one:
@@ -387,7 +420,9 @@ export async function runApiRealOutput(appDir, io, deps = {}) {
   for (const route of routes) {
     for (const example of byRoute.get(route)) {
       const { path, missing } = fillParams(route, example.params);
-      if (missing.length > 0) unfillable.push(`${route} (no value for ${missing.join(', ')})`);
+      const promised = setupCapturedParams(example);
+      const stillMissing = missing.filter((name) => !promised.has(name));
+      if (stillMissing.length > 0) unfillable.push(`${route} (no value for ${stillMissing.join(', ')})`);
       else plan.push({ route, path: withQuery(path, example.query), example });
     }
   }
@@ -515,8 +550,32 @@ async function defaultBoot(appDir, plan) {
       // is measured where the binding actually runs, and the example must name
       // that origin explicitly. There is no path here that skips a route.
       const origin = entry.example.remoteOrigin ?? null;
-      const got = await callExample(port, entry.path, entry.example, origin);
-      results.push({ ...entry, got, measuredAt: origin ?? 'local' });
+      let path = entry.path;
+      let setupError = null;
+      for (const step of Array.isArray(entry.example.setup) ? entry.example.setup : []) {
+        const stepGot = await callExample(port, step.route, step, origin);
+        if (stepGot.status === null || stepGot.status < 200 || stepGot.status >= 300) {
+          setupError = `setup ${step.method ?? 'GET'} ${step.route} answered ${stepGot.status ?? stepGot.error}`;
+          break;
+        }
+        const captured = {};
+        for (const [name, from] of Object.entries(step.capture ?? {})) {
+          const value = readPath(stepGot.body, from);
+          if (value === undefined || value === null) {
+            setupError = `setup ${step.route} did not return ${from} for parameter ${name}`;
+            break;
+          }
+          captured[name] = value;
+        }
+        if (setupError) break;
+        path = withQuery(fillParams(entry.route, { ...(entry.example.params ?? {}), ...captured }).path, entry.example.query);
+      }
+      if (setupError) {
+        results.push({ ...entry, got: { status: null, text: '', body: null, error: setupError }, measuredAt: origin ?? 'local' });
+        continue;
+      }
+      const got = await callExample(port, path, entry.example, origin);
+      results.push({ ...entry, path, got, measuredAt: origin ?? 'local' });
     }
     return { results, error: null };
   } finally {
