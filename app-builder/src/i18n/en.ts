@@ -459,6 +459,7 @@ export const en = {
     }
   },
   jobStatus: {
+    progressLabel: 'Build progress',
     regionLabel: 'Build job status',
     heading: 'Build status',
     ownerApproval:

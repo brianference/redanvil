@@ -301,6 +301,7 @@ export function JobStatusPanel({
           {stepView.percent !== null && stepView.index !== null && stepView.total !== null && (
             <div
               role="progressbar"
+              aria-label={copy.progressLabel}
               aria-valuemin={1}
               aria-valuemax={stepView.total}
               aria-valuenow={stepView.index}
