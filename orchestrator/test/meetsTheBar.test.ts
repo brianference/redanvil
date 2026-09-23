@@ -25,7 +25,9 @@ import {
   ALL_RUBRIC_RULES,
   DEFAULT_THRESHOLD,
   FAIL_CLOSED_VISUAL_RULES,
+  SHARED_PREFIXES,
   appsAffectedByFiles,
+  filesInPushRange,
   rubricCoverageReasons,
   evidenceAgeReasons,
   evaluateApp,
@@ -374,5 +376,237 @@ describe('pre-push refuses a sub-90 fixture', () => {
       { cwd: REPO_ROOT, encoding: 'utf8' }
     );
     expect(cli.status, `${cli.stdout}${cli.stderr}`).toBe(1);
+  });
+});
+
+/** Forty zeros: git's spelling of "no such object" on a new branch. */
+const ZERO_SHA = '0000000000000000000000000000000000000000';
+
+/**
+ * CJS preload that records finish-line invocations and does not run the checker.
+ * `ALL` means the hook called the checker with no `--app` (every gated app).
+ * @returns Source for the preload.
+ */
+function checkerShimSource(): string {
+  return [
+    "const fs = require('fs');",
+    'const checker = process.argv.some((arg) => {',
+    "  const n = String(arg).replace(/\\\\/g, '/');",
+    '  return (',
+    "    n === '.github/scripts/meets_the_bar.mjs' ||",
+    "    n.endsWith('/.github/scripts/meets_the_bar.mjs')",
+    '  );',
+    '});',
+    'if (!checker) return;',
+    "const index = process.argv.indexOf('--app');",
+    "const slug = index === -1 ? 'ALL' : process.argv[index + 1];",
+    "fs.appendFileSync(process.env.REDANVIL_HOOK_LOG, slug + '\\n');",
+    'process.exit(0);',
+    ''
+  ].join('\n');
+}
+
+/**
+ * Slugs the pre-push hook would check for one ref. The real finish line is not run.
+ * @param hookPath Hook script to execute.
+ * @param localSha Local tip.
+ * @param remoteSha Remote tip.
+ * @returns Checker slugs (`ALL` if the hook passed no `--app`), plus status and output.
+ */
+function probePush(
+  hookPath: string,
+  localSha: string,
+  remoteSha: string
+): { status: number | null; slugs: string[]; output: string } {
+  const dir = mkdtempSync(join(tmpdir(), 'redanvil-hook-probe-'));
+  const shim = join(dir, 'shim.cjs');
+  const log = join(dir, 'slugs.txt');
+  writeFileSync(shim, checkerShimSource(), 'utf8');
+  const r = spawnSync('bash', [hookPath, 'origin', 'https://github.com/example/example.git'], {
+    cwd: REPO_ROOT,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      NODE_OPTIONS: `--require ${shim.replace(/\\/g, '/')}`,
+      REDANVIL_HOOK_LOG: log
+    },
+    input: `refs/heads/probe ${localSha} refs/heads/probe ${remoteSha}\n`
+  });
+  const slugs = existsSync(log) ? readFileSync(log, 'utf8').split(/\r?\n/).filter(Boolean) : [];
+  rmSync(dir, { recursive: true, force: true });
+  return {
+    status: r.status,
+    slugs,
+    output: `${r.stdout ?? ''}${r.stderr ?? ''}${r.error ? String(r.error) : ''}`
+  };
+}
+
+/**
+ * Create a commit whose tree is exactly `files`, without moving HEAD or the index.
+ * When `shaStartsWith` is set, the message is varied until the sha matches.
+ * @param files Repo-relative path to file contents.
+ * @param shaStartsWith Optional required sha prefix.
+ * @returns Commit sha.
+ */
+function commitOnly(files: Record<string, string>, shaStartsWith?: string): string {
+  const indexFile = join(
+    tmpdir(),
+    `redanvil-idx-${process.pid}-${Math.random().toString(16).slice(2)}`
+  );
+  const env = {
+    ...process.env,
+    GIT_INDEX_FILE: indexFile,
+    GIT_AUTHOR_NAME: 't',
+    GIT_AUTHOR_EMAIL: 't@t',
+    GIT_COMMITTER_NAME: 't',
+    GIT_COMMITTER_EMAIL: 't@t'
+  };
+  /**
+   * @param args Git argv after `git`.
+   * @param input Optional stdin.
+   * @returns Trimmed stdout.
+   */
+  const git = (args: string[], input?: string): string => {
+    const r = spawnSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8', env, input });
+    if (r.status !== 0) throw new Error(`${args.join(' ')}\n${r.stderr || r.stdout}`);
+    return (r.stdout ?? '').trim();
+  };
+  try {
+    const maxAttempts = 400;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      git(['read-tree', '--empty']);
+      for (const [path, content] of Object.entries(files)) {
+        const blob = git(['hash-object', '-w', '--stdin'], content);
+        git(['update-index', '--add', '--cacheinfo', `100644,${blob},${path}`]);
+      }
+      const tree = git(['write-tree']);
+      const sha = git(['commit-tree', tree, '-m', `probe ${attempt} ${Date.now()}`]);
+      if (!shaStartsWith || sha.startsWith(shaStartsWith)) return sha;
+    }
+    throw new Error(`no commit sha starting with ${shaStartsWith ?? ''} in ${maxAttempts} tries`);
+  } finally {
+    rmSync(indexFile, { force: true });
+  }
+}
+
+describe('push range scopes the finish line', () => {
+  const everySlug = () => APPS.map((app) => app.slug).sort();
+
+  it('(a) a sushi-finder path does not select app-builder', () => {
+    const hit = appsAffectedByFiles(['sushi-finder/src/main.tsx']);
+    expect(hit.map((app) => app.slug)).toEqual(['sushi-finder']);
+  });
+
+  it('(b) an app-builder path selects app-builder', () => {
+    const hit = appsAffectedByFiles(['app-builder/src/App.tsx']);
+    expect(hit.map((app) => app.slug)).toContain('app-builder');
+    expect(hit.map((app) => app.slug)).not.toContain('sushi-finder');
+  });
+
+  it('(c) each shared prefix selects every gated app', () => {
+    const all = everySlug();
+    expect(all).toContain('app-builder');
+    expect(all).toContain('sushi-finder');
+    expect(all.length).toBeGreaterThan(2);
+    for (const prefix of SHARED_PREFIXES) {
+      const sample = prefix.endsWith('/') ? `${prefix}touched.ts` : prefix;
+      expect(
+        appsAffectedByFiles([sample])
+          .map((app) => app.slug)
+          .sort(),
+        sample
+      ).toEqual(all);
+    }
+  });
+
+  it('tooling paths (orchestrator, .github, root package files) select no app', () => {
+    for (const f of [
+      'orchestrator/src/gate/score.ts',
+      '.github/workflows/ci.yml',
+      'package.json',
+      'package-lock.json',
+      'eslint.config.js'
+    ]) {
+      expect(appsAffectedByFiles([f]), f).toEqual([]);
+    }
+  });
+
+  it('a root doc is not a shared prefix', () => {
+    expect(appsAffectedByFiles(['README.md'])).toEqual([]);
+    expect(appsAffectedByFiles(['docs/PUSH-BYPASS-LOG.md'])).toEqual([]);
+    expect(appsAffectedByFiles(['app-builder/package.json']).map((app) => app.slug)).toEqual([
+      'app-builder'
+    ]);
+  });
+
+  it('(d) a remote sha of all zeros lists the tip tree', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'redanvil-push-range-'));
+    try {
+      /**
+       * @param args Git argv after `git`.
+       * @returns Trimmed stdout.
+       */
+      const git = (args: string[]): string => {
+        const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+        if (r.status !== 0) throw new Error(`${args.join(' ')}\n${r.stderr || r.stdout}`);
+        return (r.stdout ?? '').trim();
+      };
+      git(['init', '-q']);
+      git(['config', 'user.email', 't@t']);
+      git(['config', 'user.name', 't']);
+      mkdirSync(join(dir, 'sushi-finder', 'src'), { recursive: true });
+      writeFileSync(join(dir, 'sushi-finder', 'src', 'main.tsx'), 'export {}\n');
+      writeFileSync(join(dir, 'README.md'), 'readme\n');
+      git(['add', 'sushi-finder/src/main.tsx', 'README.md']);
+      git(['commit', '-q', '-m', 'tip']);
+      const head = git(['rev-parse', 'HEAD']);
+      expect(filesInPushRange(dir, head, ZERO_SHA).sort()).toEqual([
+        'README.md',
+        'sushi-finder/src/main.tsx'
+      ]);
+      expect(filesInPushRange(dir, ZERO_SHA, head)).toEqual([]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('(a) the hook does not check app-builder for a sushi-finder-only push whose tip starts with 0', () => {
+    const base = commitOnly({});
+    const local = commitOnly({ 'sushi-finder/src/probe.ts': 'export {}\n' }, '0');
+    expect(local.startsWith('0')).toBe(true);
+    expect(local).not.toBe(ZERO_SHA);
+    const probed = probePush(PRE_PUSH, local, base);
+    expect(probed.output, probed.output).not.toMatch(/no refs on stdin/);
+    expect(probed.slugs, probed.output).toEqual(['sushi-finder']);
+  });
+
+  it('(b) the hook checks app-builder when the push touches app-builder/', () => {
+    const base = commitOnly({});
+    const local = commitOnly({ 'app-builder/src/probe.ts': 'export {}\n' });
+    const probed = probePush(PRE_PUSH, local, base);
+    expect(probed.slugs, probed.output).toEqual(['app-builder']);
+    expect(probed.status, probed.output).toBe(0);
+  });
+
+  it('(c) the hook checks every gated app when the push touches a shared prefix', () => {
+    const base = commitOnly({});
+    const local = commitOnly({ 'design-system/probe.ts': 'export {}\n' });
+    const probed = probePush(PRE_PUSH, local, base);
+    expect(probed.slugs, probed.output).toEqual(APPS.map((app) => app.slug));
+    expect(probed.slugs).toContain('app-builder');
+  });
+
+  it('(d) the hook treats a remote sha of all zeros as the tip tree', () => {
+    const local = commitOnly({
+      'sushi-finder/src/probe.ts': 'export {}\n',
+      'README.md': 'readme\n'
+    });
+    expect(filesInPushRange(REPO_ROOT, local, ZERO_SHA).sort()).toEqual([
+      'README.md',
+      'sushi-finder/src/probe.ts'
+    ]);
+    const probed = probePush(PRE_PUSH, local, ZERO_SHA);
+    expect(probed.output, probed.output).not.toMatch(/no refs on stdin/);
+    expect(probed.slugs, probed.output).toEqual(['sushi-finder']);
   });
 });

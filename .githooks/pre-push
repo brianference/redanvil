@@ -1,6 +1,13 @@
 #!/bin/sh
 # pre-push — refuse a push when any app in the push range is below the finish line.
 #
+# The range is the diff from the remote tip to the local tip. A new branch
+# (remote sha all zeros) is the whole tree at the local tip, not an empty
+# range and not "no refs". An app directory or results/<slug>.json checks
+# that app. A path in SHARED_PREFIXES (meets_the_bar.mjs: design-system/) is
+# shipped by every app, so that push checks every gated app. Other paths,
+# including tooling, check none; CI re-scores every app anyway.
+#
 # The finish line (defined once in .github/scripts/meets_the_bar.mjs):
 #   gate score >= 90 AND zero failing rules
 #   AND results fresher than the app's newest source commit
@@ -59,15 +66,34 @@ trap 'rm -f "$CHANGED"' EXIT
 HAD_REF=0
 while read -r local_ref local_sha remote_ref remote_sha
 do
-  # Skip branch deletions (local sha all zeros).
+  # Skip branch deletions (local sha all zeros). A sha that merely starts
+  # with 0 is a normal commit — treating it as a deletion dropped the ref
+  # and the empty-stdin path then checked every app.
   case "$local_sha" in
-    0*|0000000000000000000000000000000000000000) continue ;;
+    *[!0]*) ;;
+    *) continue ;;
   esac
   HAD_REF=1
-  if [ -z "${remote_sha:-}" ] || [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
-    git ls-tree -r --name-only "$local_sha" >>"$CHANGED" 2>/dev/null || true
-  else
-    git diff --name-only "$remote_sha" "$local_sha" >>"$CHANGED" 2>/dev/null || true
+  # An empty remote sha is how some git versions spell "new branch".
+  if [ -z "${remote_sha:-}" ]; then
+    remote_sha="0000000000000000000000000000000000000000"
+  fi
+  if ! REDANVIL_LOCAL_SHA="$local_sha" REDANVIL_REMOTE_SHA="$remote_sha" \
+    "$NODE" --input-type=module -e "
+import { pathToFileURL } from 'node:url';
+import { resolve } from 'node:path';
+const mod = pathToFileURL(resolve('.github/scripts/meets_the_bar.mjs')).href;
+const { filesInPushRange } = await import(mod);
+const files = filesInPushRange(
+  process.cwd(),
+  process.env.REDANVIL_LOCAL_SHA,
+  process.env.REDANVIL_REMOTE_SHA
+);
+for (const f of files) console.log(f);
+" >>"$CHANGED"
+  then
+    echo "pre-push: REFUSED — could not compute the push range" >&2
+    exit 1
   fi
 done
 
@@ -105,7 +131,9 @@ if [ "$HAD_REF" -eq 0 ]; then
 fi
 
 # Map changed files → affected app slugs via the same APPS list the checker uses.
-AFFECTED=$(
+# Failure here must refuse. Swallowing it used to look like "no app paths"
+# and skip the finish line.
+if ! AFFECTED=$(
   REDANVIL_CHANGED_FILE="$CHANGED" "$NODE" --input-type=module -e "
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -114,8 +142,12 @@ const mod = pathToFileURL(resolve('.github/scripts/meets_the_bar.mjs')).href;
 const { appsAffectedByFiles } = await import(mod);
 const files = readFileSync(process.env.REDANVIL_CHANGED_FILE, 'utf8').split(/\r?\n/).filter(Boolean);
 for (const a of appsAffectedByFiles(files)) console.log(a.slug);
-" 2>/dev/null || true
+"
 )
+then
+  echo "pre-push: REFUSED — could not map the push range to gated apps" >&2
+  exit 1
+fi
 
 if [ -z "${AFFECTED:-}" ]; then
   echo "pre-push: no gated app paths in push range — finish-line check skipped for apps" >&2

@@ -91,6 +91,7 @@ export declare function evaluateApps(
   repoRoot: string,
   opts?: { slugs?: string[]; threshold?: number }
 ): MeetBarVerdict[];
+export declare const SHARED_PREFIXES: readonly string[];
 export declare function appsAffectedByFiles(
   changedFiles: string[],
   apps?: readonly { slug: string; dir: string }[]

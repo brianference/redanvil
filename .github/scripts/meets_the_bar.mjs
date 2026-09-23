@@ -996,7 +996,50 @@ export function evaluateApps(repoRoot, opts = {}) {
 }
 
 /**
+ * Paths outside any one app directory that change every gated app's SHIPPED
+ * code. A push that touches one of these checks the whole APPS list.
+ *
+ * - `design-system/` -- app-builder, dashboard, az-planting-calendar,
+ *   sushi-finder, and pet-sitter import it by relative path (theme, shell,
+ *   http, hooks), and `design-system/auth-kit/` is the source those apps copy
+ *   into `functions/_lib`. A change here changes what every app renders.
+ *
+ * Deliberately NOT listed: tooling that changes how apps are MEASURED rather
+ * than what they ship -- `orchestrator/`, `.github/`, `package.json`,
+ * `package-lock.json`, `eslint.config.js`, docs. Listing them made every
+ * infrastructure push check every app, so one unshipped app refused all
+ * gate/CI work (docs/PUSH-BYPASS-LOG.md). CI's `apps-meet-the-bar` job still
+ * re-scores every app on every push, so a tooling change that moves an app
+ * below the bar is still reported red; it just cannot hold unrelated work
+ * hostage at the local hook.
+ *
+ * A trailing slash is a directory prefix. Anything else is one exact root
+ * file.
+ *
+ * @type {readonly string[]}
+ */
+export const SHARED_PREFIXES = Object.freeze(['design-system/']);
+
+/**
+ * True when a repo-relative path is shared by every gated app.
+ *
+ * @param {string} file Slash-normalized repo-relative path.
+ * @returns {boolean}
+ */
+function pathIsSharedByAllApps(file) {
+  return SHARED_PREFIXES.some((prefix) => {
+    if (prefix.endsWith('/')) {
+      return file === prefix.slice(0, -1) || file.startsWith(prefix);
+    }
+    return file === prefix;
+  });
+}
+
+/**
  * Apps whose paths appear in a list of changed files.
+ * One app directory (or `results/<slug>.json`) selects that app. A path in
+ * SHARED_PREFIXES selects every app, because that path is not owned by one
+ * of them.
  *
  * @param {string[]} changedFiles Repo-relative paths (forward or backslash).
  * @param {readonly {slug: string, dir: string}[]} [apps]
@@ -1004,6 +1047,9 @@ export function evaluateApps(repoRoot, opts = {}) {
  */
 export function appsAffectedByFiles(changedFiles, apps = APPS) {
   const norm = changedFiles.map((f) => f.replace(/\\/g, '/'));
+  if (norm.some((file) => pathIsSharedByAllApps(file))) {
+    return [...apps];
+  }
   return apps.filter((app) => {
     const prefix = `${app.dir.replace(/\\/g, '/')}/`;
     const dirExact = app.dir.replace(/\\/g, '/');
