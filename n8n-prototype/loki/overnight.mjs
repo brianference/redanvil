@@ -272,41 +272,31 @@ const COST_CAP_USD = Number(process.env.OVERNIGHT_COST_CAP_USD ?? 25);
  * crash, rate limit or reboot -- and the loop runs unattended for hours, so a
  * crash at hour six must not throw away hours one through five.
  *
- * @returns {{completed: string[], spentUsd: number, startedAt: string|null}} state
+ * @returns {{completed: string[], spentUsd: number, startedAt: string|null, deadlineAt: number|null, nightKey: string|null}} state
  */
 function readCheckpoint() {
   try {
     const state = JSON.parse(readFileSync(checkpointPath(), 'utf8'));
+    const deadlineAt = Number(state.deadlineAt);
     return {
       completed: Array.isArray(state.completed) ? state.completed : [],
       spentUsd: Number(state.spentUsd ?? 0),
-      startedAt: state.startedAt ?? null
+      startedAt: state.startedAt ?? null,
+      deadlineAt: Number.isFinite(deadlineAt) ? deadlineAt : null,
+      nightKey: typeof state.nightKey === 'string' ? state.nightKey : null
     };
   } catch {
-    return { completed: [], spentUsd: 0, startedAt: null };
+    return { completed: [], spentUsd: 0, startedAt: null, deadlineAt: null, nightKey: null };
   }
 }
 
 /**
  * Persist progress after EVERY item, not at the end.
- * @param {{completed: string[], spentUsd: number, startedAt: string|null}} state checkpoint
+ * @param {{completed: string[], spentUsd: number, startedAt: string|null, deadlineAt?: number|null, nightKey?: string|null}} state checkpoint
  */
 function writeCheckpoint(state) {
   mkdirSync(stateDir(), { recursive: true });
   writeFileSync(checkpointPath(), `${JSON.stringify(state, null, 2)}\n`);
-}
-
-/**
- * Local calendar date of an instant, `YYYY-MM-DD` in the machine timezone.
- * @param {Date|number|string} instant
- * @returns {string}
- */
-function localDateKey(instant) {
-  const date = instant instanceof Date ? instant : new Date(instant);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
 
 /**
@@ -323,34 +313,46 @@ function checkpointArchiveStamp(when) {
 }
 
 /**
+ * Night key of a deadline: local date and time to the second.
+ *
+ * A date alone collides a 06:00 night with an `--until 18:00` run whose
+ * deadline falls on the same morning. The checkpoint stores this key when
+ * the night starts. The next run compares keys. It does not recompute the
+ * old night from `startedAt` with the current `--until` or
+ * `OVERNIGHT_DEADLINE_ISO`.
+ *
+ * @param {number} deadlineAt Epoch ms.
+ * @returns {string} `YYYY-MM-DDTHH:MM:SS` in the machine timezone.
+ */
+function nightKeyForDeadline(deadlineAt) {
+  const when = new Date(deadlineAt);
+  const pad = (value) => String(value).padStart(2, '0');
+  return (
+    `${when.getFullYear()}-${pad(when.getMonth() + 1)}-${pad(when.getDate())}` +
+    `T${pad(when.getHours())}:${pad(when.getMinutes())}:${pad(when.getSeconds())}`
+  );
+}
+
+/**
  * Whether a checkpoint belongs to the night this run is finishing.
  *
- * A night is the local calendar date of the run's deadline. The deadline is
- * what `resolveDeadline` computes (`--until`, default 06:00 local; a clock
- * already past that hour rolls to the next day). The checkpoint's night is
- * that same computation at `startedAt`, with `OVERNIGHT_DEADLINE_ISO` ignored
- * so a one-off "stop now" override does not reclassify history.
+ * Same night means the stored night key equals this run's key. A checkpoint
+ * with no stored key is a previous night: recomputing one from `startedAt`
+ * let `--until 18:00` resume a finished 06:00 night, and let
+ * `OVERNIGHT_DEADLINE_ISO` archive a night that was still in progress.
  *
- * A crash at 02:00 therefore resumes a run that started at 23:30: both
- * deadlines are 06:00 that morning, and the local dates match. A checkpoint
- * whose deadline date is any earlier day is a previous night and must not
- * resume. A missing or unparseable `startedAt` is not the current night —
- * that is the input that used to resume a finished queue forever.
- *
- * @param {string|null|undefined} startedAt checkpoint startedAt
- * @param {number} deadlineAt this run's deadline, epoch ms
- * @param {string|boolean} [untilFlag] `--until` value; non-strings use the default
+ * @param {string|{nightKey?: string|null}|null|undefined} checkpoint Checkpoint, or a legacy startedAt string.
+ * @param {number} deadlineAt This run's deadline, epoch ms.
  * @returns {boolean}
  */
-function checkpointIsCurrentNight(startedAt, deadlineAt, untilFlag) {
-  if (typeof startedAt !== 'string' || !Number.isFinite(Date.parse(startedAt))) return false;
+function checkpointIsCurrentNight(checkpoint, deadlineAt) {
   if (!Number.isFinite(deadlineAt)) return false;
-  const thenDeadline = resolveDeadline({
-    untilFlag: typeof untilFlag === 'string' ? untilFlag : undefined,
-    envIso: '',
-    now: new Date(startedAt)
-  });
-  return localDateKey(thenDeadline) === localDateKey(deadlineAt);
+  const nightKey =
+    checkpoint && typeof checkpoint === 'object' && typeof checkpoint.nightKey === 'string'
+      ? checkpoint.nightKey
+      : null;
+  if (!nightKey) return false;
+  return nightKey === nightKeyForDeadline(deadlineAt);
 }
 
 /**
@@ -363,14 +365,20 @@ function checkpointIsCurrentNight(startedAt, deadlineAt, untilFlag) {
  * never ran on this machine.
  *
  * @param {{deadlineAt: number, untilFlag?: string|boolean, now?: Date}} opts
- * @returns {{checkpoint: {completed: string[], spentUsd: number, startedAt: string|null}, archived: string|null}}
+ * @returns {{checkpoint: {completed: string[], spentUsd: number, startedAt: string|null, deadlineAt: number|null, nightKey: string|null}, archived: string|null}}
  */
 function rolloverCheckpoint(opts) {
   const now = opts.now ?? new Date();
-  const empty = { completed: [], spentUsd: 0, startedAt: null };
+  const empty = {
+    completed: [],
+    spentUsd: 0,
+    startedAt: null,
+    deadlineAt: null,
+    nightKey: null
+  };
   if (!existsSync(checkpointPath())) return { checkpoint: empty, archived: null };
   const checkpoint = readCheckpoint();
-  if (checkpointIsCurrentNight(checkpoint.startedAt, opts.deadlineAt, opts.untilFlag)) {
+  if (checkpointIsCurrentNight(checkpoint, opts.deadlineAt)) {
     return { checkpoint, archived: null };
   }
   mkdirSync(stateDir(), { recursive: true });
@@ -769,11 +777,14 @@ function spawnAgent(agent, prompt, cwd, opts = {}) {
 /**
  * Whether grok failed before it could do the work.
  *
- * A non-zero exit that is not a spending-limit 403 and not a timeout means
- * grok ran. The night must not also pay Claude for that item. `status === null`
- * is a hang, a timeout (`ETIMEDOUT`) or a spawn failure — grok did not run.
+ * Hand off only when grok did not succeed. `status === null` is a hang, a
+ * timeout (`ETIMEDOUT`) or a spawn failure. A non-zero exit hands off when
+ * the output says `spending limit` or contains HTTP 403, including a plain
+ * `403 Forbidden`. Exit 0 is never a handoff, whatever the output says.
+ * Any other non-zero exit means grok ran and failed. Do not also pay Claude.
  *
- * FAIL INPUT: stderr `403 spending limit reached` → true.
+ * FAIL INPUT: `{status: 0, stdout: 'fixed the spending limit check'}` → false.
+ * FAIL INPUT: `{status: 1, stderr: 'HTTP 403 Forbidden'}` → true.
  * FAIL INPUT: `{status: null, error: {code: 'ETIMEDOUT'}}` → true.
  * A plain exit 1 with no 403 → false.
  *
@@ -782,9 +793,10 @@ function spawnAgent(agent, prompt, cwd, opts = {}) {
  */
 function grokCannotRun(res) {
   if (res.status === null) return true;
+  if (res.status === 0) return false;
   const text = `${res.stdout ?? ''}\n${res.stderr ?? ''}`;
   if (/spending limit/i.test(text)) return true;
-  if (/\b403\b/.test(text) && /spend|billing|credit|quota|payment|limit/i.test(text)) return true;
+  if (/\b403\b/.test(text)) return true;
   return false;
 }
 
@@ -846,9 +858,10 @@ function dispatchFix(app, blockers, cwd, opts = {}) {
         ? classifyClaude(res)
         : { ok: res.status === 0, rateLimited: false, costUsd: 0, detail: `exit ${res.status}` };
 
-      // Grok is first. A spending-limit 403 or a hang means it never ran, so
-      // Claude still gets the item. A grok process that actually exited is
-      // the result — do not also call Claude.
+      // Grok is first. A spending-limit or HTTP 403, or a hang, means it never
+      // ran, so Claude still gets the item. Exit 0 is grok's result even when
+      // the output mentions a spending limit. Any other exit is also the
+      // result — do not also call Claude.
       if (!agent.structured && grokCannotRun(res)) {
         process.stdout.write(
           `    ${agent.name} cannot run (${verdict.detail}); handing off\n`
@@ -1567,40 +1580,49 @@ function isMainModule() {
 /**
  * Write or clear `.redanvil/overnight/ALERT.json` at the end of a night.
  *
- * A night that tried items and produced no receipt is the failure that ran
- * for 32 nights with only a log line. Skipped items (already done this night,
- * or the deadline passed before they started) are not that failure. One
- * receipt clears a stale alert from an earlier night.
+ * The alert condition is zero VERIFIED receipts among attempted items, not
+ * zero receipt files. A drift run that fails still writes an UNVERIFIED
+ * receipt. That night must alert. Skipped items (already done this night,
+ * or the deadline passed before they started) are not attempts. One VERIFIED
+ * receipt clears a stale alert.
  *
- * FAIL INPUT: receipts 0 and attempted ids non-empty → file exists, return 1.
- * One receipt → file removed, return 0.
+ * FAIL INPUT: one attempted item whose receipt is UNVERIFIED → file lists
+ * that item and its status, return 1.
+ * One VERIFIED receipt → file removed, return 0.
  *
- * @param {{receipts: number, attemptedIds: string[], at: string}} info
+ * @param {{outcomes: {id: string, status: string}[], at: string}} info
  * @returns {number} process exit code for the night
  */
 function settleNightAlert(info) {
   const path = join(stateDir(), 'ALERT.json');
-  if (info.receipts === 0 && info.attemptedIds.length > 0) {
+  const outcomes = Array.isArray(info.outcomes) ? info.outcomes : [];
+  const verified = outcomes.filter((item) => item.status === 'VERIFIED').length;
+  if (outcomes.length > 0 && verified === 0) {
     mkdirSync(stateDir(), { recursive: true });
+    const receipts = outcomes.filter((item) => item.status !== 'ERROR').length;
     writeFileSync(
       path,
       `${JSON.stringify(
         {
           at: info.at,
-          reason: 'night finished with 0 receipts',
-          items: info.attemptedIds,
-          receipts: 0
+          reason: 'night finished with 0 VERIFIED receipts',
+          items: outcomes.map((item) => ({
+            id: item.id,
+            status: typeof item.status === 'string' ? item.status : 'UNVERIFIED'
+          })),
+          verified: 0,
+          receipts
         },
         null,
         2
       )}\n`
     );
     process.stdout.write(
-      `ALERT: night finished with 0 receipts (${info.attemptedIds.length} item(s) not skipped)\n`
+      `ALERT: night finished with 0 VERIFIED receipts (${outcomes.length} attempted)\n`
     );
     return 1;
   }
-  if (info.receipts >= 1 && existsSync(path)) unlinkSync(path);
+  if (verified >= 1 && existsSync(path)) unlinkSync(path);
   return 0;
 }
 
@@ -1645,7 +1667,14 @@ async function runOvernight(opts = {}) {
   if (rolled.archived) {
     process.stdout.write(`archived previous-night checkpoint -> ${rolled.archived}\n`);
   }
-  if (!checkpoint.startedAt) checkpoint.startedAt = new Date().toISOString();
+  if (!checkpoint.startedAt) {
+    // Wall clock, not nowFn. The injected clock is the loop's remaining-time
+    // check; spending a tick here made the first item look past its deadline.
+    checkpoint.startedAt = new Date().toISOString();
+    checkpoint.deadlineAt = deadlineAt;
+    checkpoint.nightKey = nightKeyForDeadline(deadlineAt);
+    writeCheckpoint(checkpoint);
+  }
   if (checkpoint.completed.length > 0) {
     process.stdout.write(
       `resuming: ${checkpoint.completed.length} item(s) already done, $${checkpoint.spentUsd.toFixed(2)} spent\n`
@@ -1655,8 +1684,8 @@ async function runOvernight(opts = {}) {
   const receipts = [];
   let stoppedEarly = false;
   let itemsSkipped = 0;
-  /** @type {string[]} */
-  const attemptedIds = [];
+  /** @type {{id: string, status: string}[]} */
+  const outcomes = [];
   /** @type {string|null} */
   let stopReason = null;
 
@@ -1685,7 +1714,6 @@ async function runOvernight(opts = {}) {
     }
 
     const itemTimeoutMs = clampToRemaining(ITEM_TIMEOUT_MS, remaining);
-    attemptedIds.push(item.id);
     process.stdout.write(`\n--- ${item.id}: ${item.summary}\n`);
     try {
       const receiptPath = await processItem(item, {
@@ -1701,6 +1729,10 @@ async function runOvernight(opts = {}) {
       });
       receipts.push(receiptPath);
       const receipt = JSON.parse(readFileSync(receiptPath, 'utf8'));
+      outcomes.push({
+        id: item.id,
+        status: typeof receipt.status === 'string' ? receipt.status : 'UNVERIFIED'
+      });
       process.stdout.write(`    ${receipt.status}  -> ${receiptPath}\n`);
 
       // Checkpoint after EVERY item, not at the end. The end may never arrive.
@@ -1708,7 +1740,9 @@ async function runOvernight(opts = {}) {
       checkpoint.spentUsd += Number(receipt.costUsd ?? 0);
       writeCheckpoint(checkpoint);
     } catch (err) {
-      // One broken item must never end the night.
+      // One broken item must never end the night. It also produced no
+      // VERIFIED receipt, so the night-end alert still has to name it.
+      outcomes.push({ id: item.id, status: 'ERROR' });
       process.stdout.write(`    ERROR (continuing): ${String(err)}\n`);
     }
   }
@@ -1735,8 +1769,7 @@ async function runOvernight(opts = {}) {
   );
 
   const exitCode = settleNightAlert({
-    receipts: receipts.length,
-    attemptedIds,
+    outcomes,
     at: new Date(finishedAtMs).toISOString()
   });
 
@@ -1787,6 +1820,7 @@ export {
   classifyClaude,
   AGENTS,
   checkpointIsCurrentNight,
+  nightKeyForDeadline,
   rolloverCheckpoint,
   prepareAgentLaunch,
   spawnAgent,

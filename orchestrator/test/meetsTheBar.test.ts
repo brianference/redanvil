@@ -416,7 +416,8 @@ function checkerShimSource(): string {
 function probePush(
   hookPath: string,
   localSha: string,
-  remoteSha: string
+  remoteSha: string,
+  stdin?: string
 ): { status: number | null; slugs: string[]; output: string } {
   const dir = mkdtempSync(join(tmpdir(), 'redanvil-hook-probe-'));
   const shim = join(dir, 'shim.cjs');
@@ -430,7 +431,7 @@ function probePush(
       NODE_OPTIONS: `--require ${shim.replace(/\\/g, '/')}`,
       REDANVIL_HOOK_LOG: log
     },
-    input: `refs/heads/probe ${localSha} refs/heads/probe ${remoteSha}\n`
+    input: stdin ?? `refs/heads/probe ${localSha} refs/heads/probe ${remoteSha}\n`
   });
   const slugs = existsSync(log) ? readFileSync(log, 'utf8').split(/\r?\n/).filter(Boolean) : [];
   rmSync(dir, { recursive: true, force: true });
@@ -489,6 +490,60 @@ function commitOnly(files: Record<string, string>, shaStartsWith?: string): stri
   }
 }
 
+/**
+ * Child of `parent` whose tree is the parent tree plus `files`.
+ * Objects land in the real repo. The worktree HEAD is not moved.
+ * @param parent Parent commit sha.
+ * @param files Paths added or replaced on top of the parent tree.
+ * @returns Commit sha.
+ */
+function commitOnParent(parent: string, files: Record<string, string>): string {
+  const indexFile = join(
+    tmpdir(),
+    `redanvil-idx-${process.pid}-${Math.random().toString(16).slice(2)}`
+  );
+  const env = {
+    ...process.env,
+    GIT_INDEX_FILE: indexFile,
+    GIT_AUTHOR_NAME: 't',
+    GIT_AUTHOR_EMAIL: 't@t',
+    GIT_COMMITTER_NAME: 't',
+    GIT_COMMITTER_EMAIL: 't@t'
+  };
+  /**
+   * @param args Git argv after `git`.
+   * @param input Optional stdin.
+   * @returns Trimmed stdout.
+   */
+  const git = (args: string[], input?: string): string => {
+    const r = spawnSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8', env, input });
+    if (r.status !== 0) throw new Error(`${args.join(' ')}\n${r.stderr || r.stdout}`);
+    return (r.stdout ?? '').trim();
+  };
+  try {
+    git(['read-tree', parent]);
+    for (const [path, content] of Object.entries(files)) {
+      const blob = git(['hash-object', '-w', '--stdin'], content);
+      git(['update-index', '--add', '--cacheinfo', `100644,${blob},${path}`]);
+    }
+    const tree = git(['write-tree']);
+    return git(['commit-tree', tree, '-p', parent, '-m', `probe child ${Date.now()}`]);
+  } finally {
+    rmSync(indexFile, { force: true });
+  }
+}
+
+/**
+ * Full sha of a ref in this repo.
+ * @param ref Ref name.
+ * @returns Commit sha.
+ */
+function repoRev(ref: string): string {
+  const r = spawnSync('git', ['rev-parse', ref], { cwd: REPO_ROOT, encoding: 'utf8' });
+  if (r.status !== 0) throw new Error(r.stderr || r.stdout);
+  return (r.stdout ?? '').trim();
+}
+
 describe('push range scopes the finish line', () => {
   const everySlug = () => APPS.map((app) => app.slug).sort();
 
@@ -539,31 +594,75 @@ describe('push range scopes the finish line', () => {
     ]);
   });
 
-  it('(d) a remote sha of all zeros lists the tip tree', () => {
+  it('(d) a new branch diffs against the merge-base, so a base that already has other apps is not the push', () => {
     const dir = mkdtempSync(join(tmpdir(), 'redanvil-push-range-'));
+    const indexFile = join(dir, 'idx');
     try {
+      const env = {
+        ...process.env,
+        GIT_INDEX_FILE: indexFile,
+        GIT_AUTHOR_NAME: 't',
+        GIT_AUTHOR_EMAIL: 't@t',
+        GIT_COMMITTER_NAME: 't',
+        GIT_COMMITTER_EMAIL: 't@t'
+      };
       /**
        * @param args Git argv after `git`.
+       * @param input Optional stdin.
        * @returns Trimmed stdout.
        */
-      const git = (args: string[]): string => {
-        const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+      const git = (args: string[], input?: string): string => {
+        const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8', env, input });
         if (r.status !== 0) throw new Error(`${args.join(' ')}\n${r.stderr || r.stdout}`);
         return (r.stdout ?? '').trim();
       };
+      /**
+       * @param parent Parent commit, or null for a root commit.
+       * @param files Paths in the tree. A parent tree is kept and these are added.
+       * @returns Commit sha.
+       */
+      const make = (parent: string | null, files: Record<string, string>): string => {
+        if (parent) git(['read-tree', parent]);
+        else git(['read-tree', '--empty']);
+        for (const [path, content] of Object.entries(files)) {
+          const blob = git(['hash-object', '-w', '--stdin'], content);
+          git(['update-index', '--add', '--cacheinfo', `100644,${blob},${path}`]);
+        }
+        const tree = git(['write-tree']);
+        return git(['commit-tree', tree, ...(parent ? ['-p', parent] : []), '-m', 't']);
+      };
       git(['init', '-q']);
-      git(['config', 'user.email', 't@t']);
-      git(['config', 'user.name', 't']);
-      mkdirSync(join(dir, 'sushi-finder', 'src'), { recursive: true });
-      writeFileSync(join(dir, 'sushi-finder', 'src', 'main.tsx'), 'export {}\n');
-      writeFileSync(join(dir, 'README.md'), 'readme\n');
-      git(['add', 'sushi-finder/src/main.tsx', 'README.md']);
-      git(['commit', '-q', '-m', 'tip']);
-      const head = git(['rev-parse', 'HEAD']);
-      expect(filesInPushRange(dir, head, ZERO_SHA).sort()).toEqual([
-        'README.md',
-        'sushi-finder/src/main.tsx'
-      ]);
+      // The branch is cut from a base that already contains other apps.
+      // ls-tree of the tip includes those apps; the push range must not.
+      const base = make(null, {
+        'app-builder/src/App.tsx': 'export {}\n',
+        'dashboard/src/App.tsx': 'export {}\n',
+        'README.md': 'base\n'
+      });
+      const head = make(base, { 'sushi-finder/src/main.tsx': 'export {}\n' });
+      const tip = git(['ls-tree', '-r', '--name-only', head]).split('\n').filter(Boolean).sort();
+      expect(tip).toContain('app-builder/src/App.tsx');
+      expect(tip).toContain('dashboard/src/App.tsx');
+      expect(tip).toContain('sushi-finder/src/main.tsx');
+
+      git(['update-ref', 'refs/remotes/origin/HEAD', base]);
+      expect(filesInPushRange(dir, head, ZERO_SHA)).toEqual(['sushi-finder/src/main.tsx']);
+      expect(
+        appsAffectedByFiles(filesInPushRange(dir, head, ZERO_SHA)).map((app) => app.slug)
+      ).toEqual(['sushi-finder']);
+
+      git(['update-ref', '-d', 'refs/remotes/origin/HEAD']);
+      git(['update-ref', 'refs/remotes/origin/master', base]);
+      expect(filesInPushRange(dir, head, ZERO_SHA)).toEqual(['sushi-finder/src/main.tsx']);
+
+      git(['update-ref', '-d', 'refs/remotes/origin/master']);
+      git(['update-ref', 'refs/remotes/origin/main', base]);
+      expect(filesInPushRange(dir, head, ZERO_SHA)).toEqual(['sushi-finder/src/main.tsx']);
+
+      // None of the three refs resolve: the whole tip, which is the case that
+      // cannot tell a branch from its base.
+      git(['update-ref', '-d', 'refs/remotes/origin/main']);
+      expect(filesInPushRange(dir, head, ZERO_SHA).sort()).toEqual(tip);
       expect(filesInPushRange(dir, ZERO_SHA, head)).toEqual([]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -606,6 +705,68 @@ describe('push range scopes the finish line', () => {
       'sushi-finder/src/probe.ts'
     ]);
     const probed = probePush(PRE_PUSH, local, ZERO_SHA);
+    expect(probed.output, probed.output).not.toMatch(/no refs on stdin/);
+    expect(probed.slugs, probed.output).toEqual(['sushi-finder']);
+  });
+
+  it('a new branch cut from origin/HEAD checks only files added since that base', () => {
+    const base = repoRev('refs/remotes/origin/HEAD');
+    const local = commitOnParent(base, {
+      'sushi-finder/src/new-branch-probe.ts': 'export {}\n'
+    });
+    expect(filesInPushRange(REPO_ROOT, local, ZERO_SHA)).toEqual([
+      'sushi-finder/src/new-branch-probe.ts'
+    ]);
+    const probed = probePush(PRE_PUSH, local, ZERO_SHA);
+    expect(probed.output, probed.output).not.toMatch(/no refs on stdin/);
+    expect(probed.slugs, probed.output).toEqual(['sushi-finder']);
+  });
+
+  it('FAIL INPUT: an unresolvable remote sha refuses instead of an empty range', () => {
+    const head = repoRev('HEAD');
+    const missing = 'a'.repeat(40);
+    expect(() => filesInPushRange(REPO_ROOT, head, missing)).toThrow(
+      `remote tip ${missing} is not in the local object DB -- run git fetch and push again`
+    );
+    const probed = probePush(PRE_PUSH, head, missing);
+    expect(probed.status, probed.output).not.toBe(0);
+    expect(probed.output).toContain(
+      `remote tip ${missing} is not in the local object DB -- run git fetch and push again`
+    );
+    expect(probed.slugs, probed.output).toEqual([]);
+    expect(probed.output).not.toMatch(/no gated app paths/);
+  });
+
+  it('an empty diff is an empty range, not a refusal', () => {
+    const head = repoRev('HEAD');
+    expect(filesInPushRange(REPO_ROOT, head, head)).toEqual([]);
+  });
+
+  it('FAIL INPUT: a deletion-only push checks nothing and exits 0', () => {
+    const zeros = '0'.repeat(40);
+    const remote = 'b'.repeat(40);
+    const probed = probePush(
+      PRE_PUSH,
+      zeros,
+      remote,
+      `refs/heads/old ${zeros} refs/heads/old ${remote}\n`
+    );
+    expect(probed.status, probed.output).toBe(0);
+    expect(probed.output).not.toMatch(/no refs on stdin/);
+    expect(probed.slugs, probed.output).toEqual([]);
+  });
+
+  it('a push that deletes one ref and updates another checks only the update', () => {
+    const base = commitOnly({});
+    const local = commitOnly({ 'sushi-finder/src/probe.ts': 'export {}\n' });
+    const zeros = '0'.repeat(40);
+    const remote = 'b'.repeat(40);
+    const probed = probePush(
+      PRE_PUSH,
+      local,
+      base,
+      `refs/heads/old ${zeros} refs/heads/old ${remote}\nrefs/heads/probe ${local} refs/heads/probe ${base}\n`
+    );
     expect(probed.output, probed.output).not.toMatch(/no refs on stdin/);
     expect(probed.slugs, probed.output).toEqual(['sushi-finder']);
   });

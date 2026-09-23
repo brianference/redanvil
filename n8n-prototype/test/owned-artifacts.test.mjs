@@ -304,4 +304,118 @@ describe('role-run counts decide for decisions.json', () => {
       rmSync(repo, { recursive: true, force: true });
     }
   });
+
+  test('FAIL INPUT: one-line CHOSEN and DECIDED records count when decide.mjs exits 0', () => {
+    const repo = mkdtempSync(join(tmpdir(), 'decide-oneline-'));
+    const slug = 'app';
+    const app = join(repo, slug);
+    try {
+      put(app, 'design-refs/logos/DECISION.md', 'CHOSEN: x\n');
+      put(app, 'design-refs/palettes/DECISION.md', 'CHOSEN: x\n');
+      put(app, 'design-refs/design-options/DECISION.md', 'DECIDED: x\n');
+      const cmd = [quote(NODE), quote(DECIDE), `--slug=${slug}`, `--repoRoot=${quote(repo)}`].join(
+        ' '
+      );
+      const r = runRole(repo, cmd, `${slug}/evidence/decisions.json`);
+      assert.ok(r.verdict, r.stdout + '\n' + r.stderr);
+      assert.equal(r.status, 0, r.stdout + r.stderr);
+      assert.equal(r.verdict.countedAsRun, true, JSON.stringify(r.verdict));
+      const size = statSync(join(app, 'evidence', 'decisions.json')).size;
+      assert.ok(size >= 512, `decisions.json is ${size}B`);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test('FAIL INPUT: prose that merely contains DECIDED and CHOSEN does not count', () => {
+    const repo = mkdtempSync(join(tmpdir(), 'decide-prose-'));
+    const slug = 'app';
+    const app = join(repo, slug);
+    try {
+      let prose = '';
+      const sentence = 'nothing was DECIDED by the owner and nothing was CHOSEN either\n';
+      while (Buffer.byteLength(prose) < 700) prose += sentence;
+      put(app, 'design-refs/logos/DECISION.md', prose);
+      put(app, 'design-refs/palettes/DECISION.md', prose);
+      put(app, 'design-refs/design-options/DECISION.md', prose);
+      const refused = spawnSync(NODE, [DECIDE, `--slug=${slug}`, `--repoRoot=${repo}`], {
+        encoding: 'utf8',
+        timeout: 20_000
+      });
+      assert.equal(refused.status, 1, refused.stdout);
+
+      let blob =
+        '"recordedAt" "decisions" "axis": "logo" "axis": "palette" "axis": "layout" "sha256" ';
+      while (Buffer.byteLength(blob) < 612) blob += 'x';
+      assert.equal(Buffer.byteLength(blob), 612);
+      const writer = join(repo, 'write-blob.mjs');
+      const target = join(app, 'evidence', 'decisions.json');
+      writeFileSync(
+        writer,
+        `import { mkdirSync, writeFileSync } from 'node:fs';\n` +
+          `import { dirname } from 'node:path';\n` +
+          `mkdirSync(dirname(${JSON.stringify(target)}), { recursive: true });\n` +
+          `writeFileSync(${JSON.stringify(target)}, ${JSON.stringify(blob)});\n` +
+          `process.exit(0);\n`
+      );
+      const r = runRole(repo, `${quote(NODE)} ${quote(writer)}`, `${slug}/evidence/decisions.json`);
+      assert.ok(r.verdict, r.stdout + '\n' + r.stderr);
+      assert.equal(r.verdict.countedAsRun, false, JSON.stringify(r.verdict));
+      assert.ok(
+        r.verdict.reasons?.some(
+          (reason) => /DECISION\.md/.test(reason) && /DECIDED|CHOSEN/.test(reason)
+        ),
+        JSON.stringify(r.verdict.reasons)
+      );
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('decide input mustMatch', () => {
+  test('the live decide inputs match a token line and have no minBytes floor', () => {
+    const decide = PROCESS.find((s) => s.id === 'decide');
+    assert.ok(decide);
+    const byPath = Object.fromEntries(decide.requires.map((c) => [c.path, c]));
+    assert.equal(byPath['evidence/decisions.json'].minBytes, 512);
+    assert.equal(byPath['evidence/decisions.json'].owned, true);
+    assert.equal(byPath['design-refs/logos/DECISION.md'].minBytes, undefined);
+    assert.deepEqual(byPath['design-refs/logos/DECISION.md'].mustMatch, ['^\\s*CHOSEN:\\s*\\S']);
+    assert.equal(byPath['design-refs/palettes/DECISION.md'].minBytes, undefined);
+    assert.deepEqual(byPath['design-refs/palettes/DECISION.md'].mustMatch, ['^\\s*CHOSEN:\\s*\\S']);
+    assert.equal(byPath['design-refs/design-options/DECISION.md'].minBytes, undefined);
+    assert.deepEqual(byPath['design-refs/design-options/DECISION.md'].mustMatch, [
+      '^\\s*DECIDED:\\s*\\S'
+    ]);
+  });
+
+  test('FAIL INPUT: a sentence containing the token does not match, a token line does', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'decide-match-'));
+    const app = join(dir, 'app');
+    try {
+      put(
+        app,
+        'design-refs/design-options/DECISION.md',
+        'nothing was DECIDED by the owner and nothing was CHOSEN either\n'.repeat(20)
+      );
+      const prose = checkContract(app, {
+        path: 'design-refs/design-options/DECISION.md',
+        kind: 'file',
+        mustMatch: ['^\\s*DECIDED:\\s*\\S'],
+        why: 'a recorded choice is a token line'
+      });
+      assert.equal(prose.ok, false, prose.reasons.join('; '));
+      put(app, 'design-refs/logos/DECISION.md', 'CHOSEN: x\n');
+      const line = checkContract(app, {
+        path: 'design-refs/logos/DECISION.md',
+        kind: 'file',
+        mustMatch: ['^\\s*CHOSEN:\\s*\\S'],
+        why: 'a recorded choice is a token line'
+      });
+      assert.equal(line.ok, true, line.reasons.join('; '));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

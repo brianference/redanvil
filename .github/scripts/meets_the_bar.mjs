@@ -1060,7 +1060,85 @@ export function appsAffectedByFiles(changedFiles, apps = APPS) {
 }
 
 /**
+ * True when `sha` names a commit in this repository's object database.
+ *
+ * @param {string} repoRoot Repository root.
+ * @param {string} sha Commit sha.
+ * @returns {boolean}
+ */
+function commitExists(repoRoot, sha) {
+  try {
+    execFileSync('git', ['cat-file', '-e', `${sha}^{commit}`], {
+      cwd: repoRoot,
+      stdio: 'ignore'
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Commit the remote default branch points at, if this clone has fetched it.
+ * Order is `refs/remotes/origin/HEAD`, then `origin/master`, then `origin/main`.
+ *
+ * @param {string} repoRoot Repository root.
+ * @returns {string|null} Commit sha, or null when none of the refs resolve.
+ */
+function remoteDefaultTip(repoRoot) {
+  for (const ref of ['refs/remotes/origin/HEAD', 'origin/master', 'origin/main']) {
+    const sha = gitOut(repoRoot, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`]);
+    if (sha) return sha;
+  }
+  return null;
+}
+
+/**
+ * Split a successful git name-list. A failed git command is not an empty list.
+ *
+ * @param {string|null} out Trimmed stdout, or null when git exited non-zero.
+ * @param {string} failure Message thrown when git failed.
+ * @returns {string[]}
+ */
+function namesFromGit(out, failure) {
+  if (out === null) throw new Error(failure);
+  return out.split('\n').filter(Boolean);
+}
+
+/**
+ * Files a new branch introduces.
+ *
+ * Diff against the merge-base of the local tip and the remote default branch.
+ * Only when none of those refs resolve, or they share no ancestor with the
+ * tip, fall back to every file in the tip.
+ *
+ * @param {string} repoRoot Repository root.
+ * @param {string} localSha Local tip being pushed.
+ * @returns {string[]}
+ */
+function filesOnNewBranch(repoRoot, localSha) {
+  const base = remoteDefaultTip(repoRoot);
+  if (base) {
+    const mergeBase = gitOut(repoRoot, ['merge-base', localSha, base]);
+    if (mergeBase) {
+      return namesFromGit(
+        gitOut(repoRoot, ['diff', '--name-only', mergeBase, localSha]),
+        `could not diff ${localSha} against merge-base ${mergeBase}`
+      );
+    }
+  }
+  return namesFromGit(
+    gitOut(repoRoot, ['ls-tree', '-r', '--name-only', localSha]),
+    `could not list the tree of ${localSha}`
+  );
+}
+
+/**
  * Files changed between two commits (for pre-push range).
+ *
+ * A remote sha that is not in the local object database throws. An empty
+ * diff is a real empty range. Treating a git failure as an empty list made
+ * a non-fast-forward push skip the finish line.
  *
  * @param {string} repoRoot Repository root.
  * @param {string} localSha Local tip being pushed.
@@ -1074,12 +1152,17 @@ export function filesInPushRange(repoRoot, localSha, remoteSha) {
     return [];
   }
   if (zeros.test(remoteSha)) {
-    // New branch: every file at local tip.
-    const out = gitOut(repoRoot, ['ls-tree', '-r', '--name-only', localSha]);
-    return out ? out.split('\n').filter(Boolean) : [];
+    return filesOnNewBranch(repoRoot, localSha);
   }
-  const out = gitOut(repoRoot, ['diff', '--name-only', remoteSha, localSha]);
-  return out ? out.split('\n').filter(Boolean) : [];
+  if (!commitExists(repoRoot, remoteSha)) {
+    throw new Error(
+      `remote tip ${remoteSha} is not in the local object DB -- run git fetch and push again`
+    );
+  }
+  return namesFromGit(
+    gitOut(repoRoot, ['diff', '--name-only', remoteSha, localSha]),
+    `could not diff ${remoteSha}..${localSha} -- refusing the push rather than treating the range as empty`
+  );
 }
 
 /**
