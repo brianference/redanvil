@@ -74,6 +74,9 @@ function runGenerator(value: string | undefined) {
   const env = { ...process.env };
   if (value === undefined) delete env.REDANVIL_AUTO_GATES;
   else env.REDANVIL_AUTO_GATES = value;
+  // Telegram is its own flag now. The byte-identical default is telegram off,
+  // so a shell that happens to have REDANVIL_TELEGRAM set must not change it.
+  delete env.REDANVIL_TELEGRAM;
   return spawnSync(process.execPath, [BUILD_WORKFLOW], { encoding: 'utf8', env, cwd: REPO });
 }
 
@@ -206,12 +209,16 @@ describe('build-workflow.mjs auto gates', () => {
       expect(names).toContain('Role: auto-palette');
       expect(names).toContain('auto-layout params');
       expect(names).toContain('Role: auto-layout');
-      expect(names).toContain('Notify: logo needs approval');
-      expect(names).toContain('Notify: decide needs approval');
+      // Telegram is REDANVIL_TELEGRAM, not implied by auto gates. The old
+      // generator always emitted Notify nodes; the default no longer does.
+      expect(names).not.toContain('Notify: logo needs approval');
+      expect(names).not.toContain('Notify: decide needs approval');
+      expect(workflow.nodes.filter((n) => n.type === 'n8n-nodes-base.telegram')).toHaveLength(0);
       expect(names).not.toContain('Owner approves: logo');
       expect(names).not.toContain('Owner approves: palette');
       expect(names).not.toContain('Owner approves: layout');
       expect(names).not.toContain('Owner approves: decide');
+      expect(names).not.toContain('Register gate: logo');
       expect(workflow.nodes.filter((n) => n.type === 'n8n-nodes-base.wait')).toHaveLength(0);
 
       const autoLogo = workflow.nodes.find((n) => n.name === 'auto-logo params');
@@ -219,12 +226,6 @@ describe('build-workflow.mjs auto gates', () => {
         /auto-decide\.mjs --axis=logo --slug=\{slug\} --repoRoot=\{root\}/
       );
       expect(autoLogo?.parameters?.jsCode).toMatch(/design-refs\/logos\/DECISION\.md/);
-
-      const notify = workflow.nodes.find((n) => n.name === 'Notify: logo needs approval');
-      expect(notify?.onError).toBe('continueRegularOutput');
-      expect(notify?.parameters?.text).toMatch(/auto-resolved/i);
-      expect(notify?.parameters?.text).toMatch(/pending/i);
-      expect(notify?.parameters?.text).not.toMatch(/needs a decision/i);
     } finally {
       writeFileSync(WORKFLOW_JSON, before);
     }

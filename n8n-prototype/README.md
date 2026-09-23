@@ -92,6 +92,36 @@ independent judge are all still code and still outside n8n. n8n replaces the
 PM's loop and the hand-driving -- nothing else. Anything claiming otherwise
 would be the same mistake as trusting a spec because it was written down.
 
+## Human gates and the error workflow
+
+A human-gate step registers a pending record, then waits on a form for two
+hours. Approve continues. Redo loops to the step named by `reworkTo` (or to
+the gate's own step when it has none), until that step's `maxCycles` is
+exceeded, and then the execution fails. When the wait limit expires, the
+auto-decide role for that axis runs and `resolved/<id>.json` is written with
+`decision: "auto-decided"` and `resolvedBy: "timeout"`.
+
+Telegram notify nodes are generated only when `REDANVIL_TELEGRAM=1`.
+`REDANVIL_AUTO_GATES=1` still skips the Wait and runs auto-decide immediately.
+
+`workflows/redanvil-errors.json` is the error workflow (id `redanvilErrors001`).
+The build workflow JSON sets `settings.errorWorkflow` to that id. n8n reads
+that setting when an execution fails and runs the error workflow
+(`execute-error-workflow.ts`). Import the error workflow into n8n before the
+build workflow so the id exists. In the editor the same setting is the
+workflow's error workflow; point the build workflow at "RedAnvil build errors"
+if an import did not keep the id.
+
+The error workflow writes `.redanvil/dispatch/alerts/<id>.json` through
+Execute Command. It needs `REDANVIL_REPO` in the n8n process environment.
+
+The owner's session uses `node n8n-prototype/dispatch/dispatch.mjs`.
+`sweep-orphans.mjs` is dry-run unless `--apply` is passed. Stopping an
+execution is `POST /api/v1/executions/{id}/stop` with header `X-N8N-API-KEY`
+(n8n 2.22.6 public API). The key is the env var `N8N_API_KEY` and is never
+printed. Set `N8N_BASE_URL` when n8n is not at `http://127.0.0.1:5678`
+(`start-server.sh` binds `127.0.0.1`).
+
 ## Files
 
 | path | role |

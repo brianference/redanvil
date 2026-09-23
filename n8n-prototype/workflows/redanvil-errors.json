@@ -1,0 +1,81 @@
+{
+  "id": "redanvilErrors001",
+  "name": "RedAnvil build errors",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "err-trigger",
+      "name": "On build error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "err-prep",
+      "name": "Prepare alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const root = $env.REDANVIL_REPO;\nif (!root) {\n  throw new Error('REDANVIL_REPO is not set; the error workflow cannot write an alert');\n}\nconst execution = $json.execution || {};\nconst workflowInfo = $json.workflow || {};\nconst failure = execution.error || {};\nconst message = typeof failure.message === 'string' && failure.message\n  ? failure.message\n  : 'build workflow failed';\nconst payload = {\n  executionId: String(execution.id ?? 'unknown'),\n  source: 'n8n:' + String(workflowInfo.id || \"redanvilFull001\"),\n  message,\n  ref: typeof execution.url === 'string' ? execution.url : null\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst script = JSON.stringify(String(root).replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/write-alert.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(String(root));\nreturn [{ json: { cmd } }];"
+      }
+    },
+    {
+      "id": "err-run",
+      "name": "Write alert",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.cmd }}"
+      }
+    }
+  ],
+  "connections": {
+    "On build error": {
+      "main": [
+        [
+          {
+            "node": "Prepare alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare alert": {
+      "main": [
+        [
+          {
+            "node": "Write alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write alert": {
+      "main": [
+        []
+      ]
+    }
+  }
+}
