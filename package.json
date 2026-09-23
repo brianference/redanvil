@@ -26,7 +26,7 @@
     "reverify": "node .github/scripts/reverify.mjs",
     "meets-the-bar": "node .github/scripts/meets_the_bar.mjs",
     "test:vitest": "vitest run",
-    "test:n8n": "node --test --test-concurrency=1 n8n-prototype/test/overnight.test.mjs",
+    "test:n8n": "node --test --test-concurrency=1 n8n-prototype/test/overnight.test.mjs n8n-prototype/test/owned-artifacts.test.mjs",
     "test:pytest": "node .github/scripts/run_pytest.mjs orchestrator"
   },
   "devDependencies": {

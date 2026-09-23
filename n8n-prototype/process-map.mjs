@@ -31,6 +31,10 @@
  *   lets throwaway candidates there stand in for the five finished marks.
  * @property {string[]} [mustContain] substrings that must appear in a text file
  * @property {string[]} [mustNotContain] substrings that disqualify it (placeholders)
+ * @property {boolean} [owned] this step writes the path. A content-hash change
+ *   of it is what proves the step ran. At most one contract per step is owned.
+ * @property {boolean} [input] an earlier step writes this path. This step
+ *   verifies it and must not be credited for it. Never combined with `owned`.
  * @property {string} why the failure this contract exists to prevent
  */
 
@@ -307,8 +311,31 @@ export const PROCESS = [
     skippable: false,
     requires: [
       {
+        // This is the file decide.mjs writes. The three DECISION.md paths below
+        // are written by logo, palette and layout. Counting the layout one
+        // (requires[0] used to be that file) meant a successful decide run
+        // changed nothing role-run hashes, so the step could never count as run.
+        path: 'evidence/decisions.json',
+        kind: 'file',
+        owned: true,
+        // 512 matches role-run's substance floor. The shortest record decide.mjs
+        // writes -- three axes, a one-token choice, sha256 of each source file --
+        // clears it. A stub object does not.
+        minBytes: 512,
+        mustContain: [
+          '"recordedAt"',
+          '"decisions"',
+          '"axis": "logo"',
+          '"axis": "palette"',
+          '"axis": "layout"',
+          '"sha256"'
+        ],
+        why: 'decide records the choices it verified; a DECISION.md left by an earlier step cannot prove this step ran'
+      },
+      {
         path: 'design-refs/design-options/DECISION.md',
         kind: 'file',
+        input: true,
         minBytes: 600,
         mustContain: ['DECIDED'],
         why: 'the build must read a recorded choice, never infer one'
@@ -316,6 +343,7 @@ export const PROCESS = [
       {
         path: 'design-refs/logos/DECISION.md',
         kind: 'file',
+        input: true,
         minBytes: 300,
         mustContain: ['CHOSEN'],
         why: 'the chosen mark must be named in writing, or a later worktree ships whatever it finds'
@@ -327,6 +355,7 @@ export const PROCESS = [
         // in the map before it can be enforced anywhere.
         path: 'design-refs/palettes/DECISION.md',
         kind: 'file',
+        input: true,
         minBytes: 400,
         mustContain: ['CHOSEN'],
         why: 'the palette must be a recorded owner choice, never a default carried over from whichever layout option happened to win'
@@ -493,7 +522,8 @@ export const PROCESS = [
   {
     id: 'ui-live',
     role: 'qa-live-ui',
-    summary: 'Drive the DEPLOYED UI and prove it calls the live endpoints and paints a big-enough mark',
+    summary:
+      'Drive the DEPLOYED UI and prove it calls the live endpoints and paints a big-enough mark',
     dependsOn: ['visual'],
     humanGate: false,
     skippable: false,
@@ -688,6 +718,72 @@ export const PROCESS = [
     ]
   }
 ];
+
+/**
+ * Contracts this step writes. An `input` contract belongs to an earlier step.
+ * @param {ProcessStep} step
+ * @returns {ArtifactContract[]}
+ */
+export function ownedArtifacts(step) {
+  return step.requires.filter((c) => c.input !== true);
+}
+
+/**
+ * Path whose content change proves the step ran.
+ *
+ * An explicit `owned: true` contract wins. Otherwise the first contract this
+ * step writes, which is `requires[0]` when nothing is marked `input`. That is
+ * the path build-workflow.mjs has always handed to role-run.
+ * @param {ProcessStep} step
+ * @returns {string}
+ */
+export function countedArtifactPath(step) {
+  const marked = step.requires.filter((c) => c.owned === true);
+  if (marked.length > 1) {
+    throw new Error(
+      `${step.id} marks ${marked.length} artifacts owned; exactly one content change proves the step ran`
+    );
+  }
+  if (marked.length === 1) {
+    if (marked[0].input === true) {
+      throw new Error(`${step.id} marks ${marked[0].path} both owned and input`);
+    }
+    return marked[0].path;
+  }
+  const owned = ownedArtifacts(step);
+  if (!owned.length) throw new Error(`${step.id} has no owned artifact to count`);
+  return owned[0].path;
+}
+
+/**
+ * Owned paths claimed by more than one step.
+ *
+ * The counted path is what role-run hashes. Any other non-input contract is
+ * also owned. Sharing either path lets one step take credit for a file another
+ * step wrote, which is how decide watched layout's DECISION.md and could never
+ * count as run.
+ * @param {ProcessStep[]} steps
+ * @returns {{path: string, steps: string[]}[]}
+ */
+export function sharedOwnedArtifactPaths(steps) {
+  /** @type {Map<string, string[]>} */
+  const byPath = new Map();
+  for (const step of steps) {
+    const paths = new Set(ownedArtifacts(step).map((c) => c.path));
+    paths.add(countedArtifactPath(step));
+    for (const p of paths) {
+      const ids = byPath.get(p) ?? [];
+      ids.push(step.id);
+      byPath.set(p, ids);
+    }
+  }
+  /** @type {{path: string, steps: string[]}[]} */
+  const shared = [];
+  for (const [path, ids] of byPath) {
+    if (ids.length > 1) shared.push({ path, steps: ids });
+  }
+  return shared;
+}
 
 /**
  * Steps in dependency order, failing loudly on an unknown or cyclic dependency.
