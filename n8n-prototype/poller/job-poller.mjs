@@ -16,10 +16,10 @@
  * REDANVIL_RUNNER_TOKEN is read from the environment and is never printed.
  */
 import { createHash } from 'node:crypto';
-import { statSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, statSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createDispatchStore } from './dispatch-store.mjs';
 import {
   createSqliteExecutionReader,
@@ -685,6 +685,13 @@ export async function runCycle(opts = {}) {
  * @returns {Promise<number>} exit code
  */
 export async function main(argv = process.argv.slice(2), env = process.env) {
+  // Task Scheduler starts with no shell environment, so the token lives in the
+  // gitignored n8n-prototype/.env. Only the real process env is filled from it;
+  // a variable already set wins, and nothing read here is printed.
+  const envFile = join(dirname(fileURLToPath(import.meta.url)), '..', '.env');
+  if (env === process.env && !env.REDANVIL_RUNNER_TOKEN && existsSync(envFile)) {
+    process.loadEnvFile(envFile);
+  }
   const token = env.REDANVIL_RUNNER_TOKEN;
   if (!token) {
     process.stderr.write(
