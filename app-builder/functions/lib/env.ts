@@ -38,4 +38,11 @@ export interface Env {
    * updates, and the job list fail closed (503). Never log this value.
    */
   RUNNER_TOKEN?: string;
+  /**
+   * Pages secret keying the rate-limit HMAC. An unkeyed SHA-256 of an IPv4
+   * address is reversible by brute force (2^32 inputs), so the bucket key is
+   * HMAC-SHA-256 under this secret. Unset or empty means the limited POST
+   * routes fail closed (503). Never log this value.
+   */
+  RATE_LIMIT_KEY?: string;
 }

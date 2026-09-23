@@ -14,15 +14,26 @@ const MS_PER_SECOND = 1000;
 const CLIENT_IP_HEADER = 'cf-connecting-ip';
 
 /**
- * SHA-256 hex digest. Used as the rate-limit key so the table holds no IP.
+ * HMAC-SHA-256 of a value under a server secret, as lowercase hex.
  *
- * @param value - Material to hash (address, route, hour bucket).
- * @returns Lowercase hex digest.
+ * Keyed on purpose: a plain SHA-256 of an IPv4 address can be reversed by
+ * hashing all 2^32 addresses, so "we store a hash, not the IP" would not hold.
+ *
+ * @param key - The RATE_LIMIT_KEY secret. Never logged.
+ * @param value - The string to digest.
+ * @returns 64-character hex digest.
  */
-async function sha256Hex(value: string): Promise<string> {
-  const encoded = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest('SHA-256', encoded);
-  const bytes = new Uint8Array(digest);
+async function hmacHex(key: string, value: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(key),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(value));
+  const bytes = new Uint8Array(signature);
   let hex = '';
   for (let index = 0; index < bytes.length; index += 1) {
     hex += (bytes[index] ?? 0).toString(16).padStart(2, '0');
@@ -96,9 +107,13 @@ export async function enforceRateLimit(
 ): Promise<Response | null> {
   const ip = request.headers.get(CLIENT_IP_HEADER) ?? '';
   const bucket = hourBucket(new Date());
+  const key = env.RATE_LIMIT_KEY;
+  if (key === undefined || key.length === 0) {
+    return jsonResponse(request, { error: 'rate limiter not configured' }, 503, methods);
+  }
   let bucketKey: string;
   try {
-    bucketKey = await sha256Hex(`${ip}\n${route}\n${bucket}`);
+    bucketKey = await hmacHex(key, `${ip}\n${route}\n${bucket}`);
   } catch {
     return jsonResponse(request, { error: 'Could not check rate limit' }, 500, methods);
   }

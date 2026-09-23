@@ -53,7 +53,7 @@ export const privacy = {
         items: [
           'Job rows (when you submit): id, slug derived from the prompt, the prompt string, the entity names you typed, target type (fullstack-web), gate threshold (90), status (for example queued, claimed, awaiting owner approval, building, done, or failed), optional step, detail, and deploy URL once a build finishes, plus timestamps. These live in the D1 jobs table. The owner approves a job before it runs.',
           'Saved PRD rows (when you save): id, slug, title, prompt, full markdown, and created_at in the D1 prds table.',
-          'Rate-limit rows for POST /api/submit and POST /api/prds: each route allows 10 requests per hour per client address. The D1 rate_limits table stores a SHA-256 hash of the Cloudflare CF-Connecting-IP value, the route name, and the UTC hour, plus a hit count. The raw IP address is not written to that table. The hash exists only to enforce that limit.',
+          'Rate-limit rows for POST /api/submit and POST /api/prds: each route allows 10 requests per hour per client address. The D1 rate_limits table stores a keyed hash (HMAC-SHA-256 under a server-side secret) of the Cloudflare CF-Connecting-IP value, the route name, and the UTC hour, plus a hit count. The raw IP address is not written to that table, and without the secret the hash cannot be matched back to an address. The hash exists only to enforce that limit.',
           'Theme preference on your device only: localStorage key theme with value light or dark (set by the theme toggle). After you submit, localStorage key redanvil.jobId holds that job id so a reload can keep showing build status. It is not an account identifier.',
           'Request metadata that Cloudflare may log while serving Pages, Functions, and D1 (for example IP address, user agent, path, and timestamps under Cloudflare’s own practices).'
         ]
@@ -85,7 +85,7 @@ export const privacy = {
         items: [
           'Queue a build job when you submit the wizard so the owner can approve it and the runner can build it',
           'Show you the status of the job you submitted, including a deploy link when a build finishes',
-          'Limit how often one client can submit a job or save a PRD, using a hash of the IP rather than the IP itself',
+          'Limit how often one client can submit a job or save a PRD, using a keyed hash of the IP rather than the IP itself',
           'Persist and list PRDs people chose to publish in the public library',
           'Serve saved PRDs over the public API routes above',
           'Remember light/dark theme on the same browser',
@@ -125,7 +125,7 @@ export const privacy = {
       },
       {
         heading: 'Security practices in this codebase',
-        body: 'What this app actually implements: HTTPS is provided by Cloudflare for the hosted site; API handlers validate JSON bodies with Zod and bound string lengths; D1 writes use parameterized statements (no string-concatenated SQL in the handlers); the runner token is compared as a hash, not with a raw string equality check; responses set x-content-type-options: nosniff and same-origin CORS rather than a wildcard. POST /api/submit and POST /api/prds are limited as described above, and the rate-limit table stores a hash of the client IP rather than the address. What this app does not claim: we do not assert application-layer encryption at rest, a formal SOC 2 report, or that public library content is confidential. Saved PRDs on the public PRD APIs are intentionally readable. Job prompts are not on a public list. The public job status route returns status, step, detail, and deploy URL only. Do not put secrets, production credentials, private customer data, or regulated personal data into prompts or saved documents. No method of transmission or storage is perfectly secure.'
+        body: 'What this app actually implements: HTTPS is provided by Cloudflare for the hosted site; API handlers validate JSON bodies with Zod and bound string lengths; D1 writes use parameterized statements (no string-concatenated SQL in the handlers); the runner token is compared as a hash, not with a raw string equality check; responses set x-content-type-options: nosniff and same-origin CORS rather than a wildcard. POST /api/submit and POST /api/prds are limited as described above, and the rate-limit table stores a keyed hash of the client IP rather than the address. What this app does not claim: we do not assert application-layer encryption at rest, a formal SOC 2 report, or that public library content is confidential. Saved PRDs on the public PRD APIs are intentionally readable. Job prompts are not on a public list. The public job status route returns status, step, detail, and deploy URL only. Do not put secrets, production credentials, private customer data, or regulated personal data into prompts or saved documents. No method of transmission or storage is perfectly secure.'
       },
       {
         heading: 'Changes to this policy',

@@ -53,6 +53,31 @@ function post(url: string, body: unknown, ip: string): Request {
   });
 }
 
+describe('rate limit key', () => {
+  it('fails closed with 503 when RATE_LIMIT_KEY is unset', async () => {
+    const env = { ...createQueueEnv(), RATE_LIMIT_KEY: '' };
+    const res = await submit({ request: post('https://x.test/api/submit', submitBody(), CLIENT_IP), env });
+    expect(res.status).toBe(503);
+    expect(readQueueJobs(env)).toHaveLength(0);
+  });
+
+  it('stores a keyed digest, not a plain SHA-256 an attacker can recompute', async () => {
+    const env = createQueueEnv();
+    await submit({ request: post('https://x.test/api/submit', submitBody(), CLIENT_IP), env });
+    const bucket = new Date().toISOString().slice(0, 13);
+    const plain = await crypto.subtle.digest(
+      'SHA-256',
+      new TextEncoder().encode(`${CLIENT_IP}
+submit
+${bucket}`)
+    );
+    const plainHex = [...new Uint8Array(plain)].map((b) => b.toString(16).padStart(2, '0')).join('');
+    const keys = readRateKeys(env);
+    expect(keys.length).toBeGreaterThan(0);
+    expect(keys).not.toContain(plainHex);
+  });
+});
+
 describe('rate limit', () => {
   it('uses a limit of 10 per hour', () => {
     expect(RATE_LIMIT_PER_HOUR).toBe(10);

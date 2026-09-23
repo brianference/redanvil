@@ -27,6 +27,7 @@ export function mockEnv(options: MockD1Options = {}): Env {
   const fail = options.fail === true;
   const results = options.results ?? [];
   return {
+    RATE_LIMIT_KEY: 'test-rate-limit-key',
     DB: {
       prepare: (query: string) => {
         const isRateLimit = query.includes('rate_limits');

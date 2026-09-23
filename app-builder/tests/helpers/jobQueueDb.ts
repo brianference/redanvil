@@ -309,6 +309,7 @@ export function createQueueEnv(options: QueueEnvOptions = {}): Env {
   tables.set(db, { jobs, rates });
   return {
     DB: db,
+    RATE_LIMIT_KEY: 'test-rate-limit-key',
     ...(options.runnerToken !== undefined ? { RUNNER_TOKEN: options.runnerToken } : {})
   };
 }
