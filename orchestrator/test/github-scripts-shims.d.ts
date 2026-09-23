@@ -92,6 +92,7 @@ declare module '../../.github/scripts/meets_the_bar.mjs' {
     repoRoot: string,
     opts?: { slugs?: string[]; threshold?: number }
   ): MeetBarVerdict[];
+  export const SHARED_PREFIXES: readonly string[];
   export function appsAffectedByFiles(
     changedFiles: string[],
     apps?: readonly { slug: string; dir: string }[]

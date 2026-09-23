@@ -996,7 +996,68 @@ export function evaluateApps(repoRoot, opts = {}) {
 }
 
 /**
+ * Paths outside any one app directory that still change every gated app.
+ * A push that touches one of these checks the whole APPS list. A README or a
+ * doc does not: those are not in this list, so they cannot hold an unrelated
+ * app at the finish line.
+ *
+ * A trailing slash is a directory prefix. Anything else is one exact root
+ * file, so `package.json` does not match `app-builder/package.json` and
+ * `design-system/` does not match `pet-sitter/design-system/`.
+ *
+ * - `design-system/` — app-builder, dashboard, az-planting-calendar,
+ *   sushi-finder, and pet-sitter import it by relative path (theme, shell,
+ *   http, hooks). `design-system/auth-kit/` is the source those apps copy
+ *   into `functions/_lib`.
+ * - `orchestrator/` — this checker scores every app through
+ *   `orchestrator/src/gate/done.mjs`, accepted findings, newest source
+ *   commit, and product judgement. The rubric encoding lives here, and the
+ *   root workspace script `npm run gate` runs this package.
+ * - `.github/` — CI job `apps-meet-the-bar` and this checker. A change here
+ *   changes the bar applied to every app in APPS.
+ * - `package.json` — npm workspaces lists every app. CI runs `npm ci` and the
+ *   root scripts (lint, test, gate, meets-the-bar) from this file.
+ * - `package-lock.json` — the lockfile that `npm ci` installs for that
+ *   workspace in every CI job.
+ * - `eslint.config.js` — root `eslint .` (`npm run lint`, and CI) lints
+ *   every `.ts` and `.tsx` file in every app, not one package.
+ *
+ * `tsconfig.base.json` is not listed: only `orchestrator/tsconfig.json`
+ * extends it. `vitest.config.ts` is not listed: it runs `orchestrator/test`
+ * only. `rules/` is not listed: the running gate reads the TypeScript rubric
+ * under `orchestrator/`, not the markdown.
+ *
+ * @type {readonly string[]}
+ */
+export const SHARED_PREFIXES = Object.freeze([
+  'design-system/',
+  'orchestrator/',
+  '.github/',
+  'package.json',
+  'package-lock.json',
+  'eslint.config.js'
+]);
+
+/**
+ * True when a repo-relative path is shared by every gated app.
+ *
+ * @param {string} file Slash-normalized repo-relative path.
+ * @returns {boolean}
+ */
+function pathIsSharedByAllApps(file) {
+  return SHARED_PREFIXES.some((prefix) => {
+    if (prefix.endsWith('/')) {
+      return file === prefix.slice(0, -1) || file.startsWith(prefix);
+    }
+    return file === prefix;
+  });
+}
+
+/**
  * Apps whose paths appear in a list of changed files.
+ * One app directory (or `results/<slug>.json`) selects that app. A path in
+ * SHARED_PREFIXES selects every app, because that path is not owned by one
+ * of them.
  *
  * @param {string[]} changedFiles Repo-relative paths (forward or backslash).
  * @param {readonly {slug: string, dir: string}[]} [apps]
@@ -1004,6 +1065,9 @@ export function evaluateApps(repoRoot, opts = {}) {
  */
 export function appsAffectedByFiles(changedFiles, apps = APPS) {
   const norm = changedFiles.map((f) => f.replace(/\\/g, '/'));
+  if (norm.some((file) => pathIsSharedByAllApps(file))) {
+    return [...apps];
+  }
   return apps.filter((app) => {
     const prefix = `${app.dir.replace(/\\/g, '/')}/`;
     const dirExact = app.dir.replace(/\\/g, '/');
