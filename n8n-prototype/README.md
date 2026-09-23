@@ -122,6 +122,18 @@ execution is `POST /api/v1/executions/{id}/stop` with header `X-N8N-API-KEY`
 printed. Set `N8N_BASE_URL` when n8n is not at `http://127.0.0.1:5678`
 (`start-server.sh` binds `127.0.0.1`).
 
+## Verified live on n8n 2.22.6 (2026-09-23)
+
+The form field names (`field-0`, `field-1`), the `?signature=` resume URL, and the timeout path (the Wait resumes with no `formMode`) were run on a throwaway n8n 2.22.6. Loopback only, port 5699. The home directory was a temp folder, not `.n8n-home`. The proof workflow was built from the same builders as the production generator, with the wait set to 1 minute. Production generation still emits 2 hours, and the committed full-build JSON was not changed.
+
+| execution | n8n status | outcome |
+|---|---|---|
+| 1 | success | `dispatch.mjs resolve <id> approve` with notes `ok "quoted" & 100%`. Marker file bytes were `A`. Those same note bytes were in the execution data, next to `Decision` `approve` and `formMode` `production`. Resolved record: `decision` approve, `resolvedBy` owner. |
+| 2 | success | redo via the CLI. Marker file bytes were `R`. customData `cycles_logo` was `1`. |
+| 3 | success | no answer. After the 1-minute limit the marker file bytes were `T`, and `resolved/<id>.json` had `decision` `auto-decided` and `resolvedBy` `timeout`. The execution data had no `formMode`. |
+
+A fourth execution was failed on purpose. n8n marked it `error` and ran `workflows/redanvil-errors.json` (execution 5, success). That wrote `alerts/alert-4.json` with message `live gate proof: forced failure`.
+
 ## Files
 
 | path | role |

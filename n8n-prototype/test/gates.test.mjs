@@ -21,6 +21,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { after, describe, test } from 'node:test';
 import { GALLERY_MAX_BYTES } from '../dispatch/constants.mjs';
+import { approvalNode, DEFAULT_GATE_WAIT } from '../build-workflow.mjs';
+import { buildLiveGateWorkflow } from './live-gate-workflow.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..');
@@ -177,6 +179,54 @@ function listen(handler) {
     });
   });
 }
+
+describe('wait limit parameter', () => {
+  test('production default stays 2 hours and a caller can ask for 1 minute', () => {
+    const step = { id: 'logo', summary: 'Five real generated brand marks, a gallery, and an OPEN decision' };
+    const production = approvalNode(step, 0);
+    assert.equal(production.parameters.resumeAmount, DEFAULT_GATE_WAIT.amount);
+    assert.equal(production.parameters.resumeUnit, DEFAULT_GATE_WAIT.unit);
+    assert.equal(production.parameters.resumeAmount, 2);
+    assert.equal(production.parameters.resumeUnit, 'hours');
+    const proof = approvalNode(step, 0, { amount: 1, unit: 'minutes' });
+    assert.equal(proof.parameters.resumeAmount, 1);
+    assert.equal(proof.parameters.resumeUnit, 'minutes');
+    assert.equal(proof.parameters.resume, 'form');
+    assert.equal(proof.parameters.limitWaitTime, true);
+  });
+
+  test('the live proof workflow is one logo gate with markers instead of a role loop', () => {
+    const workflow = buildLiveGateWorkflow();
+    assert.equal(workflow.settings.errorWorkflow, 'redanvilErrors001');
+    const wait = workflow.nodes.find((node) => node.name === 'Owner approves: logo');
+    assert.equal(wait.type, 'n8n-nodes-base.wait');
+    assert.equal(wait.parameters.resumeAmount, 1);
+    assert.equal(wait.parameters.resumeUnit, 'minutes');
+    assert.deepEqual(targets(workflow, 'Register gate: logo'), ['Owner approves: logo']);
+    assert.deepEqual(targets(workflow, 'Owner approves: logo'), ['If: logo form submitted']);
+    assert.deepEqual(targets(workflow, 'If: logo form submitted', 0), ['If: logo approved']);
+    assert.deepEqual(targets(workflow, 'If: logo form submitted', 1), ['Prepare timeout: logo']);
+    assert.deepEqual(targets(workflow, 'If: logo approved', 0), ['Prepare marker A']);
+    assert.deepEqual(targets(workflow, 'Prepare marker A'), ['Write marker A']);
+    assert.deepEqual(targets(workflow, 'If: logo approved', 1), ['Count cycles: logo']);
+    assert.deepEqual(targets(workflow, 'Count cycles: logo'), ['Prepare marker R']);
+    assert.deepEqual(targets(workflow, 'Prepare marker R'), ['Write marker R']);
+    assert.deepEqual(targets(workflow, 'Prepare timeout: logo'), ['Resolve timeout: logo']);
+    assert.deepEqual(targets(workflow, 'Resolve timeout: logo'), ['Prepare marker T']);
+    assert.deepEqual(targets(workflow, 'Prepare marker T'), ['Write marker T']);
+    assert.deepEqual(targets(workflow, 'Fail via webhook'), ['Stop: forced failure']);
+    const names = new Set(workflow.nodes.map((node) => node.name));
+    assert.equal(names.has('logo params'), false);
+    assert.equal(names.has('layout params'), false);
+    const register = workflow.nodes.find((node) => node.name === 'Prepare gate: logo');
+    assert.match(register.parameters.jsCode, /register-gate\.mjs/);
+    assert.match(register.parameters.jsCode, /\$execution\.resumeFormUrl/);
+    const timeout = workflow.nodes.find((node) => node.name === 'Prepare timeout: logo');
+    assert.match(timeout.parameters.jsCode, /resolve-timeout\.mjs/);
+    const cycle = workflow.nodes.find((node) => node.name === 'Count cycles: logo');
+    assert.match(cycle.parameters.jsCode, /\$execution\.customData/);
+  });
+});
 
 describe('generator gates', () => {
   test('each gate is Register, Wait of 2h, then an If with approve, redo, and timeout', () => {
