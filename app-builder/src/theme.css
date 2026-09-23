@@ -146,3 +146,10 @@
 .ex-head a {
   display: inline-block;
 }
+
+/* Status panel controls. The ring is the existing focus token, not a new color. */
+.ra-status-panel button:focus-visible,
+.ra-status-panel a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

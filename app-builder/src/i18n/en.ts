@@ -464,37 +464,90 @@ export const en = {
     ownerApproval:
       'Each build is approved by the owner before it runs. Submitting a job does not start the build.',
     jobId: (id: string): string => `Job ${id}`,
+    copyJobId: 'Copy job id',
+    copyLabel: 'Copy',
+    copied: 'Copied',
+    dismiss: 'Dismiss build status',
+    startNew: 'Start a new app',
     loading: 'Checking build status…',
     /**
-     * Plain-language status. Unknown values are shown as-is, not invented.
+     * Icon, short badge, and one-line headline for a public status.
+     * Unknown values keep the raw status instead of an invented label.
      *
      * @param status - Status string from the public endpoint.
-     * @returns A sentence for the panel.
+     * @returns Badge icon, badge text, and headline.
      */
-    statusText: (status: string): string => {
+    statusPresentation: (
+      status: string
+    ): { icon: string; badge: string; headline: string } => {
       switch (status) {
         case 'queued':
-          return 'Queued. It has not been picked up.';
+          return { icon: '○', badge: 'Queued', headline: 'In line. Nothing has started.' };
         case 'claimed':
-          return 'Picked up by the build runner.';
+          return { icon: '◉', badge: 'Picked up', headline: 'A runner picked this up.' };
         case 'awaiting_owner':
-          return 'Waiting for the owner to approve it.';
+          return {
+            icon: '◎',
+            badge: 'Awaiting approval',
+            headline: 'Waiting for owner approval.'
+          };
         case 'approved':
-          return 'Approved. The build has not started yet.';
-        case 'rejected':
-          return 'Rejected. It will not be built.';
+          return {
+            icon: '✓',
+            badge: 'Approved',
+            headline: 'Approved. The build has not started.'
+          };
         case 'building':
-          return 'Building.';
+          return { icon: '…', badge: 'Building', headline: 'The build is running.' };
         case 'done':
-          return 'Done.';
+          return { icon: '●', badge: 'Done', headline: 'The app is ready.' };
         case 'failed':
-          return 'Failed.';
+          return { icon: '!', badge: 'Failed', headline: 'The build did not finish.' };
+        case 'rejected':
+          return { icon: '×', badge: 'Rejected', headline: 'Rejected. It will not be built.' };
         default:
-          return `Status: ${status}`;
+          return { icon: '?', badge: status, headline: `Status: ${status}` };
       }
     },
-    stepText: (step: string): string => `Current step: ${step}`,
-    detailText: (detail: string): string => `Detail: ${detail}`,
+    /**
+     * Process-map order (n8n-prototype/process-map.mjs). One list for ids and labels.
+     */
+    steps: [
+      { id: 'prd', label: 'Product requirements' },
+      { id: 'product', label: 'Product brief' },
+      { id: 'brainstorm', label: 'Ranked features' },
+      { id: 'inspo', label: 'Reference apps' },
+      { id: 'reuse', label: 'Search existing code' },
+      { id: 'logo', label: 'Brand marks' },
+      { id: 'palette', label: 'Colour and type' },
+      { id: 'layout', label: 'Layout options' },
+      { id: 'decide', label: 'Owner picks the design' },
+      { id: 'integration', label: 'Wire the data source' },
+      { id: 'testwriter', label: 'Acceptance tests' },
+      { id: 'build', label: 'Implement the design' },
+      { id: 'content', label: 'Pages and empty states' },
+      { id: 'runners', label: 'Run the test lanes' },
+      { id: 'visual', label: 'Visual review' },
+      { id: 'ui-live', label: 'Drive the deployed UI' },
+      { id: 'qa-runtime', label: 'Check deployed routes' },
+      { id: 'judge', label: 'Fresh review of the diff' },
+      { id: 'qa-data', label: 'Check citations and links' },
+      { id: 'user-refuse', label: 'Adversarial acceptance' },
+      { id: 'pm', label: 'Assign unmet work' },
+      { id: 'debugger', label: 'Find the root cause' },
+      { id: 'reverify', label: 'Re-measure the deploy' },
+      { id: 'ship', label: 'Deploy and prove the hash' }
+    ],
+    /**
+     * Progress line for a known step.
+     *
+     * @param index - 1-based position in the catalog.
+     * @param total - Catalog length.
+     * @param label - Human label for that step.
+     * @returns The panel line.
+     */
+    stepProgress: (index: number, total: number, label: string): string =>
+      `Step ${index} of ${total} -- ${label}`,
     openDeploy: 'Open the deployed app',
     errors: {
       invalid: 'Could not read the build status',

@@ -166,6 +166,21 @@ export function Home(): JSX.Element {
     setView('chat');
   }
 
+  /**
+   * Hide the status panel. The panel clears the stored job id before this runs.
+   */
+  function handleDismissJob(): void {
+    setTrackedJobId(null);
+  }
+
+  /**
+   * Hide the status panel and return the builder to a fresh app.
+   */
+  function handleStartNewApp(): void {
+    setTrackedJobId(null);
+    reset();
+  }
+
   const pageTitle =
     view === 'templates'
       ? en.templates.title
@@ -183,7 +198,13 @@ export function Home(): JSX.Element {
   // surfaces use their own page titles without a lead.
   return (
     <Page title={pageTitle}>
-      {trackedJobId !== null && <JobStatusPanel jobId={trackedJobId} />}
+      {trackedJobId !== null && (
+        <JobStatusPanel
+          jobId={trackedJobId}
+          onDismiss={handleDismissJob}
+          onStartNew={handleStartNewApp}
+        />
+      )}
       {view === 'chat' && (
         <ComposerChat
           prompt={answers.prompt}
