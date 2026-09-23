@@ -92,6 +92,48 @@ independent judge are all still code and still outside n8n. n8n replaces the
 PM's loop and the hand-driving -- nothing else. Anything claiming otherwise
 would be the same mistake as trusting a spec because it was written down.
 
+## Human gates and the error workflow
+
+A human-gate step registers a pending record, then waits on a form for two
+hours. Approve continues. Redo loops to the step named by `reworkTo` (or to
+the gate's own step when it has none), until that step's `maxCycles` is
+exceeded, and then the execution fails. When the wait limit expires, the
+auto-decide role for that axis runs and `resolved/<id>.json` is written with
+`decision: "auto-decided"` and `resolvedBy: "timeout"`.
+
+Telegram notify nodes are generated only when `REDANVIL_TELEGRAM=1`.
+`REDANVIL_AUTO_GATES=1` still skips the Wait and runs auto-decide immediately.
+
+`workflows/redanvil-errors.json` is the error workflow (id `redanvilErrors001`).
+The build workflow JSON sets `settings.errorWorkflow` to that id. n8n reads
+that setting when an execution fails and runs the error workflow
+(`execute-error-workflow.ts`). Import the error workflow into n8n before the
+build workflow so the id exists. In the editor the same setting is the
+workflow's error workflow; point the build workflow at "RedAnvil build errors"
+if an import did not keep the id.
+
+The error workflow writes `.redanvil/dispatch/alerts/<id>.json` through
+Execute Command. It needs `REDANVIL_REPO` in the n8n process environment.
+
+The owner's session uses `node n8n-prototype/dispatch/dispatch.mjs`.
+`sweep-orphans.mjs` is dry-run unless `--apply` is passed. Stopping an
+execution is `POST /api/v1/executions/{id}/stop` with header `X-N8N-API-KEY`
+(n8n 2.22.6 public API). The key is the env var `N8N_API_KEY` and is never
+printed. Set `N8N_BASE_URL` when n8n is not at `http://127.0.0.1:5678`
+(`start-server.sh` binds `127.0.0.1`).
+
+## Verified live on n8n 2.22.6 (2026-09-23)
+
+The form field names (`field-0`, `field-1`), the `?signature=` resume URL, and the timeout path (the Wait resumes with no `formMode`) were run on a throwaway n8n 2.22.6. Loopback only, port 5699. The home directory was a temp folder, not `.n8n-home`. The proof workflow was built from the same builders as the production generator, with the wait set to 1 minute. Production generation still emits 2 hours, and the committed full-build JSON was not changed.
+
+| execution | n8n status | outcome |
+|---|---|---|
+| 1 | success | `dispatch.mjs resolve <id> approve` with notes `ok "quoted" & 100%`. Marker file bytes were `A`. Those same note bytes were in the execution data, next to `Decision` `approve` and `formMode` `production`. Resolved record: `decision` approve, `resolvedBy` owner. |
+| 2 | success | redo via the CLI. Marker file bytes were `R`. customData `cycles_logo` was `1`. |
+| 3 | success | no answer. After the 1-minute limit the marker file bytes were `T`, and `resolved/<id>.json` had `decision` `auto-decided` and `resolvedBy` `timeout`. The execution data had no `formMode`. |
+
+A fourth execution was failed on purpose. n8n marked it `error` and ran `workflows/redanvil-errors.json` (execution 5, success). That wrote `alerts/alert-4.json` with message `live gate proof: forced failure`.
+
 ## Files
 
 | path | role |

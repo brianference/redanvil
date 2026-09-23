@@ -20,11 +20,26 @@
  */
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { countedArtifactPath, orderedSteps } from './process-map.mjs';
 import { BINDINGS, unboundRoles } from './bindings.mjs';
+import { BUILD_WORKFLOW_ID, DEFAULT_MAX_CYCLES, ERROR_WORKFLOW_ID } from './dispatch/constants.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * The workflow files are written only when this file is the program.
+ * Importing the builders (the live proof, a unit test) must not rewrite them.
+ */
+const isDirectRun =
+  process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+/**
+ * Production human-gate wait. A live proof passes a shorter limit and must
+ * not change this default. resumeUnit values are the Wait node's options
+ * (seconds, minutes, hours, days) from Wait.node.ts in n8n 2.22.6.
+ */
+export const DEFAULT_GATE_WAIT = { amount: 2, unit: 'hours' };
 
 /** Horizontal spacing between generated nodes on the n8n canvas. */
 const X_STEP = 220;
@@ -35,6 +50,13 @@ const X_STEP = 220;
  */
 const AUTO_GATES =
   process.env.REDANVIL_AUTO_GATES === '1' || process.env.REDANVIL_AUTO_GATES === 'true';
+
+/**
+ * Telegram is off unless this is set at generation time. A missing bot
+ * credential used to be a node on every gate; it is now opt-in.
+ */
+const TELEGRAM =
+  process.env.REDANVIL_TELEGRAM === '1' || process.env.REDANVIL_TELEGRAM === 'true';
 
 /**
  * Decision.md path per auto-resolved axis. Paths taken from decide.mjs AXES
@@ -172,9 +194,12 @@ function notifyNode(step, index) {
  * Build the blocking approval node for a human gate.
  * @param {import('./process-map.mjs').ProcessStep} step the step
  * @param {number} index position in the ordered map
+ * @param {{ amount?: number, unit?: string }} [waitLimit] defaults to two hours
  * @returns {object} an n8n Wait node configured as a form
  */
-function approvalNode(step, index) {
+export function approvalNode(step, index, waitLimit = {}) {
+  const resumeAmount = waitLimit.amount ?? DEFAULT_GATE_WAIT.amount;
+  const resumeUnit = waitLimit.unit ?? DEFAULT_GATE_WAIT.unit;
   return {
     id: `h_${step.id}`,
     name: `Owner approves: ${step.id}`,
@@ -196,6 +221,118 @@ function approvalNode(step, index) {
           { fieldLabel: 'Notes', fieldType: 'textarea', requiredField: false }
         ]
       },
+      // Wait.node.ts (n8n 2.22.6): limitWaitTime + limitType afterTimeInterval
+      // + resumeAmount + resumeUnit. Two hours, then the execution resumes.
+      //
+      // Timeout and a submitted form share this node's single output, and they
+      // are not the same item. putToWait() returns getInputData() and sets
+      // waitTill. On resume, workflow-execute.ts handleWaitingState disables
+      // the Wait node and pops that run; handleDisabledNode then passes the
+      // input (the Register command's exitCode/stdout/stderr) straight through.
+      // A form POST does not: formWebhook -> prepareFormReturnItem sets
+      // formMode, submittedAt, and the field labels (Decision, Notes). The
+      // If below treats a missing formMode as the limit expiring.
+      limitWaitTime: true,
+      limitType: 'afterTimeInterval',
+      resumeAmount,
+      resumeUnit,
+      options: {}
+    }
+  };
+}
+
+/**
+ * Code node that builds a shell command whose only free text is base64.
+ * repoRoot is read from Slice config, which itself reads only the environment.
+ * @param {string} id node id
+ * @param {string} name node name
+ * @param {number[]} position canvas position
+ * @param {string} jsCode code that returns [{ json: { cmd } }]
+ * @returns {object}
+ */
+export function commandPrepNode(id, name, position, jsCode) {
+  return {
+    id,
+    name,
+    type: 'n8n-nodes-base.code',
+    typeVersion: 2,
+    position,
+    parameters: { mode: 'runOnceForAllItems', language: 'javaScript', jsCode }
+  };
+}
+
+/**
+ * Execute Command that runs the command the previous Code node put on `cmd`.
+ * @param {string} id node id
+ * @param {string} name node name
+ * @param {number[]} position canvas position
+ * @returns {object}
+ */
+export function commandNode(id, name, position) {
+  return {
+    id,
+    name,
+    type: 'n8n-nodes-base.executeCommand',
+    typeVersion: 1,
+    position,
+    parameters: { executeOnce: true, command: '={{ $json.cmd }}' }
+  };
+}
+
+/**
+ * n8n expression that shells out to a dispatch script. The payload is base64
+ * so a summary or a resume URL cannot break out of the command.
+ * @param {string} bodyJs statements that declare `payload`
+ * @param {string} scriptFile file name under n8n-prototype/dispatch
+ * @returns {string}
+ */
+export function dispatchCommandCode(bodyJs, scriptFile) {
+  return (
+    `${bodyJs}\n` +
+    `const b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\n` +
+    `const root = String(c.repoRoot);\n` +
+    `const script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/${scriptFile}');\n` +
+    `const cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\n` +
+    `return [{ json: { cmd } }];`
+  );
+}
+
+/**
+ * If node. operation is `exists` (string), `true` (boolean), or `equals`.
+ * @param {string} id node id
+ * @param {string} name node name
+ * @param {number[]} position canvas position
+ * @param {string} leftValue expression
+ * @param {'exists'|'true'|'equals'} operation comparison
+ * @param {string} [rightValue] right side for equals
+ * @returns {object}
+ */
+export function ifNode(id, name, position, leftValue, operation, rightValue) {
+  const operator =
+    operation === 'exists'
+      ? { type: 'string', operation: 'exists', singleValue: true }
+      : operation === 'true'
+        ? { type: 'boolean', operation: 'true', singleValue: true }
+        : { type: 'string', operation: 'equals' };
+  return {
+    id,
+    name,
+    type: 'n8n-nodes-base.if',
+    typeVersion: 2.3,
+    position,
+    parameters: {
+      conditions: {
+        options: { caseSensitive: true, leftValue: '', typeValidation: 'strict', version: 2 },
+        combinator: 'and',
+        conditions: [
+          {
+            id: `${id}_c`,
+            leftValue,
+            rightValue: rightValue ?? '',
+            operator
+          }
+        ]
+      },
       options: {}
     }
   };
@@ -212,43 +349,38 @@ const nodes = [
     position: [0, 0],
     parameters: {}
   },
-  {
-    // The trigger that makes HUMAN GATES POSSIBLE.
-    //
-    // `n8n execute` cannot run a Wait node with `resume: form`. It throws
-    // "context.getNodeParameter is not a function", because form resume needs
-    // the server's webhook context and the CLI has none. A CLI-driven build can
-    // therefore NEVER pause for an owner decision -- it dies at the first gate.
-    //
-    // Starting the run through the server instead puts the execution in the
-    // process that owns the webhooks, so the Wait node suspends properly and n8n
-    // serves a real form URL that resumes it.
-    //
-    // Identity read out of the installed package, not the docs:
-    //   type n8n-nodes-base.webhook, versions [1, 1.1, 2, 2.1]
-    // The docs have been wrong about node ids in this project before.
-    id: 'hook',
-    name: 'Start via webhook',
-    type: 'n8n-nodes-base.webhook',
-    typeVersion: 2.1,
-    position: [0, 220],
-    // A FIXED, VALID UUID. Fixed so the callback URL survives regeneration and
-    // the overnight loop never has to rediscover it. Valid because n8n looks the
-    // webhook up by this id when it builds the node's execution context -- the
-    // first attempt used a readable-but-malformed id ending "-redanvilbuild",
-    // and the request reached the node with `context` undefined:
-    //   TypeError: Cannot read properties of undefined (reading 'getNode')
-    // which reads like a bug in the node and is actually a bad id in our JSON.
-    webhookId: 'daccb558-a999-48b4-9d11-9ac2067ac177',
-    parameters: {
-      httpMethod: 'POST',
+  // The trigger that makes HUMAN GATES POSSIBLE.
+  //
+  // `n8n execute` cannot run a Wait node with `resume: form`. It throws
+  // "context.getNodeParameter is not a function", because form resume needs
+  // the server's webhook context and the CLI has none. A CLI-driven build can
+  // therefore NEVER pause for an owner decision -- it dies at the first gate.
+  //
+  // Starting the run through the server instead puts the execution in the
+  // process that owns the webhooks, so the Wait node suspends properly and n8n
+  // serves a real form URL that resumes it.
+  //
+  // Identity read out of the installed package, not the docs:
+  //   type n8n-nodes-base.webhook, versions [1, 1.1, 2, 2.1]
+  // The docs have been wrong about node ids in this project before.
+  //
+  // A FIXED, VALID UUID. Fixed so the callback URL survives regeneration and
+  // the overnight loop never has to rediscover it. Valid because n8n looks the
+  // webhook up by this id when it builds the node's execution context -- the
+  // first attempt used a readable-but-malformed id ending "-redanvilbuild",
+  // and the request reached the node with `context` undefined:
+  //   TypeError: Cannot read properties of undefined (reading 'getNode')
+  // which reads like a bug in the node and is actually a bad id in our JSON.
+  //
+  // Respond immediately. The build runs for hours; holding the HTTP
+  // connection open for it would time out long before the first gate.
+  webhookTriggerNode({
+      id: 'hook',
+      name: 'Start via webhook',
+      webhookId: 'daccb558-a999-48b4-9d11-9ac2067ac177',
       path: 'redanvil-build',
-      // Respond immediately. The build runs for hours; holding the HTTP
-      // connection open for it would time out long before the first gate.
-      responseMode: 'onReceived',
-      options: {}
-    }
-  },
+      position: [0, 220]
+    }),
   {
     id: 'cfg',
     name: 'Slice config',
@@ -327,71 +459,359 @@ const connections = {
   'Start a build': { main: [[{ node: 'Slice config', type: 'main', index: 0 }]] },
   'Start via webhook': { main: [[{ node: 'Slice config', type: 'main', index: 0 }]] }
 };
-let previous = 'Slice config';
+/**
+ * Add one outgoing edge without dropping the node's other outputs.
+ * An If has two outputs; assigning the whole connection object would wipe one.
+ * @param {Record<string, {main: object[][]}>} connections workflow connections
+ * @param {string} from source node name
+ * @param {string} to target node name
+ * @param {number} [outputIndex] which output. 0 for a single-output node
+ */
+export function linkInto(connections, from, to, outputIndex = 0) {
+  if (!connections[from]) connections[from] = { main: [] };
+  const main = connections[from].main;
+  while (main.length <= outputIndex) main.push([]);
+  main[outputIndex].push({ node: to, type: 'main', index: 0 });
+}
+
+/**
+ * @param {string} from source node name
+ * @param {string} to target node name
+ * @param {number} [outputIndex] which output. 0 for a single-output node
+ */
+function link(from, to, outputIndex = 0) {
+  linkInto(connections, from, to, outputIndex);
+}
+
+/**
+ * Code-node source that registers one gate. Free text rides inside the
+ * base64 payload, so the summary cannot break the shell command.
+ * @param {{ id: string, summary: string }} step gated step
+ * @returns {string}
+ */
+export function registerGateJs(step) {
+  return dispatchCommandCode(
+    `const c = $('Slice config').first().json;\n` +
+      `const payload = {\n` +
+      `  slug: c.slug,\n` +
+      `  step: ${JSON.stringify(step.id)},\n` +
+      `  title: ${JSON.stringify(`Approve ${step.id}`)},\n` +
+      `  summary: ${JSON.stringify(step.summary)},\n` +
+      `  resumeUrl: $execution.resumeFormUrl,\n` +
+      `  executionId: String($execution.id ?? '')\n` +
+      `};`,
+    'register-gate.mjs'
+  );
+}
+
+/**
+ * Code-node source that records a timeout decision for one gate.
+ * @param {{ id: string }} step gated step
+ * @returns {string}
+ */
+export function resolveTimeoutJs(step) {
+  return dispatchCommandCode(
+    `const c = $('Slice config').first().json;\n` +
+      `const payload = {\n` +
+      `  slug: c.slug,\n` +
+      `  step: ${JSON.stringify(step.id)},\n` +
+      `  executionId: String($execution.id ?? '')\n` +
+      `};`,
+    'resolve-timeout.mjs'
+  );
+}
+
+/**
+ * Code-node source that increments this execution's redo counter.
+ * customData keys may only contain [A-Za-z0-9_] (execution-metadata.ts).
+ * @param {{ id: string }} step gated step
+ * @param {number} maxCycles how many redo loops are allowed
+ * @returns {string}
+ */
+export function cycleCountJs(step, maxCycles) {
+  const cycleKey = `cycles_${step.id.replace(/-/g, '_')}`;
+  return (
+    `const key = ${JSON.stringify(cycleKey)};\n` +
+    `const raw = $execution.customData.get(key);\n` +
+    `const used = Number(raw || '0') + 1;\n` +
+    `if (!Number.isFinite(used)) {\n` +
+    `  throw new Error('cycle counter for ${step.id} is not a number');\n` +
+    `}\n` +
+    `$execution.customData.set(key, String(used));\n` +
+    `const max = ${maxCycles};\n` +
+    `return [{ json: { gateCycles: used, gateMaxCycles: max, gateExceeded: used > max } }];`
+  );
+}
+
+/**
+ * Webhook trigger. webhookId must be a real UUID: n8n looks the webhook up
+ * by it when it builds the node's execution context, and a malformed id
+ * arrives with `context` undefined.
+ * @param {{ id: string, name: string, webhookId: string, path: string, position: number[], responseMode?: string }} spec
+ * @returns {object}
+ */
+export function webhookTriggerNode(spec) {
+  return {
+    id: spec.id,
+    name: spec.name,
+    type: 'n8n-nodes-base.webhook',
+    typeVersion: 2.1,
+    position: spec.position,
+    webhookId: spec.webhookId,
+    parameters: {
+      httpMethod: 'POST',
+      path: spec.path,
+      responseMode: spec.responseMode ?? 'onReceived',
+      options: {}
+    }
+  };
+}
+
+/**
+ * Wire the auto-decide params + role pair and return the role's name.
+ * @param {import('./process-map.mjs').ProcessStep} step the gated step
+ * @param {number} index position in the ordered map
+ * @param {string} from node that feeds the pair
+ * @returns {string}
+ */
+function addAutoDecide(step, index, from) {
+  const autoArtifact = AUTO_AXIS_ARTIFACT[step.id];
+  const autoStep = {
+    id: `auto-${step.id}`,
+    role: 'auto-decide',
+    requires: [{ path: autoArtifact }]
+  };
+  const autoCmd = `node n8n-prototype/roles/auto-decide.mjs --axis=${step.id} --slug={slug} --repoRoot={root}`;
+  const autoParams = paramsNode(autoStep, index, autoCmd);
+  const autoRole = roleNode(autoStep, index);
+  nodes.push(autoParams, autoRole);
+  link(from, autoParams.name);
+  link(autoParams.name, autoRole.name);
+  return autoRole.name;
+}
+
+/** @type {{ from: string, outputIndex: number }[]} */
+let forwarders = [{ from: 'Slice config', outputIndex: 0 }];
+const stepIds = new Set(steps.map((step) => step.id));
 
 steps.forEach((step, i) => {
   const params = paramsNode(step, i);
   const role = roleNode(step, i);
   nodes.push(params, role);
-  connections[previous] = { main: [[{ node: params.name, type: 'main', index: 0 }]] };
-  connections[params.name] = { main: [[{ node: role.name, type: 'main', index: 0 }]] };
-  previous = role.name;
+  for (const edge of forwarders) link(edge.from, params.name, edge.outputIndex);
+  link(params.name, role.name);
+  /** @type {{ from: string, outputIndex: number }[]} */
+  let tails = [{ from: role.name, outputIndex: 0 }];
 
   if (step.humanGate) {
-    // Notify BEFORE the wait, never after. A message sent after the gate
-    // resolves announces a decision that has already been made.
-    const notify = notifyNode(step, i);
-    nodes.push(notify);
-    connections[previous] = { main: [[{ node: notify.name, type: 'main', index: 0 }]] };
-    previous = notify.name;
+    if (TELEGRAM) {
+      // Notify BEFORE the wait, never after. A message sent after the gate
+      // resolves announces a decision that has already been made.
+      const notify = notifyNode(step, i);
+      nodes.push(notify);
+      link(tails[0].from, notify.name);
+      tails = [{ from: notify.name, outputIndex: 0 }];
+    }
 
     const autoArtifact = AUTO_AXIS_ARTIFACT[step.id];
     if (AUTO_GATES && autoArtifact) {
       // Instead of the Wait node: a params + Role pair so role-run still
       // refuses a step whose DECISION.md did not change.
-      const autoStep = {
-        id: `auto-${step.id}`,
-        role: 'auto-decide',
-        requires: [{ path: autoArtifact }]
-      };
-      const autoCmd = `node n8n-prototype/roles/auto-decide.mjs --axis=${step.id} --slug={slug} --repoRoot={root}`;
-      const autoParams = paramsNode(autoStep, i, autoCmd);
-      const autoRole = roleNode(autoStep, i);
-      nodes.push(autoParams, autoRole);
-      connections[previous] = { main: [[{ node: autoParams.name, type: 'main', index: 0 }]] };
-      connections[autoParams.name] = { main: [[{ node: autoRole.name, type: 'main', index: 0 }]] };
-      previous = autoRole.name;
+      const autoRoleName = addAutoDecide(step, i, tails[0].from);
+      tails = [{ from: autoRoleName, outputIndex: 0 }];
     } else if (!AUTO_GATES) {
-      const approve = approvalNode(step, i);
-      nodes.push(approve);
-      connections[previous] = { main: [[{ node: approve.name, type: 'main', index: 0 }]] };
-      previous = approve.name;
+      if (step.reworkTo && !stepIds.has(step.reworkTo)) {
+        throw new Error(`gate ${step.id} reworkTo ${step.reworkTo} is not a step`);
+      }
+      const reworkName = `${step.reworkTo || step.id} params`;
+      const maxCycles = step.maxCycles ?? DEFAULT_MAX_CYCLES;
+
+      const prep = commandPrepNode(
+        `gprep_${step.id}`,
+        `Prepare gate: ${step.id}`,
+        [X_STEP * (i * 2 + 3), 80],
+        registerGateJs(step)
+      );
+      const register = commandNode(`greg_${step.id}`, `Register gate: ${step.id}`, [
+        X_STEP * (i * 2 + 4),
+        80
+      ]);
+      const wait = approvalNode(step, i);
+      const formIf = ifNode(
+        `gif_${step.id}`,
+        `If: ${step.id} form submitted`,
+        [X_STEP * (i * 2 + 5), 80],
+        '={{ $json.formMode }}',
+        'exists'
+      );
+      const decisionIf = ifNode(
+        `gid_${step.id}`,
+        `If: ${step.id} approved`,
+        [X_STEP * (i * 2 + 6), 0],
+        '={{ $json.Decision }}',
+        'equals',
+        'approve'
+      );
+      // The value is the redo count for this step in this execution.
+      const cycle = commandPrepNode(
+        `gcyc_${step.id}`,
+        `Count cycles: ${step.id}`,
+        [X_STEP * (i * 2 + 7), 80],
+        cycleCountJs(step, maxCycles)
+      );
+      const exceeded = ifNode(
+        `gex_${step.id}`,
+        `If: ${step.id} cycles exceeded`,
+        [X_STEP * (i * 2 + 8), 80],
+        '={{ $json.gateExceeded }}',
+        'true'
+      );
+      const stop = {
+        id: `gstop_${step.id}`,
+        name: `Stop: ${step.id} max cycles`,
+        type: 'n8n-nodes-base.stopAndError',
+        typeVersion: 1,
+        position: [X_STEP * (i * 2 + 9), 160],
+        parameters: {
+          errorType: 'errorMessage',
+          errorMessage:
+            `=Gate ${step.id} exceeded maxCycles (${maxCycles}) ` +
+            `rewinding to ${step.reworkTo || step.id}. cycles={{ $json.gateCycles }}`
+        }
+      };
+      const timeoutPrep = commandPrepNode(
+        `gtprep_${step.id}`,
+        `Prepare timeout: ${step.id}`,
+        [X_STEP * (i * 2 + 6), 240],
+        resolveTimeoutJs(step)
+      );
+      const timeoutRun = commandNode(`gtrun_${step.id}`, `Resolve timeout: ${step.id}`, [
+        X_STEP * (i * 2 + 7),
+        240
+      ]);
+
+      nodes.push(
+        prep,
+        register,
+        wait,
+        formIf,
+        decisionIf,
+        cycle,
+        exceeded,
+        stop,
+        timeoutPrep,
+        timeoutRun
+      );
+      link(tails[0].from, prep.name);
+      link(prep.name, register.name);
+      link(register.name, wait.name);
+      link(wait.name, formIf.name);
+      link(formIf.name, decisionIf.name, 0);
+      link(formIf.name, timeoutPrep.name, 1);
+      link(timeoutPrep.name, timeoutRun.name);
+      link(decisionIf.name, cycle.name, 1);
+      link(cycle.name, exceeded.name);
+      link(exceeded.name, stop.name, 0);
+      link(exceeded.name, reworkName, 1);
+
+      /** @type {{ from: string, outputIndex: number }[]} */
+      const continueFrom = [{ from: decisionIf.name, outputIndex: 0 }];
+      if (autoArtifact) {
+        continueFrom.push({ from: addAutoDecide(step, i, timeoutRun.name), outputIndex: 0 });
+      } else {
+        continueFrom.push({ from: timeoutRun.name, outputIndex: 0 });
+      }
+      tails = continueFrom;
     }
   }
+
+  forwarders = tails;
 });
-connections[previous] = { main: [[]] };
+
+for (const edge of forwarders) {
+  if (!connections[edge.from]) connections[edge.from] = { main: [[]] };
+}
 
 const workflow = {
-  id: 'redanvilFull001',
+  id: BUILD_WORKFLOW_ID,
   name: `RedAnvil full build (${steps.length} steps, generated)`,
   active: false,
   settings: {
     executionOrder: 'v1',
     saveDataErrorExecution: 'all',
-    saveDataSuccessExecution: 'all'
+    saveDataSuccessExecution: 'all',
+    // execute-error-workflow.ts reads settings.errorWorkflow and runs that
+    // workflow with the execution error. The id is the error workflow's id.
+    errorWorkflow: ERROR_WORKFLOW_ID
   },
   nodes,
   connections
 };
 
 const out = join(HERE, 'workflows', 'redanvil-full-build.json');
-writeFileSync(out, JSON.stringify(workflow, null, 2) + '\n');
+if (isDirectRun) writeFileSync(out, JSON.stringify(workflow, null, 2) + '\n');
 
-const unbound = unboundRoles(steps.map((s) => s.id));
-const gates = steps.filter((s) => s.humanGate).map((s) => s.id);
-console.log(`generated ${out}`);
-console.log(`  ${steps.length} steps -> ${nodes.length} nodes`);
-console.log(`  human gates: ${gates.join(', ')}`);
-console.log(`  auto gates: ${AUTO_GATES ? 'on' : 'off'}`);
-console.log(`  UNBOUND (will fail, not skip): ${unbound.join(', ') || 'none'}`);
-console.log(`  order: ${steps.map((s) => s.id).join(' -> ')}`);
+const errorWorkflow = {
+  id: ERROR_WORKFLOW_ID,
+  name: 'RedAnvil build errors',
+  active: false,
+  settings: { executionOrder: 'v1', saveDataErrorExecution: 'all', saveDataSuccessExecution: 'all' },
+  nodes: [
+    {
+      id: 'err-trigger',
+      name: 'On build error',
+      type: 'n8n-nodes-base.errorTrigger',
+      typeVersion: 1,
+      position: [0, 0],
+      parameters: {}
+    },
+    commandPrepNode(
+      'err-prep',
+      'Prepare alert',
+      [X_STEP, 0],
+      `const root = $env.REDANVIL_REPO;\n` +
+        `if (!root) {\n` +
+        `  throw new Error('REDANVIL_REPO is not set; the error workflow cannot write an alert');\n` +
+        `}\n` +
+        `const execution = $json.execution || {};\n` +
+        `const workflowInfo = $json.workflow || {};\n` +
+        `const failure = execution.error || {};\n` +
+        `const message = typeof failure.message === 'string' && failure.message\n` +
+        `  ? failure.message\n` +
+        `  : 'build workflow failed';\n` +
+        `const payload = {\n` +
+        `  executionId: String(execution.id ?? 'unknown'),\n` +
+        `  source: 'n8n:' + String(workflowInfo.id || ${JSON.stringify(BUILD_WORKFLOW_ID)}),\n` +
+        `  message,\n` +
+        `  ref: typeof execution.url === 'string' ? execution.url : null\n` +
+        `};\n` +
+        `const b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\n` +
+        `const script = JSON.stringify(String(root).replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/write-alert.mjs');\n` +
+        `const cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(String(root));\n` +
+        `return [{ json: { cmd } }];`
+    ),
+    commandNode('err-run', 'Write alert', [X_STEP * 2, 0])
+  ],
+  connections: {
+    'On build error': { main: [[{ node: 'Prepare alert', type: 'main', index: 0 }]] },
+    'Prepare alert': { main: [[{ node: 'Write alert', type: 'main', index: 0 }]] },
+    'Write alert': { main: [[]] }
+  }
+};
+
+const errorOut = join(HERE, 'workflows', 'redanvil-errors.json');
+if (isDirectRun) {
+  writeFileSync(errorOut, JSON.stringify(errorWorkflow, null, 2) + '\n');
+
+  const unbound = unboundRoles(steps.map((s) => s.id));
+  const gates = steps.filter((s) => s.humanGate).map((s) => s.id);
+  console.log(`generated ${out}`);
+  console.log(`generated ${errorOut}`);
+  console.log(`  ${steps.length} steps -> ${nodes.length} nodes`);
+  console.log(`  human gates: ${gates.join(', ')}`);
+  console.log(`  auto gates: ${AUTO_GATES ? 'on' : 'off'}`);
+  console.log(`  telegram: ${TELEGRAM ? 'on' : 'off'}`);
+  console.log(`  error workflow: ${ERROR_WORKFLOW_ID}`);
+  console.log(`  UNBOUND (will fail, not skip): ${unbound.join(', ') || 'none'}`);
+  console.log(`  order: ${steps.map((s) => s.id).join(' -> ')}`);
+}

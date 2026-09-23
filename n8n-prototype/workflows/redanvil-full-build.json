@@ -5,7 +5,8 @@
   "settings": {
     "executionOrder": "v1",
     "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all"
+    "saveDataSuccessExecution": "all",
+    "errorWorkflow": "redanvilErrors001"
   },
   "nodes": [
     {
@@ -238,29 +239,33 @@
       }
     },
     {
-      "id": "n_logo",
-      "name": "Notify: logo needs approval",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "id": "gprep_logo",
+      "name": "Prepare gate: logo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         2860,
-        20
+        80
       ],
       "parameters": {
-        "chatId": "={{ $env.REDANVIL_TELEGRAM_CHAT_ID }}",
-        "text": "=RedAnvil needs a decision: *logo*\n\nFive real generated brand marks, a gallery, and an OPEN decision\n\nApp: {{ $('Slice config').first().json.slug }}\nApprove or request a redo:\n{{ $execution.resumeFormUrl }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "Markdown"
-        }
-      },
-      "credentials": {
-        "telegramApi": {
-          "id": "redanvil-telegram",
-          "name": "RedAnvil Telegram"
-        }
-      },
-      "onError": "continueRegularOutput"
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"logo\",\n  title: \"Approve logo\",\n  summary: \"Five real generated brand marks, a gallery, and an OPEN decision\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+      }
+    },
+    {
+      "id": "greg_logo",
+      "name": "Register gate: logo",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3080,
+        80
+      ],
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.cmd }}"
+      }
     },
     {
       "id": "h_logo",
@@ -299,6 +304,200 @@
             }
           ]
         },
+        "limitWaitTime": true,
+        "limitType": "afterTimeInterval",
+        "resumeAmount": 2,
+        "resumeUnit": "hours",
+        "options": {}
+      }
+    },
+    {
+      "id": "gif_logo",
+      "name": "If: logo form submitted",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3300,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gif_logo_c",
+              "leftValue": "={{ $json.formMode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gid_logo",
+      "name": "If: logo approved",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3520,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gid_logo_c",
+              "leftValue": "={{ $json.Decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gcyc_logo",
+      "name": "Count cycles: logo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3740,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const key = \"cycles_logo\";\nconst raw = $execution.customData.get(key);\nconst used = Number(raw || '0') + 1;\nif (!Number.isFinite(used)) {\n  throw new Error('cycle counter for logo is not a number');\n}\n$execution.customData.set(key, String(used));\nconst max = 3;\nreturn [{ json: { gateCycles: used, gateMaxCycles: max, gateExceeded: used > max } }];"
+      }
+    },
+    {
+      "id": "gex_logo",
+      "name": "If: logo cycles exceeded",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3960,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gex_logo_c",
+              "leftValue": "={{ $json.gateExceeded }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gstop_logo",
+      "name": "Stop: logo max cycles",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        4180,
+        160
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Gate logo exceeded maxCycles (3) rewinding to logo. cycles={{ $json.gateCycles }}"
+      }
+    },
+    {
+      "id": "gtprep_logo",
+      "name": "Prepare timeout: logo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        240
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"logo\",\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+      }
+    },
+    {
+      "id": "gtrun_logo",
+      "name": "Resolve timeout: logo",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3740,
+        240
+      ],
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.cmd }}"
+      }
+    },
+    {
+      "id": "p_auto-logo",
+      "name": "auto-logo params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"auto-decide\", step: \"auto-logo\",\n  artifacts: `${c.slug}/design-refs/logos/DECISION.md`,\n  cmd: $env.REDANVIL_CMD_AUTO_LOGO || \"node n8n-prototype/roles/auto-decide.mjs --axis=logo --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+      }
+    },
+    {
+      "id": "r_auto-logo",
+      "name": "Role: auto-logo",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        2860,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
         "options": {}
       }
     },
@@ -334,29 +533,33 @@
       }
     },
     {
-      "id": "n_palette",
-      "name": "Notify: palette needs approval",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "id": "gprep_palette",
+      "name": "Prepare gate: palette",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         3300,
-        20
+        80
       ],
       "parameters": {
-        "chatId": "={{ $env.REDANVIL_TELEGRAM_CHAT_ID }}",
-        "text": "=RedAnvil needs a decision: *palette*\n\nFive distinct colour + type directions, each shown light AND dark, OPEN decision\n\nApp: {{ $('Slice config').first().json.slug }}\nApprove or request a redo:\n{{ $execution.resumeFormUrl }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "Markdown"
-        }
-      },
-      "credentials": {
-        "telegramApi": {
-          "id": "redanvil-telegram",
-          "name": "RedAnvil Telegram"
-        }
-      },
-      "onError": "continueRegularOutput"
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"palette\",\n  title: \"Approve palette\",\n  summary: \"Five distinct colour + type directions, each shown light AND dark, OPEN decision\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+      }
+    },
+    {
+      "id": "greg_palette",
+      "name": "Register gate: palette",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3520,
+        80
+      ],
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.cmd }}"
+      }
     },
     {
       "id": "h_palette",
@@ -395,6 +598,200 @@
             }
           ]
         },
+        "limitWaitTime": true,
+        "limitType": "afterTimeInterval",
+        "resumeAmount": 2,
+        "resumeUnit": "hours",
+        "options": {}
+      }
+    },
+    {
+      "id": "gif_palette",
+      "name": "If: palette form submitted",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3740,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gif_palette_c",
+              "leftValue": "={{ $json.formMode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gid_palette",
+      "name": "If: palette approved",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3960,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gid_palette_c",
+              "leftValue": "={{ $json.Decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gcyc_palette",
+      "name": "Count cycles: palette",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4180,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const key = \"cycles_palette\";\nconst raw = $execution.customData.get(key);\nconst used = Number(raw || '0') + 1;\nif (!Number.isFinite(used)) {\n  throw new Error('cycle counter for palette is not a number');\n}\n$execution.customData.set(key, String(used));\nconst max = 3;\nreturn [{ json: { gateCycles: used, gateMaxCycles: max, gateExceeded: used > max } }];"
+      }
+    },
+    {
+      "id": "gex_palette",
+      "name": "If: palette cycles exceeded",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4400,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gex_palette_c",
+              "leftValue": "={{ $json.gateExceeded }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gstop_palette",
+      "name": "Stop: palette max cycles",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        4620,
+        160
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Gate palette exceeded maxCycles (3) rewinding to palette. cycles={{ $json.gateCycles }}"
+      }
+    },
+    {
+      "id": "gtprep_palette",
+      "name": "Prepare timeout: palette",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3960,
+        240
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"palette\",\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+      }
+    },
+    {
+      "id": "gtrun_palette",
+      "name": "Resolve timeout: palette",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        4180,
+        240
+      ],
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.cmd }}"
+      }
+    },
+    {
+      "id": "p_auto-palette",
+      "name": "auto-palette params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3080,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"auto-decide\", step: \"auto-palette\",\n  artifacts: `${c.slug}/design-refs/palettes/DECISION.md`,\n  cmd: $env.REDANVIL_CMD_AUTO_PALETTE || \"node n8n-prototype/roles/auto-decide.mjs --axis=palette --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+      }
+    },
+    {
+      "id": "r_auto-palette",
+      "name": "Role: auto-palette",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3300,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
         "options": {}
       }
     },
@@ -430,29 +827,33 @@
       }
     },
     {
-      "id": "n_layout",
-      "name": "Notify: layout needs approval",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "id": "gprep_layout",
+      "name": "Prepare gate: layout",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         3740,
-        20
+        80
       ],
       "parameters": {
-        "chatId": "={{ $env.REDANVIL_TELEGRAM_CHAT_ID }}",
-        "text": "=RedAnvil needs a decision: *layout*\n\nThree structurally distinct layout options, gallery, OPEN decision\n\nApp: {{ $('Slice config').first().json.slug }}\nApprove or request a redo:\n{{ $execution.resumeFormUrl }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "Markdown"
-        }
-      },
-      "credentials": {
-        "telegramApi": {
-          "id": "redanvil-telegram",
-          "name": "RedAnvil Telegram"
-        }
-      },
-      "onError": "continueRegularOutput"
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"layout\",\n  title: \"Approve layout\",\n  summary: \"Three structurally distinct layout options, gallery, OPEN decision\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+      }
+    },
+    {
+      "id": "greg_layout",
+      "name": "Register gate: layout",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3960,
+        80
+      ],
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.cmd }}"
+      }
     },
     {
       "id": "h_layout",
@@ -491,6 +892,200 @@
             }
           ]
         },
+        "limitWaitTime": true,
+        "limitType": "afterTimeInterval",
+        "resumeAmount": 2,
+        "resumeUnit": "hours",
+        "options": {}
+      }
+    },
+    {
+      "id": "gif_layout",
+      "name": "If: layout form submitted",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4180,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gif_layout_c",
+              "leftValue": "={{ $json.formMode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gid_layout",
+      "name": "If: layout approved",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4400,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gid_layout_c",
+              "leftValue": "={{ $json.Decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gcyc_layout",
+      "name": "Count cycles: layout",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4620,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const key = \"cycles_layout\";\nconst raw = $execution.customData.get(key);\nconst used = Number(raw || '0') + 1;\nif (!Number.isFinite(used)) {\n  throw new Error('cycle counter for layout is not a number');\n}\n$execution.customData.set(key, String(used));\nconst max = 3;\nreturn [{ json: { gateCycles: used, gateMaxCycles: max, gateExceeded: used > max } }];"
+      }
+    },
+    {
+      "id": "gex_layout",
+      "name": "If: layout cycles exceeded",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4840,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gex_layout_c",
+              "leftValue": "={{ $json.gateExceeded }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gstop_layout",
+      "name": "Stop: layout max cycles",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        5060,
+        160
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Gate layout exceeded maxCycles (3) rewinding to layout. cycles={{ $json.gateCycles }}"
+      }
+    },
+    {
+      "id": "gtprep_layout",
+      "name": "Prepare timeout: layout",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4400,
+        240
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"layout\",\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+      }
+    },
+    {
+      "id": "gtrun_layout",
+      "name": "Resolve timeout: layout",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        4620,
+        240
+      ],
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.cmd }}"
+      }
+    },
+    {
+      "id": "p_auto-layout",
+      "name": "auto-layout params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"auto-decide\", step: \"auto-layout\",\n  artifacts: `${c.slug}/design-refs/design-options/DECISION.md`,\n  cmd: $env.REDANVIL_CMD_AUTO_LAYOUT || \"node n8n-prototype/roles/auto-decide.mjs --axis=layout --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+      }
+    },
+    {
+      "id": "r_auto-layout",
+      "name": "Role: auto-layout",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3740,
+        0
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": "redanvilRole001",
+        "mode": "once",
         "options": {}
       }
     },
@@ -526,29 +1121,33 @@
       }
     },
     {
-      "id": "n_decide",
-      "name": "Notify: decide needs approval",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
+      "id": "gprep_decide",
+      "name": "Prepare gate: decide",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         4180,
-        20
+        80
       ],
       "parameters": {
-        "chatId": "={{ $env.REDANVIL_TELEGRAM_CHAT_ID }}",
-        "text": "=RedAnvil needs a decision: *decide*\n\nThe owner picks a logo, a palette and a layout. Nothing builds before this\n\nApp: {{ $('Slice config').first().json.slug }}\nApprove or request a redo:\n{{ $execution.resumeFormUrl }}",
-        "additionalFields": {
-          "appendAttribution": false,
-          "parse_mode": "Markdown"
-        }
-      },
-      "credentials": {
-        "telegramApi": {
-          "id": "redanvil-telegram",
-          "name": "RedAnvil Telegram"
-        }
-      },
-      "onError": "continueRegularOutput"
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"decide\",\n  title: \"Approve decide\",\n  summary: \"The owner picks a logo, a palette and a layout. Nothing builds before this\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+      }
+    },
+    {
+      "id": "greg_decide",
+      "name": "Register gate: decide",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        4400,
+        80
+      ],
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.cmd }}"
+      }
     },
     {
       "id": "h_decide",
@@ -587,7 +1186,170 @@
             }
           ]
         },
+        "limitWaitTime": true,
+        "limitType": "afterTimeInterval",
+        "resumeAmount": 2,
+        "resumeUnit": "hours",
         "options": {}
+      }
+    },
+    {
+      "id": "gif_decide",
+      "name": "If: decide form submitted",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4620,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gif_decide_c",
+              "leftValue": "={{ $json.formMode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gid_decide",
+      "name": "If: decide approved",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4840,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gid_decide_c",
+              "leftValue": "={{ $json.Decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gcyc_decide",
+      "name": "Count cycles: decide",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5060,
+        80
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const key = \"cycles_decide\";\nconst raw = $execution.customData.get(key);\nconst used = Number(raw || '0') + 1;\nif (!Number.isFinite(used)) {\n  throw new Error('cycle counter for decide is not a number');\n}\n$execution.customData.set(key, String(used));\nconst max = 5;\nreturn [{ json: { gateCycles: used, gateMaxCycles: max, gateExceeded: used > max } }];"
+      }
+    },
+    {
+      "id": "gex_decide",
+      "name": "If: decide cycles exceeded",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5280,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "gex_decide_c",
+              "leftValue": "={{ $json.gateExceeded }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gstop_decide",
+      "name": "Stop: decide max cycles",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        5500,
+        160
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Gate decide exceeded maxCycles (5) rewinding to layout. cycles={{ $json.gateCycles }}"
+      }
+    },
+    {
+      "id": "gtprep_decide",
+      "name": "Prepare timeout: decide",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4840,
+        240
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"decide\",\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+      }
+    },
+    {
+      "id": "gtrun_decide",
+      "name": "Resolve timeout: decide",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        5060,
+        240
+      ],
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.cmd }}"
       }
     },
     {
@@ -1215,14 +1977,25 @@
       "main": [
         [
           {
-            "node": "Notify: logo needs approval",
+            "node": "Prepare gate: logo",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Notify: logo needs approval": {
+    "Prepare gate: logo": {
+      "main": [
+        [
+          {
+            "node": "Register gate: logo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Register gate: logo": {
       "main": [
         [
           {
@@ -1234,6 +2007,115 @@
       ]
     },
     "Owner approves: logo": {
+      "main": [
+        [
+          {
+            "node": "If: logo form submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: logo form submitted": {
+      "main": [
+        [
+          {
+            "node": "If: logo approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare timeout: logo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare timeout: logo": {
+      "main": [
+        [
+          {
+            "node": "Resolve timeout: logo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: logo approved": {
+      "main": [
+        [
+          {
+            "node": "palette params",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Count cycles: logo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count cycles: logo": {
+      "main": [
+        [
+          {
+            "node": "If: logo cycles exceeded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: logo cycles exceeded": {
+      "main": [
+        [
+          {
+            "node": "Stop: logo max cycles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "logo params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve timeout: logo": {
+      "main": [
+        [
+          {
+            "node": "auto-logo params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "auto-logo params": {
+      "main": [
+        [
+          {
+            "node": "Role: auto-logo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: auto-logo": {
       "main": [
         [
           {
@@ -1259,14 +2141,25 @@
       "main": [
         [
           {
-            "node": "Notify: palette needs approval",
+            "node": "Prepare gate: palette",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Notify: palette needs approval": {
+    "Prepare gate: palette": {
+      "main": [
+        [
+          {
+            "node": "Register gate: palette",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Register gate: palette": {
       "main": [
         [
           {
@@ -1278,6 +2171,115 @@
       ]
     },
     "Owner approves: palette": {
+      "main": [
+        [
+          {
+            "node": "If: palette form submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: palette form submitted": {
+      "main": [
+        [
+          {
+            "node": "If: palette approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare timeout: palette",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare timeout: palette": {
+      "main": [
+        [
+          {
+            "node": "Resolve timeout: palette",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: palette approved": {
+      "main": [
+        [
+          {
+            "node": "layout params",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Count cycles: palette",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count cycles: palette": {
+      "main": [
+        [
+          {
+            "node": "If: palette cycles exceeded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: palette cycles exceeded": {
+      "main": [
+        [
+          {
+            "node": "Stop: palette max cycles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "palette params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve timeout: palette": {
+      "main": [
+        [
+          {
+            "node": "auto-palette params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "auto-palette params": {
+      "main": [
+        [
+          {
+            "node": "Role: auto-palette",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: auto-palette": {
       "main": [
         [
           {
@@ -1303,14 +2305,25 @@
       "main": [
         [
           {
-            "node": "Notify: layout needs approval",
+            "node": "Prepare gate: layout",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Notify: layout needs approval": {
+    "Prepare gate: layout": {
+      "main": [
+        [
+          {
+            "node": "Register gate: layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Register gate: layout": {
       "main": [
         [
           {
@@ -1322,6 +2335,115 @@
       ]
     },
     "Owner approves: layout": {
+      "main": [
+        [
+          {
+            "node": "If: layout form submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: layout form submitted": {
+      "main": [
+        [
+          {
+            "node": "If: layout approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare timeout: layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare timeout: layout": {
+      "main": [
+        [
+          {
+            "node": "Resolve timeout: layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: layout approved": {
+      "main": [
+        [
+          {
+            "node": "decide params",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Count cycles: layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count cycles: layout": {
+      "main": [
+        [
+          {
+            "node": "If: layout cycles exceeded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: layout cycles exceeded": {
+      "main": [
+        [
+          {
+            "node": "Stop: layout max cycles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "layout params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve timeout: layout": {
+      "main": [
+        [
+          {
+            "node": "auto-layout params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "auto-layout params": {
+      "main": [
+        [
+          {
+            "node": "Role: auto-layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: auto-layout": {
       "main": [
         [
           {
@@ -1347,14 +2469,25 @@
       "main": [
         [
           {
-            "node": "Notify: decide needs approval",
+            "node": "Prepare gate: decide",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Notify: decide needs approval": {
+    "Prepare gate: decide": {
+      "main": [
+        [
+          {
+            "node": "Register gate: decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Register gate: decide": {
       "main": [
         [
           {
@@ -1366,6 +2499,93 @@
       ]
     },
     "Owner approves: decide": {
+      "main": [
+        [
+          {
+            "node": "If: decide form submitted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: decide form submitted": {
+      "main": [
+        [
+          {
+            "node": "If: decide approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare timeout: decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare timeout: decide": {
+      "main": [
+        [
+          {
+            "node": "Resolve timeout: decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: decide approved": {
+      "main": [
+        [
+          {
+            "node": "integration params",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Count cycles: decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count cycles: decide": {
+      "main": [
+        [
+          {
+            "node": "If: decide cycles exceeded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: decide cycles exceeded": {
+      "main": [
+        [
+          {
+            "node": "Stop: decide max cycles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "layout params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve timeout: decide": {
       "main": [
         [
           {
