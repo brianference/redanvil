@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node --test --test-concurrency=1 test/overnight.test.mjs test/owned-artifacts.test.mjs"
+    "test": "node --test --test-concurrency=1 test/overnight.test.mjs test/owned-artifacts.test.mjs test/job-poller.test.mjs"
   },
   "keywords": [],
   "author": "",
