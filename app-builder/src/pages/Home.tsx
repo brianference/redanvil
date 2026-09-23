@@ -9,6 +9,8 @@ import { buttonStyle } from '../components/ui';
 import { generatePrd, UnresolvedPrdError, type Prd } from '../lib/prd';
 import { estimate } from '../lib/estimate';
 import { countEntities, countScopeSignals, type BuildJob, type WizardAnswers } from '../lib/job';
+import { readLastJobId, writeLastJobId } from '../lib/jobStatus';
+import { JobStatusPanel } from '../components/JobStatusPanel';
 import { en } from '../i18n/en';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 import { theme } from '../theme';
@@ -42,6 +44,8 @@ export function Home(): JSX.Element {
   const [wizardSessionId, setWizardSessionId] = useState(0);
   /** Latest answers for async submit completion (avoids stale closures). */
   const answersRef = useRef<WizardAnswers>(answers);
+  /** Last submitted job, restored from localStorage so a reload keeps it. */
+  const [trackedJobId, setTrackedJobId] = useState<string | null>(() => readLastJobId());
   answersRef.current = answers;
 
   // Each builder surface (chat → templates → wizard → result) swaps in via state,
@@ -115,7 +119,9 @@ export function Home(): JSX.Element {
    * and show the result screen. UnresolvedPrdError (and any other throw) must
    * surface as a real error panel — never an uncaught exception on the core path.
    */
-  function handleJobReady(_job: BuildJob): void {
+  function handleJobReady(_job: BuildJob, jobId: string): void {
+    writeLastJobId(jobId);
+    setTrackedJobId(jobId);
     const current = answersRef.current;
     const entityCount = countEntities(current.entities);
     const features = Math.max(1, entityCount + (current.appType.trim() ? 1 : 0));
@@ -160,6 +166,21 @@ export function Home(): JSX.Element {
     setView('chat');
   }
 
+  /**
+   * Hide the status panel. The panel clears the stored job id before this runs.
+   */
+  function handleDismissJob(): void {
+    setTrackedJobId(null);
+  }
+
+  /**
+   * Hide the status panel and return the builder to a fresh app.
+   */
+  function handleStartNewApp(): void {
+    setTrackedJobId(null);
+    reset();
+  }
+
   const pageTitle =
     view === 'templates'
       ? en.templates.title
@@ -177,6 +198,13 @@ export function Home(): JSX.Element {
   // surfaces use their own page titles without a lead.
   return (
     <Page title={pageTitle}>
+      {trackedJobId !== null && (
+        <JobStatusPanel
+          jobId={trackedJobId}
+          onDismiss={handleDismissJob}
+          onStartNew={handleStartNewApp}
+        />
+      )}
       {view === 'chat' && (
         <ComposerChat
           prompt={answers.prompt}

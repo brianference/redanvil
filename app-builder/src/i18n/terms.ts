@@ -31,7 +31,7 @@ export interface LegalDoc {
 /** Terms and Conditions document. */
 export const terms = {
     title: 'Terms and Conditions',
-    updated: 'Last updated 2 August 2026',
+    updated: 'Last updated 23 September 2026',
     intro:
       'These terms cover the RedAnvil app builder at https://redanvil.pages.dev. By using the site you agree to them. If you do not agree, do not use the service. There are no paid plans and no accounts on this product.',
     sections: [
@@ -45,11 +45,11 @@ export const terms = {
       },
       {
         heading: 'Central disclaimer',
-        body: 'A generated PRD is a starting specification produced by deterministic client-side templates and rules, not verified engineering, legal, security, accessibility, or product advice. Effort estimates, feature lists, and stack choices can be incomplete or wrong for your case. You are responsible for reviewing every section before you build, ship, or rely on the document. Anything you save to the site is publicly visible on the Saved page, at its share URL, and via the public PRD API. Job prompts stored on submit are also listed on the public jobs API. Do not put confidential product plans, secrets, credentials, or personal data about others into content you submit or save.'
+        body: 'A generated PRD is a starting specification produced by deterministic client-side templates and rules, not verified engineering, legal, security, accessibility, or product advice. Effort estimates, feature lists, and stack choices can be incomplete or wrong for your case. You are responsible for reviewing every section before you build, ship, or rely on the document. Anything you save to the site is publicly visible on the Saved page, at its share URL, and via the public PRD API. Job prompts stored on submit are kept for the build runner. The jobs list is not a public API. Anyone with a job id can read that job\'s status, step, detail, and deploy URL, and cannot read the prompt from that status route. Do not put confidential product plans, secrets, credentials, or personal data about others into content you submit or save.'
       },
       {
         heading: 'Public library and job queue',
-        body: 'The Saved library is a shared, unauthenticated catalogue, not a private vault. Anyone can list recent saves and open a PRD by id. The jobs list endpoint is likewise unauthenticated and returns prompt text for recent jobs. By saving or submitting you understand that content may be read, copied, or linked by others. Maintainers may remove content that violates these terms or the law, or that is abusive or spam, without a private support ticket system.'
+        body: 'The Saved library is a shared, unauthenticated catalogue, not a private vault. Anyone can list recent saves and open a PRD by id. The jobs list is not unauthenticated: only the build runner, with a server token, can read stored prompts. By saving a PRD you understand that content may be read, copied, or linked by others. A job status link exposes progress, not the prompt. Submitting a job queues it for the owner to approve; it is not built automatically. Maintainers may remove content that violates these terms or the law, or that is abusive or spam, without a private support ticket system.'
       },
       {
         heading: 'Acceptable use',

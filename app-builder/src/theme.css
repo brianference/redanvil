@@ -54,8 +54,8 @@
   --shadow: rgba(0, 0, 0, 0.18);
   --border-strong: #c8c8d0;
   --chip-bg: #ffffff;
-  --success: #218358;
-  --success-soft: color-mix(in srgb, #218358 12%, transparent);
+  --success: #1a6b47;
+  --success-soft: color-mix(in srgb, #1a6b47 12%, transparent);
   --error: #c62828;
   --error-soft: color-mix(in srgb, #c62828 10%, transparent);
   --warning: #ad5700;
@@ -145,4 +145,11 @@
 
 .ex-head a {
   display: inline-block;
+}
+
+/* Status panel controls. The ring is the existing focus token, not a new color. */
+.ra-status-panel button:focus-visible,
+.ra-status-panel a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }

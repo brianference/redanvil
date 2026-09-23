@@ -20,14 +20,34 @@ export function responseHeaders(request: Request, methods: string): Record<strin
  * @param body Response body (JSON-serialized).
  * @param status HTTP status code.
  * @param methods Comma-separated allowed methods for CORS headers.
+ * @param extraHeaders Optional extra headers (for example Retry-After). Merged last.
  */
 export function jsonResponse(
   request: Request,
   body: unknown,
   status: number,
-  methods: string
+  methods: string,
+  extraHeaders?: Readonly<Record<string, string>>
 ): Response {
   return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...responseHeaders(request, methods),
+      ...extraHeaders
+    }
+  });
+}
+
+/**
+ * Response with secure headers and no body (204 No Content).
+ *
+ * @param request - Incoming request (origin is mirrored for CORS).
+ * @param status - HTTP status code.
+ * @param methods - Comma-separated allowed methods for CORS headers.
+ * @returns An empty Response.
+ */
+export function emptyResponse(request: Request, status: number, methods: string): Response {
+  return new Response(null, {
     status,
     headers: responseHeaders(request, methods)
   });

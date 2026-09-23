@@ -3,6 +3,7 @@ import {
   buildJob,
   countEntities,
   slugFromPrompt,
+  submitRequestBody,
   isPromptReady,
   isAppTypeReady,
   canForgePrd,
@@ -38,6 +39,19 @@ describe('countEntities', () => {
   it('counts comma-separated entity names', () => {
     expect(countEntities('User, Recipe, Favorite')).toBe(3);
     expect(countEntities('')).toBe(0);
+  });
+});
+
+describe('submitRequestBody', () => {
+  it('sends the integer count and the trimmed entity names separately', () => {
+    const body = submitRequestBody(
+      { ...EMPTY_WIZARD_ANSWERS, prompt: '  Build a recipe box  ', entities: '  User, Recipe  ' },
+      2
+    );
+    expect(body.entities).toBe(2);
+    expect(body.entityNames).toBe('User, Recipe');
+    expect(body.prompt).toBe('Build a recipe box');
+    expect(body).not.toHaveProperty('promptText');
   });
 });
 

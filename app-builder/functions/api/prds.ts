@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Env } from '../lib/env';
 import { jsonResponse, readValidatedBody } from '../lib/http';
+import { enforceRateLimit } from '../lib/rateLimit';
 
 /** CORS allow-methods for this endpoint (POST + GET). Order matches prior local copy. */
 const ALLOWED_METHODS = 'POST, GET';
@@ -9,6 +10,9 @@ const ALLOWED_METHODS = 'POST, GET';
 const MAX_TITLE_LEN = 200;
 const MAX_PROMPT_LEN = 10_000;
 const MAX_MARKDOWN_LEN = 200_000;
+
+/** Rate-limit route key for POST /api/prds. Not user input. */
+const RATE_LIMIT_ROUTE = 'prds';
 
 /**
  * Body for saving a generated PRD to D1.
@@ -27,6 +31,9 @@ const savePrdBodySchema = z.object({
  */
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
+
+  const limited = await enforceRateLimit(request, env, RATE_LIMIT_ROUTE, ALLOWED_METHODS);
+  if (limited !== null) return limited;
 
   const parsed = await readValidatedBody(request, savePrdBodySchema, ALLOWED_METHODS);
   if (!parsed.ok) return parsed.response;
