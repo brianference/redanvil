@@ -8,16 +8,27 @@
  * and only /api/health answers JSON. So this drives the real wizard, which also
  * means every new app dogfoods the product.
  *
- * Writes docs/PRD.md and docs/prd-provenance.json. The provenance file exists
- * because a hand-written PRD is otherwise indistinguishable from a generated
- * one, and hand-writing it is exactly the shortcut this role prevents.
+ * Writes docs/PRD.md, docs/prd-provenance.json and docs/intent.json. The
+ * provenance file exists because a hand-written PRD is otherwise
+ * indistinguishable from a generated one, and hand-writing it is exactly the
+ * shortcut this role prevents. Wizard answers come from a typed intent
+ * (roles/intent.mjs). The regex tables below are the fallback when that
+ * intent is missing or invalid. A generated PRD whose frontmatter says
+ * `fidelity: fail` is refused: the role writes an alert and exits non-zero
+ * so nothing is built from a spec that missed the prompt.
  *
  * Usage: node roles/prd.mjs --slug=sushi-finder --repoRoot=... --prompt="..."
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { randomBytes } from 'node:crypto';
+import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { chromium } from 'playwright';
+import {
+  formatEntitySpec,
+  parseEntitySpec,
+  provenanceMetaFromIntent,
+  extractIntent
+} from './intent.mjs';
 
 const BUILDER_URL = 'https://redanvil.pages.dev/';
 
@@ -268,10 +279,11 @@ export function assertAnswerTook(group, intended, actual) {
  * @param {string} prompt the prompt that produced it
  * @param {Array<{group: string, intended: string, actual: string}>} answers recorded answers
  * @param {string} source builder URL
+ * @param {{intent: Record<string, unknown>, intentSource: string, grokDurationMs: number, fallbackReason?: string}} [meta] intent, when one was extracted
  * @returns {void}
  * @throws {AnswerDidNotTakeError} when any answer did not take — and does not write
  */
-export function writePrdArtifacts(docsDir, markdown, prompt, answers, source) {
+export function writePrdArtifacts(docsDir, markdown, prompt, answers, source, meta) {
   for (const a of answers) {
     assertAnswerTook(a.group, a.intended, a.actual);
   }
@@ -280,23 +292,357 @@ export function writePrdArtifacts(docsDir, markdown, prompt, answers, source) {
       `wizard produced ${markdown.length} chars, below the 2000 floor -- refusing to write a stub PRD`
     );
   }
+  /** @type {Record<string, unknown>} */
+  const provenance = {
+    source,
+    generatedBy: 'roles/prd.mjs driving the deployed wizard with Playwright',
+    generatedAt: new Date().toISOString(),
+    prompt,
+    wizardAnswers: answers,
+    characters: markdown.length
+  };
+  if (meta?.intent) {
+    provenance.intent = meta.intent;
+    provenance.intentSource = meta.intentSource;
+    provenance.grokDurationMs = meta.grokDurationMs;
+    if (meta.fallbackReason) provenance.fallbackReason = meta.fallbackReason;
+  }
   mkdirSync(docsDir, { recursive: true });
   writeFileSync(join(docsDir, 'PRD.md'), markdown + '\n');
-  writeFileSync(
-    join(docsDir, 'prd-provenance.json'),
-    JSON.stringify(
-      {
-        source,
-        generatedBy: 'roles/prd.mjs driving the deployed wizard with Playwright',
-        generatedAt: new Date().toISOString(),
-        prompt,
-        wizardAnswers: answers,
-        characters: markdown.length
-      },
-      null,
-      2
-    ) + '\n'
+  writeFileSync(join(docsDir, 'prd-provenance.json'), JSON.stringify(provenance, null, 2) + '\n');
+  if (meta?.intent) {
+    writeFileSync(
+      join(docsDir, 'intent.json'),
+      JSON.stringify(
+        {
+          intentSource: meta.intentSource,
+          grokDurationMs: meta.grokDurationMs,
+          ...(meta.fallbackReason ? { fallbackReason: meta.fallbackReason } : {}),
+          ...meta.intent
+        },
+        null,
+        2
+      ) + '\n'
+    );
+  }
+}
+
+/**
+ * Which answer rule a group is, so an intent field can fill it.
+ *
+ * Auth and realtime both fall back to No. They are told apart by the rule's
+ * own pattern, which is the same pattern `derivePicks` matches the label with.
+ *
+ * @param {{group: RegExp, rules: Array<{option: string}>, fallback: string}} spec one ANSWER_RULES entry
+ * @returns {'appType' | 'auth' | 'storage' | 'realtime' | ''}
+ */
+function wizardGroupKind(spec) {
+  if (spec.rules.some((rule) => rule.option === 'Marketplace' || rule.option === 'SaaS')) {
+    return 'appType';
+  }
+  if (spec.rules.some((rule) => rule.option === 'Relational + search')) return 'storage';
+  if (/realtime|real-time|live refresh|push-style/.test(spec.group.source)) return 'realtime';
+  if (/sign-in|sign in|auth/.test(spec.group.source)) return 'auth';
+  return '';
+}
+
+/**
+ * Wizard picks taken from a typed intent, not from the regex.
+ *
+ * The label match is the same `ANSWER_RULES` test `derivePicks` uses, so a
+ * group whose DOM label is the hint ("simple D1 tables", "live refresh")
+ * still resolves. An option the live page does not render is dropped.
+ *
+ * @param {{label: string, options: string[]}} group one wizard group as read from the DOM
+ * @param {{appType?: string, hasAuth?: boolean, dataStorage?: string, hasRealtime?: boolean, integrations?: string[]}} intent extracted intent
+ * @returns {string[]} picks to click, possibly empty
+ */
+export function picksFromIntent(group, intent) {
+  const spec = ANSWER_RULES.find((rule) => rule.group.test(group.label));
+  if (spec) {
+    const kind = wizardGroupKind(spec);
+    /** @type {string | undefined} */
+    let pick;
+    if (kind === 'appType') pick = intent.appType;
+    else if (kind === 'auth') pick = intent.hasAuth ? 'Yes' : 'No';
+    else if (kind === 'storage') pick = intent.dataStorage;
+    else if (kind === 'realtime') pick = intent.hasRealtime ? 'Yes' : 'No';
+    if (!pick) return [];
+    return group.options.includes(pick) ? [pick] : [];
+  }
+  if (group.options.some((option) => INTEGRATION_RULES.some((rule) => rule.option === option))) {
+    const wanted = Array.isArray(intent.integrations) ? intent.integrations : [];
+    return wanted.filter((option) => group.options.includes(option));
+  }
+  return [];
+}
+
+/**
+ * Picks for one group. Intent first. Regex only when the intent names nothing
+ * the page actually offers (a chip the deployed builder does not have).
+ *
+ * An empty integration list is a real answer — the prompt named no chip — and
+ * must not fall through to the regex, which would put them back.
+ *
+ * @param {{label: string, options: string[]}} group one wizard group
+ * @param {string} prompt app description
+ * @param {{appType?: string, hasAuth?: boolean, dataStorage?: string, hasRealtime?: boolean, integrations?: string[]} | null} [intent] extracted intent
+ * @returns {string[]}
+ */
+export function picksForGroup(group, prompt, intent = null) {
+  if (!intent) return derivePicks(group, prompt);
+  const fromIntent = picksFromIntent(group, intent);
+  const integration = group.options.some((option) =>
+    INTEGRATION_RULES.some((rule) => rule.option === option)
   );
+  if (integration) return fromIntent;
+  if (fromIntent.length > 0) return fromIntent;
+  if (ANSWER_RULES.some((rule) => rule.group.test(group.label))) return derivePicks(group, prompt);
+  return [];
+}
+
+/**
+ * Entity text for the wizard field.
+ *
+ * A grok intent carries structured entities and is formatted to the entity-spec
+ * contract. The regex fallback has no entities, so a caller-supplied list (the
+ * old `--entities` / `REDANVIL_ENTITIES` path) is used instead. A spec that
+ * does not parse cleanly is not typed in — that would store a string the
+ * generator cannot read.
+ *
+ * @param {{entities?: Array<{name: string, fields?: Array<{name: string, type?: string, ref?: string}>}>} | null} intent extracted intent
+ * @param {string} callerEntities already passed through `sanitiseEntities`
+ * @returns {string}
+ */
+export function entityTextForWizard(intent, callerEntities) {
+  if (!intent?.entities || intent.entities.length === 0) return callerEntities;
+  const text = formatEntitySpec(intent.entities);
+  const parsed = parseEntitySpec(text);
+  if (parsed.errors.length > 0) return callerEntities;
+  if (parsed.entities.some((entity) => entity.fields.length === 0)) return callerEntities;
+  return text;
+}
+
+/** Alert `source` value. The n8n step that refused the PRD. */
+const ALERT_SOURCE = 'roles/prd.mjs';
+
+/**
+ * Write a file by renaming a temp file in the same directory.
+ *
+ * Readers never see a half-written JSON file. On Windows, rename will not
+ * replace an existing file, so a second attempt removes the destination first.
+ * New alert ids do not collide, which is the path that stays atomic.
+ *
+ * @param {string} dest final path
+ * @param {string} contents file body
+ * @returns {void}
+ */
+function atomicWrite(dest, contents) {
+  mkdirSync(dirname(dest), { recursive: true });
+  const tmp = join(dirname(dest), `.${basename(dest)}.${process.pid}.tmp`);
+  writeFileSync(tmp, contents);
+  try {
+    renameSync(tmp, dest);
+  } catch (err) {
+    try {
+      if (existsSync(dest)) rmSync(dest);
+      renameSync(tmp, dest);
+    } catch (renameErr) {
+      rmSync(tmp, { force: true });
+      throw renameErr instanceof Error ? renameErr : err;
+    }
+  }
+}
+
+/**
+ * Pull one YAML string list. Supports a flow list `[a, b]` and a block list.
+ *
+ * Only the two shapes the fidelity key uses. This is not a YAML parser.
+ *
+ * @param {string} block one frontmatter or yaml-fence body
+ * @param {string} key field name
+ * @returns {string[]}
+ */
+function yamlStringList(block, key) {
+  const flow = new RegExp(`^${key}\\s*:\\s*\\[([^\\]]*)\\]\\s*$`, 'm').exec(block);
+  if (flow) {
+    return flow[1]
+      .split(',')
+      .map((item) => unquoteYaml(item.trim()))
+      .filter((item) => item.length > 0);
+  }
+  const head = new RegExp(`^${key}\\s*:\\s*$`, 'm').exec(block);
+  if (!head) return [];
+  /** @type {string[]} */
+  const items = [];
+  const after = block.slice(head.index + head[0].length);
+  for (const line of after.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const item = /^\s*-\s+(.*)$/.exec(line);
+    if (!item) break;
+    const value = unquoteYaml(item[1].trim());
+    if (value) items.push(value);
+  }
+  return items;
+}
+
+/**
+ * Strip one pair of matching quotes from a YAML scalar.
+ *
+ * @param {string} value raw scalar
+ * @returns {string}
+ */
+function unquoteYaml(value) {
+  const quoted = /^(['"])(.*)\1$/.exec(value);
+  return quoted ? quoted[2] : value;
+}
+
+/**
+ * Read `fidelity` from the generated PRD.
+ *
+ * The builder emits a ```yaml fence, not a `---` block. Both are accepted so
+ * an older or newer generator is still readable. No `fidelity` key means the
+ * deployed builder predates the check.
+ *
+ * @param {string} markdown PRD body
+ * @returns {{present: boolean, fidelity: string, unmatched: string[]}}
+ */
+export function readFidelity(markdown) {
+  /** @type {string[]} */
+  const blocks = [];
+  const fenceRe = /```ya?ml\s*\n([\s\S]*?)```/gi;
+  let fence = fenceRe.exec(markdown);
+  while (fence) {
+    blocks.push(fence[1]);
+    fence = fenceRe.exec(markdown);
+  }
+  const front = /^---\r?\n([\s\S]*?)\r?\n---/.exec(markdown);
+  if (front) blocks.push(front[1]);
+  for (const block of blocks) {
+    const line = /^fidelity\s*:\s*(.*?)\s*$/m.exec(block);
+    if (!line) continue;
+    const raw = unquoteYaml(line[1].trim());
+    return {
+      present: true,
+      fidelity: raw === 'pass' || raw === 'fail' ? raw : 'invalid',
+      unmatched: yamlStringList(block, 'fidelityUnmatched')
+    };
+  }
+  return { present: false, fidelity: '', unmatched: [] };
+}
+
+/**
+ * The `json claims` fence inside `## Machine-readable claims`, verbatim.
+ *
+ * `absent` is an older builder that does not emit the section. `invalid` is a
+ * fence that is not JSON or whose `kind` is not `"claims"` — that must not be
+ * written where the gate will trust it.
+ *
+ * @param {string} markdown PRD body
+ * @returns {{status: 'absent'} | {status: 'invalid', reason: string, verbatim: string} | {status: 'ok', verbatim: string, parsed: Record<string, unknown>}}
+ */
+export function extractClaimsBlock(markdown) {
+  const section = /(?:^|\n)## Machine-readable claims[^\n]*\n([\s\S]*?)(?=\n## |$)/.exec(markdown);
+  if (!section) return { status: 'absent' };
+  const fence = /```json claims[^\n]*\n([\s\S]*?)```/.exec(section[1]);
+  if (!fence) return { status: 'absent' };
+  const verbatim = fence[1];
+  try {
+    const parsed = JSON.parse(verbatim);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || parsed.kind !== 'claims') {
+      return { status: 'invalid', reason: 'kind is not "claims"', verbatim };
+    }
+    return { status: 'ok', verbatim, parsed };
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    return { status: 'invalid', reason, verbatim };
+  }
+}
+
+/**
+ * Message that names every unmatched requirement.
+ *
+ * @param {string} slug app slug
+ * @param {string[]} unmatched fidelityUnmatched values
+ * @returns {string}
+ */
+function fidelityAlertMessage(slug, unmatched) {
+  const listed = unmatched.length > 0 ? unmatched.join('; ') : '(none listed)';
+  return `PRD for ${slug} failed prompt fidelity. Unmatched requirements: ${listed}`;
+}
+
+/**
+ * Write `.redanvil/dispatch/alerts/<id>.json` and return the record.
+ *
+ * @param {string} repoRoot repository root
+ * @param {string} slug app slug
+ * @param {string[]} unmatched unmatched requirement strings
+ * @returns {{id: string, path: string, record: {id: string, at: string, source: string, message: string, ref: string}}}
+ */
+export function writeFidelityAlert(repoRoot, slug, unmatched) {
+  const safeSlug = String(slug).replace(/[\\/]/g, '') || 'app';
+  const id = `prd-fidelity-${safeSlug}-${randomBytes(4).toString('hex')}`;
+  const record = {
+    id,
+    at: new Date().toISOString(),
+    source: ALERT_SOURCE,
+    message: fidelityAlertMessage(slug, unmatched),
+    ref: `${slug}/docs/PRD.md`
+  };
+  const path = join(repoRoot, '.redanvil', 'dispatch', 'alerts', `${id}.json`);
+  atomicWrite(path, JSON.stringify(record, null, 2) + '\n');
+  return { id, path, record };
+}
+
+/**
+ * After the wizard returns a PRD: refuse `fidelity: fail`, copy a valid claims
+ * block, and warn (without failing) when an older builder omitted either key.
+ *
+ * @param {string} markdown generated PRD body
+ * @param {{repoRoot: string, slug: string, warn?: (message: string) => void, appDir?: string}} opts where to write
+ * @returns {{exitCode: number, warnings: string[], message: string}}
+ */
+export function settleGeneratedPrd(markdown, opts) {
+  /** @type {string[]} */
+  const warnings = [];
+  /**
+   * @param {string} message warning text
+   * @returns {void}
+   */
+  const warn = (message) => {
+    warnings.push(message);
+    if (opts.warn) opts.warn(message);
+    else process.stderr.write(`${message}\n`);
+  };
+
+  const fidelity = readFidelity(markdown);
+  let exitCode = 0;
+  let message = '';
+  if (!fidelity.present) {
+    warn('prd: no fidelity key in frontmatter; continuing because an older builder does not emit one');
+  } else if (fidelity.fidelity !== 'pass') {
+    const alert = writeFidelityAlert(opts.repoRoot, opts.slug, fidelity.unmatched);
+    exitCode = 1;
+    message =
+      `${fidelityAlertMessage(opts.slug, fidelity.unmatched)}. ` +
+      `Alert ${alert.path}. Nothing will be built from a spec that misses the prompt.`;
+  }
+
+  const claims = extractClaimsBlock(markdown);
+  if (claims.status === 'absent') {
+    warn(
+      'prd: no json claims block under Machine-readable claims; continuing because an older builder does not emit one'
+    );
+  } else if (claims.status === 'invalid') {
+    exitCode = 1;
+    const claimsMessage = `PRD claims block is not JSON with kind "claims": ${claims.reason}`;
+    message = message ? `${message} ${claimsMessage}` : claimsMessage;
+  } else {
+    const appDir = opts.appDir ?? join(opts.repoRoot, opts.slug);
+    atomicWrite(join(appDir, '.redanvil', 'claims.json'), claims.verbatim);
+  }
+
+  return { exitCode, warnings, message };
 }
 
 /**
@@ -441,6 +787,8 @@ async function clickAndReadBack(page, groupIndex, pick) {
  * @param {import('playwright').Page} page the wizard page
  * @param {string} prompt the app description the whole build derives from
  * @param {Array<{group: string, intended: string, actual: string}>} chosen accumulator of recorded choices, for provenance
+ * @param {string} [entities] caller-supplied entity list, already sanitised
+ * @param {object | null} [intent] typed intent, when extraction ran
  * @returns {Promise<boolean>} whether anything was answered
  */
 /** Most entities the field will accept. A scope statement, not a noun dump. */
@@ -515,21 +863,22 @@ async function fillEntities(page, entities) {
   return await field.inputValue();
 }
 
-async function answerQuestion(page, prompt, chosen, entities = '') {
+async function answerQuestion(page, prompt, chosen, entities = '', intent = null) {
   const groups = await readGroups(page);
   if (groups.length === 0) return false;
   let answered = false;
+  const entityText = intent ? entityTextForWizard(intent, entities) : entities;
 
-  if (entities) {
-    const actual = await fillEntities(page, entities);
-    assertAnswerTook('Entities', entities, actual);
-    chosen.push({ group: 'Entities', intended: entities, actual });
+  if (entityText) {
+    const actual = await fillEntities(page, entityText);
+    assertAnswerTook('Entities', entityText, actual);
+    chosen.push({ group: 'Entities', intended: entityText, actual });
     answered = true;
   }
 
   for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
     const group = groups[groupIndex];
-    const picks = derivePicks(group, prompt);
+    const picks = picksForGroup(group, prompt, intent);
 
     for (const pick of picks) {
       const actual = await clickAndReadBack(page, groupIndex, pick);
@@ -636,15 +985,21 @@ async function main() {
   const repoRoot = resolve(args.repoRoot ?? process.cwd());
   const docsDir = join(repoRoot, slug, 'docs');
 
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-  await page.setViewportSize({ width: 1280, height: 1000 });
-
-  /** @type {Array<{group: string, intended: string, actual: string}>} */
-  const chosen = [];
-  await page.goto(BUILDER_URL, { waitUntil: 'networkidle' });
-
+  // Playwright is loaded here, not at import time. The matcher tests import
+  // this module and must not require the browser package to resolve.
+  /** @type {import('playwright').Browser | undefined} */
+  let browser;
   try {
+    const extracted = await extractIntent(prompt);
+    const { chromium } = await import('playwright');
+    browser = await chromium.launch();
+    const page = await browser.newPage();
+    await page.setViewportSize({ width: 1280, height: 1000 });
+
+    /** @type {Array<{group: string, intended: string, actual: string}>} */
+    const chosen = [];
+    await page.goto(BUILDER_URL, { waitUntil: 'networkidle' });
+
 /**
  * Fill the composer, then WAIT FOR THE BUTTON TO ACTUALLY ENABLE before
  * clicking, re-filling if the value did not survive.
@@ -737,7 +1092,7 @@ for (let step = 0; step < 12; step += 1) {
     markdown = markdown.replace(/^#\s+.*$/m, `# ${slugTitle} — product requirements`);
     break;
   }
-  const answered = await answerQuestion(page, prompt, chosen, entities);
+  const answered = await answerQuestion(page, prompt, chosen, entities, extracted);
 
   // Submitting is now EXPLICIT. It used to happen by accident: the old
   // answer picker fell through to "the first button on the page", and on the
@@ -757,15 +1112,30 @@ for (let step = 0; step < 12; step += 1) {
     else if (!answered) break;
   }
 
-    writePrdArtifacts(docsDir, markdown, prompt, chosen, BUILDER_URL);
-    const summary = chosen.map((a) => `${a.group}: ${a.actual}`).join(', ');
-    console.log(`PRD written: ${markdown.length} chars, wizard answers: ${summary || '(none)'}`);
+    writePrdArtifacts(
+      docsDir,
+      markdown,
+      prompt,
+      chosen,
+      BUILDER_URL,
+      provenanceMetaFromIntent(extracted)
+    );
+    const settled = settleGeneratedPrd(markdown, { repoRoot, slug });
+    if (settled.exitCode !== 0) {
+      process.stderr.write(`${settled.message}\n`);
+      process.exitCode = settled.exitCode;
+    } else {
+      const summary = chosen.map((a) => `${a.group}: ${a.actual}`).join(', ');
+      console.log(
+        `PRD written: ${markdown.length} chars, wizard answers: ${summary || '(none)'}, intent: ${extracted.intentSource}`
+      );
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     process.stderr.write(`${message}\n`);
     process.exitCode = 1;
   } finally {
-    await browser.close();
+    if (browser) await browser.close();
   }
 }
 
