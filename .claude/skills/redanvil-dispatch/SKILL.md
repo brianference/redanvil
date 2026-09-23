@@ -15,7 +15,7 @@ On a `/loop` about every 20 minutes, from the repo root:
 node n8n-prototype/dispatch/dispatch.mjs list --json
 ```
 
-Remember the ids you have already notified. Only a new id gets a message.
+Each pending record and alert carries `notified: true|false`. Only a record with `notified: false` gets a message; after sending it, run `node n8n-prototype/dispatch/dispatch.mjs mark-notified <id>` so a restarted session does not notify twice.
 
 ## New pending record
 
@@ -27,15 +27,15 @@ Remember the ids you have already notified. Only a new id gets a message.
 
 Act only on an explicit reply.
 
-- Gate: `node n8n-prototype/dispatch/dispatch.mjs resolve <id> approve|redo --notes "..."`
+- Gate: write the owner's words to a temp file, then `node n8n-prototype/dispatch/dispatch.mjs resolve <id> approve|redo --notes-file <file>`
 - `reject` is not a gate decision. The command fails and leaves the gate pending.
 - Job approval (`kind` is `job-approval`): resolve `approve` or `reject` only after the owner says so. Silence is not approval. Do not resolve a job because the gate timeout fired.
 
-Notes are an argument to `resolve`. Do not shell them into another command.
+Pass notes with `--notes-file`, never quoted on a command line: the owner's text can contain quotes, `&`, `%` and newlines.
 
 ## Alerts
 
-One notification per alert. After the owner has seen it:
+One notification per alert (then `mark-notified <id>`). After the owner has seen it:
 
 ```
 node n8n-prototype/dispatch/dispatch.mjs ack <alertId>

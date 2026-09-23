@@ -25,7 +25,7 @@ export function registryRoot(repoRoot) {
 
 /**
  * @param {string} repoRoot repository root
- * @param {'pending'|'resolved'|'alerts'|'acked'|'jobs'} bucket directory name
+ * @param {'pending'|'resolved'|'alerts'|'acked'|'jobs'|'notified'} bucket directory name
  * @returns {string}
  */
 export function bucketDir(repoRoot, bucket) {
@@ -103,7 +103,7 @@ export function readJson(filePath) {
 /**
  * Every `*.json` record in a bucket, skipping names that are not safe ids.
  * @param {string} repoRoot repository root
- * @param {'pending'|'resolved'|'alerts'|'acked'|'jobs'} bucket directory name
+ * @param {'pending'|'resolved'|'alerts'|'acked'|'jobs'|'notified'} bucket directory name
  * @returns {unknown[]}
  */
 export function readBucket(repoRoot, bucket) {

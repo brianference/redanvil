@@ -11,7 +11,7 @@
  * Free-text notes are an argv element and then an HTTP body field. They are
  * never placed in a shell command. The runner token is not read.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { fileURLToPath } from 'node:url';
@@ -23,7 +23,8 @@ import {
   bucketDir,
   moveRecord,
   readBucket,
-  readJson
+  readJson,
+  writeJsonAtomic
 } from './registry.mjs';
 import { join } from 'node:path';
 
@@ -78,11 +79,53 @@ export function listDispatch(repoRoot) {
     if (typeof status !== 'string') return true;
     return !TERMINAL_JOB_STATUSES.has(status);
   });
+  const notified = notifiedIds(repoRoot);
   return {
-    pending: readBucket(repoRoot, 'pending'),
-    alerts: readBucket(repoRoot, 'alerts'),
+    pending: readBucket(repoRoot, 'pending').map((record) => withNotified(record, notified)),
+    alerts: readBucket(repoRoot, 'alerts').map((record) => withNotified(record, notified)),
     jobs
   };
+}
+
+/**
+ * Ids the owner's session has already sent a notification for.
+ *
+ * Kept on disk rather than in the Claude session's memory, so a restarted
+ * session does not notify the owner about the same gate twice.
+ * @param {string} repoRoot repository root
+ * @returns {Set<string>}
+ */
+export function notifiedIds(repoRoot) {
+  const ids = new Set();
+  for (const record of readBucket(repoRoot, 'notified')) {
+    if (record && typeof record === 'object' && typeof record.id === 'string') ids.add(record.id);
+  }
+  return ids;
+}
+
+/**
+ * Copy of a record with a `notified` boolean added.
+ * @param {unknown} record pending or alert record
+ * @param {Set<string>} notified ids already notified
+ * @returns {unknown}
+ */
+function withNotified(record, notified) {
+  if (!record || typeof record !== 'object') return record;
+  const id = /** @type {{id?: unknown}} */ (record).id;
+  return { ...record, notified: typeof id === 'string' && notified.has(id) };
+}
+
+/**
+ * Record that the owner has been notified about a pending record or alert.
+ * @param {string} repoRoot repository root
+ * @param {string} id record id
+ */
+export function markNotified(repoRoot, id) {
+  assertSafeId(id);
+  writeJsonAtomic(join(bucketDir(repoRoot, 'notified'), `${id}.json`), {
+    id,
+    at: new Date().toISOString()
+  });
 }
 
 /**
@@ -226,7 +269,7 @@ export async function runDispatch(argv) {
     const positional = [];
     for (let index = 0; index < rest.length; index += 1) {
       const arg = rest[index];
-      if (arg === '--notes') {
+      if (arg === '--notes' || arg === '--notes-file') {
         index += 1;
         continue;
       }
@@ -236,9 +279,21 @@ export async function runDispatch(argv) {
     const id = positional[0];
     const decision = positional[1];
     if (!id || !decision) throw new Error('usage: resolve <id> approve|redo|reject [--notes "..."]');
-    const notes = flagValue(argv, 'notes') ?? '';
+    // --notes-file exists so a caller that runs this through a shell can
+    // write the owner's words to a file instead of quoting them on a
+    // command line; the file's bytes are posted unchanged.
+    const notesFile = flagValue(argv, 'notes-file');
+    const notes = notesFile ? readFileSync(notesFile, 'utf8') : (flagValue(argv, 'notes') ?? '');
     await resolveDispatch(repoRoot, id, decision, notes);
     process.stdout.write(`${id} ${decision}\n`);
+    return 0;
+  }
+  if (command === 'mark-notified') {
+    const id = rest.find((arg) => !arg.startsWith('--'));
+    if (!id) throw new Error('usage: mark-notified <id>');
+    markNotified(repoRoot, id);
+    process.stdout.write(`${id}
+`);
     return 0;
   }
   if (command === 'ack') {
@@ -248,7 +303,7 @@ export async function runDispatch(argv) {
     process.stdout.write(`${id}\n`);
     return 0;
   }
-  throw new Error('usage: list [--json] | gallery <id> --out <file> | resolve <id> approve|redo|reject [--notes] | ack <alertId>');
+  throw new Error('usage: list [--json] | gallery <id> --out <file> | resolve <id> approve|redo|reject [--notes "..." | --notes-file <path>] | mark-notified <id> | ack <alertId>');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

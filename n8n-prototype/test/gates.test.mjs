@@ -754,3 +754,105 @@ describe('sweep-orphans', () => {
     assert.match(result.pending, /signature=keep/);
   });
 });
+
+describe('dispatch notified tracking and notes file', () => {
+  test('list marks a pending record notified only after mark-notified, and it survives a new process', () => {
+    const repo = scratch();
+    const id = 'sushi-finder-logo-9';
+    put(
+      repo,
+      `.redanvil/dispatch/pending/${id}.json`,
+      JSON.stringify({
+        id,
+        kind: 'gate',
+        createdAt: '2026-09-23T00:00:00.000Z',
+        expiresAt: '2026-09-23T02:00:00.000Z',
+        slug: 'sushi-finder',
+        title: 'Approve logo',
+        summary: 'pick a mark',
+        options: [],
+        resume: { type: 'n8n-form', url: 'http://127.0.0.1:1/form-waiting/9' },
+        onTimeout: 'auto-decide'
+      })
+    );
+    const list = () =>
+      JSON.parse(
+        spawnSync(process.execPath, [DISPATCH, 'list', '--json', `--repoRoot=${repo}`], {
+          encoding: 'utf8'
+        }).stdout
+      );
+    assert.equal(list().pending[0].notified, false);
+    const marked = spawnSync(process.execPath, [DISPATCH, 'mark-notified', id, `--repoRoot=${repo}`], {
+      encoding: 'utf8'
+    });
+    assert.equal(marked.status, 0, marked.stderr);
+    assert.equal(list().pending[0].notified, true);
+  });
+
+  test('resolve --notes-file posts the file bytes unchanged', async () => {
+    const notes = 'logo 3 "the sharp one" & palette B -- 100% sure\nsecond line';
+    /** @type {string[]} */
+    const bodies = [];
+    const { url, close } = await new Promise((resolveServer) => {
+      const server = createServer((req, res) => {
+        let raw = '';
+        req.setEncoding('utf8');
+        req.on('data', (chunk) => {
+          raw += chunk;
+        });
+        req.on('end', () => {
+          bodies.push(raw);
+          res.writeHead(200);
+          res.end('ok');
+        });
+      });
+      server.listen(0, '127.0.0.1', () => {
+        const address = server.address();
+        const port = typeof address === 'object' && address ? address.port : 0;
+        resolveServer({ url: `http://127.0.0.1:${port}`, close: () => server.close() });
+      });
+    });
+    try {
+      const repo = scratch();
+      const id = 'sushi-finder-logo-10';
+      put(
+        repo,
+        `.redanvil/dispatch/pending/${id}.json`,
+        JSON.stringify({
+          id,
+          kind: 'gate',
+          createdAt: '2026-09-23T00:00:00.000Z',
+          expiresAt: '2026-09-23T02:00:00.000Z',
+          slug: 'sushi-finder',
+          title: 'Approve logo',
+          summary: 'pick a mark',
+          options: [],
+          resume: { type: 'n8n-form', url: `${url}/form-waiting/10?signature=x` },
+          onTimeout: 'auto-decide'
+        })
+      );
+      put(repo, 'notes.txt', notes);
+      const result = await spawnAsync([
+        DISPATCH,
+        'resolve',
+        id,
+        'approve',
+        '--notes-file',
+        join(repo, 'notes.txt'),
+        `--repoRoot=${repo}`
+      ]);
+      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+      // multipart/form-data normalises line breaks to CRLF (HTML form encoding
+      // rules), so the POSTed field is the file bytes with LF turned into CRLF;
+      // the resolved record keeps the bytes exactly.
+      const crlfNotes = notes.split('\n').join('\r\n');
+      assert.ok(bodies[0].includes(crlfNotes), 'form body carries the notes file bytes');
+      const resolved = JSON.parse(
+        readFileSync(join(repo, '.redanvil/dispatch/resolved', `${id}.json`), 'utf8')
+      );
+      assert.equal(resolved.notes, notes);
+    } finally {
+      close();
+    }
+  });
+});
