@@ -4,7 +4,9 @@ import type { D1PreparedStatement, Env } from '../../functions/lib/env';
 /** Options for {@link mockEnv}. */
 export interface MockD1Options {
   /**
-   * When true, both `run` and `all` reject with a D1 outage error.
+   * When true, `run` and `all` reject, except rate-limit statements, which
+   * succeed with hit_count 1 so a test can still reach the insert or list
+   * it is checking. Counting lives in jobQueueDb.
    * @default false
    */
   fail?: boolean;
@@ -24,16 +26,35 @@ export interface MockD1Options {
 export function mockEnv(options: MockD1Options = {}): Env {
   const fail = options.fail === true;
   const results = options.results ?? [];
-  const stmt: D1PreparedStatement = {
-    bind: () => stmt,
-    run: () =>
-      fail ? Promise.reject(new Error('D1 unavailable')) : Promise.resolve({}),
-    all: () =>
-      fail
-        ? Promise.reject(new Error('D1 unavailable'))
-        : Promise.resolve({ results })
+  return {
+    DB: {
+      prepare: (query: string) => {
+        const isRateLimit = query.includes('rate_limits');
+        const stmt: D1PreparedStatement = {
+          bind: () => stmt,
+          run: () => {
+            // A down database still answers the rate-limit write so tests that
+            // set `fail` can reach the insert/list they are actually checking.
+            // The rate-limit tests use jobQueueDb, which does count.
+            if (fail && !isRateLimit) {
+              return Promise.reject(new Error('D1 unavailable'));
+            }
+            return Promise.resolve({ meta: { changes: 1 }, results: [] });
+          },
+          all: () => {
+            if (fail && !isRateLimit) {
+              return Promise.reject(new Error('D1 unavailable'));
+            }
+            if (isRateLimit) {
+              return Promise.resolve({ results: [{ hit_count: 1 }] });
+            }
+            return Promise.resolve({ results });
+          }
+        };
+        return stmt;
+      }
+    }
   };
-  return { DB: { prepare: () => stmt } };
 }
 
 /** Options for {@link expectSecureHeaders}. */

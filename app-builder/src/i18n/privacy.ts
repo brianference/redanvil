@@ -31,9 +31,9 @@ export interface LegalDoc {
 /** Privacy Policy document. */
 export const privacy = {
     title: 'Privacy Policy',
-    updated: 'Last updated 2 August 2026',
+    updated: 'Last updated 23 September 2026',
     intro:
-      'This policy describes how the RedAnvil app builder at https://redanvil.pages.dev handles information. There are no user accounts and no sign-in. PRD text is generated in your browser. Server storage is Cloudflare D1 for optional job rows and for PRDs you choose to save. Saved PRDs and the job list are public API surfaces. We do not run ads or product analytics on this UI.',
+      'This policy describes how the RedAnvil app builder at https://redanvil.pages.dev handles information. There are no user accounts and no sign-in. PRD text is generated in your browser. Server storage is Cloudflare D1 for optional job rows and for PRDs you choose to save. Saved PRDs are a public API surface. The full job list, including prompts, is not. We do not run ads or product analytics on this UI.',
     sections: [
       {
         heading: 'Who we are and how to reach us',
@@ -45,15 +45,16 @@ export const privacy = {
       },
       {
         heading: 'How the product processes your input',
-        body: 'The clarifying wizard runs entirely in your browser. The structured PRD (markdown, title, slug) is produced by client-side code when you finish the flow. That generation path does not call a third-party large-language-model API from this app. When you submit the wizard, the browser POSTs a small JSON body to our Pages Function at /api/submit (prompt text, app type, whether the described app needs auth, and an entity count). That request is what can create a job row in D1. Separately, if you choose Save, the browser POSTs the generated slug, title, prompt, and full markdown to /api/prds. If you only download the markdown and never save, the full PRD body is not written to our database by that action.'
+        body: 'The clarifying wizard runs entirely in your browser. The structured PRD (markdown, title, slug) is produced by client-side code when you finish the flow. That generation path does not call a third-party large-language-model API from this app. When you submit the wizard, the browser POSTs a small JSON body to our Pages Function at /api/submit (prompt text, app type, whether the described app needs auth, an entity count, and the entity names you typed, trimmed to at most 500 characters). That request is what can create a job row in D1. A queued job is not built until the owner approves it. Separately, if you choose Save, the browser POSTs the generated slug, title, prompt, and full markdown to /api/prds. If you only download the markdown and never save, the full PRD body is not written to our database by that action.'
       },
       {
         heading: 'What we collect and store',
         body: 'Depending on what you do, the following may be processed or stored:',
         items: [
-          'Job rows (when you submit): id, slug derived from the prompt, the prompt string, target type (fullstack-web), gate threshold (90), status (for example queued), and created_at. These live in the D1 jobs table.',
+          'Job rows (when you submit): id, slug derived from the prompt, the prompt string, the entity names you typed, target type (fullstack-web), gate threshold (90), status (for example queued, claimed, awaiting owner approval, building, done, or failed), optional step, detail, and deploy URL once a build finishes, plus timestamps. These live in the D1 jobs table. The owner approves a job before it runs.',
           'Saved PRD rows (when you save): id, slug, title, prompt, full markdown, and created_at in the D1 prds table.',
-          'Theme preference on your device only: localStorage key theme with value light or dark (set by the theme toggle).',
+          'Rate-limit rows for POST /api/submit and POST /api/prds: each route allows 10 requests per hour per client address. The D1 rate_limits table stores a SHA-256 hash of the Cloudflare CF-Connecting-IP value, the route name, and the UTC hour, plus a hit count. The raw IP address is not written to that table. The hash exists only to enforce that limit.',
+          'Theme preference on your device only: localStorage key theme with value light or dark (set by the theme toggle). After you submit, localStorage key redanvil.jobId holds that job id so a reload can keep showing build status. It is not an account identifier.',
           'Request metadata that Cloudflare may log while serving Pages, Functions, and D1 (for example IP address, user agent, path, and timestamps under Cloudflare’s own practices).'
         ]
       },
@@ -63,7 +64,8 @@ export const privacy = {
         items: [
           'GET /api/prds returns recent saved PRD metadata (id, slug, title, created_at) for the public Saved page.',
           'GET /api/prd/:id returns the full saved row, including prompt and markdown, to anyone who has the id.',
-          'GET /api/jobs returns recent job rows, including the stored prompt text, for the build loop and related tooling.',
+          'GET /api/jobs is not public. It requires a bearer token held by the build runner (the Pages secret RUNNER_TOKEN). Anonymous callers get an error and no rows. Prompts are not listed for the public.',
+          'GET /api/jobs/:id/status is public. It returns only the job id, status, step, detail, updated time, and deploy URL. It does not return the prompt, the entity names, or any other job field.',
           'The Saved UI lists public entries; a share URL of the form /prd/<id> exposes that document to anyone with the link.'
         ]
       },
@@ -81,9 +83,11 @@ export const privacy = {
         heading: 'Why we process it',
         body: 'We process the data above only to run the product features you invoke:',
         items: [
-          'Queue a build job when you submit the wizard so the RedAnvil loop or dashboard can pick up work',
+          'Queue a build job when you submit the wizard so the owner can approve it and the runner can build it',
+          'Show you the status of the job you submitted, including a deploy link when a build finishes',
+          'Limit how often one client can submit a job or save a PRD, using a hash of the IP rather than the IP itself',
           'Persist and list PRDs people chose to publish in the public library',
-          'Serve those records over the public API routes above',
+          'Serve saved PRDs over the public API routes above',
           'Remember light/dark theme on the same browser',
           'Operate hosting, routing, and storage on Cloudflare infrastructure'
         ]
@@ -94,7 +98,7 @@ export const privacy = {
       },
       {
         heading: 'Cookies and local storage',
-        body: 'RedAnvil application code does not set tracking cookies and does not use session cookies for accounts (there are no accounts). The only intentional client persistence we implement is localStorage for theme preference under the key theme (values light or dark). Wizard answers and generated PRD text for an in-progress session live in page memory until you leave or reset; they are not written to localStorage by the app. Your browser may still keep ordinary HTTP cache entries for static assets. Clear site data in the browser to remove the theme key.'
+        body: 'RedAnvil application code does not set tracking cookies and does not use session cookies for accounts (there are no accounts). The intentional client persistence we implement is localStorage for theme preference under the key theme (values light or dark) and, after a successful submit, the key redanvil.jobId holding that job id so a reload can keep showing build status. Wizard answers and generated PRD text for an in-progress session live in page memory until you leave or reset; they are not written to localStorage by the app. Your browser may still keep ordinary HTTP cache entries for static assets. Clear site data in the browser to remove the theme key and the stored job id.'
       },
       {
         heading: 'Where data lives and international transfers',
@@ -102,7 +106,7 @@ export const privacy = {
       },
       {
         heading: 'Retention and deletion',
-        body: 'There is no automatic expiry job in the app for jobs or prds. Rows remain until a maintainer deletes them, the database is wiped, or the project is retired. The public APIs expose list and create/read paths; there is no self-service delete endpoint for end users. Theme preference remains on your device until you clear it. Cloudflare edge or access logs, if any, follow Cloudflare’s retention practices, which we do not control from this repository. If you want a specific saved PRD or identifiable job prompt removed, open a GitHub issue titled "Privacy request" with the public URL, id, slug, or enough timing detail to find the row. We will remove what we can identify; we cannot invent or locate records without identifiers, and we cannot erase copies others may have already downloaded from a public URL.'
+        body: 'There is no automatic expiry job in the app for jobs, prds, or rate-limit rows. Rows remain until a maintainer deletes them, the database is wiped, or the project is retired. The public PRD APIs expose list and read paths. The job list does not. There is no self-service delete endpoint for end users. Rate-limit hashes stay until a maintainer deletes them, and they contain no IP address. Theme preference and the stored job id remain on your device until you clear them. Cloudflare edge or access logs, if any, follow Cloudflare’s retention practices, which we do not control from this repository. If you want a specific saved PRD or identifiable job prompt removed, open a GitHub issue titled "Privacy request" with the public URL, id, slug, or enough timing detail to find the row. We will remove what we can identify; we cannot invent or locate records without identifiers, and we cannot erase copies others may have already downloaded from a public URL.'
       },
       {
         heading: 'What you can request and how',
@@ -121,7 +125,7 @@ export const privacy = {
       },
       {
         heading: 'Security practices in this codebase',
-        body: 'What this app actually implements: HTTPS is provided by Cloudflare for the hosted site; API handlers validate JSON bodies with Zod and bound string lengths; D1 writes use parameterized statements (no string-concatenated SQL in the handlers); responses set x-content-type-options: nosniff and same-origin CORS rather than a wildcard. What this app does not claim: we do not assert application-layer encryption at rest, a formal SOC 2 report, or that public library content is confidential. Saved PRDs and job prompts on the public APIs are intentionally readable. Do not put secrets, production credentials, private customer data, or regulated personal data into prompts or saved documents. No method of transmission or storage is perfectly secure.'
+        body: 'What this app actually implements: HTTPS is provided by Cloudflare for the hosted site; API handlers validate JSON bodies with Zod and bound string lengths; D1 writes use parameterized statements (no string-concatenated SQL in the handlers); the runner token is compared as a hash, not with a raw string equality check; responses set x-content-type-options: nosniff and same-origin CORS rather than a wildcard. POST /api/submit and POST /api/prds are limited as described above, and the rate-limit table stores a hash of the client IP rather than the address. What this app does not claim: we do not assert application-layer encryption at rest, a formal SOC 2 report, or that public library content is confidential. Saved PRDs on the public PRD APIs are intentionally readable. Job prompts are not on a public list. The public job status route returns status, step, detail, and deploy URL only. Do not put secrets, production credentials, private customer data, or regulated personal data into prompts or saved documents. No method of transmission or storage is perfectly secure.'
       },
       {
         heading: 'Changes to this policy',

@@ -7,10 +7,12 @@ import {
   isAppTypeReady,
   isFeatureSelectionReady,
   canForgePrd,
+  submitRequestBody,
   EMPTY_WIZARD_ANSWERS,
   type BuildJob,
   type WizardAnswers
 } from '../lib/job';
+import { parseSubmittedJobId } from '../lib/jobStatus';
 import { en } from '../i18n/en';
 import { messageFromPayload } from '../lib/apiError';
 import { theme } from '../theme';
@@ -42,8 +44,8 @@ export interface WizardProps {
   value: WizardAnswers;
   /** Called when any answer field changes. */
   onChange: (next: WizardAnswers) => void;
-  /** Called with the server job only after a successful submit. */
-  onSubmit: (job: BuildJob) => void;
+  /** Called with the server job and its id only after a successful submit. */
+  onSubmit: (job: BuildJob, jobId: string) => void;
   /** Optional: start on a specific step (e.g. 2 when prompt already set). */
   initialStep?: WizardStepIndex;
 }
@@ -218,12 +220,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
       const response = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          prompt: value.prompt.trim(),
-          appType: value.appType,
-          hasAuth: value.hasAuth,
-          entities: entityCount
-        }),
+        body: JSON.stringify(submitRequestBody(value, entityCount)),
         signal: controller.signal
       });
 
@@ -242,13 +239,14 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
       }
 
       const job = parseBuildJob(payload);
-      if (job === null) {
+      const jobId = parseSubmittedJobId(payload);
+      if (job === null || jobId === null) {
         setSubmitState({ status: 'error', message: copy.errors.invalidJobPayload });
         return;
       }
 
       setSubmitState({ status: 'success', job });
-      onSubmit(job);
+      onSubmit(job, jobId);
     } catch (error: unknown) {
       const timedOut =
         (error instanceof DOMException && error.name === 'AbortError') ||

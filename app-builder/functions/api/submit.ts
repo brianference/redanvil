@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { buildJob } from '../../src/lib/job';
 import type { Env } from '../lib/env';
 import { jsonResponse, readValidatedBody } from '../lib/http';
+import { enforceRateLimit } from '../lib/rateLimit';
 
 /** CORS allow-methods for this endpoint (POST only). */
 const ALLOWED_METHODS = 'POST';
@@ -10,16 +11,24 @@ const ALLOWED_METHODS = 'POST';
 const MAX_PROMPT_LEN = 10_000;
 const MAX_APP_TYPE_LEN = 64;
 
+/** Max length of the optional entity-names string stored on the job row. */
+const MAX_ENTITY_NAMES_LEN = 500;
+
+/** Rate-limit route key for POST /api/submit. Not user input. */
+const RATE_LIMIT_ROUTE = 'submit';
+
 /**
  * Submit body from the wizard: prompt and scope fields.
  * entities is a non-negative integer count (not free-text names).
+ * entityNames is the wizard's free-text list, stored separately on jobs.entities.
  * String fields are bounded so multi-megabyte bodies are rejected at 400.
  */
 const submitBodySchema = z.object({
   prompt: z.string().trim().min(8).max(MAX_PROMPT_LEN),
   appType: z.string().min(1).max(MAX_APP_TYPE_LEN),
   hasAuth: z.boolean(),
-  entities: z.number().int().min(0).max(10_000)
+  entities: z.number().int().min(0).max(10_000),
+  entityNames: z.string().trim().max(MAX_ENTITY_NAMES_LEN).optional()
 });
 
 /**
@@ -30,6 +39,9 @@ const submitBodySchema = z.object({
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
 
+  const limited = await enforceRateLimit(request, env, RATE_LIMIT_ROUTE, ALLOWED_METHODS);
+  if (limited !== null) return limited;
+
   const parsed = await readValidatedBody(request, submitBodySchema, ALLOWED_METHODS);
   if (!parsed.ok) return parsed.response;
 
@@ -39,13 +51,24 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     hasAuth: parsed.data.hasAuth,
     entities: String(parsed.data.entities)
   });
+  const entityNames = parsed.data.entityNames ?? '';
 
   const id = crypto.randomUUID();
   try {
     await env.DB.prepare(
-      'INSERT INTO jobs (id, slug, prompt, target_type, threshold, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO jobs (id, slug, prompt, target_type, threshold, status, created_at, entities, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
-      .bind(id, job.slug, job.prompt, job.targetType, job.threshold, 'queued', job.createdAt)
+      .bind(
+        id,
+        job.slug,
+        job.prompt,
+        job.targetType,
+        job.threshold,
+        'queued',
+        job.createdAt,
+        entityNames,
+        job.createdAt
+      )
       .run();
   } catch {
     return jsonResponse(request, { error: 'Could not queue the build job' }, 500, ALLOWED_METHODS);

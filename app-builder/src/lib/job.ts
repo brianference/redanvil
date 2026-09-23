@@ -200,6 +200,41 @@ export function countEntities(entities: string): number {
     .filter((part) => part.length > 0).length;
 }
 
+/** JSON body POST /api/submit accepts from the wizard. */
+export interface SubmitRequestBody {
+  /** Trimmed prompt. */
+  prompt: string;
+  /** App type chip or free text. */
+  appType: string;
+  /** Whether the described app needs sign-in. */
+  hasAuth: boolean;
+  /** Integer count. The names themselves go in entityNames. */
+  entities: number;
+  /** Trimmed entity names from the wizard field. May be empty. */
+  entityNames: string;
+}
+
+/**
+ * Build the POST /api/submit body.
+ *
+ * The integer `entities` count stays what the server already validated.
+ * `entityNames` is the wizard's free-text list, sent separately so the
+ * queue can store the names.
+ *
+ * @param answers - Current wizard answers.
+ * @param entityCount - {@link countEntities} of `answers.entities`.
+ * @returns Body for `JSON.stringify`.
+ */
+export function submitRequestBody(answers: WizardAnswers, entityCount: number): SubmitRequestBody {
+  return {
+    prompt: answers.prompt.trim(),
+    appType: answers.appType,
+    hasAuth: answers.hasAuth,
+    entities: entityCount,
+    entityNames: answers.entities.trim()
+  };
+}
+
 /**
  * Normalize optional wizard fields so callers that only set core fields
  * (submit API) still produce a complete WizardAnswers object.

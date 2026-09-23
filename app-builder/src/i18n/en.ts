@@ -458,6 +458,51 @@ export const en = {
       timeout: 'Request timed out'
     }
   },
+  jobStatus: {
+    regionLabel: 'Build job status',
+    heading: 'Build status',
+    ownerApproval:
+      'Each build is approved by the owner before it runs. Submitting a job does not start the build.',
+    jobId: (id: string): string => `Job ${id}`,
+    loading: 'Checking build status…',
+    /**
+     * Plain-language status. Unknown values are shown as-is, not invented.
+     *
+     * @param status - Status string from the public endpoint.
+     * @returns A sentence for the panel.
+     */
+    statusText: (status: string): string => {
+      switch (status) {
+        case 'queued':
+          return 'Queued. It has not been picked up.';
+        case 'claimed':
+          return 'Picked up by the build runner.';
+        case 'awaiting_owner':
+          return 'Waiting for the owner to approve it.';
+        case 'approved':
+          return 'Approved. The build has not started yet.';
+        case 'rejected':
+          return 'Rejected. It will not be built.';
+        case 'building':
+          return 'Building.';
+        case 'done':
+          return 'Done.';
+        case 'failed':
+          return 'Failed.';
+        default:
+          return `Status: ${status}`;
+      }
+    },
+    stepText: (step: string): string => `Current step: ${step}`,
+    detailText: (detail: string): string => `Detail: ${detail}`,
+    openDeploy: 'Open the deployed app',
+    errors: {
+      invalid: 'Could not read the build status',
+      loadFailed: 'Could not load the build status',
+      network: 'Network error checking build status',
+      timeout: 'Build status request timed out'
+    }
+  },
   prdResult: {
     ready: 'PRD READY',
     download: 'Download .md',
