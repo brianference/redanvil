@@ -44,6 +44,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   unlinkSync,
   writeFileSync
@@ -132,23 +133,37 @@ function parseArgs(argv) {
  * failing gate is the NORMAL case for an app below the bar — it is the input to
  * the loop, not an error in it.
  *
+ * `shell` defaults to true on Windows because `npm` and `npx` are `.cmd`
+ * shims. Callers that pass a free-text prompt must set `shell: false` and
+ * keep that text out of `args` — cmd.exe splits unquoted argv and expands
+ * `%` even inside quotes. `input` is the stdin bytes (claude `-p`).
+ *
  * @param {string} cmd executable
  * @param {string[]} args arguments
- * @param {{cwd?: string, timeout?: number, env?: NodeJS.ProcessEnv}} [opts] spawn options
- * @returns {{status: number|null, stdout: string, stderr: string}} result
+ * @param {{cwd?: string, timeout?: number, env?: NodeJS.ProcessEnv, shell?: boolean, input?: string}} [opts] spawn options
+ * @returns {{status: number|null, stdout: string, stderr: string, signal: NodeJS.Signals|null, error: {code: string|null, message: string}|null}} result
  */
 function run(cmd, args, opts = {}) {
-  const proc = spawnSync(cmd, args, {
+  /** @type {import('node:child_process').SpawnSyncOptionsWithStringEncoding} */
+  const spawnOpts = {
     cwd: opts.cwd ?? getRepoRoot(),
     encoding: 'utf8',
     timeout: opts.timeout ?? ITEM_TIMEOUT_MS,
-    shell: process.platform === 'win32',
+    shell: Object.prototype.hasOwnProperty.call(opts, 'shell')
+      ? opts.shell
+      : process.platform === 'win32',
     env: opts.env ?? process.env
-  });
+  };
+  if (Object.prototype.hasOwnProperty.call(opts, 'input')) spawnOpts.input = opts.input;
+  const proc = spawnSync(cmd, args, spawnOpts);
   return {
     status: proc.status,
     stdout: String(proc.stdout ?? ''),
-    stderr: String(proc.stderr ?? '')
+    stderr: String(proc.stderr ?? ''),
+    signal: proc.signal ?? null,
+    error: proc.error
+      ? { code: proc.error.code ?? null, message: String(proc.error.message ?? '') }
+      : null
   };
 }
 
@@ -197,42 +212,56 @@ function headCommit(cwd) {
  * already present twice over.
  *
  * Both entries below are installed, authenticated and verified on this machine:
- * `claude -p` returns HEADLESS_OK and `grok -p` returns a completion. That is
- * why no third-party orchestrator is adopted here.
+ * `grok --prompt-file` returns a completion and `claude -p` returns
+ * HEADLESS_OK. That is why no third-party orchestrator is adopted here.
  *
- * @type {Array<{name: string, bin: string, args: (prompt: string, cwd: string) => string[]}>}
+ * Order is grok, then claude. Grok has no session limit, so it is the agent
+ * that actually runs the night. Claude is the fallback only when grok cannot
+ * run (not on PATH, spending-limit 403, or a hang/timeout) — not when grok
+ * ran and the fix failed. Claude's own usage-window waits stay in dispatchFix.
+ *
+ * Neither `args` function receives the prompt text. On Windows, spawn with
+ * `shell: true` joins argv without quoting, so a prompt that starts
+ * "In ${app}, ..." arrives as the single word "In", and `% & | < > ^` plus
+ * newlines never survive cmd.exe. prepareAgentLaunch writes the bytes to a
+ * file or to stdin instead.
+ *
+ * @type {Array<{name: string, bin: string, structured: boolean, hasUsageLimits: boolean, promptVia: 'file'|'stdin'}>}
  */
 const AGENTS = [
   {
+    name: 'grok',
+    bin: 'grok',
+    structured: false,
+    // Grok has no session limit. It goes first so a Claude usage window is
+    // not the thing that decides whether the night works.
+    hasUsageLimits: false,
+    // `grok --help`: --prompt-file is "Single-turn prompt from a file".
+    promptVia: 'file'
+  },
+  {
     name: 'claude',
     bin: 'claude',
-    // -p is print/headless mode. --output-format json returns a STRUCTURED
-    // envelope (is_error, api_error_status, permission_denials, total_cost_usd)
-    // instead of prose, so a rate limit is detected by reading a field rather
-    // than by pattern-matching an error sentence that can change wording.
-    args: (prompt) => ['-p', prompt, '--output-format', 'json'],
     structured: true,
     // Claude enforces usage windows. When one is hit, the night must WAIT, not
     // spin: retrying immediately burns the hours the limit was going to clear in.
-    hasUsageLimits: true
-  },
-  {
-    name: 'grok',
-    bin: 'grok',
-    args: (prompt, cwd) => ['--always-approve', '--cwd', cwd, '-m', 'grok-4.6', '-p', prompt],
-    structured: false,
-    // Grok has no session limit, which is exactly why it is the fallback: when
-    // Claude's window closes, work continues instead of stopping.
-    hasUsageLimits: false
+    hasUsageLimits: true,
+    // `claude --help`: -p/--print is "useful for pipes", and --input-format
+    // text (the default) is the input format for --print. No positional
+    // prompt — the bytes are stdin.
+    promptVia: 'stdin'
   }
 ];
+
+/** Worktree file that holds the grok prompt. Never passed on the command line. */
+const PROMPT_FILE_NAME = 'OVERNIGHT_TASK.md';
 
 /**
  * Spend ceiling for one night. A trivial claude call cost $0.27; caps matter.
  *
  * This cannot bind on grok: the non-structured branch of dispatchFix hardcodes
- * costUsd: 0, and grok is the fallback that does most of the work once Claude's
- * window closes. The wall-clock deadline is the real cap.
+ * costUsd: 0, and grok is the agent that runs first. The wall-clock deadline
+ * is the real cap.
  */
 const COST_CAP_USD = Number(process.env.OVERNIGHT_COST_CAP_USD ?? 25);
 
@@ -265,6 +294,92 @@ function readCheckpoint() {
 function writeCheckpoint(state) {
   mkdirSync(stateDir(), { recursive: true });
   writeFileSync(checkpointPath(), `${JSON.stringify(state, null, 2)}\n`);
+}
+
+/**
+ * Local calendar date of an instant, `YYYY-MM-DD` in the machine timezone.
+ * @param {Date|number|string} instant
+ * @returns {string}
+ */
+function localDateKey(instant) {
+  const date = instant instanceof Date ? instant : new Date(instant);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Local `YYYYMMDD-HHMMSS` stamp used in archived checkpoint filenames.
+ * @param {Date} when
+ * @returns {string}
+ */
+function checkpointArchiveStamp(when) {
+  const pad = (value) => String(value).padStart(2, '0');
+  return (
+    `${when.getFullYear()}${pad(when.getMonth() + 1)}${pad(when.getDate())}` +
+    `-${pad(when.getHours())}${pad(when.getMinutes())}${pad(when.getSeconds())}`
+  );
+}
+
+/**
+ * Whether a checkpoint belongs to the night this run is finishing.
+ *
+ * A night is the local calendar date of the run's deadline. The deadline is
+ * what `resolveDeadline` computes (`--until`, default 06:00 local; a clock
+ * already past that hour rolls to the next day). The checkpoint's night is
+ * that same computation at `startedAt`, with `OVERNIGHT_DEADLINE_ISO` ignored
+ * so a one-off "stop now" override does not reclassify history.
+ *
+ * A crash at 02:00 therefore resumes a run that started at 23:30: both
+ * deadlines are 06:00 that morning, and the local dates match. A checkpoint
+ * whose deadline date is any earlier day is a previous night and must not
+ * resume. A missing or unparseable `startedAt` is not the current night —
+ * that is the input that used to resume a finished queue forever.
+ *
+ * @param {string|null|undefined} startedAt checkpoint startedAt
+ * @param {number} deadlineAt this run's deadline, epoch ms
+ * @param {string|boolean} [untilFlag] `--until` value; non-strings use the default
+ * @returns {boolean}
+ */
+function checkpointIsCurrentNight(startedAt, deadlineAt, untilFlag) {
+  if (typeof startedAt !== 'string' || !Number.isFinite(Date.parse(startedAt))) return false;
+  if (!Number.isFinite(deadlineAt)) return false;
+  const thenDeadline = resolveDeadline({
+    untilFlag: typeof untilFlag === 'string' ? untilFlag : undefined,
+    envIso: '',
+    now: new Date(startedAt)
+  });
+  return localDateKey(thenDeadline) === localDateKey(deadlineAt);
+}
+
+/**
+ * Archive a previous night's checkpoint and return a fresh one.
+ *
+ * Same-night checkpoints are returned unchanged so a crash, reboot or usage
+ * window later that night still resumes. The archive name is
+ * `checkpoint-<YYYYMMDD-HHMMSS>.json` (local time of `now`) beside the live
+ * checkpoint. This replaced the `wmic` block in `run-overnight.cmd`, which
+ * never ran on this machine.
+ *
+ * @param {{deadlineAt: number, untilFlag?: string|boolean, now?: Date}} opts
+ * @returns {{checkpoint: {completed: string[], spentUsd: number, startedAt: string|null}, archived: string|null}}
+ */
+function rolloverCheckpoint(opts) {
+  const now = opts.now ?? new Date();
+  const empty = { completed: [], spentUsd: 0, startedAt: null };
+  if (!existsSync(checkpointPath())) return { checkpoint: empty, archived: null };
+  const checkpoint = readCheckpoint();
+  if (checkpointIsCurrentNight(checkpoint.startedAt, opts.deadlineAt, opts.untilFlag)) {
+    return { checkpoint, archived: null };
+  }
+  mkdirSync(stateDir(), { recursive: true });
+  let dest = join(stateDir(), `checkpoint-${checkpointArchiveStamp(now)}.json`);
+  if (existsSync(dest)) {
+    dest = join(stateDir(), `checkpoint-${checkpointArchiveStamp(now)}-${process.pid}.json`);
+  }
+  renameSync(checkpointPath(), dest);
+  return { checkpoint: { ...empty }, archived: dest };
 }
 
 /**
@@ -579,6 +694,101 @@ function createWorktree(slug, repoRoot = getRepoRoot()) {
 }
 
 /**
+ * Write the prompt beside the worktree and return argv that does not contain it.
+ *
+ * FAIL INPUT: a prompt with spaces, newlines, `"`, `&` and `%` must not appear
+ * in `args`. On Windows those bytes are destroyed by cmd.exe before the child
+ * starts; a real receipt showed Claude answering `just "In"`.
+ *
+ * grok reads `OVERNIGHT_TASK.md` via `--prompt-file` (`grok --help`:
+ * "Single-turn prompt from a file"). claude gets the same bytes on stdin and
+ * no positional prompt (`claude --help`: `-p/--print` is useful for pipes,
+ * `--input-format text` is the default input format for `--print`).
+ *
+ * @param {{name: string, promptVia?: 'file'|'stdin'}} agent
+ * @param {string} prompt exact prompt text
+ * @param {string} cwd worktree directory
+ * @returns {{args: string[], input: string|null, promptFile: string|null}}
+ */
+function prepareAgentLaunch(agent, prompt, cwd) {
+  if (agent.promptVia === 'stdin' || agent.name === 'claude') {
+    return {
+      args: ['-p', '--output-format', 'json', '--input-format', 'text'],
+      input: prompt,
+      promptFile: null
+    };
+  }
+  const promptFile = join(cwd, PROMPT_FILE_NAME);
+  writeFileSync(promptFile, prompt, 'utf8');
+  return {
+    args: ['--always-approve', '--cwd', cwd, '-m', 'grok-4.6', '--prompt-file', promptFile],
+    input: null,
+    promptFile
+  };
+}
+
+/**
+ * Spawn one agent with the prompt kept off the command line.
+ *
+ * `shell` is false. grok and claude are `.exe` files on this machine
+ * (`where grok` → `grok.exe`, `where claude` → `claude.exe`); they do not
+ * need cmd.exe, and cmd.exe is what splits a free-text argument. The prompt
+ * file is removed after the child exits so `git add -A` cannot commit it.
+ *
+ * @param {{name: string, bin: string, promptVia?: 'file'|'stdin'}} agent
+ * @param {string} prompt exact prompt text
+ * @param {string} cwd worktree directory
+ * @param {{timeout?: number, env?: NodeJS.ProcessEnv, run?: typeof run, bin?: string, argsPrefix?: string[]}} [opts]
+ * @returns {{status: number|null, stdout: string, stderr: string, signal?: NodeJS.Signals|null, error?: {code: string|null, message: string}|null}}
+ */
+function spawnAgent(agent, prompt, cwd, opts = {}) {
+  const plan = prepareAgentLaunch(agent, prompt, cwd);
+  const runFn = opts.run ?? run;
+  const args = [...(opts.argsPrefix ?? []), ...plan.args];
+  /** @type {{cwd?: string, timeout?: number, env?: NodeJS.ProcessEnv, shell: boolean, input?: string}} */
+  const spawnOpts = {
+    cwd,
+    timeout: opts.timeout,
+    env: opts.env,
+    shell: false
+  };
+  if (plan.input != null) spawnOpts.input = plan.input;
+  try {
+    return runFn(opts.bin ?? agent.bin, args, spawnOpts);
+  } finally {
+    if (plan.promptFile && existsSync(plan.promptFile)) {
+      try {
+        unlinkSync(plan.promptFile);
+      } catch {
+        // the agent may already have removed it
+      }
+    }
+  }
+}
+
+/**
+ * Whether grok failed before it could do the work.
+ *
+ * A non-zero exit that is not a spending-limit 403 and not a timeout means
+ * grok ran. The night must not also pay Claude for that item. `status === null`
+ * is a hang, a timeout (`ETIMEDOUT`) or a spawn failure — grok did not run.
+ *
+ * FAIL INPUT: stderr `403 spending limit reached` → true.
+ * FAIL INPUT: `{status: null, error: {code: 'ETIMEDOUT'}}` → true.
+ * A plain exit 1 with no 403 → false.
+ *
+ * @param {{status: number|null, stdout?: string, stderr?: string, error?: {code?: string|null}|null}} res
+ * @returns {boolean}
+ */
+function grokCannotRun(res) {
+  if (res.status === null) return true;
+  const text = `${res.stdout ?? ''}\n${res.stderr ?? ''}`;
+  if (/spending limit/i.test(text)) return true;
+  if (/\b403\b/.test(text) && /spend|billing|credit|quota|payment|limit/i.test(text)) return true;
+  return false;
+}
+
+/**
  * Ask a headless agent to fix the named failing rules, in a worktree.
  *
  * The prompt names the SPECIFIC failing rule ids rather than saying "improve the
@@ -590,10 +800,11 @@ function createWorktree(slug, repoRoot = getRepoRoot()) {
  * @param {string} app slug
  * @param {string[]} blockers failing rule ids
  * @param {string} cwd worktree to work in
- * @param {{deadlineAt?: number, itemTimeoutMs?: number}} [opts] deadline clamp
- * @returns {{agent: string|null, status: number|null, output: string}} result
+ * @param {{deadlineAt?: number, itemTimeoutMs?: number, run?: typeof run}} [opts] deadline clamp
+ * @returns {{agent: string|null, status: number|null, ok?: boolean, costUsd?: number, output: string}} result
  */
 function dispatchFix(app, blockers, cwd, opts = {}) {
+  const runFn = opts.run ?? run;
   const prompt =
     `In ${app}, these RedAnvil gate rules are failing:\n\n` +
     `${blockers.map((b) => `  - ${b}`).join('\n')}\n\n` +
@@ -612,7 +823,9 @@ function dispatchFix(app, blockers, cwd, opts = {}) {
   const LIMIT_BACKOFF_MS = [5 * 60_000, 15 * 60_000, 30 * 60_000, 60 * 60_000];
 
   for (const agent of AGENTS) {
-    const probe = run(process.platform === 'win32' ? 'where' : 'which', [agent.bin], { timeout: 10_000 });
+    const probe = runFn(process.platform === 'win32' ? 'where' : 'which', [agent.bin], {
+      timeout: 10_000
+    });
     if (probe.status !== 0) continue;
 
     for (let attempt = 0; attempt <= LIMIT_BACKOFF_MS.length; attempt += 1) {
@@ -628,10 +841,20 @@ function dispatchFix(app, blockers, cwd, opts = {}) {
           output: 'deadline reached before dispatch'
         };
       }
-      const res = run(agent.bin, agent.args(prompt, cwd), { cwd, timeout });
+      const res = spawnAgent(agent, prompt, cwd, { run: runFn, timeout });
       const verdict = agent.structured
         ? classifyClaude(res)
         : { ok: res.status === 0, rateLimited: false, costUsd: 0, detail: `exit ${res.status}` };
+
+      // Grok is first. A spending-limit 403 or a hang means it never ran, so
+      // Claude still gets the item. A grok process that actually exited is
+      // the result — do not also call Claude.
+      if (!agent.structured && grokCannotRun(res)) {
+        process.stdout.write(
+          `    ${agent.name} cannot run (${verdict.detail}); handing off\n`
+        );
+        break;
+      }
 
       if (verdict.ok || !verdict.rateLimited) {
         return {
@@ -1342,10 +1565,50 @@ function isMainModule() {
 }
 
 /**
+ * Write or clear `.redanvil/overnight/ALERT.json` at the end of a night.
+ *
+ * A night that tried items and produced no receipt is the failure that ran
+ * for 32 nights with only a log line. Skipped items (already done this night,
+ * or the deadline passed before they started) are not that failure. One
+ * receipt clears a stale alert from an earlier night.
+ *
+ * FAIL INPUT: receipts 0 and attempted ids non-empty → file exists, return 1.
+ * One receipt → file removed, return 0.
+ *
+ * @param {{receipts: number, attemptedIds: string[], at: string}} info
+ * @returns {number} process exit code for the night
+ */
+function settleNightAlert(info) {
+  const path = join(stateDir(), 'ALERT.json');
+  if (info.receipts === 0 && info.attemptedIds.length > 0) {
+    mkdirSync(stateDir(), { recursive: true });
+    writeFileSync(
+      path,
+      `${JSON.stringify(
+        {
+          at: info.at,
+          reason: 'night finished with 0 receipts',
+          items: info.attemptedIds,
+          receipts: 0
+        },
+        null,
+        2
+      )}\n`
+    );
+    process.stdout.write(
+      `ALERT: night finished with 0 receipts (${info.attemptedIds.length} item(s) not skipped)\n`
+    );
+    return 1;
+  }
+  if (info.receipts >= 1 && existsSync(path)) unlinkSync(path);
+  return 0;
+}
+
+/**
  * Run the overnight loop once. Exported so tests can inject a clock and a queue.
  *
  * @param {{args?: Record<string, string|boolean>, nowFn?: () => number, deadlineAt?: number, queue?: Array, loki?: {available: boolean, version: string|null}, repoRoot?: string, fetchImpl?: typeof fetch, dispatchFix?: Function, run?: typeof run}} [opts]
- * @returns {Promise<{summaryPath: string, receipts: string[], stoppedEarly: boolean, itemsSkipped: number, deadlineAt: number}>}
+ * @returns {Promise<{summaryPath: string, receipts: string[], stoppedEarly: boolean, itemsSkipped: number, deadlineAt: number, exitCode: number}>}
  */
 async function runOvernight(opts = {}) {
   if (opts.repoRoot) process.env.REDANVIL_REPO = opts.repoRoot;
@@ -1374,7 +1637,14 @@ async function runOvernight(opts = {}) {
       `; deadline=${new Date(deadlineAt).toISOString()}\n`
   );
 
-  const checkpoint = readCheckpoint();
+  const rolled = rolloverCheckpoint({
+    deadlineAt,
+    untilFlag: args.until
+  });
+  const checkpoint = rolled.checkpoint;
+  if (rolled.archived) {
+    process.stdout.write(`archived previous-night checkpoint -> ${rolled.archived}\n`);
+  }
   if (!checkpoint.startedAt) checkpoint.startedAt = new Date().toISOString();
   if (checkpoint.completed.length > 0) {
     process.stdout.write(
@@ -1385,6 +1655,8 @@ async function runOvernight(opts = {}) {
   const receipts = [];
   let stoppedEarly = false;
   let itemsSkipped = 0;
+  /** @type {string[]} */
+  const attemptedIds = [];
   /** @type {string|null} */
   let stopReason = null;
 
@@ -1413,6 +1685,7 @@ async function runOvernight(opts = {}) {
     }
 
     const itemTimeoutMs = clampToRemaining(ITEM_TIMEOUT_MS, remaining);
+    attemptedIds.push(item.id);
     process.stdout.write(`\n--- ${item.id}: ${item.summary}\n`);
     try {
       const receiptPath = await processItem(item, {
@@ -1441,11 +1714,12 @@ async function runOvernight(opts = {}) {
   }
 
   const summaryPath = join(stateDir(), 'last-run.json');
+  const finishedAtMs = nowFn();
   writeFileSync(
     summaryPath,
     `${JSON.stringify(
       {
-        finishedAt: new Date(nowFn()).toISOString(),
+        finishedAt: new Date(finishedAtMs).toISOString(),
         executor: loki.available ? 'loki' : 'grok',
         lokiAvailable: loki.available,
         items: queue.length,
@@ -1460,16 +1734,26 @@ async function runOvernight(opts = {}) {
     )}\n`
   );
 
+  const exitCode = settleNightAlert({
+    receipts: receipts.length,
+    attemptedIds,
+    at: new Date(finishedAtMs).toISOString()
+  });
+
   process.stdout.write(`\novernight: ${receipts.length}/${queue.length} item(s) produced a receipt\n`);
   process.stdout.write(`summary: ${summaryPath}\n`);
-  return { summaryPath, receipts, stoppedEarly, itemsSkipped, deadlineAt };
+  return { summaryPath, receipts, stoppedEarly, itemsSkipped, deadlineAt, exitCode };
 }
 
 if (isMainModule()) {
-  void runOvernight().catch((err) => {
-    process.stderr.write(`${String(err)}\n`);
-    process.exitCode = 1;
-  });
+  void runOvernight()
+    .then((result) => {
+      if (result.exitCode) process.exitCode = result.exitCode;
+    })
+    .catch((err) => {
+      process.stderr.write(`${String(err)}\n`);
+      process.exitCode = 1;
+    });
 }
 
 export {
@@ -1500,5 +1784,12 @@ export {
   getRepoRoot,
   createWorktree,
   headCommit,
-  classifyClaude
+  classifyClaude,
+  AGENTS,
+  checkpointIsCurrentNight,
+  rolloverCheckpoint,
+  prepareAgentLaunch,
+  spawnAgent,
+  grokCannotRun,
+  settleNightAlert
 };

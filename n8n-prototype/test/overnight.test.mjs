@@ -10,6 +10,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync
@@ -973,5 +974,393 @@ describe('7. parseArgs already accepts --until and --allow-deploy', () => {
     const args = overnight.parseArgs(['--until', '06:00', '--allow-deploy']);
     assert.equal(args.until, '06:00');
     assert.equal(args['allow-deploy'], true);
+  });
+});
+
+/**
+ * Capture stdout while still letting the test runner print.
+ * @param {() => Promise<T>} fn
+ * @returns {Promise<{result: T, stdout: string}>}
+ * @template T
+ */
+async function withStdout(fn) {
+  /** @type {string[]} */
+  const chunks = [];
+  const original = process.stdout.write.bind(process.stdout);
+  process.stdout.write = (chunk, encoding, callback) => {
+    chunks.push(typeof chunk === 'string' ? chunk : chunk.toString('utf8'));
+    return original(chunk, encoding, callback);
+  };
+  try {
+    const result = await fn();
+    return { result, stdout: chunks.join('') };
+  } finally {
+    process.stdout.write = original;
+  }
+}
+
+/**
+ * @param {string} repo
+ * @param {{completed: string[], spentUsd: number, startedAt: string|null}} state
+ */
+function writeCheckpointFile(repo, state) {
+  const dir = join(repo, '.redanvil', 'overnight');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'checkpoint.json'), `${JSON.stringify(state, null, 2)}\n`);
+}
+
+/**
+ * Temp repo with an empty results feed. Caller deletes it.
+ * @param {string} label
+ * @returns {string}
+ */
+function makeOvernightRepo(label) {
+  const repo = mkdtempSync(join(tmpdir(), label));
+  mkdirSync(join(repo, 'results'), { recursive: true });
+  writeFileSync(join(repo, 'results', 'all.json'), '[]\n');
+  return repo;
+}
+
+describe('8. checkpoint night rollover', () => {
+  test('FAIL INPUT: a 2026-08-21 start is not the night whose deadline is 2026-09-23', () => {
+    const started = new Date(2026, 7, 21, 23, 30, 0, 0).toISOString();
+    const deadline = new Date(2026, 8, 23, 6, 0, 0, 0).getTime();
+    assert.equal(overnight.checkpointIsCurrentNight(started, deadline, '06:00'), false);
+  });
+
+  test('a 23:30 start resumed at 02:00 is the same night (deadline 06:00)', () => {
+    const started = new Date(2026, 8, 22, 23, 30, 0, 0).toISOString();
+    const deadline = new Date(2026, 8, 23, 6, 0, 0, 0).getTime();
+    assert.equal(overnight.checkpointIsCurrentNight(started, deadline), true);
+  });
+
+  test('FAIL INPUT: missing startedAt is not the current night', () => {
+    assert.equal(overnight.checkpointIsCurrentNight(null, Date.now()), false);
+    assert.equal(overnight.checkpointIsCurrentNight('not-a-date', Date.now()), false);
+  });
+
+  test('checkpoint from a previous night is archived and the night starts fresh', async () => {
+    const repo = makeOvernightRepo('overnight-prev-');
+    const started = new Date(2026, 7, 21, 23, 30, 0, 0);
+    writeCheckpointFile(repo, {
+      completed: ['item-old'],
+      spentUsd: 1.25,
+      startedAt: started.toISOString()
+    });
+    const prevRepo = process.env.REDANVIL_REPO;
+    try {
+      const { result, stdout } = await withStdout(() =>
+        overnight.runOvernight({
+          args: { 'dry-run': true },
+          repoRoot: repo,
+          // Far enough ahead that the item is started. The checkpoint's own
+          // night is 2026-08-22 (06:00 after a 23:30 start), so this is not
+          // that night. A deadline of 06:00 on the day the test runs is
+          // already in the past by afternoon and would skip the item.
+          deadlineAt: Date.now() + 60_000,
+          queue: [{ id: 'item-old', kind: 'fix-known-bug', summary: 'previous night item' }],
+          loki: { available: false, version: null }
+        })
+      );
+      assert.equal(result.receipts.length, 1, stdout);
+      assert.equal(result.exitCode, 0, stdout);
+      assert.match(stdout, /archived previous-night checkpoint/);
+      assert.doesNotMatch(stdout, /resuming:/);
+      assert.match(stdout, /previous night item/);
+      const stateDir = join(repo, '.redanvil', 'overnight');
+      const archives = readdirSync(stateDir).filter((name) => name.startsWith('checkpoint-'));
+      assert.equal(archives.length, 1, archives.join(','));
+      assert.match(archives[0], /^checkpoint-\d{8}-\d{6}(?:-\d+)?\.json$/);
+      const archived = JSON.parse(readFileSync(join(stateDir, archives[0]), 'utf8'));
+      assert.deepEqual(archived.completed, ['item-old']);
+      assert.equal(archived.startedAt, started.toISOString());
+      const live = JSON.parse(readFileSync(join(stateDir, 'checkpoint.json'), 'utf8'));
+      assert.deepEqual(live.completed, ['item-old']);
+      assert.notEqual(live.startedAt, started.toISOString());
+      assert.equal(existsSync(join(stateDir, 'ALERT.json')), false);
+    } finally {
+      process.env.REDANVIL_REPO = prevRepo;
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test('checkpoint from the same night is resumed, not archived', async () => {
+    const repo = makeOvernightRepo('overnight-same-');
+    const started = new Date(2026, 8, 22, 23, 30, 0, 0);
+    writeCheckpointFile(repo, {
+      completed: ['item-same'],
+      spentUsd: 0.5,
+      startedAt: started.toISOString()
+    });
+    const prevRepo = process.env.REDANVIL_REPO;
+    try {
+      const { result, stdout } = await withStdout(() =>
+        overnight.runOvernight({
+          args: { 'dry-run': true },
+          repoRoot: repo,
+          // Same deadline date the 23:30 start belongs to: 06:00 the next
+          // morning. Build that instant from the start so it stays in the
+          // future whenever this test runs after 06:00.
+          deadlineAt: new Date(
+            started.getFullYear(),
+            started.getMonth(),
+            started.getDate() + 1,
+            6,
+            0,
+            0,
+            0
+          ).getTime(),
+          nowFn: () => started.getTime() + 2 * 60 * 60 * 1000,
+          queue: [{ id: 'item-same', kind: 'fix-known-bug', summary: 'same night item' }],
+          loki: { available: false, version: null }
+        })
+      );
+      assert.equal(result.receipts.length, 0, stdout);
+      assert.equal(result.exitCode, 0, stdout);
+      assert.match(stdout, /resuming: 1 item/);
+      assert.match(stdout, /already done, skipping/);
+      assert.doesNotMatch(stdout, /same night item/);
+      assert.doesNotMatch(stdout, /archived previous-night/);
+      const stateDir = join(repo, '.redanvil', 'overnight');
+      const archives = readdirSync(stateDir).filter((name) => name.startsWith('checkpoint-'));
+      assert.equal(archives.length, 0);
+      const live = JSON.parse(readFileSync(join(stateDir, 'checkpoint.json'), 'utf8'));
+      assert.equal(live.startedAt, started.toISOString());
+      assert.deepEqual(live.completed, ['item-same']);
+      assert.equal(existsSync(join(stateDir, 'ALERT.json')), false);
+    } finally {
+      process.env.REDANVIL_REPO = prevRepo;
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('9. prompt delivery on win32', () => {
+  const PROMPT = 'alpha beta\nline "two" & three %PERCENT%\n';
+
+  /**
+   * Child that echoes the prompt file or stdin, and fails if the prompt
+   * text itself was placed on argv (cmd.exe would already have eaten it).
+   * @param {string} path
+   */
+  function writeEchoAgent(path) {
+    writeFileSync(
+      path,
+      [
+        "import { readFileSync } from 'node:fs';",
+        'const argv = process.argv.slice(2);',
+        "if (argv.some((arg) => arg.includes('%PERCENT%') || arg.includes('line \"two\"'))) {",
+        "  process.stderr.write('LEAK');",
+        '  process.exit(2);',
+        '}',
+        "const fileFlag = argv.indexOf('--prompt-file');",
+        'if (fileFlag >= 0) process.stdout.write(readFileSync(argv[fileFlag + 1]));',
+        'else process.stdout.write(readFileSync(0));',
+        ''
+      ].join('\n')
+    );
+  }
+
+  test('spaces, newlines, quotes, & and % reach the child byte-identical', () => {
+    assert.equal(process.platform, 'win32');
+    const parent = mkdtempSync(join(tmpdir(), 'overnight-prompt-'));
+    const cwd = join(parent, 'space & pct');
+    mkdirSync(cwd);
+    const script = join(parent, 'echo-agent.mjs');
+    writeEchoAgent(script);
+    try {
+      for (const agent of overnight.AGENTS) {
+        const plan = overnight.prepareAgentLaunch(agent, PROMPT, cwd);
+        assert.ok(
+          plan.args.every((arg) => !arg.includes('%PERCENT%') && !arg.includes('\n') && !arg.includes('line "two"')),
+          `${agent.name} put the prompt on argv: ${JSON.stringify(plan.args)}`
+        );
+        if (agent.promptVia === 'file') {
+          assert.equal(readFileSync(plan.promptFile, 'utf8'), PROMPT);
+          assert.equal(plan.input, null);
+        } else {
+          assert.equal(plan.input, PROMPT);
+        }
+        const res = overnight.spawnAgent(agent, PROMPT, cwd, {
+          bin: process.execPath,
+          argsPrefix: [script],
+          timeout: 15_000
+        });
+        assert.equal(res.status, 0, `${agent.name} stderr=${res.stderr}`);
+        assert.equal(res.stdout, PROMPT, `${agent.name} delivered ${JSON.stringify(res.stdout)}`);
+      }
+    } finally {
+      rmSync(parent, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('10. executor order', () => {
+  test('order is grok then claude', () => {
+    assert.deepEqual(
+      overnight.AGENTS.map((agent) => agent.name),
+      ['grok', 'claude']
+    );
+  });
+
+  /**
+   * @param {(cmd: string, args: string[], opts: object) => {status: number|null, stdout: string, stderr: string, error?: object|null}} run
+   */
+  function dispatchWith(run) {
+    const cwd = mkdtempSync(join(tmpdir(), 'overnight-order-'));
+    try {
+      return overnight.dispatchFix('demo', ['lg-shipped'], cwd, {
+        run,
+        deadlineAt: Date.now() + 120_000,
+        itemTimeoutMs: 5_000
+      });
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  }
+
+  test('FAIL INPUT: grok spending-limit 403 hands off to claude, and claude is not first', () => {
+    /** @type {string[]} */
+    const seen = [];
+    const result = dispatchWith((cmd, args, opts) => {
+      seen.push(cmd);
+      if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
+      if (cmd === 'grok' || cmd === 'claude') {
+        assert.equal(opts.shell, false);
+        assert.ok(!args.some((arg) => arg.includes('\n') || arg.includes('RedAnvil gate rules')));
+      }
+      if (cmd === 'grok') {
+        return { status: 1, stdout: '', stderr: '403 spending limit reached', error: null };
+      }
+      if (cmd === 'claude') {
+        return {
+          status: 0,
+          stdout: '{"is_error":false,"subtype":"success","total_cost_usd":0}',
+          stderr: ''
+        };
+      }
+      return { status: 1, stdout: '', stderr: `unexpected ${cmd}` };
+    });
+    assert.deepEqual(
+      seen.filter((cmd) => cmd === 'grok' || cmd === 'claude'),
+      ['grok', 'claude']
+    );
+    assert.equal(result.agent, 'claude');
+  });
+
+  test('a grok exit 1 that is not a 403 does not fall through to claude', () => {
+    /** @type {string[]} */
+    const seen = [];
+    const result = dispatchWith((cmd) => {
+      seen.push(cmd);
+      if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
+      if (cmd === 'grok') return { status: 1, stdout: '', stderr: 'edit failed', error: null };
+      if (cmd === 'claude') {
+        return { status: 0, stdout: '{"is_error":false,"total_cost_usd":0}', stderr: '' };
+      }
+      return { status: 1, stdout: '', stderr: '' };
+    });
+    assert.deepEqual(
+      seen.filter((cmd) => cmd === 'grok' || cmd === 'claude'),
+      ['grok']
+    );
+    assert.equal(result.agent, 'grok');
+    assert.equal(result.ok, false);
+  });
+
+  test('FAIL INPUT: grok hang (status null) hands off to claude', () => {
+    const result = dispatchWith((cmd) => {
+      if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
+      if (cmd === 'grok') {
+        return { status: null, stdout: '', stderr: '', error: { code: 'ETIMEDOUT', message: 'spawnSync ETIMEDOUT' } };
+      }
+      if (cmd === 'claude') {
+        return { status: 0, stdout: '{"is_error":false,"total_cost_usd":0}', stderr: '' };
+      }
+      return { status: 1, stdout: '', stderr: '' };
+    });
+    assert.equal(result.agent, 'claude');
+    assert.equal(overnight.grokCannotRun({ status: null, stdout: '', stderr: '', error: { code: 'ETIMEDOUT' } }), true);
+    assert.equal(overnight.grokCannotRun({ status: 1, stdout: '', stderr: 'edit failed' }), false);
+  });
+});
+
+describe('11. zero-receipt alert', () => {
+  test('FAIL INPUT: 0 receipts with an item not skipped writes ALERT.json and returns non-zero', async () => {
+    const repo = makeOvernightRepo('overnight-alert-');
+    const prevRepo = process.env.REDANVIL_REPO;
+    try {
+      const { result, stdout } = await withStdout(() =>
+        overnight.runOvernight({
+          args: {},
+          repoRoot: repo,
+          deadlineAt: Date.now() + 60_000,
+          queue: [{ id: 'item-z', kind: 'drift', summary: 'throws before a receipt' }],
+          loki: { available: false, version: null },
+          run: () => {
+            throw new Error('no executor');
+          }
+        })
+      );
+      assert.equal(result.receipts.length, 0);
+      assert.equal(result.exitCode, 1);
+      assert.match(stdout, /(^|\n)ALERT:/);
+      const alert = JSON.parse(
+        readFileSync(join(repo, '.redanvil', 'overnight', 'ALERT.json'), 'utf8')
+      );
+      assert.equal(alert.receipts, 0);
+      assert.equal(typeof alert.at, 'string');
+      assert.ok(alert.at.length > 0);
+      assert.equal(alert.reason, 'night finished with 0 receipts');
+      assert.deepEqual(alert.items, ['item-z']);
+    } finally {
+      process.env.REDANVIL_REPO = prevRepo;
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test('a receipt deletes a stale ALERT.json', async () => {
+    const repo = makeOvernightRepo('overnight-alert-clear-');
+    const alertFile = join(repo, '.redanvil', 'overnight', 'ALERT.json');
+    mkdirSync(join(repo, '.redanvil', 'overnight'), { recursive: true });
+    writeFileSync(alertFile, '{"at":"2000-01-01T00:00:00.000Z","reason":"stale","items":[],"receipts":0}\n');
+    const prevRepo = process.env.REDANVIL_REPO;
+    try {
+      const { result } = await withStdout(() =>
+        overnight.runOvernight({
+          args: { 'dry-run': true },
+          repoRoot: repo,
+          deadlineAt: Date.now() + 60_000,
+          queue: [{ id: 'item-a', kind: 'fix-known-bug', summary: 'produces a receipt' }],
+          loki: { available: false, version: null }
+        })
+      );
+      assert.equal(result.receipts.length, 1);
+      assert.equal(result.exitCode, 0);
+      assert.equal(existsSync(alertFile), false);
+    } finally {
+      process.env.REDANVIL_REPO = prevRepo;
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  test('every item skipped does not alert and exits 0', async () => {
+    const repo = makeOvernightRepo('overnight-alert-skip-');
+    const prevRepo = process.env.REDANVIL_REPO;
+    try {
+      const result = await overnight.runOvernight({
+        args: { 'dry-run': true },
+        repoRoot: repo,
+        deadlineAt: Date.parse('2000-01-01T00:00:00.000Z'),
+        queue: [{ id: 'item-a', kind: 'fix-known-bug', summary: 'too late' }],
+        loki: { available: false, version: null }
+      });
+      assert.equal(result.receipts.length, 0);
+      assert.equal(result.exitCode, 0);
+      assert.equal(existsSync(join(repo, '.redanvil', 'overnight', 'ALERT.json')), false);
+    } finally {
+      process.env.REDANVIL_REPO = prevRepo;
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 });

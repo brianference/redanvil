@@ -7,9 +7,14 @@ REM entries the scheduler's environment does not have: the scheduler starts with
 REM a minimal profile, so `claude` and `grok` are simply not found and every item
 REM silently reports "no headless agent could run".
 REM
-REM The checkpoint is cleared at the START of each night on purpose. It exists so
-REM a crash, reboot or usage window mid-night resumes where it stopped -- not so
-REM that tonight skips work because last night finished it.
+REM The checkpoint exists so a crash, reboot or usage window mid-night resumes
+REM where it stopped -- not so that tonight skips work because last night
+REM finished it. Per-night rollover lives in overnight.mjs: a checkpoint whose
+REM night (the local calendar date of that run's deadline) is not tonight is
+REM archived there, and a crash later the same night still resumes. Do not
+REM archive from this script. The old wmic block never ran on this machine
+REM (wmic is gone), %STAMP% expanded before it was set, and the move error
+REM was hidden.
 
 setlocal
 
@@ -25,15 +30,11 @@ cd /d "%REDANVIL_REPO%" || exit /b 1
 
 if not exist ".redanvil\overnight" mkdir ".redanvil\overnight"
 
-REM Archive last night's checkpoint rather than deleting it, so a morning
-REM question about what ran has an answer.
-if exist ".redanvil\overnight\checkpoint.json" (
-  for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value 2^>nul ^| find "="') do set "STAMP=%%I"
-  move /y ".redanvil\overnight\checkpoint.json" ".redanvil\overnight\checkpoint-%STAMP:~0,8%-%STAMP:~8,6%.json" >nul 2>&1
-)
-
 if not exist "logs" mkdir "logs"
 
 node "n8n-prototype\loki\overnight.mjs" --allow-deploy >> "logs\overnight.log" 2>&1
+set "EXITCODE=%ERRORLEVEL%"
 
-endlocal
+REM endlocal resets ERRORLEVEL. A zero-receipt night exits non-zero from
+REM overnight.mjs; without this, the scheduled task would still look green.
+endlocal & exit /b %EXITCODE%
