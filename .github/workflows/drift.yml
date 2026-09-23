@@ -23,6 +23,15 @@ permissions:
 jobs:
   drift:
     runs-on: ubuntu-latest
+    # A clean run of the re-gate step itself is about 3 minutes (run
+    # 35763018220: verdicts parsed at 17:50:22, coverage mismatch at 17:53:22)
+    # and the whole job, dying at that first re-gate, finishes in 5. The same
+    # workflow has also hung for 48 and 49 minutes (runs 34883822976 and
+    # 34507788362) with no timeout, which is how a stuck runner burns an hour.
+    # 20 minutes is the cap already used by results-provenance and
+    # dashboard-provenance for one gate reproduction: enough for this job's
+    # live audits plus both re-gates, and short enough to cut the hang.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
