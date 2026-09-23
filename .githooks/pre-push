@@ -2,11 +2,15 @@
 # pre-push — refuse a push when any app in the push range is below the finish line.
 #
 # The range is the diff from the remote tip to the local tip. A new branch
-# (remote sha all zeros) is the whole tree at the local tip, not an empty
-# range and not "no refs". An app directory or results/<slug>.json checks
-# that app. A path in SHARED_PREFIXES (meets_the_bar.mjs: design-system/) is
-# shipped by every app, so that push checks every gated app. Other paths,
-# including tooling, check none; CI re-scores every app anyway.
+# (remote sha all zeros) is the diff against the merge-base with the remote
+# default (refs/remotes/origin/HEAD, else origin/master, else origin/main).
+# Only when none of those resolve is the range the whole tip. A remote tip
+# that is not in the local object database refuses the push. A deletion adds
+# no files: a deletion-only push checks nothing, and a mixed push checks
+# only the updates. An app directory or results/<slug>.json checks that app.
+# A path in SHARED_PREFIXES (meets_the_bar.mjs: design-system/) is shipped by
+# every app, so that push checks every gated app. Other paths, including
+# tooling, check none; CI re-scores every app anyway.
 #
 # The finish line (defined once in .github/scripts/meets_the_bar.mjs):
 #   gate score >= 90 AND zero failing rules
@@ -68,10 +72,16 @@ while read -r local_ref local_sha remote_ref remote_sha
 do
   # Skip branch deletions (local sha all zeros). A sha that merely starts
   # with 0 is a normal commit — treating it as a deletion dropped the ref
-  # and the empty-stdin path then checked every app.
+  # and the empty-stdin path then checked every app. A deletion is still a
+  # ref: counting it keeps a deletion-only push off the empty-stdin path,
+  # which checks every gated app. The deletion adds no paths, so that push
+  # checks nothing, and a mixed push checks only the update.
   case "$local_sha" in
     *[!0]*) ;;
-    *) continue ;;
+    *)
+      HAD_REF=1
+      continue
+      ;;
   esac
   HAD_REF=1
   # An empty remote sha is how some git versions spell "new branch".

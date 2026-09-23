@@ -178,7 +178,7 @@ export function checkContract(appDir, c) {
   }
 
   // Only read text when there is something to assert about its contents.
-  if (c.mustContain?.length || c.mustNotContain?.length) {
+  if (c.mustContain?.length || c.mustNotContain?.length || c.mustMatch?.length) {
     let text = '';
     try {
       text = readFileSync(full, 'utf8');
@@ -193,6 +193,20 @@ export function checkContract(appDir, c) {
     for (const needle of c.mustContain ?? []) {
       if (!haystack.includes(needle.toLowerCase())) {
         reasons.push(`${c.path} does not record "${needle}" -- ${c.why}`);
+      }
+    }
+    // `m` so `^` is each line, which is how decide.mjs scans for `TOKEN: value`.
+    // A substring check matched the word inside "nothing was DECIDED".
+    for (const source of c.mustMatch ?? []) {
+      let pattern;
+      try {
+        pattern = new RegExp(source, 'm');
+      } catch (err) {
+        reasons.push(`${c.path} has an invalid mustMatch /${source}/ (${String(err)}) -- ${c.why}`);
+        continue;
+      }
+      if (!pattern.test(text)) {
+        reasons.push(`${c.path} does not match /${source}/ -- ${c.why}`);
       }
     }
     // Strip the places where a marker is being NAMED rather than left unfilled.

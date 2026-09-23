@@ -30,6 +30,8 @@
  *   logo role writes a `logos/raw/` working directory, and a recursive count
  *   lets throwaway candidates there stand in for the five finished marks.
  * @property {string[]} [mustContain] substrings that must appear in a text file
+ * @property {string[]} [mustMatch] regular expressions that must match a text file.
+ *   Compiled with the multiline flag, so `^` is the start of a line.
  * @property {string[]} [mustNotContain] substrings that disqualify it (placeholders)
  * @property {boolean} [owned] this step writes the path. A content-hash change
  *   of it is what proves the step ran. At most one contract per step is owned.
@@ -333,19 +335,26 @@ export const PROCESS = [
         why: 'decide records the choices it verified; a DECISION.md left by an earlier step cannot prove this step ran'
       },
       {
+        // Same line decide.mjs accepts (`^\s*DECIDED:\s*\S`), not the word
+        // "DECIDED" inside a sentence. No minBytes floor: auto-decide.mjs
+        // appends onto whatever OPEN note the layout step left. Measured
+        // 2026-09-23, a 5-byte "OPEN\n" plus that append is 342 bytes, under
+        // the old 600 floor, so an auto-gates run could not pass decide.
+        // A one-line `DECIDED: x` that decide.mjs accepts is 11 bytes.
         path: 'design-refs/design-options/DECISION.md',
         kind: 'file',
         input: true,
-        minBytes: 600,
-        mustContain: ['DECIDED'],
+        mustMatch: ['^\\s*DECIDED:\\s*\\S'],
         why: 'the build must read a recorded choice, never infer one'
       },
       {
+        // Measured the same way: logo's auto-decide output from "OPEN\n" is
+        // 317 bytes and palette's is 338. The old 400-byte palette floor
+        // rejected that file. `CHOSEN: x` is 10 bytes and decide.mjs accepts it.
         path: 'design-refs/logos/DECISION.md',
         kind: 'file',
         input: true,
-        minBytes: 300,
-        mustContain: ['CHOSEN'],
+        mustMatch: ['^\\s*CHOSEN:\\s*\\S'],
         why: 'the chosen mark must be named in writing, or a later worktree ships whatever it finds'
       },
       {
@@ -356,8 +365,7 @@ export const PROCESS = [
         path: 'design-refs/palettes/DECISION.md',
         kind: 'file',
         input: true,
-        minBytes: 400,
-        mustContain: ['CHOSEN'],
+        mustMatch: ['^\\s*CHOSEN:\\s*\\S'],
         why: 'the palette must be a recorded owner choice, never a default carried over from whichever layout option happened to win'
       }
     ]
