@@ -212,11 +212,11 @@ describe('job status helpers', () => {
   });
 
   it('numbers a known step and leaves an unknown id unnumbered', () => {
-    expect(en.jobStatus.stepProgress(6, 24, 'Brand marks')).toBe('Step 6 of 24 -- Brand marks');
+    expect(en.jobStatus.stepProgress(6, 24, 'Brand marks')).toBe('Step 6 of 24 · Brand marks');
 
     const logo = formatBuildStepLine('logo', en.jobStatus.steps, en.jobStatus.stepProgress);
     expect(logo).toEqual({
-      line: 'Step 6 of 24 -- Brand marks',
+      line: 'Step 6 of 24 · Brand marks',
       index: 6,
       total: 24,
       percent: 25
@@ -225,12 +225,12 @@ describe('job status helpers', () => {
     const first = formatBuildStepLine('prd', en.jobStatus.steps, en.jobStatus.stepProgress);
     expect(first.index).toBe(1);
     expect(first.total).toBe(24);
-    expect(first.line.startsWith('Step 1 of 24 -- ')).toBe(true);
+    expect(first.line.startsWith('Step 1 of 24 · ')).toBe(true);
 
     const last = formatBuildStepLine('ship', en.jobStatus.steps, en.jobStatus.stepProgress);
     expect(last.index).toBe(24);
     expect(last.percent).toBe(100);
-    expect(last.line.startsWith('Step 24 of 24 -- ')).toBe(true);
+    expect(last.line.startsWith('Step 24 of 24 · ')).toBe(true);
 
     const unknown = formatBuildStepLine(
       'install-deps',

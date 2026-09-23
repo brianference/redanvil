@@ -547,7 +547,7 @@ export const en = {
      * @returns The panel line.
      */
     stepProgress: (index: number, total: number, label: string): string =>
-      `Step ${index} of ${total} -- ${label}`,
+      `Step ${index} of ${total} · ${label}`,
     openDeploy: 'Open the deployed app',
     errors: {
       invalid: 'Could not read the build status',
