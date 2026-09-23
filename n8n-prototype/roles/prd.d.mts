@@ -91,21 +91,103 @@ export declare function derivePicks(group: WizardGroup, prompt: string): string[
  */
 export declare function assertAnswerTook(group: string, intended: string, actual: string): void;
 
+/** Intent block stored beside the PRD so a later step can see what was asked. */
+export interface PrdIntentMeta {
+  /** Normalised intent fields. */
+  intent: Record<string, unknown>;
+  /** `grok` or `regex-fallback`. */
+  intentSource: string;
+  /** Milliseconds spent in the grok attempts. */
+  grokDurationMs: number;
+  /** Why the regex fallback was used, when it was. */
+  fallbackReason?: string;
+}
+
 /**
- * Write `PRD.md` and `prd-provenance.json`, refusing a stub.
+ * Write `PRD.md`, `prd-provenance.json`, and `intent.json` when `meta` is set.
+ * Refuses a stub and an answer that did not take.
  * @param docsDir - The app's `docs` directory.
  * @param markdown - The generated PRD body.
  * @param prompt - The app description the PRD derives from.
  * @param answers - Recorded answers, intended and actual.
  * @param source - The builder URL the document came from.
+ * @param meta - Intent record. Absent when the caller is not the role.
  */
 export declare function writePrdArtifacts(
   docsDir: string,
   markdown: string,
   prompt: string,
   answers: RecordedAnswer[],
-  source: string
+  source: string,
+  meta?: PrdIntentMeta
 ): void;
+
+/**
+ * Picks for one wizard group taken from a typed intent.
+ * @param group - One wizard group as read from the DOM.
+ * @param intent - Extracted intent.
+ * @returns Picks to click, possibly empty.
+ */
+export declare function picksFromIntent(
+  group: WizardGroup,
+  intent: {
+    appType?: string;
+    hasAuth?: boolean;
+    dataStorage?: string;
+    hasRealtime?: boolean;
+    integrations?: string[];
+  }
+): string[];
+
+/**
+ * Intent first, regex only when the page does not offer the intent's option.
+ * @param group - One wizard group.
+ * @param prompt - The app description.
+ * @param intent - Extracted intent, or null to use the regex only.
+ * @returns Picks to click.
+ */
+export declare function picksForGroup(
+  group: WizardGroup,
+  prompt: string,
+  intent?: {
+    appType?: string;
+    hasAuth?: boolean;
+    dataStorage?: string;
+    hasRealtime?: boolean;
+    integrations?: string[];
+  } | null
+): string[];
+
+/**
+ * `fidelity` from a yaml fence or a `---` frontmatter block.
+ * @param markdown - Generated PRD body.
+ * @returns Whether the key is present, its value, and the unmatched list.
+ */
+export declare function readFidelity(markdown: string): {
+  present: boolean;
+  fidelity: string;
+  unmatched: string[];
+};
+
+/**
+ * The `json claims` fence, verbatim, or absent / invalid.
+ * @param markdown - Generated PRD body.
+ */
+export declare function extractClaimsBlock(markdown: string):
+  | { status: 'absent' }
+  | { status: 'invalid'; reason: string; verbatim: string }
+  | { status: 'ok'; verbatim: string; parsed: Record<string, unknown> };
+
+/**
+ * Refuse `fidelity: fail`, copy a valid claims block, warn when either is missing.
+ * @param markdown - Generated PRD body.
+ * @param opts - Where to write the alert and the claims file.
+ * @returns Process exit code. Non-zero refuses the build.
+ */
+export declare function settleGeneratedPrd(
+  markdown: string,
+  opts: { repoRoot: string; slug: string; warn?: (message: string) => void; appDir?: string }
+): { exitCode: number; warnings: string[]; message: string };
 
 /**
  * Decode a base64 prompt. Base64 crosses two shells byte-for-byte, which plain
