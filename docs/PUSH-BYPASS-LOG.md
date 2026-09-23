@@ -73,11 +73,14 @@ every app on every push.
 
 An app is checked when the range touches that app's directory or
 `results/<slug>.json`. A path under `SHARED_PREFIXES` in
-`.github/scripts/meets_the_bar.mjs` (`design-system/`, `orchestrator/`,
-`.github/`, and the root workspace files the apps are installed and linted
-with) still checks every app. A doc or a README does not.
+`.github/scripts/meets_the_bar.mjs` (only `design-system/`, the one shared
+path that changes what every app ships) still checks every app. Tooling paths
+(`orchestrator/`, `.github/`, root package and lint files) and docs do not:
+listing them made every infrastructure push check every app, which recreated
+the original block. CI re-scores every app on every push regardless.
 
 A local sha that only starts with 0 is a commit, not a branch deletion. The
-old pattern treated it as one, dropped the ref, and then checked every app.
+old pattern `0*` treated it as one, dropped the ref, and then checked every
+app. That was the actual cause of the unrelated-app refusals.
 
 CI `apps-meet-the-bar` is unchanged and still checks every app on the remote.

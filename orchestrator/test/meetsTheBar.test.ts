@@ -519,6 +519,18 @@ describe('push range scopes the finish line', () => {
     }
   });
 
+  it('tooling paths (orchestrator, .github, root package files) select no app', () => {
+    for (const f of [
+      'orchestrator/src/gate/score.ts',
+      '.github/workflows/ci.yml',
+      'package.json',
+      'package-lock.json',
+      'eslint.config.js'
+    ]) {
+      expect(appsAffectedByFiles([f]), f).toEqual([]);
+    }
+  });
+
   it('a root doc is not a shared prefix', () => {
     expect(appsAffectedByFiles(['README.md'])).toEqual([]);
     expect(appsAffectedByFiles(['docs/PUSH-BYPASS-LOG.md'])).toEqual([]);

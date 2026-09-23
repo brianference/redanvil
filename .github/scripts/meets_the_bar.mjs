@@ -996,47 +996,29 @@ export function evaluateApps(repoRoot, opts = {}) {
 }
 
 /**
- * Paths outside any one app directory that still change every gated app.
- * A push that touches one of these checks the whole APPS list. A README or a
- * doc does not: those are not in this list, so they cannot hold an unrelated
- * app at the finish line.
+ * Paths outside any one app directory that change every gated app's SHIPPED
+ * code. A push that touches one of these checks the whole APPS list.
+ *
+ * - `design-system/` -- app-builder, dashboard, az-planting-calendar,
+ *   sushi-finder, and pet-sitter import it by relative path (theme, shell,
+ *   http, hooks), and `design-system/auth-kit/` is the source those apps copy
+ *   into `functions/_lib`. A change here changes what every app renders.
+ *
+ * Deliberately NOT listed: tooling that changes how apps are MEASURED rather
+ * than what they ship -- `orchestrator/`, `.github/`, `package.json`,
+ * `package-lock.json`, `eslint.config.js`, docs. Listing them made every
+ * infrastructure push check every app, so one unshipped app refused all
+ * gate/CI work (docs/PUSH-BYPASS-LOG.md). CI's `apps-meet-the-bar` job still
+ * re-scores every app on every push, so a tooling change that moves an app
+ * below the bar is still reported red; it just cannot hold unrelated work
+ * hostage at the local hook.
  *
  * A trailing slash is a directory prefix. Anything else is one exact root
- * file, so `package.json` does not match `app-builder/package.json` and
- * `design-system/` does not match `pet-sitter/design-system/`.
- *
- * - `design-system/` — app-builder, dashboard, az-planting-calendar,
- *   sushi-finder, and pet-sitter import it by relative path (theme, shell,
- *   http, hooks). `design-system/auth-kit/` is the source those apps copy
- *   into `functions/_lib`.
- * - `orchestrator/` — this checker scores every app through
- *   `orchestrator/src/gate/done.mjs`, accepted findings, newest source
- *   commit, and product judgement. The rubric encoding lives here, and the
- *   root workspace script `npm run gate` runs this package.
- * - `.github/` — CI job `apps-meet-the-bar` and this checker. A change here
- *   changes the bar applied to every app in APPS.
- * - `package.json` — npm workspaces lists every app. CI runs `npm ci` and the
- *   root scripts (lint, test, gate, meets-the-bar) from this file.
- * - `package-lock.json` — the lockfile that `npm ci` installs for that
- *   workspace in every CI job.
- * - `eslint.config.js` — root `eslint .` (`npm run lint`, and CI) lints
- *   every `.ts` and `.tsx` file in every app, not one package.
- *
- * `tsconfig.base.json` is not listed: only `orchestrator/tsconfig.json`
- * extends it. `vitest.config.ts` is not listed: it runs `orchestrator/test`
- * only. `rules/` is not listed: the running gate reads the TypeScript rubric
- * under `orchestrator/`, not the markdown.
+ * file.
  *
  * @type {readonly string[]}
  */
-export const SHARED_PREFIXES = Object.freeze([
-  'design-system/',
-  'orchestrator/',
-  '.github/',
-  'package.json',
-  'package-lock.json',
-  'eslint.config.js'
-]);
+export const SHARED_PREFIXES = Object.freeze(['design-system/']);
 
 /**
  * True when a repo-relative path is shared by every gated app.

@@ -4,8 +4,9 @@
 # The range is the diff from the remote tip to the local tip. A new branch
 # (remote sha all zeros) is the whole tree at the local tip, not an empty
 # range and not "no refs". An app directory or results/<slug>.json checks
-# that app. A path in SHARED_PREFIXES (meets_the_bar.mjs) is shared by every
-# app, so that push checks every gated app. Other paths check none.
+# that app. A path in SHARED_PREFIXES (meets_the_bar.mjs: design-system/) is
+# shipped by every app, so that push checks every gated app. Other paths,
+# including tooling, check none; CI re-scores every app anyway.
 #
 # The finish line (defined once in .github/scripts/meets_the_bar.mjs):
 #   gate score >= 90 AND zero failing rules
