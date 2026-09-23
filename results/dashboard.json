@@ -213,7 +213,7 @@
     },
     {
       "ruleId": "proc-conventional-commits",
-      "passed": true
+      "passed": false
     },
     {
       "ruleId": "proc-artifact-verified",
@@ -391,9 +391,9 @@
     }
   ],
   "deployUrl": null,
-  "finishedAt": "2026-08-17T05:01:25.559Z",
+  "finishedAt": "2026-09-23T22:31:13.756Z",
   "provenance": {
-    "commit": "eebad638b9fbe301c9acde90d5ded0c4a12fff3b",
+    "commit": "759920006033720125b9b211737469b163d63fe3",
     "dirty": false,
     "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
     "rubricRuleCount": 96,
@@ -407,6 +407,6 @@
       "u-plat-migrations"
     ],
     "staleVerdicts": [],
-    "generatedAt": "2026-08-17T05:01:25.624Z"
+    "generatedAt": "2026-09-23T22:31:13.905Z"
   }
 }

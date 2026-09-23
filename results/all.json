@@ -214,7 +214,7 @@
       },
       {
         "ruleId": "proc-conventional-commits",
-        "passed": true
+        "passed": false
       },
       {
         "ruleId": "proc-artifact-verified",
@@ -392,9 +392,9 @@
       }
     ],
     "deployUrl": null,
-    "finishedAt": "2026-08-17T05:01:25.559Z",
+    "finishedAt": "2026-09-23T22:31:13.756Z",
     "provenance": {
-      "commit": "eebad638b9fbe301c9acde90d5ded0c4a12fff3b",
+      "commit": "759920006033720125b9b211737469b163d63fe3",
       "dirty": false,
       "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
       "rubricRuleCount": 96,
@@ -408,7 +408,7 @@
         "u-plat-migrations"
       ],
       "staleVerdicts": [],
-      "generatedAt": "2026-08-17T05:01:25.624Z"
+      "generatedAt": "2026-09-23T22:31:13.905Z"
     }
   },
   {
@@ -417,7 +417,7 @@
     "finalScore": 0,
     "threshold": 90,
     "passed": false,
-    "evaluated": 83,
+    "evaluated": 61,
     "total": 83,
     "rules": [
       {
@@ -622,7 +622,7 @@
       },
       {
         "ruleId": "proc-conventional-commits",
-        "passed": true
+        "passed": false
       },
       {
         "ruleId": "proc-artifact-verified",
@@ -682,70 +682,10 @@
       },
       {
         "ruleId": "meas-standard-tool",
-        "passed": true
+        "passed": false
       },
       {
         "ruleId": "meas-engine-named",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-touch-targets",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-type-floor",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-responsive-375",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-safe-areas",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-premium-nav",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-noncolor-state",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-no-attribution",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-cross-link",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-seo-og",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-required-pages",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-visual-review-recorded",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-cold-visitor",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-a11y-contrast",
-        "passed": true
-      },
-      {
-        "ruleId": "u-conc-idiomatic",
-        "passed": true
-      },
-      {
-        "ruleId": "u-conc-no-speculative-abstraction",
         "passed": true
       },
       {
@@ -753,35 +693,7 @@
         "passed": true
       },
       {
-        "ruleId": "u-conc-smallest-diff",
-        "passed": true
-      },
-      {
-        "ruleId": "u-test-adequacy",
-        "passed": true
-      },
-      {
-        "ruleId": "u-test-behavioral",
-        "passed": true
-      },
-      {
         "ruleId": "fe-pages-compose",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-fail-closed-states",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-desktop-width",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-product-completeness",
-        "passed": true
-      },
-      {
-        "ruleId": "fe-design-archetype",
         "passed": true
       }
     ],
@@ -793,6 +705,7 @@
           "u-test-runners",
           "u-api-no-spa-mask",
           "fe-theme-tokens-only",
+          "fe-a11y-contrast",
           "fe-search-present",
           "fe-assistant-present",
           "fe-favicon-legible",
@@ -801,6 +714,16 @@
           "fe-structured-data",
           "u-legal-claims-true",
           "fe-prior-art",
+          "fe-premium-nav",
+          "fe-required-pages",
+          "fe-no-attribution",
+          "fe-responsive-375",
+          "fe-product-completeness",
+          "fe-visual-review-recorded",
+          "fe-cold-visitor",
+          "fe-touch-targets",
+          "fe-type-floor",
+          "fe-desktop-width",
           "hyg-no-binaries",
           "hyg-no-duplication",
           "lg-shipped",
@@ -809,9 +732,9 @@
       }
     ],
     "deployUrl": null,
-    "finishedAt": "2026-08-17T04:49:32.763Z",
+    "finishedAt": "2026-09-23T22:20:22.242Z",
     "provenance": {
-      "commit": "3693c80bc7ff311a07e4308f4edcd5a92d3c2757",
+      "commit": "759920006033720125b9b211737469b163d63fe3",
       "dirty": false,
       "rubricHash": "6f387c7bd814b8c1bf911b31013c24863407b9aef477bf422e28cb1537c71262",
       "rubricRuleCount": 96,
@@ -825,8 +748,31 @@
         "u-competitor-scan",
         "u-integration-scan"
       ],
-      "staleVerdicts": [],
-      "generatedAt": "2026-08-17T04:49:32.825Z"
+      "staleVerdicts": [
+        "fe-a11y-contrast",
+        "fe-cold-visitor",
+        "fe-cross-link",
+        "fe-design-archetype",
+        "fe-desktop-width",
+        "fe-fail-closed-states",
+        "fe-no-attribution",
+        "fe-noncolor-state",
+        "fe-premium-nav",
+        "fe-product-completeness",
+        "fe-required-pages",
+        "fe-responsive-375",
+        "fe-safe-areas",
+        "fe-seo-og",
+        "fe-touch-targets",
+        "fe-type-floor",
+        "fe-visual-review-recorded",
+        "u-conc-idiomatic",
+        "u-conc-no-speculative-abstraction",
+        "u-conc-smallest-diff",
+        "u-test-adequacy",
+        "u-test-behavioral"
+      ],
+      "generatedAt": "2026-09-23T22:20:22.431Z"
     }
   },
   {
