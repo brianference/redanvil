@@ -314,7 +314,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"palette\", step: \"palette\",\n  artifacts: `${c.slug}/design-refs/palettes/gallery.html`,\n  cmd: $env.REDANVIL_CMD_PALETTE || \"node n8n-prototype/roles/design-role.mjs --role=palette --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"palette\", step: \"palette\",\n  artifacts: `${c.slug}/design-refs/palettes`,\n  cmd: $env.REDANVIL_CMD_PALETTE || \"node n8n-prototype/roles/design-role.mjs --role=palette --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -506,7 +506,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"user-picks\", step: \"decide\",\n  artifacts: `${c.slug}/design-refs/design-options/DECISION.md`,\n  cmd: $env.REDANVIL_CMD_DECIDE || \"node n8n-prototype/roles/decide.mjs --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"user-picks\", step: \"decide\",\n  artifacts: `${c.slug}/evidence/decisions.json`,\n  cmd: $env.REDANVIL_CMD_DECIDE || \"node n8n-prototype/roles/decide.mjs --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {

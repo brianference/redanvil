@@ -7,6 +7,7 @@
  * entire point of a human gate is that the process stops until a person decides.
  * A role that could invent the decision would make the gate decorative.
  */
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
@@ -51,7 +52,16 @@ for (const a of AXES) {
     );
     continue;
   }
-  recorded.push({ axis: a.axis, file: a.file, choice: line.trim().slice(0, 160) });
+  // sha256 binds the record to the document that was verified. It is also
+  // what keeps a real record above role-run's 512B floor: three one-token
+  // choices (`CHOSEN:x`) otherwise serialise to 416 bytes, and decide would
+  // still be refused after writing a complete record.
+  recorded.push({
+    axis: a.axis,
+    file: a.file,
+    choice: line.trim().slice(0, 160),
+    sha256: createHash('sha256').update(text).digest('hex')
+  });
 }
 
 if (missing.length) {
@@ -66,4 +76,6 @@ writeFileSync(
   join(appDir, 'evidence', 'decisions.json'),
   JSON.stringify({ recordedAt: new Date().toISOString(), decisions: recorded }, null, 2) + '\n'
 );
-console.log(`decide: ${recorded.length} axis/axes recorded -- ${recorded.map((r) => r.axis).join(', ')}`);
+console.log(
+  `decide: ${recorded.length} axis/axes recorded -- ${recorded.map((r) => r.axis).join(', ')}`
+);

@@ -21,7 +21,7 @@
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { orderedSteps } from './process-map.mjs';
+import { countedArtifactPath, orderedSteps } from './process-map.mjs';
 import { BINDINGS, unboundRoles } from './bindings.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -55,10 +55,12 @@ const AUTO_AXIS_ARTIFACT = {
  * @returns {object} an n8n Code node
  */
 function paramsNode(step, index, boundCmd) {
-  // Each role owns a DISTINCT artifact directory. Point two roles at the same
-  // path and each takes credit for the other's work, so the contract's first
-  // required path is the role's own territory.
-  const artifacts = step.requires[0]?.path ?? '.';
+  // Each role owns a DISTINCT artifact. Point two roles at the same path and
+  // each takes credit for the other's work. The counted path is the file this
+  // step writes (`owned: true`), not an input it only verifies. Steps that
+  // predate that flag still count requires[0], which is what this used to
+  // hard-code -- and what credited decide for layout's DECISION.md.
+  const artifacts = countedArtifactPath(step);
   const envKey = `REDANVIL_CMD_${step.id.replace(/-/g, '_').toUpperCase()}`;
   // The bound command is baked in from bindings.mjs. Previously the generator
   // emitted only an env-var lookup with an "echo no runner configured" fallback,
@@ -185,7 +187,12 @@ function approvalNode(step, index) {
       formDescription: step.summary,
       formFields: {
         values: [
-          { fieldLabel: 'Decision', fieldType: 'dropdown', fieldOptions: { values: [{ option: 'approve' }, { option: 'redo' }] }, requiredField: true },
+          {
+            fieldLabel: 'Decision',
+            fieldType: 'dropdown',
+            fieldOptions: { values: [{ option: 'approve' }, { option: 'redo' }] },
+            requiredField: true
+          },
           { fieldLabel: 'Notes', fieldType: 'textarea', requiredField: false }
         ]
       },
@@ -290,18 +297,18 @@ const nodes = [
       // through REDANVIL_PROMPT in the environment rather than through argv, so
       // no amount of quoting in it can break out.
       jsCode:
-        "const body = ($json && $json.body) ? $json.body : {};\n" +
+        'const body = ($json && $json.body) ? $json.body : {};\n' +
         "const repoRoot = $env.REDANVIL_REPO || 'C:/Users/brian/RedAnvil';\n" +
         "const runner = $env.REDANVIL_RUNNER || 'C:/Users/brian/RedAnvil/n8n-prototype/role-run.mjs';\n" +
         "const requestedSlug = typeof body.slug === 'string' ? body.slug : '';\n" +
-        "if (requestedSlug && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(requestedSlug)) {\n" +
+        'if (requestedSlug && !/^[a-z0-9][a-z0-9-]{0,63}$/.test(requestedSlug)) {\n' +
         "  throw new Error('slug must match /^[a-z0-9][a-z0-9-]{0,63}$/ -- it becomes a path component and a shell argument');\n" +
-        "}\n" +
+        '}\n' +
         "const slug = requestedSlug || $env.REDANVIL_SLUG || 'pet-sitter';\n" +
         "const prompt = typeof body.prompt === 'string' && body.prompt.trim() ? body.prompt : $env.REDANVIL_PROMPT;\n" +
-        "if (!prompt) {\n" +
+        'if (!prompt) {\n' +
         "  throw new Error('No prompt: POST a { prompt } body to the webhook, or set REDANVIL_PROMPT. The prd role drives the live app builder with it, and every later role builds what that PRD says, so there is no safe default.');\n" +
-        "}\n" +
+        '}\n' +
         // The domain entities the wizard's own entities field takes. Optional,
         // and empty is legal: the builder then falls back to deriving them from
         // the prompt, which is what it did before this existed.
@@ -368,7 +375,11 @@ const workflow = {
   id: 'redanvilFull001',
   name: `RedAnvil full build (${steps.length} steps, generated)`,
   active: false,
-  settings: { executionOrder: 'v1', saveDataErrorExecution: 'all', saveDataSuccessExecution: 'all' },
+  settings: {
+    executionOrder: 'v1',
+    saveDataErrorExecution: 'all',
+    saveDataSuccessExecution: 'all'
+  },
   nodes,
   connections
 };

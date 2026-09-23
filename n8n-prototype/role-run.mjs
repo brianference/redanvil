@@ -9,10 +9,15 @@
  * satisfies an existence check forever. So the verdict here is the same
  * `countedAsRun` rule the orchestrator already uses:
  *
- *     countedAsRun = exit 0 AND the declared artifacts actually changed
+ *     countedAsRun = exit 0
+ *       AND the owned artifact's content hash changed
+ *       AND it meets the substance floor
+ *       AND every input precondition still satisfies its contract
  *
  * plus a substance floor, because a role that writes a zero-byte placeholder
- * changes the artifact without producing anything.
+ * changes the artifact without producing anything. An input is a file an
+ * earlier step wrote. It has to be present and valid, and a change to it does
+ * not prove this step ran.
  *
  * Exit code is 0 only when countedAsRun is true, so an n8n node goes red on a
  * no-op role instead of green.
@@ -22,6 +27,8 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
+import { checkContract } from './contract-check.mjs';
+import { PROCESS } from './process-map.mjs';
 
 /** Minimum bytes for an artifact to count as substance rather than a placeholder. */
 const SUBSTANCE_FLOOR_BYTES = 512;
@@ -128,12 +135,94 @@ function headCommit(repoRoot) {
 }
 
 /**
+ * App directory for a role-run invocation.
+ *
+ * The workflow passes `artifacts` as `<slug>/<path>` relative to the repo, or
+ * as an absolute path under it. The first segment after the repo root is the
+ * app slug.
+ * @param {string} repoRoot repository root
+ * @param {string} artifacts artifact path the workflow declared
+ * @returns {string|null} absolute app directory, or null when it cannot be derived
+ */
+function appDirFromArtifacts(repoRoot, artifacts) {
+  const root = resolve(repoRoot).replaceAll('\\', '/');
+  let rel = resolve(repoRoot, artifacts).replaceAll('\\', '/');
+  if (rel.toLowerCase().startsWith(root.toLowerCase() + '/')) {
+    rel = rel.slice(root.length + 1);
+  }
+  const slug = rel.split('/').filter(Boolean)[0];
+  if (!slug || slug === '.' || slug === '..') return null;
+  return resolve(repoRoot, slug);
+}
+
+/**
+ * Where to fingerprint, when the process map names an owned artifact.
+ *
+ * Roles that are not in the map (the hand-authored slice workflow) keep the
+ * `--artifacts` path. A role that declares `owned` is fingerprinted there even
+ * if the workflow still points `--artifacts` at an input. Resolving the app
+ * directory and then failing to do so is a failure, not a skip.
+ * @param {{role: string, artifacts: string, repoRoot: string}} opts role config
+ * @returns {{step: import('./process-map.mjs').ProcessStep|null, appDir: string|null, fingerprintPath: string|null, artifactLabel: string|null, unresolved: boolean}}
+ */
+function resolveOwnedFingerprint(opts) {
+  const step = PROCESS.find((s) => s.role === opts.role) ?? null;
+  const owned = step?.requires.find((c) => c.owned === true) ?? null;
+  const inputs = step?.requires.filter((c) => c.input === true) ?? [];
+  if (!owned && inputs.length === 0) {
+    return {
+      step: null,
+      appDir: null,
+      fingerprintPath: null,
+      artifactLabel: null,
+      unresolved: false
+    };
+  }
+  const appDir = appDirFromArtifacts(opts.repoRoot, opts.artifacts);
+  if (!appDir) {
+    return { step, appDir: null, fingerprintPath: null, artifactLabel: null, unresolved: true };
+  }
+  const slug = relative(opts.repoRoot, appDir).replaceAll('\\', '/');
+  return {
+    step,
+    appDir,
+    fingerprintPath: owned ? resolve(appDir, owned.path) : null,
+    artifactLabel: owned ? `${slug}/${owned.path}` : null,
+    unresolved: false
+  };
+}
+
+/**
+ * Contract failures for this role's owned artifact and its input preconditions.
+ *
+ * Called after the command. An owned file that does not exist yet is a failure
+ * -- the role was supposed to write it -- and an input that lost its CHOSEN or
+ * DECIDED marker is a failure even when the command exited 0.
+ * @param {import('./process-map.mjs').ProcessStep|null} step
+ * @param {string|null} appDir
+ * @returns {string[]}
+ */
+function contractReasons(step, appDir) {
+  if (!step || !appDir) return [];
+  /** @type {string[]} */
+  const reasons = [];
+  for (const c of step.requires) {
+    if (c.input !== true && c.owned !== true) continue;
+    const result = checkContract(appDir, c);
+    if (!result.ok) reasons.push(...result.reasons);
+  }
+  return reasons;
+}
+
+/**
  * Execute one role and return a verdict object.
  * @param {{role: string, cmd: string, artifacts: string, repoRoot: string}} opts role config
  * @returns {Promise<object>} the verdict, shaped for n8n to branch on
  */
 async function runRole(opts) {
-  const artifactDir = resolve(opts.repoRoot, opts.artifacts);
+  const located = resolveOwnedFingerprint(opts);
+  const artifactLabel = located.artifactLabel ?? opts.artifacts;
+  const artifactDir = located.fingerprintPath ?? resolve(opts.repoRoot, opts.artifacts);
   const before = await fingerprint(artifactDir);
   const startedAt = new Date().toISOString();
 
@@ -151,7 +240,13 @@ async function runRole(opts) {
   const exitOk = proc.status === 0;
   const producedWork = delta.changedCount > 0;
   const substantive = thin.length === 0;
-  const countedAsRun = exitOk && producedWork && substantive;
+  const contractFails = located.unresolved
+    ? [
+        `cannot resolve the app directory from ${opts.artifacts}, so the owned artifact and its inputs were not checked`
+      ]
+    : contractReasons(located.step, located.appDir);
+  const contractsOk = contractFails.length === 0;
+  const countedAsRun = exitOk && producedWork && substantive && contractsOk;
 
   /**
    * The command's own last words. spawnSync has captured stderr all along and
@@ -203,8 +298,10 @@ async function runRole(opts) {
         (failureLog ? ` -- full output: ${relative(opts.repoRoot, failureLog)}` : '')
     );
   }
-  if (!producedWork) reasons.push(`no artifact under ${opts.artifacts} changed -- role did nothing`);
-  if (!substantive) reasons.push(`placeholder artifacts under ${SUBSTANCE_FLOOR_BYTES}B: ${thin.join(', ')}`);
+  if (!producedWork) reasons.push(`no artifact under ${artifactLabel} changed -- role did nothing`);
+  if (!substantive)
+    reasons.push(`placeholder artifacts under ${SUBSTANCE_FLOOR_BYTES}B: ${thin.join(', ')}`);
+  reasons.push(...contractFails);
 
   return {
     role: opts.role,
@@ -214,7 +311,7 @@ async function runRole(opts) {
     commit: headCommit(opts.repoRoot),
     exitCode: proc.status,
     stderrTail: errTail,
-    artifactDir: opts.artifacts,
+    artifactDir: artifactLabel,
     added: delta.added,
     modified: delta.modified,
     changedCount: delta.changedCount,
