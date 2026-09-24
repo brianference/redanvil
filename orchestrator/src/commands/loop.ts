@@ -315,7 +315,7 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
   // Independent judge over the REAL git diff — before any app can be reported
   // done. Instructions are to REFUTE: find what the author missed, cite
   // file:line, FAIL anything unverified. A silent empty pass is forbidden.
-  const review = runIndependentDiffReview({ dir });
+  const review = await runIndependentDiffReview({ dir });
   const independentReviewOk = review.ok;
   let independentReviewSummary: string;
   if (review.mode === 'empty-diff' || review.nothingToReview === true) {
