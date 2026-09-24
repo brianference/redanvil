@@ -18,7 +18,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: 20
+          node-version: 22
       # `npm test` now runs the pytest lane as well as vitest. Without an
       # interpreter and the two Python deps, run_pytest.mjs exits 1 by design —
       # "could not run the tests" must never read as "the tests passed" — so CI
@@ -81,7 +81,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: 20
+          node-version: 22
       # One install at the root: app-builder and dashboard are npm workspaces
       # now, so react is hoisted to a single copy. Installing them separately
       # would recreate the two-React-instances bug that broke every hook.
@@ -127,7 +127,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: 20
+          node-version: 22
       - name: Install workspace deps
         run: npm ci
       # The scaffold gate builds and runs a generated app, and the e2e smoke
@@ -181,7 +181,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: 20
+          node-version: 22
       - name: Install workspace deps
         run: npm ci
       - name: Install Playwright chromium
@@ -204,7 +204,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: 20
+          node-version: 22
       - name: Install workspace deps
         run: npm ci
       - name: Every gated app meets the finish line
@@ -224,7 +224,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: 20
+          node-version: 22
       # Workspace install at the root; see the note in results-provenance.
       - name: Install workspace deps
         run: npm ci
@@ -267,7 +267,7 @@ jobs:
           path: quickflight
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
-          node-version: 20
+          node-version: 22
       - name: Install gate deps
         run: npm ci
         working-directory: redanvil
