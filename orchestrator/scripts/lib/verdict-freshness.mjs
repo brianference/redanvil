@@ -2,8 +2,8 @@
  * One decision for "is this verdict still about the thing it reviewed?"
  *
  * Visual verdicts that recorded a bundle hash are about the built page, so a
- * source edit that does not change `dist/assets/index-*.js` + `.css` does not
- * expire them. Everything else — including a visual verdict with no bundle
+ * source edit that does not change the built app (`dist/`) or its
+ * `functions/` does not expire them. Everything else — including a visual verdict with no bundle
  * hash — stays on the source-tree check. Unknown is stale. A match is the
  * only fresh answer.
  */
@@ -25,8 +25,8 @@ export const JUDGE_SCOPE_SCHEMA_VERSION = 2;
 
 /** Vite's hashed client entry, the same file the deploy verifier names. */
 const INDEX_JS_RE = /^index-.+\.js$/;
-/** Sibling stylesheet. A CSS-only rebuild still changes what a visual rule saw. */
-const INDEX_CSS_RE = /^index-.+\.css$/;
+/** Separator between a hashed path and its bytes, so boundaries cannot collide. */
+const NUL = String.fromCharCode(0);
 
 /**
  * Newest basename in `dir` matching `pattern`, by mtime.
@@ -66,30 +66,58 @@ function newestMatch(dir, pattern) {
 /**
  * Identity of the app's built client bundle.
  *
- * sha256 over the bytes of the newest `dist/assets/index-*.js` and the newest
- * `dist/assets/index-*.css`. The deploy verifier identifies the build by the
- * `index-<hash>.js` filename (`extractAssetHash` / `newestLocalIndexAsset`);
- * this hashes those same files' contents, plus the stylesheet, so a paint
- * change that does not rename the script still moves the hash.
+ * sha256 over every file of the built app (`dist/`) and of its `functions/`
+ * source, each keyed by its relative path, in sorted order.
  *
- * Null when either file is missing. A missing build is not "unchanged".
+ * The first version hashed only the newest `index-*.js` and `index-*.css`, so a
+ * new logo or favicon in `public/` (copied into dist), an edited `index.html`,
+ * or an API change in `functions/` left a visual verdict "fresh" although what
+ * the page renders had changed. Everything that reaches the rendered page is
+ * in scope now.
+ *
+ * Null when the build has no `index-*.js`: a missing build is not "unchanged".
  *
  * @param {string} appDir App directory (the one that contains `dist/`).
  * @returns {string | null} Hex digest, or null.
  */
 export function bundleHashOfApp(appDir) {
-  const assetsDir = join(appDir, 'dist', 'assets');
-  const jsName = newestMatch(assetsDir, INDEX_JS_RE);
-  const cssName = newestMatch(assetsDir, INDEX_CSS_RE);
-  if (jsName === null || cssName === null) return null;
+  const distDir = join(appDir, 'dist');
+  if (newestMatch(join(distDir, 'assets'), INDEX_JS_RE) === null) return null;
   const hash = createHash('sha256');
-  for (const name of [jsName, cssName]) {
-    const bytes = readFileSync(join(assetsDir, name));
-    hash.update(name);
-    hash.update('\0');
-    hash.update(bytes);
+  for (const [label, root] of [
+    ['dist', distDir],
+    ['functions', join(appDir, 'functions')]
+  ]) {
+    for (const rel of listFilesSorted(root)) {
+      hash.update(`${label}/${rel}`);
+      hash.update(NUL);
+      hash.update(readFileSync(join(root, rel)));
+      hash.update(NUL);
+    }
   }
   return hash.digest('hex');
+}
+
+/**
+ * Every file under a directory, as sorted forward-slash relative paths.
+ * A missing directory yields an empty list.
+ *
+ * @param {string} root Directory to walk.
+ * @returns {string[]}
+ */
+function listFilesSorted(root) {
+  if (!existsSync(root)) return [];
+  /** @type {string[]} */
+  const out = [];
+  const walk = (dir, prefix) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(join(dir, entry.name), rel);
+      else if (entry.isFile()) out.push(rel);
+    }
+  };
+  walk(root, '');
+  return out.sort();
 }
 
 /**
@@ -248,6 +276,10 @@ export function judgeScopeFromCitations(evidence, exists) {
     if (typeof entry !== 'string' || entry.length === 0) continue;
     const norm = entry.replace(/\\/g, '/');
     if (!exists(norm)) continue;
+    // Gate outputs (evidence/, results/*.json) are filtered out of the change
+    // probe, so a scope made only of them could never go stale. Leave them out;
+    // an empty scope then falls back to the whole app, which is conservative.
+    if (isGateOutput(norm)) continue;
     if (!scope.includes(norm)) scope.push(norm);
   }
   return scope;

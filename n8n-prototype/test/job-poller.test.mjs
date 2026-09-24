@@ -265,6 +265,34 @@ describe('owner decision', () => {
     }
   });
 
+  test('FAIL INPUT: a webhook that reached n8n but lost its response is not posted again', async () => {
+    // The response is lost after delivery (abort, crash before writeJob). The
+    // execution exists in n8n, so later cycles must find it instead of POSTing.
+    const deliverThenThrow = async (url, init) => {
+      const response = await globalThis.fetch(url, init);
+      if (String(url).includes('/webhook/')) throw new Error('aborted after delivery');
+      return response;
+    };
+    const world = await createWorld({ job: SAMPLE_JOB, fetchImpl: deliverThenThrow });
+    try {
+      await world.cycle();
+      decide(world.repo, 'job-1', 'approve');
+      const reader = {
+        lookup: async () =>
+          world.webhooks.length > 0
+            ? { executionId: 'e-1', status: 'running', step: null, errorMessage: null }
+            : null
+      };
+      await world.cycle({ executionReader: reader });
+      await world.cycle({ executionReader: reader });
+      await world.cycle({ executionReader: reader });
+      assert.equal(world.webhooks.length, 1);
+      assert.ok(world.statuses.some((post) => post.body.status === 'building'));
+    } finally {
+      await world.close();
+    }
+  });
+
   test('FAIL INPUT: reject never calls the webhook', async () => {
     const world = await createWorld({ job: SAMPLE_JOB });
     try {
@@ -287,9 +315,13 @@ describe('owner decision', () => {
     cpSync(POLLER_DIR, copyDir, { recursive: true });
     const copy = join(copyDir, 'job-poller.mjs');
     const source = readFileSync(copy, 'utf8');
+    // Remove BOTH idempotency guards: the posted flag and the attempt marker that
+    // looks for an earlier execution before posting again.
     const needle = 'job.webhookPosted = true';
-    assert.equal(source.split(needle).length - 1, 1);
-    writeFileSync(copy, source.replace(needle, 'job.webhookPosted = false'));
+    const attempt = 'if (job.webhookAttemptedAt) {';
+    assert.equal(source.split(needle).length - 1, 2);
+    assert.equal(source.split(attempt).length - 1, 1);
+    writeFileSync(copy, source.split(needle).join('job.webhookPosted = false').replace(attempt, 'if (false) {'));
     const broken = await import(pathToFileURL(copy).href);
     const world = await createWorld({ job: SAMPLE_JOB, runCycleFn: broken.runCycle });
     try {
@@ -431,7 +463,9 @@ describe('building', () => {
       assert.equal(stepPost.body.step, 'prd');
       const failed = world.statuses.find((post) => post.id === 'job-bad');
       assert.equal(failed.body.status, 'failed');
-      assert.equal(failed.body.detail, 'role command exited 3');
+      // Public detail names the step only; the raw n8n message stays local.
+      assert.equal(failed.body.detail, 'build error at step qa-runtime');
+      assert.equal(failed.body.detail.includes('exited'), false);
       assert.equal(failed.body.step, 'qa-runtime');
 
       views['41'] = { executionId: '41', status: 'success', step: 'ship', errorMessage: null };
@@ -482,7 +516,7 @@ describe('site down', () => {
 
 describe('cli', () => {
   test('FAIL INPUT: missing REDANVIL_RUNNER_TOKEN exits non-zero and does not invent one', () => {
-    const env = { ...process.env };
+    const env = { ...process.env, REDANVIL_SKIP_ENV_FILE: '1', REDANVIL_SITE_URL: 'http://127.0.0.1:9' };
     delete env.REDANVIL_RUNNER_TOKEN;
     const result = spawnSync(NODE, [POLLER, '--once'], { encoding: 'utf8', env, timeout: 15_000 });
     assert.notEqual(result.status, 0);
@@ -498,6 +532,7 @@ describe('cli', () => {
         timeout: 15_000,
         env: {
           ...process.env,
+          REDANVIL_SKIP_ENV_FILE: '1',
           REDANVIL_RUNNER_TOKEN: token,
           REDANVIL_SITE_URL: 'http://127.0.0.1:9',
           REDANVIL_N8N_URL: 'http://127.0.0.1:9',

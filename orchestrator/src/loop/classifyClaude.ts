@@ -93,5 +93,27 @@ export function classifyClaude(res: ClaudeSpawnResult): ClaudeClassification {
 export function claudeShouldFallBack(res: ClaudeSpawnResult & { unavailable?: boolean }): boolean {
   if (res.unavailable === true) return true;
   if (res.status === null) return true;
-  return classifyClaude(res).rateLimited;
+  // An error envelope (is_error: true -- an auth failure, an API error) is not
+  // a review. Parsing its text as judge output could read a clean JSON result
+  // inside it as a pass, so any Claude error goes to Grok.
+  return classifyClaude(res).rateLimited || isErrorEnvelope(res.stdout);
+}
+
+/**
+ * True when stdout is Claude's JSON envelope with `is_error: true`.
+ *
+ * @param stdout - Raw stdout of `claude -p --output-format json`.
+ * @returns Whether the envelope reports an error.
+ */
+function isErrorEnvelope(stdout: string): boolean {
+  try {
+    const parsed: unknown = JSON.parse(stdout.trim());
+    return (
+      parsed !== null &&
+      typeof parsed === 'object' &&
+      (parsed as { is_error?: unknown }).is_error === true
+    );
+  } catch {
+    return false;
+  }
 }

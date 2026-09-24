@@ -861,3 +861,23 @@ describe('dispatch notified tracking and notes file', () => {
     }
   });
 });
+
+describe('gate records across redo rounds and stale forms', () => {
+  test('a redo round gets its own id, so its notified marker starts false', async () => {
+    const { gateRecordId } = await import('../dispatch/registry.mjs');
+    assert.notEqual(gateRecordId('app', 'logo', '12', 0), gateRecordId('app', 'logo', '12', 1));
+    assert.equal(gateRecordId('app', 'logo', '12', 0), 'app-logo-12');
+  });
+
+  test('registering a gate supersedes an older pending gate of the same execution', async () => {
+    const { registerGate } = await import('../dispatch/register-gate.mjs');
+    const repo = scratch();
+    const base = { slug: 'app', title: 'Approve', summary: 's', resumeUrl: 'http://127.0.0.1:5678/form-waiting/7', executionId: '7' };
+    const first = registerGate({ ...base, step: 'logo' }, repo, '2026-09-24T00:00:00.000Z');
+    const second = registerGate({ ...base, step: 'palette' }, repo, '2026-09-24T00:05:00.000Z');
+    assert.equal(existsSync(join(repo, '.redanvil/dispatch/pending', `${first.id}.json`)), false);
+    assert.equal(existsSync(join(repo, '.redanvil/dispatch/pending', `${second.id}.json`)), true);
+    const retired = JSON.parse(readFileSync(join(repo, '.redanvil/dispatch/resolved', `${first.id}.json`), 'utf8'));
+    assert.equal(retired.decision, 'superseded');
+  });
+});

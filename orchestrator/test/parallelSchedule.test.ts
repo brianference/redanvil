@@ -282,6 +282,8 @@ describe('skip unchanged inputs', () => {
     };
     try {
       const rows = [failingRow('feature-gaps')];
+      // Two identical counted attempts: the cap is reached, so it is skipped.
+      recordCountedRoleInputs(appDir, role, rows, slug);
       recordCountedRoleInputs(appDir, role, rows, slug);
       let calls = 0;
       await oneIteration([role], rows, async () => {
@@ -297,6 +299,28 @@ describe('skip unchanged inputs', () => {
       expect(calls).toBe(1);
     } finally {
       console.log = orig;
+      cleanup();
+    }
+  });
+
+  it('FAIL INPUT: retries a role with a failing row on unchanged inputs, then stops after the cap', async () => {
+    const { appDir, slug, role, cleanup } = skipApp();
+    try {
+      const rows = [failingRow('feature-gaps')];
+      recordCountedRoleInputs(appDir, role, rows, slug);
+      let calls = 0;
+      // One counted attempt so far: a failing row must be retried.
+      await oneIteration([role], rows, async () => {
+        calls += 1;
+      }, { appDir, slug });
+      expect(calls).toBe(1);
+      // A second identical counted attempt reaches the cap; the next is skipped.
+      recordCountedRoleInputs(appDir, role, rows, slug);
+      await oneIteration([role], rows, async () => {
+        calls += 1;
+      }, { appDir, slug });
+      expect(calls).toBe(1);
+    } finally {
       cleanup();
     }
   });
@@ -336,5 +360,23 @@ describe('skip unchanged inputs', () => {
     } finally {
       cleanup();
     }
+  });
+});
+
+describe('scheduleRoleRuns after a dependency did not count', () => {
+  it('skips dependents (transitively) instead of running them', async () => {
+    const { scheduleRoleRuns } = await import('../src/team/pm');
+    const role = (id: string, dependsOn: string[]) =>
+      ({ role: { id, dependsOn }, rows: [], matchedOwns: [] }) as never;
+    const ran: string[] = [];
+    const skipped = await scheduleRoleRuns(
+      [role('logo', []), role('layout', ['logo']), role('engineer', ['layout']), role('palette', [])],
+      async (a: { role: { id: string } }) => {
+        ran.push(a.role.id);
+        return a.role.id !== 'logo';
+      }
+    );
+    expect(ran.sort()).toEqual(['logo', 'palette']);
+    expect(skipped.sort()).toEqual(['engineer', 'layout']);
   });
 });

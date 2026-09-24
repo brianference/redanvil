@@ -244,3 +244,15 @@ test('an exhausted Grok balance (402) hands off, with a readable reason', () => 
   assert.equal(grokCannotRun(res), true);
   assert.equal(describeGrokFailure(res), 'usage balance exhausted (402)');
 });
+
+test('task failures that merely contain 402 or 403 do not hand off', () => {
+  for (const stderr of [
+    'AssertionError: expected 200 to be 403',
+    '    at render (src/App.tsx:402:11)',
+    'wrote 402 bytes to dist/index.html',
+    'status 403 returned by /api/admin in the acceptance test'
+  ]) {
+    assert.equal(grokCannotRun({ status: 1, stdout: '', stderr }), false, stderr);
+  }
+  assert.equal(grokCannotRun({ status: 1, stdout: '', stderr: 'HTTP 403 Forbidden' }), true);
+});

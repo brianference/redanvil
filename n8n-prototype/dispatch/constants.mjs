@@ -41,4 +41,6 @@ export const TERMINAL_JOB_STATUSES = new Set(['done', 'failed', 'rejected']);
 export const GATE_DECISIONS = new Set(['approve', 'redo']);
 
 /** Decisions resolve accepts for a job-approval record. */
-export const JOB_DECISIONS = new Set(['approve', 'redo', 'reject']);
+// No `redo` for a job: the poller cannot act on it, and resolving would remove
+// the pending record and strand the job at awaiting_owner.
+export const JOB_DECISIONS = new Set(['approve', 'reject']);

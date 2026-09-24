@@ -325,14 +325,12 @@ All queries are parameterized. Validate every input with Zod at the boundary.`;
 
   const coreFeaturesMarkdown = renderCoreFeatures(features);
   const acceptanceMarkdown = renderAcceptanceCriteria(features);
-  // Declared entity and field names are the owner's own domain words, so they
-  // count as coverage alongside the feature text.
-  const declaredDomain = entitySpecs
-    .map((entity) => [entity.name, ...entity.fields.map((field) => field.name)].join(' '))
-    .join('\n');
+  // Features only. Adding the declared entity and field names inflated every
+  // score, so the wrong-product PRD for the dog-care prompt passed (0.43).
   const fidelityUnmatched = unmatchedPromptRequirements(
     productPrompt,
-    `${coreFeaturesMarkdown}\n${acceptanceMarkdown}\n${declaredDomain}`
+    `${coreFeaturesMarkdown}
+${acceptanceMarkdown}`
   );
   const fidelity = fidelityUnmatched.length === 0 ? 'pass' : 'fail';
 
@@ -456,9 +454,7 @@ ${buildCodingStandard()}
   const selfCheckOpts = {
     entities: frontmatterEntities.length > 0 ? frontmatterEntities : listedEntityNames,
     hasDomainTables,
-    prompt: productPrompt,
-    // Same corpus the frontmatter fidelity used, so the two cannot disagree.
-    domainWords: declaredDomain
+    prompt: productPrompt
   };
 
   const selfCheck = evaluatePrdSelfCheck(bodyBeforeSelfCheck + '\n## 14. PRD Self-Check\n', selfCheckOpts);

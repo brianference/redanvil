@@ -451,6 +451,7 @@ function intentPrompt(prompt) {
     '- appName is a short product name, not the whole description.',
     '- entities are the records the app stores. Normalise entity names to start with an uppercase letter and field names to start with a lowercase letter. Letters and digits only for entities. Fields may use underscores.',
     '- Do not emit id, created_at, or updated_at. Those columns are added automatically.',
+    '- Never name an entity or field after a SQL keyword (for example order, group, key, first, last, plan, index, values, default); use a descriptive name such as orderNumber or planName. Never name an entity User or Session, and never emit a user_id field: sign-in owns those.',
     '- Field type is text, int, real, bool, date, or datetime. When a field points at another entity, set ref to that entity name and type to text. Omit ref otherwise.',
     '- Every entity needs at least one field.',
     '- hasAuth is true only when people sign in or have their own accounts.',

@@ -101,15 +101,19 @@ export function headNounPhrase(line: string): string {
  * Share of a requirement's content words that must appear in the features for
  * it to count as covered, when its head phrase does not appear verbatim.
  *
- * Calibrated 2026-09-23 on real documents (coverage of the prompt line):
- *   0.43  dog-care PRD generated from the wizard entity spec (right product)
- *   0.43  "remind you when your dog needs grooming..." with a thin spec
- *   0.32  old sushi-finder PRD (generic title/description CRUD)
- *   0.27  old plant-water-tracker PRD
- *   0.18  old herb-garden-log PRD
- *   0.14  old dog-care PRD: a double-booking scheduler, the wrong product
- * 0.35 passes the right product and fails every generic or wrong one. The
- * margin is thin, so the known-bad document is pinned in selfCheck.test.ts.
+ * Calibrated 2026-09-24 on real documents, features and acceptance text only
+ * (coverage of the prompt line):
+ *   0.429  "remind you when your dog needs grooming..." with a thin spec
+ *   0.357  dog-care PRD generated from the wizard entity spec (right product)
+ *   0.333  old sushi-finder PRD (generic title/description CRUD)
+ *   0.286  old dog-care PRD: a double-booking scheduler, the wrong product
+ *   0.273  old plant-water-tracker PRD
+ *   0.182  old herb-garden-log PRD
+ * 0.35 passes the right product and fails every generic or wrong one, but the
+ * margin is 0.024: word overlap is a weak proxy. It fails closed, so a borderline
+ * good PRD stops the build and asks the owner; the owner's job approval and the
+ * claims-based gate checks remain the primary defences. An earlier version also
+ * scored the declared entity names, which let the wrong product pass at 0.43.
  */
 export const FIDELITY_MIN_COVERAGE = 0.35;
 
@@ -213,12 +217,10 @@ function featureCorpusFromMarkdown(markdown: string): string {
  *
  * @param markdown - Full PRD markdown (or a partial document under test).
  * @param opts - Optional generation context for entity/DDL and fidelity checks.
- *   `domainWords` is the declared entity and field names, added to the fidelity
- *   corpus exactly as `generatePrd` does for the frontmatter.
  */
 export function evaluatePrdSelfCheck(
   markdown: string,
-  opts?: { entities?: string[]; hasDomainTables?: boolean; prompt?: string; domainWords?: string }
+  opts?: { entities?: string[]; hasDomainTables?: boolean; prompt?: string }
 ): PrdSelfCheckResult {
   const entities = opts?.entities ?? [];
   const hasDomainTables = opts?.hasDomainTables ?? true;
@@ -290,7 +292,7 @@ export function evaluatePrdSelfCheck(
   const hasFeatureSections = /## 8\. Core Features/.test(markdown) && /## 9\. Acceptance/.test(markdown);
   const unmatched =
     prompt.trim().length > 0 && hasFeatureSections
-      ? unmatchedPromptRequirements(prompt, `${corpus}\n${opts?.domainWords ?? ''}`)
+      ? unmatchedPromptRequirements(prompt, corpus)
       : [];
   const fidelityPass =
     prompt.trim().length === 0 || !hasFeatureSections || unmatched.length === 0;

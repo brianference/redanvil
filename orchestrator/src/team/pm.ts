@@ -88,7 +88,8 @@ export interface PmDeps {
    * Run one assigned role. The PM never trusts the return value as "done" --
    * only that the role attempted work; measurements decide.
    */
-  runRole: (assignment: RoleAssignment, iteration: number) => Promise<void>;
+  /** Resolves false when the role ran but did not count (its dependents are then skipped). */
+  runRole: (assignment: RoleAssignment, iteration: number) => Promise<void | boolean>;
   /**
    * Run the gate after promotions. Same contract as ralph's gate.
    */
@@ -280,15 +281,20 @@ export function planIteration(
  * `roleDispatchOrder`, not in completion order.
  *
  * @param assignments - Roles selected for this iteration.
- * @param run - Invokes one role. The PM does not read its result as "done".
+ * A role whose run resolves `false` (ran, did not count) is not a satisfied
+ * dependency: its dependents in the batch are skipped, transitively, instead of
+ * building on a missing artifact.
+ *
+ * @param run - Invokes one role; resolves false when the role did not count.
  * @param cap - Concurrency ceiling. Defaults to {@link PM_ROLE_CONCURRENCY}.
+ * @returns Ids of roles skipped because a dependency did not count.
  */
 export async function scheduleRoleRuns(
   assignments: readonly RoleAssignment[],
-  run: (assignment: RoleAssignment) => Promise<void>,
+  run: (assignment: RoleAssignment) => Promise<void | boolean>,
   cap: number = PM_ROLE_CONCURRENCY
-): Promise<void> {
-  if (assignments.length === 0) return;
+): Promise<string[]> {
+  if (assignments.length === 0) return [];
   if (cap < 1) {
     throw new Error(`role concurrency cap must be >= 1, got ${cap}`);
   }
@@ -302,6 +308,9 @@ export async function scheduleRoleRuns(
   }
   const runnableIds = new Set(pending.keys());
   const done = new Set<string>();
+  // Roles that ran without counting, and the dependents skipped because of them.
+  const notCounted = new Set<string>();
+  const skipped: string[] = [];
   let active = 0;
   let failed = false;
 
@@ -312,8 +321,15 @@ export async function scheduleRoleRuns(
    */
   const readyOf = (): RoleAssignment[] => {
     const ready: RoleAssignment[] = [];
-    for (const assignment of pending.values()) {
+    for (const assignment of [...pending.values()]) {
       const deps = assignment.role.dependsOn ?? [];
+      // A dependency that ran but did not count left nothing to build on.
+      if (deps.some((dep) => notCounted.has(dep))) {
+        pending.delete(assignment.role.id);
+        notCounted.add(assignment.role.id);
+        skipped.push(assignment.role.id);
+        continue;
+      }
       const blocked = deps.some((dep) => runnableIds.has(dep) && !done.has(dep));
       if (!blocked) ready.push(assignment);
     }
@@ -351,7 +367,8 @@ export async function scheduleRoleRuns(
         active += 1;
         Promise.resolve()
           .then(() => run(next))
-          .then(() => {
+          .then((counted) => {
+            if (counted === false) notCounted.add(next.role.id);
             done.add(next.role.id);
             active -= 1;
             pump();
@@ -364,6 +381,7 @@ export async function scheduleRoleRuns(
     };
     pump();
   });
+  return skipped;
 }
 
 /**

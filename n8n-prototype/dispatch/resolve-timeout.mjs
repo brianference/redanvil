@@ -33,9 +33,10 @@ export function resolveTimeout(
   slug,
   step,
   executionId,
-  resolvedAt = new Date().toISOString()
+  resolvedAt = new Date().toISOString(),
+  cycle = 0
 ) {
-  const id = gateRecordId(slug, step, executionId);
+  const id = gateRecordId(slug, step, executionId, cycle);
   const record = {
     id,
     decision: 'auto-decided',
@@ -68,7 +69,14 @@ function main() {
     if (typeof executionId !== 'string' && typeof executionId !== 'number') {
       throw new Error('payload needs executionId');
     }
-    const record = resolveTimeout(repoRoot, slug, step, String(executionId));
+    const record = resolveTimeout(
+      repoRoot,
+      slug,
+      step,
+      String(executionId),
+      new Date().toISOString(),
+      Number(payload.cycle ?? 0)
+    );
     process.stdout.write(`${record.id}\n`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

@@ -65,16 +65,14 @@ describe('dependsOn fan-out', () => {
       const prep = workflow.nodes.find((node) => node.name === 'Prepare design roles after product');
       assert.equal(prep.type, 'n8n-nodes-base.code');
       assert.match(prep.parameters.jsCode, /parallel-roles\.mjs/);
-      assert.match(prep.parameters.jsCode, /--roles=brainstorm,logo,palette,layout/);
+      assert.match(prep.parameters.jsCode, /--roles=brainstorm,logo,palette(?![,a-z])/);
       assert.deepEqual(edges(workflow, 'Prepare design roles after product'), [
         { node: 'Run design roles after product', index: 0 }
       ]);
       const runOut = edges(workflow, 'Run design roles after product').map((edge) => edge.node).sort();
-      assert.deepEqual(runOut, [
-        'Prepare gate: layout',
-        'Prepare gate: logo',
-        'Prepare gate: palette'
-      ]);
+      // Layout reads brainstorm's docs/FEATURES.md, so it starts after the batch
+      // (which includes brainstorm) rather than inside it.
+      assert.deepEqual(runOut, ['Prepare gate: logo', 'Prepare gate: palette', 'layout params']);
 
       assert.deepEqual(edges(workflow, 'If: logo approved', 0), [
         { node: 'Join: logo+palette', index: 0 }

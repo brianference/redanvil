@@ -13,7 +13,9 @@ import {
   assertSafeId,
   bucketDir,
   gateRecordId,
+  moveRecord,
   payloadFromArgv,
+  readBucket,
   repoRootFromArgv,
   writeJsonAtomic
 } from './registry.mjs';
@@ -63,7 +65,7 @@ export function buildGateRecord(payload, repoRoot, createdAt) {
   if (typeof executionId !== 'string' && typeof executionId !== 'number') {
     throw new Error('executionId is required');
   }
-  const id = gateRecordId(slug, step, String(executionId));
+  const id = gateRecordId(slug, step, String(executionId), Number(payload.cycle ?? 0));
   const created = new Date(createdAt);
   if (Number.isNaN(created.getTime())) throw new Error('createdAt is not a date');
   return {
@@ -76,8 +78,36 @@ export function buildGateRecord(payload, repoRoot, createdAt) {
     summary,
     options: optionsForStep(repoRoot, slug, step),
     resume: { type: 'n8n-form', url: resumeUrl },
-    onTimeout: 'auto-decide'
+    onTimeout: 'auto-decide',
+    executionId: String(executionId)
   };
+}
+
+/**
+ * Retire pending gates of the same execution before registering a new one.
+ *
+ * An n8n execution waits on one form at a time, and its resume URL is per
+ * execution. A gate answered directly through the form (not through dispatch)
+ * left its pending record behind, and a later `resolve` of that stale record
+ * would have posted its decision into whatever gate the execution waits on now.
+ *
+ * @param {string} repoRoot repository root
+ * @param {string} executionId n8n execution id
+ * @param {string} keepId the gate being registered
+ * @param {string} now ISO timestamp
+ */
+function supersedeOlderGates(repoRoot, executionId, keepId, now) {
+  for (const old of readBucket(repoRoot, 'pending')) {
+    if (!old || typeof old !== 'object') continue;
+    if (old.kind !== 'gate' || old.executionId !== executionId || old.id === keepId) continue;
+    moveRecord(repoRoot, 'pending', 'resolved', old.id, {
+      id: old.id,
+      decision: 'superseded',
+      notes: `a later gate (${keepId}) was registered for execution ${executionId}`,
+      resolvedAt: now,
+      resolvedBy: 'owner'
+    });
+  }
 }
 
 /**
@@ -90,6 +120,7 @@ export function buildGateRecord(payload, repoRoot, createdAt) {
 export function registerGate(payload, repoRoot, now = new Date().toISOString()) {
   const record = buildGateRecord(payload, repoRoot, now);
   assertSafeId(record.id);
+  supersedeOlderGates(repoRoot, record.executionId, record.id, now);
   writeJsonAtomic(join(bucketDir(repoRoot, 'pending'), `${record.id}.json`), record);
   return record;
 }

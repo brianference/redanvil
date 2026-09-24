@@ -166,3 +166,16 @@ describe('per-iteration judge engine', () => {
     expect(parsed?.foundNothingExplicit).toBe(true);
   });
 });
+
+describe('claudeShouldFallBack on an error envelope', () => {
+  it('falls back to grok when claude returns is_error, even with parseable text', async () => {
+    const { claudeShouldFallBack } = await import('../src/loop/classifyClaude');
+    const envelope = JSON.stringify({
+      type: 'result',
+      is_error: true,
+      result: '{"findings":[],"foundNothingExplicit":true}'
+    });
+    expect(claudeShouldFallBack({ status: 1, stdout: envelope, stderr: '' })).toBe(true);
+    expect(claudeShouldFallBack({ status: 0, stdout: envelope, stderr: '' })).toBe(true);
+  });
+});

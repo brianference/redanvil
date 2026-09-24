@@ -154,9 +154,37 @@ export function splitClauses(prompt) {
  */
 export function clauseIsNegated(clause, headingActive = false) {
   if (headingActive) return true;
-  return /(?:\b(?:is|was|are|were|do|does|did)\s+not\b|\b(?:isn't|aren't|wasn't|weren't|don't|doesn't|didn't|never)\b|\bnot an?\b|\brather than\b|\binstead of\b|\bno\b)/.test(
+  return /(?:\bnot\b|\b(?:isn't|aren't|wasn't|weren't|don't|doesn't|didn't|never)\b|\brather than\b|\binstead of\b|\bno\b|\bwithout\b|\boptional\b)/.test(
     clause
   );
+}
+
+/**
+ * Sign-in words the prompt uses, same list the regex rules test.
+ */
+const AUTH_WORDS_RE = /\b(sign[- ]?in|log[- ]?in|account|accounts|per[- ]user|profile)\b/;
+
+/**
+ * Overrule an intent that turns sign-in on when the prompt only ever mentions
+ * sign-in to rule it out ("works without a login", "login not required").
+ *
+ * Grok's answer is trusted for everything else. This one field decides whether
+ * a public app ships with an auth wall, and the prompt's own negation is the
+ * stronger evidence. The override is recorded on the intent.
+ *
+ * @param {string} prompt raw prompt
+ * @param {Record<string, unknown>} intent extracted intent
+ * @returns {Record<string, unknown>} the same intent, or a copy with hasAuth false
+ */
+export function reconcileAuthWithPrompt(prompt, intent) {
+  if (!intent || intent.hasAuth !== true) return intent;
+  const mentions = clausesWithNegation(prompt).filter((clause) => AUTH_WORDS_RE.test(clause.text));
+  if (mentions.length === 0 || mentions.some((clause) => !clause.negated)) return intent;
+  return {
+    ...intent,
+    hasAuth: false,
+    authOverride: 'every sign-in mention in the prompt is negated'
+  };
 }
 
 /**
@@ -618,8 +646,20 @@ export function settleGeneratedPrd(markdown, opts) {
   const fidelity = readFidelity(markdown);
   let exitCode = 0;
   let message = '';
+  // A missing key means the builder that produced this PRD predates the check.
+  // Continuing would build from an unchecked spec, so it fails closed unless
+  // the operator says the legacy builder is expected (REDANVIL_ALLOW_LEGACY_BUILDER=1).
+  const allowLegacy =
+    opts.allowLegacyBuilder ?? process.env.REDANVIL_ALLOW_LEGACY_BUILDER === '1';
   if (!fidelity.present) {
-    warn('prd: no fidelity key in frontmatter; continuing because an older builder does not emit one');
+    if (allowLegacy) {
+      warn('prd: no fidelity key in frontmatter; continuing because REDANVIL_ALLOW_LEGACY_BUILDER=1');
+    } else {
+      exitCode = 1;
+      message =
+        'PRD frontmatter has no fidelity key: the deployed builder predates the fidelity check. ' +
+        'Deploy the current app-builder, or set REDANVIL_ALLOW_LEGACY_BUILDER=1 to accept it.';
+    }
   } else if (fidelity.fidelity !== 'pass') {
     const alert = writeFidelityAlert(opts.repoRoot, opts.slug, fidelity.unmatched);
     exitCode = 1;
@@ -630,9 +670,13 @@ export function settleGeneratedPrd(markdown, opts) {
 
   const claims = extractClaimsBlock(markdown);
   if (claims.status === 'absent') {
-    warn(
-      'prd: no json claims block under Machine-readable claims; continuing because an older builder does not emit one'
-    );
+    if (allowLegacy) {
+      warn('prd: no json claims block; continuing because REDANVIL_ALLOW_LEGACY_BUILDER=1');
+    } else {
+      exitCode = 1;
+      const claimsMessage = 'PRD has no json claims block: the deployed builder predates it.';
+      message = message ? `${message} ${claimsMessage}` : claimsMessage;
+    }
   } else if (claims.status === 'invalid') {
     exitCode = 1;
     const claimsMessage = `PRD claims block is not JSON with kind "claims": ${claims.reason}`;
@@ -990,7 +1034,7 @@ async function main() {
   /** @type {import('playwright').Browser | undefined} */
   let browser;
   try {
-    const extracted = await extractIntent(prompt);
+    const extracted = reconcileAuthWithPrompt(prompt, await extractIntent(prompt));
     const { chromium } = await import('playwright');
     browser = await chromium.launch();
     const page = await browser.newPage();

@@ -281,7 +281,10 @@ export const PROCESS = [
     id: 'layout',
     role: 'layout',
     summary: 'Three structurally distinct layout options, gallery, OPEN decision',
-    dependsOn: ['product'],
+    // Layout's prompt reads docs/FEATURES.md, which brainstorm writes. Running
+    // them together (they used to share ['product']) handed layout a missing
+    // or stale feature list.
+    dependsOn: ['brainstorm'],
     humanGate: true,
     skippable: false,
     requires: [

@@ -683,10 +683,11 @@ export async function runAssignment(
 export function makePmRunRole(
   ctx: PmRuntimeContext,
   deps: PmRuntimeDeps = {}
-): (assignment: RoleAssignment, iteration: number) => Promise<void> {
+): (assignment: RoleAssignment, iteration: number) => Promise<boolean> {
   return async (assignment, iteration) => {
     const outcome = await runAssignment(assignment, iteration, ctx, deps);
     console.log(`pm-runtime: ${outcome.reason}`);
+    return outcome.countedAsRun;
   };
 }
 

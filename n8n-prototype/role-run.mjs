@@ -30,6 +30,15 @@ import { join, relative, resolve } from 'node:path';
 import { checkContract } from './contract-check.mjs';
 import { PROCESS } from './process-map.mjs';
 
+/**
+ * Outer backstop for one role command. The roles own their real budgets and
+ * kill their own process trees (roles/agent-failover.mjs): a design role may
+ * spend 30 minutes on grok and 30 more on a Claude handoff. This only has to
+ * be longer than that. At 20 minutes it cut design roles off mid-handoff, and
+ * on Windows spawnSync's timeout kills only cmd.exe, not the agent under it.
+ */
+const ROLE_RUN_BACKSTOP_MS = 75 * 60 * 1000;
+
 /** Minimum bytes for an artifact to count as substance rather than a placeholder. */
 const SUBSTANCE_FLOOR_BYTES = 512;
 
@@ -230,7 +239,7 @@ async function runRole(opts) {
     cwd: opts.repoRoot,
     shell: true,
     encoding: 'utf8',
-    timeout: 20 * 60 * 1000
+    timeout: ROLE_RUN_BACKSTOP_MS
   });
 
   const after = await fingerprint(artifactDir);
