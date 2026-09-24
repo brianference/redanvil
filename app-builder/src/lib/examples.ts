@@ -72,6 +72,15 @@ export interface Example {
 }
 
 /**
+ * Last public RedAnvil commit that still carried Sushi Finder, Pet Sitter and
+ * AZ Planting Calendar. They moved to their own repositories (private at the
+ * time of the move), so a link to `tree/master/<app>` would 404; a pinned
+ * commit keeps the claims below checkable against the code that shipped them.
+ */
+const MONOREPO_SNAPSHOT =
+  'https://github.com/brianference/redanvil/tree/f48afd7d1384a99778addf64f420a12cf7aa1f80';
+
+/**
  * The shipped examples.
  *
  * Add an entry only after `capture_example.mjs` has produced its frames against
@@ -161,7 +170,7 @@ export const EXAMPLES: readonly Example[] = [
         ]
       }
     ],
-    repoUrl: 'https://github.com/brianference/redanvil/tree/master/sushi-finder'
+    repoUrl: `${MONOREPO_SNAPSHOT}/sushi-finder`
   },
   {
     slug: 'pet-sitter',
@@ -238,7 +247,7 @@ export const EXAMPLES: readonly Example[] = [
         ]
       }
     ],
-    repoUrl: 'https://github.com/brianference/redanvil/tree/master/pet-sitter'
+    repoUrl: `${MONOREPO_SNAPSHOT}/pet-sitter`
   },
 
   {
@@ -294,7 +303,7 @@ export const EXAMPLES: readonly Example[] = [
       }
     ],
     liveUrl: 'https://az-planting-calendar.pages.dev',
-    repoUrl: 'https://github.com/brianference/redanvil/tree/main/az-planting-calendar',
+    repoUrl: `${MONOREPO_SNAPSHOT}/az-planting-calendar`,
     features: [
       {
         area: 'Planting data (read from live /api on 2026-08-02)',
