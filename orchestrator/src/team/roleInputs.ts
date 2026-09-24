@@ -156,10 +156,61 @@ export function recordCountedRoleInputs(
   const hash = hashDeclaredInputs(appDir, role, rows, slug);
   if (hash === null) return;
   const all = readRoleInputHashes(appDir);
+  const attempts = readAttempts(appDir);
+  const previous = attempts[role.id];
+  attempts[role.id] = {
+    hash,
+    count: previous !== undefined && previous.hash === hash ? previous.count + 1 : 1
+  };
   all[role.id] = hash;
   const p = roleInputStorePath(appDir);
   mkdirSync(dirname(p), { recursive: true });
   writeFileSync(p, `${JSON.stringify(all, null, 2)}\n`);
+  writeFileSync(attemptStorePath(appDir), `${JSON.stringify(attempts, null, 2)}\n`);
+}
+
+/**
+ * Counted runs on identical inputs before a role with failing rows is skipped.
+ *
+ * An agent re-run can fix a row the last run did not, so a failing row is
+ * retried. It is not retried forever on the same inputs: after this many
+ * identical attempts the role is skipped (and logged) until an input changes.
+ */
+export const MAX_IDENTICAL_ATTEMPTS = 2;
+
+/**
+ * Where consecutive identical-input attempts are counted.
+ *
+ * @param appDir - App directory.
+ * @returns Absolute path of the attempts store.
+ */
+function attemptStorePath(appDir: string): string {
+  return join(dirname(roleInputStorePath(appDir)), 'role-input-attempts.json');
+}
+
+/**
+ * Consecutive counted runs per role on the same input hash.
+ *
+ * @param appDir - App directory.
+ * @returns Role id to {hash, count}; empty when absent or unreadable.
+ */
+function readAttempts(appDir: string): Record<string, { hash: string; count: number }> {
+  const p = attemptStorePath(appDir);
+  if (!existsSync(p)) return {};
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(p, 'utf8'));
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    const out: Record<string, { hash: string; count: number }> = {};
+    for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+      const v = value as { hash?: unknown; count?: unknown };
+      if (typeof v?.hash === 'string' && Number.isInteger(v.count)) {
+        out[key] = { hash: v.hash, count: v.count as number };
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
 }
 
 /**
@@ -184,6 +235,14 @@ export function shouldSkipUnchangedRole(
   if (hash === null) return false;
   const stored = readRoleInputHashes(appDir)[role.id];
   if (stored !== hash) return false;
+  // A role handed a failing row still has work to do. Retry it on the same
+  // inputs up to MAX_IDENTICAL_ATTEMPTS counted runs; past that, re-running the
+  // same inputs is burning budget, and the PM logs the skip.
+  if (rows.some((row) => row.status !== 'pass')) {
+    const attempt = readAttempts(appDir)[role.id];
+    if (attempt === undefined || attempt.hash !== hash) return false;
+    if (attempt.count < MAX_IDENTICAL_ATTEMPTS) return false;
+  }
   const artifacts = expandArtifacts(role.artifacts, slug);
   return missingArtifacts(appDir, artifacts).length === 0;
 }
