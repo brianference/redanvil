@@ -639,6 +639,16 @@ const nodes = [
       // through REDANVIL_PROMPT in the environment rather than through argv, so
       // no amount of quoting in it can break out.
       jsCode:
+        // A webhook call must carry the shared token. The manual editor trigger
+        // has no headers and stays usable. Without this, any local process (or a
+        // page posting to 127.0.0.1) could start a build and skip the owner.
+        'if ($json && $json.headers) {\n' +
+        "  const expected = $env.REDANVIL_WEBHOOK_TOKEN || '';\n" +
+        "  const got = $json.headers['x-redanvil-token'] || '';\n" +
+        '  if (!expected || got !== expected) {\n' +
+        "    throw new Error('build webhook refused: missing or wrong x-redanvil-token (set REDANVIL_WEBHOOK_TOKEN for n8n and the poller)');\n" +
+        '  }\n' +
+        '}\n' +
         'const body = ($json && $json.body) ? $json.body : {};\n' +
         "const repoRoot = $env.REDANVIL_REPO || 'C:/Users/brian/RedAnvil';\n" +
         "const runner = $env.REDANVIL_RUNNER || 'C:/Users/brian/RedAnvil/n8n-prototype/role-run.mjs';\n" +

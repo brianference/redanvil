@@ -30,5 +30,13 @@ export N8N_LISTEN_ADDRESS=127.0.0.1
 export REDANVIL_REPO="${REDANVIL_REPO:-C:/Users/brian/RedAnvil}"
 export REDANVIL_RUNNER="${REDANVIL_RUNNER:-$HERE/role-run.mjs}"
 
+# Secrets for the workflow (REDANVIL_WEBHOOK_TOKEN) live in the gitignored .env,
+# never in this file. Values are base64url, so plain sourcing is safe.
+if [ -f "$HERE/.env" ]; then
+  set -a
+  . "$HERE/.env"
+  set +a
+fi
+
 cd "$HERE"
 exec npx n8n start

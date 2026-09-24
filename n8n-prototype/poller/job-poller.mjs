@@ -257,7 +257,7 @@ function buildPending(job, createdAt) {
  * POST JSON. A thrown fetch is a network error, not an HTTP status.
  * @param {typeof fetch} fetchImpl fetch implementation
  * @param {string} url absolute URL
- * @param {{token?: string, body?: object, timeoutMs?: number}} options
+ * @param {{token?: string, body?: object, timeoutMs?: number, headers?: Record<string, string>}} options
  */
 async function postJson(fetchImpl, url, options) {
   const controller = new AbortController();
@@ -267,6 +267,7 @@ async function postJson(fetchImpl, url, options) {
     const headers = { accept: 'application/json' };
     if (options.token) headers.authorization = `Bearer ${options.token}`;
     if (options.body !== undefined) headers['content-type'] = 'application/json';
+    Object.assign(headers, options.headers ?? {});
     const response = await fetchImpl(url, {
       method: 'POST',
       headers,
@@ -382,6 +383,9 @@ export async function runCycle(opts = {}) {
       'REDANVIL_RUNNER_TOKEN is not set. The poller cannot claim jobs without it.'
     );
   }
+  // Shared secret the n8n build webhook checks (REDANVIL_WEBHOOK_TOKEN on both
+  // sides). Without it the webhook refuses the POST, which is the intent.
+  const webhookToken = opts.webhookToken ?? process.env.REDANVIL_WEBHOOK_TOKEN ?? '';
   const siteUrl = (opts.siteUrl ?? process.env.REDANVIL_SITE_URL ?? DEFAULT_SITE_URL).replace(
     /\/$/,
     ''
@@ -636,8 +640,11 @@ export async function runCycle(opts = {}) {
       if (!job.webhookPosted) {
         job.webhookAttemptedAt = now().toISOString();
         store.writeJob(job);
+        // The build webhook refuses a request without this header, so only
+        // this poller (after the owner approved) can start a build.
         const webhook = await postJson(fetchImpl, `${n8nUrl}${BUILD_WEBHOOK_PATH}`, {
-          body: { slug: job.slug, prompt: job.prompt, entities: job.entities }
+          body: { slug: job.slug, prompt: job.prompt, entities: job.entities },
+          headers: webhookToken ? { 'x-redanvil-token': webhookToken } : {}
         });
         if (webhook.networkError || !webhook.ok) {
           log(
