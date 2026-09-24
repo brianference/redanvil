@@ -618,8 +618,20 @@ export function settleGeneratedPrd(markdown, opts) {
   const fidelity = readFidelity(markdown);
   let exitCode = 0;
   let message = '';
+  // A missing key means the builder that produced this PRD predates the check.
+  // Continuing would build from an unchecked spec, so it fails closed unless
+  // the operator says the legacy builder is expected (REDANVIL_ALLOW_LEGACY_BUILDER=1).
+  const allowLegacy =
+    opts.allowLegacyBuilder ?? process.env.REDANVIL_ALLOW_LEGACY_BUILDER === '1';
   if (!fidelity.present) {
-    warn('prd: no fidelity key in frontmatter; continuing because an older builder does not emit one');
+    if (allowLegacy) {
+      warn('prd: no fidelity key in frontmatter; continuing because REDANVIL_ALLOW_LEGACY_BUILDER=1');
+    } else {
+      exitCode = 1;
+      message =
+        'PRD frontmatter has no fidelity key: the deployed builder predates the fidelity check. ' +
+        'Deploy the current app-builder, or set REDANVIL_ALLOW_LEGACY_BUILDER=1 to accept it.';
+    }
   } else if (fidelity.fidelity !== 'pass') {
     const alert = writeFidelityAlert(opts.repoRoot, opts.slug, fidelity.unmatched);
     exitCode = 1;
@@ -630,9 +642,13 @@ export function settleGeneratedPrd(markdown, opts) {
 
   const claims = extractClaimsBlock(markdown);
   if (claims.status === 'absent') {
-    warn(
-      'prd: no json claims block under Machine-readable claims; continuing because an older builder does not emit one'
-    );
+    if (allowLegacy) {
+      warn('prd: no json claims block; continuing because REDANVIL_ALLOW_LEGACY_BUILDER=1');
+    } else {
+      exitCode = 1;
+      const claimsMessage = 'PRD has no json claims block: the deployed builder predates it.';
+      message = message ? `${message} ${claimsMessage}` : claimsMessage;
+    }
   } else if (claims.status === 'invalid') {
     exitCode = 1;
     const claimsMessage = `PRD claims block is not JSON with kind "claims": ${claims.reason}`;

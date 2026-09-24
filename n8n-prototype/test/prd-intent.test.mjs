@@ -99,6 +99,9 @@ const WIZARD_GROUPS = [
   { label: 'Optional. Free text or pick common chips.', options: [...WIZARD_INTEGRATIONS] }
 ];
 
+/** A PRD from a builder that predates fidelity frontmatter and the claims block. */
+const LEGACY_PRD = ['# Dog Care', '', '```yaml', 'appType: "SaaS"', 'hasAuth: false', '```', ''].join('\n');
+
 /** @type {string[]} */
 const scratchDirs = [];
 
@@ -587,20 +590,36 @@ describe('generated PRD settlement', () => {
     assert.equal(existsSync(join(badRepo, 'dog-care', '.redanvil', 'claims.json')), false);
   });
 
-  test('missing fidelity and claims warn and continue', () => {
+  test('FAIL INPUT: a PRD with no fidelity key or claims block fails closed', () => {
+    const repo = scratch();
+    const result = settleGeneratedPrd(LEGACY_PRD, {
+      repoRoot: repo,
+      slug: 'dog-care',
+      allowLegacyBuilder: false,
+      warn: () => {}
+    });
+    assert.equal(result.exitCode, 1);
+    assert.match(result.message, /no fidelity key/);
+    assert.match(result.message, /claims block/);
+  });
+
+  test('missing fidelity and claims warn and continue only when the legacy builder is allowed', () => {
     const repo = scratch();
     /** @type {string[]} */
     const warnings = [];
-    const result = settleGeneratedPrd('# Dog Care\n\n```yaml\nappType: "SaaS"\nhasAuth: false\n```\n', {
+    const result = settleGeneratedPrd(LEGACY_PRD, {
       repoRoot: repo,
       slug: 'dog-care',
+      allowLegacyBuilder: true,
       warn: (message) => warnings.push(message)
     });
     assert.equal(result.exitCode, 0);
     assert.equal(warnings.length, 2);
-    assert.match(warnings.join('\n'), /fidelity/i);
-    assert.match(warnings.join('\n'), /claims/i);
+    assert.match(warnings.join(' '), /fidelity/i);
+    assert.match(warnings.join(' '), /claims/i);
     assert.equal(existsSync(join(repo, '.redanvil', 'dispatch', 'alerts')), false);
     assert.equal(existsSync(join(repo, 'dog-care', '.redanvil', 'claims.json')), false);
   });
+
+
 });
