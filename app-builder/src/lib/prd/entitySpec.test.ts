@@ -95,3 +95,18 @@ describe('parseEntitySpec', () => {
     expect(parseEntitySpec('   ')).toEqual({ entities: [], errors: [] });
   });
 });
+
+describe('parseEntitySpec refuses names that break the generated DDL', () => {
+  it('rejects SQL keywords, case and plural table collisions, and the sign-in tables', () => {
+    const errorsOf = (text: string): string => parseEntitySpec(text).errors.join(' | ');
+    expect(errorsOf('Shop: order')).toMatch(/Shop\.order is a SQL keyword/);
+    expect(errorsOf('Group: title')).toMatch(/SQL keyword/);
+    expect(errorsOf('Dog: dueDate, duedate')).toMatch(/duplicate field: Dog\.duedate/);
+    expect(errorsOf('Dog: name; DOG: breed')).toMatch(/both map to table dogs/);
+    expect(errorsOf('Box: name; Boxe: name')).toMatch(/both map to table boxes/);
+    expect(errorsOf('User: name')).toMatch(/sign-in kit owns/);
+    expect(errorsOf('Session: name')).toMatch(/sign-in kit owns/);
+    expect(errorsOf('Dog: user_id')).toMatch(/reserved field: user_id/);
+    expect(parseEntitySpec('Dog: name, breed; CareTask: dueDate:date, dog->Dog').errors).toEqual([]);
+  });
+});

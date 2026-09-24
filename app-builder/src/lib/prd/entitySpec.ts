@@ -6,6 +6,10 @@
  * fields: valid to parse, not enough to generate.
  */
 
+// Circular with naming.ts, which imports parseEntitySpec; both are only used at
+// call time, never while either module is initialising, so the cycle is safe.
+import { entityTable } from './naming';
+
 /** Field types the entity-spec contract allows. */
 export const FIELD_TYPES = ['text', 'int', 'real', 'bool', 'date', 'datetime'] as const;
 
@@ -41,6 +45,164 @@ export interface EntitySpecParse {
 /** Contract example. Also the fallback shown in the wizard. */
 export const ENTITY_SPEC_EXAMPLE =
   'Dog: name, breed, birthDate:date; CareTask: title, dueDate:date, repeatDays:int, dog->Dog; CareLog: doneAt:datetime, note, task->CareTask';
+
+/**
+ * SQLite keywords (147), from https://www.sqlite.org/lang_keywords.html, fetched
+ * 2026-09-24. A field or table named after one (`order`, `group`, `key`) made
+ * the generated DDL a syntax error, so the parser refuses it with a rename hint.
+ */
+const SQL_KEYWORDS: ReadonlySet<string> = new Set([
+  'abort',
+  'action',
+  'add',
+  'after',
+  'all',
+  'alter',
+  'always',
+  'analyze',
+  'and',
+  'as',
+  'asc',
+  'attach',
+  'autoincrement',
+  'before',
+  'begin',
+  'between',
+  'by',
+  'cascade',
+  'case',
+  'cast',
+  'check',
+  'collate',
+  'column',
+  'commit',
+  'conflict',
+  'constraint',
+  'create',
+  'cross',
+  'current',
+  'current_date',
+  'current_time',
+  'current_timestamp',
+  'database',
+  'default',
+  'deferrable',
+  'deferred',
+  'delete',
+  'desc',
+  'detach',
+  'distinct',
+  'do',
+  'drop',
+  'each',
+  'else',
+  'end',
+  'escape',
+  'except',
+  'exclude',
+  'exclusive',
+  'exists',
+  'explain',
+  'fail',
+  'filter',
+  'first',
+  'following',
+  'for',
+  'foreign',
+  'from',
+  'full',
+  'generated',
+  'glob',
+  'group',
+  'groups',
+  'having',
+  'if',
+  'ignore',
+  'immediate',
+  'in',
+  'index',
+  'indexed',
+  'initially',
+  'inner',
+  'insert',
+  'instead',
+  'intersect',
+  'into',
+  'is',
+  'isnull',
+  'join',
+  'key',
+  'last',
+  'left',
+  'like',
+  'limit',
+  'match',
+  'materialized',
+  'natural',
+  'no',
+  'not',
+  'nothing',
+  'notnull',
+  'null',
+  'nulls',
+  'of',
+  'offset',
+  'on',
+  'or',
+  'order',
+  'others',
+  'outer',
+  'over',
+  'partition',
+  'plan',
+  'pragma',
+  'preceding',
+  'primary',
+  'query',
+  'raise',
+  'range',
+  'recursive',
+  'references',
+  'regexp',
+  'reindex',
+  'release',
+  'rename',
+  'replace',
+  'restrict',
+  'returning',
+  'right',
+  'rollback',
+  'row',
+  'rows',
+  'savepoint',
+  'select',
+  'set',
+  'table',
+  'temp',
+  'temporary',
+  'then',
+  'ties',
+  'to',
+  'transaction',
+  'trigger',
+  'unbounded',
+  'union',
+  'unique',
+  'update',
+  'using',
+  'vacuum',
+  'values',
+  'view',
+  'virtual',
+  'when',
+  'where',
+  'window',
+  'with',
+  'without'
+]);
+
+/** Tables the auth kit creates. An entity mapping to one would collide with it. */
+const AUTH_KIT_TABLES = new Set(['users', 'sessions']);
 
 /** Names the generator always adds. Listing one is an error. */
 const RESERVED_FIELDS = new Set(['id', 'created_at', 'updated_at']);
@@ -198,14 +360,43 @@ export function parseEntitySpec(text: string | null | undefined): EntitySpecPars
   }
 
   const names = new Set(entities.map((entity) => entity.name));
-  const seenEntities = new Set<string>();
+  // Compared case-insensitively and by the table each maps to: `Dog`/`DOG` and
+  // `Box`/`Boxe` were both accepted, and `CREATE TABLE IF NOT EXISTS` then
+  // silently dropped the second. SQLite identifiers are case-insensitive too.
+  const tableOwner = new Map<string, string>();
   for (const entity of entities) {
-    if (seenEntities.has(entity.name)) errors.push(`duplicate entity: ${entity.name}`);
-    seenEntities.add(entity.name);
+    const table = entityTable(entity.name);
+    if (SQL_KEYWORDS.has(entity.name.toLowerCase()) || SQL_KEYWORDS.has(table)) {
+      errors.push(
+        `${entity.name} (table ${table}) is a SQL keyword; rename it, for example ${entity.name}Item`
+      );
+    }
+    if (AUTH_KIT_TABLES.has(table)) {
+      errors.push(`${entity.name} maps to table ${table}, which the sign-in kit owns; rename it`);
+    }
+    const owner = tableOwner.get(table);
+    if (owner !== undefined) {
+      errors.push(
+        owner === entity.name
+          ? `duplicate entity: ${entity.name}`
+          : `duplicate entity: ${owner} and ${entity.name} both map to table ${table}`
+      );
+    } else {
+      tableOwner.set(table, entity.name);
+    }
     const seenFields = new Set<string>();
     for (const field of entity.fields) {
-      if (seenFields.has(field.name)) errors.push(`duplicate field: ${entity.name}.${field.name}`);
-      seenFields.add(field.name);
+      const key = field.name.toLowerCase();
+      if (seenFields.has(key)) errors.push(`duplicate field: ${entity.name}.${field.name}`);
+      seenFields.add(key);
+      if (SQL_KEYWORDS.has(key)) {
+        errors.push(
+          `${entity.name}.${field.name} is a SQL keyword; rename it, for example ${field.name}Name`
+        );
+      }
+      if (key === 'user_id') {
+        errors.push(`reserved field: ${field.name} (sign-in adds user_id to every table)`);
+      }
       if (field.ref !== undefined && !names.has(field.ref)) {
         errors.push(`unknown entity ref: ${field.name}->${field.ref}`);
       }

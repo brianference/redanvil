@@ -623,3 +623,20 @@ describe('generated PRD settlement', () => {
 
 
 });
+
+describe('sign-in negation', () => {
+  test('FAIL INPUT: negated sign-in phrasings never switch sign-in on', async () => {
+    const { reconcileAuthWithPrompt, clauseIsNegated } = await import('../roles/prd.mjs');
+    for (const prompt of [
+      'A recipe box that works without a login',
+      'A public tide chart, login not required',
+      'A plant tracker; sign-in is optional'
+    ]) {
+      const intent = reconcileAuthWithPrompt(prompt, { hasAuth: true });
+      assert.equal(intent.hasAuth, false, prompt);
+    }
+    assert.equal(reconcileAuthWithPrompt('A journal with a private account per user', { hasAuth: true }).hasAuth, true);
+    assert.equal(clauseIsNegated('works without a login'), true);
+    assert.equal(clauseIsNegated('users log in with email'), false);
+  });
+});

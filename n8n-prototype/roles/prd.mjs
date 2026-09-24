@@ -154,9 +154,37 @@ export function splitClauses(prompt) {
  */
 export function clauseIsNegated(clause, headingActive = false) {
   if (headingActive) return true;
-  return /(?:\b(?:is|was|are|were|do|does|did)\s+not\b|\b(?:isn't|aren't|wasn't|weren't|don't|doesn't|didn't|never)\b|\bnot an?\b|\brather than\b|\binstead of\b|\bno\b)/.test(
+  return /(?:\bnot\b|\b(?:isn't|aren't|wasn't|weren't|don't|doesn't|didn't|never)\b|\brather than\b|\binstead of\b|\bno\b|\bwithout\b|\boptional\b)/.test(
     clause
   );
+}
+
+/**
+ * Sign-in words the prompt uses, same list the regex rules test.
+ */
+const AUTH_WORDS_RE = /\b(sign[- ]?in|log[- ]?in|account|accounts|per[- ]user|profile)\b/;
+
+/**
+ * Overrule an intent that turns sign-in on when the prompt only ever mentions
+ * sign-in to rule it out ("works without a login", "login not required").
+ *
+ * Grok's answer is trusted for everything else. This one field decides whether
+ * a public app ships with an auth wall, and the prompt's own negation is the
+ * stronger evidence. The override is recorded on the intent.
+ *
+ * @param {string} prompt raw prompt
+ * @param {Record<string, unknown>} intent extracted intent
+ * @returns {Record<string, unknown>} the same intent, or a copy with hasAuth false
+ */
+export function reconcileAuthWithPrompt(prompt, intent) {
+  if (!intent || intent.hasAuth !== true) return intent;
+  const mentions = clausesWithNegation(prompt).filter((clause) => AUTH_WORDS_RE.test(clause.text));
+  if (mentions.length === 0 || mentions.some((clause) => !clause.negated)) return intent;
+  return {
+    ...intent,
+    hasAuth: false,
+    authOverride: 'every sign-in mention in the prompt is negated'
+  };
 }
 
 /**
@@ -1006,7 +1034,7 @@ async function main() {
   /** @type {import('playwright').Browser | undefined} */
   let browser;
   try {
-    const extracted = await extractIntent(prompt);
+    const extracted = reconcileAuthWithPrompt(prompt, await extractIntent(prompt));
     const { chromium } = await import('playwright');
     browser = await chromium.launch();
     const page = await browser.newPage();

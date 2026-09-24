@@ -20,8 +20,9 @@ export interface PromptClause {
 /**
  * Whether a clause is under negation scope.
  *
- * Matches `not a` / `is not` / `isn't` / `never` / `no` / `rather than` /
- * `instead of` / `not an` / `do(es) not`, plus the "What this is NOT:"
+ * Matches any `not`, the n't contractions, `never`, `no`, `rather than`,
+ * `instead of`, `without` and `optional` ("works without a login", "login not
+ * required" and "sign-in is optional" all used to switch sign-in on), plus the "What this is NOT:"
  * heading form (the heading itself and every remaining clause of that
  * sentence, via `headingActive`).
  *
@@ -31,7 +32,7 @@ export interface PromptClause {
  */
 export function clauseIsNegated(clause: string, headingActive = false): boolean {
   if (headingActive) return true;
-  return /(?:\b(?:is|was|are|were|do|does|did)\s+not\b|\b(?:isn't|aren't|wasn't|weren't|don't|doesn't|didn't|never)\b|\bnot an?\b|\brather than\b|\binstead of\b|\bno\b)/.test(
+  return /(?:\bnot\b|\b(?:isn't|aren't|wasn't|weren't|don't|doesn't|didn't|never)\b|\brather than\b|\binstead of\b|\bno\b|\bwithout\b|\boptional\b)/.test(
     clause
   );
 }

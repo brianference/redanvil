@@ -5,6 +5,21 @@ import { legalDocs } from './legalCopy';
 import { featureAuditScript, featureManifestJson, coldVisitorScript } from './featureAudit';
 import { apiExamplesJson, coverageStateJson } from './apiExamples';
 
+/**
+ * Escape text for a double-quoted HTML attribute. The job prompt is free text
+ * from the site, and a `"` in it broke out of the meta description attribute.
+ *
+ * @param value - Raw text.
+ * @returns Attribute-safe text.
+ */
+function escapeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 const PAGES = ['Home', 'About', 'Terms', 'Privacy', 'Contact'] as const;
 
 /** Map scaffold field types to SQLite column types. */
@@ -1178,7 +1193,7 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
       `    <meta charset="UTF-8" />\n` +
       `    <meta name="viewport" content="width=device-width, initial-scale=1" />\n` +
       `    <title>${job.slug}</title>\n` +
-      `    <meta name="description" content="${job.prompt.slice(0, 150)}" />\n` +
+      `    <meta name="description" content="${escapeHtmlAttribute(job.prompt.slice(0, 150))}" />\n` +
       `    <meta property="og:title" content="${job.slug}" />\n` +
       `    <meta property="og:type" content="website" />\n` +
       `    <meta property="og:image" content="/og.svg" />\n` +
