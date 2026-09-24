@@ -46,7 +46,7 @@ const timeoutMs =
     : undefined;
 
 const dir = resolve(appDir);
-const report = runIndependentDiffReview({
+const report = await runIndependentDiffReview({
   dir,
   repoRoot: repoRoot !== undefined ? resolve(repoRoot) : undefined,
   outPath: outPath !== undefined ? resolve(outPath) : undefined,

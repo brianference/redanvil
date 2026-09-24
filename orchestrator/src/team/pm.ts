@@ -20,6 +20,7 @@ import {
 import { assignUnmetRows, type RoleAssignment } from './assign';
 import type { Role, RoleId } from './roles';
 import { ROLES } from './roles';
+import { shouldSkipUnchangedRole } from './roleInputs';
 import {
   enforceDesignBeforeBuild,
   type DesignPreconditionResult
@@ -174,6 +175,15 @@ export interface PmResult {
 }
 
 /**
+ * How many roles an iteration may have in flight at once.
+ *
+ * The old `Promise.all` looked parallel and was not: `runRole` blocked on
+ * `spawnSync`, so the cap was secretly 1. Three is the default so a fan-out
+ * of independent roles overlaps without unbounded grok processes.
+ */
+export const PM_ROLE_CONCURRENCY = 3;
+
+/**
  * Stable dispatch order: product → design (logo, layout) → other → user-refuse last.
  *
  * @param id - Role id.
@@ -262,6 +272,114 @@ export function planIteration(
 }
 
 /**
+ * Run assigned roles in dependency order, with at most `cap` in flight.
+ *
+ * A role starts only after every `dependsOn` id that is also in this batch
+ * has finished. Dependencies not in the batch are already satisfied (they
+ * were not assigned this iteration). Ready roles are started in
+ * `roleDispatchOrder`, not in completion order.
+ *
+ * @param assignments - Roles selected for this iteration.
+ * @param run - Invokes one role. The PM does not read its result as "done".
+ * @param cap - Concurrency ceiling. Defaults to {@link PM_ROLE_CONCURRENCY}.
+ */
+export async function scheduleRoleRuns(
+  assignments: readonly RoleAssignment[],
+  run: (assignment: RoleAssignment) => Promise<void>,
+  cap: number = PM_ROLE_CONCURRENCY
+): Promise<void> {
+  if (assignments.length === 0) return;
+  if (cap < 1) {
+    throw new Error(`role concurrency cap must be >= 1, got ${cap}`);
+  }
+
+  const pending = new Map<string, RoleAssignment>();
+  for (const assignment of assignments) {
+    if (pending.has(assignment.role.id)) {
+      throw new Error(`duplicate role in one iteration: ${assignment.role.id}`);
+    }
+    pending.set(assignment.role.id, assignment);
+  }
+  const runnableIds = new Set(pending.keys());
+  const done = new Set<string>();
+  let active = 0;
+  let failed = false;
+
+  /**
+   * Roles whose in-batch dependencies have finished, in dispatch order.
+   *
+   * @returns Ready assignments still waiting to start.
+   */
+  const readyOf = (): RoleAssignment[] => {
+    const ready: RoleAssignment[] = [];
+    for (const assignment of pending.values()) {
+      const deps = assignment.role.dependsOn ?? [];
+      const blocked = deps.some((dep) => runnableIds.has(dep) && !done.has(dep));
+      if (!blocked) ready.push(assignment);
+    }
+    ready.sort((a, b) => {
+      const delta = roleDispatchOrder(a.role.id) - roleDispatchOrder(b.role.id);
+      if (delta !== 0) return delta;
+      return a.role.id.localeCompare(b.role.id);
+    });
+    return ready;
+  };
+
+  await new Promise<void>((resolve, reject) => {
+    /**
+     * Start ready roles until the cap is full, then wait for one to finish.
+     */
+    const pump = (): void => {
+      if (failed) return;
+      if (pending.size === 0 && active === 0) {
+        resolve();
+        return;
+      }
+      const ready = readyOf();
+      if (ready.length === 0 && active === 0 && pending.size > 0) {
+        reject(
+          new Error(
+            `unsatisfiable dependsOn among assigned roles: ${[...pending.keys()].join(', ')}`
+          )
+        );
+        return;
+      }
+      while (active < cap && ready.length > 0) {
+        const next = ready.shift();
+        if (next === undefined) break;
+        pending.delete(next.role.id);
+        active += 1;
+        Promise.resolve()
+          .then(() => run(next))
+          .then(() => {
+            done.add(next.role.id);
+            active -= 1;
+            pump();
+          })
+          .catch((err: unknown) => {
+            failed = true;
+            reject(err);
+          });
+      }
+    };
+    pump();
+  });
+}
+
+/**
+ * App slug the PM should use when hashing role inputs.
+ *
+ * @param appDir - App directory, when the caller passed one.
+ * @param slug - Explicit slug, when the caller passed one.
+ * @returns Slug, or empty when there is no app directory.
+ */
+function slugForInputs(appDir: string | undefined, slug: string | undefined): string {
+  if (slug !== undefined && slug.length > 0) return slug;
+  if (appDir === undefined || appDir === '') return '';
+  return appDir.replace(/[/\\]+$/, '').split(/[/\\]/).pop() ?? 'app';
+}
+
+/**
  * Dry-run: print role assignments for unmet rows without mutating anything.
  *
  * @param statuses - Checklist statuses (e.g. from an existing gate result).
@@ -330,7 +448,7 @@ export async function invokeIterationJudge(
   appDir: string,
   runners?: IterationJudgeRunners
 ): Promise<{ ok: boolean; summary: string; engine?: JudgeEngine }> {
-  const review = runIndependentDiffReview({
+  const review = await runIndependentDiffReview({
     dir: appDir,
     engine: 'claude',
     runClaude: runners?.runClaude,
@@ -439,13 +557,25 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
       return a.role.id.localeCompare(b.role.id);
     });
 
-    // Parallel for independent roles; sequential if budget forces drip.
+    // Parallel for independent roles, but never ahead of dependsOn, and never
+    // more than PM_ROLE_CONCURRENCY at once. spawnSync used to make the
+    // Promise.all sequential; scheduleRoleRuns awaits an async runner.
     // Design/build never appear here when product brief is missing; build never
     // appears when design is missing -- planIteration already stripped them.
     // When a precondition blocks every score-raising role, only unblocking
     // roles remain (product, or logo/layout) — no full fan-out for free.
     const runnable: RoleAssignment[] = [];
+    const skippedUnchanged: RoleId[] = [];
+    const inputSlug = slugForInputs(deps.appDir, deps.slug);
     for (const a of ordered) {
+      if (
+        deps.appDir !== undefined &&
+        deps.appDir !== '' &&
+        shouldSkipUnchangedRole(deps.appDir, a.role, a.rows, inputSlug)
+      ) {
+        skippedUnchanged.push(a.role.id);
+        continue;
+      }
       if (budgetUsed >= budgetCeiling) {
         budgetExhausted = true;
         break;
@@ -454,7 +584,13 @@ export async function runPm(deps: PmDeps, cfg: PmConfig): Promise<PmResult> {
       budgetUsed += 1;
     }
 
-    await Promise.all(runnable.map((a) => deps.runRole(a, iteration)));
+    if (skippedUnchanged.length > 0) {
+      console.log(
+        `pm: iteration ${iteration} economy — skipped (inputs unchanged): ${skippedUnchanged.join(', ')}`
+      );
+    }
+
+    await scheduleRoleRuns(runnable, (a) => deps.runRole(a, iteration));
   };
 
   /**

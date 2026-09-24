@@ -9,12 +9,13 @@
  *
  * The judge reads the DIFF, not a summary of the diff.
  */
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
-import { quoteForCmd, scrubbedEnv } from '../process/run';
+import { mapPool } from '../process/pool';
+import { runCommand, scrubbedEnv } from '../process/run';
 import { claudeShouldFallBack } from './classifyClaude';
 import {
   allFailingFindingsAccepted,
@@ -190,7 +191,7 @@ export interface IndependentReviewOptions {
     index: number;
     total: number;
     prompt: string;
-  }) => { stdout: string };
+  }) => { stdout: string } | Promise<{ stdout: string }>;
   /**
    * Test-only: override the per-chunk character budget (default
    * JUDGE_PROMPT_DIFF_BUDGET). Production never sets this.
@@ -208,6 +209,15 @@ export interface IndependentReviewOptions {
  * raising the cap (843KB will not fit one context).
  */
 export const JUDGE_PROMPT_DIFF_BUDGET = 120_000;
+
+/**
+ * How many chunk reviews may be in flight at once.
+ *
+ * Each chunk is its own grok process (up to 600s). Sequential `spawnSync`
+ * made a multi-chunk review take the sum of those ceilings. Three overlaps
+ * them without an unbounded process fan-out.
+ */
+export const JUDGE_CHUNK_CONCURRENCY = 3;
 
 /**
  * Hard ceiling on how many judge invocations one review may spawn. Hitting
@@ -1230,7 +1240,7 @@ export function parseJudgeJson(text: string): {
  * parseable review.
  *
  * @param opts - Cwd, path to the prompt file, session id, optional model.
- * @returns Argv for `spawnSync('grok', ...)`.
+ * @returns Argv for `runCommand('grok', ...)`.
  */
 export function buildIndependentReviewGrokArgs(opts: {
   cwd: string;
@@ -1272,7 +1282,7 @@ export function buildIndependentReviewGrokArgs(opts: {
  * No `--resume` and no session id: each call is a fresh context. The prompt
  * is the diff, never a verdict file.
  *
- * @returns The plan `spawnSync` must use. `shell` is always false.
+ * @returns The plan `runCommand` must use. `shell` is always false.
  */
 export function claudeSpawnPlan(prompt: string): {
   command: 'claude';
@@ -1296,28 +1306,26 @@ export function claudeSpawnPlan(prompt: string): {
  * @param timeoutMs - Wall-clock ceiling.
  * @returns Spawn result. `unavailable` when the process never produced an exit.
  */
-function invokeClaudeForChunk(
+async function invokeClaudeForChunk(
   dir: string,
   prompt: string,
   timeoutMs: number
-): EngineSpawnResult {
+): Promise<EngineSpawnResult> {
   const plan = claudeSpawnPlan(prompt);
-  const claude = spawnSync(plan.command, plan.args, {
+  // Async so pooled chunks overlap. The prompt is stdin, never argv, so the
+  // diff cannot hit the Windows command-line ceiling or pass through cmd.exe
+  // quoting; the arguments are fixed flags.
+  const claude = await runCommand(plan.command, plan.args, {
     cwd: dir,
     input: plan.input,
-    encoding: 'utf8',
-    timeout: timeoutMs,
-    maxBuffer: 16 * 1024 * 1024,
-    // Explicit. Claude is not a .cmd we are willing to hand to cmd.exe; a
-    // missing binary is "unavailable" and the caller falls back to Grok.
-    shell: plan.shell,
+    timeoutMs,
     env: scrubbedEnv([])
   });
   return {
-    status: claude.status,
-    stdout: typeof claude.stdout === 'string' ? claude.stdout : String(claude.stdout ?? ''),
-    stderr: typeof claude.stderr === 'string' ? claude.stderr : String(claude.stderr ?? ''),
-    unavailable: Boolean(claude.error) || claude.status === null
+    status: claude.code,
+    stdout: claude.stdout,
+    stderr: claude.stderr,
+    unavailable: claude.code === null
   };
 }
 
@@ -1370,16 +1378,21 @@ function emptyDiffReport(base: {
 /**
  * Invoke grok once for a single chunk's prompt file.
  *
- * @param dir - App cwd for the CLI.
+ * Async via {@link runCommand}. `runCommand` quotes argv for the Windows
+ * shell, so this does not pre-quote (that would double-quote). A null exit
+ * is unavailable: timeout kill or a missing binary, same as the old
+ * `error || status === null` check.
+ *
+ * @param dir - App cwd for the CLI (`--cwd`, not the spawn cwd).
  * @param prompt - Full refute prompt text.
  * @param timeoutMs - Per-chunk spawn timeout.
  * @returns stdout text, or an error marker when the binary cannot run.
  */
-function invokeGrokForChunk(
+async function invokeGrokForChunk(
   dir: string,
   prompt: string,
   timeoutMs: number
-): { stdout: string; unavailable: boolean; detail: string } {
+): Promise<{ stdout: string; unavailable: boolean; detail: string }> {
   const taskDir = mkdtempSync(join(tmpdir(), 'redanvil-judge-diff-'));
   const promptFile = join(taskDir, 'REFUTE_TASK.md');
   writeFileSync(promptFile, prompt, 'utf8');
@@ -1389,31 +1402,27 @@ function invokeGrokForChunk(
     promptFile,
     sessionId: randomUUID()
   });
-  // grok is a .cmd shim on Windows — needs a shell. Node's shell:true joins
-  // argv without quoting, so multi-word args must be quoteForCmd'd first.
-  const useShell = process.platform === 'win32';
-  const finalArgv = useShell ? grokArgv.map(quoteForCmd) : grokArgv;
 
   try {
-    const grok = spawnSync('grok', finalArgv, {
-      encoding: 'utf8',
-      timeout: timeoutMs,
-      maxBuffer: 16 * 1024 * 1024,
-      shell: useShell,
+    const grok = await runCommand('grok', grokArgv, {
+      timeoutMs,
       // Same allowlist as harness runGrok / lg-grok-no-secrets — not a denylist.
       env: scrubbedEnv([])
     });
-    if (grok.error || grok.status === null) {
+    if (grok.code === null) {
+      const detailText = grok.timedOut
+        ? 'timed out'
+        : grok.stderr.trim() || grok.stdout.trim() || 'non-zero or missing binary';
       return {
-        stdout: String(grok.stderr ?? grok.stdout ?? ''),
+        stdout: `${grok.stdout}${grok.stderr}`,
         unavailable: true,
         detail:
           'grok CLI could not be run — independent review is required before done; ' +
-          (grok.error instanceof Error ? grok.error.message : 'non-zero or missing binary')
+          detailText
       };
     }
-    const stdout = typeof grok.stdout === 'string' ? grok.stdout : String(grok.stdout ?? '');
-    const stderr = typeof grok.stderr === 'string' ? grok.stderr : String(grok.stderr ?? '');
+    const stdout = grok.stdout;
+    const stderr = grok.stderr;
     // Prefer stdout (JSON envelope). stderr is diagnostic only — concat only as
     // a fallback when stdout is empty so parseJudgeJson can still fail closed.
     const raw = stdout.trim().length > 0 ? stdout : `${stdout}\n${stderr}`;
@@ -1427,7 +1436,142 @@ function invokeGrokForChunk(
   }
 }
 
-export function runIndependentDiffReview(opts: IndependentReviewOptions): IndependentReviewReport {
+/**
+ * Judge one chunk: hook, or grok with one retry on unparseable output.
+ *
+ * @param args - Chunk, prompt context, and how to invoke the reviewer.
+ * @returns The chunk result, plus whether the reviewer could not be started.
+ */
+async function reviewOneChunk(args: {
+  dir: string;
+  slug: string;
+  commit: string;
+  chunk: DiffChunk;
+  total: number;
+  diffChars: number;
+  timeoutMs: number;
+  reviewChunk?: IndependentReviewOptions['reviewChunk'];
+  /** Runs the active judge engine (with its Claude-to-Grok fallback) on one prompt. */
+  invoke: (prompt: string) => Promise<{ stdout: string; unavailable: boolean; detail: string }>;
+}): Promise<{ result: ChunkReviewResult; unavailable: boolean; detail: string }> {
+  const { chunk, total } = args;
+  const prompt = buildRefutePrompt(args.slug, args.commit, chunk.text, {
+    chunkIndex: chunk.index,
+    chunkTotal: total,
+    coverageChars: chunk.coverageChars,
+    diffChars: args.diffChars,
+    splitFile: chunk.splitFile,
+    splitFilePath: chunk.splitFilePath,
+    splitPart: chunk.splitPart,
+    splitParts: chunk.splitParts
+  });
+
+  const unavailableResult = (
+    detail: string,
+    stdout: string
+  ): { result: ChunkReviewResult; unavailable: boolean; detail: string } => ({
+    unavailable: true,
+    detail,
+    result: {
+      index: chunk.index,
+      coverageChars: chunk.coverageChars,
+      completed: false,
+      foundNothingExplicit: false,
+      findings: [
+        {
+          title: 'judge unavailable',
+          citation: 'orchestrator/src/loop/independentReview.ts:1',
+          detail: `${detail} (chunk ${chunk.index + 1}/${total})`,
+          passed: false
+        }
+      ],
+      rawExcerpt: stdout.slice(0, 2000)
+    }
+  });
+
+  let raw: string;
+  if (args.reviewChunk) {
+    const reviewed = await args.reviewChunk({
+      chunk,
+      index: chunk.index,
+      total,
+      prompt
+    });
+    raw = reviewed.stdout;
+  } else {
+    const invoked = await args.invoke(prompt);
+    if (invoked.unavailable) {
+      return unavailableResult(invoked.detail, invoked.stdout);
+    }
+    raw = invoked.stdout;
+  }
+
+  // One retry on unparseable live output — multi-chunk reviews amplify
+  // transient CLI/schema failures, and a single flaky chunk would otherwise
+  // discard an otherwise full review (fail-closed still applies if retry fails).
+  let parsed = parseJudgeJson(raw);
+  if (parsed === null && !args.reviewChunk) {
+    const retry = await args.invoke(prompt);
+    if (retry.unavailable) {
+      return unavailableResult(retry.detail, retry.stdout);
+    }
+    raw = retry.stdout;
+    parsed = parseJudgeJson(raw);
+  }
+  if (parsed === null) {
+    return {
+      unavailable: false,
+      detail: '',
+      result: {
+        index: chunk.index,
+        coverageChars: chunk.coverageChars,
+        completed: false,
+        foundNothingExplicit: false,
+        findings: [
+          {
+            title: REVIEWER_UNREACHABLE_RE.test(raw)
+              ? 'judge could not run'
+              : 'unparseable judge output',
+            citation: 'orchestrator/src/loop/independentReview.ts:1',
+            detail: REVIEWER_UNREACHABLE_RE.test(raw)
+              ? `chunk ${chunk.index + 1}/${total}: the reviewer could not be reached — ` +
+                `${raw.slice(0, 200)} — cannot verify; fail closed`
+              : `chunk ${chunk.index + 1}/${total} did not return JSON — cannot verify; fail closed`,
+            passed: false
+          }
+        ],
+        rawExcerpt: raw.slice(0, 4000)
+      }
+    };
+  }
+  return {
+    unavailable: false,
+    detail: '',
+    result: {
+      index: chunk.index,
+      coverageChars: chunk.coverageChars,
+      completed: true,
+      foundNothingExplicit: parsed.foundNothingExplicit === true,
+      findings: parsed.findings,
+      rawExcerpt: raw.slice(0, 4000)
+    }
+  };
+}
+
+/**
+ * Run the independent diff review and write evidence bound to the commit.
+ *
+ * Chunk reviews run through {@link mapPool} ({@link JUDGE_CHUNK_CONCURRENCY}
+ * at a time). Result order is chunk order. One unavailable chunk stops new
+ * chunks from starting; chunks that never started are still recorded so
+ * coverage accounting stays complete and fail-closed.
+ *
+ * @param opts - Review options.
+ * @returns Report (also written to disk when possible).
+ */
+export async function runIndependentDiffReview(
+  opts: IndependentReviewOptions
+): Promise<IndependentReviewReport> {
   const dir = resolve(opts.dir);
   const repo = opts.repoRoot ?? gitRoot(dir) ?? dir;
   const slug = basename(dir);
@@ -1513,26 +1657,29 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
     opts.maxChunks ?? MAX_DIFF_REVIEW_CHUNKS
   );
   const timeoutMs = opts.timeoutMs ?? 600_000;
-  const chunkResults: ChunkReviewResult[] = [];
   let unavailableDetail: string | null = null;
+  let unavailableChunk = 0;
+  let stopScheduling = false;
   // Claude is opt-in (the PM passes it). Anything else, including the test
-  // hook that supplies chunks directly, stays on Grok unless asked.
-  let activeEngine: JudgeEngine = opts.engine ?? 'grok';
+  // hook that supplies chunks directly, stays on Grok unless asked. One shared
+  // switch: once Claude is rate-limited, every later chunk goes to Grok, so a
+  // review never ping-pongs between engines.
+  const engineState: { active: JudgeEngine } = { active: opts.engine ?? 'grok' };
 
   /**
-   * Spawn the engine that is active for this chunk, or the injected runner.
+   * Spawn one engine for one prompt, or the injected test runner.
    *
    * @param engine - claude or grok.
    * @param prompt - Refute prompt for this chunk.
    * @returns Spawn result. Unavailable is never treated as a review.
    */
-  const spawnEngine = (engine: JudgeEngine, prompt: string): EngineSpawnResult => {
+  const spawnEngine = async (engine: JudgeEngine, prompt: string): Promise<EngineSpawnResult> => {
     if (engine === 'claude') {
       if (opts.runClaude) return opts.runClaude(prompt, timeoutMs);
       return invokeClaudeForChunk(dir, prompt, timeoutMs);
     }
     if (opts.runGrok) return opts.runGrok(prompt, timeoutMs);
-    const grok = invokeGrokForChunk(dir, prompt, timeoutMs);
+    const grok = await invokeGrokForChunk(dir, prompt, timeoutMs);
     return {
       status: grok.unavailable ? null : 0,
       stdout: grok.stdout,
@@ -1541,123 +1688,77 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
     };
   };
 
-  for (const chunk of split.chunks) {
-    const prompt = buildRefutePrompt(slug, commit, chunk.text, {
-      chunkIndex: chunk.index,
-      chunkTotal: split.chunks.length,
-      coverageChars: chunk.coverageChars,
-      diffChars: split.diffChars,
-      splitFile: chunk.splitFile,
-      splitFilePath: chunk.splitFilePath,
-      splitPart: chunk.splitPart,
-      splitParts: chunk.splitParts
-    });
+  /**
+   * Run the active engine, falling back from Claude to Grok once.
+   *
+   * @param prompt - Refute prompt for this chunk.
+   * @returns Output in the shape reviewOneChunk expects.
+   */
+  const invokeJudge = async (
+    prompt: string
+  ): Promise<{ stdout: string; unavailable: boolean; detail: string }> => {
+    let invoked = await spawnEngine(engineState.active, prompt);
+    if (engineState.active === 'claude' && claudeShouldFallBack(invoked)) {
+      engineState.active = 'grok';
+      invoked = await spawnEngine('grok', prompt);
+    }
+    const unavailable = invoked.unavailable === true;
+    return {
+      stdout: invoked.stdout,
+      unavailable,
+      detail: unavailable ? invoked.stderr || invoked.stdout || 'judge unavailable' : ''
+    };
+  };
 
-    let raw: string;
-    if (opts.reviewChunk) {
-      raw = opts.reviewChunk({
+  const pooled = await mapPool(
+    split.chunks,
+    JUDGE_CHUNK_CONCURRENCY,
+    async (chunk) => {
+      const reviewed = await reviewOneChunk({
+        dir,
+        slug,
+        commit,
         chunk,
-        index: chunk.index,
         total: split.chunks.length,
-        prompt
-      }).stdout;
-    } else {
-      let invoked = spawnEngine(activeEngine, prompt);
-      // One fallback for the whole review, not per chunk: a rate-limited
-      // Claude must not leave half the diff on Claude and half on Grok.
-      if (activeEngine === 'claude' && claudeShouldFallBack(invoked)) {
-        activeEngine = 'grok';
-        invoked = spawnEngine('grok', prompt);
+        diffChars: split.diffChars,
+        timeoutMs,
+        reviewChunk: opts.reviewChunk,
+        invoke: invokeJudge
+      });
+      if (reviewed.unavailable) {
+        stopScheduling = true;
+        unavailableDetail = reviewed.detail;
+        unavailableChunk = chunk.index;
       }
-      if (invoked.unavailable) {
-        unavailableDetail = invoked.stderr || invoked.stdout || 'judge unavailable';
-        chunkResults.push({
-          index: chunk.index,
-          coverageChars: chunk.coverageChars,
-          completed: false,
-          foundNothingExplicit: false,
-          findings: [
-            {
-              title: 'judge unavailable',
-              citation: 'orchestrator/src/loop/independentReview.ts:1',
-              detail: `${unavailableDetail} (chunk ${chunk.index + 1}/${split.chunks.length})`,
-              passed: false
-            }
-          ],
-          rawExcerpt: invoked.stdout.slice(0, 2000)
-        });
-        // Still walk remaining chunks' coverage accounting via short-circuit:
-        // one unavailable chunk already fails the aggregate; mark the rest incomplete.
-        for (let j = chunk.index + 1; j < split.chunks.length; j++) {
-          const rest = split.chunks[j]!;
-          chunkResults.push({
-            index: rest.index,
-            coverageChars: rest.coverageChars,
-            completed: false,
-            foundNothingExplicit: false,
-            findings: [
-              {
-                title: 'judge unavailable',
-                citation: 'orchestrator/src/loop/independentReview.ts:1',
-                detail: `skipped after unavailable chunk ${chunk.index + 1} — ${unavailableDetail}`,
-                passed: false
-              }
-            ],
-            rawExcerpt: ''
-          });
-        }
-        break;
-      }
-      raw = invoked.stdout;
-    }
+      return reviewed.result;
+    },
+    () => stopScheduling
+  );
 
-    // One retry on unparseable live output — multi-chunk reviews amplify
-    // transient CLI/schema failures, and a single flaky chunk would otherwise
-    // discard an otherwise full review (fail-closed still applies if retry fails).
-    // Retry the engine that actually answered. A rate-limited Claude has
-    // already moved activeEngine to grok and must not be retried as Claude.
-    let parsed = parseJudgeJson(raw);
-    if (parsed === null && !opts.reviewChunk) {
-      const retry = spawnEngine(activeEngine, prompt);
-      if (!retry.unavailable) {
-        raw = retry.stdout;
-        parsed = parseJudgeJson(raw);
-      }
+  const chunkResults: ChunkReviewResult[] = [];
+  for (let i = 0; i < split.chunks.length; i++) {
+    const got = pooled[i];
+    if (got !== undefined) {
+      chunkResults.push(got);
+      continue;
     }
-    if (parsed === null) {
-      chunkResults.push({
-        index: chunk.index,
-        coverageChars: chunk.coverageChars,
-        completed: false,
-        foundNothingExplicit: false,
-        findings: [
-          {
-            // See the note at the aggregate site: a reviewer that could not RUN
-            // is not one that answered badly. Both fail closed.
-            title: REVIEWER_UNREACHABLE_RE.test(raw)
-              ? 'judge could not run'
-              : 'unparseable judge output',
-            citation: 'orchestrator/src/loop/independentReview.ts:1',
-            detail: REVIEWER_UNREACHABLE_RE.test(raw)
-              ? `chunk ${chunk.index + 1}/${split.chunks.length}: the reviewer could not be reached — ` +
-                `${raw.slice(0, 200)} — cannot verify; fail closed`
-              : `chunk ${chunk.index + 1}/${split.chunks.length} did not return JSON — ` +
-                `cannot verify; fail closed`,
-            passed: false
-          }
-        ],
-        rawExcerpt: raw.slice(0, 4000)
-      });
-    } else {
-      chunkResults.push({
-        index: chunk.index,
-        coverageChars: chunk.coverageChars,
-        completed: true,
-        foundNothingExplicit: parsed.foundNothingExplicit === true,
-        findings: parsed.findings,
-        rawExcerpt: raw.slice(0, 4000)
-      });
-    }
+    const rest = split.chunks[i]!;
+    chunkResults.push({
+      index: rest.index,
+      coverageChars: rest.coverageChars,
+      completed: false,
+      foundNothingExplicit: false,
+      findings: [
+        {
+          title: 'judge unavailable',
+          citation: 'orchestrator/src/loop/independentReview.ts:1',
+          detail:
+            `skipped after unavailable chunk ${unavailableChunk + 1} — ${unavailableDetail ?? 'judge unavailable'}`,
+          passed: false
+        }
+      ],
+      rawExcerpt: ''
+    });
   }
 
   const aggregated = aggregateChunkReviews({
@@ -1669,7 +1770,7 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
   });
 
   const mode: IndependentReviewMode =
-    unavailableDetail !== null ? 'unavailable' : activeEngine;
+    unavailableDetail !== null ? 'unavailable' : engineState.active;
 
   const report: IndependentReviewReport = {
     kind: 'independent-diff-review',
@@ -1686,7 +1787,7 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
     // The engine that produced the output, including a Grok fallback and a
     // review that then failed closed. Empty-diff / fixture / external never
     // reach here.
-    engine: activeEngine,
+    engine: engineState.active,
     chunkCount: aggregated.chunkCount,
     coverageChars: aggregated.coverageChars,
     diffChars: aggregated.diffChars,

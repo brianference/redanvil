@@ -19,6 +19,7 @@ import {
   independentReviewOkFromReport,
   isScopeTruncationFinding,
   JUDGE_DIFF_JSON_SCHEMA,
+  JUDGE_CHUNK_CONCURRENCY,
   JUDGE_PROMPT_DIFF_BUDGET,
   MAX_DIFF_REVIEW_CHUNKS,
   parseJudgeJson,
@@ -309,7 +310,7 @@ describe('independentReview pure helpers', () => {
 });
 
 describe('independentReview fixture mode (known-answer)', () => {
-  it('writes a report bound to the commit and fails when findings refute', () => {
+  it('writes a report bound to the commit and fails when findings refute', async () => {
     const dir = initGitRepo('redanvil-review-');
     try {
       writeFileSync(join(dir, 'a.txt'), 'a\n');
@@ -317,7 +318,7 @@ describe('independentReview fixture mode (known-answer)', () => {
       git(dir, ['commit', '-qm', 'init']);
 
       const outPath = join(dir, 'evidence', 'judge-diff-test.json');
-      const report = runIndependentDiffReview({
+      const report = await runIndependentDiffReview({
         dir,
         outPath,
         fixtureReport: {
@@ -341,14 +342,14 @@ describe('independentReview fixture mode (known-answer)', () => {
     }
   });
 
-  it('accepts an explicit found-nothing report', () => {
+  it('accepts an explicit found-nothing report', async () => {
     const dir = initGitRepo('redanvil-review-ok-');
     try {
       writeFileSync(join(dir, 'a.txt'), 'a\n');
       git(dir, ['add', 'a.txt']);
       git(dir, ['commit', '-qm', 'init']);
 
-      const report = runIndependentDiffReview({
+      const report = await runIndependentDiffReview({
         dir,
         outPath: join(dir, 'evidence', 'judge-diff-ok.json'),
         fixtureReport: {
@@ -363,7 +364,7 @@ describe('independentReview fixture mode (known-answer)', () => {
     }
   });
 
-  it('readJudgeDiffReport + independentReviewOkFromReport are commit-pinned', () => {
+  it('readJudgeDiffReport + independentReviewOkFromReport are commit-pinned', async () => {
     const dir = initGitRepo('redanvil-review-load-');
     try {
       writeFileSync(join(dir, 'a.txt'), 'a\n');
@@ -372,7 +373,7 @@ describe('independentReview fixture mode (known-answer)', () => {
       const head = git(dir, ['rev-parse', 'HEAD']);
       const slug = 'load-app';
       const outPath = join(dir, 'evidence', `judge-diff-${slug}.json`);
-      const written = runIndependentDiffReview({
+      const written = await runIndependentDiffReview({
         dir,
         outPath,
         fixtureReport: { foundNothingExplicit: true, findings: [] }
@@ -586,7 +587,7 @@ describe('collectDiff merge commits (first-parent)', () => {
 });
 
 describe('empty-diff explicit fail-closed state', () => {
-  it('records nothingToReview / empty-diff and keeps independentReviewOk false', () => {
+  it('records nothingToReview / empty-diff and keeps independentReviewOk false', async () => {
     const dir = initGitRepo('redanvil-empty-diff-');
     try {
       // Empty commit: clean tree + HEAD has no patch.
@@ -594,7 +595,7 @@ describe('empty-diff explicit fail-closed state', () => {
       expect(collectDiff(dir).trim()).toBe('');
 
       // Even a fixtureReport must not paper over empty — F5 hole otherwise.
-      const report = runIndependentDiffReview({
+      const report = await runIndependentDiffReview({
         dir,
         outPath: join(dir, 'evidence', 'judge-diff-empty.json'),
         fixtureReport: {
@@ -1044,7 +1045,7 @@ describe('aggregateChunkReviews', () => {
 });
 
 describe('runIndependentDiffReview multi-chunk via reviewChunk hook', () => {
-  it('reviews every chunk and reports full coverage (no diff-truncated finding)', () => {
+  it('reviews every chunk and reports full coverage (no diff-truncated finding)', async () => {
     const dir = initGitRepo('redanvil-chunk-hook-');
     try {
       // Several mid-size files + tiny budget ⇒ multiple file-boundary chunks.
@@ -1062,7 +1063,7 @@ describe('runIndependentDiffReview multi-chunk via reviewChunk hook', () => {
 
       let calls = 0;
       const seenPrompts: string[] = [];
-      const report = runIndependentDiffReview({
+      const report = await runIndependentDiffReview({
         dir,
         outPath: join(dir, 'evidence', 'judge-diff-chunk.json'),
         // ~1.5k forces one file per chunk for the ~2k+ file diffs above.
@@ -1100,7 +1101,7 @@ describe('runIndependentDiffReview multi-chunk via reviewChunk hook', () => {
     }
   });
 
-  it('simulates unparseable chunk output → aggregate completed false / ok false', () => {
+  it('simulates unparseable chunk output → aggregate completed false / ok false', async () => {
     const dir = initGitRepo('redanvil-chunk-unparse-');
     try {
       writeFileSync(join(dir, 'a.txt'), 'a\n');
@@ -1108,7 +1109,7 @@ describe('runIndependentDiffReview multi-chunk via reviewChunk hook', () => {
       git(dir, ['commit', '-qm', 'init']);
       writeFileSync(join(dir, 'a.txt'), 'b\n');
 
-      const report = runIndependentDiffReview({
+      const report = await runIndependentDiffReview({
         dir,
         outPath: join(dir, 'evidence', 'judge-diff-unparse.json'),
         reviewChunk: () => ({ stdout: 'this is not json and not a review' })
@@ -1126,7 +1127,7 @@ describe('runIndependentDiffReview multi-chunk via reviewChunk hook', () => {
     }
   });
 
-  it('one of many chunks unparseable fails the whole review (partial ≠ clean)', () => {
+  it('one of many chunks unparseable fails the whole review (partial ≠ clean)', async () => {
     const dir = initGitRepo('redanvil-chunk-partial-');
     try {
       const names: string[] = [];
@@ -1142,7 +1143,7 @@ describe('runIndependentDiffReview multi-chunk via reviewChunk hook', () => {
       }
 
       let n = 0;
-      const report = runIndependentDiffReview({
+      const report = await runIndependentDiffReview({
         dir,
         outPath: join(dir, 'evidence', 'judge-diff-partial.json'),
         diffBudget: 1_500,
@@ -1168,7 +1169,7 @@ describe('runIndependentDiffReview multi-chunk via reviewChunk hook', () => {
     }
   });
 
-  it('dashboard-shaped single chunk (fits budget) still completes as one review', () => {
+  it('dashboard-shaped single chunk (fits budget) still completes as one review', async () => {
     const dir = initGitRepo('redanvil-chunk-single-');
     try {
       writeFileSync(join(dir, 'small.txt'), 'hello\n');
@@ -1177,7 +1178,7 @@ describe('runIndependentDiffReview multi-chunk via reviewChunk hook', () => {
       writeFileSync(join(dir, 'small.txt'), 'hello world\n');
 
       let calls = 0;
-      const report = runIndependentDiffReview({
+      const report = await runIndependentDiffReview({
         dir,
         outPath: join(dir, 'evidence', 'judge-diff-single.json'),
         reviewChunk: () => {
@@ -1192,6 +1193,70 @@ describe('runIndependentDiffReview multi-chunk via reviewChunk hook', () => {
       expect(report.completed).toBe(true);
       expect(report.ok).toBe(true);
       expect(report.coverageChars).toBe(report.diffChars);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps chunk result order when a later chunk finishes first, and caps in-flight chunks', async () => {
+    expect(JUDGE_CHUNK_CONCURRENCY).toBe(3);
+    const dir = initGitRepo('redanvil-chunk-pool-');
+    try {
+      const names: string[] = [];
+      for (let i = 0; i < 4; i++) {
+        const name = `c${i}.txt`;
+        writeFileSync(join(dir, name), `${'base\n'.repeat(30)}`);
+        names.push(name);
+      }
+      git(dir, ['add', ...names]);
+      git(dir, ['commit', '-qm', 'init']);
+      for (let i = 0; i < 4; i++) {
+        writeFileSync(join(dir, `c${i}.txt`), `${'next\n'.repeat(30)}`);
+      }
+
+      const gates: Array<{ promise: Promise<void>; resolve: () => void }> = [];
+      for (let i = 0; i < 8; i++) {
+        let resolve: () => void = () => undefined;
+        const promise = new Promise<void>((r) => {
+          resolve = r;
+        });
+        gates.push({ promise, resolve });
+      }
+      const started: number[] = [];
+      let capResolve: () => void = () => undefined;
+      const capHit = new Promise<void>((resolve) => {
+        capResolve = resolve;
+      });
+
+      const pending = runIndependentDiffReview({
+        dir,
+        outPath: join(dir, 'evidence', 'judge-diff-pool.json'),
+        // Small budget so four file edits become at least four chunks.
+        diffBudget: 80,
+        reviewChunk: async ({ index }) => {
+          started.push(index);
+          if (started.length === JUDGE_CHUNK_CONCURRENCY) capResolve();
+          const gate = gates[index];
+          if (gate !== undefined) await gate.promise;
+          return {
+            stdout: JSON.stringify({ foundNothingExplicit: true, findings: [] })
+          };
+        }
+      });
+
+      await capHit;
+      await Promise.resolve();
+      expect(started).toHaveLength(JUDGE_CHUNK_CONCURRENCY);
+      // Highest in-flight index is released first; the rest were still blocked.
+      for (let i = gates.length - 1; i >= 0; i--) gates[i]?.resolve();
+      const report = await pending;
+      expect(report.chunkCount).toBeGreaterThanOrEqual(4);
+      expect(report.completed).toBe(true);
+      expect(report.coverageComplete).toBe(true);
+      const first = report.rawExcerpt.indexOf('--- chunk 1/');
+      const second = report.rawExcerpt.indexOf('--- chunk 2/');
+      expect(first).toBeGreaterThanOrEqual(0);
+      expect(second).toBeGreaterThan(first);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

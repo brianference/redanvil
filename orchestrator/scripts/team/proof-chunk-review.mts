@@ -51,7 +51,7 @@ function show(
 }
 
 // a) Full az release range — every chunk clean → full coverage, no truncation finding.
-const azClean = runIndependentDiffReview({
+const azClean = await runIndependentDiffReview({
   dir: resolve(repoRoot, 'az-planting-calendar'),
   repoRoot,
   outPath: join(repoRoot, 'evidence', 'judge-diff-az-planting-calendar-chunk-proof.json'),
@@ -67,7 +67,7 @@ const azClean = runIndependentDiffReview({
 show('a-az-clean', azClean);
 
 // c) One unparseable chunk → aggregate completed false / ok false.
-const azBlind = runIndependentDiffReview({
+const azBlind = await runIndependentDiffReview({
   dir: resolve(repoRoot, 'az-planting-calendar'),
   repoRoot,
   outPath: join(repoRoot, 'evidence', 'judge-diff-az-unparseable-proof.json'),
@@ -83,7 +83,7 @@ const azBlind = runIndependentDiffReview({
 show('c-az-unparseable', azBlind);
 
 // b) dashboard fits one chunk.
-const dash = runIndependentDiffReview({
+const dash = await runIndependentDiffReview({
   dir: resolve(repoRoot, 'dashboard'),
   repoRoot,
   outPath: join(repoRoot, 'evidence', 'judge-diff-dashboard-chunk-proof.json'),

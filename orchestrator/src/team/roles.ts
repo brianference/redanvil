@@ -41,6 +41,21 @@ export interface Role {
   artifacts: readonly string[];
   /** Whether a writing worktree is required (read-only roles get none). */
   needsWorktree: boolean;
+  /**
+   * Role ids that must finish earlier in this same iteration before this role
+   * starts. A dependency that was not assigned this iteration is already
+   * satisfied. Omitted or empty means the role can start immediately.
+   * Filled only from dependencies the role prompts and the product/design
+   * ordering already state — not from a guessed pipeline.
+   */
+  dependsOn?: readonly RoleId[];
+  /**
+   * Files this role reads, repo-relative to the app, `<slug>` expanded by
+   * the caller. Omitted or empty: the role always runs. When set, an
+   * unchanged hash of these files (plus the assigned rows) skips the role
+   * if its artifacts are still on disk.
+   */
+  inputs?: readonly string[];
   /** Single-job prompt seed for the agent that plays this role. */
   prompt: string;
 }
@@ -67,8 +82,73 @@ export function getRole(id: RoleId): Role | undefined {
 }
 
 /**
+ * Thrown when `dependsOn` contains a cycle. A cycle would stall the PM
+ * instead of failing, so it is rejected when the registry is loaded.
+ */
+export class RoleDependencyCycleError extends Error {
+  /** Role ids on the cycle, last repeated to show the loop closing. */
+  readonly cycle: readonly string[];
+
+  /**
+   * @param cycle - Ids from the repeated node back to itself.
+   */
+  constructor(cycle: readonly string[]) {
+    super(`dependsOn cycle: ${cycle.join(' -> ')}`);
+    this.name = 'RoleDependencyCycleError';
+    this.cycle = cycle;
+  }
+}
+
+/**
+ * Reject a dependency cycle, or a `dependsOn` entry that names no role.
+ *
+ * @param roles - Registry (or a fixture list in tests).
+ * @throws {RoleDependencyCycleError} When a cycle exists.
+ * @throws {Error} When a dependency names an unknown role id.
+ */
+export function assertAcyclicDependsOn(
+  roles: readonly { id: string; dependsOn?: readonly string[] }[]
+): void {
+  const byId = new Map(roles.map((r) => [r.id, r]));
+  for (const role of roles) {
+    for (const dep of role.dependsOn ?? []) {
+      if (!byId.has(dep)) {
+        throw new Error(`role ${role.id} dependsOn unknown role "${dep}"`);
+      }
+    }
+  }
+  const WHITE = 0;
+  const GRAY = 1;
+  const BLACK = 2;
+  const color = new Map<string, number>();
+
+  /**
+   * Depth-first search. A gray node seen again is a cycle.
+   *
+   * @param id - Role id being visited.
+   * @param stack - Path from the search root to `id`.
+   */
+  const visit = (id: string, stack: string[]): void => {
+    const state = color.get(id) ?? WHITE;
+    if (state === BLACK) return;
+    if (state === GRAY) {
+      const start = stack.indexOf(id);
+      throw new RoleDependencyCycleError([...stack.slice(start), id]);
+    }
+    color.set(id, GRAY);
+    stack.push(id);
+    for (const dep of byId.get(id)?.dependsOn ?? []) visit(dep, stack);
+    stack.pop();
+    color.set(id, BLACK);
+  };
+
+  for (const role of roles) visit(role.id, []);
+}
+
+/**
  * The full team. Order is documentation order from the SPEC; execution order
- * is decided by the PM (user-refuse always last).
+ * is decided by the PM (user-refuse always last, and `dependsOn` within an
+ * iteration).
  */
 export const ROLES: readonly Role[] = Object.freeze([
   {
@@ -116,6 +196,9 @@ export const ROLES: readonly Role[] = Object.freeze([
     owns: ['feature-gaps'],
     artifacts: ['docs/<slug>-features.md'],
     needsWorktree: false,
+    // Prompt: catch what the PRD forgot, and do it before build.
+    dependsOn: ['product'],
+    inputs: ['docs/<slug>-prd.md'],
     prompt:
       'Before build, produce a ranked feature list with an impact estimate and a ' +
       'data-source note per item. Catch what the PRD forgot. A feature with no ' +
@@ -132,6 +215,8 @@ export const ROLES: readonly Role[] = Object.freeze([
       'design-refs/logo/mark-03.png'
     ],
     needsWorktree: true,
+    // Product prompt: run before design and build.
+    dependsOn: ['product'],
     prompt:
       'Produce three distinct brand marks via Grok Imagine, rendered at 16, 32, 96 and 256px ' +
       'on light and dark in a gallery. Report what is legible at each size. Own fe-brand-mark ' +
@@ -145,6 +230,9 @@ export const ROLES: readonly Role[] = Object.freeze([
       'design-refs/palettes/DECISION.md'
     ],
     needsWorktree: true,
+    // Product runs before design. The prompt names the app-store intake as the file it reads.
+    dependsOn: ['product'],
+    inputs: ['design-refs/appstore/SOURCES.md'],
     prompt:
       'Produce FIVE distinct colour-and-type directions as complete themes (bg, surface, text, ' +
       'muted, border, primary, primary-contrast, success, display face, body face). They must ' +
@@ -167,6 +255,7 @@ export const ROLES: readonly Role[] = Object.freeze([
       'design-refs/design-options/DECISION.md'
     ],
     needsWorktree: true,
+    dependsOn: ['product'],
     prompt:
       'Produce three structurally distinct options each for home, header/search, footer and ' +
       'one inner page. Gallery at dark and light, 375 and 1280. DECISION.md must state ' +
@@ -192,6 +281,9 @@ export const ROLES: readonly Role[] = Object.freeze([
       'src/pages/Contact.tsx'
     ],
     needsWorktree: true,
+    // Build role: product before build, brainstorm before build, design outputs
+    // (logo + layout) before build. Debugger runs before anyone proposes a fix.
+    dependsOn: ['product', 'brainstorm', 'logo', 'layout', 'debugger'],
     prompt:
       'Write Terms, Privacy, About, Contact to the 1400-word / 14-section floor with required ' +
       'topic coverage, plus every empty state and boundary explanation. Own fe-legal-substance ' +
@@ -236,6 +328,17 @@ export const ROLES: readonly Role[] = Object.freeze([
     ],
     artifacts: ['src/index.ts'],
     needsWorktree: true,
+    // Build depends on design outputs (logo + layout decisions), on the PRD,
+    // on the feature list brainstorm writes before build, and on the acceptance
+    // tests testwriter writes before the engineer builds. Debugger first.
+    dependsOn: ['product', 'brainstorm', 'logo', 'layout', 'testwriter', 'debugger'],
+    inputs: [
+      'docs/<slug>-prd.md',
+      'docs/<slug>-features.md',
+      'design-refs/logo/DECISION.md',
+      'design-refs/design-options/DECISION.md',
+      'tests/acceptance.spec.ts'
+    ],
     prompt:
       'Full-stack engineer: schema, API, UI. Delegate implementation to Grok Build. ' +
       'Own the functional rules. Do not mark your own work done -- the measurement decides.'
@@ -252,6 +355,9 @@ export const ROLES: readonly Role[] = Object.freeze([
     ],
     artifacts: ['tests/acceptance.spec.ts', 'tests/features.manifest.json'],
     needsWorktree: true,
+    // From the PRD, before the engineer, and only after design (build role).
+    dependsOn: ['product', 'brainstorm', 'logo', 'layout'],
+    inputs: ['docs/<slug>-prd.md'],
     prompt:
       'Write acceptance tests from the PRD acceptance criteria BEFORE the engineer builds, ' +
       'so tests encode the requirement rather than the implementation. Own u-test-acceptance ' +
@@ -327,3 +433,5 @@ export const ROLES: readonly Role[] = Object.freeze([
       'too small", "I can\'t type Sierra Vista", "there\'s no autocomplete".'
   }
 ] as const satisfies readonly Role[]);
+
+assertAcyclicDependsOn(ROLES);

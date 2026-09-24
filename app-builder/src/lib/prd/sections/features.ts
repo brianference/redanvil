@@ -29,7 +29,19 @@ export interface FeatureSuggestion {
  * @param prompt - Raw prompt (drives capability features).
  * @returns Ordered feature specs for the PRD sections.
  */
-export function buildFeatures(entities: string[], hasAuth: boolean, prompt = ''): FeatureSpec[] {
+/**
+ * Apps with this many entities or fewer manage all of them in the MVP. A dog
+ * care app is Dog + CareTask + CareLog; shipping only Dog CRUD in the MVP ships
+ * nothing the prompt asked for.
+ */
+const MVP_ENTITY_LIMIT = 3;
+
+export function buildFeatures(
+  entities: string[],
+  hasAuth: boolean,
+  prompt = '',
+  fieldsByEntity: ReadonlyMap<string, readonly string[]> = new Map()
+): FeatureSpec[] {
   // What the app is FOR comes first. Entities say what it stores; only the
   // prompt says what it does, and it was not being read at all — a request for
   // "the lowest cost airline flight, nonstop or one layover, with limits on
@@ -40,6 +52,11 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
   const primaryTable = entities[0] ? entityTable(entities[0]) : '';
   const secondary = entities.slice(1);
   const features: FeatureSpec[] = [];
+  // The wizard's entity spec names the real columns; the detail feature lists
+  // them instead of the old stock "title, description".
+  const primaryFields = primary ? (fieldsByEntity.get(entities[0] ?? '') ?? []) : [];
+  const detailFields =
+    primaryFields.length > 0 ? primaryFields.join(', ') : 'title, description';
 
   if (primary && primaryTable) {
     features.push(
@@ -75,10 +92,10 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
         id: 'F2',
         role: 'entity-detail',
         name: `${primary} detail`,
-        behavior: `Clicking a list row opens the full ${primary} record with title, description, and a back link. Any external URL from data is rendered only after safeHttpUrl/safeHref validation (no anchor when unsafe).`,
+        behavior: `Clicking a list row opens the full ${primary} record with ${detailFields}, and a back link. Any external URL from data is rendered only after safeHttpUrl/safeHref validation (no anchor when unsafe).`,
         mvp: true,
         acceptance: [
-          `GIVEN a ${primary} id that exists in D1 WHEN the user opens /${primaryTable}/:id THEN the page shows title, description, and a back link to the list`,
+          `GIVEN a ${primary} id that exists in D1 WHEN the user opens /${primaryTable}/:id THEN the page shows ${detailFields}, and a back link to the list`,
           `GIVEN an unknown id WHEN the user opens /${primaryTable}/:id THEN a not-found state with a path back to the list is shown`,
           `GIVEN the API returns 500 WHEN detail loads THEN an error message with a retry action is shown`,
           `GIVEN a detail record whose source/external URL is javascript: or otherwise non-http(s) WHEN the page renders THEN no anchor is emitted for that URL (safeHttpUrl/SafeExternalLink; u-sec-safe-href)`
@@ -184,7 +201,7 @@ export function buildFeatures(entities: string[], hasAuth: boolean, prompt = '')
       role: 'entity-manage',
       name: `Manage ${pascal}`,
       behavior: `Create, edit, and delete ${table} with confirmation before delete.`,
-      mvp: false,
+      mvp: entities.length <= MVP_ENTITY_LIMIT,
       acceptance: [
         `GIVEN the ${pascal} manage form is open WHEN the user creates a ${pascal} with a valid title THEN the list includes the new row`,
         `GIVEN an existing ${pascal} WHEN the user confirms delete THEN the row is gone from the list`,

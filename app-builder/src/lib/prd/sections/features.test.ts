@@ -24,9 +24,20 @@ describe('buildFeatureSuggestions', () => {
     const suggestions = buildFeatureSuggestions(['Trip', 'Driver'], true);
     expect(defaults.length).toBeGreaterThan(0);
     expect(defaults.every((id) => suggestions.find((s) => s.id === id)?.mvp === true)).toBe(true);
-    expect(defaults).not.toContain(
-      suggestions.find((s) => s.title.startsWith('Manage Driver'))?.id
-    );
+    // Two entities is within the MVP entity limit, so managing the second one
+    // is part of the minimum product.
+    const driver = suggestions.find((s) => s.title.startsWith('Manage Driver'));
+    expect(driver, 'Manage Driver suggestion missing').toBeDefined();
+    expect(defaults).toContain(driver!.id);
+  });
+
+  it('keeps a fourth entity out of the MVP', () => {
+    const entities = ['Trip', 'Driver', 'Vehicle', 'Charger'];
+    const defaults = defaultSelectedFeatureIds(entities, true);
+    const suggestions = buildFeatureSuggestions(entities, true);
+    const charger = suggestions.find((s) => s.title.startsWith('Manage Charger'));
+    expect(charger, 'Manage Charger suggestion missing').toBeDefined();
+    expect(defaults).not.toContain(charger!.id);
   });
 });
 

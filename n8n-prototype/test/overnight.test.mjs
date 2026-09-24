@@ -1435,6 +1435,16 @@ describe('10. executor order', () => {
       overnight.grokCannotRun({ status: 1, stdout: 'usage', stderr: 'spending limit reached' }),
       true
     );
+    // The real stderr of an exhausted Grok Build account, captured 2026-09-23.
+    assert.equal(
+      overnight.grokCannotRun({
+        status: 1,
+        stdout: '',
+        stderr:
+          'Error: Internal error: { "message": "API error (status 402 Payment Required): Grok Build usage balance exhausted", "http_status": 402 }'
+      }),
+      true
+    );
   });
 
   test('FAIL INPUT: grok hang (status null) hands off to claude', () => {

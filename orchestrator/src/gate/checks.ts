@@ -5,6 +5,12 @@ export interface Check {
   args: string[];
   /** Per-check wall-clock ceiling; defaults applied by the runner. */
   timeoutMs?: number;
+  /**
+   * When true, this check runs with nothing else in flight. Set on checks
+   * that read-modify-write `evidence/measurement-meta.json`, or that boot a
+   * dev server (`wrangler pages dev`) against the app directory.
+   */
+  exclusive?: boolean;
 }
 
 /*

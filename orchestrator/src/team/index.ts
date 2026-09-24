@@ -6,6 +6,8 @@ export {
   ROLES,
   expandArtifacts,
   getRole,
+  assertAcyclicDependsOn,
+  RoleDependencyCycleError,
   type Role,
   type RoleId
 } from './roles';
@@ -59,7 +61,9 @@ export {
   runPm,
   planIteration,
   dryRunAssignments,
+  scheduleRoleRuns,
   roleDispatchOrder,
+  PM_ROLE_CONCURRENCY,
   type PmDeps,
   type PmConfig,
   type PmResult,

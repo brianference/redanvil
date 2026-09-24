@@ -36,9 +36,10 @@ describe('slugFromPrompt', () => {
 });
 
 describe('countEntities', () => {
-  it('counts comma-separated entity names', () => {
+  it('counts parsed entities, not field tokens', () => {
     expect(countEntities('User, Recipe, Favorite')).toBe(3);
     expect(countEntities('')).toBe(0);
+    expect(countEntities('Dog: name, breed; CareTask: title, dueDate:date')).toBe(2);
   });
 });
 
@@ -135,8 +136,11 @@ describe('wizard readiness (canForgePrd)', () => {
     expect(canForgePrd({ ...base, appType: '   ' })).toBe(false);
   });
 
-  it('is ready once both prompt and app type are provided', () => {
-    expect(canForgePrd({ ...base, appType: 'Mobile app' })).toBe(true);
+  it('is ready once prompt, app type, and a fielded entity spec are provided', () => {
+    expect(canForgePrd({ ...base, appType: 'Mobile app' })).toBe(false);
+    expect(
+      canForgePrd({ ...base, appType: 'Mobile app', entities: 'Dog: name, breed' })
+    ).toBe(true);
   });
 
   it('is not ready when the prompt is too short even with an app type', () => {
@@ -148,7 +152,7 @@ describe('wizard readiness (canForgePrd)', () => {
   // the whole point of the Features step — deselect everything and Forge must
   // refuse, rather than generate a PRD with no features in it.
   it('refuses to forge when the user has deselected every feature', () => {
-    const ready = { ...base, appType: 'SaaS' };
+    const ready = { ...base, appType: 'SaaS', entities: 'Dog: name' };
     expect(canForgePrd({ ...ready, selectedFeatureIds: [] })).toBe(false);
     expect(canForgePrd({ ...ready, selectedFeatureIds: ['F1'] })).toBe(true);
     // null means "not chosen yet", which is not the same as "chosen none".
@@ -163,17 +167,17 @@ describe('wizard readiness (canForgePrd)', () => {
       ...base,
       prompt: fragmentPrompt,
       appType: 'Mobile app',
-      // Explicit entity so only the title-fragment branch fails, not A1 entities.
-      entities: 'Item'
+      // A fielded entity so only the title-fragment branch fails, not the spec gate.
+      entities: 'Item: name'
     };
     expect(isPromptReady(ready)).toBe(true);
     expect(isAppTypeReady(ready)).toBe(true);
     expect(canForgePrd(ready)).toBe(false);
-    // Control: a prompt that yields a real noun phrase still forges.
-    expect(canForgePrd({ ...base, appType: 'Mobile app' })).toBe(true);
+    // Control: the same gate passes when the title is a real noun phrase and the spec has fields.
+    expect(canForgePrd({ ...base, appType: 'Mobile app', entities: 'Dog: name' })).toBe(true);
   });
 
-  it('refuses to forge when no entities are listed and none can be derived', () => {
+  it('refuses to forge when the entity spec is empty or has no fields', () => {
     const vague = {
       ...base,
       prompt: 'please make a thing',
@@ -182,7 +186,8 @@ describe('wizard readiness (canForgePrd)', () => {
     };
     expect(isPromptReady(vague)).toBe(true);
     expect(canForgePrd(vague)).toBe(false);
-    // Naming an entity clears the gate even when the prompt has no nouns.
-    expect(canForgePrd({ ...vague, entities: 'Thing' })).toBe(true);
+    // A legacy name parses, but it has no fields, so it is not enough to forge.
+    expect(canForgePrd({ ...vague, entities: 'Thing' })).toBe(false);
+    expect(canForgePrd({ ...vague, entities: 'Thing: name' })).toBe(true);
   });
 });

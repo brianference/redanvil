@@ -14,25 +14,29 @@ const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), 'prd.character
  * real generator — never by hand. Full golden payloads live in
  * `prd.characterization.fixtures/*.json`.
  *
- * Last regenerated because DANGLING_TAIL gained the possessive determiners
- * ('your', 'my', 'our', …) plus the subordinating and copula words. Only
- * `mobile-no-auth-two-entities` moved: its prompt ("…remind you when your dog
- * needs grooming…") titled itself "App to Remind You When Your", and this
- * golden had been PINNING that truncation as correct output since it was
- * written. The other four digests are unchanged, which is the evidence that the
- * change is confined to titles that were cut mid-phrase.
+ * Last regenerated because generation now takes a parsed entity spec (DDL and
+ * API examples come from those fields), writes fidelity into the frontmatter,
+ * fails the displayed grade when fidelity fails, and appends the claims block.
+ * The case inputs changed with that: a field-less list is no longer enough to
+ * generate, and the storage-none case names UptimeCheck and StatusPage instead
+ * of leaving the field empty for deriveEntities.
  *
- * A golden test freezes whatever the generator did on the day it ran, bug and
- * all. When one moves, the question to answer is "is the NEW output right?",
- * not "which value makes the suite green" -- here the new title is
- * "App to Remind You", a phrase that ends where a phrase can end.
+ * Regenerated again the same day (read the diffs, all intended): the top-ranked
+ * capability is now MVP and leads the list, every entity is managed in the MVP
+ * when there are three or fewer, the detail feature names the entity's real
+ * fields instead of "title, description", and a subject phrase that contains a
+ * declared entity uses the entity's name.
+ *
+ * A golden test freezes whatever the generator did on the day it ran. When one
+ * moves, the question is whether the new output is the spec, not which digest
+ * makes the suite green.
  */
 const EXPECTED_DIGESTS: Readonly<Record<string, string>> = {
-  'dashboard-auth-two-entities': '77ec762927a533edc35b5468c535f74782865b7a95111fb58be56723ab066c04',
-  'mobile-no-auth-two-entities': '09dcc1b5b8fcd34d29524a0a626c03d663f191dda5769e7c82ef7ffb80951649',
-  'marketplace-auth-scoped': '3919febc3a063e962e79c99368dafe8baa3df42d2b7252b0b39684875b019d83',
-  'empty-entities-no-auth': '5d7eef4047ade3540e859ee5c3adfc2fe984dddcf8fa0ee7695bb77c42cac69d',
-  'long-prompt-many-entities': '2824582f4a8a69fc8ad3a1326e4376d6461e811b5fb5d886da12331e4c3f7436'
+  'dashboard-auth-two-entities': '91a144e6fa105e3e5f8448986baa5a1ce62109a6c3c4c34f803359a6aa361686',
+  'mobile-no-auth-two-entities': '33dac7398dae4957bff34a4a43b52ce08b2508e9e19ecd2d14c237a6d77693da',
+  'marketplace-auth-scoped': '8d07d7ccfbe6bf365dc55b6df19d7d5ee794121888a71f6a936e52c6c93b3e14',
+  'empty-entities-no-auth': 'e767b2e641930c0108f045b0aede7e702e649185825757354993094ad2973c9d',
+  'long-prompt-many-entities': '27d5d85eee94a58fc8c533399152056d4fa915802d8fc4206ab9e8cebcc6b614'
 };
 
 describe('generatePrd characterization (byte-identical output)', () => {

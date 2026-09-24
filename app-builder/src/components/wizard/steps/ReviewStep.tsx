@@ -3,6 +3,7 @@ import { MIN_PROMPT_LENGTH, type BuildJob, type WizardAnswers } from '../../../l
 import { en } from '../../../i18n/en';
 import { theme } from '../../../theme';
 import { errorBannerStyle, statusBannerStyle } from '../../ui';
+import { entitySpecBlockMessage } from '../entitySpecMessage';
 import { reviewAnswerRows } from '../reviewRows';
 import { estimateBoxStyle, fieldLabelStyle, reviewListStyle } from '../styles';
 
@@ -76,6 +77,7 @@ export function ReviewStep({
 }: ReviewStepProps): JSX.Element {
   const copy = en.wizard;
   const rows = reviewAnswerRows(value);
+  const entityBlock = entitySpecBlockMessage(value.entities);
 
   return (
     <div>
@@ -108,6 +110,12 @@ export function ReviewStep({
         <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
           <span aria-hidden="true">!</span>
           <span>{copy.promptTooShort(MIN_PROMPT_LENGTH)}</span>
+        </div>
+      )}
+      {promptReady && appTypeReady && entityBlock !== null && (
+        <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
+          <span aria-hidden="true">!</span>
+          <span>{entityBlock}</span>
         </div>
       )}
       {promptReady && !appTypeReady && (

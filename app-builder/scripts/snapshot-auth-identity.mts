@@ -20,6 +20,7 @@ const prompt = readFileSync(
   'utf8'
 );
 const entities = deriveEntities(prompt);
+const entitySpec = entities.map((name) => `${name}: name`).join('; ');
 console.log('AFTER entities', JSON.stringify(entities));
 console.log('AFTER subject', JSON.stringify(extractSubject(prompt, entities)));
 console.log(
@@ -36,7 +37,7 @@ const selected = defaultSelectedFeatureIds(entities, true, prompt);
 console.log('AFTER selected', selected.join(','));
 const cost = estimate({ features: 8, hasAuth: true, entities: entities.length });
 const prd = generatePrd(
-  { prompt, appType: 'SaaS', hasAuth: true, entities: '', selectedFeatureIds: selected },
+  { prompt, appType: 'SaaS', hasAuth: true, entities: entitySpec, selectedFeatureIds: selected },
   cost
 );
 const yaml = prd.markdown.match(/```yaml\n([\s\S]*?)\n```/)?.[1] ?? '';
