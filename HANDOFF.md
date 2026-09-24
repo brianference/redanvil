@@ -3,7 +3,7 @@
 The one file a new session reads first. History lives in `docs/archive/handoffs/`
 and in git; do not grow this file into a log. Replace sections when they change.
 
-## What works now (on master, not yet pushed or deployed)
+## What works now (on master, pushed; app-builder deployed as index-D1C80DaM.js)
 
 - **Idea to build path.** `POST /api/submit` queues a job in D1. `n8n-prototype/poller/job-poller.mjs`
   claims it (bearer `RUNNER_TOKEN`), writes a `job-approval` record, and only after the owner
@@ -51,13 +51,9 @@ and counted; fleet-shared-db is left as a backup.
 
 ## Blocked on the owner
 
-1. **Secrets.** `RUNNER_TOKEN` and `RATE_LIMIT_KEY` must be set as Pages secrets on project
-   `redanvil` before deploying, or submit/save return 503 (fail closed). The gitignored
-   `n8n-prototype/.env` needs `REDANVIL_RUNNER_TOKEN` (same value as `RUNNER_TOKEN`) and
-   `REDANVIL_WEBHOOK_TOKEN` (any long random value; `start-server.sh` loads it into n8n and the
-   poller sends it, and the build webhook refuses a request without it).
-2. **Remote D1 migration** `app-builder/migrations/0003_job_runner.sql`, then build and deploy
-   app-builder (`--branch main`), verify asset hash and `/api/health`.
+Done 2026-09-24: Pages secrets set, remote migration 0003 applied, app-builder deployed and
+verified (hash match, /api/health ok, /api/jobs 401 without the token).
+
 3. **Finish line.** app-builder and dashboard do not meet it (see the 2026-09-24 entry in
    `docs/PUSH-BYPASS-LOG.md`, clear by 2026-10-08): the 90% coverage floor is unreachable with
    the process lane waived, and both apps have real defects listed there.
