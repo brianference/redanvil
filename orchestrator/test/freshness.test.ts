@@ -292,3 +292,37 @@ describe('freshBuildBundleProbe', () => {
     expect(builds).toBe(1);
   });
 });
+
+describe('bundleHashOfApp covers everything the page renders', () => {
+  it('changes when a public asset, index.html or a function changes, not only the entry bundle', async () => {
+    const { bundleHashOfApp } = await import('../scripts/lib/verdict-freshness.mjs');
+    const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const app = mkdtempSync(join(tmpdir(), 'bundle-hash-'));
+    mkdirSync(join(app, 'dist', 'assets'), { recursive: true });
+    mkdirSync(join(app, 'functions', 'api'), { recursive: true });
+    writeFileSync(join(app, 'dist', 'assets', 'index-abc.js'), 'js');
+    writeFileSync(join(app, 'dist', 'assets', 'index-abc.css'), 'css');
+    writeFileSync(join(app, 'dist', 'index.html'), '<html></html>');
+    writeFileSync(join(app, 'dist', 'logo.png'), 'logo-v1');
+    writeFileSync(join(app, 'functions', 'api', 'items.ts'), 'v1');
+    const base = bundleHashOfApp(app);
+    expect(base).not.toBeNull();
+    writeFileSync(join(app, 'dist', 'logo.png'), 'logo-v2');
+    const logoChanged = bundleHashOfApp(app);
+    expect(logoChanged).not.toBe(base);
+    writeFileSync(join(app, 'functions', 'api', 'items.ts'), 'v2');
+    expect(bundleHashOfApp(app)).not.toBe(logoChanged);
+  });
+});
+
+describe('judge scope never consists only of gate outputs', () => {
+  it('drops evidence and results paths, so an evidence-only citation falls back to the whole app', async () => {
+    const { judgeScopeFromCitations } = await import('../scripts/lib/verdict-freshness.mjs');
+    expect(judgeScopeFromCitations(['evidence/design-app-builder.json'], () => true)).toEqual([]);
+    expect(
+      judgeScopeFromCitations(['app-builder/evidence/api.json', 'app-builder/src/App.tsx'], () => true)
+    ).toEqual(['app-builder/src/App.tsx']);
+  });
+});
