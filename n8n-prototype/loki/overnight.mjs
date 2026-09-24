@@ -49,6 +49,7 @@ import {
   unlinkSync,
   writeFileSync
 } from 'node:fs';
+import { grokCannotRun as sharedGrokCannotRun } from '../roles/agent-failover.mjs';
 import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
@@ -793,15 +794,9 @@ function spawnAgent(agent, prompt, cwd, opts = {}) {
  * @returns {boolean}
  */
 function grokCannotRun(res) {
-  if (res.status === null) return true;
-  if (res.status === 0) return false;
-  const text = `${res.stdout ?? ''}\n${res.stderr ?? ''}`;
-  if (/spending limit/i.test(text)) return true;
-  if (/\b403\b/.test(text)) return true;
-  // Measured 2026-09-23: an exhausted account exits 1 with
-  // `API error (status 402 Payment Required): Grok Build usage balance exhausted`.
-  if (/\b402\b|payment required|usage balance exhausted/i.test(text)) return true;
-  return false;
+  // One definition, shared with the n8n roles (roles/agent-failover.mjs), so
+  // a new failure shape such as the 402 balance error is taught once.
+  return sharedGrokCannotRun(res);
 }
 
 /**
