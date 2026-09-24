@@ -67,9 +67,15 @@ and counted; fleet-shared-db is left as a backup.
 5. **Revoke** the GitHub token found in `workspace/projects/tpusa-monitor-dashboard/.git/config`.
 6. **Grok Build balance** is exhausted (402). One large task (b4c, 2026-09-23) recorded `total_cost_usd` 5.43 in its JSON envelope.
 
+## CI (2026-09-24, run 36049239128 on 0bc6af5)
+
+Green: orchestrator (red before this round), repo-checks, apps (app-builder), apps (dashboard).
+Red, each read: apps-meet-the-bar, dashboard-provenance, results-provenance (finish line and
+stale verdicts; see PUSH-BYPASS-LOG 2026-09-24), quickflight-provenance (quickflight's own repo
+changed 52 files after its verdicts; re-verify in that repo). CI now runs Node 22.
+
 ## Known issues (real, not waived)
 
-- `crossAppDuplication` real-repo test fails (2224 > 38 duplicated lines) since before this round.
 - `tests/feature-coverage.spec.ts` "examples page exposes live app and source links" fails on prod too.
 - harness / promote / coverageGates tests time out (5 s) only under the full parallel suite on
   Windows; they pass alone.
