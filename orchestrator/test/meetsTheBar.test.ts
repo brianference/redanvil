@@ -547,22 +547,22 @@ function repoRev(ref: string): string {
 describe('push range scopes the finish line', () => {
   const everySlug = () => APPS.map((app) => app.slug).sort();
 
-  it('(a) a sushi-finder path does not select app-builder', () => {
-    const hit = appsAffectedByFiles(['sushi-finder/src/main.tsx']);
-    expect(hit.map((app) => app.slug)).toEqual(['sushi-finder']);
+  it('(a) a dashboard path does not select app-builder', () => {
+    const hit = appsAffectedByFiles(['dashboard/src/main.tsx']);
+    expect(hit.map((app) => app.slug)).toEqual(['dashboard']);
   });
 
   it('(b) an app-builder path selects app-builder', () => {
     const hit = appsAffectedByFiles(['app-builder/src/App.tsx']);
     expect(hit.map((app) => app.slug)).toContain('app-builder');
-    expect(hit.map((app) => app.slug)).not.toContain('sushi-finder');
+    expect(hit.map((app) => app.slug)).not.toContain('dashboard');
   });
 
   it('(c) each shared prefix selects every gated app', () => {
     const all = everySlug();
     expect(all).toContain('app-builder');
-    expect(all).toContain('sushi-finder');
-    expect(all.length).toBeGreaterThan(2);
+    expect(all).toContain('dashboard');
+    expect(all.length).toBeGreaterThanOrEqual(2);
     for (const prefix of SHARED_PREFIXES) {
       const sample = prefix.endsWith('/') ? `${prefix}touched.ts` : prefix;
       expect(
@@ -639,25 +639,25 @@ describe('push range scopes the finish line', () => {
         'dashboard/src/App.tsx': 'export {}\n',
         'README.md': 'base\n'
       });
-      const head = make(base, { 'sushi-finder/src/main.tsx': 'export {}\n' });
+      const head = make(base, { 'dashboard/src/main.tsx': 'export {}\n' });
       const tip = git(['ls-tree', '-r', '--name-only', head]).split('\n').filter(Boolean).sort();
       expect(tip).toContain('app-builder/src/App.tsx');
       expect(tip).toContain('dashboard/src/App.tsx');
-      expect(tip).toContain('sushi-finder/src/main.tsx');
+      expect(tip).toContain('dashboard/src/main.tsx');
 
       git(['update-ref', 'refs/remotes/origin/HEAD', base]);
-      expect(filesInPushRange(dir, head, ZERO_SHA)).toEqual(['sushi-finder/src/main.tsx']);
+      expect(filesInPushRange(dir, head, ZERO_SHA)).toEqual(['dashboard/src/main.tsx']);
       expect(
         appsAffectedByFiles(filesInPushRange(dir, head, ZERO_SHA)).map((app) => app.slug)
-      ).toEqual(['sushi-finder']);
+      ).toEqual(['dashboard']);
 
       git(['update-ref', '-d', 'refs/remotes/origin/HEAD']);
       git(['update-ref', 'refs/remotes/origin/master', base]);
-      expect(filesInPushRange(dir, head, ZERO_SHA)).toEqual(['sushi-finder/src/main.tsx']);
+      expect(filesInPushRange(dir, head, ZERO_SHA)).toEqual(['dashboard/src/main.tsx']);
 
       git(['update-ref', '-d', 'refs/remotes/origin/master']);
       git(['update-ref', 'refs/remotes/origin/main', base]);
-      expect(filesInPushRange(dir, head, ZERO_SHA)).toEqual(['sushi-finder/src/main.tsx']);
+      expect(filesInPushRange(dir, head, ZERO_SHA)).toEqual(['dashboard/src/main.tsx']);
 
       // None of the three refs resolve: the whole tip, which is the case that
       // cannot tell a branch from its base.
@@ -669,14 +669,14 @@ describe('push range scopes the finish line', () => {
     }
   });
 
-  it('(a) the hook does not check app-builder for a sushi-finder-only push whose tip starts with 0', () => {
+  it('(a) the hook does not check app-builder for a dashboard-only push whose tip starts with 0', () => {
     const base = commitOnly({});
-    const local = commitOnly({ 'sushi-finder/src/probe.ts': 'export {}\n' }, '0');
+    const local = commitOnly({ 'dashboard/src/probe.ts': 'export {}\n' }, '0');
     expect(local.startsWith('0')).toBe(true);
     expect(local).not.toBe(ZERO_SHA);
     const probed = probePush(PRE_PUSH, local, base);
     expect(probed.output, probed.output).not.toMatch(/no refs on stdin/);
-    expect(probed.slugs, probed.output).toEqual(['sushi-finder']);
+    expect(probed.slugs, probed.output).toEqual(['dashboard']);
   });
 
   it('(b) the hook checks app-builder when the push touches app-builder/', () => {
@@ -697,29 +697,29 @@ describe('push range scopes the finish line', () => {
 
   it('(d) the hook treats a remote sha of all zeros as the tip tree', () => {
     const local = commitOnly({
-      'sushi-finder/src/probe.ts': 'export {}\n',
+      'dashboard/src/probe.ts': 'export {}\n',
       'README.md': 'readme\n'
     });
     expect(filesInPushRange(REPO_ROOT, local, ZERO_SHA).sort()).toEqual([
       'README.md',
-      'sushi-finder/src/probe.ts'
+      'dashboard/src/probe.ts'
     ]);
     const probed = probePush(PRE_PUSH, local, ZERO_SHA);
     expect(probed.output, probed.output).not.toMatch(/no refs on stdin/);
-    expect(probed.slugs, probed.output).toEqual(['sushi-finder']);
+    expect(probed.slugs, probed.output).toEqual(['dashboard']);
   });
 
   it('a new branch cut from origin/HEAD checks only files added since that base', () => {
     const base = repoRev('refs/remotes/origin/HEAD');
     const local = commitOnParent(base, {
-      'sushi-finder/src/new-branch-probe.ts': 'export {}\n'
+      'dashboard/src/new-branch-probe.ts': 'export {}\n'
     });
     expect(filesInPushRange(REPO_ROOT, local, ZERO_SHA)).toEqual([
-      'sushi-finder/src/new-branch-probe.ts'
+      'dashboard/src/new-branch-probe.ts'
     ]);
     const probed = probePush(PRE_PUSH, local, ZERO_SHA);
     expect(probed.output, probed.output).not.toMatch(/no refs on stdin/);
-    expect(probed.slugs, probed.output).toEqual(['sushi-finder']);
+    expect(probed.slugs, probed.output).toEqual(['dashboard']);
   });
 
   it('FAIL INPUT: an unresolvable remote sha refuses instead of an empty range', () => {
@@ -758,7 +758,7 @@ describe('push range scopes the finish line', () => {
 
   it('a push that deletes one ref and updates another checks only the update', () => {
     const base = commitOnly({});
-    const local = commitOnly({ 'sushi-finder/src/probe.ts': 'export {}\n' });
+    const local = commitOnly({ 'dashboard/src/probe.ts': 'export {}\n' });
     const zeros = '0'.repeat(40);
     const remote = 'b'.repeat(40);
     const probed = probePush(
@@ -768,6 +768,6 @@ describe('push range scopes the finish line', () => {
       `refs/heads/old ${zeros} refs/heads/old ${remote}\nrefs/heads/probe ${local} refs/heads/probe ${base}\n`
     );
     expect(probed.output, probed.output).not.toMatch(/no refs on stdin/);
-    expect(probed.slugs, probed.output).toEqual(['sushi-finder']);
+    expect(probed.slugs, probed.output).toEqual(['dashboard']);
   });
 });

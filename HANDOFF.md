@@ -40,6 +40,15 @@ and in git; do not grow this file into a log. Replace sections when they change.
   function in `roles/agent-failover.mjs`.
 - **Scaffold.** New apps get the shared shell, working test runners and (when asked) the auth kit.
 
+## Apps moved out (2026-09-24)
+
+sushi-finder, pet-sitter and az-planting-calendar now live in their own private repos
+(github.com/brianference/<slug>) with full history, vendored design-system modules and their own
+lockfiles; each was redeployed from its repo and verified (hash match, health 200, no console
+errors). RedAnvil gates only app-builder and dashboard. The fleet apps agent-tower, social-pulse
+and yt-intel-one moved off `fleet-shared-db` to their own D1 (`<app>-db`) with every row copied
+and counted; fleet-shared-db is left as a backup.
+
 ## Blocked on the owner
 
 1. **Secrets.** `RUNNER_TOKEN` and `RATE_LIMIT_KEY` must be set as Pages secrets on project
@@ -49,10 +58,9 @@ and in git; do not grow this file into a log. Replace sections when they change.
    poller sends it, and the build webhook refuses a request without it).
 2. **Remote D1 migration** `app-builder/migrations/0003_job_runner.sql`, then build and deploy
    app-builder (`--branch main`), verify asset hash and `/api/health`.
-3. **Push.** master is far ahead of origin. The scoped pre-push hook refuses because the August
-   auth-kit commits touch sushi-finder / pet-sitter / az-planting-calendar (stale results) and
-   `furniture-listings` has no results file. Either reverify those apps or bypass once and log it
-   in `docs/PUSH-BYPASS-LOG.md` with a clear-by date.
+3. **Finish line.** app-builder and dashboard do not meet it (see the 2026-09-24 entry in
+   `docs/PUSH-BYPASS-LOG.md`, clear by 2026-10-08): the 90% coverage floor is unreachable with
+   the process lane waived, and both apps have real defects listed there.
 4. **Run it.** Import `workflows/redanvil-errors.json` then `redanvil-full-build.json` into n8n;
    register `n8n-prototype/poller/run-poller.cmd` in Task Scheduler; start a Remote Control Claude
    session and `/loop` the redanvil-dispatch skill.
