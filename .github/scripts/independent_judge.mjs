@@ -20,15 +20,23 @@
  * Usage:
  *   node independent_judge.mjs <appDir> [--out evidence/judge-independent-<slug>.json]
  *                                       [--rules a,b,c] [--timeout 900]
+ *                                       [--engine claude|grok]
+ *
+ * `--engine` defaults to claude. A rate limit or a missing `claude` binary
+ * falls back to grok. The report records which engine actually answered.
  *
  * Exit 0 when the run completed and a report was written (findings or not),
  * 1 when the reviewer could not be run, 2 on usage error.
  */
-import { writeFileSync, readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { writeFileSync, readFileSync, existsSync, mkdtempSync, rmSync, readdirSync } from 'node:fs';
 import { join, basename, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import {
+  judgeScopeFromCitations,
+  JUDGE_SCOPE_SCHEMA_VERSION
+} from '../../orchestrator/scripts/lib/verdict-freshness.mjs';
 
 const args = process.argv.slice(2);
 const appDir = args[0];
@@ -43,6 +51,11 @@ const flag = (name, fallback) => {
 const slug = basename(resolve(appDir));
 const outPath = flag('out', join('evidence', `judge-independent-${slug}.json`));
 const timeoutSec = Number(flag('timeout', '900'));
+const engineFlag = String(flag('engine', 'claude'));
+if (engineFlag !== 'claude' && engineFlag !== 'grok') {
+  console.error('independent_judge FAIL: --engine must be claude or grok');
+  process.exit(2);
+}
 
 /**
  * The judge-method rules. Kept explicit rather than derived so a rule silently
@@ -169,8 +182,73 @@ console.log(`independent judge: ${slug} @ ${head.slice(0, 12)}, ${rules.length} 
 // Passing it as an argument exceeded the Windows command-line limit and grok
 // exited 1 with no output — which this script correctly refused to record as
 // agreement, but which also meant it never ran.
+// The checkout contains committed verdict files. Remove them inside the
+// throwaway worktree only, so neither engine can grade by copying the last
+// review. The real repo copy is untouched.
+hidePriorVerdicts(worktreePath);
+
 const taskFile = join(worktreePath, 'JUDGE_TASK.md');
 writeFileSync(taskFile, prompt);
+
+/**
+ * Delete prior judge output inside a disposable worktree.
+ *
+ * @param {string} root Worktree root.
+ */
+function hidePriorVerdicts(root) {
+  const stack = [root];
+  while (stack.length > 0) {
+    const dir = stack.pop();
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (entry.name === 'node_modules' || entry.name === '.git') continue;
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(full);
+        continue;
+      }
+      if (/^(verdicts-|judge-).*\.json$/.test(entry.name)) rmSync(full, { force: true });
+    }
+  }
+}
+
+/**
+ * Classify a `claude --output-format json` envelope.
+ *
+ * Same rules as `classifyClaude` in orchestrator/src/loop/classifyClaude.ts
+ * (ported from n8n-prototype/loki/overnight.mjs). Kept here so this script
+ * stays runnable under plain `node`.
+ *
+ * @param {{status: number|null, stdout: string, stderr: string}} res
+ * @returns {{ok: boolean, rateLimited: boolean, detail: string}}
+ */
+function classifyClaude(res) {
+  const combined = `${res.stdout}\n${res.stderr}`;
+  let envelope = null;
+  try {
+    envelope = JSON.parse(res.stdout);
+  } catch {
+    // Not JSON: the process died before an envelope.
+  }
+  if (envelope && typeof envelope === 'object') {
+    const apiStatus = envelope.api_error_status;
+    const rateLimited = apiStatus === 429 || apiStatus === 529;
+    return {
+      ok: envelope.is_error !== true,
+      rateLimited,
+      detail: `subtype=${envelope.subtype} api_error_status=${apiStatus ?? 'none'}`
+    };
+  }
+  const rateLimited = /rate.?limit|usage limit|429|too many requests|quota|overloaded/i.test(
+    combined
+  );
+  return { ok: res.status === 0, rateLimited, detail: `no json envelope; exit ${res.status}` };
+}
 
 const sid = randomUUID();
 const grokArgs = [
@@ -186,7 +264,7 @@ const grokArgs = [
   '-p',
   'Read JUDGE_TASK.md in the current directory and carry out exactly what it ' +
     'says. Reply with only the JSON array it asks for. Do not modify any file, ' +
-    'including JUDGE_TASK.md.'
+    'including JUDGE_TASK.md. Do not open any verdicts-*.json or judge-*.json file.'
 ];
 
 // The reviewer never needs credentials, and must not see them.
@@ -195,27 +273,68 @@ for (const k of Object.keys(scrubbed)) {
   if (/TOKEN|KEY|SECRET|PASSWORD|CREDENTIAL/i.test(k)) delete scrubbed[k];
 }
 
-// `grok` is a .cmd shim on Windows, which CreateProcess cannot run directly, so
-// it needs a shell. But Node's `shell: true` joins argv into one command line
-// WITHOUT quoting, so the multi-word prompt was re-split and grok tried to run
-// its second word as a subcommand ("unrecognized subcommand 'in'"). Quote each
-// argument ourselves when going through a shell.
-const useShell = process.platform === 'win32';
-const quoted = useShell
-  ? grokArgs.map((a) => (/[\s"]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a))
-  : grokArgs;
+/**
+ * Run grok. It is a .cmd shim on Windows, so that path uses a shell, with
+ * each argument quoted — Node's shell:true does not quote, and the prompt
+ * was being re-split.
+ *
+ * @returns {{code: number, stdout: string, stderr: string, unavailable: boolean}}
+ */
+function runGrok() {
+  const useShell = process.platform === 'win32';
+  const quoted = useShell
+    ? grokArgs.map((a) => (/[\s"]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a))
+    : grokArgs;
+  const grok = run('grok', quoted, {
+    env: scrubbed,
+    timeout: timeoutSec * 1000,
+    shell: useShell
+  });
+  return { ...grok, unavailable: grok.code !== 0 && grok.stdout.trim().length === 0 };
+}
 
-const res = run('grok', quoted, {
-  env: scrubbed,
-  timeout: timeoutSec * 1000,
-  shell: useShell
-});
+/**
+ * Run claude -p. Prompt on stdin, no shell, same scrubbed env and timeout.
+ *
+ * A fresh process: no --resume, no session id. The prompt is the task text,
+ * not a path to a verdict file.
+ *
+ * @returns {{code: number, stdout: string, stderr: string, unavailable: boolean}}
+ */
+function runClaude() {
+  const claude = run('claude', ['-p', '--output-format', 'json'], {
+    input: prompt,
+    cwd: worktreePath,
+    env: scrubbed,
+    timeout: timeoutSec * 1000,
+    shell: false
+  });
+  const unavailable = claude.code === null || (claude.stdout.trim().length === 0 && claude.code !== 0);
+  return { ...claude, unavailable };
+}
+
+let usedEngine = engineFlag;
+let res = usedEngine === 'claude' ? runClaude() : runGrok();
+if (usedEngine === 'claude') {
+  const classified = classifyClaude({
+    status: res.code,
+    stdout: res.stdout,
+    stderr: res.stderr
+  });
+  if (res.unavailable || classified.rateLimited) {
+    console.error(
+      `independent judge: claude unavailable or rate-limited (${classified.detail}); falling back to grok`
+    );
+    usedEngine = 'grok';
+    res = runGrok();
+  }
+}
 
 cleanup();
 
 if (res.code !== 0 && res.stdout.trim().length === 0) {
   console.error(
-    `independent_judge FAIL: grok exited ${res.code} with no output.\n` +
+    `independent_judge FAIL: ${usedEngine} exited ${res.code} with no output.\n` +
       `${res.stderr.slice(0, 800)}\n` +
       `A judge that could not be run must NOT be recorded as agreement.`
   );
@@ -228,6 +347,7 @@ function extractVerdicts(raw) {
   try {
     const envelope = JSON.parse(raw);
     if (typeof envelope?.text === 'string') text = envelope.text;
+    else if (typeof envelope?.result === 'string') text = envelope.result;
   } catch {
     /* not an envelope; treat as raw text */
   }
@@ -257,13 +377,23 @@ if (verdicts === null) {
 const withChecks = verdicts.map((v) => {
   const cited = Array.isArray(v?.evidence) ? v.evidence : [];
   const missing = cited.filter((p) => typeof p === 'string' && !existsSync(p));
-  return { ...v, missingEvidence: missing };
+  // Scope is the files the judge cited that exist. Never an empty array:
+  // an empty scope would either be rejected (schemaVersion 2) or mean
+  // "the whole app" (legacy). Omit it and let the caller refuse the row.
+  const scope = judgeScopeFromCitations(cited, (p) => existsSync(p));
+  const row = { ...v, missingEvidence: missing };
+  if (scope.length > 0) {
+    row.scope = scope;
+    row.schemaVersion = JUDGE_SCOPE_SCHEMA_VERSION;
+  }
+  return row;
 });
 const bogus = withChecks.filter((v) => v.missingEvidence.length > 0);
 
 const failed = withChecks.filter((v) => v?.passed === false);
 const report = {
-  source: 'independent judge (grok, disposable worktree, no access to the verdict file)',
+  source: `independent judge (${usedEngine}, disposable worktree, no access to the verdict file)`,
+  engine: usedEngine,
   reviewedCommit: head,
   app: slug,
   rulesRequested: rules,

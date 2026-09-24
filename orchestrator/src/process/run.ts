@@ -15,6 +15,11 @@ export interface RunOptions {
   timeoutMs?: number;
   /** Full environment for the child. Callers pass a scrubbed env to withhold secrets from Grok. */
   env?: NodeJS.ProcessEnv;
+  /**
+   * Bytes written to the child's stdin, which is then closed. Use this for a
+   * large or free-text payload (a prompt, a diff) instead of argv.
+   */
+  input?: string;
 }
 
 const DEFAULT_TIMEOUT_MS = 120_000;
@@ -68,7 +73,7 @@ export function runCommand(
   args: string[],
   opts: RunOptions = {}
 ): Promise<RunResult> {
-  const { cwd, timeoutMs = DEFAULT_TIMEOUT_MS, env } = opts;
+  const { cwd, timeoutMs = DEFAULT_TIMEOUT_MS, env, input } = opts;
   const start = Date.now();
 
   // Refuse an argv the platform cannot carry, rather than letting the OS decide.
@@ -120,6 +125,13 @@ export function runCommand(
       timedOut = true;
       child.kill('SIGKILL');
     }, timeoutMs);
+
+    if (input !== undefined) {
+      // A child that exits before reading all of stdin raises EPIPE on the
+      // stream; the exit code is still the result, so the error is not fatal.
+      child.stdin.on('error', () => undefined);
+      child.stdin.end(input);
+    }
 
     child.stdout.on('data', (chunk: Buffer) => {
       stdout += chunk.toString();

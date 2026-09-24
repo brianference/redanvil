@@ -169,4 +169,67 @@ describe('parseVerdicts method-match (F4)', () => {
     }
     expect(msg).toMatch(/does not match rubric method/);
   });
+
+  it('rejects a new judge verdict that names no scope', async () => {
+    const { parseVerdicts, JUDGE_SCOPE_SCHEMA_VERSION } = await import('../src/schemas/verdicts');
+    const { JUDGE_SCOPE_SCHEMA_VERSION: fromScript } = await import(
+      '../scripts/lib/verdict-freshness.mjs'
+    );
+    expect(JUDGE_SCOPE_SCHEMA_VERSION).toBe(2);
+    expect(fromScript).toBe(JUDGE_SCOPE_SCHEMA_VERSION);
+    const v = JSON.stringify([
+      {
+        ruleId: 'u-conc-idiomatic',
+        passed: true,
+        method: 'judge',
+        evidence: ['README.md'],
+        note: 'looked at the readme only',
+        reviewedAt: '2026-09-23T00:00:00.000Z',
+        reviewedCommit: 'abcdef1',
+        schemaVersion: JUDGE_SCOPE_SCHEMA_VERSION
+      }
+    ]);
+    let msg = '';
+    try {
+      parseVerdicts(v, 'test');
+    } catch (e) {
+      const err = e as { issues?: string[] };
+      msg = (err.issues ?? []).join(' ');
+    }
+    expect(msg).toMatch(/scope/);
+  });
+
+  it('accepts a legacy judge verdict that has no scope', async () => {
+    const { parseVerdicts } = await import('../src/schemas/verdicts');
+    const v = JSON.stringify([
+      {
+        ruleId: 'u-conc-idiomatic',
+        passed: true,
+        method: 'judge',
+        evidence: ['README.md'],
+        note: 'legacy verdict recorded before scope was required',
+        reviewedAt: '2026-07-23T00:00:00.000Z',
+        reviewedCommit: 'abcdef1'
+      }
+    ]);
+    expect(() => parseVerdicts(v, 'test')).not.toThrow();
+  });
+
+  it('accepts a schemaVersion 2 judge verdict that names a scope', async () => {
+    const { parseVerdicts, JUDGE_SCOPE_SCHEMA_VERSION } = await import('../src/schemas/verdicts');
+    const v = JSON.stringify([
+      {
+        ruleId: 'u-conc-idiomatic',
+        passed: true,
+        method: 'judge',
+        evidence: ['README.md'],
+        note: 'reviewed the readme and named it',
+        reviewedAt: '2026-09-23T00:00:00.000Z',
+        reviewedCommit: 'abcdef1',
+        schemaVersion: JUDGE_SCOPE_SCHEMA_VERSION,
+        scope: ['README.md']
+      }
+    ]);
+    expect(() => parseVerdicts(v, 'test')).not.toThrow();
+  });
 });

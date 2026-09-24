@@ -3,9 +3,21 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { ValidationError } from '../errors';
 import { loadRubric } from '../rubric/index';
-import { findStaleVerdicts, verdictScope, commitTimeMs } from '../gate/freshness';
-import type { ChangeProbe, StaleVerdict } from '../gate/freshness';
+import { findStaleVerdicts, verdictScope, commitTimeMs, gitBundleProbe } from '../gate/freshness';
+import type { BundleProbe, ChangeProbe, StaleVerdict } from '../gate/freshness';
 import type { Outcome } from '../gate/score';
+
+/**
+ * Judge verdicts recorded at this version must carry a non-empty `scope`.
+ *
+ * Absent `schemaVersion` is legacy and may omit scope. A `reviewedAt` cutoff
+ * was rejected: reverify moves timestamps on files this change does not edit,
+ * and a date would start rejecting those legacy verdicts.
+ *
+ * Must stay equal to `JUDGE_SCOPE_SCHEMA_VERSION` in
+ * `orchestrator/scripts/lib/verdict-freshness.mjs`.
+ */
+export const JUDGE_SCOPE_SCHEMA_VERSION = 2;
 
 /**
  * A recorded human/judge verdict for one rule.
@@ -28,13 +40,38 @@ export const VerdictSchema = z.object({
   reviewedAt: z.string().datetime(),
   reviewedCommit: z.string().min(7),
   /**
-   * Repo-relative path prefixes this verdict speaks for. Optional: with no scope
-   * the verdict covers the whole app directory, which is the conservative
-   * reading. Narrowing it keeps an unrelated edit from expiring a verdict, but
-   * a scope that is too narrow is a way to make a verdict immortal, so it is
-   * reviewed like any other claim.
+   * Repo-relative path prefixes this verdict speaks for.
+   *
+   * Optional on a legacy judge verdict (no `schemaVersion`): with no scope the
+   * verdict covers the whole app directory. A judge verdict at
+   * {@link JUDGE_SCOPE_SCHEMA_VERSION} must name the files the reviewer looked
+   * at. A scope that is too narrow is a way to make a verdict immortal, so it
+   * is reviewed like any other claim.
    */
-  scope: z.array(z.string().min(1)).optional()
+  scope: z.array(z.string().min(1)).optional(),
+  /**
+   * `2` when this record was written after judge scope became mandatory.
+   * Omitted on every verdict recorded before that. See
+   * {@link JUDGE_SCOPE_SCHEMA_VERSION}.
+   */
+  schemaVersion: z.literal(JUDGE_SCOPE_SCHEMA_VERSION).optional(),
+  /**
+   * sha256 of the built `dist/assets/index-*.js` and `index-*.css` a visual
+   * verdict was measured against. When set, the verdict is stale only when
+   * the current build's hash differs. When omitted, the source-tree check
+   * still applies — a missing hash is not a pass.
+   */
+  bundleHash: z.string().min(8).optional()
+}).superRefine((verdict, ctx) => {
+  if (verdict.method !== 'judge') return;
+  if (verdict.schemaVersion !== JUDGE_SCOPE_SCHEMA_VERSION) return;
+  if (verdict.scope !== undefined && verdict.scope.length > 0) return;
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    path: ['scope'],
+    message:
+      'judge verdicts at schemaVersion 2 must name the repo-relative paths reviewed (scope)'
+  });
 });
 
 export const VerdictListSchema = z.array(VerdictSchema).min(1);
@@ -328,7 +365,7 @@ export function parseVerdicts(
   raw: string,
   source: string,
   repoRoot = process.cwd(),
-  freshness?: { appDirRel: string; probe: ChangeProbe }
+  freshness?: { appDirRel: string; probe: ChangeProbe; bundleProbe?: BundleProbe }
 ): { outcomes: Outcome[]; stale: StaleVerdict[] } {
   let json: unknown;
   try {
@@ -409,7 +446,8 @@ export function parseVerdicts(
       : findStaleVerdicts(
           parsed.data,
           (v) => verdictScope(v, freshness.appDirRel),
-          freshness.probe
+          freshness.probe,
+          freshness.bundleProbe ?? gitBundleProbe(repoRoot, freshness.appDirRel)
         );
   const staleIds = new Set(stale.map((s) => s.ruleId));
 

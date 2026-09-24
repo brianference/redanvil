@@ -21,7 +21,7 @@ import { join, resolve, basename } from 'node:path';
 import { checklistCoverage } from '../done/coverage.mjs';
 import { loadChecklistRows } from '../done/checklist.mjs';
 import { DEFAULT_CHECKLIST_PATH, DEFAULT_DONE_THRESHOLD, isDone } from '../gate/done';
-import { dryRunAssignments, runPm, type PmDeps, type PmConfig } from '../team/pm';
+import { dryRunAssignments, invokeIterationJudge, runPm, type PmDeps, type PmConfig } from '../team/pm';
 import { findUnownedChecklistRows } from '../team/assign';
 import { ROLES } from '../team/roles';
 import { makePmRunRole, type PmRuntimeDeps } from '../team/pmRuntime';
@@ -36,7 +36,6 @@ import {
 } from '../team/productPrecondition';
 import { gateApp, type GateReport } from './gate';
 import type { Outcome } from '../gate/score';
-import { runIndependentDiffReview } from '../loop/independentReview';
 import { loadProductJudgementOpts } from '../team/finishOpts';
 import { verifyDeploy } from '../deploy/verify';
 import { readFile } from 'node:fs/promises';
@@ -442,15 +441,10 @@ async function executePm(opts: PmCommandOptions): Promise<number> {
           feedback
         };
       },
-      independentJudge: async () => {
-        const review = await runIndependentDiffReview({ dir: appDir });
-        return {
-          ok: review.ok,
-          summary: review.ok
-            ? `independent judge ok (${review.mode})`
-            : `independent judge not ok (${review.mode}): ${review.findings?.length ?? 0} finding(s)`
-        };
-      },
+      // One Claude judge per iteration. Falls back to Grok inside
+      // invokeIterationJudge when Claude is unavailable or rate-limited.
+      // Building roles are dispatched by runRole and stay on Grok.
+      independentJudge: () => invokeIterationJudge(appDir),
       isDone: async () => {
         const rules = lastGate
           ? lastGate.outcomes.map((o) => ({ ruleId: o.ruleId, passed: o.passed }))
