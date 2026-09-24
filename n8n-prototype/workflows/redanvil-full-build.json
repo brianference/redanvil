@@ -1877,7 +1877,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/roles/parallel-roles.mjs');\nconst cmd = 'node ' + script + ' --roles=brainstorm,logo,palette,layout --slug=' + JSON.stringify(c.slug) + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/roles/parallel-roles.mjs');\nconst cmd = 'node ' + script + ' --roles=brainstorm,logo,palette --slug=' + JSON.stringify(c.slug) + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
       }
     },
     {
@@ -2884,7 +2884,7 @@
             "index": 0
           },
           {
-            "node": "Prepare gate: layout",
+            "node": "layout params",
             "type": "main",
             "index": 0
           }
