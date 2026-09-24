@@ -6,7 +6,7 @@ Slug: `job-application-site`.
 This file is the contract a resumed session reads. It is updated as work lands.
 `.redanvil/overnight/night-state.json` carries the machine-readable state; this
 carries the reasoning. Read BOTH, then read
-`docs/HANDOFF-2026-08-21-overnight.md` for the background.
+`docs/archive/handoffs/HANDOFF-2026-08-21-overnight.md` for the background.
 
 ## The owner's instruction
 
