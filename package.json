@@ -8,10 +8,7 @@
   "workspaces": [
     "orchestrator",
     "app-builder",
-    "dashboard",
-    "az-planting-calendar",
-    "sushi-finder",
-    "pet-sitter"
+    "dashboard"
   ],
   "scripts": {
     "prepare": "node scripts/install-hooks.mjs",

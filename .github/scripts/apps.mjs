@@ -76,42 +76,6 @@ export const CORE_APPS = Object.freeze([
     })
   },
   {
-    // Added because it was NOT here, and that omission is why its visual review
-    // never ran. app-builder and dashboard were audited on every cycle without
-    // anyone deciding to; this app relied on me remembering, and it shipped with
-    // a text-label theme toggle instead of an icon and an unrun acceptance
-    // suite. The deploy hook fired eight times that day saying what to run. An
-    // advisory reminder loses to momentum; a scripted step does not.
-    slug: 'az-planting-calendar',
-    dir: 'az-planting-calendar',
-    url: 'https://az-planting-calendar.pages.dev',
-    designRoutes: '/about,/contact,/terms,/privacy,/no-such-page',
-    widthRoutes: '/,/about,/contact,/terms,/privacy',
-    e2e: false,
-    wizard: false,
-    coreFlow: 'search',
-    na: 'process',
-    // Copied from az-planting-calendar/src/i18n/en.ts: footer.* link labels +
-    // about/terms/privacy/contact page titles (rendered as the page h1).
-    // searchQuery: real crop name in the shipped az1005 catalog (API returns
-    // "Tomatoes" for q=Tomato).
-    stranger: Object.freeze({
-      purposeSentence:
-        'Arizona low-desert planting calendar: search a crop and see when to plant it (seed or transplant) for Cave Creek / Maricopa County.',
-      searchQuery: 'Tomato',
-      requiredPages: Object.freeze([
-        Object.freeze({ path: '/about', linkName: 'About', headingText: 'About this calendar' }),
-        Object.freeze({
-          path: '/terms',
-          linkName: 'Terms of use',
-          headingText: 'Terms of use'
-        }),
-        Object.freeze({ path: '/privacy', linkName: 'Privacy', headingText: 'Privacy' }),
-        Object.freeze({ path: '/contact', linkName: 'Contact', headingText: 'Contact' })
-      ])
-    })
-  },
-  {
     slug: 'dashboard',
     dir: 'dashboard',
     url: 'https://redanvil-dashboard.pages.dev',
@@ -122,7 +86,7 @@ export const CORE_APPS = Object.freeze([
     coreFlow: 'search',
     na: 'process',
     // Copied from dashboard/src/i18n/en.ts: app.footer* link labels + pages.*.title
-    // (Page shell h1). Not az-planting-calendar copy.
+    // (Page shell h1).
     // searchQuery: a real run slug on the public feed (results/all.json shows
     // "dashboard" and "app-builder") -- what a stranger types after reading the list.
     stranger: Object.freeze({
@@ -133,42 +97,6 @@ export const CORE_APPS = Object.freeze([
         Object.freeze({ path: '/about', linkName: 'About', headingText: 'About' }),
         Object.freeze({ path: '/terms', linkName: 'Terms', headingText: 'Terms' }),
         Object.freeze({ path: '/privacy', linkName: 'Privacy', headingText: 'Privacy' }),
-        Object.freeze({ path: '/contact', linkName: 'Contact', headingText: 'Contact' })
-      ])
-    })
-  },
-  {
-    slug: 'pet-sitter',
-    dir: 'pet-sitter',
-    url: 'https://pet-sitter-vz1.pages.dev',
-    designRoutes: '/about,/contact,/terms,/privacy,/sitters,/no-such-page',
-    widthRoutes: '/,/about,/contact,/terms,/privacy',
-    e2e: false,
-    wizard: false,
-    coreFlow: 'search',
-    na: 'process',
-    // Copied from pet-sitter/src/i18n/en.ts page titles (Page shell h1) and
-    // claims.searchProbe.query (Leslieville — a real seeded neighbourhood).
-    stranger: Object.freeze({
-      purposeSentence:
-        'Find and book trusted local pet sitters: browse sitters by neighbourhood with verified reviews, per-night rates, and the pet types each sitter accepts.',
-      searchQuery: 'Leslieville',
-      requiredPages: Object.freeze([
-        Object.freeze({
-          path: '/about',
-          linkName: 'About',
-          headingText: 'About Pet Sitter Finder'
-        }),
-        Object.freeze({
-          path: '/terms',
-          linkName: 'Terms',
-          headingText: 'Terms and conditions'
-        }),
-        Object.freeze({
-          path: '/privacy',
-          linkName: 'Privacy',
-          headingText: 'Privacy policy'
-        }),
         Object.freeze({ path: '/contact', linkName: 'Contact', headingText: 'Contact' })
       ])
     })

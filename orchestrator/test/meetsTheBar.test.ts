@@ -153,11 +153,11 @@ describe('finish-line constants', () => {
     const slugs = APPS.map((a) => a.slug).sort();
     expect(slugs).toEqual(
       expect.arrayContaining(
-        ['app-builder', 'az-planting-calendar', 'dashboard'].sort()
+        ['app-builder', 'dashboard'].sort()
       )
     );
     // Every managed registry entry must appear in APPS (no silent drop).
-    expect(slugs.length).toBeGreaterThanOrEqual(3);
+    expect(slugs.length).toBeGreaterThanOrEqual(2);
   });
 });
 
