@@ -64,7 +64,8 @@ function flagValue(argv, name) {
  * @returns {record is { id: string, status?: string }}
  */
 function isJobRecord(record) {
-  return !!record && typeof record === 'object' && 'id' in record;
+  // Poller job files key on fileId/jobId and lastStatus, not id/status.
+  return !!record && typeof record === 'object' && ('fileId' in record || 'id' in record);
 }
 
 /**
@@ -75,7 +76,7 @@ function isJobRecord(record) {
 export function listDispatch(repoRoot) {
   const jobs = readBucket(repoRoot, 'jobs').filter((record) => {
     if (!isJobRecord(record)) return false;
-    const status = 'status' in record ? record.status : undefined;
+    const status = 'lastStatus' in record ? record.lastStatus : 'status' in record ? record.status : undefined;
     if (typeof status !== 'string') return true;
     return !TERMINAL_JOB_STATUSES.has(status);
   });

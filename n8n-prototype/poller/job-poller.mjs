@@ -69,6 +69,12 @@ const AWAITING_OWNER_DETAIL = 'waiting for the owner to approve this build';
 /** Name sent in the claim body. Not a path. */
 const DEFAULT_RUNNER_NAME = 'b2-poller';
 
+/**
+ * How long after an unconfirmed webhook attempt to wait for its execution to
+ * appear in n8n before posting again.
+ */
+const WEBHOOK_SETTLE_MS = 3 * 60_000;
+
 /** Webhook path of the full-build workflow (build-workflow.mjs). */
 const BUILD_WEBHOOK_PATH = '/webhook/redanvil-build';
 
@@ -155,11 +161,12 @@ function directoryExists(path) {
  * @param {string} requested slug from the job
  * @returns {{ok: true, slug: string, collided: boolean, original: string}|{ok: false, reason: string}}
  */
-export function resolveSlug(repoRoot, requested) {
+export function resolveSlug(repoRoot, requested, taken = new Set()) {
   if (typeof requested !== 'string' || !SLUG_PATTERN.test(requested)) {
     return { ok: false, reason: 'slug must match /^[a-z0-9][a-z0-9-]{0,63}$/' };
   }
-  if (!directoryExists(join(repoRoot, requested))) {
+  const free = (slug) => !taken.has(slug) && !directoryExists(join(repoRoot, slug));
+  if (free(requested)) {
     return { ok: true, slug: requested, collided: false, original: requested };
   }
   for (let suffixNumber = 2; suffixNumber <= MAX_SLUG_SUFFIX; suffixNumber += 1) {
@@ -168,7 +175,7 @@ export function resolveSlug(repoRoot, requested) {
     if (!base) base = 'a';
     const candidate = `${base}${suffix}`;
     if (!SLUG_PATTERN.test(candidate)) continue;
-    if (!directoryExists(join(repoRoot, candidate))) {
+    if (free(candidate)) {
       return { ok: true, slug: candidate, collided: true, original: requested };
     }
   }
@@ -343,7 +350,9 @@ export function mapExecution(snap) {
     return {
       status: 'failed',
       step: snap.step,
-      detail: clip(snap.errorMessage || `execution ${snap.status}`, DETAIL_MAX_CHARS),
+      // The raw n8n error can carry local paths and the command line. The public
+      // status says where it stopped; the full message stays in the local record.
+      detail: `build ${snap.status}${snap.step ? ` at step ${snap.step}` : ''}`,
       executionId: snap.executionId
     };
   }
@@ -487,7 +496,13 @@ export async function runCycle(opts = {}) {
     const createdAt = now().toISOString();
     const prompt = typeof remote.prompt === 'string' ? remote.prompt : '';
     const entities = entitiesToString(remote.entities);
-    const resolution = resolveSlug(repoRoot, remote.slug);
+    const inFlight = new Set(
+      store
+        .listJobs()
+        .filter((job) => !['done', 'failed', 'rejected'].includes(job.lastStatus))
+        .map((job) => job.slug)
+    );
+    const resolution = resolveSlug(repoRoot, remote.slug, inFlight);
     if (!resolution.ok || !prompt.trim()) {
       const detail = !resolution.ok ? resolution.reason : 'job has no prompt';
       const failed = {
@@ -564,12 +579,10 @@ export async function runCycle(opts = {}) {
         if (job.actedDecision === 'reject') continue;
         job.actedDecision = 'reject';
         job.lastStatus = 'rejected';
-        job.detail = clip(
-          typeof resolved.notes === 'string' && resolved.notes.trim()
-            ? resolved.notes.trim()
-            : 'rejected by the owner',
-          DETAIL_MAX_CHARS
-        );
+        // The status route is public: the owner's notes stay in the local
+        // record, and the site only learns that the build was declined.
+        job.ownerNotes = typeof resolved.notes === 'string' ? resolved.notes : '';
+        job.detail = 'declined by the owner';
         job.remoteSynced = false;
         store.writeJob(job);
         job.remoteSynced = await postStatus(job.jobId, {
@@ -592,7 +605,37 @@ export async function runCycle(opts = {}) {
       // that flag can be set beside a forgotten webhookPosted and would hide
       // the double-fire.
       if (job.webhookPosted) continue;
-      {
+      if (job.webhookAttemptedAt) {
+        // A previous attempt may have reached n8n even though this process never
+        // saw the 2xx (abort after delivery, crash before writeJob). Find that
+        // execution before posting again; a second POST starts a second build.
+        let found = null;
+        try {
+          found = await reader.lookup({
+            executionId: null,
+            slug: job.slug,
+            notBefore: job.webhookAttemptedAt
+          });
+        } catch {
+          found = null;
+        }
+        if (found) {
+          job.webhookPosted = true;
+          job.webhookPostedAt = job.webhookAttemptedAt;
+          job.executionId = found.executionId;
+          job.lastStatus = 'building';
+          job.actedDecision = 'approve';
+          job.detail = 'n8n build started';
+          job.remoteSynced = false;
+          store.writeJob(job);
+          log(`poller: found the build for ${job.jobId} from an earlier attempt; not posting again`);
+        } else if (now().getTime() - Date.parse(job.webhookAttemptedAt) < WEBHOOK_SETTLE_MS) {
+          continue;
+        }
+      }
+      if (!job.webhookPosted) {
+        job.webhookAttemptedAt = now().toISOString();
+        store.writeJob(job);
         const webhook = await postJson(fetchImpl, `${n8nUrl}${BUILD_WEBHOOK_PATH}`, {
           body: { slug: job.slug, prompt: job.prompt, entities: job.entities }
         });
@@ -647,6 +690,8 @@ export async function runCycle(opts = {}) {
         continue;
       }
       const mapped = mapExecution(snap);
+      // Kept locally for the owner; never sent to the public status route.
+      if (snap.errorMessage) job.errorMessage = snap.errorMessage;
       const step = mapped.step ?? job.lastStep ?? null;
       const same =
         job.remoteSynced === true &&
@@ -689,7 +734,14 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
   // gitignored n8n-prototype/.env. Only the real process env is filled from it;
   // a variable already set wins, and nothing read here is printed.
   const envFile = join(dirname(fileURLToPath(import.meta.url)), '..', '.env');
-  if (env === process.env && !env.REDANVIL_RUNNER_TOKEN && existsSync(envFile)) {
+  // REDANVIL_SKIP_ENV_FILE keeps the test suite from loading the real token
+  // and claiming a live job from the production site.
+  if (
+    env === process.env &&
+    !env.REDANVIL_RUNNER_TOKEN &&
+    env.REDANVIL_SKIP_ENV_FILE !== '1' &&
+    existsSync(envFile)
+  ) {
     process.loadEnvFile(envFile);
   }
   const token = env.REDANVIL_RUNNER_TOKEN;
