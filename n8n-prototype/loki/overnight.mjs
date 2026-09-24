@@ -786,6 +786,7 @@ function spawnAgent(agent, prompt, cwd, opts = {}) {
  * FAIL INPUT: `{status: 0, stdout: 'fixed the spending limit check'}` → false.
  * FAIL INPUT: `{status: 1, stderr: 'HTTP 403 Forbidden'}` → true.
  * FAIL INPUT: `{status: null, error: {code: 'ETIMEDOUT'}}` → true.
+ * FAIL INPUT: `{status: 1, stderr: '... status 402 Payment Required ... usage balance exhausted'}` → true.
  * A plain exit 1 with no 403 → false.
  *
  * @param {{status: number|null, stdout?: string, stderr?: string, error?: {code?: string|null}|null}} res
@@ -797,6 +798,9 @@ function grokCannotRun(res) {
   const text = `${res.stdout ?? ''}\n${res.stderr ?? ''}`;
   if (/spending limit/i.test(text)) return true;
   if (/\b403\b/.test(text)) return true;
+  // Measured 2026-09-23: an exhausted account exits 1 with
+  // `API error (status 402 Payment Required): Grok Build usage balance exhausted`.
+  if (/\b402\b|payment required|usage balance exhausted/i.test(text)) return true;
   return false;
 }
 
