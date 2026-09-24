@@ -98,11 +98,89 @@ export function headNounPhrase(line: string): string {
 }
 
 /**
- * Requirement lines whose head noun phrase does not appear in feature text.
+ * Share of a requirement's content words that must appear in the features for
+ * it to count as covered, when its head phrase does not appear verbatim.
  *
- * @param prompt - Original product prompt (not generator directives).
- * @param featureCorpus - Concatenated feature names, behaviors, and acceptance.
- * @returns Unmatched requirement lines (original wording), order preserved.
+ * Calibrated 2026-09-23 on real documents (coverage of the prompt line):
+ *   0.43  dog-care PRD generated from the wizard entity spec (right product)
+ *   0.43  "remind you when your dog needs grooming..." with a thin spec
+ *   0.32  old sushi-finder PRD (generic title/description CRUD)
+ *   0.27  old plant-water-tracker PRD
+ *   0.18  old herb-garden-log PRD
+ *   0.14  old dog-care PRD: a double-booking scheduler, the wrong product
+ * 0.35 passes the right product and fails every generic or wrong one. The
+ * margin is thin, so the known-bad document is pinned in selfCheck.test.ts.
+ */
+export const FIDELITY_MIN_COVERAGE = 0.35;
+
+/**
+ * Lower-case, singular content words, with camelCase split (`dueDate` gives
+ * `due` and `date`) so declared field names count as domain words.
+ *
+ * @param text - Requirement line or feature corpus.
+ * @returns Content words, stopwords removed.
+ */
+function fidelityWords(text: string): string[] {
+  return text
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .replace(/https?:\/\/\S+/g, ' ')
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 2 && !FIDELITY_STOP.has(word) && !FIDELITY_FILLER.has(word))
+    .map(fidelityStem);
+}
+
+/**
+ * Pronouns and request filler that say nothing about the product, so they must
+ * not count against coverage ("an app to remind you when your dog ...").
+ */
+const FIDELITY_FILLER = new Set([
+  'app', 'you', 'your', 'they', 'their', 'them', 'when', 'what', 'which', 'who',
+  'need', 'needs', 'want', 'wants', 'can', 'will', 'should', 'would', 'like',
+  'such', 'etc', 'per', 'into', 'via', 'about', 'all', 'any', 'each', 'some', 'user', 'users'
+]);
+
+/**
+ * Crude stem so `reminder`/`remind`, `cleaning`/`clean` and `tasks`/`task` meet.
+ * Only strips a suffix when a stem of at least four letters remains.
+ *
+ * @param word - Lower-case word.
+ * @returns Stemmed word.
+ */
+function fidelityStem(word: string): string {
+  for (const suffix of ['ings', 'ing', 'ers', 'er', 'ed', 'es', 's']) {
+    if (word.endsWith(suffix) && word.length - suffix.length >= 4 && !word.endsWith('ss')) {
+      return word.slice(0, -suffix.length);
+    }
+  }
+  return word;
+}
+
+/**
+ * Share of a requirement line's content words that appear in the corpus.
+ *
+ * @param line - One prompt requirement line.
+ * @param corpus - Feature text plus declared entity and field names.
+ * @returns 1 when the line has no content words, otherwise covered / total.
+ */
+export function requirementCoverage(line: string, corpus: string): number {
+  const words = [...new Set(fidelityWords(line))];
+  if (words.length === 0) return 1;
+  const corpusWords = new Set(fidelityWords(corpus));
+  return words.filter((word) => corpusWords.has(word)).length / words.length;
+}
+
+/**
+ * Prompt requirement lines the features do not cover.
+ *
+ * A line is covered when its head noun phrase appears in the features, or when
+ * at least {@link FIDELITY_MIN_COVERAGE} of its content words do. The old rule
+ * needed every one of the first three content words, so "A reminder app for
+ * dog owners ..." failed on the word "owners" however right the features were.
+ *
+ * @param prompt - The product prompt.
+ * @param featureCorpus - Core features, acceptance criteria, and declared entity/field names.
+ * @returns Requirement lines that are not covered.
  */
 export function unmatchedPromptRequirements(prompt: string, featureCorpus: string): string[] {
   const corpus = featureCorpus.toLowerCase();
@@ -110,11 +188,8 @@ export function unmatchedPromptRequirements(prompt: string, featureCorpus: strin
   for (const line of requirementLines(prompt)) {
     const head = headNounPhrase(line);
     if (head.length === 0) continue;
-    // Phrase hit, or every content token of the head appears in features.
     if (corpus.includes(head)) continue;
-    const tokens = head.split(/\s+/).filter((t) => t.length > 1);
-    const hit = tokens.length > 0 && tokens.every((t) => corpus.includes(t));
-    if (!hit) unmatched.push(line);
+    if (requirementCoverage(line, featureCorpus) < FIDELITY_MIN_COVERAGE) unmatched.push(line);
   }
   return unmatched;
 }
@@ -138,10 +213,12 @@ function featureCorpusFromMarkdown(markdown: string): string {
  *
  * @param markdown - Full PRD markdown (or a partial document under test).
  * @param opts - Optional generation context for entity/DDL and fidelity checks.
+ *   `domainWords` is the declared entity and field names, added to the fidelity
+ *   corpus exactly as `generatePrd` does for the frontmatter.
  */
 export function evaluatePrdSelfCheck(
   markdown: string,
-  opts?: { entities?: string[]; hasDomainTables?: boolean; prompt?: string }
+  opts?: { entities?: string[]; hasDomainTables?: boolean; prompt?: string; domainWords?: string }
 ): PrdSelfCheckResult {
   const entities = opts?.entities ?? [];
   const hasDomainTables = opts?.hasDomainTables ?? true;
@@ -213,7 +290,7 @@ export function evaluatePrdSelfCheck(
   const hasFeatureSections = /## 8\. Core Features/.test(markdown) && /## 9\. Acceptance/.test(markdown);
   const unmatched =
     prompt.trim().length > 0 && hasFeatureSections
-      ? unmatchedPromptRequirements(prompt, corpus)
+      ? unmatchedPromptRequirements(prompt, `${corpus}\n${opts?.domainWords ?? ''}`)
       : [];
   const fidelityPass =
     prompt.trim().length === 0 || !hasFeatureSections || unmatched.length === 0;
@@ -302,6 +379,13 @@ export function evaluatePrdSelfCheck(
   const passed = items.filter((i) => i.pass).length;
   const total = items.length;
   const percent = total === 0 ? 0 : Math.round((passed / total) * 100);
+  // A fidelity miss used to still print "15/16 (94%)", which reads as a pass
+  // against the gate threshold of 90. The checklist row already fails. The
+  // grade line has to say so, or the percentage is the only thing a reader sees.
+  const fidelityFailed = items.some((item) => item.id === 'prompt-fidelity' && !item.pass);
+  const gradeLine = fidelityFailed
+    ? `**Grade: FAIL — prompt fidelity failed (${passed}/${total} checks, ${percent}%)**`
+    : `**Grade: ${passed}/${total} checks passed (${percent}%)**`;
 
   const checklist = items.map((i) => `- [${i.pass ? 'x' : ' '}] ${i.label}`).join('\n');
   const markdownOut = [
@@ -311,7 +395,7 @@ export function evaluatePrdSelfCheck(
     '',
     checklist,
     '',
-    `**Grade: ${passed}/${total} checks passed (${percent}%)**`
+    gradeLine
   ].join('\n');
 
   return { items, passed, total, percent, markdown: markdownOut };

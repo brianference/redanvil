@@ -5,6 +5,7 @@ import { savePrd, SavePrdError } from '../lib/savePrd';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 import { LoadingBanner, ErrorBanner } from './Banner';
+import { FidelityWarning } from './FidelityWarning';
 import { buttonStyle, cardStyle, statusBannerStyle } from './ui';
 
 export interface PrdResultProps {
@@ -130,6 +131,8 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
           );
         })()}
       {saveState.status === 'error' && <ErrorBanner message={saveState.message} />}
+
+      <FidelityWarning markdown={prd.markdown} />
 
       <div style={cardStyle(theme.space.md)}>
         <pre style={preStyle}>{prd.markdown}</pre>

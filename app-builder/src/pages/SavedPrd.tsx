@@ -4,6 +4,7 @@ import { Page } from '../components/Page';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 import { LoadingBanner, ErrorBanner } from '../components/Banner';
+import { FidelityWarning } from '../components/FidelityWarning';
 import { buttonStyle, cardStyle } from '../components/ui';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
@@ -129,6 +130,7 @@ export function SavedPrd(): JSX.Element {
           <p style={{ margin: 0, color: theme.color.muted, fontSize: theme.type.scale[1] }}>
             {copy.createdAt(formatCreatedAt(state.prd.created_at))}
           </p>
+          <FidelityWarning markdown={state.prd.markdown} />
           <div style={cardStyle(theme.space.md)}>
             <pre style={preStyle}>{state.prd.markdown}</pre>
           </div>

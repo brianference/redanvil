@@ -399,8 +399,26 @@ export const en = {
     authNo: 'No',
     authGroupLabel: 'Does this app need sign-in?',
     entitiesLabel: 'Main entities',
-    entitiesPlaceholder: 'e.g. User, Recipe, Favorite',
-    entitiesHint: 'Comma-separated domain nouns the app will store or manage.',
+    entitiesPlaceholder: 'Dog: name, breed, birthDate:date',
+    entitiesHint:
+      'Separate entities with a semicolon or a new line. Each one is Name: field, field:type, or field->Other. Types are text, int, real, bool, date, datetime. id, created_at, and updated_at are added for you.',
+    entitiesExampleLead: 'Example:',
+    entitySpecExamples: {
+      fallback:
+        'Dog: name, breed, birthDate:date; CareTask: title, dueDate:date, repeatDays:int, dog->Dog; CareLog: doneAt:datetime, note, task->CareTask',
+      dog: 'Dog: name, breed, birthDate:date; CareTask: title, dueDate:date, repeatDays:int, dog->Dog; CareLog: doneAt:datetime, note, task->CareTask',
+      flight:
+        'Flight: origin, destination, departsAt:datetime, price:real; Layover: airport, minutes:int, flight->Flight',
+      crop: 'Crop: name, daysToHarvest:int; PlantingWindow: method, startsOn:date, crop->Crop',
+      recipe: 'Recipe: title, servings:int; Ingredient: name, amount, recipe->Recipe',
+      shift: 'Shift: startsAt:datetime, role; Employee: name, shift->Shift'
+    },
+    entitiesRequired: 'Add at least one entity before continuing.',
+    entityNeedsField: (name: string): string =>
+      `${name} needs at least one field. List the fields after a colon.`,
+    entitiesPreviewLabel: 'Parsed entities',
+    entityNoFields: 'no fields yet',
+    entityFieldChip: (name: string, typeLabel: string): string => `${name} (${typeLabel})`,
     dataStorageLabel: 'Data storage',
     dataStorageHint: 'Optional. Default is simple D1 tables.',
     dataStorageOptions: {
@@ -569,6 +587,10 @@ export const en = {
     savedViewAt: (url: string): string => `Saved — view at ${url}`,
     sectionLabel: 'Generated PRD',
     lede: 'Your product requirements document is ready. Download it, copy it, or save a shareable link.',
+    fidelityTitle: 'Prompt fidelity failed',
+    fidelityBody:
+      'These requirements did not show up in the features. Add them to the prompt or to the entity fields, then forge again. The PRD is still below.',
+    fidelityUnmatchedLabel: 'Not covered',
     errors: {
       generic: 'Could not save the PRD.',
       timeout: 'Save request timed out',

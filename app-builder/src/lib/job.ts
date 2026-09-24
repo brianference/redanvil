@@ -1,4 +1,5 @@
-import { deriveEntities, entityList, isTitleFragment, titleFromPrompt } from './prd/naming';
+import { entitySpecReady, parseEntitySpec } from './prd/entitySpec';
+import { isTitleFragment, titleFromPrompt } from './prd/naming';
 
 /** How the app should persist domain data (wizard scope). */
 export type DataStorage = 'none' | 'simple' | 'relational';
@@ -11,7 +12,10 @@ export interface WizardAnswers {
   appType: string;
   /** Whether the app needs authentication. */
   hasAuth: boolean;
-  /** Comma-separated main domain entity names. */
+  /**
+   * Main entities in the entity-spec syntax (`Name: field, field:type, field->Other`).
+   * Legacy comma lists parse, but they have no fields and cannot be forged.
+   */
   entities: string;
   /**
    * Data storage approach. Optional for callers that only set core fields
@@ -97,8 +101,8 @@ export function isFeatureSelectionReady(answers: WizardAnswers): boolean {
 /**
  * Whether Forge PRD may run: prompt, app type, a non-empty feature pick when
  * the user has already made an explicit selection, a non-fragment derived
- * product title (A6), and at least one domain entity either listed or
- * derivable from the prompt (A1 — same fail-closed rule as generatePrd).
+ * product title (A6), and an entity spec with at least one field on every
+ * entity and zero parse errors (same fail-closed rule as generatePrd).
  *
  * @param answers - Wizard form values.
  * @returns True when the submit action may fire.
@@ -114,10 +118,9 @@ export function canForgePrd(answers: WizardAnswers): boolean {
   if (isTitleFragment(titleFromPrompt(answers.prompt))) {
     return false;
   }
-  // Gate when neither wizard entities nor prompt-derived nouns exist (A1).
-  // Without this, "please make a thing" queues a job and generatePrd throws.
-  const listed = entityList(answers.entities);
-  if (listed.length === 0 && deriveEntities(answers.prompt).length === 0) {
+  // The wizard guarantees a parsed spec. Deriving nouns from the prompt is
+  // not a substitute: a field-less legacy list must not forge.
+  if (!entitySpecReady(answers.entities)) {
     return false;
   }
   return true;
@@ -188,16 +191,16 @@ export function slugFromPrompt(prompt: string): string {
 }
 
 /**
- * Count main entities from a comma / semicolon / newline separated list.
+ * Count entities in a Main entities spec.
  *
- * @param entities - Free-text entity list.
- * @returns Count of non-empty parts.
+ * Uses the parser, so `Dog: name, breed; CareTask: title` is two entities,
+ * not four comma-separated chunks.
+ *
+ * @param entities - Entity spec text.
+ * @returns How many entities parsed, including legacy names that have no fields.
  */
 export function countEntities(entities: string): number {
-  return entities
-    .split(/[,;\n]+/)
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0).length;
+  return parseEntitySpec(entities).entities.length;
 }
 
 /** JSON body POST /api/submit accepts from the wizard. */

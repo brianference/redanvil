@@ -1,5 +1,6 @@
 import type { FeatureSpec } from '../types';
 import { hasPronounHead, isBareAdjective, isEntityStopWord, requirementLines } from '../naming';
+import { clausesWithNegation, type PromptClause } from './negation';
 
 /**
  * What the app actually DOES, extracted from the prompt.
@@ -32,44 +33,137 @@ export interface Capability {
   subject: string;
 }
 
-/** Verb patterns that identify each capability, most specific first. */
-const KIND_PATTERNS: readonly { kind: Capability['kind']; re: RegExp }[] = [
+/**
+ * One distinct signal for a capability kind.
+ *
+ * Score is the count of these that hit a non-negated clause, so "appointments"
+ * (one scheduling signal) loses to "tracks" plus "history" (two tracking
+ * signals) instead of winning because schedule used to be earlier in the list.
+ */
+interface KindRule {
+  /** Capability this signal group identifies. */
+  kind: Capability['kind'];
+  /** Each pattern counts at most once, however often it matches. */
+  signals: readonly RegExp[];
+}
+
+/**
+ * Signals for each capability.
+ *
+ * "calendar" is a reference signal, not a scheduling one. A planting calendar
+ * answers "what belongs in this window"; nobody assigns anything. Scheduling
+ * needs a verb that means assigned or reserved on its own.
+ */
+const KIND_RULES: readonly KindRule[] = [
   {
     kind: 'search-rank',
-    re: /\b(find|finds|search|searches|compare|compares|rank|ranks|cheapest|lowest|best|fastest|shortest|optimi[sz]e[sd]?)\b/i
+    signals: [
+      /\bfinds?\b/i,
+      /\bsearch(?:es)?\b/i,
+      /\bcompares?\b/i,
+      /\branks?\b/i,
+      /\bcheapest\b/i,
+      /\blowest\b/i,
+      /\bbest\b/i,
+      /\bfastest\b/i,
+      /\bshortest\b/i,
+      /\boptimi[sz]e[sd]?\b/i
+    ]
   },
   {
-    // Reference views over a fixed, cited dataset: planting calendars, tide
-    // tables, hardiness charts. Placed AFTER search-rank so a genuine search
-    // prompt still wins. "calendar" alone is intentionally here (not under
-    // schedule) — RA-163 removed it from schedule; without this kind the
-    // planting-calendar prompt matches nothing and §8 collapses to CRUD.
     kind: 'reference',
-    re: /\b(show|shows|list|lists|display|displays|browse|browses|view|views|chart|charts|grid|grids|calendar|calendars|window|windows|what\s+is\s+\w+)\b/i
+    signals: [
+      /\bshows?\b/i,
+      /\blists?\b/i,
+      /\bdisplays?\b/i,
+      /\bbrowses?\b/i,
+      /\bviews?\b/i,
+      /\bcharts?\b/i,
+      /\bgrids?\b/i,
+      /\bcalendars?\b/i,
+      /\bwindows?\b/i,
+      /\bwhat\s+is\s+\w+\b/i
+    ]
   },
   {
-    // "calendar" alone is NOT a scheduling signal and used to be one. A planting
-    // calendar, a content calendar and an academic calendar are all REFERENCE
-    // views: they answer "what belongs in this window", and nobody assigns
-    // anything to anybody. Matching the bare word emitted "Schedule Item — users
-    // assign Item to a time and a person, and the app refuses assignments that
-    // conflict" for an Arizona planting calendar, with conflict-detection tests
-    // attached, and building that spec literally produces an item tracker while
-    // the actual product never appears.
-    //
-    // Scheduling needs a signal that something is ASSIGNED or RESERVED, so the
-    // remaining verbs all carry that meaning on their own.
     kind: 'schedule',
-    re: /\b(schedul\w*|shift\w*|roster\w*|book\w*|appointment\w*|availability|coverage)\b/i
+    signals: [
+      /\bschedul\w*\b/i,
+      /\bshift\w*\b/i,
+      /\broster\w*\b/i,
+      /\bbook\w*\b/i,
+      /\bappointment\w*\b/i,
+      /\bavailability\b/i,
+      /\bcoverage\b/i
+    ]
   },
-  { kind: 'notify', re: /\b(alert\w*|notif\w*|remind\w*|warn\w*|escalat\w*)\b/i },
-  { kind: 'track', re: /\b(track\w*|log\w*|monitor\w*|record\w*|history|audit)\b/i },
+  {
+    kind: 'notify',
+    signals: [/\balert\w*\b/i, /\bnotif\w*\b/i, /\bremind\w*\b/i, /\bwarn\w*\b/i, /\bescalat\w*\b/i]
+  },
+  {
+    kind: 'track',
+    signals: [
+      /\btrack\w*\b/i,
+      /\blog\w*\b/i,
+      /\bmonitor\w*\b/i,
+      /\brecord\w*\b/i,
+      /\bhistory\b/i,
+      /\baudit\b/i
+    ]
+  },
   {
     kind: 'calculate',
-    re: /\b(calculat\w*|estimat\w*|forecast\w*|budget\w*|score[sd]?|total\w*)\b/i
+    signals: [
+      /\bcalculat\w*\b/i,
+      /\bestimat\w*\b/i,
+      /\bforecast\w*\b/i,
+      /\bbudget\w*\b/i,
+      /\bscore[sd]?\b/i,
+      /\btotal\w*\b/i
+    ]
   },
-  { kind: 'import-export', re: /\b(import\w*|export\w*|upload\w*|csv|sync\w*)\b/i }
+  {
+    kind: 'import-export',
+    signals: [/\bimport\w*\b/i, /\bexport\w*\b/i, /\bupload\w*\b/i, /\bcsv\b/i, /\bsync\w*\b/i]
+  }
 ];
+
+/**
+ * How many capabilities the rendered sections keep.
+ *
+ * `capabilityFeatures` turns each kind into product behaviour, and the problem
+ * statement treats the first as what the app is for. Past two, the spec has
+ * no primary capability and the MVP stops being minimal. Ranking is by score,
+ * then by the earliest non-negated hit, then by kind name — not by this list's
+ * order, which is what let "appointments" outrank a care history.
+ */
+const MAX_RENDERED_CAPABILITIES = 2;
+
+/**
+ * Index of the first non-negated match of one signal, or null.
+ *
+ * @param lower - Lowercased prompt. Offsets match {@link clausesWithNegation}.
+ * @param clauses - Clauses with negation flags.
+ * @param signal - One kind signal. Counted once even if it matches twice.
+ * @returns Earliest match index, or null when every hit is negated or absent.
+ */
+function earliestSignal(
+  lower: string,
+  clauses: readonly PromptClause[],
+  signal: RegExp
+): number | null {
+  const flags = signal.flags.includes('g') ? signal.flags : `${signal.flags}g`;
+  const re = new RegExp(signal.source, flags);
+  let earliest: number | null = null;
+  for (const match of lower.matchAll(re)) {
+    const at = match.index ?? 0;
+    const clause = clauses.find((item) => at >= item.start && at < item.end);
+    if (clause === undefined || clause.negated) continue;
+    if (earliest === null || at < earliest) earliest = at;
+  }
+  return earliest;
+}
 
 /** Superlative objectives, longest first so "lowest cost" beats "cost". */
 const OBJECTIVE_RE =
@@ -162,6 +256,56 @@ function isUsableSubject(raw: string): boolean {
 }
 
 /**
+ * Lower-case words of a PascalCase entity name: `CareTask` -> `care task`.
+ *
+ * @param entity - Entity name from the wizard spec.
+ * @returns Space-separated lower-case words.
+ */
+function entityWords(entity: string): string {
+  return entity
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * Drop a trailing plural `s` so `tasks` meets `task`.
+ *
+ * @param word - One lower-case word.
+ * @returns The word without a single trailing `s` (but `ss` is kept).
+ */
+function singular(word: string): string {
+  return word.length > 3 && word.endsWith('s') && !word.endsWith('ss') ? word.slice(0, -1) : word;
+}
+
+/**
+ * The declared entity a captured subject phrase is about, if any.
+ *
+ * A phrase such as `recurring care tasks like vaccinations` names the CareTask
+ * entity the owner typed into the wizard. Titling features with the whole
+ * phrase produced "Recurring Care Tasks Like Vaccinations history"; the entity
+ * is the precise name. The longest matching entity wins so `CareTask` beats a
+ * bare `Care`.
+ *
+ * @param phrase - Usable subject capture from the prompt.
+ * @param entities - Entity names from the wizard spec.
+ * @returns The entity's lower-case words, or null when none appears in the phrase.
+ */
+function entityInPhrase(phrase: string, entities: readonly string[]): string | null {
+  const phraseWords = ` ${phrase.toLowerCase().split(/\s+/).map(singular).join(' ')} `;
+  let best: string | null = null;
+  for (const entity of entities) {
+    const words = entityWords(entity);
+    if (words.length === 0) continue;
+    const needle = ` ${words.split(' ').map(singular).join(' ')} `;
+    if (phraseWords.includes(needle) && (best === null || words.length > best.length)) {
+      best = words;
+    }
+  }
+  return best;
+}
+
+/**
  * The thing the app acts on.
  *
  * Prefers the prompt, because that is where the domain lives, but falls back to
@@ -186,7 +330,7 @@ export function extractSubject(prompt: string, entities: readonly string[] = [])
       .replace(/\b(lowest|highest|cheapest|best|fastest|cost|price|current)\b/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
-    if (isUsableSubject(raw)) return raw;
+    if (isUsableSubject(raw)) return entityInPhrase(raw, entities) ?? raw;
     const relIndex = match.index;
     searchFrom += relIndex + Math.max(1, match[0].length);
   }
@@ -201,11 +345,13 @@ export function extractSubject(prompt: string, entities: readonly string[] = [])
  * Detect what the app does from its prompt.
  *
  * Deterministic on purpose: the PRD is a spec, and a spec that changes when you
- * regenerate it is not a spec.
+ * regenerate it is not a spec. Every kind is scored by how many of its signals
+ * hit a clause that is not negated. Highest score first. A tie goes to the
+ * kind whose evidence appears earlier in the prompt, then to the kind name.
  *
  * @param prompt - Raw prompt text.
  * @param entities - Domain entity names (helps subject extraction).
- * @returns Capabilities in priority order; empty when the prompt names none.
+ * @returns Capabilities in rank order, capped at {@link MAX_RENDERED_CAPABILITIES}.
  */
 export function detectCapabilities(prompt: string, entities: readonly string[] = []): Capability[] {
   const text = prompt.trim();
@@ -213,13 +359,31 @@ export function detectCapabilities(prompt: string, entities: readonly string[] =
   const objective = OBJECTIVE_RE.exec(text)?.[1]?.toLowerCase() ?? null;
   const criteria = extractCriteria(text);
   const subject = extractSubject(text, entities);
-  const found: Capability[] = [];
-  for (const { kind, re } of KIND_PATTERNS) {
-    if (re.test(text)) found.push({ kind, objective, criteria, subject });
+  const lower = text.toLowerCase();
+  const clauses = clausesWithNegation(text);
+  const ranked: { kind: Capability['kind']; score: number; earliest: number }[] = [];
+  for (const rule of KIND_RULES) {
+    let score = 0;
+    let earliest = Number.POSITIVE_INFINITY;
+    for (const signal of rule.signals) {
+      const hit = earliestSignal(lower, clauses, signal);
+      if (hit === null) continue;
+      score += 1;
+      if (hit < earliest) earliest = hit;
+    }
+    if (score > 0) ranked.push({ kind: rule.kind, score, earliest });
   }
-  // Two is the useful ceiling: a spec that claims six primary capabilities has
-  // no primary capability, and the MVP stops being minimal.
-  return found.slice(0, 2);
+  ranked.sort((left, right) => {
+    if (right.score !== left.score) return right.score - left.score;
+    if (left.earliest !== right.earliest) return left.earliest - right.earliest;
+    return left.kind < right.kind ? -1 : left.kind > right.kind ? 1 : 0;
+  });
+  return ranked.slice(0, MAX_RENDERED_CAPABILITIES).map((entry) => ({
+    kind: entry.kind,
+    objective,
+    criteria,
+    subject
+  }));
 }
 
 /** Title-case a subject for feature names. */
@@ -256,7 +420,8 @@ export function capabilityFeatures(
   const out: Array<Omit<FeatureSpec, 'role'>> = [];
   let n = startIndex;
 
-  for (const cap of capabilities) {
+  for (const [rank, cap] of capabilities.entries()) {
+    const firstOfCapability = out.length;
     const subject = cap.subject;
     const Subject = titleCase(subject);
     const id = ident(subject);
@@ -502,6 +667,14 @@ export function capabilityFeatures(
         }
       });
       n += 1;
+    }
+    // The top-ranked capability IS the product: a reminder app whose reminders
+    // sit in "Beyond MVP" ships an MVP that does not do what was asked. Only the
+    // first capability is promoted; the rest keep their own tier.
+    if (rank === 0) {
+      for (let index = firstOfCapability; index < out.length; index += 1) {
+        out[index] = { ...out[index]!, mvp: true };
+      }
     }
   }
 
