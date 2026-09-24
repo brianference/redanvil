@@ -29,6 +29,12 @@ and in git; do not grow this file into a log. Replace sections when they change.
   (`roles/parallel-roles.mjs`; n8n v1 itself runs branches serially).
 - **Verdicts.** Visual verdicts bind to a freshly built bundle hash; judge verdicts need a scope
   (schema v2). The per-iteration judge runs on `claude -p` and falls back to Grok.
+- **Independent review (2026-09-24).** A fresh-context reviewer found 7 high and 13 medium issues
+  in Batches 2-4; all high and medium ones are fixed and tested on master (grok handoff only on
+  account errors, fidelity scored on features only, per-round gate ids, idempotent webhook, judge
+  scope, whole-bundle hash, webhook token, DDL-safe names, negation, dependency skips, bounded
+  retries). Not fixed: rate_limits table is never pruned; a job claimed just before a crash stays
+  `claimed` (no lease).
 - **Overnight loop.** Per-night checkpoint rollover in `overnight.mjs`, Grok first, prompt via file,
   ALERT.json when no VERIFIED receipt. Grok failover (hang, 403, spending limit, 402 balance) is one
   function in `roles/agent-failover.mjs`.
@@ -37,9 +43,10 @@ and in git; do not grow this file into a log. Replace sections when they change.
 ## Blocked on the owner
 
 1. **Secrets.** `RUNNER_TOKEN` and `RATE_LIMIT_KEY` must be set as Pages secrets on project
-   `redanvil` before deploying, or submit/save return 503 (fail closed). Script (prints only exit
-   codes): `node <scratchpad>/set-secrets.mjs` from the 2026-09-23 session, or set them by hand.
-   The poller reads `REDANVIL_RUNNER_TOKEN` from the gitignored `n8n-prototype/.env`.
+   `redanvil` before deploying, or submit/save return 503 (fail closed). The gitignored
+   `n8n-prototype/.env` needs `REDANVIL_RUNNER_TOKEN` (same value as `RUNNER_TOKEN`) and
+   `REDANVIL_WEBHOOK_TOKEN` (any long random value; `start-server.sh` loads it into n8n and the
+   poller sends it, and the build webhook refuses a request without it).
 2. **Remote D1 migration** `app-builder/migrations/0003_job_runner.sql`, then build and deploy
    app-builder (`--branch main`), verify asset hash and `/api/health`.
 3. **Push.** master is far ahead of origin. The scoped pre-push hook refuses because the August
@@ -59,6 +66,8 @@ and in git; do not grow this file into a log. Replace sections when they change.
 - harness / promote / coverageGates tests time out (5 s) only under the full parallel suite on
   Windows; they pass alone.
 - Drift CI stays red at the finish-line step until app-builder is re-gated and shipped.
+- Fidelity is a word-overlap proxy with a 0.024 margin between the right dog-care PRD (0.357) and
+  the old sushi PRD (0.333); it fails closed, so expect some good PRDs to stop and ask.
 - PRD titles still come from the prompt; the wizard has no app-name field, so Grok's intent
   `appName` cannot reach the PRD yet. `deriveEntities` is now only used by tests and a script.
 - The Claude judge fails claims it cannot see from a diff alone; its prompt needs file context.
