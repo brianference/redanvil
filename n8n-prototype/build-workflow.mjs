@@ -696,6 +696,16 @@ function link(from, to, outputIndex = 0, inputIndex = 0) {
 }
 
 /**
+ * The customData key that counts a gate's redo rounds in this execution.
+ * customData keys may only contain [A-Za-z0-9_].
+ * @param {{ id: string }} step gated step
+ * @returns {string}
+ */
+function cycleKeyFor(step) {
+  return `cycles_${step.id.replace(/-/g, '_')}`;
+}
+
+/**
  * Code-node source that registers one gate. Free text rides inside the
  * base64 payload, so the summary cannot break the shell command.
  * @param {{ id: string, summary: string }} step gated step
@@ -710,7 +720,8 @@ export function registerGateJs(step) {
       `  title: ${JSON.stringify(`Approve ${step.id}`)},\n` +
       `  summary: ${JSON.stringify(step.summary)},\n` +
       `  resumeUrl: $execution.resumeFormUrl,\n` +
-      `  executionId: String($execution.id ?? '')\n` +
+      `  executionId: String($execution.id ?? ''),\n` +
+      `  cycle: Number($execution.customData.get(${JSON.stringify(cycleKeyFor(step))}) || '0')\n` +
       `};`,
     'register-gate.mjs'
   );
@@ -727,7 +738,8 @@ export function resolveTimeoutJs(step) {
       `const payload = {\n` +
       `  slug: c.slug,\n` +
       `  step: ${JSON.stringify(step.id)},\n` +
-      `  executionId: String($execution.id ?? '')\n` +
+      `  executionId: String($execution.id ?? ''),\n` +
+      `  cycle: Number($execution.customData.get(${JSON.stringify(cycleKeyFor(step))}) || '0')\n` +
       `};`,
     'resolve-timeout.mjs'
   );

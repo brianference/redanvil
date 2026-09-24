@@ -65,8 +65,12 @@ export function safeExecutionFragment(executionId) {
  * @param {string} executionId n8n execution id
  * @returns {string}
  */
-export function gateRecordId(slug, step, executionId) {
-  return assertSafeId(`${slug}-${step}-${safeExecutionFragment(executionId)}`);
+export function gateRecordId(slug, step, executionId, cycle = 0) {
+  // A redo re-registers the same gate in the same execution. Without the cycle
+  // the second round reused the first round's id, so its `notified` marker said
+  // the owner had already been told and the 2h timeout decided unannounced.
+  const round = Number.isInteger(cycle) && cycle > 0 ? `-r${cycle}` : '';
+  return assertSafeId(`${slug}-${step}-${safeExecutionFragment(executionId)}${round}`);
 }
 
 /**

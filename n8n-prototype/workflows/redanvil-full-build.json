@@ -250,7 +250,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"logo\",\n  title: \"Approve logo\",\n  summary: \"Five real generated brand marks, a gallery, and an OPEN decision\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"logo\",\n  title: \"Approve logo\",\n  summary: \"Five real generated brand marks, a gallery, and an OPEN decision\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? ''),\n  cycle: Number($execution.customData.get(\"cycles_logo\") || '0')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
       }
     },
     {
@@ -453,7 +453,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"logo\",\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"logo\",\n  executionId: String($execution.id ?? ''),\n  cycle: Number($execution.customData.get(\"cycles_logo\") || '0')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
       }
     },
     {
@@ -544,7 +544,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"palette\",\n  title: \"Approve palette\",\n  summary: \"Five distinct colour + type directions, each shown light AND dark, OPEN decision\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"palette\",\n  title: \"Approve palette\",\n  summary: \"Five distinct colour + type directions, each shown light AND dark, OPEN decision\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? ''),\n  cycle: Number($execution.customData.get(\"cycles_palette\") || '0')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
       }
     },
     {
@@ -747,7 +747,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"palette\",\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"palette\",\n  executionId: String($execution.id ?? ''),\n  cycle: Number($execution.customData.get(\"cycles_palette\") || '0')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
       }
     },
     {
@@ -838,7 +838,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"layout\",\n  title: \"Approve layout\",\n  summary: \"Three structurally distinct layout options, gallery, OPEN decision\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"layout\",\n  title: \"Approve layout\",\n  summary: \"Three structurally distinct layout options, gallery, OPEN decision\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? ''),\n  cycle: Number($execution.customData.get(\"cycles_layout\") || '0')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
       }
     },
     {
@@ -1041,7 +1041,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"layout\",\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"layout\",\n  executionId: String($execution.id ?? ''),\n  cycle: Number($execution.customData.get(\"cycles_layout\") || '0')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
       }
     },
     {
@@ -1132,7 +1132,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"decide\",\n  title: \"Approve decide\",\n  summary: \"The owner picks a logo, a palette and a layout. Nothing builds before this\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"decide\",\n  title: \"Approve decide\",\n  summary: \"The owner picks a logo, a palette and a layout. Nothing builds before this\",\n  resumeUrl: $execution.resumeFormUrl,\n  executionId: String($execution.id ?? ''),\n  cycle: Number($execution.customData.get(\"cycles_decide\") || '0')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/register-gate.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
       }
     },
     {
@@ -1335,7 +1335,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"decide\",\n  executionId: String($execution.id ?? '')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nconst payload = {\n  slug: c.slug,\n  step: \"decide\",\n  executionId: String($execution.id ?? ''),\n  cycle: Number($execution.customData.get(\"cycles_decide\") || '0')\n};\nconst b64 = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/dispatch/resolve-timeout.mjs');\nconst cmd = 'node ' + script + ' --payloadB64=' + b64 + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
       }
     },
     {
