@@ -44,16 +44,22 @@ export function grokCannotRun(res) {
   if (res.status === null) return true;
   if (res.status === 0) return false;
   const text = `${res.stdout ?? ''}\n${res.stderr ?? ''}`;
-  if (/spending limit/i.test(text)) return true;
-  if (/\b403\b/.test(text)) return true;
-  // Measured 2026-09-23: an exhausted account exits 1 with
-  // `API error (status 402 Payment Required): Grok Build usage balance exhausted`.
-  if (GROK_BALANCE_EXHAUSTED_RE.test(text)) return true;
-  return false;
+  return GROK_ACCOUNT_BLOCKED_RE.test(text);
 }
 
-/** Grok Build's out-of-balance error (HTTP 402), as it appears in stderr. */
-const GROK_BALANCE_EXHAUSTED_RE = /\b402\b|payment required|usage balance exhausted/i;
+/**
+ * The shapes grok prints when the ACCOUNT cannot run, not when the task failed.
+ *
+ * A bare `\b40[23]\b` also matched a failing test's "expected 200 to be 403" and
+ * a stack frame "App.tsx:402:11", and handed a half-finished tree to Claude. Only
+ * the API error envelope, the status phrases and the billing words count.
+ * Measured 2026-09-23: `API error (status 402 Payment Required): Grok Build usage balance exhausted`.
+ */
+const GROK_ACCOUNT_BLOCKED_RE =
+  /API error \(status 40[23]\b|\b403 Forbidden\b|\b402 Payment Required\b|usage balance exhausted|spending[- ]limit/i;
+
+/** The balance-exhausted subset, for a readable receipt reason. */
+const GROK_BALANCE_EXHAUSTED_RE = /\b402 Payment Required\b|usage balance exhausted/i;
 
 /**
  * Short reason for a receipt. Not the whole stream.
@@ -64,9 +70,9 @@ export function describeGrokFailure(res) {
   if (res.error?.code === 'HEARTBEAT') return 'heartbeat: no output';
   if (res.error?.code === 'ETIMEDOUT' || res.status === null) return 'hang or timeout';
   const text = `${res.stdout ?? ''}\n${res.stderr ?? ''}`;
-  if (/spending limit/i.test(text)) return 'spending limit';
-  if (/\b403\b/.test(text)) return 'HTTP 403';
   if (GROK_BALANCE_EXHAUSTED_RE.test(text)) return 'usage balance exhausted (402)';
+  if (/spending[- ]limit/i.test(text)) return 'spending limit';
+  if (GROK_ACCOUNT_BLOCKED_RE.test(text)) return 'HTTP 403';
   return `exit ${res.status}`;
 }
 
