@@ -1,6 +1,15 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { join } from 'node:path';
 import type { Verdict } from '../schemas/verdicts';
 import { isGateOutput } from '../../scripts/lib/gate-outputs.mjs';
+import {
+  bundleHashOfApp,
+  changedFilesSince,
+  commitResolvable,
+  isBundleBound,
+  scopeForVerdict,
+  verdictStaleReason
+} from '../../scripts/lib/verdict-freshness.mjs';
 
 /**
  * A verdict that can no longer be trusted, and why.
@@ -22,6 +31,12 @@ export interface StaleVerdict {
  */
 export type ChangeProbe = (commit: string, scope: string[]) => string[] | null;
 
+/**
+ * Current built-bundle hash for a bundle-bound visual verdict.
+ * Null means the build cannot be read, which is stale, not fresh.
+ */
+export type BundleProbe = () => string | null;
+
 /** How many changed paths to carry into the failure message. */
 const MAX_REPORTED_FILES = 5;
 
@@ -30,14 +45,16 @@ const MAX_REPORTED_FILES = 5;
  * the whole app directory is the scope, because a reviewer who did not say what
  * they looked at is only credibly speaking for the thing under review.
  *
+ * A visual verdict that recorded `bundleHash` is not scoped this way: it is
+ * bound to the built bundle, and a source edit that does not change the bundle
+ * does not expire it. This function is the source-tree scope only.
+ *
  * @param verdict The recorded verdict.
  * @param appDirRel The app directory being gated, relative to the repo root.
  * @returns Repo-relative path prefixes the verdict speaks for.
  */
 export function verdictScope(verdict: Verdict, appDirRel: string): string[] {
-  const scope = verdict.scope;
-  if (scope !== undefined && scope.length > 0) return scope;
-  return [appDirRel];
+  return scopeForVerdict(verdict, appDirRel);
 }
 
 /**
@@ -51,36 +68,44 @@ export function verdictScope(verdict: Verdict, appDirRel: string): string[] {
  * fails closed — the same treatment as a review that never happened, because
  * that is what it now is.
  *
+ * A visual verdict with `bundleHash` is stale only when the current build's
+ * hash differs, or when that hash cannot be read. Source edits do not expire
+ * it. A visual verdict with no hash, and every judge verdict, keep the
+ * source-tree check. Unknown stays stale.
+ *
  * @param verdicts Parsed verdicts.
  * @param scopeFor Resolves the paths a verdict speaks for.
  * @param probe Reports what changed in a scope since a commit.
+ * @param bundleProbe Current build hash. Required for bundle-bound verdicts;
+ *   a missing probe is treated as a missing build (stale), never as a match.
  * @returns Every stale verdict, in input order.
  */
 export function findStaleVerdicts(
   verdicts: Verdict[],
   scopeFor: (verdict: Verdict) => string[],
-  probe: ChangeProbe
+  probe: ChangeProbe,
+  bundleProbe?: BundleProbe
 ): StaleVerdict[] {
   const stale: StaleVerdict[] = [];
   for (const verdict of verdicts) {
-    const changed = probe(verdict.reviewedCommit, scopeFor(verdict));
-    if (changed === null) {
-      stale.push({
-        ruleId: verdict.ruleId,
-        reviewedCommit: verdict.reviewedCommit,
-        reason: `reviewedCommit ${verdict.reviewedCommit.slice(0, 12)} is not resolvable in this repository`,
-        changedFiles: []
-      });
-      continue;
-    }
-    if (changed.length > 0) {
-      stale.push({
-        ruleId: verdict.ruleId,
-        reviewedCommit: verdict.reviewedCommit,
-        reason: `${changed.length} file(s) under review changed since ${verdict.reviewedCommit.slice(0, 12)}`,
-        changedFiles: changed.slice(0, MAX_REPORTED_FILES)
-      });
-    }
+    // Do not ask git about a bundle-bound verdict. A source-only commit must
+    // not be able to expire a review of the rendered page.
+    const changed = isBundleBound(verdict)
+      ? null
+      : probe(verdict.reviewedCommit, scopeFor(verdict));
+    const currentBundleHash = isBundleBound(verdict)
+      ? bundleProbe
+        ? bundleProbe()
+        : null
+      : null;
+    const decision = verdictStaleReason(verdict, { changedFiles: changed, currentBundleHash });
+    if (!decision.stale) continue;
+    stale.push({
+      ruleId: verdict.ruleId,
+      reviewedCommit: verdict.reviewedCommit,
+      reason: decision.reason,
+      changedFiles: decision.changedFiles.slice(0, MAX_REPORTED_FILES)
+    });
   }
   return stale;
 }
@@ -140,7 +165,7 @@ export function gitChangeProbe(repoRoot: string): ChangeProbe {
   return (commit, scope) => {
     // Resolve the commit first so "unknown commit" is distinguishable from
     // "nothing changed" — both make `git diff` print nothing.
-    if (git(['cat-file', '-e', `${commit}^{commit}`], repoRoot) === null) {
+    if (!commitResolvable(repoRoot, commit)) {
       if (shallow) {
         console.error(
           `freshness: cannot resolve ${commit.slice(0, 12)} — this is a SHALLOW clone. ` +
@@ -149,19 +174,73 @@ export function gitChangeProbe(repoRoot: string): ChangeProbe {
       }
       return null;
     }
-
-    const changed = git(['diff', '--name-only', commit, '--', ...scope], repoRoot);
-    if (changed === null) return null;
-    const untracked = git(['ls-files', '--others', '--exclude-standard', '--', ...scope], repoRoot);
-
-    const lines = (text: string): string[] =>
-      text
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-
-    return [...new Set([...lines(changed), ...lines(untracked ?? '')])].filter(
-      (file) => !isGateOutput(file)
-    );
+    return changedFilesSince(repoRoot, commit, scope);
   };
+}
+
+/**
+ * Hash of the app's current `dist/assets/index-*.js` and `.css`.
+ *
+ * @param repoRoot Repository root.
+ * @param appDirRel App directory relative to the repo root.
+ * @returns A probe. Null from the probe means the build could not be read.
+ */
+export function gitBundleProbe(repoRoot: string, appDirRel: string): BundleProbe {
+  return () => {
+    try {
+      return bundleHashOfApp(join(repoRoot, appDirRel));
+    } catch {
+      return null;
+    }
+  };
+}
+
+/** Upper bound on the fresh build a bundle probe runs before hashing. */
+const FRESH_BUILD_TIMEOUT_MS = 5 * 60 * 1000;
+
+/**
+ * Bundle probe that builds the app first, then hashes the fresh output.
+ *
+ * Verdicts are loaded before the gate's own checks (which include the build),
+ * so hashing whatever `dist/` happens to be on disk would let a build left over
+ * from an earlier commit vouch for source that has since changed. Building here
+ * makes the hash describe the current source. Vite output is deterministic, so
+ * unchanged source reproduces the recorded hash. The build runs at most once per
+ * probe; a failed build yields null, which marks bundle-bound verdicts stale.
+ *
+ * @param repoRoot Repository root.
+ * @param appDirRel App directory relative to the repo root.
+ * @param build Runs the app's build in its directory; true on success. Injected for tests.
+ * @returns A probe over a freshly built bundle.
+ */
+export function freshBuildBundleProbe(
+  repoRoot: string,
+  appDirRel: string,
+  build: (appDir: string) => boolean = defaultBuild
+): BundleProbe {
+  let cached: { hash: string | null } | null = null;
+  return () => {
+    if (cached !== null) return cached.hash;
+    const appDir = join(repoRoot, appDirRel);
+    const hash = build(appDir) ? gitBundleProbe(repoRoot, appDirRel)() : null;
+    cached = { hash };
+    return hash;
+  };
+}
+
+/**
+ * `npm run build` in the app directory, bounded and quiet.
+ *
+ * @param appDir Absolute app directory.
+ * @returns True when the build exited 0.
+ */
+function defaultBuild(appDir: string): boolean {
+  const result = spawnSync('npm', ['run', 'build'], {
+    cwd: appDir,
+    stdio: 'ignore',
+    timeout: FRESH_BUILD_TIMEOUT_MS,
+    // npm is a .cmd shim on Windows and needs a shell; the arguments are fixed.
+    shell: process.platform === 'win32'
+  });
+  return result.status === 0;
 }

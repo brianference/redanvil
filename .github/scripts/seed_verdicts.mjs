@@ -14,6 +14,7 @@
  * Usage: node seed_verdicts.mjs <slug>
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { bundleHashOfApp } from '../../orchestrator/scripts/lib/verdict-freshness.mjs';
 
 const slug = process.argv[2];
 if (!slug) {
@@ -104,6 +105,9 @@ const VISUAL_RULES = new Set([
 const existing = existsSync(verdictsPath) ? JSON.parse(readFileSync(verdictsPath, 'utf8')) : [];
 const known = new Set(existing.map((v) => v.ruleId));
 const now = new Date().toISOString();
+// The slug is the app directory in this repo. A missing build leaves the
+// field off, so freshness keeps the source-tree check instead of inventing a hash.
+const bundleHash = bundleHashOfApp(slug);
 
 let added = 0;
 for (const ruleId of ruleIds) {
@@ -118,7 +122,8 @@ for (const ruleId of ruleIds) {
     evidence: [source[ruleId] ?? reportPath],
     note: String(f.detail ?? '').slice(0, 300),
     reviewedAt: now,
-    reviewedCommit: 'unstamped'
+    reviewedCommit: 'unstamped',
+    ...(bundleHash !== null ? { bundleHash } : {})
   });
   added += 1;
 }

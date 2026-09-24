@@ -12,7 +12,7 @@ import type { GateReport } from './commands/gate';
 import type { Outcome } from './gate/score';
 import { collectProvenance } from './gate/provenance';
 import { parseVerdicts } from './schemas/verdicts';
-import { gitChangeProbe } from './gate/freshness';
+import { freshBuildBundleProbe, gitChangeProbe } from './gate/freshness';
 import type { StaleVerdict } from './gate/freshness';
 import { indexOutcomes } from './gate/score';
 import { runLoopCommand } from './commands/loop';
@@ -61,7 +61,11 @@ async function parseSharedRunFlags(
     typeof values.judge === 'string' && verdictsRaw !== null
       ? parseVerdicts(verdictsRaw, values.judge, repoRoot, {
           appDirRel: relative(repoRoot, resolve(appDir)).split(sep).join('/') || '.',
-          probe: gitChangeProbe(repoRoot)
+          probe: gitChangeProbe(repoRoot),
+          bundleProbe: freshBuildBundleProbe(
+            repoRoot,
+            relative(repoRoot, resolve(appDir)).split(sep).join('/') || '.'
+          )
         })
       : { outcomes: [] as Outcome[], stale: [] as StaleVerdict[] };
   const judge = parsedVerdicts.outcomes;

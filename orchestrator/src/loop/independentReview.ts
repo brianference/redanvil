@@ -15,6 +15,7 @@ import { basename, join, resolve } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { quoteForCmd, scrubbedEnv } from '../process/run';
+import { claudeShouldFallBack } from './classifyClaude';
 import {
   allFailingFindingsAccepted,
   type AcceptedFinding
@@ -29,10 +30,14 @@ import { reviewPinCommit } from '../git/newestSourceCommit.mjs';
  */
 export type IndependentReviewMode =
   | 'grok'
+  | 'claude'
   | 'fixture'
   | 'unavailable'
   | 'empty-diff'
   | 'external';
+
+/** Which model engine produced a judge result. Building roles stay on Grok. */
+export type JudgeEngine = 'claude' | 'grok';
 
 /**
  * Raw judge output that means the reviewer could not be REACHED, as opposed to
@@ -79,6 +84,11 @@ export interface IndependentReviewReport {
   rawExcerpt: string;
   /** How the review was produced. */
   mode: IndependentReviewMode;
+  /**
+   * Engine that produced this review, when a model ran. Recorded from the
+   * call, never inferred. Absent for empty-diff, fixture, and external.
+   */
+  engine?: JudgeEngine;
   /** Who judged, when the reviewer is not the default. Recorded, never inferred. */
   reviewerId?: string;
   /**
@@ -112,6 +122,15 @@ export interface IndependentFinding {
   passed: boolean;
 }
 
+/** One headless judge spawn, real or injected. */
+export interface EngineSpawnResult {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+  /** True when the binary could not be started or the process never exited. */
+  unavailable?: boolean;
+}
+
 export interface IndependentReviewOptions {
   /** Working directory for git / app. */
   dir: string;
@@ -137,8 +156,23 @@ export interface IndependentReviewOptions {
    * verdict.
    */
   externalReview?: { reviewerId: string; findings: IndependentFinding[]; rawExcerpt?: string };
-  /** Per-chunk timeout for the grok CLI (ms). */
+  /** Per-chunk timeout for the judge CLI (ms). */
   timeoutMs?: number;
+  /**
+   * Which engine runs this review. `claude` is the per-iteration default the
+   * PM passes; it falls back to `grok` when Claude is unavailable or
+   * rate-limited. Omitted means `grok`, so existing callers keep Grok.
+   */
+  engine?: JudgeEngine;
+  /**
+   * Test-only Claude spawn. Production never sets this.
+   * Return the raw `--output-format json` envelope (or a rate-limit envelope).
+   */
+  runClaude?: (prompt: string, timeoutMs: number) => EngineSpawnResult;
+  /**
+   * Test-only Grok spawn. Production never sets this.
+   */
+  runGrok?: (prompt: string, timeoutMs: number) => EngineSpawnResult;
   /** Base vs head for the diff. Defaults to merge-base with main/master..HEAD. */
   diffRange?: string;
   /**
@@ -1122,6 +1156,8 @@ export function parseJudgeJson(text: string): {
   try {
     const envelope = JSON.parse(body) as {
       text?: unknown;
+      /** Claude `--output-format json` puts the model text here, not in `text`. */
+      result?: unknown;
       structuredOutput?: unknown;
       structuredOutputError?: unknown;
       stopReason?: unknown;
@@ -1155,6 +1191,10 @@ export function parseJudgeJson(text: string): {
     }
     if (typeof envelope.text === 'string') {
       body = envelope.text.trim();
+    } else if (typeof envelope.result === 'string') {
+      // Headless Claude. The envelope is not the review; the review is the
+      // string in `result`. Fall through and parse that string.
+      body = envelope.result.trim();
     } else {
       // Structured output landed as the top-level object (no text wrapper).
       const direct = normalizeJudgePayload(envelope);
@@ -1222,6 +1262,63 @@ export function buildIndependentReviewGrokArgs(opts: {
     '--prompt-file',
     opts.promptFile
   ];
+}
+
+/**
+ * Argv for headless Claude. The prompt is NOT an argument — it goes on stdin,
+ * so a release-sized diff cannot hit the Windows command-line ceiling, and
+ * the spawn does not go through a shell.
+ *
+ * No `--resume` and no session id: each call is a fresh context. The prompt
+ * is the diff, never a verdict file.
+ *
+ * @returns The plan `spawnSync` must use. `shell` is always false.
+ */
+export function claudeSpawnPlan(prompt: string): {
+  command: 'claude';
+  args: string[];
+  shell: false;
+  input: string;
+} {
+  return {
+    command: 'claude',
+    args: ['-p', '--output-format', 'json'],
+    shell: false,
+    input: prompt
+  };
+}
+
+/**
+ * Run `claude -p` once. Prompt on stdin, no shell, scrubbed env, bounded timeout.
+ *
+ * @param dir - Working directory. The prompt already contains the diff.
+ * @param prompt - Refute prompt. Must not be a path to a verdict file.
+ * @param timeoutMs - Wall-clock ceiling.
+ * @returns Spawn result. `unavailable` when the process never produced an exit.
+ */
+function invokeClaudeForChunk(
+  dir: string,
+  prompt: string,
+  timeoutMs: number
+): EngineSpawnResult {
+  const plan = claudeSpawnPlan(prompt);
+  const claude = spawnSync(plan.command, plan.args, {
+    cwd: dir,
+    input: plan.input,
+    encoding: 'utf8',
+    timeout: timeoutMs,
+    maxBuffer: 16 * 1024 * 1024,
+    // Explicit. Claude is not a .cmd we are willing to hand to cmd.exe; a
+    // missing binary is "unavailable" and the caller falls back to Grok.
+    shell: plan.shell,
+    env: scrubbedEnv([])
+  });
+  return {
+    status: claude.status,
+    stdout: typeof claude.stdout === 'string' ? claude.stdout : String(claude.stdout ?? ''),
+    stderr: typeof claude.stderr === 'string' ? claude.stderr : String(claude.stderr ?? ''),
+    unavailable: Boolean(claude.error) || claude.status === null
+  };
 }
 
 /**
@@ -1418,6 +1515,31 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
   const timeoutMs = opts.timeoutMs ?? 600_000;
   const chunkResults: ChunkReviewResult[] = [];
   let unavailableDetail: string | null = null;
+  // Claude is opt-in (the PM passes it). Anything else, including the test
+  // hook that supplies chunks directly, stays on Grok unless asked.
+  let activeEngine: JudgeEngine = opts.engine ?? 'grok';
+
+  /**
+   * Spawn the engine that is active for this chunk, or the injected runner.
+   *
+   * @param engine - claude or grok.
+   * @param prompt - Refute prompt for this chunk.
+   * @returns Spawn result. Unavailable is never treated as a review.
+   */
+  const spawnEngine = (engine: JudgeEngine, prompt: string): EngineSpawnResult => {
+    if (engine === 'claude') {
+      if (opts.runClaude) return opts.runClaude(prompt, timeoutMs);
+      return invokeClaudeForChunk(dir, prompt, timeoutMs);
+    }
+    if (opts.runGrok) return opts.runGrok(prompt, timeoutMs);
+    const grok = invokeGrokForChunk(dir, prompt, timeoutMs);
+    return {
+      status: grok.unavailable ? null : 0,
+      stdout: grok.stdout,
+      stderr: grok.detail,
+      unavailable: grok.unavailable
+    };
+  };
 
   for (const chunk of split.chunks) {
     const prompt = buildRefutePrompt(slug, commit, chunk.text, {
@@ -1440,9 +1562,15 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
         prompt
       }).stdout;
     } else {
-      const invoked = invokeGrokForChunk(dir, prompt, timeoutMs);
+      let invoked = spawnEngine(activeEngine, prompt);
+      // One fallback for the whole review, not per chunk: a rate-limited
+      // Claude must not leave half the diff on Claude and half on Grok.
+      if (activeEngine === 'claude' && claudeShouldFallBack(invoked)) {
+        activeEngine = 'grok';
+        invoked = spawnEngine('grok', prompt);
+      }
       if (invoked.unavailable) {
-        unavailableDetail = invoked.detail;
+        unavailableDetail = invoked.stderr || invoked.stdout || 'judge unavailable';
         chunkResults.push({
           index: chunk.index,
           coverageChars: chunk.coverageChars,
@@ -1452,7 +1580,7 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
             {
               title: 'judge unavailable',
               citation: 'orchestrator/src/loop/independentReview.ts:1',
-              detail: `${invoked.detail} (chunk ${chunk.index + 1}/${split.chunks.length})`,
+              detail: `${unavailableDetail} (chunk ${chunk.index + 1}/${split.chunks.length})`,
               passed: false
             }
           ],
@@ -1471,7 +1599,7 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
               {
                 title: 'judge unavailable',
                 citation: 'orchestrator/src/loop/independentReview.ts:1',
-                detail: `skipped after unavailable chunk ${chunk.index + 1} — ${invoked.detail}`,
+                detail: `skipped after unavailable chunk ${chunk.index + 1} — ${unavailableDetail}`,
                 passed: false
               }
             ],
@@ -1486,9 +1614,11 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
     // One retry on unparseable live output — multi-chunk reviews amplify
     // transient CLI/schema failures, and a single flaky chunk would otherwise
     // discard an otherwise full review (fail-closed still applies if retry fails).
+    // Retry the engine that actually answered. A rate-limited Claude has
+    // already moved activeEngine to grok and must not be retried as Claude.
     let parsed = parseJudgeJson(raw);
     if (parsed === null && !opts.reviewChunk) {
-      const retry = invokeGrokForChunk(dir, prompt, timeoutMs);
+      const retry = spawnEngine(activeEngine, prompt);
       if (!retry.unavailable) {
         raw = retry.stdout;
         parsed = parseJudgeJson(raw);
@@ -1539,7 +1669,7 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
   });
 
   const mode: IndependentReviewMode =
-    unavailableDetail !== null ? 'unavailable' : 'grok';
+    unavailableDetail !== null ? 'unavailable' : activeEngine;
 
   const report: IndependentReviewReport = {
     kind: 'independent-diff-review',
@@ -1553,6 +1683,10 @@ export function runIndependentDiffReview(opts: IndependentReviewOptions): Indepe
     findings: aggregated.findings,
     rawExcerpt: aggregated.rawExcerpt,
     mode,
+    // The engine that produced the output, including a Grok fallback and a
+    // review that then failed closed. Empty-diff / fixture / external never
+    // reach here.
+    engine: activeEngine,
     chunkCount: aggregated.chunkCount,
     coverageChars: aggregated.coverageChars,
     diffChars: aggregated.diffChars,

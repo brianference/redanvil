@@ -2,6 +2,10 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname, relative } from 'node:path';
 import { runGrok, parseGrokJson, newSessionId } from '../grok/harness';
+import {
+  judgeScopeFromCitations,
+  JUDGE_SCOPE_SCHEMA_VERSION
+} from '../../scripts/lib/verdict-freshness.mjs';
 
 /**
  * The judgment half of `u-api-real-output`.
@@ -57,6 +61,10 @@ export interface JudgeVerdict {
   note: string;
   reviewedAt: string;
   reviewedCommit: string;
+  /** Repo-relative files the judge was given. Required at schemaVersion 2. */
+  scope: string[];
+  /** {@link JUDGE_SCOPE_SCHEMA_VERSION}. */
+  schemaVersion: typeof JUDGE_SCOPE_SCHEMA_VERSION;
 }
 
 /** Grok's per-route finding. */
@@ -301,23 +309,40 @@ export async function runApiJudge(
       : `${failed.length} of ${parsed.findings.length} route(s) answer without delivering: ` +
         failed.map((f) => `${f.route} — ${f.reason}`).join('; ');
 
+  // Relative to the CURRENT WORKING DIRECTORY, not to the app. parseVerdicts
+  // resolves evidence with `join(repoRoot, path)` where repoRoot is
+  // `process.cwd()`, so an app-relative path is looked up under the
+  // orchestrator repo, is not found, and the verdict is rejected — which
+  // fails closed, but for a reason that has nothing to do with the app. The
+  // gate is invoked from the monorepo root against an app directory, so this
+  // is the path that actually resolves there. An absolute path would not:
+  // `join` does not discard its first argument for an absolute second one.
+  const evidencePath = relative(process.cwd(), evidenceAbs).split('\\').join('/');
+  const claimPaths = claimFiles.map((name) =>
+    relative(process.cwd(), join(appDir, name)).split('\\').join('/')
+  );
+  const scope = judgeScopeFromCitations([evidencePath, ...claimPaths], (p) =>
+    existsSync(join(process.cwd(), p))
+  );
+  if (scope.length === 0) {
+    return {
+      exitCode: 2,
+      message:
+        'judge verdict has no scope — the files the judge was given are not on disk, so it was not recorded',
+      verdict: null
+    };
+  }
+
   const verdict: JudgeVerdict = {
     ruleId: 'u-api-real-output',
     passed: failed.length === 0,
     method: 'judge',
-    // Relative to the CURRENT WORKING DIRECTORY, not to the app. parseVerdicts
-    // resolves evidence with `join(repoRoot, path)` where repoRoot is
-    // `process.cwd()`, so an app-relative path is looked up under the
-    // orchestrator repo, is not found, and the verdict is rejected — which
-    // fails closed, but for a reason that has nothing to do with the app. The
-    // gate is invoked from the monorepo root against an app directory, so this
-    // is the path that actually resolves there. An absolute path would not:
-    // `join` does not discard its first argument for an absolute second one.
-    evidence: [relative(process.cwd(), evidenceAbs).split('\\').join('/')],
-    // VerdictSchema requires min 3 chars; a truncated note is still a real one.
+    evidence: [evidencePath],
     note: note.slice(0, 2000),
     reviewedAt: new Date().toISOString(),
-    reviewedCommit: commit
+    reviewedCommit: commit,
+    scope,
+    schemaVersion: JUDGE_SCOPE_SCHEMA_VERSION
   };
 
   const outRel = join(EVIDENCE_DIR, `judge-api-${slug}.json`);

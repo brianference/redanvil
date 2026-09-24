@@ -2,11 +2,11 @@
 /**
  * Re-measure, re-stamp and re-gate both apps, in the only order that works.
  *
- * Every change to an app's `src/` invalidates its recorded verdicts, because a
- * recorded review is only evidence for the commit it was recorded at. Doing
- * that by hand is five commands per app in a specific order, and forgetting it
- * cost three CI failures in one session — each time `results-provenance` failed
- * on a change that was itself fine.
+ * A visual verdict that recorded a bundle hash is about the built page: it goes
+ * stale when that build changes, not when an unrelated source file does. A
+ * judge verdict goes stale when a file in its scope changes. This script
+ * re-measures or re-judges only the rules that are stale, and says which and
+ * why. Re-stamping a fresh verdict is the treadmill this exists to stop.
  *
  * The order is not arbitrary and this script enforces it:
  *
@@ -30,6 +30,15 @@ import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { APPS } from './apps.mjs';
 import { waiversForApp } from './meets_the_bar.mjs';
+import {
+  bundleHashOfApp,
+  changedFilesSince,
+  formatStaleLines,
+  isBundleBound,
+  measurersForStale,
+  scopeForVerdict,
+  verdictStaleReason
+} from '../../orchestrator/scripts/lib/verdict-freshness.mjs';
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
@@ -133,9 +142,84 @@ if (!flag('skip-propagation')) {
   step(2, 'propagation check SKIPPED (--skip-propagation)');
 }
 
-// --- 3. measure --------------------------------------------------------------
-step(3, 'measure against the deployed build');
+/** Script name → measurer id used by measurersForStale. */
+const MEASURER_BY_SCRIPT = {
+  'design_audit.mjs': 'design_audit',
+  'desktop_width.mjs': 'desktop_width',
+  'a11y_audit.mjs': 'a11y',
+  'runtime_parity.mjs': 'runtime_parity',
+  'cold_visitor.mjs': 'cold_visitor',
+  'screenshots.mjs': 'screenshots',
+  'e2e_smoke_app_builder.mjs': 'e2e',
+  'wizard_width.mjs': 'wizard_width'
+};
+
+/**
+ * Which recorded verdicts no longer describe the build or the files they named.
+ *
+ * @param {{slug: string, dir: string}} app App being reverified.
+ * @returns {{
+ *   stale: Array<{ruleId: string, method?: string, evidence?: string[], reason: string}>,
+ *   bundleHash: string | null,
+ *   plan: ReturnType<typeof measurersForStale>
+ * }}
+ */
+function classifyApp(app) {
+  const verdictPath = `evidence/verdicts-${app.slug}.json`;
+  const bundleHash = bundleHashOfApp(app.dir);
+  if (!existsSync(verdictPath)) {
+    return { stale: [], bundleHash, plan: measurersForStale(app.slug, []) };
+  }
+  const list = JSON.parse(readFileSync(verdictPath, 'utf8'));
+  const stale = [];
+  for (const verdict of list) {
+    const bound = isBundleBound(verdict);
+    // Bundle-bound visual verdicts do not consult the source tree.
+    const changed = bound
+      ? null
+      : changedFilesSince(
+          process.cwd(),
+          verdict.reviewedCommit,
+          scopeForVerdict(verdict, app.dir)
+        );
+    const decision = verdictStaleReason(verdict, {
+      changedFiles: changed,
+      currentBundleHash: bundleHash
+    });
+    if (!decision.stale) continue;
+    stale.push({
+      ruleId: verdict.ruleId,
+      method: verdict.method,
+      evidence: verdict.evidence,
+      reason: decision.reason
+    });
+  }
+  return { stale, bundleHash, plan: measurersForStale(app.slug, stale) };
+}
+
+/** @type {Map<string, ReturnType<typeof classifyApp>>} */
+const plans = new Map();
+
+// --- 3. measure only what went stale -----------------------------------------
+step(3, 're-measure only rules whose verdicts are stale');
 for (const app of apps) {
+  const classified = classifyApp(app);
+  plans.set(app.slug, classified);
+  if (classified.stale.length === 0) {
+    console.log(`    ${app.slug}: no stale verdicts — not re-measuring`);
+    continue;
+  }
+  console.log(`    ${app.slug}: ${classified.stale.length} stale verdict(s)`);
+  for (const line of formatStaleLines(classified.stale)) {
+    console.log(`      ${line}`);
+  }
+  if (classified.plan.unmapped.length > 0) {
+    fail(
+      `${app.slug}: stale verdict(s) cite evidence this script cannot re-measure: ` +
+        classified.plan.unmapped.map((row) => `${row.ruleId} (${row.reason})`).join('; ') +
+        '. Not re-stamped.'
+    );
+  }
   const jobs = [
     [
       'design_audit.mjs',
@@ -200,8 +284,13 @@ for (const app of apps) {
     jobs.push(['wizard_width.mjs', [app.url, '--out', `evidence/wizard-width-${app.slug}.json`]]);
   }
   for (const [name, rest] of jobs) {
-    const r = script(name, rest);
     const label = `${app.slug} ${name.replace('.mjs', '')}`;
+    const measurer = MEASURER_BY_SCRIPT[name];
+    if (!classified.plan.measurers.includes(measurer)) {
+      console.log(`    skip ${label} — no stale verdict cites it`);
+      continue;
+    }
+    const r = script(name, rest);
     if (r.code !== 0) {
       // A measurer that only found WAIVED defects must not hard-stop the run.
       // Otherwise a recorded, dated, accepted defect keeps the gate from ever
@@ -223,6 +312,25 @@ for (const app of apps) {
       fail(`${label} failed — fix the finding, do not re-stamp over it`);
     }
     console.log(`    ok  ${label}`);
+  }
+  if (classified.plan.judgeRuleIds.length > 0) {
+    console.log(`    ${app.slug}: re-judge ${classified.plan.judgeRuleIds.join(', ')}`);
+    const judge = script('independent_judge.mjs', [
+      app.dir,
+      '--rules',
+      classified.plan.judgeRuleIds.join(','),
+      '--engine',
+      'claude',
+      '--out',
+      `evidence/judge-independent-${app.slug}.json`
+    ]);
+    if (judge.code !== 0) {
+      console.error(judge.out.split('\n').slice(-12).join('\n'));
+      fail(
+        `${app.slug}: independent judge failed — stale judge verdicts were not re-stamped`
+      );
+    }
+    console.log(`    ok  ${app.slug} independent_judge`);
   }
 }
 
@@ -265,8 +373,12 @@ function outcomeFromEvidence(verdict) {
 // binding. Re-record HERE — after the audits, before the gate scores them —
 // otherwise the entry can never be current at scoring time and the rule fails on
 // every run no matter how honest the measurement was.
+const a11yApps = apps.filter((app) => plans.get(app.slug)?.plan.measurers.includes('a11y'));
+if (a11yApps.length === 0) {
+  step('3b', 'a11y-contrast provenance skipped — fe-a11y-contrast is not stale');
+} else {
 step('3b', 'record the a11y-contrast provenance against the reports just produced');
-for (const app of apps) {
+for (const app of a11yApps) {
   const rec = run(process.execPath, [
     'orchestrator/scripts/checks/record-a11y-contrast.mjs',
     app.dir,
@@ -279,6 +391,7 @@ for (const app of apps) {
     );
   }
   console.log(`    ok  ${app.slug} a11y-contrast provenance`);
+}
 }
 
 /**
@@ -321,10 +434,37 @@ function lastSourceCommit(appDir) {
   return sha !== undefined && /^[0-9a-f]{40}$/.test(sha) ? sha : head;
 }
 
-// --- 4. stamp verdicts to the app's last SOURCE commit ----------------------
-// Only now: a report produced BEFORE the commit it vouches for is rejected, and
-// rightly — re-stamping is not re-measuring.
-step(4, "stamp verdicts to each app's last source commit");
+/**
+ * Judge rows from the independent-judge report, keyed by rule id.
+ *
+ * A row with an empty scope is omitted. Recording it would either fail the
+ * schema or silently mean "the whole app".
+ *
+ * @param {string} reportPath Report written by independent_judge.mjs.
+ * @returns {Map<string, {passed: boolean, note: string, evidence: string[], scope: string[]}>}
+ */
+function judgeUpdatesFromReport(reportPath) {
+  const updates = new Map();
+  if (!existsSync(reportPath)) return updates;
+  const report = JSON.parse(readFileSync(reportPath, 'utf8'));
+  for (const row of report.verdicts ?? []) {
+    if (typeof row?.ruleId !== 'string') continue;
+    if (!Array.isArray(row.scope) || row.scope.length === 0) continue;
+    if (!Array.isArray(row.evidence) || row.evidence.length === 0) continue;
+    updates.set(row.ruleId, {
+      passed: row.passed === true,
+      note: String(row.note ?? ''),
+      evidence: row.evidence,
+      scope: row.scope
+    });
+  }
+  return updates;
+}
+
+// --- 4. stamp only the verdicts that were just re-measured or re-judged ------
+// A fresh verdict keeps its reviewedCommit. Moving it forward without new
+// evidence is the re-stamp treadmill.
+step(4, 'stamp only the verdicts that were re-measured or re-judged');
 for (const app of apps) {
   const p = `evidence/verdicts-${app.slug}.json`;
   // A first-time app has no verdicts yet, and reverify crashed with ENOENT
@@ -334,19 +474,42 @@ for (const app of apps) {
   if (!existsSync(p)) {
     writeFileSync(p, '[]\n');
     console.log(`    created ${p} — first run for this app, no verdicts recorded yet`);
+    continue;
+  }
+  const classified = plans.get(app.slug) ?? classifyApp(app);
+  const staleIds = new Set(classified.stale.map((row) => row.ruleId));
+  if (staleIds.size === 0) {
+    console.log(`    ${app.slug}: nothing stale — verdicts left untouched`);
+    continue;
   }
   const list = JSON.parse(readFileSync(p, 'utf8'));
   const stampTo = lastSourceCommit(app.dir);
+  const judgeUpdates = judgeUpdatesFromReport(`evidence/judge-independent-${app.slug}.json`);
   let rederived = 0;
+  let stamped = 0;
   for (const v of list) {
+    if (!staleIds.has(v.ruleId)) continue;
+    if (v.method === 'judge') {
+      const update = judgeUpdates.get(v.ruleId);
+      if (update === undefined) {
+        fail(
+          `${app.slug}: ${v.ruleId} is stale but the judge returned no scope — not re-stamped`
+        );
+      }
+      v.passed = update.passed;
+      if (update.note.length >= 3) v.note = update.note;
+      v.evidence = update.evidence;
+      v.scope = update.scope;
+      v.schemaVersion = 2;
+      v.reviewedCommit = stampTo;
+      v.reviewedAt = new Date().toISOString();
+      stamped += 1;
+      continue;
+    }
     v.reviewedCommit = stampTo;
-    // Advancing reviewedCommit while preserving the recorded outcome is exactly
-    // the "re-stamping is not re-measuring" failure this step warns about, just
-    // in the other field. fe-required-pages kept a `passed: false` recorded when
-    // /terms was 706 words, long after the rewrite took it past the floor and
-    // the freshly-measured report said ok — a verdict that looked newly reviewed
-    // and carried a stale answer.
-    //
+    // Bind the re-measured visual verdict to this build. No hash means the
+    // dist was missing; leave the field absent so the source-tree check remains.
+    if (classified.bundleHash !== null) v.bundleHash = classified.bundleHash;
     // Where the evidence is a machine-produced report that names the rule, the
     // report is the answer. Verdicts whose evidence cannot decide the rule (a
     // screenshot, a human review) keep what was recorded.
@@ -356,11 +519,13 @@ for (const app of apps) {
       v.note = decided.note;
       rederived += 1;
     }
+    stamped += 1;
   }
   writeFileSync(p, `${JSON.stringify(list, null, 2)}\n`);
   console.log(
-    `    ${app.slug}: ${list.length} verdicts at ${stampTo.slice(0, 12)}` +
-      (stampTo === head ? ' (== HEAD)' : ' (last source commit, HEAD is newer)') +
+    `    ${app.slug}: stamped ${stamped} stale verdict(s) at ${stampTo.slice(0, 12)}` +
+      ` (${list.length - stamped} left untouched)` +
+      (classified.bundleHash !== null ? `, bundle ${classified.bundleHash.slice(0, 12)}` : ', no bundle hash') +
       (rederived > 0 ? ` (${rederived} re-derived from freshly measured evidence)` : '')
   );
 }

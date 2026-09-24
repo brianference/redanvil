@@ -12,6 +12,11 @@
 
 import type { RowStatus } from '../done/coverage.d.mts';
 import { runLoop, type GateOutcome, type LoopConfig, type LoopResult } from '../loop/ralph';
+import {
+  runIndependentDiffReview,
+  type EngineSpawnResult,
+  type JudgeEngine
+} from '../loop/independentReview';
 import { assignUnmetRows, type RoleAssignment } from './assign';
 import type { Role, RoleId } from './roles';
 import { ROLES } from './roles';
@@ -88,9 +93,12 @@ export interface PmDeps {
    */
   gate: () => Promise<GateOutcome>;
   /**
-   * Optional independent judge over the diff. Defaults to a no-op pass.
+   * Optional independent judge over the diff. When omitted, the iteration
+   * does not spawn a judge (unit tests of budget and dispatch). The
+   * production PM command passes {@link invokeIterationJudge}, which runs
+   * Claude and falls back to Grok. Building roles are not this callback.
    */
-  independentJudge?: () => Promise<{ ok: boolean; summary: string }>;
+  independentJudge?: () => Promise<{ ok: boolean; summary: string; engine?: JudgeEngine }>;
   /**
    * Optional deploy + served-hash verify when isDone. Not used in mechanism
    * dry-runs; real runs wire this later.
@@ -297,6 +305,45 @@ export function dryRunAssignments(
     );
   }
   return { plan, lines };
+}
+
+/** Test-only spawns for {@link invokeIterationJudge}. Production omits this. */
+export interface IterationJudgeRunners {
+  runClaude?: (prompt: string, timeoutMs: number) => EngineSpawnResult;
+  runGrok?: (prompt: string, timeoutMs: number) => EngineSpawnResult;
+}
+
+/**
+ * The one independent judge an iteration runs.
+ *
+ * Claude by default (`claude -p`, fresh context, no verdict file). When Claude
+ * is unavailable or rate-limited, the review falls back to Grok inside
+ * {@link runIndependentDiffReview}. The report records which engine actually
+ * answered. Grok remains the engine for every building role; this function
+ * does not dispatch one.
+ *
+ * @param appDir - App directory the diff is collected from.
+ * @param runners - Test-only spawns. Production omits them.
+ * @returns Whether the review is acceptable, a one-line summary, and the engine.
+ */
+export async function invokeIterationJudge(
+  appDir: string,
+  runners?: IterationJudgeRunners
+): Promise<{ ok: boolean; summary: string; engine?: JudgeEngine }> {
+  const review = runIndependentDiffReview({
+    dir: appDir,
+    engine: 'claude',
+    runClaude: runners?.runClaude,
+    runGrok: runners?.runGrok
+  });
+  const who = review.engine ?? review.mode;
+  return {
+    ok: review.ok,
+    engine: review.engine,
+    summary: review.ok
+      ? `independent judge ok (${who})`
+      : `independent judge not ok (${who}): ${review.findings.length} finding(s)`
+  };
 }
 
 /**
