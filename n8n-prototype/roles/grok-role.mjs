@@ -17,9 +17,10 @@
  * demands the specific token its contract checks for. A role that writes a file
  * without that token has not done the job the contract describes.
  */
-import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { runAgentWithFailover } from './agent-failover.mjs';
 
 /**
  * Per-role brief. `out` is the artifact the contract will check.
@@ -153,28 +154,8 @@ than guessing.`
   }
 };
 
-const args = Object.fromEntries(
-  process.argv.slice(2).flatMap((a) => {
-    const m = /^--([^=]+)=([\s\S]*)$/.exec(a);
-    return m ? [[m[1], m[2]]] : [];
-  })
-);
-const role = args.role;
-const slug = args.slug;
-if (!role || !slug || !ROLES[role]) {
-  process.stderr.write(`usage: grok-role.mjs --role=<${Object.keys(ROLES).join('|')}> --slug=X\n`);
-  process.exit(2);
-}
-
-const root = resolve(args.repoRoot ?? process.cwd());
-const appDir = join(root, slug);
-const briefPath = join(appDir, 'docs', 'PRODUCT-BRIEF.md');
-const brief = existsSync(briefPath) ? readFileSync(briefPath, 'utf8') : '';
-
-// Ensure the artifact's parent exists so a role failing to create a directory is
-// not mistaken for a role that produced nothing.
-mkdirSync(join(appDir, 'docs'), { recursive: true });
-mkdirSync(join(appDir, 'evidence'), { recursive: true });
+/** Overall bound for one judgement role. The heartbeat inside the failover is shorter. */
+const ROLE_TIMEOUT_MS = 20 * 60 * 1000;
 
 /**
  * Scope the agent as tightly as its job allows.
@@ -186,20 +167,67 @@ mkdirSync(join(appDir, 'evidence'), { recursive: true });
  * job rewrite the orchestrator or the gate that scores it.
  */
 const NEEDS_REPO = new Set(['judge']);
-const agentCwd = NEEDS_REPO.has(role) ? root : appDir;
 
-const prompt = ROLES[role].prompt({ slug, brief });
-const proc = spawnSync(
-  'grok',
-  ['--always-approve', '--cwd', agentCwd, '-m', 'grok-4.6', '-p', prompt],
-  { cwd: root, encoding: 'utf8', timeout: 20 * 60 * 1000, shell: false }
-);
-
-if (proc.error) {
-  process.stderr.write(`grok could not be launched: ${proc.error.message}\n`);
-  process.exit(1);
+/**
+ * Run one judgement role. None of these prompts call image_gen, so a grok
+ * hang or a spending-limit 403 may hand the same prompt to claude.
+ *
+ * @param {{role: string, slug: string, repoRoot?: string, runAgent?: typeof runAgentWithFailover}} opts
+ * @returns {Promise<{status: number, stdout: string, stderr: string}>}
+ */
+export async function runGrokRole(opts) {
+  const spec = ROLES[opts.role];
+  if (!opts.role || !opts.slug || !spec) {
+    return {
+      status: 2,
+      stdout: '',
+      stderr: `usage: grok-role.mjs --role=<${Object.keys(ROLES).join('|')}> --slug=X\n`
+    };
+  }
+  const root = resolve(opts.repoRoot ?? process.cwd());
+  const appDir = join(root, opts.slug);
+  const briefPath = join(appDir, 'docs', 'PRODUCT-BRIEF.md');
+  const brief = existsSync(briefPath) ? readFileSync(briefPath, 'utf8') : '';
+  mkdirSync(join(appDir, 'docs'), { recursive: true });
+  mkdirSync(join(appDir, 'evidence'), { recursive: true });
+  const agentCwd = NEEDS_REPO.has(opts.role) ? root : appDir;
+  const runAgent = opts.runAgent ?? runAgentWithFailover;
+  const result = await runAgent({
+    prompt: spec.prompt({ slug: opts.slug, brief }),
+    cwd: agentCwd,
+    timeoutMs: ROLE_TIMEOUT_MS,
+    needsImages: false,
+    role: opts.role,
+    artifact: spec.out,
+    appDir
+  });
+  const tail = (result.stdout ?? '').trim().split('\n').slice(-3).join('\n');
+  const stdout = `${tail}${tail ? '\n' : ''}engine: ${result.engine ?? 'none'}\n`;
+  const stderr = result.ok ? '' : `${result.reason ?? result.stderr ?? ''}\n`;
+  const status = result.ok ? 0 : typeof result.status === 'number' && result.status !== 0 ? result.status : 1;
+  return { status, stdout, stderr };
 }
-process.stdout.write((proc.stdout ?? '').trim().split('\n').slice(-3).join('\n') + '\n');
-// The verdict on whether this role did work belongs to role-run.mjs and the
-// contract, not to grok's own report. Exit reflects the process only.
-process.exit(proc.status ?? 1);
+
+/**
+ * @param {string[]} argv
+ * @returns {Record<string, string>}
+ */
+function parseArgs(argv) {
+  return Object.fromEntries(
+    argv.flatMap((arg) => {
+      const match = /^--([^=]+)=([\s\S]*)$/.exec(arg);
+      return match ? [[match[1], match[2]]] : [];
+    })
+  );
+}
+
+const isDirectRun =
+  process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectRun) {
+  const args = parseArgs(process.argv.slice(2));
+  const result = await runGrokRole({ role: args.role, slug: args.slug, repoRoot: args.repoRoot });
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+  process.exit(result.status);
+}

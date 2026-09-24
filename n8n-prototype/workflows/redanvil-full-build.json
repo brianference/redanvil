@@ -1816,6 +1816,131 @@
         "mode": "once",
         "options": {}
       }
+    },
+    {
+      "id": "rwc_layout_decide",
+      "name": "Rework check: layout",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        360
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const used = Number($execution.customData.get(\"cycles_decide\") || '0');\nreturn [{ json: { reworkGate: used > 0 ? \"decide\" : '' } }];"
+      }
+    },
+    {
+      "id": "rwi_layout_decide",
+      "name": "If: layout returns to decide",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2200,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "rwi_layout_decide_c",
+              "leftValue": "={{ $json.reworkGate }}",
+              "rightValue": "decide",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "pfan_product",
+      "name": "Prepare design roles after product",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        480
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Slice config').first().json;\nconst root = String(c.repoRoot);\nconst script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/roles/parallel-roles.mjs');\nconst cmd = 'node ' + script + ' --roles=brainstorm,logo,palette,layout --slug=' + JSON.stringify(c.slug) + ' --repoRoot=' + JSON.stringify(root);\nreturn [{ json: { cmd } }];"
+      }
+    },
+    {
+      "id": "rfan_product",
+      "name": "Run design roles after product",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        480
+      ],
+      "parameters": {
+        "executeOnce": true,
+        "command": "={{ $json.cmd }}"
+      }
+    },
+    {
+      "id": "join_logo_palette",
+      "name": "Join: logo+palette",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        5500,
+        180
+      ],
+      "parameters": {
+        "mode": "chooseBranch",
+        "numberInputs": 2,
+        "chooseBranchMode": "waitForAll",
+        "output": "empty"
+      }
+    },
+    {
+      "id": "join_logo_palette_layout",
+      "name": "Join: logo+palette+layout",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        5720,
+        360
+      ],
+      "parameters": {
+        "mode": "chooseBranch",
+        "numberInputs": 2,
+        "chooseBranchMode": "waitForAll",
+        "output": "empty"
+      }
+    },
+    {
+      "id": "join_integration_testwriter",
+      "name": "Join: integration+testwriter",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        5500,
+        180
+      ],
+      "parameters": {
+        "mode": "chooseBranch",
+        "numberInputs": 2,
+        "chooseBranchMode": "waitForAll",
+        "output": "empty"
+      }
     }
   ],
   "connections": {
@@ -1841,33 +1966,11 @@
         ]
       ]
     },
-    "Slice config": {
-      "main": [
-        [
-          {
-            "node": "prd params",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "prd params": {
       "main": [
         [
           {
             "node": "Role: prd",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: prd": {
-      "main": [
-        [
-          {
-            "node": "product params",
             "type": "main",
             "index": 0
           }
@@ -1885,33 +1988,11 @@
         ]
       ]
     },
-    "Role: product": {
-      "main": [
-        [
-          {
-            "node": "brainstorm params",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "brainstorm params": {
       "main": [
         [
           {
             "node": "Role: brainstorm",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: brainstorm": {
-      "main": [
-        [
-          {
-            "node": "inspo params",
             "type": "main",
             "index": 0
           }
@@ -1929,33 +2010,11 @@
         ]
       ]
     },
-    "Role: inspo": {
-      "main": [
-        [
-          {
-            "node": "reuse params",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "reuse params": {
       "main": [
         [
           {
             "node": "Role: reuse",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: reuse": {
-      "main": [
-        [
-          {
-            "node": "logo params",
             "type": "main",
             "index": 0
           }
@@ -2050,7 +2109,7 @@
       "main": [
         [
           {
-            "node": "palette params",
+            "node": "Join: logo+palette",
             "type": "main",
             "index": 0
           }
@@ -2109,17 +2168,6 @@
         [
           {
             "node": "Role: auto-logo",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: auto-logo": {
-      "main": [
-        [
-          {
-            "node": "palette params",
             "type": "main",
             "index": 0
           }
@@ -2214,9 +2262,9 @@
       "main": [
         [
           {
-            "node": "layout params",
+            "node": "Join: logo+palette",
             "type": "main",
-            "index": 0
+            "index": 1
           }
         ],
         [
@@ -2273,17 +2321,6 @@
         [
           {
             "node": "Role: auto-palette",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: auto-palette": {
-      "main": [
-        [
-          {
-            "node": "layout params",
             "type": "main",
             "index": 0
           }
@@ -2378,7 +2415,7 @@
       "main": [
         [
           {
-            "node": "decide params",
+            "node": "Rework check: layout",
             "type": "main",
             "index": 0
           }
@@ -2437,17 +2474,6 @@
         [
           {
             "node": "Role: auto-layout",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: auto-layout": {
-      "main": [
-        [
-          {
-            "node": "decide params",
             "type": "main",
             "index": 0
           }
@@ -2542,7 +2568,7 @@
       "main": [
         [
           {
-            "node": "integration params",
+            "node": "testwriter params",
             "type": "main",
             "index": 0
           }
@@ -2585,33 +2611,11 @@
         ]
       ]
     },
-    "Resolve timeout: decide": {
-      "main": [
-        [
-          {
-            "node": "integration params",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "integration params": {
       "main": [
         [
           {
             "node": "Role: integration",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: integration": {
-      "main": [
-        [
-          {
-            "node": "testwriter params",
             "type": "main",
             "index": 0
           }
@@ -2629,33 +2633,11 @@
         ]
       ]
     },
-    "Role: testwriter": {
-      "main": [
-        [
-          {
-            "node": "build params",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "build params": {
       "main": [
         [
           {
             "node": "Role: build",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: build": {
-      "main": [
-        [
-          {
-            "node": "content params",
             "type": "main",
             "index": 0
           }
@@ -2673,33 +2655,11 @@
         ]
       ]
     },
-    "Role: content": {
-      "main": [
-        [
-          {
-            "node": "runners params",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "runners params": {
       "main": [
         [
           {
             "node": "Role: runners",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: runners": {
-      "main": [
-        [
-          {
-            "node": "visual params",
             "type": "main",
             "index": 0
           }
@@ -2717,33 +2677,11 @@
         ]
       ]
     },
-    "Role: visual": {
-      "main": [
-        [
-          {
-            "node": "ui-live params",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "ui-live params": {
       "main": [
         [
           {
             "node": "Role: ui-live",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: ui-live": {
-      "main": [
-        [
-          {
-            "node": "qa-runtime params",
             "type": "main",
             "index": 0
           }
@@ -2761,33 +2699,11 @@
         ]
       ]
     },
-    "Role: qa-runtime": {
-      "main": [
-        [
-          {
-            "node": "judge params",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "judge params": {
       "main": [
         [
           {
             "node": "Role: judge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: judge": {
-      "main": [
-        [
-          {
-            "node": "qa-data params",
             "type": "main",
             "index": 0
           }
@@ -2805,33 +2721,11 @@
         ]
       ]
     },
-    "Role: qa-data": {
-      "main": [
-        [
-          {
-            "node": "user-refuse params",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "user-refuse params": {
       "main": [
         [
           {
             "node": "Role: user-refuse",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: user-refuse": {
-      "main": [
-        [
-          {
-            "node": "pm params",
             "type": "main",
             "index": 0
           }
@@ -2849,33 +2743,11 @@
         ]
       ]
     },
-    "Role: pm": {
-      "main": [
-        [
-          {
-            "node": "debugger params",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "debugger params": {
       "main": [
         [
           {
             "node": "Role: debugger",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Role: debugger": {
-      "main": [
-        [
-          {
-            "node": "reverify params",
             "type": "main",
             "index": 0
           }
@@ -2893,6 +2765,334 @@
         ]
       ]
     },
+    "ship params": {
+      "main": [
+        [
+          {
+            "node": "Role: ship",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: auto-layout": {
+      "main": [
+        [
+          {
+            "node": "Rework check: layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rework check: layout": {
+      "main": [
+        [
+          {
+            "node": "If: layout returns to decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: layout returns to decide": {
+      "main": [
+        [
+          {
+            "node": "decide params",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Join: logo+palette+layout",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Prepare design roles after product": {
+      "main": [
+        [
+          {
+            "node": "Run design roles after product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slice config": {
+      "main": [
+        [
+          {
+            "node": "prd params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: prd": {
+      "main": [
+        [
+          {
+            "node": "product params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: product": {
+      "main": [
+        [
+          {
+            "node": "Prepare design roles after product",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "inspo params",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "reuse params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run design roles after product": {
+      "main": [
+        [
+          {
+            "node": "Prepare gate: logo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare gate: palette",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare gate: layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: auto-logo": {
+      "main": [
+        [
+          {
+            "node": "Join: logo+palette",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: auto-palette": {
+      "main": [
+        [
+          {
+            "node": "Join: logo+palette",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Join: logo+palette": {
+      "main": [
+        [
+          {
+            "node": "Join: logo+palette+layout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Join: logo+palette+layout": {
+      "main": [
+        [
+          {
+            "node": "decide params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: reuse": {
+      "main": [
+        [
+          {
+            "node": "integration params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve timeout: decide": {
+      "main": [
+        [
+          {
+            "node": "testwriter params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: integration": {
+      "main": [
+        [
+          {
+            "node": "Join: integration+testwriter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: testwriter": {
+      "main": [
+        [
+          {
+            "node": "Join: integration+testwriter",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Join: integration+testwriter": {
+      "main": [
+        [
+          {
+            "node": "build params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: build": {
+      "main": [
+        [
+          {
+            "node": "content params",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "visual params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: content": {
+      "main": [
+        [
+          {
+            "node": "runners params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: visual": {
+      "main": [
+        [
+          {
+            "node": "ui-live params",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "qa-runtime params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: qa-runtime": {
+      "main": [
+        [
+          {
+            "node": "judge params",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "qa-data params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: qa-data": {
+      "main": [
+        [
+          {
+            "node": "user-refuse params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: user-refuse": {
+      "main": [
+        [
+          {
+            "node": "pm params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: pm": {
+      "main": [
+        [
+          {
+            "node": "debugger params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Role: debugger": {
+      "main": [
+        [
+          {
+            "node": "reverify params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Role: reverify": {
       "main": [
         [
@@ -2904,15 +3104,49 @@
         ]
       ]
     },
-    "ship params": {
+    "Role: brainstorm": {
       "main": [
-        [
-          {
-            "node": "Role: ship",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
+      ]
+    },
+    "Role: inspo": {
+      "main": [
+        []
+      ]
+    },
+    "Stop: logo max cycles": {
+      "main": [
+        []
+      ]
+    },
+    "Stop: palette max cycles": {
+      "main": [
+        []
+      ]
+    },
+    "Stop: layout max cycles": {
+      "main": [
+        []
+      ]
+    },
+    "Stop: decide max cycles": {
+      "main": [
+        []
+      ]
+    },
+    "Role: runners": {
+      "main": [
+        []
+      ]
+    },
+    "Role: ui-live": {
+      "main": [
+        []
+      ]
+    },
+    "Role: judge": {
+      "main": [
+        []
       ]
     },
     "Role: ship": {

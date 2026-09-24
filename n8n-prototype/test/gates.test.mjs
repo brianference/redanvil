@@ -242,7 +242,12 @@ describe('generator gates', () => {
       assert.ok(errors.nodes.some((node) => node.type === 'n8n-nodes-base.executeCommand'));
       assert.equal(workflow.nodes.some((node) => node.type === 'n8n-nodes-base.telegram'), false);
 
-      const next = { logo: 'palette params', palette: 'layout params', layout: 'decide params', decide: 'integration params' };
+      const next = {
+        logo: 'Join: logo+palette',
+        palette: 'Join: logo+palette',
+        layout: 'Rework check: layout',
+        decide: 'testwriter params'
+      };
       for (const id of ['logo', 'palette', 'layout', 'decide']) {
         assert.deepEqual(targets(workflow, `Register gate: ${id}`), [`Owner approves: ${id}`]);
         const wait = workflow.nodes.find((node) => node.name === `Owner approves: ${id}`);
