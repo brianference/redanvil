@@ -51,7 +51,7 @@
  * The server was stopped after the probe. This reader did not write a row.
  */
 import { existsSync } from 'node:fs';
-import { DatabaseSync } from 'node:sqlite';
+import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 
 /** How many recent executions to scan when the webhook did not return an id. */
@@ -275,6 +275,9 @@ function startedAtMs(value) {
  * @returns {import('node:sqlite').DatabaseSync}
  */
 export function openReadOnlyDatabase(databasePath) {
+  // Loaded on first use, not at import: node:sqlite exists only from Node 22,
+  // and CI (Node 20) imports this module for tests that inject a fake reader.
+  const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite');
   const db = new DatabaseSync(databasePath, { readOnly: true });
   db.exec('PRAGMA query_only = ON');
   return db;

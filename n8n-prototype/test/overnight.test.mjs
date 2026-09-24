@@ -1273,8 +1273,10 @@ describe('9. prompt delivery on win32', () => {
     );
   }
 
-  test('spaces, newlines, quotes, & and % reach the child byte-identical', () => {
-    assert.equal(process.platform, 'win32');
+  // cmd.exe quoting only exists on Windows; elsewhere there is nothing to prove.
+  test('spaces, newlines, quotes, & and % reach the child byte-identical', {
+    skip: process.platform !== 'win32' && 'cmd.exe argument quoting only exists on Windows'
+  }, () => {
     const parent = mkdtempSync(join(tmpdir(), 'overnight-prompt-'));
     const cwd = join(parent, 'space & pct');
     mkdirSync(cwd);
