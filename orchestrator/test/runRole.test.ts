@@ -87,6 +87,31 @@ describe('runRole', () => {
     await cleanup();
   });
 
+  it('counts an artifact written after the spawn yields (spawn is awaited)', async () => {
+    // spawnSync returned before the caller continued. An async spawn that
+    // writes only after a microtask must still be visible to the verdict.
+    // If runRole forgets to await, the file is not there yet and this fails.
+    const { dir, cleanup } = await workDir();
+    const res = await runRole(
+      { role: engineerLocal, rows: [{ id: 'A1', status: 'fail' }] },
+      1,
+      { workDir: dir, slug: 'x' },
+      {
+        writeBrief: () => undefined,
+        spawn: async (_cmd, _args, opts) => {
+          await Promise.resolve();
+          const cwd = opts.cwd ?? dir;
+          mkdirSync(join(cwd, 'src'), { recursive: true });
+          writeFileSync(join(cwd, 'src', 'index.ts'), 'export const app = 1;\n');
+          return { code: 0, out: '' };
+        }
+      }
+    );
+    expect(res.countedAsRun).toBe(true);
+    expect(res.missing).toEqual([]);
+    await cleanup();
+  });
+
   it('(b) role creates a missing artifact → countedAsRun true', async () => {
     const { dir, cleanup } = await workDir();
 

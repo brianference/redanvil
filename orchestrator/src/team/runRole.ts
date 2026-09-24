@@ -23,8 +23,8 @@
  */
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { runCommand } from '../process/run';
 import { expandArtifacts, type Role, type RoleId } from './roles';
 import {
   missingArtifacts,
@@ -112,12 +112,16 @@ export interface RunRoleContext {
 
 /** Injectable side effects, so tests never shell out to a real agent. */
 export interface RunRoleDeps {
-  /** Spawn a process. Defaults to a real grok invocation. */
+  /**
+   * Spawn a process. Defaults to a real grok invocation via the async runner.
+   * May return a promise. A synchronous return is still accepted so existing
+   * tests keep working; the default path does not block the event loop.
+   */
   spawn?: (
     cmd: string,
     args: string[],
     opts: { cwd?: string; env?: NodeJS.ProcessEnv; timeout?: number; shell?: boolean }
-  ) => { code: number; out: string };
+  ) => { code: number; out: string } | Promise<{ code: number; out: string }>;
   /** Write the brief. Defaults to the filesystem. */
   writeBrief?: (path: string, body: string) => void;
   /** Session id generator, so a test can assert determinism. */
@@ -216,22 +220,28 @@ export function scrubEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 /**
  * Default spawn: the grok CLI, headless, in the role's working directory.
  *
+ * Uses {@link runCommand} so the wait is async. `spawnSync` blocked the PM's
+ * event loop for the whole timeout, which made `Promise.all` sequential.
+ * A null exit (timeout or spawn error) maps to code 1, matching the old
+ * `status ?? 1` so a killed role is not counted.
+ *
  * @param cmd - Command.
- * @param args - Arguments.
- * @param opts - Spawn options.
+ * @param args - Arguments. Not pre-quoted: `runCommand` applies `quoteForCmd`
+ *   on Windows, where `shell: true` would otherwise re-split a multi-word prompt.
+ * @param opts - Spawn options. `timeout` is milliseconds.
  * @returns Exit code and combined output.
  */
-function defaultSpawn(
+async function defaultSpawn(
   cmd: string,
   args: string[],
   opts: { cwd?: string; env?: NodeJS.ProcessEnv; timeout?: number; shell?: boolean }
-): { code: number; out: string } {
-  const r = spawnSync(cmd, args, {
-    encoding: 'utf8',
-    maxBuffer: 64 * 1024 * 1024,
-    ...opts
+): Promise<{ code: number; out: string }> {
+  const r = await runCommand(cmd, args, {
+    cwd: opts.cwd,
+    env: opts.env,
+    timeoutMs: opts.timeout
   });
-  return { code: r.status ?? 1, out: `${r.stdout ?? ''}${r.stderr ?? ''}` };
+  return { code: r.code === null ? 1 : r.code, out: `${r.stdout}${r.stderr}` };
 }
 
 /**
@@ -283,14 +293,14 @@ export async function runRole(
       'says. Leave every artifact it names on disk. Do not delete ROLE_TASK.md.'
   ];
 
-  // grok is a .cmd shim on Windows, which needs a shell; Node's shell:true joins
-  // argv without quoting, so a multi-word prompt gets re-split. Quote by hand.
+  // grok is a .cmd shim on Windows, which needs a shell. Node's shell:true joins
+  // argv without quoting, so a multi-word prompt gets re-split. `runCommand`
+  // quotes with `quoteForCmd` on that path. Injected spawns receive the raw
+  // argv (same words, no extra quotes) plus `shell: true` on Windows so a
+  // test double can see the platform decision.
   const useShell = process.platform === 'win32';
-  const finalArgs = useShell
-    ? args.map((a) => (/[\s"]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a))
-    : args;
 
-  const res = spawn('grok', finalArgs, {
+  const res = await spawn('grok', args, {
     cwd: ctx.workDir,
     env: scrubEnv(process.env),
     timeout: (ctx.timeoutSec ?? DEFAULT_ROLE_TIMEOUT_SEC) * 1000,

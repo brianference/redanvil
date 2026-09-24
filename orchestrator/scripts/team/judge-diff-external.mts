@@ -89,7 +89,7 @@ for (const f of parsed) {
 
 const dir = resolve(appDir);
 const diffPaths = flag('diff-paths');
-const report = runIndependentDiffReview({
+const report = await runIndependentDiffReview({
   dir,
   externalReview: { reviewerId, findings },
   diffRange: flag('diff-range'),

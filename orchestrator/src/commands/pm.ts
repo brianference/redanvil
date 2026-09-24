@@ -443,7 +443,7 @@ async function executePm(opts: PmCommandOptions): Promise<number> {
         };
       },
       independentJudge: async () => {
-        const review = runIndependentDiffReview({ dir: appDir });
+        const review = await runIndependentDiffReview({ dir: appDir });
         return {
           ok: review.ok,
           summary: review.ok

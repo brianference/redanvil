@@ -38,6 +38,7 @@ import {
 } from './runRole';
 import type { RoleAssignment } from './assign';
 import type { RoleId } from './roles';
+import { recordCountedRoleInputs } from './roleInputs';
 import {
   trackLiveRoleWorktree,
   untrackLiveRoleWorktree
@@ -492,6 +493,9 @@ export async function runAssignment(
       { workDir: absApp, slug: ctx.slug, timeoutSec: ctx.timeoutSec },
       deps.runRoleDeps
     );
+    if (result.countedAsRun) {
+      recordCountedRoleInputs(absApp, role, assignment.rows, ctx.slug);
+    }
     return {
       role: role.id,
       countedAsRun: result.countedAsRun,
@@ -604,6 +608,7 @@ export async function runAssignment(
       promoted = promo.promoted === true;
       if (promoted) {
         reason = `${result.reason}; promoted ${branch}`;
+        recordCountedRoleInputs(absApp, role, assignment.rows, ctx.slug);
       } else if (isEnvironmentalPromotionRefusal(promo)) {
         // KEEP branch + worktree for a later promote. Do not charge a re-run.
         retained = true;

@@ -20,11 +20,19 @@ const RUNTIME_PARITY_SCRIPT = join(
   dirname(fileURLToPath(import.meta.url)),
   '../../../.github/scripts/runtime_parity.mjs'
 );
-/** One static check via check.mjs, scanning the app dir (`.` since cwd = app dir at run time). */
-const det = (ruleId: string): Check => ({
+/**
+ * One static check via check.mjs, scanning the app dir (`.` since cwd = app dir at run time).
+ *
+ * @param ruleId - Rubric rule id.
+ * @param exclusive - True when the check writes `evidence/measurement-meta.json`.
+ *   Those read-modify-write the same file and must not overlap.
+ * @returns Check definition.
+ */
+const det = (ruleId: string, exclusive = false): Check => ({
   ruleId,
   command: 'node',
-  args: [CHECK_SCRIPT, ruleId, '.']
+  args: [CHECK_SCRIPT, ruleId, '.'],
+  ...(exclusive ? { exclusive: true } : {})
 });
 /**
  * Deterministic checks runnable against a generated Cloudflare app. Covers every
@@ -65,7 +73,9 @@ export const APP_CHECKS: Check[] = [
     ruleId: 'fe-search-present',
     command: 'node',
     args: [CHECK_SCRIPT, 'fe-search-present', '.'],
-    timeoutMs: 300_000
+    timeoutMs: 300_000,
+    // Playwright + wrangler pages dev, and writes measurement-meta.json.
+    exclusive: true
   },
   // Every app with queryable domain data ships a Worker-side AI assistant
   // grounded in that data (not a canned stub, not browser-only inference).
@@ -77,35 +87,41 @@ export const APP_CHECKS: Check[] = [
     ruleId: 'fe-brand-mark-size',
     command: 'node',
     args: [CHECK_SCRIPT, 'fe-brand-mark-size', '.'],
-    timeoutMs: 300_000
+    timeoutMs: 300_000,
+    // Writes measurement-meta.json (read-modify-write).
+    exclusive: true
   },
   // Inner/detail pages show a breadcrumb nav with a parent link.
   {
     ruleId: 'fe-breadcrumbs',
     command: 'node',
     args: [CHECK_SCRIPT, 'fe-breadcrumbs', '.'],
-    timeoutMs: 300_000
+    timeoutMs: 300_000,
+    exclusive: true
   },
   // Search/filter results must land in the first viewport (not below the fold).
   {
     ruleId: 'fe-result-in-viewport',
     command: 'node',
     args: [CHECK_SCRIPT, 'fe-result-in-viewport', '.'],
-    timeoutMs: 300_000
+    timeoutMs: 300_000,
+    // wrangler pages dev plus measurement-meta.json.
+    exclusive: true
   },
   // Item detail pages link to real external resources that resolve (browser UA).
   {
     ruleId: 'fe-resource-links',
     command: 'node',
     args: [CHECK_SCRIPT, 'fe-resource-links', '.'],
-    timeoutMs: 300_000
+    timeoutMs: 300_000,
+    exclusive: true
   },
   // Terms/Privacy substance: word/h2 floors + required topics.
-  det('fe-legal-substance'),
+  det('fe-legal-substance', true),
   // JSON-LD + absolute canonical on home.
-  det('fe-structured-data'),
+  det('fe-structured-data', true),
   // §7.3a three design options + DECISION.md.
-  det('proc-design-options'),
+  det('proc-design-options', true),
   // SOURCES.md / INTEGRATIONS.md / COMPETITORS.md present and written (not markers).
   det('fe-prior-art'),
   det('u-integration-scan'),
@@ -130,7 +146,9 @@ export const APP_CHECKS: Check[] = [
     ruleId: 'u-plat-runtime-parity',
     command: 'node',
     args: [RUNTIME_PARITY_SCRIPT, '.'],
-    timeoutMs: 300_000
+    timeoutMs: 300_000,
+    // Boots `wrangler pages dev` against this app's .wrangler state.
+    exclusive: true
   },
   // Also boots the real Workers runtime and calls every declared route, so it
   // needs the same 5-minute budget rather than the 180s default. This is only
@@ -140,7 +158,8 @@ export const APP_CHECKS: Check[] = [
     ruleId: 'u-api-real-output',
     command: 'node',
     args: [CHECK_SCRIPT, 'u-api-real-output', '.'],
-    timeoutMs: 300_000
+    timeoutMs: 300_000,
+    exclusive: true
   },
   det('u-data-no-placeholder'),
   det('u-plat-migrations'),
@@ -179,7 +198,8 @@ export const APP_CHECKS: Check[] = [
     ruleId: 'lg-bindings-bound',
     command: 'node',
     args: [CHECK_SCRIPT, 'lg-bindings-bound', '.'],
-    timeoutMs: 180_000
+    timeoutMs: 180_000,
+    exclusive: true
   },
   // Theme paint: landmark backgrounds must actually change between light and
   // dark. Attribute-only checks shipped a black hero on a light page.
@@ -188,36 +208,40 @@ export const APP_CHECKS: Check[] = [
     ruleId: 'fe-light-dark',
     command: 'node',
     args: [CHECK_SCRIPT, 'fe-light-dark', '.'],
-    timeoutMs: 300_000
+    timeoutMs: 300_000,
+    exclusive: true
   },
   // DONE-CHECKLIST A5 / B3 / B5 / D4 / D7 / F4 / G1–G5
-  det('u-build-succeeds'),
+  det('u-build-succeeds', true),
   {
     ruleId: 'u-api-not-found',
     command: 'node',
     args: [CHECK_SCRIPT, 'u-api-not-found', '.'],
-    timeoutMs: 300_000
+    timeoutMs: 300_000,
+    exclusive: true
   },
   {
     ruleId: 'u-api-no-spa-mask',
     command: 'node',
     args: [CHECK_SCRIPT, 'u-api-no-spa-mask', '.'],
-    timeoutMs: 300_000
+    timeoutMs: 300_000,
+    exclusive: true
   },
-  det('u-legal-claims-true'),
+  det('u-legal-claims-true', true),
   {
     ruleId: 'fe-favicon-legible',
     command: 'node',
     args: [CHECK_SCRIPT, 'fe-favicon-legible', '.'],
-    timeoutMs: 180_000
+    timeoutMs: 180_000,
+    exclusive: true
   },
-  det('lg-result-reproduces'),
+  det('lg-result-reproduces', true),
   // Measurement provenance — after the checks that write measurement-meta.
-  det('meas-known-bad'),
-  det('meas-two-run'),
-  det('meas-recheck-flattering'),
-  det('meas-standard-tool'),
-  det('meas-engine-named')
+  det('meas-known-bad', true),
+  det('meas-two-run', true),
+  det('meas-recheck-flattering', true),
+  det('meas-standard-tool', true),
+  det('meas-engine-named', true)
 ];
 export interface GateReport {
   outcomes: Outcome[];
