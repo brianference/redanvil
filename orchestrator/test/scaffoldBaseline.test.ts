@@ -71,6 +71,17 @@ function installApp(appDir: string): void {
   if (result.status !== 0) {
     throw new Error(`npm install failed: ${result.stdout ?? ''}${result.stderr ?? ''}`);
   }
+  // The scaffold resolves its own @playwright/test, which may need a browser
+  // build the repo did not install; the browser test lane cannot start without it.
+  const browsers = spawnSync('npx', ['playwright', 'install', 'chromium'], {
+    cwd: appDir,
+    encoding: 'utf8',
+    shell: true,
+    timeout: 300_000
+  });
+  if (browsers.status !== 0) {
+    throw new Error(`playwright install failed: ${browsers.stdout ?? ''}${browsers.stderr ?? ''}`);
+  }
 }
 
 afterAll(async () => {

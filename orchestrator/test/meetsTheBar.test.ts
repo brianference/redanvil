@@ -709,8 +709,14 @@ describe('push range scopes the finish line', () => {
     expect(probed.slugs, probed.output).toEqual(['dashboard']);
   });
 
-  it('a new branch cut from origin/HEAD checks only files added since that base', () => {
-    const base = repoRev('refs/remotes/origin/HEAD');
+  it('a new branch cut from the remote default checks only files added since that base', () => {
+    // Same order filesInPushRange uses. CI's checkout has origin/master but no
+    // origin/HEAD, so pinning the test to origin/HEAD failed there.
+    const base = ['refs/remotes/origin/HEAD', 'origin/master', 'origin/main']
+      .map((ref) => spawnSync('git', ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`], { cwd: REPO_ROOT, encoding: 'utf8' }))
+      .find((r) => r.status === 0)
+      ?.stdout.trim();
+    if (base === undefined) throw new Error('no remote default ref to cut a branch from');
     const local = commitOnParent(base, {
       'dashboard/src/new-branch-probe.ts': 'export {}\n'
     });

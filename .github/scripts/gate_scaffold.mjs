@@ -71,6 +71,15 @@ try {
     console.error(install.out.split('\n').slice(-10).join('\n'));
     process.exit(1);
   }
+  // The scaffold resolves its own @playwright/test version, which can need a
+  // different browser build from the one the repo installed. Without this the
+  // browser test lane cannot launch and u-test-presence fails on Linux CI.
+  const browsers = run('npx', ['playwright', 'install', 'chromium'], appDir);
+  if (browsers.code !== 0) {
+    console.error('scaffold gate FAIL: could not install the browser for the generated app');
+    console.error(browsers.out.split('\n').slice(-10).join('\n'));
+    process.exit(1);
+  }
 
   // 3. The tool-backed checks the gate runs, exactly as it runs them.
   const TOOLS = [
