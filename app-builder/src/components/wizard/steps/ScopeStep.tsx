@@ -1,9 +1,12 @@
 import type { ChangeEvent } from 'react';
 import { type DataStorage, type WizardAnswers } from '../../../lib/job';
+import { parseEntitySpec } from '../../../lib/prd/entitySpec';
 import { en } from '../../../i18n/en';
 import { theme } from '../../../theme';
 import { ErrorBanner } from '../../Banner';
 import { chipStyle, fieldStyle, hintStyle, labelStyle } from '../../ui';
+import { entitySpecExampleForPrompt } from '../entitySpecExample';
+import { entitySpecBlockMessage } from '../entitySpecMessage';
 import { integrationChipSelected, toggleIntegrationChip } from '../integrationChips';
 import { chipsRowStyle, fieldLabelStyle } from '../styles';
 
@@ -23,6 +26,9 @@ export interface ScopeStepProps {
  */
 export function ScopeStep({ value, patch, appTypeReady }: ScopeStepProps): JSX.Element {
   const copy = en.wizard;
+  const parsed = parseEntitySpec(value.entities);
+  const entityBlock = entitySpecBlockMessage(value.entities);
+  const example = entitySpecExampleForPrompt(value.prompt);
   return (
     <div>
       <p id="wizard-q-2" style={fieldLabelStyle}>
@@ -88,19 +94,69 @@ export function ScopeStep({ value, patch, appTypeReady }: ScopeStepProps): JSX.E
       <label htmlFor="wizard-entities" style={{ ...labelStyle(), marginTop: theme.space.lg }}>
         {copy.entitiesLabel}
       </label>
-      <input
+      <textarea
         id="wizard-entities"
         name="entities"
-        type="text"
         value={value.entities}
-        onChange={(event: ChangeEvent<HTMLInputElement>) => patch({ entities: event.target.value })}
+        onChange={(event: ChangeEvent<HTMLTextAreaElement>) => patch({ entities: event.target.value })}
         placeholder={copy.entitiesPlaceholder}
-        style={fieldStyle()}
-        aria-describedby="wizard-entities-hint"
+        style={{ ...fieldStyle(), minHeight: theme.touch * 2 }}
+        rows={4}
+        aria-describedby={
+          entityBlock !== null ? 'wizard-entities-hint wizard-entities-errors' : 'wizard-entities-hint'
+        }
+        aria-invalid={entityBlock !== null}
       />
       <p id="wizard-entities-hint" style={hintStyle()}>
-        {copy.entitiesHint}
+        {copy.entitiesHint} {copy.entitiesExampleLead} {example}
       </p>
+      {parsed.entities.length > 0 && (
+        <ul
+          aria-label={copy.entitiesPreviewLabel}
+          style={{
+            ...chipsRowStyle,
+            listStyle: 'none',
+            margin: `${theme.space.sm}px 0 0`,
+            padding: 0
+          }}
+        >
+          {parsed.entities.map((entity, index) => (
+            <li
+              key={`${entity.name}-${index}`}
+              style={{
+                ...chipStyle(false),
+                cursor: 'default',
+                minHeight: theme.touch,
+                fontSize: theme.type.scale[2],
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: theme.space.xs
+              }}
+            >
+              <span style={{ fontWeight: 700 }}>{entity.name}</span>
+              {entity.fields.length === 0 ? (
+                <span>{copy.entityNoFields}</span>
+              ) : (
+                <span>
+                  {entity.fields
+                    .map((field) =>
+                      copy.entityFieldChip(
+                        field.name,
+                        field.ref !== undefined ? `->${field.ref}` : field.type
+                      )
+                    )
+                    .join(', ')}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {entityBlock !== null && (
+        <div id="wizard-entities-errors">
+          <ErrorBanner message={entityBlock} style={{ marginTop: theme.space.md }} />
+        </div>
+      )}
 
       <p style={{ ...fieldLabelStyle, marginTop: theme.space.lg }} id="wizard-storage-label">
         {copy.dataStorageLabel}

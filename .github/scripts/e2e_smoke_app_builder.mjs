@@ -96,6 +96,19 @@ try {
   //    chip would look like a bug, so assert the chip, not just the value.
   const next = page.getByRole('button', { name: /^next$/i });
   await next.waitFor({ state: 'visible' });
+
+  // 2a. Entities are required WITH fields. A bare name list must keep Next
+  //     disabled (that is what let generation guess "Cleaned" as an entity);
+  //     a full spec must enable it.
+  const entities = page.getByRole('textbox', { name: /entities/i });
+  await entities.fill('Dog, CareTask');
+  if (expect) {
+    await expect(next).toBeDisabled();
+  } else {
+    await ensure(await next.isDisabled(), 'Next must stay disabled for entities without fields');
+  }
+  await entities.fill('Dog: name, breed; CareTask: kind, dueDate:date, dog->Dog');
+
   const appType = page.getByRole('textbox', { name: /^app type$/i });
   const mobileChip = page.getByRole('button', { name: /^mobile app$/i });
   if (expect) {

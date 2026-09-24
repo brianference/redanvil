@@ -101,6 +101,17 @@ function yamlFrontmatter(markdown: string): string {
   return markdown.match(/```yaml\n([\s\S]*?)\n```/)?.[1] ?? '';
 }
 
+/**
+ * Wizard spec for names the noun miner returned. Generation no longer derives
+ * entities itself, and a name with no fields is not enough.
+ *
+ * @param names - PascalCase entity names.
+ * @returns Entity spec text.
+ */
+function specFromNames(names: readonly string[]): string {
+  return names.map((name) => `${name}: name`).join('; ');
+}
+
 describe('auth-identity spec', () => {
   describe('1. authRequiredByFeatures with accounts at a non-F3 id', () => {
     it('returns true when the accounts feature is present and is not F3', () => {
@@ -136,7 +147,7 @@ describe('auth-identity spec', () => {
           prompt: JOB_APPLICATION_PROMPT,
           appType: 'SaaS',
           hasAuth: true,
-          entities: '',
+          entities: specFromNames(entities),
           selectedFeatureIds: selected
         },
         estimate({ features: 8, hasAuth: true, entities: Math.max(entities.length, 1) })
@@ -205,7 +216,7 @@ describe('auth-identity spec', () => {
           prompt,
           appType: 'Mobile app',
           hasAuth: false,
-          entities: entities.join(', '),
+          entities: specFromNames(entities),
           selectedFeatureIds: selected
         },
         estimate({ features: 3, hasAuth: false, entities: entities.length })

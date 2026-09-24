@@ -1,4 +1,5 @@
 import type { DataStorage } from '../job';
+import { parseEntitySpec } from './entitySpec';
 
 const STOPWORDS = new Set([
   'a',
@@ -762,12 +763,17 @@ function toTitleCase(value: string): string {
     .join(' ');
 }
 
-/** Split the free-text entities field into a clean list. */
+/**
+ * Entity names from a Main entities spec, in source order.
+ *
+ * Legacy comma lists still return names. A spec with fields returns the
+ * entity names only, not the field tokens.
+ *
+ * @param entities - Entity spec text.
+ * @returns Parsed entity names. Invalid names are omitted.
+ */
 export function entityList(entities: string): string[] {
-  return entities
-    .split(/[,;\n]+/)
-    .map((e) => e.trim())
-    .filter((e) => e.length > 0);
+  return parseEntitySpec(entities).entities.map((entity) => entity.name);
 }
 
 /**

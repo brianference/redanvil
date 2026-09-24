@@ -17,7 +17,7 @@ const answers = {
   prompt: 'a shift scheduling app for small teams with swap requests and coverage alerts',
   appType: 'dashboard',
   hasAuth: true,
-  entities: 'Shift, Staff'
+  entities: 'Shift: startsAt:datetime, role; Staff: name'
 };
 const cost = estimate({ features: 4, hasAuth: true, entities: 2, scopeSignals: 3 });
 const prd = generatePrd(answers, cost);

@@ -142,6 +142,25 @@ export function errorBannerStyle(): CSSProperties {
 }
 
 /**
+ * Warning banner for a problem the user should fix without hiding the result.
+ */
+export function warningBannerStyle(): CSSProperties {
+  return {
+    display: 'flex',
+    gap: theme.space.sm,
+    alignItems: 'flex-start',
+    padding: theme.space.md,
+    borderRadius: theme.radius.md,
+    border: `1px solid ${theme.color.warning}`,
+    background: theme.color.surfaceElevated,
+    color: theme.color.text,
+    fontSize: theme.type.scale[2],
+    lineHeight: 1.4,
+    boxSizing: 'border-box'
+  };
+}
+
+/**
  * Success / status banner.
  */
 export function statusBannerStyle(): CSSProperties {

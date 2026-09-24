@@ -108,7 +108,7 @@ async function appShot(path, name, theme, scrollTo) {
       // back to a generic "Item" and the example shows a PRD nobody generated.
       const entities = page.getByRole('textbox', { name: /main entities/i });
       if ((await entities.count()) > 0 && (await entities.inputValue()) === '') {
-        await entities.fill(flag('entities', 'flight'));
+        await entities.fill(flag('entities', 'Flight: origin, destination, departAt:datetime, price:real'));
       }
       if ((await next.count()) === 0) break;
       if (await next.isDisabled()) break;

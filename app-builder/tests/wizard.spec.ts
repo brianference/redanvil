@@ -34,6 +34,9 @@ async function isOnScreen(page: Page, locator: ReturnType<Page['locator']>): Pro
 }
 
 /** Send the opening description and land on Scope. */
+/** A valid entity spec: every entity names at least one field. */
+const ENTITY_SPEC = 'Flight: origin, destination, departAt:datetime, price:real';
+
 async function startWizard(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('textbox', { name: /describe your app/i }).fill(PROMPT);
@@ -44,6 +47,8 @@ async function startWizard(page: Page): Promise<void> {
   // merely present somewhere in a tall document.
   await expect(next).toBeInViewport();
   await expect.poll(async () => isOnScreen(page, next)).toBe(true);
+  // Entities are required with at least one field each before Next enables.
+  await page.getByRole('textbox', { name: /main entities/i }).fill(ENTITY_SPEC);
 }
 
 test('the composer refuses a description that is too short', async ({ page }) => {
@@ -130,18 +135,16 @@ test('Back returns to the previous step with answers intact', async ({ page }) =
 
 test('Review shows the answers that were actually given', async ({ page }) => {
   await startWizard(page);
-  await page.getByRole('textbox', { name: /main entities/i }).fill('flight');
   await page.getByRole('button', { name: /^next$/i }).click();
   await page.getByRole('button', { name: /^next$/i }).click();
 
   await expect(page.getByRole('button', { name: /forge prd/i })).toBeVisible();
-  await expect(page.getByText('flight', { exact: false }).first()).toBeVisible();
+  await expect(page.getByText('Flight', { exact: false }).first()).toBeVisible();
   await expect(page.getByText(/mobile app/i).first()).toBeVisible();
 });
 
 test('Forge PRD produces a document containing the prompt', async ({ page }) => {
   await startWizard(page);
-  await page.getByRole('textbox', { name: /main entities/i }).fill('flight');
   await page.getByRole('button', { name: /^next$/i }).click();
   await page.getByRole('button', { name: /^next$/i }).click();
 

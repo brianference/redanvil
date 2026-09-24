@@ -1,5 +1,13 @@
+import { buildFeatureSuggestions } from '../lib/prd/sections/features';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
 import { en } from '../i18n/en';
+import { entitySpecReady, ENTITY_SPEC_EXAMPLE } from '../lib/prd/entitySpec';
+import { FidelityWarning } from './FidelityWarning';
+import { Wizard } from './Wizard';
+import { entitySpecExampleForPrompt } from './wizard/entitySpecExample';
+import { entitySpecBlockMessage } from './wizard/entitySpecMessage';
 import {
   EMPTY_WIZARD_ANSWERS,
   countScopeSignals,
@@ -41,6 +49,13 @@ describe('wizard scope options', () => {
   });
 
   it('reviewAnswerRows includes every scope field and chosen features for the Review step', () => {
+    // Select by name: ids renumber when the prompt's top capability leads.
+    const suggestions = buildFeatureSuggestions(['Reminder', 'Pet'], false, 'a dog grooming reminder app');
+    const idOf = (prefix: string): string => {
+      const found = suggestions.find((s) => s.title.startsWith(prefix));
+      if (found === undefined) throw new Error(`no suggestion starting with ${prefix}`);
+      return found.id;
+    };
     const answers: WizardAnswers = {
       prompt: 'a dog grooming reminder app',
       appType: 'Mobile app',
@@ -49,7 +64,7 @@ describe('wizard scope options', () => {
       dataStorage: 'simple',
       hasRealtime: false,
       integrations: 'Email',
-      selectedFeatureIds: ['F1', 'F4']
+      selectedFeatureIds: [idOf('Browse & search'), idOf('Manage Reminder')]
     };
     const rows = reviewAnswerRows(answers);
     const terms = rows.map((r) => r.term);
@@ -196,3 +211,101 @@ describe('resolveFeatureSelection', () => {
     expect(resolveFeatureSelection({ ...answers, selectedFeatureIds: [] })).toEqual([]);
   });
 });
+
+describe('entity spec wizard copy', () => {
+  it('block message is null exactly when the spec is ready to generate', () => {
+    for (const sample of [
+      '',
+      'Dog',
+      'Dog, CareTask',
+      'Dog: id',
+      'CareTask: dog->Dog',
+      'Dog: name, breed',
+      ENTITY_SPEC_EXAMPLE
+    ]) {
+      expect(entitySpecBlockMessage(sample) === null).toBe(entitySpecReady(sample));
+    }
+  });
+
+  it('names the missing field and the parser error', () => {
+    expect(entitySpecBlockMessage('')).toBe(en.wizard.entitiesRequired);
+    expect(entitySpecBlockMessage('Dog')).toContain(en.wizard.entityNeedsField('Dog'));
+    expect(entitySpecBlockMessage('CareTask: dog->Dog')).toContain('unknown entity ref: dog->Dog');
+  });
+
+  it('picks an example from the prompt and falls back to the contract example', () => {
+    expect(entitySpecExampleForPrompt('find the lowest cost airline flight')).toBe(
+      en.wizard.entitySpecExamples.flight
+    );
+    expect(entitySpecExampleForPrompt('a planting calendar for crops')).toBe(
+      en.wizard.entitySpecExamples.crop
+    );
+    expect(entitySpecExampleForPrompt('hello there')).toBe(en.wizard.entitySpecExamples.fallback);
+    expect(en.wizard.entitySpecExamples.fallback).toBe(ENTITY_SPEC_EXAMPLE);
+  });
+
+  it('shows parsed chips and blocks Next until every entity has a field', () => {
+    const blocked = renderWizard({
+      ...EMPTY_WIZARD_ANSWERS,
+      prompt: 'a dog care tracker for owners',
+      appType: 'Mobile app',
+      entities: 'Dog'
+    });
+    expect(blocked).toContain('Dog');
+    expect(blocked).toContain(en.wizard.entityNoFields);
+    expect(blocked).toContain(en.wizard.entityNeedsField('Dog'));
+    expect(blocked).toContain('disabled');
+
+    const ready = renderWizard({
+      ...EMPTY_WIZARD_ANSWERS,
+      prompt: 'find the lowest cost airline flight',
+      appType: 'Mobile app',
+      entities: 'Flight: origin, departsAt:datetime'
+    });
+    expect(ready).toContain('Flight');
+    expect(ready).toContain(en.wizard.entityFieldChip('origin', 'text'));
+    expect(ready).toContain(en.wizard.entityFieldChip('departsAt', 'datetime'));
+    expect(ready).toContain('Layover: airport, minutes:int, flight-&gt;Flight');
+    expect(ready).not.toContain(en.wizard.entitiesRequired);
+  });
+});
+
+describe('fidelity warning', () => {
+  it('lists unmatched requirements and does not replace the PRD', () => {
+    const markdown = [
+      '```yaml',
+      'fidelity: fail',
+      'fidelityUnmatched:',
+      '  - "track vaccinations per dog"',
+      '```',
+      '',
+      '# Implementation Spec — Dog Care',
+      '',
+      'The PRD body stays visible.'
+    ].join('\n');
+    const html = renderToStaticMarkup(createElement(FidelityWarning, { markdown }));
+    expect(html).toContain(en.prdResult.fidelityTitle);
+    expect(html).toContain('track vaccinations per dog');
+    expect(html).toContain(en.prdResult.fidelityBody);
+    expect(renderToStaticMarkup(createElement(FidelityWarning, { markdown: 'fidelity: pass' }))).toBe(
+      ''
+    );
+  });
+});
+
+/**
+ * Render the Scope step of the wizard.
+ *
+ * @param value - Wizard answers.
+ * @returns Static HTML.
+ */
+function renderWizard(value: WizardAnswers): string {
+  return renderToStaticMarkup(
+    createElement(Wizard, {
+      value,
+      onChange: () => undefined,
+      onSubmit: () => undefined,
+      initialStep: 2
+    })
+  );
+}

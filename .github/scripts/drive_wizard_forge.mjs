@@ -19,6 +19,10 @@ const require = createRequire(import.meta.url);
 export const DEFAULT_FORGE_PROMPT =
   'an app to remind you when your dogs ears need cleaned, teeth cleaned, groomed, vet appointments etc';
 
+/** Entity spec for the default prompt; every entity names at least one field. */
+export const DEFAULT_FORGE_ENTITIES =
+  'Dog: name, breed; CareTask: kind, dueDate:date, repeatDays:int, dog->Dog';
+
 /**
  * @typedef {{
  *   submitOk: boolean,
@@ -36,7 +40,7 @@ export const DEFAULT_FORGE_PROMPT =
  * Callers must treat that as a product failure (exit 1), never as "measured fine".
  *
  * @param {import('playwright').Page} page - Page already at the app home URL.
- * @param {{ prompt?: string, submitTimeoutMs?: number, resultTimeoutMs?: number }} [opts]
+ * @param {{ prompt?: string, entities?: string, submitTimeoutMs?: number, resultTimeoutMs?: number }} [opts]
  * @returns {Promise<WizardForgeResult>}
  */
 export async function driveWizardForge(page, opts = {}) {
@@ -61,9 +65,13 @@ export async function driveWizardForge(page, opts = {}) {
     await page.getByRole('textbox', { name: /describe your app/i }).fill(prompt);
     await page.getByRole('button', { name: /send description/i }).click();
 
-    // 2. Scope step: default app type is already chosen; Next is enabled.
+    // 2. Scope step: default app type is already chosen. Entities are required
+    //    with at least one field each, so fill a spec before Next can enable.
     const next = page.getByRole('button', { name: /^next$/i });
     await next.waitFor({ state: 'visible', timeout: resultTimeoutMs });
+    await page
+      .getByRole('textbox', { name: /main entities/i })
+      .fill(opts.entities ?? DEFAULT_FORGE_ENTITIES);
     if (!(await next.isEnabled())) {
       // Re-pick Mobile app if defaults were cleared somehow.
       const mobileChip = page.getByRole('button', { name: /^mobile app$/i });

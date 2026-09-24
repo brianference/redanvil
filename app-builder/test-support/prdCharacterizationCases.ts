@@ -29,7 +29,7 @@ export const CASES: ReadonlyArray<{
       prompt: 'Build an app for tracking tesla driving stats',
       appType: 'dashboard',
       hasAuth: true,
-      entities: 'trips, drivers'
+      entities: 'Trip: startedAt:datetime, miles:real; Driver: name'
     },
     cost: estimate({ features: 3, hasAuth: true, entities: 2 })
   },
@@ -39,7 +39,7 @@ export const CASES: ReadonlyArray<{
       prompt: 'an app to remind you when your dog needs grooming, vet visits, ear cleaning',
       appType: 'Mobile app',
       hasAuth: false,
-      entities: 'Reminder, Pet',
+      entities: 'Reminder: dueAt:datetime, note; Pet: name',
       dataStorage: 'simple',
       hasRealtime: false,
       integrations: ''
@@ -52,7 +52,7 @@ export const CASES: ReadonlyArray<{
       prompt: 'A marketplace for local makers with listings and search',
       appType: 'Marketplace',
       hasAuth: true,
-      entities: 'Listing, Seller',
+      entities: 'Listing: title, price:real, seller->Seller; Seller: name',
       dataStorage: 'relational',
       hasRealtime: true,
       integrations: 'Stripe, Email'
@@ -65,7 +65,7 @@ export const CASES: ReadonlyArray<{
       prompt: 'Simple status page for uptime checks',
       appType: 'internal tool',
       hasAuth: false,
-      entities: '',
+      entities: 'UptimeCheck: name, status; StatusPage: title',
       dataStorage: 'none',
       hasRealtime: false,
       integrations: ''
@@ -79,7 +79,8 @@ export const CASES: ReadonlyArray<{
         'A Shift Scheduling app for Small Businesses with employee roles and swaps that also handles overtime approvals, manager dashboards, payroll export, and mobile notifications for last-minute coverage gaps across multiple store locations',
       appType: 'SaaS',
       hasAuth: true,
-      entities: 'shifts, employees, locations, swap requests, overtime logs',
+      entities:
+        'Shift: startsAt:datetime, role; Employee: name; Location: city; SwapRequest: reason, shift->Shift; OvertimeLog: hours:real, employee->Employee',
       dataStorage: 'relational',
       hasRealtime: true,
       integrations: 'Twilio, Slack'

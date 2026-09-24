@@ -185,6 +185,34 @@ describe('multi-line criteria (A3)', () => {
   });
 });
 
+describe('negated clauses are not capability evidence', () => {
+  it('does not treat a negated scheduling clause as a scheduling app', () => {
+    const kinds = detectCapabilities(
+      'This is not a scheduling app, and it never books appointments. It tracks care history per dog.',
+      ['Dog']
+    ).map((capability) => capability.kind);
+    expect(kinds).not.toContain('schedule');
+    expect(kinds[0]).toBe('track');
+  });
+
+  it('negates every clause under a "What this is NOT" heading', () => {
+    const kinds = detectCapabilities(
+      'What this is NOT: a booking tool, or a roster. It tracks vaccines.',
+      ['Dog']
+    ).map((capability) => capability.kind);
+    expect(kinds).not.toContain('schedule');
+    expect(kinds).toContain('track');
+  });
+
+  it('still counts a scheduling verb that is outside the negated clause', () => {
+    const kinds = detectCapabilities(
+      'It is not a marketplace. Staff book appointments on a weekly roster.',
+      ['Booking']
+    ).map((capability) => capability.kind);
+    expect(kinds).toContain('schedule');
+  });
+});
+
 describe('reference features', () => {
   it('emits grid, filter, and detail with GIVEN/WHEN/THEN acceptance', () => {
     const planting =

@@ -2,9 +2,8 @@ import type { WizardAnswers } from '../job';
 import { slugFromPrompt, withWizardDefaults } from '../job';
 import type { Prd, TokenEstimate } from './types';
 import { PRD_THRESHOLD, REQUIRED_PAGES } from './types';
+import { parseEntitySpec, type EntitySpec } from './entitySpec';
 import {
-  deriveEntities,
-  entityList,
   entityPascal,
   entityTable,
   isTitleFragment,
@@ -12,6 +11,7 @@ import {
   stripGeneratorDirectives,
   titleFromPrompt
 } from './naming';
+import { buildClaims, claimsJson } from './claims';
 import { buildFrontmatter } from './sections/frontmatter';
 import { buildNonGoals, buildSuccessOutcome, buildUserStories } from './sections/scope';
 import { authDdl, buildFileTree, entityApiContract, entityDdl } from './sections/schema';
@@ -34,7 +34,7 @@ import {
 } from './sections/architecture';
 import { buildDesignDirection } from './sections/design';
 import { detectCapabilities } from './sections/capabilities';
-import { evaluatePrdSelfCheck } from './selfCheck';
+import { evaluatePrdSelfCheck, unmatchedPromptRequirements } from './selfCheck';
 
 /**
  * Error thrown when generatePrd cannot resolve a required product identity
@@ -115,7 +115,7 @@ function buildProblemStatement(
  * @param answers - Wizard answers (core fields required; storage/realtime/integrations optional).
  * @param cost - Effort estimate embedded in the final build prompt footer.
  * @returns Structured PRD with slug, title, prompt, and full markdown.
- * @throws {UnresolvedPrdError} When entities cannot be derived or the title is a fragment without `appName`.
+ * @throws {UnresolvedPrdError} When the entity spec is missing, field-less, or invalid, or the title is a fragment without `appName`.
  */
 export function generatePrd(
   answers: Pick<WizardAnswers, 'prompt' | 'appType' | 'hasAuth' | 'entities'> &
@@ -147,14 +147,23 @@ export function generatePrd(
   // Slug from the product title, not the multi-line sentence.
   const slug = slugFromPrompt(title);
 
-  const listed = entityList(full.entities);
-  const derivedEntityNames = listed.length > 0 ? listed : deriveEntities(prompt);
-  if (derivedEntityNames.length === 0) {
-    throw new UnresolvedPrdError(
-      'unresolved-entities',
-      'Unresolved entities: the wizard entities field is empty and no domain nouns could be derived from the prompt. Name at least one entity (e.g. Crop, Trip) or include domain nouns in the description.'
-    );
+  const parsedEntities = parseEntitySpec(full.entities);
+  const missingFields = parsedEntities.entities.filter((entity) => entity.fields.length === 0);
+  if (
+    parsedEntities.errors.length > 0 ||
+    parsedEntities.entities.length === 0 ||
+    missingFields.length > 0
+  ) {
+    const detail =
+      missingFields.length > 0
+        ? `${missingFields.map((entity) => entity.name).join(', ')} ${missingFields.length === 1 ? 'has' : 'have'} no fields. Every entity needs at least one field.`
+        : parsedEntities.errors.length > 0
+          ? parsedEntities.errors.join('; ')
+          : 'name at least one entity with fields (for example Dog: name, breed).';
+    throw new UnresolvedPrdError('unresolved-entities', `Unresolved entities: ${detail}`);
   }
+  const entitySpecs = parsedEntities.entities;
+  const listedEntityNames = entitySpecs.map((entity) => entity.name);
 
   const appType = full.appType.trim() || 'web application';
   const wizardHasAuth = full.hasAuth;
@@ -163,17 +172,20 @@ export function generatePrd(
   const integrations = full.integrations;
   const selectedFeatureIds = full.selectedFeatureIds;
 
-  const capabilities = detectCapabilities(productPrompt, derivedEntityNames);
+  const capabilities = detectCapabilities(productPrompt, listedEntityNames);
   const primaryCap = capabilities[0];
-  const subject = primaryCap?.subject ?? derivedEntityNames[0] ?? '';
+  const subject = primaryCap?.subject ?? listedEntityNames[0] ?? '';
 
   // Full derivation uses wizard scope; selection filters after (legacy: no selection = all).
-  const allFeatures = buildFeatures(derivedEntityNames, wizardHasAuth, productPrompt);
+  const fieldsByEntity = new Map(
+    entitySpecs.map((entity) => [entity.name, entity.fields.map((field) => field.name)] as const)
+  );
+  const allFeatures = buildFeatures(listedEntityNames, wizardHasAuth, productPrompt, fieldsByEntity);
   const features = filterFeaturesBySelection(allFeatures, selectedFeatureIds);
   const selectionActive = selectedFeatureIds != null;
   const entityNames = selectionActive
-    ? entitiesRequiredByFeatures(derivedEntityNames, features)
-    : derivedEntityNames;
+    ? entitiesRequiredByFeatures(listedEntityNames, features)
+    : listedEntityNames;
   // Picked behaviour: keep the user's sign-in answer. Feature selection may
   // omit the accounts *section*, but an explicit Yes is never rewritten as
   // hasAuth: false in front matter (measured: provenance Yes, yaml false).
@@ -185,23 +197,28 @@ export function generatePrd(
   const mvpIds = mvpFeatures.map((f) => f.id).join(', ');
   const slices = buildSlices({
     slug,
-    entities: entityNames.length > 0 ? entityNames : derivedEntityNames,
+    entities: entityNames.length > 0 ? entityNames : listedEntityNames,
     hasAuth,
     features,
     dataStorage
   });
   const lastSlice = slices[slices.length - 1]!;
 
+  const specByName = new Map(entitySpecs.map((entity) => [entity.name, entity]));
+  const ddlEntities = entityNames
+    .map((name) => specByName.get(name))
+    .filter((entity): entity is EntitySpec => entity !== undefined);
+
   const ddlBlocks = [
     ...(hasAuth ? [authDdl()] : []),
-    ...(hasDomainTables ? entityNames.map((e) => entityDdl(e, hasAuth)) : [])
+    ...(hasDomainTables ? ddlEntities.map((entity) => entityDdl(entity, hasAuth)) : [])
   ].join('\n\n');
 
   const apiBlocks = !hasDomainTables
     ? dataStorage === 'none'
       ? '_No domain CRUD tables (data storage = none). Health (and auth if in scope) still required._'
       : '_No domain CRUD tables for the selected features. Health (and auth if in scope) still required._'
-    : entityNames.map((e) => entityApiContract(e)).join('\n\n');
+    : ddlEntities.map((entity) => entityApiContract(entity)).join('\n\n');
   const authApi = hasAuth
     ? [
         '',
@@ -274,7 +291,7 @@ export function generatePrd(
   } else if (selectionActive) {
     frontmatterEntities = [];
   } else {
-    frontmatterEntities = derivedEntityNames;
+    frontmatterEntities = listedEntityNames;
   }
 
   // DDL body for §7.2 — empty domain + no auth gets a prose note; otherwise fenced SQL.
@@ -306,10 +323,31 @@ All queries are parameterized. Validate every input with Zod at the boundary.`;
         ].join('\n')
       : '';
 
+  const coreFeaturesMarkdown = renderCoreFeatures(features);
+  const acceptanceMarkdown = renderAcceptanceCriteria(features);
+  // Declared entity and field names are the owner's own domain words, so they
+  // count as coverage alongside the feature text.
+  const declaredDomain = entitySpecs
+    .map((entity) => [entity.name, ...entity.fields.map((field) => field.name)].join(' '))
+    .join('\n');
+  const fidelityUnmatched = unmatchedPromptRequirements(
+    productPrompt,
+    `${coreFeaturesMarkdown}\n${acceptanceMarkdown}\n${declaredDomain}`
+  );
+  const fidelity = fidelityUnmatched.length === 0 ? 'pass' : 'fail';
+
   // Body without self-check first; grade against that body + section stubs, then append grade.
   const bodyBeforeSelfCheck = `# Implementation Spec — ${title}
 
-${buildFrontmatter({ slug, title, appType, hasAuth, entities: frontmatterEntities })}
+${buildFrontmatter({
+  slug,
+  title,
+  appType,
+  hasAuth,
+  entities: frontmatterEntities,
+  fidelity,
+  fidelityUnmatched
+})}
 
 > Generated by RedAnvil App Builder. Paste this whole document into Claude (or Grok) to build the app. Threshold to ship: **score >= ${PRD_THRESHOLD}** on the RedAnvil rubric.
 
@@ -347,11 +385,11 @@ ${buildArchitectureSection({ hasAuth, dataStorage, hasRealtime, integrations })}
 
 ### 7.2 Interface contract
 
-Default columns below are concrete starting points to refine — do **not** invent extra tables or replace these defaults without updating this contract first.
+Columns below are \`id\`, \`created_at\`, \`updated_at\`, \`user_id\` when sign-in is on, and the fields from the entity spec. Do not add tables that are not listed here.
 
 #### File tree and key signatures
 
-${buildFileTree(frontmatterEntities.length > 0 ? frontmatterEntities : derivedEntityNames, hasAuth)}
+${buildFileTree(frontmatterEntities.length > 0 ? frontmatterEntities : listedEntityNames, hasAuth)}
 
 #### D1 schema (DDL)
 
@@ -384,17 +422,17 @@ ${buildDesignSpecifications()}
 
 ### 7.3a Design direction (binding)
 
-${buildDesignDirection(`${productPrompt}|${full.appType}|${frontmatterEntities.join(',')}`)}
+${buildDesignDirection(`${productPrompt}|${appType}|${frontmatterEntities.join(',')}`)}
 
 ## 8. Core Features (MVP first)
 
-${renderCoreFeatures(features)}
+${coreFeaturesMarkdown}
 
 ## 9. Acceptance Criteria
 
 Each feature has an ID for task and UAT binding. Every bullet is one testable condition; bind each to a named test in §10.
 
-${renderAcceptanceCriteria(features)}
+${acceptanceMarkdown}
 
 ## 10. Test Plan
 
@@ -416,9 +454,11 @@ ${buildCodingStandard()}
 `;
 
   const selfCheckOpts = {
-    entities: frontmatterEntities.length > 0 ? frontmatterEntities : derivedEntityNames,
+    entities: frontmatterEntities.length > 0 ? frontmatterEntities : listedEntityNames,
     hasDomainTables,
-    prompt: productPrompt
+    prompt: productPrompt,
+    // Same corpus the frontmatter fidelity used, so the two cannot disagree.
+    domainWords: declaredDomain
   };
 
   const selfCheck = evaluatePrdSelfCheck(bodyBeforeSelfCheck + '\n## 14. PRD Self-Check\n', selfCheckOpts);
@@ -442,7 +482,45 @@ ${buildCodingStandard()}
     finalCheck.markdown +
     `\n\n## Initial build prompt (paste into the coder)\n\n` +
     `> Implement this spec as **vertical slices** (§11, Slice 0→Slice ${lastSlice.index}). Honor **§7** Technical Requirements (architecture, DDL, routes, Zod names, signatures, design specs) before polish. Satisfy every MVP feature (${mvpIds}) and its acceptance bullets (**§9**) with the named tests in **§10** (${featureIds}). Follow **§13** coding standard. Do not implement **§5** non-goals. After each slice, run that slice's Verify command. Do not stop until **§12** clears: \`npx tsc --noEmit\`, \`npx eslint . --max-warnings 0\`, \`npx vitest run\`, \`npm run build\`, runtime \`curl …/api/health\`, and from monorepo root \`npm run gate -- ${slug} --threshold ${PRD_THRESHOLD}\` at score >= ${PRD_THRESHOLD}. No push, no deploy, no secrets. Smallest correct diff. Strict TypeScript, zero \`any\`.\n\n` +
-    `_Effort (human/orchestrator only): ~${cost.iterations} iterations, ~${cost.tokens.toLocaleString()} tokens (${cost.confidence} confidence)._\n`;
+    `_Effort (human/orchestrator only): ~${cost.iterations} iterations, ~${cost.tokens.toLocaleString()} tokens (${cost.confidence} confidence)._\n\n` +
+    claimsSection(slug, title, productPrompt, appType, hasAuth, frontmatterEntities, features);
 
   return { slug, title, prompt, markdown };
+}
+
+/**
+ * The closing claims fence. Same inputs the design section and the feature
+ * list already used, so a gate reading `.redanvil/claims.json` sees the spec
+ * the builder read.
+ *
+ * @param slug - Deployed hostname.
+ * @param title - Product title.
+ * @param prompt - Prompt with generator directives stripped.
+ * @param appType - App type written into the frontmatter.
+ * @param hasAuth - Auth flag written into the frontmatter.
+ * @param entities - Entity names written into the frontmatter.
+ * @param features - Features rendered in §8.
+ * @returns Markdown section, including the trailing fence.
+ */
+function claimsSection(
+  slug: string,
+  title: string,
+  prompt: string,
+  appType: string,
+  hasAuth: boolean,
+  entities: string[],
+  features: ReturnType<typeof buildFeatures>
+): string {
+  const json = claimsJson(
+    buildClaims({
+      slug,
+      title,
+      prompt,
+      appType,
+      hasAuth,
+      entities,
+      features
+    })
+  );
+  return `## Machine-readable claims\n\n\`\`\`json claims\n${json}\`\`\`\n`;
 }

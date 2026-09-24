@@ -2,7 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { generatePrd, evaluatePrdSelfCheck, PRD_SECTION_HEADINGS, UnresolvedPrdError } from './prd';
 import { estimate } from './estimate';
 import { DEFAULT_APP_TYPE, EMPTY_WIZARD_ANSWERS } from './job';
+import { buildClaims, claimsJson } from './prd/claims';
+import { readPrdFidelity } from './prd/sections/frontmatter';
 import { unmatchedPromptRequirements } from './prd/selfCheck';
+import { buildFeatureSuggestions } from './prd/sections/features';
 
 const cost = estimate({ features: 3, hasAuth: true, entities: 2 });
 const prd = generatePrd(
@@ -10,7 +13,7 @@ const prd = generatePrd(
     prompt: 'Build an app for tracking tesla driving stats',
     appType: 'dashboard',
     hasAuth: true,
-    entities: 'trips, drivers'
+    entities: 'Trip: startedAt:datetime, miles:real; Driver: name'
   },
   cost
 );
@@ -43,7 +46,7 @@ describe('generatePrd', () => {
         prompt: 'A Shift Scheduling app for Small Businesses with employee roles and swaps',
         appType: 'internal tool',
         hasAuth: true,
-        entities: 'shifts, employees'
+        entities: 'Shift: startsAt:datetime, role; Employee: name'
       },
       cost
     );
@@ -112,8 +115,14 @@ describe('generatePrd', () => {
     expect(prd.markdown).toContain('CREATE TABLE IF NOT EXISTS users');
     expect(prd.markdown).toContain('id TEXT PRIMARY KEY');
     expect(prd.markdown).toContain('created_at TEXT NOT NULL');
-    expect(prd.markdown).toContain('title TEXT NOT NULL');
+    expect(prd.markdown).toContain('startedAt TEXT NOT NULL, -- ISO-8601 datetime');
+    expect(prd.markdown).toContain('miles REAL NOT NULL');
+    expect(prd.markdown).toContain('name TEXT NOT NULL');
     expect(prd.markdown).toContain('user_id TEXT NOT NULL');
+    expect(prd.markdown).not.toContain('description TEXT');
+    expect(prd.markdown).not.toContain('rem_01');
+    expect(prd.markdown).not.toContain('Scheduled care task');
+    expect(prd.markdown).not.toMatch(/do \*\*not\*\* invent extra tables or replace these defaults/i);
     expect(prd.markdown).not.toMatch(/fields specific to/i);
   });
 
@@ -124,7 +133,8 @@ describe('generatePrd', () => {
     expect(prd.markdown).toContain('TripCreateSchema');
     expect(prd.markdown).toContain('DriverCreateSchema');
     // Concrete example payloads (request AND response body)
-    expect(prd.markdown).toMatch(/Request:\s*\{[^}]*"title"/);
+    expect(prd.markdown).toMatch(/Request:\s*\{[^}]*"startedAt"/);
+    expect(prd.markdown).toMatch(/Request:\s*\{[^}]*"miles"/);
     expect(prd.markdown).toMatch(/Response:\s*201\s*\{/);
     expect(prd.markdown).toMatch(/Errors:\s*400\s*\{ "error"/);
   });
@@ -230,7 +240,7 @@ describe('generatePrd', () => {
         prompt: 'A marketplace for local makers with listings and search',
         appType: 'Marketplace',
         hasAuth: true,
-        entities: 'Listing, Seller',
+        entities: 'Listing: title, price:real, seller->Seller; Seller: name',
         dataStorage: 'relational',
         hasRealtime: true,
         integrations: 'Stripe, Email'
@@ -248,7 +258,7 @@ describe('generatePrd', () => {
         prompt: 'an app to remind you when your dog needs grooming, vet visits, ear cleaning',
         appType: 'Mobile app',
         hasAuth: false,
-        entities: 'Reminder, Pet'
+        entities: 'Reminder: dueAt:datetime, note; Pet: name'
       },
       estimate({ features: 3, hasAuth: false, entities: 2 })
     );
@@ -269,7 +279,7 @@ describe('generatePrd', () => {
         prompt: 'Build an app for tracking tesla driving stats',
         appType: 'dashboard',
         hasAuth: true,
-        entities: 'trips, drivers'
+        entities: 'Trip: startedAt:datetime, miles:real; Driver: name'
       },
       cost
     );
@@ -279,24 +289,32 @@ describe('generatePrd', () => {
   });
 
   it('includes only selected features and omits deselected ones (acceptance, tests, schema)', () => {
-    // Full derivation with auth + two entities yields F1–F4 MVP, F5 Manage Driver, F6 pages.
-    // Deselect F5 (secondary manage) and F3 (Accounts): selected work stays; dropped work vanishes.
+    // Select by NAME: ids renumber whenever the prompt's top capability leads
+    // the MVP. Keep browse, detail and manage for Trip; drop Manage Driver,
+    // Accounts and the pages feature.
+    const prompt = 'Build an app for tracking tesla driving stats';
+    const suggestions = buildFeatureSuggestions(['Trip', 'Driver'], true, prompt);
+    const idOf = (prefix: string): string => {
+      const found = suggestions.find((s) => s.title.startsWith(prefix));
+      if (found === undefined) throw new Error(`no suggestion starting with ${prefix}`);
+      return found.id;
+    };
     const selected = generatePrd(
       {
-        prompt: 'Build an app for tracking tesla driving stats',
+        prompt,
         appType: 'dashboard',
         hasAuth: true,
-        entities: 'trips, drivers',
-        selectedFeatureIds: ['F1', 'F2', 'F4']
+        entities: 'Trip: startedAt:datetime, miles:real; Driver: name',
+        selectedFeatureIds: [idOf('Browse & search Trip'), idOf('Trip detail'), idOf('Manage Trip')]
       },
       cost
     );
     const md = selected.markdown;
 
     // Selected features present in core features, acceptance, and test plan
-    expect(md).toMatch(/### F1 — Browse & search Trip/);
-    expect(md).toMatch(/### F2 — Trip detail/);
-    expect(md).toMatch(/### F4 — Manage Trip/);
+    expect(md).toMatch(/### F\d+ — Browse & search Trip/);
+    expect(md).toMatch(/### F\d+ — Trip detail/);
+    expect(md).toMatch(/### F\d+ — Manage Trip/);
     expect(md).toContain('GIVEN seeded trips exist WHEN the user opens the list');
     expect(md).toContain('filterTrips_byQuery_matchesTitle');
 
@@ -325,7 +343,7 @@ describe('generatePrd', () => {
         prompt: 'Build an app for tracking tesla driving stats',
         appType: 'dashboard',
         hasAuth: true,
-        entities: 'trips, drivers'
+        entities: 'Trip: startedAt:datetime, miles:real; Driver: name'
       },
       cost
     );
@@ -426,7 +444,7 @@ describe('generatePrd sample: dog care reminders', () => {
       prompt: 'an app to remind you when your dog needs grooming, vet visits, ear cleaning',
       appType: 'Mobile app',
       hasAuth: false,
-      entities: 'Reminder, Pet',
+      entities: 'Reminder: dueAt:datetime, note; Pet: name',
       dataStorage: 'simple',
       hasRealtime: false,
       integrations: ''
@@ -469,7 +487,7 @@ describe('default app type reaches the PRD', () => {
       prompt: 'a mobile-first app that finds the lowest cost airline flight',
       appType: EMPTY_WIZARD_ANSWERS.appType,
       hasAuth: EMPTY_WIZARD_ANSWERS.hasAuth,
-      entities: 'flight'
+      entities: 'Flight: origin, destination, departsAt:datetime'
     },
     estimate({ features: 2, hasAuth: false, entities: 1 })
   );
@@ -493,7 +511,7 @@ describe('app name override', () => {
       appName: 'QuickFlight',
       appType: 'Mobile app',
       hasAuth: false,
-      entities: 'flight'
+      entities: 'Flight: origin, destination, departsAt:datetime'
     },
     estimate({ features: 2, hasAuth: false, entities: 1 })
   );
@@ -513,7 +531,7 @@ describe('app name override', () => {
           'a mobile-first app that finds the lowest cost airline flight with nonstop only, maximum one layover',
         appType: 'Mobile app',
         hasAuth: false,
-        entities: 'flight'
+        entities: 'Flight: origin, destination, departsAt:datetime'
       },
       estimate({ features: 2, hasAuth: false, entities: 1 })
     );
@@ -530,7 +548,7 @@ describe('app name override', () => {
           'a mobile-first app that finds the lowest cost airline flight with nonstop only, maximum one layover',
         appType: 'Mobile app',
         hasAuth: false,
-        entities: 'flight'
+        entities: 'Flight: origin, destination, departsAt:datetime'
       },
       estimate({ features: 2, hasAuth: false, entities: 1 })
     );
@@ -555,7 +573,7 @@ describe('planting-calendar PRD regression (Part A)', () => {
       prompt: PLANTING_CALENDAR_PROMPT,
       appType: 'Mobile app',
       hasAuth: false,
-      entities: '',
+      entities: 'Crop: name, daysToHarvest:int; PlantingWindow: method, startsOn:date, crop->Crop',
       appName: 'Desert Planting Calendar'
     },
     estimate({ features: 4, hasAuth: false, entities: 2, scopeSignals: 2 })
@@ -674,7 +692,7 @@ describe('fail-closed unresolved title (A6)', () => {
         prompt: 'with the and of a for extra padding',
         appType: 'web application',
         hasAuth: false,
-        entities: 'Crop',
+        entities: 'Crop: name',
         appName: 'Desert Planting Calendar'
       },
       estimate({ features: 1, hasAuth: false, entities: 1 })
@@ -683,3 +701,78 @@ describe('fail-closed unresolved title (A6)', () => {
     expect(prd.markdown).toContain('Desert Planting Calendar');
   });
 });
+
+describe('prompt fidelity and claims', () => {
+  it('writes fidelity: pass and does not print a failing grade when every requirement is covered', () => {
+    expect(plantingMarkdown()).toMatch(/^fidelity: pass$/m);
+    expect(plantingMarkdown()).not.toMatch(/fidelityUnmatched:/);
+    expect(plantingMarkdown()).toMatch(/\*\*Grade: \d+\/\d+ checks passed \(\d+%\)\*\*/);
+    expect(plantingMarkdown()).not.toMatch(/\*\*Grade: FAIL/);
+  });
+
+  it('caps the displayed grade at FAIL when a requirement is unmatched, and still shows the PRD', () => {
+    const missed = generatePrd(
+      {
+        prompt: 'Calibrate the flux capacitor before every departure',
+        appName: 'Flux Bench',
+        appType: 'Internal tool',
+        hasAuth: false,
+        entities: 'Widget: name'
+      },
+      estimate({ features: 2, hasAuth: false, entities: 1 })
+    );
+    const fidelity = readPrdFidelity(missed.markdown);
+    expect(fidelity.fidelity).toBe('fail');
+    expect(fidelity.unmatched.some((line) => /flux capacitor/i.test(line))).toBe(true);
+    expect(missed.markdown).toMatch(/\*\*Grade: FAIL — prompt fidelity failed/);
+    expect(missed.markdown).not.toMatch(/\*\*Grade: \d+\/\d+ checks passed \(\d+%\)\*\*/);
+    expect(missed.markdown).toContain('# Implementation Spec — Flux Bench');
+    expect(missed.markdown).toContain('CREATE TABLE IF NOT EXISTS widgets');
+  });
+
+  it('ends with the claims block buildClaims already produces', () => {
+    const fence = prd.markdown.match(/```json claims\n([\s\S]*?)```/);
+    expect(fence).not.toBeNull();
+    const parsed = JSON.parse(fence![1] ?? '') as { kind: string; slug: string; entities: string[] };
+    expect(parsed.kind).toBe('claims');
+    expect(parsed.slug).toBe(prd.slug);
+    expect(parsed.entities).toEqual(['Trip', 'Driver']);
+    const expected = claimsJson(
+      buildClaims({
+        slug: prd.slug,
+        title: prd.title,
+        prompt: 'Build an app for tracking tesla driving stats',
+        appType: 'dashboard',
+        hasAuth: true,
+        entities: ['Trip', 'Driver'],
+        features: []
+      })
+    );
+    // An empty feature list must NOT match. The fence is the real feature list.
+    expect(fence![1]).not.toBe(expected);
+    expect(prd.markdown.trimEnd().endsWith('```')).toBe(true);
+    expect(prd.markdown.lastIndexOf('## Machine-readable claims')).toBeGreaterThan(
+      prd.markdown.lastIndexOf('## 14. PRD Self-Check')
+    );
+  });
+});
+
+/**
+ * Planting PRD markdown, generated once for the fidelity assertions above.
+ * The planting describe already builds the same document; this helper keeps
+ * the new assertions from depending on that describe's local const.
+ *
+ * @returns Generated markdown.
+ */
+function plantingMarkdown(): string {
+  return generatePrd(
+    {
+      prompt: PLANTING_CALENDAR_PROMPT,
+      appType: 'Mobile app',
+      hasAuth: false,
+      entities: 'Crop: name, daysToHarvest:int; PlantingWindow: method, startsOn:date, crop->Crop',
+      appName: 'Desert Planting Calendar'
+    },
+    estimate({ features: 4, hasAuth: false, entities: 2, scopeSignals: 2 })
+  ).markdown;
+}

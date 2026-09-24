@@ -29,6 +29,7 @@ import {
   resolveFeatureSelection
 } from './wizard/steps/FeaturesStep';
 import { ReviewStep, type SubmitUiState } from './wizard/steps/ReviewStep';
+import { entitySpecBlockMessage } from './wizard/entitySpecMessage';
 import { formStyle, kickerStyle } from './wizard/styles';
 import type { WizardStepIndex } from './wizard/types';
 
@@ -111,6 +112,8 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
   const promptReady = isPromptReady(value);
   const appTypeReady = isAppTypeReady(value);
   const featuresReady = isFeatureSelectionReady(value);
+  const entityBlock = entitySpecBlockMessage(value.entities);
+  const entitiesReady = entityBlock === null;
   const isLoading = submitState.status === 'loading';
   const canSubmit = canForgePrd(value) && !isLoading;
   const copy = en.wizard;
@@ -138,7 +141,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
   function goNext(): void {
     if (step === 1 && !promptReady) return;
     // Step 2 (Scope) collects the app type. Do not let the user advance without it.
-    if (step === 2 && !appTypeReady) return;
+    if (step === 2 && (!appTypeReady || !entitiesReady)) return;
     if (step === 2) {
       const entityNames = featureEntityNames(value.entities);
       const nextSelection =
@@ -195,7 +198,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
    */
   function nextDisabled(): boolean {
     if (step === 1) return !promptReady;
-    if (step === 2) return !appTypeReady;
+    if (step === 2) return !appTypeReady || !entitiesReady;
     if (step === 3) return !featuresReady;
     return true;
   }
