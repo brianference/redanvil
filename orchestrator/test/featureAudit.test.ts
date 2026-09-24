@@ -90,19 +90,33 @@ describe('the scaffold ships an enforcing feature audit', () => {
   it('renders every control the manifest claims', async () => {
     // A manifest describing controls the app does not render is a coverage
     // claim with nothing behind it -- the failure this audit exists to catch,
-    // one file over. These are the handles the crawl keys on.
-    const shell = await readFile(join(out, 'src', 'components', 'Page.tsx'), 'utf8');
-    const toggle = await readFile(join(out, 'src', 'components', 'ThemeToggle.tsx'), 'utf8');
+    // one file over. The shell is split across the shared units and the thin
+    // wrappers, so the id can live in whichever file actually renders it.
+    const parts = await Promise.all(
+      [
+        'src/components/Page.tsx',
+        'src/components/ThemeToggle.tsx',
+        'src/components/shell/Header.tsx',
+        'src/components/shell/Brand.tsx',
+        'src/components/shell/NavLinks.tsx',
+        'design-system/ThemeToggle.tsx',
+        'design-system/NavLink.tsx'
+      ].map((rel) => readFile(join(out, rel), 'utf8'))
+    );
+    const rendered = parts.join('\n');
     const manifest = JSON.parse(
       await readFile(join(out, 'tests', 'features.manifest.json'), 'utf8')
     ) as { controls: { name: string }[] };
-    const rendered = `${shell}\n${toggle}`;
     for (const control of manifest.controls) {
-      expect(rendered, `nothing renders data-testid="${control.name}"`).toContain(
-        `data-testid="${control.name}"`
-      );
+      const literal = `data-testid="${control.name}"`;
+      const assigned = `'data-testid': '${control.name}'`;
+      const field = `testId: '${control.name}'`;
+      expect(
+        rendered.includes(literal) || rendered.includes(assigned) || rendered.includes(field),
+        `nothing renders data-testid="${control.name}"`
+      ).toBe(true);
     }
-    expect(shell).toContain('<ThemeToggle />');
+    expect(rendered).toContain('<ThemeToggle />');
   });
 
   it('wires the audit into test:features AND verify', async () => {

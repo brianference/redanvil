@@ -5,6 +5,8 @@ import { spawnSync } from 'node:child_process';
 import type { Job } from '../schemas/job';
 import { CORPUS_VERSION } from '../corpus/version';
 import { loadRubric } from '../rubric/index';
+import { applyAuthKit, jobHasAuth } from './applyAuthKit';
+import { sharedShellFiles } from './sharedShell';
 import { appFiles } from './templates';
 
 export interface ScaffoldInput {
@@ -57,6 +59,11 @@ export interface ScaffoldResult {
   commitInstruction: string;
   /** True when the app's own PRD was written to `PRD.md`. */
   prdIncluded: boolean;
+  /**
+   * True when `design-system/auth-kit/port.mjs` ran. False when the job did
+   * not ask for accounts — the kit is not copied in that case.
+   */
+  authKitApplied: boolean;
 }
 
 /**
@@ -123,13 +130,27 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
     ...(input.claimsJson === undefined
       ? {}
       : { '.redanvil/claims.json': input.claimsJson }),
-    ...appFiles(job, builtAt)
+    ...appFiles(job, builtAt),
+    ...(await sharedShellFiles(designSystemDir))
   };
 
   for (const [rel, content] of Object.entries(files)) {
     const full = join(outDir, rel);
     await mkdir(dirname(full), { recursive: true });
     await writeFile(full, content);
+  }
+
+  // Auth kit after the tree exists and before git init, so a standalone
+  // scaffold's first commit includes the migration and the functions. port.mjs
+  // does the copy; this does not re-implement it. Jobs without accounts skip it.
+  let authKitApplied = false;
+  if (jobHasAuth(job)) {
+    await applyAuthKit({
+      job,
+      outDir,
+      portScript: join(designSystemDir, 'auth-kit', 'port.mjs')
+    });
+    authKitApplied = true;
   }
 
   // Git setup: standalone scaffolds get their own repo so rules that shell out
@@ -146,7 +167,8 @@ export async function scaffoldApp(input: ScaffoldInput): Promise<ScaffoldResult>
     gitInitialised: gitSetup.gitInitialised,
     nestedGitSkipped: gitSetup.nestedGitSkipped,
     commitInstruction: gitSetup.commitInstruction,
-    prdIncluded: input.prdMarkdown !== undefined
+    prdIncluded: input.prdMarkdown !== undefined,
+    authKitApplied
   };
 }
 
