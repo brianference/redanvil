@@ -143,3 +143,23 @@ A fourth execution was failed on purpose. n8n marked it `error` and ran `workflo
 | `workflows/redanvil-app-slice.json` | parent: product -> logo -> layout -> owner approval -> gate |
 | `run-slice.sh` | headless runner with the environment the workflows need |
 | `inspect-nodes.cjs` | prints ground-truth node types and versions from the installed package |
+
+## Design roles run concurrently (verified 2026-09-24)
+
+n8n 2.22.6 with `executionOrder: 'v1'` does not overlap parallel branches: the
+executor shifts one stack entry at a time and unshifts children, so it walks a
+branch to the end before starting the next (n8n-core `workflow-execute.js`). A
+Merge fan-out alone therefore saves nothing. The generator instead launches
+every agent step that shares a dependency set (today brainstorm, logo, palette
+and layout, all after `product`) from one Execute Command running
+`roles/parallel-roles.mjs`, which spawns one `role-run.mjs` per role and awaits
+them together. Each role still passes the same `countedAsRun` contract; one
+failing role fails the batch without cancelling the others. Joins before
+`decide` use Merge `chooseBranch` / `waitForAll`. `test/parallel-roles.test.mjs`
+proves overlap with four real child processes, and fails on a serial copy.
+
+Grok roles (`grok-role.mjs`, `design-role.mjs`) share `roles/agent-failover.mjs`:
+prompt via `--prompt-file`, no shell, an 8-minute output heartbeat, and a
+hand-off to `claude -p` only on a hang, a timeout, a spending-limit/403, or an
+exhausted balance (402). Image roles never hand off: Grok Imagine has no Claude
+equivalent, so they fail clearly instead.

@@ -338,6 +338,216 @@ export function ifNode(id, name, position, leftValue, operation, rightValue) {
   };
 }
 
+/**
+ * Binary Merge that waits until both inputs have arrived.
+ *
+ * Read from the installed n8n 2.22.6 package, not from the docs:
+ * `n8n-nodes-base/dist/nodes/Merge/Merge.node.js` defaultVersion is 3.2.
+ * `actions/mode/chooseBranch.js` names `chooseBranchMode: 'waitForAll'`
+ * "Wait for All Inputs to Arrive".
+ * `actions/versionDescription.js` sets chooseBranch `requiredInputs` to
+ * `[0, 1]`. A 3-input chooseBranch still only requires the first two when
+ * the stack is empty (workflow-execute.js), so three or more dependencies
+ * are a chain of these binary nodes. `output: 'empty'` yields one item;
+ * downstream Code nodes read Slice config, not the merged json.
+ *
+ * @param {string} id node id
+ * @param {string} name node name
+ * @param {number[]} position canvas position
+ * @returns {object}
+ */
+function joinNode(id, name, position) {
+  return {
+    id,
+    name,
+    type: 'n8n-nodes-base.merge',
+    typeVersion: 3.2,
+    position,
+    parameters: {
+      mode: 'chooseBranch',
+      numberInputs: 2,
+      chooseBranchMode: 'waitForAll',
+      output: 'empty'
+    }
+  };
+}
+
+/**
+ * Grok and design-role bindings are the slow steps. Local scripts are not.
+ * @param {import('./process-map.mjs').ProcessStep} step
+ * @returns {boolean}
+ */
+function isAgentStep(step) {
+  const cmd = BINDINGS[step.id] ?? '';
+  return cmd.includes('roles/grok-role.mjs') || cmd.includes('roles/design-role.mjs');
+}
+
+/**
+ * Code-node source for the parallel design launch.
+ * The role list is fixed at generation time. slug and repoRoot come from
+ * Slice config, quoted the same way as the dispatch commands.
+ * @param {string} roleList comma-separated step ids
+ * @returns {string}
+ */
+function designFanoutJs(roleList) {
+  return (
+    `const c = $('Slice config').first().json;\n` +
+    `const root = String(c.repoRoot);\n` +
+    `const script = JSON.stringify(root.replaceAll('\\\\', '/') + '/n8n-prototype/roles/parallel-roles.mjs');\n` +
+    `const cmd = 'node ' + script + ' --roles=${roleList} --slug=' + JSON.stringify(c.slug) + ' --repoRoot=' + JSON.stringify(root);\n` +
+    `return [{ json: { cmd } }];`
+  );
+}
+
+/**
+ * Connect every completion tail to one target input.
+ * @param {{from: string, outputIndex: number}[]} tails
+ * @param {string} to target node name
+ * @param {number} inputIndex merge input slot
+ */
+function wireTails(tails, to, inputIndex) {
+  for (const edge of tails) link(edge.from, to, edge.outputIndex, inputIndex);
+}
+
+/**
+ * Wire steps from `dependsOn` instead of from map order.
+ *
+ * Steps that share a dependency set fan out from one predecessor. A set of
+ * two or more grok/design roles is launched by one Execute Command
+ * (`parallel-roles.mjs`), because executionOrder v1 walks one branch to the
+ * end before the next (n8n-core workflow-execute.js: the loop shifts a
+ * single stack entry, and v1 unshifts children). Human gates stay on their
+ * own branch after that command. A redo still enters the one step's params
+ * node. When that step is someone else's `reworkTo`, a later pass skips the
+ * join: the join already consumed the other branches, and waiting for them
+ * again would stall the redo.
+ */
+function wireDag() {
+  const indexOf = new Map(steps.map((step, index) => [step.id, index]));
+  /**
+   * @param {import('./process-map.mjs').ProcessStep} step
+   * @returns {string[]}
+   */
+  const depIdsOf = (step) =>
+    step.dependsOn.slice().sort((left, right) => indexOf.get(left) - indexOf.get(right));
+
+  /** @type {Map<string, {from: string, outputIndex: number}[]>} */
+  const effective = new Map(completion);
+
+  if (!AUTO_GATES) {
+    for (const step of steps) {
+      const gates = steps.filter((gate) => gate.humanGate && gate.reworkTo === step.id);
+      if (!gates.length) continue;
+      let incoming = effective.get(step.id) ?? [];
+      for (const gate of gates) {
+        const checkName = `Rework check: ${step.id}${gates.length > 1 ? ` ${gate.id}` : ''}`;
+        const ifName = `If: ${step.id} returns to ${gate.id}`;
+        const cycleKey = `cycles_${gate.id.replace(/-/g, '_')}`;
+        nodes.push(
+          commandPrepNode(
+            `rwc_${step.id}_${gate.id}`,
+            checkName,
+            [X_STEP * ((indexOf.get(step.id) ?? 0) + 2), 360],
+            `const used = Number($execution.customData.get(${JSON.stringify(cycleKey)}) || '0');\n` +
+              `return [{ json: { reworkGate: used > 0 ? ${JSON.stringify(gate.id)} : '' } }];`
+          ),
+          ifNode(
+            `rwi_${step.id}_${gate.id}`,
+            ifName,
+            [X_STEP * ((indexOf.get(step.id) ?? 0) + 3), 360],
+            '={{ $json.reworkGate }}',
+            'equals',
+            gate.id
+          )
+        );
+        for (const edge of incoming) link(edge.from, checkName, edge.outputIndex);
+        link(checkName, ifName);
+        link(ifName, `${gate.id} params`, 0);
+        incoming = [{ from: ifName, outputIndex: 1 }];
+      }
+      effective.set(step.id, incoming);
+    }
+  }
+
+  /** @type {Map<string, import('./process-map.mjs').ProcessStep[]>} */
+  const groups = new Map();
+  for (const step of steps) {
+    const key = depIdsOf(step).join('+');
+    const list = groups.get(key) ?? [];
+    list.push(step);
+    groups.set(key, list);
+  }
+
+  /** @type {Map<string, {prepName: string, runName: string, agents: import('./process-map.mjs').ProcessStep[]}>} */
+  const batches = new Map();
+  for (const [key, group] of groups) {
+    const agents = group.filter(isAgentStep);
+    if (agents.length < 2) continue;
+    const label = key || 'start';
+    const slug = label.replace(/[^a-z0-9]+/gi, '_');
+    const prepName = `Prepare design roles after ${label}`;
+    const runName = `Run design roles after ${label}`;
+    nodes.push(
+      commandPrepNode(`pfan_${slug}`, prepName, [X_STEP * 4, 480], designFanoutJs(agents.map((step) => step.id).join(','))),
+      commandNode(`rfan_${slug}`, runName, [X_STEP * 5, 480])
+    );
+    link(prepName, runName);
+    for (const step of agents) {
+      if (!afterRole.has(step.id)) {
+        effective.set(step.id, [{ from: runName, outputIndex: 0 }]);
+      }
+    }
+    batches.set(key, { prepName, runName, agents });
+  }
+
+  /**
+   * @param {string[]} depIds process-order dependency ids
+   * @returns {{from: string, outputIndex: number}[]}
+   */
+  const joinedTails = (depIds) => {
+    if (depIds.length === 0) return [{ from: 'Slice config', outputIndex: 0 }];
+    if (depIds.length === 1) return effective.get(depIds[0]) ?? [];
+    /** @type {string[]} */
+    let accIds = [];
+    /** @type {{from: string, outputIndex: number}[]} */
+    let accTails = [];
+    for (let index = 0; index < depIds.length; index += 1) {
+      const depId = depIds[index];
+      if (index === 0) {
+        accIds = [depId];
+        accTails = effective.get(depId) ?? [];
+        continue;
+      }
+      accIds = accIds.concat(depId);
+      const name = `Join: ${accIds.join('+')}`;
+      if (!nodes.some((node) => node.name === name)) {
+        nodes.push(joinNode(`join_${accIds.join('_')}`, name, [X_STEP * (steps.length + index), index * 180]));
+        wireTails(accTails, name, 0);
+        wireTails(effective.get(depId) ?? [], name, 1);
+      }
+      accTails = [{ from: name, outputIndex: 0 }];
+    }
+    return accTails;
+  };
+
+  for (const [key, group] of groups) {
+    const depIds = key ? key.split('+') : [];
+    const source = joinedTails(depIds);
+    const batch = batches.get(key);
+    const batched = new Set(batch ? batch.agents.map((step) => step.id) : []);
+    if (batch) wireTails(source, batch.prepName, 0);
+    for (const step of group) {
+      if (batched.has(step.id)) {
+        const next = afterRole.get(step.id);
+        if (next && batch) link(batch.runName, next);
+        continue;
+      }
+      const entryName = entry.get(step.id);
+      if (entryName) wireTails(source, entryName, 0);
+    }
+  }
+}
+
 const steps = orderedSteps();
 /** @type {object[]} */
 const nodes = [
@@ -466,21 +676,23 @@ const connections = {
  * @param {string} from source node name
  * @param {string} to target node name
  * @param {number} [outputIndex] which output. 0 for a single-output node
+ * @param {number} [inputIndex] which input on the target. Merge uses this to wait
  */
-export function linkInto(connections, from, to, outputIndex = 0) {
+export function linkInto(connections, from, to, outputIndex = 0, inputIndex = 0) {
   if (!connections[from]) connections[from] = { main: [] };
   const main = connections[from].main;
   while (main.length <= outputIndex) main.push([]);
-  main[outputIndex].push({ node: to, type: 'main', index: 0 });
+  main[outputIndex].push({ node: to, type: 'main', index: inputIndex });
 }
 
 /**
  * @param {string} from source node name
  * @param {string} to target node name
  * @param {number} [outputIndex] which output. 0 for a single-output node
+ * @param {number} [inputIndex] which input on the target
  */
-function link(from, to, outputIndex = 0) {
-  linkInto(connections, from, to, outputIndex);
+function link(from, to, outputIndex = 0, inputIndex = 0) {
+  linkInto(connections, from, to, outputIndex, inputIndex);
 }
 
 /**
@@ -590,16 +802,21 @@ function addAutoDecide(step, index, from) {
   return autoRole.name;
 }
 
-/** @type {{ from: string, outputIndex: number }[]} */
-let forwarders = [{ from: 'Slice config', outputIndex: 0 }];
 const stepIds = new Set(steps.map((step) => step.id));
+
+/** @type {Map<string, {from: string, outputIndex: number}[]>} */
+const completion = new Map();
+/** @type {Map<string, string>} */
+const entry = new Map();
+/** @type {Map<string, string>} */
+const afterRole = new Map();
 
 steps.forEach((step, i) => {
   const params = paramsNode(step, i);
   const role = roleNode(step, i);
   nodes.push(params, role);
-  for (const edge of forwarders) link(edge.from, params.name, edge.outputIndex);
   link(params.name, role.name);
+  entry.set(step.id, params.name);
   /** @type {{ from: string, outputIndex: number }[]} */
   let tails = [{ from: role.name, outputIndex: 0 }];
 
@@ -725,11 +942,15 @@ steps.forEach((step, i) => {
     }
   }
 
-  forwarders = tails;
+  completion.set(step.id, tails);
+  const roleNext = connections[role.name]?.main?.[0]?.[0]?.node;
+  if (roleNext) afterRole.set(step.id, roleNext);
 });
 
-for (const edge of forwarders) {
-  if (!connections[edge.from]) connections[edge.from] = { main: [[]] };
+wireDag();
+
+for (const node of nodes) {
+  if (!connections[node.name]) connections[node.name] = { main: [[]] };
 }
 
 const workflow = {
