@@ -1,4 +1,6 @@
 import type { Job } from '../schemas/job';
+import { jobHasAuth } from './applyAuthKit';
+import { appShellFiles } from './appShell';
 import { legalDocs } from './legalCopy';
 import { featureAuditScript, featureManifestJson, coldVisitorScript } from './featureAudit';
 import { apiExamplesJson, coverageStateJson } from './apiExamples';
@@ -149,6 +151,45 @@ function sitemapXml(slug: string): string {
 }
 
 /**
+ * Labels the shared shell reads. `breadcrumbNav` is the accessible name
+ * `fe-breadcrumbs` matches (`/breadcrumb/i`); a different word fails the check
+ * even when the trail is on the page.
+ *
+ * @param job - Job providing the product name and the prompt used as the footer tagline.
+ * @returns A JSON object literal (braces included) for the `app` key.
+ */
+function shellCopy(job: Job): string {
+  return JSON.stringify(
+    {
+      name: job.slug,
+      primaryNav: 'Primary',
+      footerCopyright: `© ${job.slug}`,
+      breadcrumbNav: 'Breadcrumb',
+      breadcrumbHome: 'Home',
+      themeToLight: 'Switch to light theme',
+      themeToDark: 'Switch to dark theme',
+      menuOpen: 'Open menu',
+      menuClose: 'Close menu',
+      footerTagline: job.prompt,
+      footerProduct: 'Product',
+      footerCompany: 'Company',
+      footerLegal: 'Legal',
+      footerAbout: 'About',
+      footerContact: 'Contact',
+      footerTerms: 'Terms',
+      footerPrivacy: 'Privacy',
+      navHome: 'Home',
+      navAbout: 'About',
+      navTerms: 'Terms',
+      navPrivacy: 'Privacy',
+      navContact: 'Contact'
+    },
+    null,
+    2
+  );
+}
+
+/**
  * English locale bundle used by page templates.
  *
  * @param job - Job providing the app name for copy.
@@ -181,17 +222,17 @@ function i18nEnTs(job: Job, builtAt: string): string {
   const pages = (Object.keys(all) as (keyof typeof all)[])
     .map((key) => `  ${key}: ${JSON.stringify(all[key], null, 2).split('\n').join('\n  ')}`)
     .join(',\n');
+  const appJson = shellCopy(job)
+    .split('\n')
+    .map((line, index) => (index === 0 ? line : `  ${line}`))
+    .join('\n');
   return (
     `/**\n` +
     ` * Central English locale bundle for all user-facing copy.\n` +
     ` * Components must reference these keys; no inline UI strings.\n` +
     ` */\n` +
     `export const en = {\n` +
-    `  app: {\n` +
-    `    name: '${job.slug}',\n` +
-    `    primaryNav: 'Primary',\n` +
-    `    footerCopyright: '© ${job.slug}'\n` +
-    `  },\n` +
+    `  app: ${appJson},\n` +
     `  pages: {\n${pages}\n  }\n` +
     `} as const;\n`
   );
@@ -205,6 +246,9 @@ function i18nEnTs(job: Job, builtAt: string): string {
  */
 function pageComponent(name: string): string {
   const key = name.toLowerCase();
+  // Home is the trail root. Every other shell page is an inner route, and
+  // fe-breadcrumbs fails the build when that route has no breadcrumb nav.
+  const crumb = name === 'Home' ? '' : ` breadcrumb={en.pages.${key}.title}`;
   return (
     `import { DocPage } from '../components/DocPage';
 ` +
@@ -215,7 +259,7 @@ function pageComponent(name: string): string {
 ` +
     `export function ${name}(): JSX.Element {
 ` +
-    `  return <DocPage doc={en.pages.${key}} />;
+    `  return <DocPage doc={en.pages.${key}}${crumb} />;
 ` +
     `}
 `
@@ -305,16 +349,20 @@ function docPageComponent(): string {
 ` +
     `  doc: Doc;
 ` +
+    `  /** Current-page breadcrumb label. Omit on the home page. */
+` +
+    `  breadcrumb?: string;
+` +
     `}
 
 ` +
     `/** Renders a document as real headed sections rather than one paragraph. */
 ` +
-    `export function DocPage({ doc }: DocPageProps): JSX.Element {
+    `export function DocPage({ doc, breadcrumb }: DocPageProps): JSX.Element {
 ` +
     `  return (
 ` +
-    `    <Page title={doc.title}>
+    `    <Page title={doc.title} breadcrumb={breadcrumb}>
 ` +
     `      <p className="page-intro">{doc.intro}</p>
 ` +
@@ -979,104 +1027,6 @@ describe('vrt lane — shell snapshot', () => {
 `;
 }
 
-/**
- * Shared page shell: sticky header, brand, primary nav, theme toggle, footer.
- *
- * The shell used to render the app name as bare text inside `<nav>` and never
- * mounted `ThemeToggle` at all, so a generated app shipped with zero interactive
- * controls — the starter acceptance spec tested a theme toggle and a Privacy
- * link that nothing rendered, and `fe-premium-nav` and `fe-light-dark` (both
- * blockers) could not be satisfied from the app's own starting point. Rendering
- * them here is also what makes `tests/features.manifest.json` describe real
- * controls rather than remembered ones.
- *
- * Each control carries a `data-testid`: it is the handle the feature audit keys
- * on, and it groups a repeated component into one entry regardless of how the
- * builder later names its CSS classes.
- *
- * @returns Contents of `src/components/Page.tsx`.
- */
-function pageShellTsx(): string {
-  return [
-    "import type { ReactNode } from 'react';",
-    "import { Link, NavLink } from 'react-router-dom';",
-    "import { en } from '../i18n/en';",
-    "import { ROUTES } from '../lib/routes';",
-    "import { theme } from '../theme';",
-    "import { ThemeToggle } from './ThemeToggle';",
-    '',
-    'export interface PageProps {',
-    '  /** Page title, rendered as the single h1. */',
-    '  title: string;',
-    '  /** Page body. */',
-    '  children: ReactNode;',
-    '}',
-    '',
-    '/** Shared page shell: sticky header, primary nav, one h1, professional footer. */',
-    'export function Page({ title, children }: PageProps): JSX.Element {',
-    '  return (',
-    '    <div>',
-    '      <header',
-    '        style={{',
-    "          position: 'sticky',",
-    '          top: 0,',
-    "          display: 'flex',",
-    "          alignItems: 'center',",
-    '          gap: theme.space.md,',
-    '          padding: theme.space.md,',
-    '          background: theme.color.surface,',
-    "          borderBottom: '1px solid ' + theme.color.border",
-    '        }}',
-    '      >',
-    '        <Link',
-    '          data-testid="brand"',
-    '          to="/"',
-    "          style={{ color: theme.color.text, fontWeight: 700, textDecoration: 'none' }}",
-    '        >',
-    '          {en.app.name}',
-    '        </Link>',
-    '        <nav aria-label={en.app.primaryNav}>',
-    "          <ul style={{ display: 'flex', gap: theme.space.md, listStyle: 'none', margin: 0, padding: 0 }}>",
-    '            {ROUTES.map((route) => (',
-    '              <li key={route.path}>',
-    '                <NavLink',
-    '                  data-testid="nav-link"',
-    '                  to={route.path}',
-    '                  style={({ isActive }) => ({',
-    '                    color: isActive ? theme.color.text : theme.color.muted,',
-    '                    // fe-noncolor-state: the active page is underlined as',
-    '                    // well as recoloured, so the state survives a colour',
-    '                    // vision difference and a greyscale screenshot.',
-    "                    textDecoration: isActive ? 'underline' : 'none',",
-    '                    // R1.1: a 44px touch target, not a bare text link.',
-    '                    minHeight: 44,',
-    "                    display: 'inline-flex',",
-    "                    alignItems: 'center'",
-    '                  })}',
-    '                >',
-    '                  {route.name}',
-    '                </NavLink>',
-    '              </li>',
-    '            ))}',
-    '          </ul>',
-    '        </nav>',
-    "        <div style={{ marginLeft: 'auto' }}>",
-    '          <ThemeToggle />',
-    '        </div>',
-    '      </header>',
-    '      <main>',
-    '        <h1>{title}</h1>',
-    '        {children}',
-    '      </main>',
-    '      <footer>',
-    '        <small>{en.app.footerCopyright}</small>',
-    '      </footer>',
-    '    </div>',
-    '  );',
-    '}',
-    ''
-  ].join('\n');
-}
 
 function routesTestTs(): string {
   return (
@@ -1110,6 +1060,16 @@ function routesTestTs(): string {
  * @returns Map of relative paths to file contents.
  */
 export function appFiles(job: Job, builtAt: string): Record<string, string> {
+  const dependencies: Record<string, string> = {
+    react: '^18.3.0',
+    'react-dom': '^18.3.0',
+    'react-router-dom': '^6.26.0'
+  };
+  // The auth kit's validate.ts imports zod. port.mjs only prints a TODO when
+  // it is missing; the import still fails typecheck, so the dependency ships
+  // with the kit and is absent when the job has no accounts.
+  if (jobHasAuth(job)) dependencies.zod = '^3.25.76';
+
   const files: Record<string, string> = {
     'package.json':
       JSON.stringify(
@@ -1146,11 +1106,7 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
               'npm run test:coverage && npm run build && ' +
               'npm run test:e2e && npm run test:features'
           },
-          dependencies: {
-            react: '^18.3.0',
-            'react-dom': '^18.3.0',
-            'react-router-dom': '^6.26.0'
-          },
+          dependencies,
           devDependencies: {
             // Ships with the scaffold because `tests/acceptance.spec.ts` does
             // (R27) — a spec the app cannot run is not a test.
@@ -1239,14 +1195,15 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     'eslint.config.js': eslintConfigJs(),
     'design-system/tokens.json': JSON.stringify(TOKENS_JSON, null, 2) + '\n',
     'src/main.tsx':
-      `import { StrictMode } from 'react';\n` +
-      `import { createRoot } from 'react-dom/client';\n` +
-      `import { App } from './App';\n\n` +
-      `createRoot(document.getElementById('root')!).render(\n` +
-      `  <StrictMode>\n` +
-      `    <App />\n` +
-      `  </StrictMode>\n` +
-      `);\n`,
+      `import { App } from './App';\n` +
+      `import { mountApp } from '../design-system/mountApp';\n` +
+      `import './theme.css';\n\n` +
+      `/**\n` +
+      ` * Shared entry. Theme is applied before paint, and the router lives once\n` +
+      ` * inside mountApp. persistInitialTheme is false so the first visit does\n` +
+      ` * not record a choice the visitor never made.\n` +
+      ` */\n` +
+      `mountApp(<App />, { persistInitialTheme: false });\n`,
     // `fe-light-dark` is a BLOCKER: light and dark, a visible toggle, a stated
     // default, AA in both. The scaffold used to ship one flat token object and
     // no stylesheet at all, so a generated app could not satisfy the rule from
@@ -1254,7 +1211,6 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     // system before the gate could pass. It ships one now, dark by default.
     'src/theme.css': themeCss(),
     'src/theme.ts': themeTs(),
-    'src/components/ThemeToggle.tsx': themeToggleTsx(),
     'src/i18n/en.ts': i18nEnTs(job, builtAt),
     'src/lib/routes.ts': routesTs(),
     'src/lib/routes.test.ts': routesTestTs(),
@@ -1296,7 +1252,7 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     'vitest.workspace.ts': vitestWorkspaceTs(),
     'src/components/ScrollToTop.tsx': scrollToTopComponent(),
     'src/components/DocPage.tsx': docPageComponent(),
-    'src/components/Page.tsx': pageShellTsx(),
+    ...appShellFiles(),
     'functions/api/health.ts':
       `/** Health endpoint — proves the Worker runtime boots (lg-runtime-parity). */\n` +
       `export function onRequest(context: { request: Request }): Response {\n` +
@@ -1328,20 +1284,22 @@ export function appFiles(job: Job, builtAt: string): Record<string, string> {
     return `        <Route path={${pathExpr}} element={<${p} />} />`;
   }).join('\n');
   files['src/App.tsx'] =
-    `import { BrowserRouter, Routes, Route } from 'react-router-dom';\n` +
+    `import { Routes, Route } from 'react-router-dom';\n` +
     `import { pathForPage } from './lib/routes';\n` +
     `import { ScrollToTop } from './components/ScrollToTop';\n` +
     `${routeImports}\n\n` +
-    `/** App router: composes the required pages from the shared route table. */\n` +
+    `/**\n` +
+    ` * App router. The BrowserRouter lives in mountApp, so this tree must not\n` +
+    ` * add a second one. ScrollToTop still sits inside that router (R34).\n` +
+    ` */\n` +
     `export function App(): JSX.Element {\n` +
     `  return (\n` +
-    `    <BrowserRouter>\n` +
-    `      {/* Inside the router: it reads the current location (R34). */}\n` +
+    `    <>\n` +
     `      <ScrollToTop />\n` +
     `      <Routes>\n` +
     `${routeElements}\n` +
     `      </Routes>\n` +
-    `    </BrowserRouter>\n` +
+    `    </>\n` +
     `  );\n` +
     `}\n`;
 
@@ -1503,91 +1461,32 @@ function themeTs(): string {
     '  color: {',
     "    bg: 'var(--bg)',",
     "    surface: 'var(--surface)',",
+    "    surface2: 'var(--surface-elevated)',",
     "    surfaceElevated: 'var(--surface-elevated)',",
     "    text: 'var(--text)',",
     "    textOnAccent: 'var(--text-on-accent)',",
     "    muted: 'var(--muted)',",
     "    accent: 'var(--accent)',",
-    "    border: 'var(--border)'",
+    "    accentFg: 'var(--accent)',",
+    "    border: 'var(--border)',",
+    "    scrim: 'color-mix(in srgb, var(--text) 45%, transparent)',",
+    "    shadow: '0 12px 32px color-mix(in srgb, var(--text) 18%, transparent)'",
     '  },',
     '  space: tokens.space,',
     '  radius: tokens.radius,',
-    '  type: tokens.type',
+    '  type: tokens.type,',
+    '  /** Minimum touch target edge, px (R1.1). */',
+    '  touch: 44,',
+    '  /**',
+    '   * Content column. `94%` is not a fixed cap: a media query is unnecessary',
+    '   * because it already tracks the viewport. `fe-no-inline-width` rejects a',
+    '   * numeric maxWidth literal; this value is passed through the shared shell.',
+    '   */',
+    '  layout: {',
+    "    contentMaxWidth: '94%'",
+    '  }',
     '} as const;',
     ''
   ].join('\n');
 }
 
-/**
- * Theme toggle: flips `data-theme`, persists the choice, states the default.
- *
- * @returns Contents of `src/components/ThemeToggle.tsx`.
- */
-function themeToggleTsx(): string {
-  return [
-    "import { useCallback, useEffect, useState } from 'react';",
-    "import { theme } from '../theme';",
-    '',
-    "type ThemeChoice = 'light' | 'dark';",
-    '',
-    '/**',
-    " * The user's saved choice, else the brand default.",
-    ' *',
-    ' * Dark is the stated default. A saved choice always wins.',
-    ' *',
-    ' * @param stored - Raw localStorage value, or null.',
-    ' * @returns The theme to apply.',
-    ' */',
-    'function resolveTheme(stored: string | null): ThemeChoice {',
-    "  return stored === 'light' || stored === 'dark' ? stored : 'dark';",
-    '}',
-    '',
-    '/**',
-    ' * Header control that switches between light and dark.',
-    ' *',
-    ' * @returns The toggle button.',
-    ' */',
-    'export function ThemeToggle(): JSX.Element {',
-    "  const [mode, setMode] = useState<ThemeChoice>('dark');",
-    '',
-    '  useEffect(() => {',
-    "    const next = resolveTheme(localStorage.getItem('theme'));",
-    '    setMode(next);',
-    '    document.documentElement.dataset.theme = next;',
-    '  }, []);',
-    '',
-    '  const toggle = useCallback((): void => {',
-    '    setMode((current): ThemeChoice => {',
-    "      const next: ThemeChoice = current === 'dark' ? 'light' : 'dark';",
-    '      document.documentElement.dataset.theme = next;',
-    "      localStorage.setItem('theme', next);",
-    '      return next;',
-    '    });',
-    '  }, []);',
-    '',
-    '  return (',
-    '    <button',
-    '      type="button"',
-    // The handle the feature audit keys this control on, so it stays one entry
-    // in tests/features.manifest.json however its styling is renamed later.
-    '      data-testid="theme-toggle"',
-    '      onClick={toggle}',
-    "      aria-label={mode === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}",
-    '      style={{',
-    '        minWidth: 44,',
-    '        minHeight: 44,',
-    '        borderRadius: theme.radius.md,',
-    '        border: `1px solid ${theme.color.border}`,',
-    '        background: theme.color.surface,',
-    '        color: theme.color.text,',
-    '        fontSize: theme.type.scale[2],',
-    "        cursor: 'pointer'",
-    '      }}',
-    '    >',
-    "      <span aria-hidden=\"true\">{mode === 'dark' ? '☀' : '☾'}</span>",
-    '    </button>',
-    '  );',
-    '}',
-    ''
-  ].join('\n');
-}
