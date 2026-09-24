@@ -38,8 +38,8 @@ test-results/
 # migrations/ and SOURCES.md; the raw dumps are reproducible and not evidence.
 tmp-sources/
 
-# Generation intermediates for crop art. Shipped WebP assets live in
-# az-planting-calendar/public/crops/; raw JPG sources are not product evidence.
+# Generation intermediates for crop art. Shipped WebP assets live in an app's
+# public/crops/; raw JPG sources are not product evidence.
 **/design-refs/crop-art/raw/
 
 # Design-option raster previews under design-refs/ (HTML decisions stay tracked).
@@ -57,11 +57,6 @@ tmp-sources/
 # commit fine) plus the SHIPPED mark in public/. The candidate PNGs are working
 # files. That is also the real requirement: the mark has to ship, not be archived.
 
-# Spec proof PNGs under evidence/ that are not under evidence/screenshots/
-# (hyg-no-binaries allowlists only public|assets|static|images|screenshots).
-az-planting-calendar/evidence/spec-*/**
-az-planting-calendar/evidence/*.png
-
 # Known-bad fixture content, not build output -- must be committed so the
 # fixture is re-runnable on a fresh checkout (see fe-result-in-viewport-api).
 !known-bad-fixtures/fe-result-in-viewport-api/bad-app/dist/
@@ -71,7 +66,6 @@ az-planting-calendar/evidence/*.png
 # these appear on every local run.
 __pycache__/
 *.pyc
-pet-sitter/design-refs/appstore/*.jpg
 
 # Scratch output of verify_results.mjs — a reproduction, not a result.
 results/*.verify.json

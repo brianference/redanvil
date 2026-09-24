@@ -94,19 +94,25 @@ before reading anything else here.
 
 The rubric is 96 rules, and 69 of them are blockers. A blocker does not shade the
 score down a few points -- it zeroes the whole thing. So 0 means "at least one
-blocking rule is open", never "nothing works". All six apps are deployed and
+blocking rule is open", never "nothing works". The apps below are deployed and
 serving right now:
 
 | App | Live | State |
 | --- | --- | --- |
 | App builder | https://redanvil.pages.dev | axe clean in both themes (0 violations, 2026-08-21); 26 gate blockers open |
 | Dashboard | https://redanvil-dashboard.pages.dev | live; gate blockers open |
-| AZ Planting Calendar | https://az-planting-calendar.pages.dev | 12/12 design rules pass, 121 tests across 3 lanes |
-| Sushi Finder | https://sushi-finder.pages.dev | live, gate blockers open |
-| Pet Sitter | https://pet-sitter-vz1.pages.dev | live, gate blockers open |
 | QuickFlight | https://quickflight.pages.dev | live, re-gated against the current rubric |
 
-A note on the two rows above, because the distinction matters when reading a 0.
+Three apps that were built inside this monorepo now live in their own
+repositories and are no longer gated from here:
+
+| App | Repository | Live |
+| --- | --- | --- |
+| AZ Planting Calendar | https://github.com/brianference/az-planting-calendar | https://az-planting-calendar.pages.dev |
+| Sushi Finder | https://github.com/brianference/sushi-finder | https://sushi-finder.pages.dev |
+| Pet Sitter | https://github.com/brianference/pet-sitter | https://pet-sitter-vz1.pages.dev |
+
+A note on the app states above, because the distinction matters when reading a 0.
 They previously read "12/12 design rules pass". That was recorded from a real run
 and then went stale: design verdicts are pinned to the commit they were measured
 at, and every later commit — including commits that touch nothing those rules

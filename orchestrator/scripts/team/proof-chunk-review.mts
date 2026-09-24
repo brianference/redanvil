@@ -50,29 +50,30 @@ function show(
   );
 }
 
-// a) Full az release range — every chunk clean → full coverage, no truncation finding.
-const azClean = await runIndependentDiffReview({
-  dir: resolve(repoRoot, 'az-planting-calendar'),
+// a) Full app-builder release range (the largest in-repo app, so it spans
+// several chunks) — every chunk clean → full coverage, no truncation finding.
+const bigClean = await runIndependentDiffReview({
+  dir: resolve(repoRoot, 'app-builder'),
   repoRoot,
-  outPath: join(repoRoot, 'evidence', 'judge-diff-az-planting-calendar-chunk-proof.json'),
+  outPath: join(repoRoot, 'evidence', 'judge-diff-app-builder-chunk-proof.json'),
   diffRange: 'origin/master..HEAD',
-  diffPaths: [':(top)az-planting-calendar'],
+  diffPaths: [':(top)app-builder'],
   reviewChunk: ({ index, total }) => {
-    process.stdout.write(`az clean: chunk ${index + 1}/${total}\n`);
+    process.stdout.write(`app-builder clean: chunk ${index + 1}/${total}\n`);
     return {
       stdout: JSON.stringify({ foundNothingExplicit: true, findings: [] })
     };
   }
 });
-show('a-az-clean', azClean);
+show('a-app-builder-clean', bigClean);
 
 // c) One unparseable chunk → aggregate completed false / ok false.
-const azBlind = await runIndependentDiffReview({
-  dir: resolve(repoRoot, 'az-planting-calendar'),
+const bigBlind = await runIndependentDiffReview({
+  dir: resolve(repoRoot, 'app-builder'),
   repoRoot,
-  outPath: join(repoRoot, 'evidence', 'judge-diff-az-unparseable-proof.json'),
+  outPath: join(repoRoot, 'evidence', 'judge-diff-app-builder-unparseable-proof.json'),
   diffRange: 'origin/master..HEAD',
-  diffPaths: [':(top)az-planting-calendar'],
+  diffPaths: [':(top)app-builder'],
   reviewChunk: ({ index }) => {
     if (index === 2) return { stdout: 'NOT JSON — blind chunk' };
     return {
@@ -80,7 +81,7 @@ const azBlind = await runIndependentDiffReview({
     };
   }
 });
-show('c-az-unparseable', azBlind);
+show('c-app-builder-unparseable', bigBlind);
 
 // b) dashboard fits one chunk.
 const dash = await runIndependentDiffReview({
@@ -96,15 +97,15 @@ const dash = await runIndependentDiffReview({
 show('b-dashboard', dash);
 
 const pass =
-  azClean.completed === true &&
-  azClean.ok === true &&
-  azClean.coverageComplete === true &&
-  azClean.coverageChars === azClean.diffChars &&
-  (azClean.chunkCount ?? 0) > 1 &&
-  azClean.findings.every((f) => !/diff truncated/i.test(f.title)) &&
-  azBlind.completed === false &&
-  azBlind.ok === false &&
-  azBlind.findings.some((f) => f.title === 'unparseable judge output') &&
+  bigClean.completed === true &&
+  bigClean.ok === true &&
+  bigClean.coverageComplete === true &&
+  bigClean.coverageChars === bigClean.diffChars &&
+  (bigClean.chunkCount ?? 0) > 1 &&
+  bigClean.findings.every((f) => !/diff truncated/i.test(f.title)) &&
+  bigBlind.completed === false &&
+  bigBlind.ok === false &&
+  bigBlind.findings.some((f) => f.title === 'unparseable judge output') &&
   dash.completed === true &&
   dash.chunkCount === 1 &&
   dash.coverageChars === dash.diffChars;
