@@ -144,17 +144,33 @@ test('saved New build returns to the composer', async ({ page }) => {
   await expect(page.getByRole('textbox', { name: /describe your app/i })).toBeInViewport();
 });
 
-test('saved Retry is present when the list fails to load', async ({ page }) => {
+test('saved Retry reloads the list after a failure', async ({ page }) => {
   // Induce the failure, do not depend on the server lacking a backend. The
   // original version relied on `vite preview` having no Pages Functions, so it
   // passed only while the harness was wrong: booting the real Workers runtime
   // made /api/prds succeed and the error state it asserts stopped existing.
   // A test that needs the environment broken is testing the environment.
-  await page.route('**/api/prds*', (route) => route.fulfill({ status: 500, body: '{}' }));
+  // Only the FIRST request fails; Retry must reach the real route and recover.
+  let failed = false;
+  await page.route('**/api/prds*', async (route) => {
+    if (failed) return route.continue();
+    failed = true;
+    return route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+  });
   await page.goto('/saved');
   const retry = page.getByRole('button', { name: /^retry$/i });
   await expect(retry).toBeVisible({ timeout: 15_000 });
   await expect(retry).toBeInViewport();
+
+  const reload = page.waitForResponse((r) => r.url().includes('/api/prds') && r.status() === 200);
+  await retry.click();
+  await reload;
+  await expect(retry).toBeHidden();
+  await expect(page.getByRole('alert')).toBeHidden();
+  // A recovered list is the library or its honest empty state, never a blank.
+  await expect(
+    page.getByRole('list', { name: /public saved prds/i }).or(page.getByText(/no saved prds yet/i))
+  ).toBeVisible();
 });
 
 test('navigating between pages starts at the top', async ({ page }) => {

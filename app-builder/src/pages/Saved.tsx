@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { ErrorBanner } from '../components/Banner';
 import { Page } from '../components/Page';
 import { SavedCardList } from '../components/saved/SavedCardList';
 import { SavedEmpty } from '../components/saved/SavedEmpty';
@@ -6,8 +7,9 @@ import { SavedError } from '../components/saved/SavedError';
 import { SavedKpiStrip } from '../components/saved/SavedKpiStrip';
 import { SavedLoading } from '../components/saved/SavedLoading';
 import { SavedToolbar } from '../components/saved/SavedToolbar';
+import { partialBannerStyle } from '../components/saved/styles';
 import { en } from '../i18n/en';
-import { countThisWeek, parseSavedList, type SavedPrdListItem } from '../lib/savedList';
+import { countThisWeek, parseSavedList, type SavedListResult, type SavedPrdListItem } from '../lib/savedList';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
@@ -15,24 +17,30 @@ type ListState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
   | { status: 'empty' }
-  | { status: 'success'; items: SavedPrdListItem[] };
+  | { status: 'success'; items: SavedPrdListItem[]; rejected: number };
 
 /**
  * Map generic abortable fetch state onto the Saved list view union.
- * Empty success data becomes the dedicated empty view (not an error).
+ * An empty list is the empty view. A list where no row could be read is an
+ * error, never "empty". Some unreadable rows keep `rejected` above zero, and
+ * the page shows the partial result with that count.
  *
  * @param fetchState - Hook state from GET /api/prds.
+ * @param errorMessage - Copy for a list with no readable row.
  * @returns Page-local list state.
  */
 function toListState(
-  fetchState: ReturnType<typeof useAbortableJsonGet<SavedPrdListItem[]>>['state']
+  fetchState: ReturnType<typeof useAbortableJsonGet<SavedListResult>>['state'],
+  errorMessage: string
 ): ListState {
   if (fetchState.status === 'loading') return { status: 'loading' };
   if (fetchState.status === 'error') {
     return { status: 'error', message: fetchState.message };
   }
-  if (fetchState.data.length === 0) return { status: 'empty' };
-  return { status: 'success', items: fetchState.data };
+  const { items, rejected } = fetchState.data;
+  if (items.length === 0 && rejected > 0) return { status: 'error', message: errorMessage };
+  if (items.length === 0) return { status: 'empty' };
+  return { status: 'success', items, rejected };
 }
 
 /**
@@ -52,16 +60,11 @@ export function Saved(): JSX.Element {
     parse: parseSavedList,
     errorMessage: copy.error
   });
-  const state = toListState(fetchState);
+  const state = toListState(fetchState, copy.error);
 
   const kpis = useMemo(() => {
     if (state.status !== 'success') return null;
-    const total = state.items.length;
-    return {
-      thisWeek: countThisWeek(state.items),
-      total,
-      saved: total
-    };
+    return { thisWeek: countThisWeek(state.items), total: state.items.length };
   }, [state]);
 
   return (
@@ -76,7 +79,10 @@ export function Saved(): JSX.Element {
 
       {state.status === 'success' && kpis !== null && (
         <>
-          <SavedKpiStrip thisWeek={kpis.thisWeek} total={kpis.total} saved={kpis.saved} />
+          {state.rejected > 0 && (
+            <ErrorBanner message={copy.partial(state.rejected)} style={partialBannerStyle} />
+          )}
+          <SavedKpiStrip thisWeek={kpis.thisWeek} total={kpis.total} />
           <SavedCardList items={state.items} />
         </>
       )}

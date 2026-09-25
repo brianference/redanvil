@@ -125,8 +125,8 @@
       "role": "button",
       "name": "Retry",
       "routes": ["/saved"],
-      "test": "feature-coverage.spec.ts > saved Retry is present when the list fails to load",
-      "whyNotCrawled": "only rendered when GET /api/prds fails; the crawler sees it under vite preview (no Pages Functions) but not against a live backend. The claiming test drives the error state and asserts the control is in the viewport."
+      "test": "feature-coverage.spec.ts > saved Retry reloads the list after a failure",
+      "whyNotCrawled": "only rendered when GET /api/prds fails; the crawler sees it under vite preview (no Pages Functions) but not against a live backend. The claiming test drives the error state, clicks Retry, and asserts the list recovers."
     },
     {
       "role": "link",

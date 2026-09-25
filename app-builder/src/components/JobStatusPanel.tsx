@@ -2,34 +2,32 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
 import { en } from '../i18n/en';
 import {
-  FETCH_TIMEOUT_MS,
-  createActiveFlag,
-  isAbortError
-} from '../lib/abortableEffect';
-import { messageFromPayload } from '../lib/apiError';
-import {
   JOB_STATUS_POLL_INTERVAL_MS,
-  dismissTrackedJob,
+  clearLastJobId,
   formatBuildStepLine,
   isTerminalJobStatus,
   jobStatusUrl,
   parsePublicJobStatus,
   shortJobId,
-  shouldPollJob,
   shouldShowDeployLink,
   type PublicJobStatus
 } from '../lib/jobStatus';
+import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { theme } from '../theme';
 import { buttonStyle, cardStyle, errorBannerStyle } from './ui';
 
 /** How long the inline "Copied" label stays on the job-id button. */
 const COPIED_FEEDBACK_MS = 2000;
 
-/** What the panel is showing. A later poll does not flash back to loading. */
-type PanelState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; job: PublicJobStatus };
+/**
+ * Whether a job has stopped moving, so polling can end.
+ *
+ * @param job - Latest public status.
+ * @returns True for done, failed, or rejected.
+ */
+function isFinished(job: PublicJobStatus): boolean {
+  return isTerminalJobStatus(job.status);
+}
 
 export interface JobStatusPanelProps {
   /** Job id returned by POST /api/submit. */
@@ -99,9 +97,23 @@ export function JobStatusPanel({
   onStartNew
 }: JobStatusPanelProps): JSX.Element | null {
   const copy = en.jobStatus;
-  const [state, setState] = useState<PanelState>({ status: 'loading' });
   const [hidden, setHidden] = useState(false);
   const [copied, setCopied] = useState(false);
+  // The shared GET owns the timeout, abort-on-unmount, JSON and shape checks.
+  // Polling keeps the last answer on screen until the next one lands, and a
+  // hidden panel passes no URL, which stops it.
+  const { state } = useAbortableJsonGet({
+    url: hidden ? null : jobStatusUrl(jobId),
+    parse: parsePublicJobStatus,
+    errorMessage: copy.errors.loadFailed,
+    messages: {
+      timeout: copy.errors.timeout,
+      network: copy.errors.network,
+      invalid: copy.errors.invalid
+    },
+    pollMs: JOB_STATUS_POLL_INTERVAL_MS,
+    stopPolling: isFinished
+  });
 
   useEffect(() => {
     if (!copied) return;
@@ -112,90 +124,6 @@ export function JobStatusPanel({
       window.clearTimeout(timeoutId);
     };
   }, [copied]);
-
-  useEffect(() => {
-    if (!shouldPollJob(hidden, null)) return;
-    const flag = createActiveFlag();
-    let timer: ReturnType<typeof setInterval> | null = null;
-    let stopped = false;
-    let inFlight: AbortController | null = null;
-
-    /**
-     * Fetch the public status once. A timeout sets an error; a cleanup abort
-     * does not. Terminal statuses stop the interval.
-     */
-    async function poll(): Promise<void> {
-      if (stopped || !flag.isActive()) return;
-      if (!shouldPollJob(hidden, null)) return;
-      inFlight?.abort();
-      const controller = new AbortController();
-      inFlight = controller;
-      let timedOut = false;
-      const timeoutId = setTimeout(() => {
-        timedOut = true;
-        controller.abort();
-      }, FETCH_TIMEOUT_MS);
-
-      try {
-        const response = await fetch(jobStatusUrl(jobId), { signal: controller.signal });
-        clearTimeout(timeoutId);
-        let payload: unknown;
-        try {
-          payload = await response.json();
-        } catch {
-          flag.ifActive(() => {
-            setState({ status: 'error', message: copy.errors.invalid });
-          });
-          return;
-        }
-        if (!response.ok) {
-          flag.ifActive(() => {
-            setState({
-              status: 'error',
-              message: messageFromPayload(payload, copy.errors.loadFailed)
-            });
-          });
-          return;
-        }
-        const job = parsePublicJobStatus(payload);
-        if (job === null) {
-          flag.ifActive(() => {
-            setState({ status: 'error', message: copy.errors.invalid });
-          });
-          return;
-        }
-        flag.ifActive(() => {
-          setState({ status: 'ready', job });
-        });
-        if (!shouldPollJob(false, job.status)) {
-          stopped = true;
-          if (timer !== null) clearInterval(timer);
-        }
-      } catch (error: unknown) {
-        clearTimeout(timeoutId);
-        if (!flag.isActive()) return;
-        if (isAbortError(error)) {
-          if (timedOut) {
-            setState({ status: 'error', message: copy.errors.timeout });
-          }
-          return;
-        }
-        setState({ status: 'error', message: copy.errors.network });
-      }
-    }
-
-    void poll();
-    timer = setInterval(() => {
-      void poll();
-    }, JOB_STATUS_POLL_INTERVAL_MS);
-
-    return () => {
-      flag.deactivate();
-      stopped = true;
-      if (timer !== null) clearInterval(timer);
-      inFlight?.abort();
-    };
-  }, [jobId, copy, hidden]);
 
   /**
    * Copy the full job id and show inline confirmation. A blocked clipboard stays quiet.
@@ -211,11 +139,12 @@ export function JobStatusPanel({
 
   /**
    * Clear the stored id and hide the panel. Polling stops because the panel unmounts
-   * or, if the parent does not drop it, because `hidden` ends the effect.
+   * or, if the parent does not drop it, because a hidden panel passes no URL.
    */
   function handleDismiss(): void {
     setHidden(true);
-    dismissTrackedJob(onDismiss);
+    clearLastJobId();
+    onDismiss();
   }
 
   /**
@@ -223,12 +152,13 @@ export function JobStatusPanel({
    */
   function handleStartNew(): void {
     setHidden(true);
-    dismissTrackedJob(onStartNew);
+    clearLastJobId();
+    onStartNew();
   }
 
   if (hidden) return null;
 
-  const job = state.status === 'ready' ? state.job : null;
+  const job = state.status === 'success' ? state.data : null;
   const presentation = job !== null ? copy.statusPresentation(job.status) : null;
   const tone = job !== null ? badgeTone(job.status) : null;
   const stepView =

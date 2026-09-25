@@ -10,30 +10,54 @@ const MS_PER_DAY = 86_400_000;
 const WEEK_DAYS = 7;
 
 /**
- * Narrow unknown JSON to a SavedPrdListItem array, or null if any row is invalid.
+ * The rows of GET /api/prds that could be read, and how many could not.
+ * A non-zero `rejected` is a partial result the page must say out loud.
  */
-export function parseSavedList(payload: unknown): SavedPrdListItem[] | null {
+export interface SavedListResult {
+  items: SavedPrdListItem[];
+  rejected: number;
+}
+
+/**
+ * Narrow one unknown row to a SavedPrdListItem, or null if any field is wrong.
+ *
+ * @param row - One element of the response array.
+ * @returns The typed row, or null.
+ */
+function toListItem(row: unknown): SavedPrdListItem | null {
+  if (typeof row !== 'object' || row === null) return null;
+  const { id, slug, title, created_at: createdAt } = row as Record<string, unknown>;
+  if (
+    typeof id !== 'string' ||
+    typeof slug !== 'string' ||
+    typeof title !== 'string' ||
+    typeof createdAt !== 'string'
+  ) {
+    return null;
+  }
+  return { id, slug, title, created_at: createdAt };
+}
+
+/**
+ * Narrow the list response, keeping every readable row and counting the rest.
+ *
+ * One malformed row used to discard the whole list, so a single bad record
+ * turned 49 good PRDs into an error screen. Now the good rows render and the
+ * rejected count is shown beside them.
+ *
+ * @param payload - Raw JSON from GET /api/prds.
+ * @returns Readable rows and the rejected count, or null when it is not an array.
+ */
+export function parseSavedList(payload: unknown): SavedListResult | null {
   if (!Array.isArray(payload)) return null;
   const items: SavedPrdListItem[] = [];
+  let rejected = 0;
   for (const row of payload) {
-    if (
-      typeof row !== 'object' ||
-      row === null ||
-      typeof (row as { id?: unknown }).id !== 'string' ||
-      typeof (row as { slug?: unknown }).slug !== 'string' ||
-      typeof (row as { title?: unknown }).title !== 'string' ||
-      typeof (row as { created_at?: unknown }).created_at !== 'string'
-    ) {
-      return null;
-    }
-    items.push({
-      id: (row as { id: string }).id,
-      slug: (row as { slug: string }).slug,
-      title: (row as { title: string }).title,
-      created_at: (row as { created_at: string }).created_at
-    });
+    const item = toListItem(row);
+    if (item === null) rejected += 1;
+    else items.push(item);
   }
-  return items;
+  return { items, rejected };
 }
 
 /**

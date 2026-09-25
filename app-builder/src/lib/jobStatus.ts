@@ -42,20 +42,6 @@ export function isTerminalJobStatus(status: string): boolean {
 }
 
 /**
- * Whether the panel should keep requesting status.
- * A dismissed panel and a terminal job both stop the loop.
- *
- * @param hidden - The user dismissed the panel.
- * @param status - Latest status, or null before the first successful read.
- * @returns False when polling must stop.
- */
-export function shouldPollJob(hidden: boolean, status: string | null): boolean {
-  if (hidden) return false;
-  if (status !== null && isTerminalJobStatus(status)) return false;
-  return true;
-}
-
-/**
  * First characters of a job id for the visible label.
  *
  * @param jobId - Full job id.
@@ -265,15 +251,4 @@ export function clearLastJobId(): void {
   } catch {
     // Private mode and blocked storage must not trap the panel on screen.
   }
-}
-
-/**
- * Dismiss the tracked job: clear storage, then tell the parent to hide the panel.
- * Storage errors are swallowed inside {@link clearLastJobId}; the hide callback still runs.
- *
- * @param hide - Parent callback that drops the tracked id.
- */
-export function dismissTrackedJob(hide: () => void): void {
-  clearLastJobId();
-  hide();
 }

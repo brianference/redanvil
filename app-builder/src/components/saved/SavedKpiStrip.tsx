@@ -7,16 +7,14 @@ export interface SavedKpiStripProps {
   thisWeek: number;
   /** Total builds in the list. */
   total: number;
-  /** Saved count (same as total for the public list). */
-  saved: number;
 }
 
 /**
- * Three-up KPI strip for the Saved dashboard.
+ * KPI strip for the Saved dashboard.
  *
- * @param props - thisWeek, total, and saved counts.
+ * @param props - thisWeek and total counts.
  */
-export function SavedKpiStrip({ thisWeek, total, saved }: SavedKpiStripProps): JSX.Element {
+export function SavedKpiStrip({ thisWeek, total }: SavedKpiStripProps): JSX.Element {
   const copy = en.pages.saved;
   return (
     <div
@@ -27,7 +25,6 @@ export function SavedKpiStrip({ thisWeek, total, saved }: SavedKpiStripProps): J
     >
       <KpiCard value={thisWeek} label={copy.kpiThisWeek} />
       <KpiCard value={total} label={copy.kpiTotal} />
-      <KpiCard value={saved} label={copy.kpiSaved} />
     </div>
   );
 }
