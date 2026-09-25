@@ -74,13 +74,9 @@ export function emptyResponse(request: Request, status: number, methods: string)
  */
 export async function readValidatedBody<T>(
   request: Request,
-  schema: {
-    safeParse: (
-      value: unknown
-    ) => { success: true; data: T } | { success: false; error: { issues: { message: string }[] } };
-  },
+  schema: BoundarySchema<T>,
   methods: string
-): Promise<{ ok: true; data: T } | { ok: false; response: Response }> {
+): Promise<Validated<T>> {
   let raw: unknown;
   try {
     raw = await request.json();
@@ -90,6 +86,35 @@ export async function readValidatedBody<T>(
       response: jsonResponse(request, { error: 'Invalid JSON body' }, 400, methods)
     };
   }
+  return validateInput(request, raw, schema, methods);
+}
+
+/** Anything exposing Zod's `safeParse`. */
+export interface BoundarySchema<T> {
+  safeParse: (
+    value: unknown
+  ) => { success: true; data: T } | { success: false; error: { issues: { message: string }[] } };
+}
+
+/** A validated value, or the 400 Response to return unchanged. */
+export type Validated<T> = { ok: true; data: T } | { ok: false; response: Response };
+
+/**
+ * Schema-validate one boundary input (a body or a path param), failing closed
+ * with a 400 carrying the first issue's message.
+ *
+ * @param request Incoming request.
+ * @param raw Untrusted input.
+ * @param schema Zod schema for it.
+ * @param methods Comma-separated allowed methods for CORS headers on the error.
+ * @returns The validated value, or the 400 Response to return unchanged.
+ */
+export function validateInput<T>(
+  request: Request,
+  raw: unknown,
+  schema: BoundarySchema<T>,
+  methods: string
+): Validated<T> {
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {
     const message = parsed.error.issues[0]?.message ?? 'Invalid input';

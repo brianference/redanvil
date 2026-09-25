@@ -1,11 +1,12 @@
 import type { Env } from '../../lib/env';
-import { jsonResponse } from '../../lib/http';
+import { jsonResponse, validateInput } from '../../lib/http';
+import { prdIdSchema } from '../../lib/ids';
 
 /** CORS allow-methods for this endpoint (GET only). */
 const ALLOWED_METHODS = 'GET';
 
 /**
- * GET /api/prd/:id — fetch one saved PRD by id. Missing → 404; DB error → 500.
+ * GET /api/prd/:id — fetch one saved PRD by id. Malformed id → 400; missing → 404; DB error → 500.
  */
 export async function onRequestGet(context: {
   request: Request;
@@ -13,17 +14,14 @@ export async function onRequestGet(context: {
   params: { id?: string };
 }): Promise<Response> {
   const { request, env, params } = context;
-  const id = params.id?.trim() ?? '';
-
-  if (id.length === 0) {
-    return jsonResponse(request, { error: 'Missing PRD id' }, 400, ALLOWED_METHODS);
-  }
+  const id = validateInput(request, params.id, prdIdSchema, ALLOWED_METHODS);
+  if (!id.ok) return id.response;
 
   try {
     const { results } = await env.DB.prepare(
       'SELECT id, slug, title, prompt, markdown, created_at FROM prds WHERE id = ?'
     )
-      .bind(id)
+      .bind(id.data)
       .all();
 
     const row = results[0];

@@ -1,4 +1,5 @@
 import { safeHttpUrl } from '../../../design-system/safeHttpUrl';
+import { UUID_PATTERN } from './ids';
 
 /** How often the status panel polls GET /api/jobs/:id/status. */
 export const JOB_STATUS_POLL_INTERVAL_MS = 15_000;
@@ -11,10 +12,6 @@ export const JOB_ID_SHORT_LENGTH = 8;
 
 /** Statuses that stop polling. Anything else keeps the 15s loop. */
 const TERMINAL_JOB_STATUSES: ReadonlySet<string> = new Set(['done', 'failed', 'rejected']);
-
-/** UUID shape crypto.randomUUID() returns. */
-const JOB_ID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 /** Max length of a deploy URL, matching the status API. */
 const MAX_DEPLOY_URL_LEN = 200;
@@ -134,7 +131,7 @@ export function formatBuildStepLine(
  * @returns Whether it is a lowercase UUID.
  */
 export function isJobId(value: string): boolean {
-  return JOB_ID_PATTERN.test(value);
+  return UUID_PATTERN.test(value);
 }
 
 /**

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Env } from '../../../lib/env';
-import { jsonResponse, readValidatedBody } from '../../../lib/http';
+import { jsonResponse, readValidatedBody, validateInput } from '../../../lib/http';
+import { jobIdSchema } from '../../../lib/ids';
 import { authorizeRunner } from '../../../lib/runnerAuth';
 
 /** CORS allow-methods for this endpoint (public GET, runner POST). */
@@ -86,54 +87,21 @@ interface StatusContext {
   params: { id?: string };
 }
 
-/**
- * Path id, or a 400 response when it is missing.
- *
- * @param context - Pages Function context.
- * @returns The id, or the response to return.
- */
-function requireJobId(
-  context: StatusContext
-): { ok: true; id: string } | { ok: false; response: Response } {
-  const id = context.params.id?.trim() ?? '';
-  if (id.length === 0) {
-    return {
-      ok: false,
-      response: jsonResponse(context.request, { error: 'Missing job id' }, 400, ALLOWED_METHODS)
-    };
-  }
-  return { ok: true, id };
-}
+/** Empty optional columns read as null in the public body. */
+const emptyAsNull = z
+  .string()
+  .nullable()
+  .transform((value) => (value === null || value.length === 0 ? null : value));
 
-/**
- * Read a string column, treating null and non-strings as null.
- *
- * @param value - Unknown column value.
- * @returns The string, or null.
- */
-function asNullableString(value: unknown): string | null {
-  if (typeof value !== 'string' || value.length === 0) return null;
-  return value;
-}
-
-/**
- * True when a public status row has id and status strings.
- *
- * @param value - Unknown D1 row.
- * @returns Whether the row can be mapped to the public body.
- */
-function isStatusRow(value: unknown): value is {
-  id: string;
-  status: string;
-  step: unknown;
-  detail: unknown;
-  updated_at: unknown;
-  deploy_url: unknown;
-} {
-  if (typeof value !== 'object' || value === null) return false;
-  const row = value as Record<string, unknown>;
-  return typeof row['id'] === 'string' && typeof row['status'] === 'string';
-}
+/** A row from PUBLIC_STATUS_SQL. */
+const statusRowSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  step: emptyAsNull,
+  detail: emptyAsNull,
+  updated_at: emptyAsNull,
+  deploy_url: emptyAsNull
+});
 
 /**
  * GET /api/jobs/:id/status — public progress for one job.
@@ -146,24 +114,25 @@ function isStatusRow(value: unknown): value is {
  */
 export async function onRequestGet(context: StatusContext): Promise<Response> {
   const { request, env } = context;
-  const idResult = requireJobId(context);
+  const idResult = validateInput(request, context.params.id, jobIdSchema, ALLOWED_METHODS);
   if (!idResult.ok) return idResult.response;
 
   try {
-    const { results } = await env.DB.prepare(PUBLIC_STATUS_SQL).bind(idResult.id).all();
-    const row = results[0];
-    if (!isStatusRow(row)) {
+    const { results } = await env.DB.prepare(PUBLIC_STATUS_SQL).bind(idResult.data).all();
+    const parsed = statusRowSchema.safeParse(results[0]);
+    if (!parsed.success) {
       return jsonResponse(request, { error: 'Job not found' }, 404, ALLOWED_METHODS);
     }
+    const row = parsed.data;
     return jsonResponse(
       request,
       {
         id: row.id,
         status: row.status,
-        step: asNullableString(row.step),
-        detail: asNullableString(row.detail),
-        updatedAt: asNullableString(row.updated_at),
-        deployUrl: asNullableString(row.deploy_url)
+        step: row.step,
+        detail: row.detail,
+        updatedAt: row.updated_at,
+        deployUrl: row.deploy_url
       },
       200,
       ALLOWED_METHODS
@@ -189,7 +158,7 @@ export async function onRequestPost(context: StatusContext): Promise<Response> {
   const auth = await authorizeRunner(request, env, ALLOWED_METHODS);
   if (!auth.ok) return auth.response;
 
-  const idResult = requireJobId(context);
+  const idResult = validateInput(request, context.params.id, jobIdSchema, ALLOWED_METHODS);
   if (!idResult.ok) return idResult.response;
 
   const parsed = await readValidatedBody(request, statusBodySchema, ALLOWED_METHODS);
@@ -206,7 +175,7 @@ export async function onRequestPost(context: StatusContext): Promise<Response> {
         executionId ?? null,
         deployUrl ?? null,
         now,
-        idResult.id
+        idResult.data
       )
       .run();
     if ((updated.meta?.changes ?? 0) !== 1) {
