@@ -1,6 +1,12 @@
 import { en } from '../i18n/en';
 
 /** Narrow style gives the compact labels the run cards use ("3h ago", "2mo ago"). */
+/** Approximate month and year lengths for coarse age buckets. */
+const DAYS_PER_MONTH = 30;
+const DAYS_PER_YEAR = 365;
+/** Largest month count shown before switching to years. */
+const MAX_MONTHS = 11;
+
 const formatter = new Intl.RelativeTimeFormat(en.relativeTime.locale, { style: 'narrow' });
 
 /**
@@ -25,10 +31,10 @@ export function formatRelativeTime(iso: string, nowMs: number = Date.now()): str
   if (hours < 24) return formatter.format(-hours, 'hour');
 
   const days = Math.floor(hours / 24);
-  if (days < 30) return formatter.format(-days, 'day');
+  if (days < DAYS_PER_MONTH) return formatter.format(-days, 'day');
 
-  const months = Math.floor(days / 30);
-  if (months < 12) return formatter.format(-months, 'month');
-
-  return formatter.format(-Math.floor(days / 365), 'year');
+  // Years are decided on days first: 360-364 days is 12 thirty-day months but
+  // not yet a year, and bucketing by months printed "0y ago" there.
+  if (days >= DAYS_PER_YEAR) return formatter.format(-Math.floor(days / DAYS_PER_YEAR), 'year');
+  return formatter.format(-Math.min(MAX_MONTHS, Math.floor(days / DAYS_PER_MONTH)), 'month');
 }

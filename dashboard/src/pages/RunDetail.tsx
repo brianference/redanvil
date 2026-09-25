@@ -100,7 +100,9 @@ export function RunDetailView({ slug, state }: RunDetailViewProps): JSX.Element 
  */
 export function RunDetail(): JSX.Element {
   const { slug: rawSlug } = useParams<{ slug: string }>();
-  const slug = rawSlug !== undefined ? decodeURIComponent(rawSlug) : '';
+  // useParams already decodes; decoding again threw URIError on a slug with
+  // an encoded '%' and blanked the page.
+  const slug = rawSlug ?? '';
   const state = useRuns();
 
   useDocumentMeta({

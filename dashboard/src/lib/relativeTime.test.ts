@@ -19,6 +19,15 @@ describe('formatRelativeTime', () => {
     expect(formatRelativeTime('2024-07-21T12:00:00.000Z', now)).toBe('2y ago');
   });
 
+  it('never prints 0y ago in the 360-364 day gap between months and years', () => {
+    const DAY_MS = 86_400_000;
+    for (const days of [359, 360, 364]) {
+      const iso = new Date(now - days * DAY_MS).toISOString();
+      expect(formatRelativeTime(iso, now)).toBe('11mo ago');
+    }
+    expect(formatRelativeTime(new Date(now - 365 * DAY_MS).toISOString(), now)).toBe('1y ago');
+  });
+
   it('returns the raw string when the timestamp is invalid', () => {
     expect(formatRelativeTime('not-a-date', now)).toBe('not-a-date');
   });

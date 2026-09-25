@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { linkifyText } from '../lib/linkify';
+import { linkifyText } from '../../../design-system/linkify';
 import { theme } from '../theme';
 
 /** One labeled body block under a content-page intro. */
@@ -85,12 +85,12 @@ export function ContentSections({ intro, updated, sections }: ContentSectionsPro
         {sections.map((section) => (
           <section key={section.heading} style={sectionStyle}>
             <h2 style={headingStyle}>{section.heading}</h2>
-            <p style={bodyStyle}>{linkifyText(section.body)}</p>
+            <p style={bodyStyle}>{linkifyText(section.body, theme.color.accent)}</p>
             {section.items !== undefined && section.items.length > 0 && (
               <ul style={listStyle}>
                 {section.items.map((item) => (
                   <li key={item} style={{ marginBottom: theme.space.xs }}>
-                    {linkifyText(item)}
+                    {linkifyText(item, theme.color.accent)}
                   </li>
                 ))}
               </ul>

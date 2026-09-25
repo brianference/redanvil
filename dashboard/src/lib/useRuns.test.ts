@@ -106,6 +106,14 @@ describe('fetchRuns', () => {
     expect(result).toEqual({ status: 'error', message: 'Timed out after 10s' });
   });
 
+  it('reports a non-Error rejection as a generic failure, not a success', async () => {
+    vi.stubGlobal('fetch', async () => {
+      // A thrown non-Error value has no message to show.
+      throw 'offline';
+    });
+    expect(await fetchRuns(FEED_URL)).toEqual({ status: 'error', message: 'load failed' });
+  });
+
   it('reports a transport failure with its own message', async () => {
     vi.stubGlobal('fetch', async () => {
       throw new TypeError('Failed to fetch');

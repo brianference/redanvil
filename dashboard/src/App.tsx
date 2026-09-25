@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ScrollToTop } from './components/ScrollToTop';
 import { Home } from './pages/Home';
 import { About } from './pages/About';
 import { Terms } from './pages/Terms';
@@ -8,11 +7,13 @@ import { Contact } from './pages/Contact';
 import { RunDetail } from './pages/RunDetail';
 import { NotFound } from './pages/NotFound';
 
-/** App router: composes the required pages plus run detail. */
+/**
+ * App router: composes the required pages plus run detail. Scroll reset on
+ * navigation lives in the shared Page every route renders through.
+ */
 export function App(): JSX.Element {
   return (
     <BrowserRouter>
-      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/run/:slug" element={<RunDetail />} />

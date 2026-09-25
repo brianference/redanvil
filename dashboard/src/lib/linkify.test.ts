@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { isValidElement } from 'react';
-import { linkifyText } from './linkify';
+import { linkifyText as linkifyShared } from '../../../design-system/linkify';
+import { theme } from '../theme';
+
+/** The shared helper as ContentSections calls it, with this app's accent. */
+const linkifyText = (text: string): ReturnType<typeof linkifyShared> =>
+  linkifyShared(text, theme.color.accent);
 
 describe('linkifyText', () => {
   it('returns plain text as a single string segment when there is no URL', () => {
