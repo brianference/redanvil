@@ -28,8 +28,12 @@ const inputStyle: CSSProperties = {
 };
 
 /**
- * Filter runs by slug against a (already-trimmed, lowercased) query.
- * Empty query matches everything.
+ * Whether a run slug matches the visitor's raw query: trimmed, case-insensitive
+ * substring. A blank query matches everything.
+ *
+ * @param slug - Run slug.
+ * @param query - Raw query as typed.
+ * @returns True when the slug contains the normalised query.
  */
 export function matchesRunQuery(slug: string, query: string): boolean {
   const q = query.trim().toLowerCase();
@@ -52,17 +56,18 @@ export function RunSearch({ value, onChange }: RunSearchProps): JSX.Element {
 
   return (
     <div style={toolbarStyle} data-testid="live-search">
-      <label htmlFor="run-search" style={{ display: 'none' }}>
+      {/* Visually hidden, not display:none: a display:none label never reaches
+          the accessibility tree, so it named nothing. type="search" already
+          carries the searchbox role. */}
+      <label htmlFor="run-search" className="ra-visually-hidden">
         {en.pages.home.searchLabel}
       </label>
       <input
         id="run-search"
         type="search"
-        role="searchbox"
         value={value}
         onChange={handleChange}
         placeholder={en.pages.home.searchPlaceholder}
-        aria-label={en.pages.home.searchLabel}
         style={inputStyle}
         data-testid="filter-search"
       />

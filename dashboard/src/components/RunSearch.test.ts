@@ -30,13 +30,16 @@ describe('matchesRunQuery', () => {
 });
 
 describe('RunSearch', () => {
-  it('renders an accessible text search input, not a bare select', () => {
+  it('names the search field with a real label, not a duplicate aria-label', () => {
     const html = renderToStaticMarkup(
       createElement(RunSearch, { value: '', onChange: () => undefined })
     );
-    expect(html).toContain('type="search"');
-    expect(html).toContain(`aria-label="${en.pages.home.searchLabel}"`);
-    expect(html).not.toContain('<select');
+    // RunSearch.browser.test.ts proves this label reaches the accessibility tree.
+    expect(html).toMatch(
+      new RegExp(`<label for="run-search"[^>]*>${en.pages.home.searchLabel}</label>`)
+    );
+    expect(html).toContain('id="run-search"');
+    expect(html).not.toContain('aria-label=');
   });
 
   it('reflects the controlled value', () => {

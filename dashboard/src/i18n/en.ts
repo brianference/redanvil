@@ -44,6 +44,8 @@ export const en = {
       title: 'Runs',
       loading: 'Loading live runs…',
       error: (message: string): string => `Could not load runs: ${message}`,
+      partial: (hidden: number, shown: number): string =>
+        `Could not read ${hidden} of the ${hidden + shown} runs in the feed. Unreadable runs are hidden, and the totals below cover only the ${shown} shown.`,
       empty: 'No runs recorded yet.',
       summaryLabel: 'Build stats',
       kpiTotal: 'Total runs',
@@ -66,7 +68,7 @@ export const en = {
       title: 'About',
       updated: 'Last updated 27 July 2026',
       intro:
-        'RedAnvil forges full-stack web apps behind an automated quality gate. This site (https://redanvil-dashboard.pages.dev) is the public, read-only dashboard for RedAnvil\'s own build run results.',
+        "RedAnvil forges full-stack web apps behind an automated quality gate. This site (https://redanvil-dashboard.pages.dev) is the public, read-only dashboard for RedAnvil's own build run results.",
       sections: [
         {
           heading: 'What RedAnvil is',
@@ -78,7 +80,7 @@ export const en = {
         },
         {
           heading: 'What the scores mean',
-          body: 'Each score is RedAnvil\'s own automated gate result for one of its own builds. It is a machine-checked rubric score from that run, not a third-party certification, security audit, compliance badge, or guarantee that the app is free of bugs. The number is only as good as the rules wired into that gate and the evidence recorded for that run.'
+          body: "Each score is RedAnvil's own automated gate result for one of its own builds. It is a machine-checked rubric score from that run, not a third-party certification, security audit, compliance badge, or guarantee that the app is free of bugs. The number is only as good as the rules wired into that gate and the evidence recorded for that run."
         },
         {
           heading: 'Where the data comes from',
@@ -86,7 +88,7 @@ export const en = {
         },
         {
           heading: 'What this dashboard is not',
-          body: 'This view is read-only. Nothing here starts, edits, restarts, or deletes a build. It is not a multi-tenant status product for other companies\' CI, and it does not offer accounts, billing, or write APIs for visitors.'
+          body: "This view is read-only. Nothing here starts, edits, restarts, or deletes a build. It is not a multi-tenant status product for other companies' CI, and it does not offer accounts, billing, or write APIs for visitors."
         },
         {
           heading: 'Honest limitations',
@@ -131,7 +133,7 @@ export const en = {
       title: 'Terms',
       updated: 'Last updated 31 July 2026',
       intro:
-        'These terms cover the RedAnvil dashboard at https://redanvil-dashboard.pages.dev. The dashboard is a free, read-only site that lists public quality-gate results for RedAnvil\'s own builds. By loading or using the site you agree to these terms. If you do not agree, do not use it. There are no paid plans and no user accounts on this product.',
+        "These terms cover the RedAnvil dashboard at https://redanvil-dashboard.pages.dev. The dashboard is a free, read-only site that lists public quality-gate results for RedAnvil's own builds. By loading or using the site you agree to these terms. If you do not agree, do not use it. There are no paid plans and no user accounts on this product.",
       sections: [
         {
           heading: 'Acceptance and eligibility',
@@ -147,7 +149,7 @@ export const en = {
         },
         {
           heading: 'Central disclaimer',
-          body: 'Scores, pass/fail flags, coverage counts, iteration histories, and rule results shown here are RedAnvil\'s own automated gate outcomes for its own builds. They are not a third-party certification of security, quality, accessibility, fitness for purpose, uptime, or legal compliance. Do not treat a pass badge, numeric score, or green status as a warranty, audit report, penetration-test result, or guarantee that a linked deploy is free of bugs. Feed content can lag a live deploy, omit runs that never published a result, reflect an older rubric version, or be temporarily wrong while maintainers correct the repository. Deploy links may point at apps that later go offline or change.'
+          body: "Scores, pass/fail flags, coverage counts, iteration histories, and rule results shown here are RedAnvil's own automated gate outcomes for its own builds. They are not a third-party certification of security, quality, accessibility, fitness for purpose, uptime, or legal compliance. Do not treat a pass badge, numeric score, or green status as a warranty, audit report, penetration-test result, or guarantee that a linked deploy is free of bugs. Feed content can lag a live deploy, omit runs that never published a result, reflect an older rubric version, or be temporarily wrong while maintainers correct the repository. Deploy links may point at apps that later go offline or change."
         },
         {
           heading: 'How run data is presented',
@@ -170,7 +172,7 @@ export const en = {
         },
         {
           heading: 'Third-party services and links',
-          body: 'The site is hosted on Cloudflare Pages. The run feed is fetched from GitHub\'s raw content host for the public repository. Run rows may link to deployed apps and other external hosts. Those services have their own terms and privacy policies. We are not responsible for third-party content, uptime, security, or practices. Following a deploy link or opening the GitHub repository leaves this site and is governed by that destination\'s rules.'
+          body: "The site is hosted on Cloudflare Pages. The run feed is fetched from GitHub's raw content host for the public repository. Run rows may link to deployed apps and other external hosts. Those services have their own terms and privacy policies. We are not responsible for third-party content, uptime, security, or practices. Following a deploy link or opening the GitHub repository leaves this site and is governed by that destination's rules."
         },
         {
           heading: 'Disclaimer of warranties',
@@ -229,7 +231,7 @@ export const en = {
           body: 'From visitors, this dashboard does not collect names, email addresses, passwords, payment details, phone numbers, or form fields that create a user profile. There are no newsletter, checkout, or registration forms on this site. The only intentional client-side preference RedAnvil application code stores is your theme choice.',
           items: [
             'Theme preference on your device only: localStorage key theme with value light or dark, set when you use the theme toggle',
-            'Request metadata that Cloudflare may log while serving Pages and the health function (for example IP address, user agent, path, and timestamps under Cloudflare\'s own practices)',
+            "Request metadata that Cloudflare may log while serving Pages and the health function (for example IP address, user agent, path, and timestamps under Cloudflare's own practices)",
             'Ordinary browser behaviour such as HTTP cache entries for static assets you load'
           ]
         },
@@ -247,7 +249,7 @@ export const en = {
           heading: 'Why we process this information',
           body: 'This is why we process the limited data above — only to run the features the site actually provides:',
           items: [
-            'Render public run history so anyone can inspect how RedAnvil\'s own builds scored against the gate',
+            "Render public run history so anyone can inspect how RedAnvil's own builds scored against the gate",
             'Remember light or dark theme on the same browser after you toggle it',
             'Answer a simple health check so operators can confirm the Pages Function runtime is up',
             'Operate hosting and edge delivery on Cloudflare infrastructure'
@@ -257,8 +259,8 @@ export const en = {
           heading: 'Third-party processors and subprocessors',
           body: 'Infrastructure this dashboard is built on:',
           items: [
-            'Cloudflare Pages hosts static assets and runs the /api/health Pages Function. Cloudflare receives the request metadata needed to serve those resources under Cloudflare\'s terms and privacy policy.',
-            'GitHub hosts the public source repository and serves the results/all.json feed via raw.githubusercontent.com. When your browser loads the run list, it requests that URL directly; GitHub processes that request under GitHub\'s policies.',
+            "Cloudflare Pages hosts static assets and runs the /api/health Pages Function. Cloudflare receives the request metadata needed to serve those resources under Cloudflare's terms and privacy policy.",
+            "GitHub hosts the public source repository and serves the results/all.json feed via raw.githubusercontent.com. When your browser loads the run list, it requests that URL directly; GitHub processes that request under GitHub's policies.",
             'Optional outbound links (repository issues, deploy URLs on other hosts, the sibling app builder) send you to those destinations under their own policies when you choose to follow them.'
           ]
         },
@@ -272,7 +274,7 @@ export const en = {
         },
         {
           heading: 'Where data lives and international transfers',
-          body: 'Static assets and the health function for this dashboard run on Cloudflare\'s network. The run feed is stored in the public GitHub repository and delivered from GitHub\'s content infrastructure. Cloudflare and GitHub operate globally, so request handling may involve processing outside your country. We do not maintain a separate RedAnvil user database for dashboard visitors.'
+          body: "Static assets and the health function for this dashboard run on Cloudflare's network. The run feed is stored in the public GitHub repository and delivered from GitHub's content infrastructure. Cloudflare and GitHub operate globally, so request handling may involve processing outside your country. We do not maintain a separate RedAnvil user database for dashboard visitors."
         },
         {
           heading: 'Retention and deletion',
@@ -315,7 +317,6 @@ export const en = {
       `${label}: score ${score} versus threshold ${threshold}`
   },
   runList: {
-    empty: 'No runs yet.',
     caption: 'Build runs',
     listAria: 'Recent builds',
     slug: 'Slug',
@@ -343,6 +344,8 @@ export const en = {
     loading: 'Loading run detail…',
     error: (message: string): string => `Could not load run: ${message}`,
     notFound: 'No run found for this slug.',
+    partialNotFound: (hidden: number): string =>
+      `No readable run matches this slug. ${hidden} of the runs in the feed could not be read, so this run may be one of them.`,
     backToRuns: 'Back to all runs',
     missingSlug: 'Run',
     headerLabel: 'Run summary',

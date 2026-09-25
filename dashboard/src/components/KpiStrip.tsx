@@ -19,8 +19,8 @@ const stripStyle: CSSProperties = {
 const cardStyle: CSSProperties = {
   background: theme.color.surface,
   border: `1px solid ${theme.color.border}`,
-  borderRadius: 10,
-  padding: `${theme.space.sm + 2}px ${theme.space.sm}px`,
+  borderRadius: theme.radius.md,
+  padding: theme.space.sm,
   boxShadow: theme.color.shadow,
   minWidth: 0
 };
@@ -43,22 +43,32 @@ const labelStyle: CSSProperties = {
   fontSize: theme.type.scale[1],
   fontWeight: 600,
   color: theme.color.muted,
-  marginTop: 3,
+  marginTop: theme.space.xs,
   textTransform: 'uppercase',
   letterSpacing: '0.04em',
   overflowWrap: 'anywhere'
 };
 
 /**
+ * Display value for the average score: a dash when there are no runs to
+ * average, the whole number when it is one, otherwise one decimal place.
+ *
+ * @param summary - Aggregate stats.
+ * @returns The text shown in the average card.
+ */
+export function formatAverage(summary: RunSummary): string {
+  if (summary.total === 0) return '—';
+  if (Number.isInteger(summary.avgScore)) return String(summary.avgScore);
+  return summary.avgScore.toFixed(1);
+}
+
+/**
  * Glanceable KPI row: total runs, passed count, average score — all from real summarize().
+ *
+ * @returns The KPI group.
  */
 export function KpiStrip({ summary }: KpiStripProps): JSX.Element {
-  const avgDisplay =
-    summary.total === 0
-      ? '—'
-      : Number.isInteger(summary.avgScore)
-        ? String(summary.avgScore)
-        : summary.avgScore.toFixed(1);
+  const avgDisplay = formatAverage(summary);
 
   return (
     <div

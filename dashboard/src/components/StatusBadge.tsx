@@ -27,7 +27,8 @@ export function StatusBadge({ passed, score, threshold }: StatusBadgeProps): JSX
     alignItems: 'center',
     gap: theme.space.xs,
     padding: `${theme.space.xs}px ${theme.space.sm}px`,
-    borderRadius: 999,
+    // lg (20) exceeds half the badge height, so it still renders as a pill.
+    borderRadius: theme.radius.lg,
     fontSize: theme.type.scale[1],
     fontWeight: 700,
     letterSpacing: '0.03em',

@@ -72,4 +72,36 @@ describe('HomeBody', () => {
     expect(html).toContain(en.pages.home.searchLabel);
     expect(html).not.toContain(`href="/run/${sampleRun().slug}"`);
   });
+
+  it('narrows the list to the runs whose slug matches the query, under the score note', () => {
+    const runs = [
+      sampleRun(),
+      sampleRun({ slug: 'az-planting-calendar' }),
+      sampleRun({ slug: 'dashboard' })
+    ];
+    const html = renderHome({ status: 'ready', runs }, ' AZ ');
+    expect(html).toContain(en.pages.home.scoreNote.replace(/"/g, '&quot;'));
+    expect(html).toContain('href="/run/az-planting-calendar"');
+    expect(html).not.toContain('href="/run/app-builder"');
+    expect(html).not.toContain('href="/run/dashboard"');
+    expect(html).toContain(en.pages.home.recentMeta(1));
+  });
+
+  it('shows the readable runs and says how many rows were hidden when the feed is partial', () => {
+    const html = renderHome({
+      status: 'partial',
+      runs: [sampleRun(), sampleRun({ slug: 'dashboard' })],
+      rejected: ['malformed run at finalScore: Required']
+    });
+    expect(html).toContain(en.pages.home.partial(1, 2));
+    expect(html).toContain('role="alert"');
+    expect(html).toContain('href="/run/app-builder"');
+    expect(html).toContain('href="/run/dashboard"');
+  });
+
+  it('does not show the partial notice when every row was read', () => {
+    const html = renderHome({ status: 'ready', runs: [sampleRun()] });
+    expect(html).not.toContain('role="alert"');
+    expect(html).toContain('href="/run/app-builder"');
+  });
 });

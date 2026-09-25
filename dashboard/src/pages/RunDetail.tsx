@@ -1,315 +1,29 @@
-import type { CSSProperties } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { AlertNote, LoadingNote, StatusNote } from '../components/FeedStatus';
 import { Page } from '../components/Page';
-import { StatusBadge } from '../components/StatusBadge';
+import { BackToRunsLink } from '../components/runDetail/BackToRunsLink';
+import { IterationHistory } from '../components/runDetail/IterationHistory';
+import { RuleBreakdown } from '../components/runDetail/RuleBreakdown';
+import { RunHeader } from '../components/runDetail/RunHeader';
 import { en } from '../i18n/en';
-import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
-import { gatedCommitUrl, gateResultUrl } from '../lib/runLinks';
-import { groupRulesByLane, type Run, type RunIteration, type RunRule } from '../lib/summary';
+import type { Run } from '../lib/summary';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 import { type RunsState, useRuns } from '../lib/useRuns';
-import { theme } from '../theme';
 
 /**
- * Format a finishedAt ISO string for display; falls back to the raw value.
+ * Page title and breadcrumb for a detail route.
+ *
+ * @param slug - Decoded route slug; empty when the param is missing.
+ * @returns The slug, or the generic run label when there is none.
  */
-function formatFinishedAt(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short'
-  });
-}
-
-const cardStyle: CSSProperties = {
-  fontFamily: theme.type.family,
-  color: theme.color.text,
-  background: theme.color.surface,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.md,
-  padding: theme.space.md,
-  marginBottom: theme.space.lg
-};
-
-const sectionTitleStyle: CSSProperties = {
-  margin: `0 0 ${theme.space.md}px`,
-  fontSize: theme.type.scale[3],
-  fontWeight: 600,
-  letterSpacing: '-0.01em'
-};
-
-const metaRowStyle: CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: theme.space.md,
-  listStyle: 'none',
-  margin: 0,
-  padding: 0
-};
-
-const metaItemStyle: CSSProperties = {
-  minWidth: '8rem',
-  flex: '1 1 8rem'
-};
-
-const metaLabelStyle: CSSProperties = {
-  display: 'block',
-  color: theme.color.muted,
-  fontSize: theme.type.scale[1],
-  fontWeight: 600,
-  marginBottom: theme.space.xs
-};
-
-const linkStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  minHeight: theme.touch,
-  color: theme.color.accent,
-  textDecoration: 'underline',
-  textUnderlineOffset: 3
-};
-
-const recoveryLinkStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  minHeight: theme.touch,
-  marginTop: theme.space.md,
-  color: theme.color.accent,
-  fontWeight: 600,
-  textDecoration: 'underline',
-  textUnderlineOffset: 3
-};
-
-/**
- * Header card: score, threshold, pass/fail, coverage, finished time, deploy link,
- * and the two external sources that back the numbers (result file, gated commit).
- */
-function RunHeader({ run }: { run: Run }): JSX.Element {
-  const commitUrl = gatedCommitUrl(run.commit);
-  return (
-    <section style={cardStyle} aria-label={en.runDetail.headerLabel}>
-      <ul style={metaRowStyle}>
-        <li style={metaItemStyle}>
-          <span style={metaLabelStyle}>{en.runDetail.scoreLabel}</span>
-          <span
-            style={{
-              display: 'inline-flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              gap: theme.space.xs
-            }}
-          >
-            <span style={{ fontSize: theme.type.scale[4], fontWeight: 600 }}>
-              {en.runDetail.scoreValue(run.finalScore, run.threshold)}
-            </span>
-            <StatusBadge passed={run.passed} score={run.finalScore} threshold={run.threshold} />
-          </span>
-        </li>
-        <li style={metaItemStyle}>
-          <span style={metaLabelStyle}>{en.runDetail.coverageLabel}</span>
-          <span>{en.runDetail.coverageValue(run.evaluated, run.total)}</span>
-        </li>
-        <li style={metaItemStyle}>
-          <span style={metaLabelStyle}>{en.runDetail.finishedLabel}</span>
-          <time dateTime={run.finishedAt}>{formatFinishedAt(run.finishedAt)}</time>
-        </li>
-        <li style={metaItemStyle}>
-          <span style={metaLabelStyle}>{en.runDetail.deployLabel}</span>
-          {run.deployUrl !== null && run.deployUrl !== '' ? (
-            <SafeExternalLink href={run.deployUrl} rel="noreferrer" style={linkStyle}>
-              {en.runDetail.openDeploy}
-            </SafeExternalLink>
-          ) : (
-            <span style={{ color: theme.color.muted }}>{en.runDetail.none}</span>
-          )}
-        </li>
-        <li style={metaItemStyle}>
-          <span style={metaLabelStyle}>{en.runDetail.resultLabel}</span>
-          <SafeExternalLink href={gateResultUrl(run.slug)} style={linkStyle}>
-            {en.runDetail.openResult}
-          </SafeExternalLink>
-        </li>
-        <li style={metaItemStyle}>
-          <span style={metaLabelStyle}>{en.runDetail.commitLabel}</span>
-          {commitUrl !== null && run.commit !== null ? (
-            <SafeExternalLink href={commitUrl} style={linkStyle}>
-              <code>{en.runDetail.commitValue(run.commit)}</code>
-            </SafeExternalLink>
-          ) : (
-            <span style={{ color: theme.color.muted }}>{en.runDetail.none}</span>
-          )}
-        </li>
-      </ul>
-    </section>
-  );
-}
-
-/**
- * One iteration row: index, score, and blockers that failed that pass.
- */
-function IterationItem({ iteration }: { iteration: RunIteration }): JSX.Element {
-  const hasBlockers = iteration.blockers.length > 0;
-  return (
-    <li
-      style={{
-        borderBottom: `1px solid ${theme.color.border}`,
-        padding: `${theme.space.sm}px 0`,
-        listStyle: 'none'
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'baseline',
-          gap: theme.space.sm,
-          marginBottom: hasBlockers ? theme.space.xs : 0
-        }}
-      >
-        <span style={{ fontWeight: 600 }}>{en.runDetail.iterationIndex(iteration.index)}</span>
-        <span style={{ color: theme.color.muted }}>
-          {en.runDetail.iterationScore(iteration.score)}
-        </span>
-      </div>
-      {hasBlockers ? (
-        <ul
-          style={{
-            margin: 0,
-            paddingLeft: theme.space.lg,
-            color: theme.color.text,
-            fontSize: theme.type.scale[1]
-          }}
-        >
-          {iteration.blockers.map((blocker) => (
-            <li key={blocker} style={{ marginBottom: 2 }}>
-              {blocker}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p style={{ margin: 0, color: theme.color.muted, fontSize: theme.type.scale[1] }}>
-          {en.runDetail.noBlockers}
-        </p>
-      )}
-    </li>
-  );
-}
-
-/**
- * Iteration history: proof the score was earned over N passes with blockers.
- */
-function IterationHistory({ iterations }: { iterations: readonly RunIteration[] }): JSX.Element {
-  return (
-    <section style={cardStyle} aria-labelledby="run-iterations-heading">
-      <h2 id="run-iterations-heading" style={sectionTitleStyle}>
-        {en.runDetail.iterationsHeading}
-      </h2>
-      {iterations.length === 0 ? (
-        <p role="status" style={{ margin: 0, color: theme.color.muted }}>
-          {en.runDetail.iterationsEmpty}
-        </p>
-      ) : (
-        <>
-          <p
-            style={{
-              margin: `0 0 ${theme.space.sm}px`,
-              color: theme.color.muted,
-              fontSize: theme.type.scale[1]
-            }}
-          >
-            {en.runDetail.iterationsSummary(iterations.length)}
-          </p>
-          <ol style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-            {iterations.map((iteration) => (
-              <IterationItem key={iteration.index} iteration={iteration} />
-            ))}
-          </ol>
-        </>
-      )}
-    </section>
-  );
-}
-
-/**
- * Single rule row with non-color PASS/FAIL marker.
- */
-function RuleRow({ rule }: { rule: RunRule }): JSX.Element {
-  return (
-    <li
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: theme.space.sm,
-        padding: `${theme.space.xs}px 0`,
-        borderBottom: `1px solid ${theme.color.border}`,
-        listStyle: 'none',
-        fontSize: theme.type.scale[2]
-      }}
-    >
-      <code
-        style={{
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-          fontSize: theme.type.scale[2],
-          wordBreak: 'break-word'
-        }}
-      >
-        {rule.ruleId}
-      </code>
-      <StatusBadge passed={rule.passed} />
-    </li>
-  );
-}
-
-/**
- * Per-rule breakdown grouped by lane prefix — the gate evidence.
- */
-function RuleBreakdown({ rules }: { rules: readonly RunRule[] }): JSX.Element {
-  const groups = groupRulesByLane(rules);
-  return (
-    <section style={cardStyle} aria-labelledby="run-rules-heading">
-      <h2 id="run-rules-heading" style={sectionTitleStyle}>
-        {en.runDetail.rulesHeading}
-      </h2>
-      {rules.length === 0 ? (
-        <p role="status" style={{ margin: 0, color: theme.color.muted }}>
-          {en.runDetail.rulesEmpty}
-        </p>
-      ) : (
-        <div style={{ display: 'grid', gap: theme.space.lg }}>
-          {groups.map((group) => (
-            <div key={group.lane}>
-              <h3
-                style={{
-                  margin: `0 0 ${theme.space.sm}px`,
-                  fontSize: theme.type.scale[2],
-                  fontWeight: 600,
-                  color: theme.color.muted
-                }}
-              >
-                {en.runDetail.laneHeading(group.lane)}
-              </h3>
-              <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                {group.rules.map((rule) => (
-                  <RuleRow key={rule.ruleId} rule={rule} />
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
+function detailTitle(slug: string): string {
+  return slug.length > 0 ? slug : en.runDetail.missingSlug;
 }
 
 /**
  * Pure body for a resolved run (header + iterations + rules). Exported for tests.
+ *
+ * @returns The three detail sections.
  */
 export function RunDetailBody({ run }: { run: Run }): JSX.Element {
   return (
@@ -321,21 +35,10 @@ export function RunDetailBody({ run }: { run: Run }): JSX.Element {
   );
 }
 
-/**
- * Recovery link back to the run list (used on not-found / error).
- */
-function BackToRunsLink(): JSX.Element {
-  return (
-    <Link to="/" style={recoveryLinkStyle}>
-      {en.runDetail.backToRuns}
-    </Link>
-  );
-}
-
 export interface RunDetailViewProps {
   /** Route slug (decoded). Empty string means missing-slug branch. */
   slug: string;
-  /** Injected runs feed state (loading / error / ready). */
+  /** Injected runs feed state (loading / error / partial / ready). */
   state: RunsState;
 }
 
@@ -343,16 +46,16 @@ export interface RunDetailViewProps {
  * Pure detail view: loading, error, missing-slug, not-found, and ready body.
  * Exported so unit tests can inject each branch without waiting on the live
  * feed (same pattern as RunDetailBody).
+ *
+ * @returns The detail page for the given slug and feed state.
  */
 export function RunDetailView({ slug, state }: RunDetailViewProps): JSX.Element {
-  const title = slug.length > 0 ? slug : en.runDetail.missingSlug;
+  const title = detailTitle(slug);
 
   if (state.status === 'loading') {
     return (
       <Page title={title} breadcrumb={title}>
-        <p role="status" aria-live="polite" aria-busy="true" style={{ color: theme.color.muted }}>
-          {en.runDetail.loading}
-        </p>
+        <LoadingNote>{en.runDetail.loading}</LoadingNote>
       </Page>
     );
   }
@@ -360,40 +63,31 @@ export function RunDetailView({ slug, state }: RunDetailViewProps): JSX.Element 
   if (state.status === 'error') {
     return (
       <Page title={title} breadcrumb={title}>
-        <p role="alert" style={{ color: theme.color.accent }}>
-          {en.runDetail.error(state.message)}
-        </p>
+        <AlertNote>{en.runDetail.error(state.message)}</AlertNote>
         <BackToRunsLink />
       </Page>
     );
   }
 
-  if (slug.length === 0) {
+  const run = slug.length > 0 ? state.runs.find((r) => r.slug === slug) : undefined;
+  if (run !== undefined) {
     return (
-      <Page title={en.runDetail.missingSlug} breadcrumb={en.runDetail.missingSlug}>
-        <p role="status" style={{ color: theme.color.muted }}>
-          {en.runDetail.notFound}
-        </p>
-        <BackToRunsLink />
+      <Page title={title} breadcrumb={title}>
+        <RunDetailBody run={run} />
       </Page>
     );
   }
 
-  const run = state.runs.find((r) => r.slug === slug);
-  if (run === undefined) {
-    return (
-      <Page title={slug} breadcrumb={slug}>
-        <p role="status" style={{ color: theme.color.muted }}>
-          {en.runDetail.notFound}
-        </p>
-        <BackToRunsLink />
-      </Page>
-    );
-  }
-
+  // Not found. When part of the feed could not be read, the run may be one of
+  // the hidden rows, so that is said out loud rather than a flat "no such run".
   return (
-    <Page title={run.slug} breadcrumb={run.slug}>
-      <RunDetailBody run={run} />
+    <Page title={title} breadcrumb={title}>
+      {state.status === 'partial' && slug.length > 0 ? (
+        <AlertNote>{en.runDetail.partialNotFound(state.rejected.length)}</AlertNote>
+      ) : (
+        <StatusNote>{en.runDetail.notFound}</StatusNote>
+      )}
+      <BackToRunsLink />
     </Page>
   );
 }
@@ -401,15 +95,16 @@ export function RunDetailView({ slug, state }: RunDetailViewProps): JSX.Element 
 /**
  * Detail view for one run: header, iteration history, and full per-rule breakdown.
  * Loads the same feed as the list and selects by slug; fail-closed loading/error/empty.
+ *
+ * @returns The run detail page.
  */
 export function RunDetail(): JSX.Element {
   const { slug: rawSlug } = useParams<{ slug: string }>();
   const slug = rawSlug !== undefined ? decodeURIComponent(rawSlug) : '';
   const state = useRuns();
-  const title = slug.length > 0 ? slug : en.runDetail.missingSlug;
 
   useDocumentMeta({
-    title: `${title} · RedAnvil Dashboard`,
+    title: `${detailTitle(slug)} · RedAnvil Dashboard`,
     description:
       slug.length > 0
         ? `Build run detail for ${slug}: score, coverage, iterations, and per-rule breakdown.`

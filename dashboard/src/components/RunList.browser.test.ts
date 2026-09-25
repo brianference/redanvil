@@ -69,6 +69,27 @@ describe('RunList in a real browser', () => {
     await expect.poll(landedOn).toBe('detail:dashboard');
   });
 
+  it('tints the status icon border with the pass or fail colour, not the plain card border', () => {
+    mounted = mountRunList([sampleRun(), dashboardRun]);
+    /**
+     * Resolved top border colour of a card's status icon.
+     *
+     * @param slug - Run slug.
+     * @returns The computed colour string.
+     */
+    function iconBorder(slug: string): string {
+      const icon = card(slug).querySelector('div[aria-hidden="true"]');
+      if (icon === null) throw new Error(`no status icon for ${slug}`);
+      return getComputedStyle(icon).borderTopColor;
+    }
+    const plainBorder = getComputedStyle(card('app-builder')).borderTopColor;
+    const passBorder = iconBorder('app-builder');
+    const failBorder = iconBorder('dashboard');
+    expect(passBorder).not.toBe(failBorder);
+    expect(passBorder).not.toBe(plainBorder);
+    expect(failBorder).not.toBe(plainBorder);
+  });
+
   it('tabs card -> title link -> deploy link, in that order', async () => {
     mounted = mountRunList([sampleRun()]);
     const before = document.createElement('button');
