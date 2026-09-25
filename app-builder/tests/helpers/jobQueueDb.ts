@@ -47,6 +47,17 @@ export interface QueueJobSeed {
   execution_id?: string | null;
   deploy_url?: string | null;
   updated_at?: string;
+  /** ISO time of the last claim. Only meaningful with status `claimed`. */
+  claimed_at?: string | null;
+  claimed_by?: string | null;
+}
+
+/** Seed for a rate-limit bucket, to prove expired buckets are pruned. */
+export interface RateBucketSeed {
+  bucket_key: string;
+  hit_count: number;
+  /** UTC hour, `YYYY-MM-DDTHH`, as the limiter writes it. */
+  window_start: string;
 }
 
 /** Options for {@link createQueueEnv}. */
@@ -55,6 +66,8 @@ export interface QueueEnvOptions {
   runnerToken?: string;
   /** Jobs present before the first request. */
   jobs?: readonly QueueJobSeed[];
+  /** Rate-limit buckets present before the first request. */
+  rateBuckets?: readonly RateBucketSeed[];
   /**
    * When true, every statement rejects. Used to prove storage failures
    * are not reported as an empty queue.
@@ -88,8 +101,8 @@ function fromSeed(seed: QueueJobSeed): StoredJob {
     threshold: seed.threshold ?? 90,
     status: seed.status ?? 'queued',
     created_at: seed.created_at,
-    claimed_at: null,
-    claimed_by: null,
+    claimed_at: seed.claimed_at ?? null,
+    claimed_by: seed.claimed_by ?? null,
     step: seed.step ?? null,
     detail: seed.detail ?? null,
     execution_id: seed.execution_id ?? null,
@@ -121,6 +134,21 @@ function projectJob(row: StoredJob, selectList: string): Record<string, unknown>
     projected[name] = record[name];
   }
   return projected;
+}
+
+/**
+ * Whether a claim may take this row: queued, or claimed with a lease that
+ * started before `leaseCutoff`. A null cutoff means queued only, which is
+ * what the claim SQL did before the lease existed.
+ *
+ * @param row - Stored job.
+ * @param leaseCutoff - ISO time; claims older than this have expired.
+ * @returns True when the row is claimable.
+ */
+function isClaimable(row: StoredJob, leaseCutoff: string | null): boolean {
+  if (row.status === 'queued') return true;
+  if (leaseCutoff === null) return false;
+  return row.status === 'claimed' && row.claimed_at !== null && row.claimed_at < leaseCutoff;
 }
 
 /**
@@ -166,6 +194,22 @@ function execute(
     return { changes: 0, results: [{ hit_count: existing.hit_count }] };
   }
 
+  if (
+    norm ===
+    'DELETE FROM rate_limits WHERE bucket_key IN (SELECT bucket_key FROM rate_limits WHERE window_start < ? LIMIT ?)'
+  ) {
+    const cutoff = String(params[0]);
+    const limit = Number(params[1]);
+    if (!Number.isInteger(limit) || limit < 1) {
+      throw new Error(`jobQueueDb: bad prune limit ${String(params[1])}`);
+    }
+    const expired = [...rates.values()]
+      .filter((bucket) => bucket.window_start < cutoff)
+      .slice(0, limit);
+    for (const bucket of expired) rates.delete(bucket.bucket_key);
+    return { changes: expired.length, results: [] };
+  }
+
   if (norm.startsWith('INSERT INTO prds ')) {
     return { changes: 1, results: [] };
   }
@@ -196,9 +240,15 @@ function execute(
     return { changes: 1, results: [] };
   }
 
-  if (norm === "SELECT id FROM jobs WHERE status = 'queued' ORDER BY created_at ASC LIMIT 1") {
+  const pickQueued =
+    norm === "SELECT id FROM jobs WHERE status = 'queued' ORDER BY created_at ASC LIMIT 1";
+  const pickWithLease =
+    norm ===
+    "SELECT id FROM jobs WHERE status = 'queued' OR (status = 'claimed' AND claimed_at < ?) ORDER BY created_at ASC LIMIT 1";
+  if (pickQueued || pickWithLease) {
+    const leaseCutoff = pickWithLease ? String(params[0]) : null;
     const queued = jobs
-      .filter((row) => row.status === 'queued')
+      .filter((row) => isClaimable(row, leaseCutoff))
       .sort((left, right) => (left.created_at < right.created_at ? -1 : 1));
     const oldest = queued[0];
     if (oldest === undefined) return { changes: 0, results: [] };
@@ -206,11 +256,16 @@ function execute(
   }
 
   if (norm.startsWith("UPDATE jobs SET status = 'claimed'")) {
-    const guarded = norm.includes("AND status = 'queued'");
+    const leased = norm.endsWith(
+      "AND (status = 'queued' OR (status = 'claimed' AND claimed_at < ?))"
+    );
+    const guarded = leased || norm.includes("AND status = 'queued'");
     const id = String(params[3]);
     const row = jobs.find((candidate) => candidate.id === id);
     if (row === undefined) return { changes: 0, results: [] };
-    if (guarded && row.status !== 'queued') return { changes: 0, results: [] };
+    if (guarded && !isClaimable(row, leased ? String(params[4]) : null)) {
+      return { changes: 0, results: [] };
+    }
     row.status = 'claimed';
     row.claimed_at = String(params[0]);
     row.claimed_by = String(params[1]);
@@ -277,6 +332,9 @@ const tables = new WeakMap<D1Database, { jobs: StoredJob[]; rates: Map<string, R
 export function createQueueEnv(options: QueueEnvOptions = {}): Env {
   const jobs = (options.jobs ?? []).map(fromSeed);
   const rates = new Map<string, RateBucket>();
+  for (const bucket of options.rateBuckets ?? []) {
+    rates.set(bucket.bucket_key, { ...bucket });
+  }
   const fail = options.fail === true;
 
   const db: D1Database = {
@@ -326,6 +384,20 @@ export function readQueueJobs(env: Env): readonly StoredJob[] {
     throw new Error('readQueueJobs: env was not created by createQueueEnv');
   }
   return table.jobs;
+}
+
+/**
+ * Rate-limit buckets currently stored, with their window.
+ *
+ * @param env - Env returned by {@link createQueueEnv}.
+ * @returns Copies of the stored buckets.
+ */
+export function readRateBuckets(env: Env): readonly RateBucket[] {
+  const table = tables.get(env.DB);
+  if (table === undefined) {
+    throw new Error('readRateBuckets: env was not created by createQueueEnv');
+  }
+  return [...table.rates.values()].map((bucket) => ({ ...bucket }));
 }
 
 /**

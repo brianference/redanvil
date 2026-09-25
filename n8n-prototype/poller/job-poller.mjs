@@ -451,17 +451,29 @@ export async function runCycle(opts = {}) {
   async function flushUnsynced() {
     for (const job of store.listJobs()) {
       if (job.remoteSynced !== false) continue;
-      if (typeof job.lastStatus !== 'string' || !job.lastStatus) continue;
-      const ok = await postStatus(job.jobId, {
-        status: job.lastStatus,
-        step: job.lastStep,
-        detail: job.detail,
-        executionId: job.executionId
-      });
-      if (!ok) continue;
-      job.remoteSynced = true;
-      store.writeJob(job);
+      await resendStatus(job);
     }
+  }
+
+  /**
+   * Post a job's last local status again and record whether it landed.
+   * Does not change the decision and does not call the webhook.
+   * @param {object} job local job record
+   * @returns {Promise<void>}
+   */
+  async function resendStatus(job) {
+    if (typeof job.lastStatus !== 'string' || !job.lastStatus) return;
+    const ok = await postStatus(job.jobId, {
+      status: job.lastStatus,
+      step: job.lastStep,
+      detail: job.detail,
+      executionId: job.executionId
+    });
+    // Write only when the synced flag changes, so a down site leaves the
+    // record byte-for-byte as it was.
+    if (job.remoteSynced === ok) return;
+    job.remoteSynced = ok;
+    store.writeJob(job);
   }
 
   /**
@@ -493,8 +505,16 @@ export async function runCycle(opts = {}) {
       return false;
     }
     const fileId = toDispatchId(remote.id);
-    if (store.readJob(fileId)) {
-      log(`poller: job ${remote.id} is already tracked`);
+    const tracked = store.readJob(fileId);
+    if (tracked) {
+      // The site re-issues a job still `claimed` after its lease (CLAIM_LEASE_MS
+      // in app-builder/functions/api/jobs/claim.ts). Ours means the status that
+      // moves it past `claimed` never landed. Re-send the local status now; the
+      // owner decision and the webhook stay keyed on the local record
+      // (webhookPosted / webhookAttemptedAt), so a re-claim never starts a
+      // second build.
+      log(`poller: job ${remote.id} is already tracked; re-sending its status`);
+      await resendStatus(tracked);
       return false;
     }
     const createdAt = now().toISOString();

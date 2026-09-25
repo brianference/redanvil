@@ -31,7 +31,7 @@ export interface LegalDoc {
 /** Privacy Policy document. */
 export const privacy = {
     title: 'Privacy Policy',
-    updated: 'Last updated 23 September 2026',
+    updated: 'Last updated 24 September 2026',
     intro:
       'This policy describes how the RedAnvil app builder at https://redanvil.pages.dev handles information. There are no user accounts and no sign-in. PRD text is generated in your browser. Server storage is Cloudflare D1 for optional job rows and for PRDs you choose to save. Saved PRDs are a public API surface. The full job list, including prompts, is not. We do not run ads or product analytics on this UI.',
     sections: [
@@ -53,7 +53,7 @@ export const privacy = {
         items: [
           'Job rows (when you submit): id, slug derived from the prompt, the prompt string, the entity names you typed, target type (fullstack-web), gate threshold (90), status (for example queued, claimed, awaiting owner approval, building, done, or failed), optional step, detail, and deploy URL once a build finishes, plus timestamps. These live in the D1 jobs table. The owner approves a job before it runs.',
           'Saved PRD rows (when you save): id, slug, title, prompt, full markdown, and created_at in the D1 prds table.',
-          'Rate-limit rows for POST /api/submit and POST /api/prds: each route allows 10 requests per hour per client address. The D1 rate_limits table stores a keyed hash (HMAC-SHA-256 under a server-side secret) of the Cloudflare CF-Connecting-IP value, the route name, and the UTC hour, plus a hit count. The raw IP address is not written to that table, and without the secret the hash cannot be matched back to an address. The hash exists only to enforce that limit.',
+          'Rate-limit rows for POST /api/submit and POST /api/prds: each route allows 10 requests per hour per client address. The D1 rate_limits table stores a keyed hash (HMAC-SHA-256 under a server-side secret) of the Cloudflare CF-Connecting-IP value, the route name, and the UTC hour, plus a hit count. The raw IP address is not written to that table, and without the secret the hash cannot be matched back to an address. The hash exists only to enforce that limit, and rows from earlier hours are deleted automatically.',
           'Theme preference on your device only: localStorage key theme with value light or dark (set by the theme toggle). After you submit, localStorage key redanvil.jobId holds that job id so a reload can keep showing build status. It is not an account identifier.',
           'Request metadata that Cloudflare may log while serving Pages, Functions, and D1 (for example IP address, user agent, path, and timestamps under Cloudflare’s own practices).'
         ]
@@ -106,7 +106,7 @@ export const privacy = {
       },
       {
         heading: 'Retention and deletion',
-        body: 'There is no automatic expiry job in the app for jobs, prds, or rate-limit rows. Rows remain until a maintainer deletes them, the database is wiped, or the project is retired. The public PRD APIs expose list and read paths. The job list does not. There is no self-service delete endpoint for end users. Rate-limit hashes stay until a maintainer deletes them, and they contain no IP address. Theme preference and the stored job id remain on your device until you clear them. Cloudflare edge or access logs, if any, follow Cloudflare’s retention practices, which we do not control from this repository. If you want a specific saved PRD or identifiable job prompt removed, open a GitHub issue titled "Privacy request" with the public URL, id, slug, or enough timing detail to find the row. We will remove what we can identify; we cannot invent or locate records without identifiers, and we cannot erase copies others may have already downloaded from a public URL.'
+        body: 'There is no automatic expiry job in the app for jobs or prds. Those rows remain until a maintainer deletes them, the database is wiped, or the project is retired. The public PRD APIs expose list and read paths. The job list does not. There is no self-service delete endpoint for end users. Rate-limit rows expire on their own: once the UTC hour a row counts has ended, the next request that opens a new rate-limit row deletes up to 100 expired ones, so an expired row lasts until enough later traffic arrives to reach it. They contain no IP address. Theme preference and the stored job id remain on your device until you clear them. Cloudflare edge or access logs, if any, follow Cloudflare’s retention practices, which we do not control from this repository. If you want a specific saved PRD or identifiable job prompt removed, open a GitHub issue titled "Privacy request" with the public URL, id, slug, or enough timing detail to find the row. We will remove what we can identify; we cannot invent or locate records without identifiers, and we cannot erase copies others may have already downloaded from a public URL.'
       },
       {
         heading: 'What you can request and how',
