@@ -18,7 +18,7 @@ export interface PrdResultProps {
 type SaveState =
   | { status: 'idle' }
   | { status: 'loading' }
-  | { status: 'success'; href: string }
+  | { status: 'success'; url: string }
   | { status: 'error'; message: string };
 
 /** Result of the last copy-to-clipboard attempt, shown on the copy button. */
@@ -70,15 +70,7 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
     setSaveState({ status: 'loading' });
     try {
       const result = await savePrd(prd);
-      // The API returns a same-origin path (`/prd/:id`); safeHref rejects
-      // javascript:, data: and protocol-relative values. A rejected link is
-      // reported, never dropped: the save happened and the user must hear so.
-      const href = safeHref(result.url);
-      setSaveState(
-        href === null
-          ? { status: 'error', message: copy.errors.unsafeLink }
-          : { status: 'success', href }
-      );
+      setSaveState({ status: 'success', url: result.url });
     } catch (error: unknown) {
       const message = error instanceof SavePrdError ? error.message : copy.errors.generic;
       setSaveState({ status: 'error', message });
@@ -86,6 +78,10 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
   }
 
   const saving = saveState.status === 'loading';
+  // The API returns a same-origin path (`/prd/:id`); safeHref rejects
+  // javascript:, data: and protocol-relative values. A rejected link is
+  // reported below, never dropped: the save happened and the user must hear so.
+  const savedHref = safeHref(saveState.status === 'success' ? saveState.url : null);
   const copyLabels: Record<CopyState, string> = {
     idle: copy.copy,
     copied: copy.copied,
@@ -131,13 +127,16 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
       </div>
 
       {saveState.status === 'loading' && <LoadingBanner message={copy.saving} />}
-      {saveState.status === 'success' && (
+      {savedHref !== null && (
         <div role="status" style={statusBannerStyle()}>
           <span aria-hidden="true">✓</span>
-          <a href={saveState.href} style={{ color: theme.color.accent, fontWeight: 600 }}>
-            {copy.savedViewAt(saveState.href)}
+          <a href={savedHref} style={{ color: theme.color.accent, fontWeight: 600 }}>
+            {copy.savedViewAt(savedHref)}
           </a>
         </div>
+      )}
+      {saveState.status === 'success' && savedHref === null && (
+        <ErrorBanner message={copy.errors.unsafeLink} />
       )}
       {saveState.status === 'error' && <ErrorBanner message={saveState.message} />}
 
