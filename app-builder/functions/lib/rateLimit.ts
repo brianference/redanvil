@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { Env } from './env';
 import { jsonResponse } from './http';
 
@@ -83,20 +84,8 @@ function retryAfterSeconds(nowMs: number): number {
   return seconds;
 }
 
-/**
- * True when a D1 row has a numeric hit count.
- *
- * @param value - Unknown `all()` row.
- * @returns Whether `hit_count` is a number.
- */
-function isHitRow(value: unknown): value is { hit_count: number } {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'hit_count' in value &&
-    typeof (value as { hit_count: unknown }).hit_count === 'number'
-  );
-}
+/** The row the counting upsert returns. */
+const hitRowSchema = z.object({ hit_count: z.number() });
 
 /**
  * Count this request toward the hourly limit for one route.
@@ -154,10 +143,11 @@ export async function enforceRateLimit(
       .bind(bucketKey)
       .all();
 
-    const row = results[0];
-    if (!isHitRow(row)) {
+    const parsed = hitRowSchema.safeParse(results[0]);
+    if (!parsed.success) {
       return jsonResponse(request, { error: 'Could not check rate limit' }, 500, methods);
     }
+    const row = parsed.data;
     if (row.hit_count === 1) {
       await env.DB.prepare(PRUNE_EXPIRED_SQL).bind(bucket, RATE_LIMIT_PRUNE_BATCH).run();
     }
