@@ -3,9 +3,8 @@ import { theme } from '../theme';
 
 /**
  * The feed states every data page renders: loading, error, partial, and the
- * informational empty / not-found / no-match notes. Home and RunDetail each
- * carried their own copy of this markup; one set keeps the roles and colours
- * the same on both screens.
+ * informational empty / not-found / no-match notes. One set keeps the roles
+ * and colours the same on every screen and inside every detail card.
  */
 
 export interface FeedNoteProps {
@@ -13,7 +12,8 @@ export interface FeedNoteProps {
   children: ReactNode;
 }
 
-const mutedStyle: CSSProperties = { color: theme.color.muted };
+/** Secondary text colour shared by status notes and "None" placeholders. */
+export const mutedTextStyle: CSSProperties = { color: theme.color.muted };
 
 // accentFg, not accent: accent is the fill colour and is not AA as text on the
 // dark surface. accentFg is the token defined for accent-coloured text.
@@ -26,7 +26,7 @@ const alertStyle: CSSProperties = { color: theme.color.accentFg };
  */
 export function LoadingNote({ children }: FeedNoteProps): JSX.Element {
   return (
-    <p role="status" aria-live="polite" aria-busy="true" style={mutedStyle}>
+    <p role="status" aria-live="polite" aria-busy="true" style={mutedTextStyle}>
       {children}
     </p>
   );
@@ -53,7 +53,7 @@ export function AlertNote({ children }: FeedNoteProps): JSX.Element {
  */
 export function StatusNote({ children }: FeedNoteProps): JSX.Element {
   return (
-    <p role="status" style={mutedStyle}>
+    <p role="status" style={mutedTextStyle}>
       {children}
     </p>
   );

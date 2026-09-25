@@ -2,14 +2,8 @@ import type { CSSProperties } from 'react';
 import { en } from '../../i18n/en';
 import type { RunIteration } from '../../lib/summary';
 import { theme } from '../../theme';
-import {
-  cardStyle,
-  emptyNoteStyle,
-  mutedTextStyle,
-  plainListStyle,
-  sectionTitleStyle,
-  smallMutedStyle
-} from './styles';
+import { mutedTextStyle, StatusNote } from '../FeedStatus';
+import { cardStyle, plainListStyle, sectionTitleStyle, smallMutedStyle } from './styles';
 
 const iterationItemStyle: CSSProperties = {
   borderBottom: `1px solid ${theme.color.border}`,
@@ -79,9 +73,7 @@ export function IterationHistory({
         {en.runDetail.iterationsHeading}
       </h2>
       {iterations.length === 0 ? (
-        <p role="status" style={emptyNoteStyle}>
-          {en.runDetail.iterationsEmpty}
-        </p>
+        <StatusNote>{en.runDetail.iterationsEmpty}</StatusNote>
       ) : (
         <>
           <p style={summaryLineStyle}>{en.runDetail.iterationsSummary(iterations.length)}</p>

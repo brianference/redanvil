@@ -5,7 +5,8 @@ import { gatedCommitUrl, gateResultUrl } from '../../lib/runLinks';
 import type { Run } from '../../lib/summary';
 import { theme } from '../../theme';
 import { StatusBadge } from '../StatusBadge';
-import { cardStyle, linkStyle, mutedTextStyle, plainListStyle } from './styles';
+import { mutedTextStyle } from '../FeedStatus';
+import { cardStyle, linkStyle, plainListStyle } from './styles';
 
 const metaRowStyle: CSSProperties = {
   ...plainListStyle,

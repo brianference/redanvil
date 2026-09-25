@@ -3,7 +3,8 @@ import { en } from '../../i18n/en';
 import { groupRulesByLane, type RunRule } from '../../lib/summary';
 import { theme } from '../../theme';
 import { StatusBadge } from '../StatusBadge';
-import { cardStyle, emptyNoteStyle, plainListStyle, sectionTitleStyle } from './styles';
+import { StatusNote } from '../FeedStatus';
+import { cardStyle, plainListStyle, sectionTitleStyle } from './styles';
 
 const ruleRowStyle: CSSProperties = {
   display: 'flex',
@@ -62,9 +63,7 @@ export function RuleBreakdown({ rules }: { rules: readonly RunRule[] }): JSX.Ele
         {en.runDetail.rulesHeading}
       </h2>
       {rules.length === 0 ? (
-        <p role="status" style={emptyNoteStyle}>
-          {en.runDetail.rulesEmpty}
-        </p>
+        <StatusNote>{en.runDetail.rulesEmpty}</StatusNote>
       ) : (
         <div style={laneGridStyle}>
           {groupRulesByLane(rules).map((group) => (

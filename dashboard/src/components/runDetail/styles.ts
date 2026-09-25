@@ -32,17 +32,6 @@ export const plainListStyle: CSSProperties = {
   listStyle: 'none'
 };
 
-/** Secondary text: "None", empty notes, iteration score. */
-export const mutedTextStyle: CSSProperties = {
-  color: theme.color.muted
-};
-
-/** An empty-section note inside a card. */
-export const emptyNoteStyle: CSSProperties = {
-  margin: 0,
-  color: theme.color.muted
-};
-
 /** A small secondary line inside a card. */
 export const smallMutedStyle: CSSProperties = {
   margin: 0,
