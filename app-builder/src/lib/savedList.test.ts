@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { countThisWeek, formatRelativeTime, parseSavedList, parseSavedPrd } from './savedList';
+import {
+  countThisWeek,
+  formatRelativeTime,
+  listCountLabel,
+  parseSavedList,
+  parseSavedPrd
+} from './savedList';
 
 describe('parseSavedList', () => {
   it('accepts valid rows and rejects malformed payloads', () => {
@@ -75,5 +81,12 @@ describe('countThisWeek', () => {
       }
     ];
     expect(countThisWeek(items, now)).toBe(1);
+  });
+});
+
+describe('listCountLabel', () => {
+  it('marks a count that may be higher as a lower bound', () => {
+    expect(listCountLabel(12, false)).toBe('12');
+    expect(listCountLabel(50, true)).toBe('50+');
   });
 });

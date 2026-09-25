@@ -67,6 +67,16 @@ export interface QueueJobSeed {
 /** Seed for a rate-limit bucket, to prove expired buckets are pruned. */
 export type RateBucketSeed = RateBucket;
 
+/** Seed for a saved PRD row. */
+export interface PrdSeed {
+  id: string;
+  slug: string;
+  title: string;
+  prompt: string;
+  markdown: string;
+  created_at: string;
+}
+
 /** Options for {@link createQueueEnv}. */
 export interface QueueEnvOptions {
   /** When set, copied onto Env.RUNNER_TOKEN. */
@@ -75,6 +85,8 @@ export interface QueueEnvOptions {
   jobs?: readonly QueueJobSeed[];
   /** Rate-limit buckets present before the first request. */
   rateBuckets?: readonly RateBucketSeed[];
+  /** Saved PRDs present besides the one migrations/0002 seeds. */
+  prds?: readonly PrdSeed[];
   /**
    * When true, every statement rejects. Used to prove storage failures
    * are not reported as an empty queue.
@@ -176,6 +188,13 @@ export function createQueueEnv(options: QueueEnvOptions = {}): Env {
   );
   for (const bucket of options.rateBuckets ?? []) {
     insertBucket.run(bucket.bucket_key, bucket.hit_count, bucket.window_start);
+  }
+
+  const insertPrd = sqlite.prepare(
+    'INSERT INTO prds (id, slug, title, prompt, markdown, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+  );
+  for (const prd of options.prds ?? []) {
+    insertPrd.run(prd.id, prd.slug, prd.title, prd.prompt, prd.markdown, prd.created_at);
   }
 
   const db = asD1(sqlite, options.fail === true);
