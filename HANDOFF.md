@@ -28,16 +28,20 @@ and in git; do not grow this file into a log. Replace sections when they change.
   outcomes identical (the other is git-state). n8n launches brainstorm/logo/palette/layout together
   (`roles/parallel-roles.mjs`; n8n v1 itself runs branches serially).
 - **Verdicts.** Visual verdicts bind to a freshly built bundle hash; judge verdicts need a scope
-  (schema v2). The per-iteration judge runs on `claude -p` and falls back to Grok.
+  (schema v2). Every judge runs on `claude -p` with no Grok fallback; it now also reads a
+  summary of the commits since the app's last scored commit for u-conc-smallest-diff.
 - **Independent review (2026-09-24).** A fresh-context reviewer found 7 high and 13 medium issues
   in Batches 2-4; all high and medium ones are fixed and tested on master (grok handoff only on
   account errors, fidelity scored on features only, per-round gate ids, idempotent webhook, judge
   scope, whole-bundle hash, webhook token, DDL-safe names, negation, dependency skips, bounded
-  retries). Not fixed: rate_limits table is never pruned; a job claimed just before a crash stays
-  `claimed` (no lease).
-- **Overnight loop.** Per-night checkpoint rollover in `overnight.mjs`, Grok first, prompt via file,
-  ALERT.json when no VERIFIED receipt. Grok failover (hang, 403, spending limit, 402 balance) is one
-  function in `roles/agent-failover.mjs`.
+  retries). Since fixed (2026-09-24): expired rate_limits buckets are pruned (migration 0004
+  adds the index, applied remotely) and a claim holds a 30-minute lease.
+- **Overnight loop.** Per-night checkpoint rollover in `overnight.mjs`, Claude only, and the $25
+  nightly cap now binds (it could not while Grok cost was recorded as 0).
+- **Engine policy (owner rule 2026-09-24).** Grok runs only the logo, palette and layout roles
+  (Grok Imagine + design work); `orchestrator/scripts/lib/engine-policy.mjs` is the one list.
+  Coding, judging, review, PRD intent and every other role run on Claude and fail closed. Reason:
+  coding was ~90% of recorded Grok tokens (~/.grok/logs/unified.jsonl, 2026-09-22..24).
 - **Scaffold.** New apps get the shared shell, working test runners and (when asked) the auth kit.
 
 ## Apps moved out (2026-09-24)
@@ -54,25 +58,26 @@ and counted; fleet-shared-db is left as a backup.
 Done 2026-09-24: Pages secrets set, remote migration 0003 applied, app-builder deployed and
 verified (hash match, /api/health ok, /api/jobs 401 without the token).
 
-3. **Finish line.** app-builder and dashboard do not meet it (see the 2026-09-24 entry in
-   `docs/PUSH-BYPASS-LOG.md`, clear by 2026-10-08): the 90% coverage floor is unreachable with
-   the process lane waived, and both apps have real defects listed there.
+3. **Finish line.** Not met yet. The process lane is now measured (coverage 94-96%), the test
+   lanes, breadcrumbs, resource links and most waivers are fixed, and both apps are deployed.
+   What remains is the independent judge: each full re-judge finds new, real, smaller findings
+   (dashboard went 8 -> 5 -> 3 failing judge rules over three rounds). See PUSH-BYPASS-LOG,
+   clear by 2026-10-08.
 4. **Run it.** Import `workflows/redanvil-errors.json` then `redanvil-full-build.json` into n8n;
    register `n8n-prototype/poller/run-poller.cmd` in Task Scheduler; start a Remote Control Claude
    session and `/loop` the redanvil-dispatch skill.
-5. **Revoke** the GitHub token found in `workspace/projects/tpusa-monitor-dashboard/.git/config`.
-6. **Grok Build balance** is exhausted (402). One large task (b4c, 2026-09-23) recorded `total_cost_usd` 5.43 in its JSON envelope.
+5. **Grok Build balance** is exhausted (402) until 2026-09-30 02:25; only design/logo roles use it now.
 
-## CI (2026-09-24, run 36049239128 on 0bc6af5)
+## CI (2026-09-25, on bd324b49)
 
-Green: orchestrator (red before this round), repo-checks, apps (app-builder), apps (dashboard).
-Red, each read: apps-meet-the-bar, dashboard-provenance, results-provenance (finish line and
-stale verdicts; see PUSH-BYPASS-LOG 2026-09-24), quickflight-provenance (quickflight's own repo
-changed 52 files after its verdicts; re-verify in that repo). CI now runs Node 22.
+Green: orchestrator, repo-checks, apps (app-builder), apps (dashboard), quickflight-provenance
+(re-gated in its repo at 63a3509, honest 0/100). Red until both apps pass the judge and are
+re-verified: apps-meet-the-bar, dashboard-provenance, results-provenance. CI runs Node 22 and
+installs Chromium for the new browser/VRT lanes; Linux VRT baselines come from
+record-vrt-baselines.yml.
 
 ## Known issues (real, not waived)
 
-- `tests/feature-coverage.spec.ts` "examples page exposes live app and source links" fails on prod too.
 - harness / promote / coverageGates tests time out (5 s) only under the full parallel suite on
   Windows; they pass alone.
 - Drift CI stays red at the finish-line step until app-builder is re-gated and shipped.
@@ -82,4 +87,5 @@ changed 52 files after its verdicts; re-verify in that repo). CI now runs Node 2
   `appName` cannot reach the PRD yet. `deriveEntities` is now only used by tests and a script.
 - The Claude judge fails claims it cannot see from a diff alone; its prompt needs file context.
 - Leftover worktree folders to delete by hand: `RedAnvil-gate`, `RedAnvil-logo`,
-  `RedAnvil-wt/prdfix`, `ra-*`; also `zztest-app/` and tracked `no-such-app-dir-xyz/`.
+  `RedAnvil-wt/prdfix`, `ra-*`; also `zztest-app/` and tracked `no-such-app-dir-xyz/`. Seven old
+  app folders from the monorepo were moved (not deleted) to `C:/Users/brian/RedAnvil-leftovers-2026-09-24`.
