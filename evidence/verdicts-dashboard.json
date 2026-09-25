@@ -11,13 +11,13 @@
     ],
     "note": "axe-core 4.12.1 against https://redanvil-dashboard.pages.dev on this build: 0 colour-contrast violation nodes and 0 other violation types in BOTH themes. Resolved backgrounds confirm the audit really switched theme (dark rgb(11,11,15), light rgb(246,247,251)).",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-premium-nav",
@@ -30,13 +30,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: 4 header link(s) [App Builder, Runs, About, Contact], aria-current on \"Runs\"",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-required-pages",
@@ -49,13 +49,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: /about 200 \"About\"; /contact 200 \"Contact\"; /terms 200 \"Terms\"; /privacy 200 \"Privacy\"",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-no-attribution",
@@ -67,13 +67,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: no attribution text",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-responsive-375",
@@ -86,13 +86,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: no horizontal overflow at 375",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-product-completeness",
@@ -104,13 +104,13 @@
     ],
     "note": "The dashboard's core feature is showing real gate runs, and it does: the index renders a run card carrying measured values from the committed results feed (score 100, 46/46 rules, 1 iteration) rather than an empty shell, plus KPI tiles derived from the same data. Runtime parity passes on the real Workers runtime (/ 200 and /api/health 200), so this is a booting app and not just static assets.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -127,13 +127,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: 0 console/page error(s) across the measured loads",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-seo-og",
@@ -145,13 +145,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: title \"RedAnvil Dashboard — build runs\", description present, og:image present",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-cross-link",
@@ -163,13 +163,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: cross-site link present",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-touch-targets",
@@ -181,13 +181,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: 13 interactive elements at 375, 0 under 44px",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-type-floor",
@@ -199,13 +199,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: minimum body font 16px at 375, 0 node(s) under 16px",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-noncolor-state",
@@ -218,13 +218,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: active nav item: weight 650, gradient background true, aria-current present true",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-safe-areas",
@@ -236,13 +236,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: header position sticky, padding-top 0px",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "u-conc-idiomatic",
@@ -297,21 +297,23 @@
     "passed": false,
     "method": "judge",
     "evidence": [
-      "dashboard/src/pages/NotFound.tsx",
-      "dashboard/src/components/shell/constants.ts",
-      "dashboard/src/theme.ts",
-      "dashboard/src/components/runDetail/BackToRunsLink.tsx",
-      "dashboard/src/components/runDetail/styles.ts"
+      "dashboard/src/lib/useRuns.ts",
+      "design-system/http.ts",
+      "dashboard/src/lib/relativeTime.ts",
+      "dashboard/src/i18n/en.ts",
+      "dashboard/src/components/RunList.tsx",
+      "dashboard/src/components/StatusBadge.tsx"
     ],
-    "note": "NotFound.tsx:6 and :43 import TOUCH_TARGET_MIN_PX (constants.ts:23, value 44). That duplicates theme.touch (theme.ts:29, also 44), which the rest of src uses, and NotFound is the constant's only consumer. NotFound.tsx:35-52 also builds its own 'back home' link with an 11-property inline style. The codebase already has that link: BackToRunsLink.tsx:18-24, built on the shared linkStyle at runDetail/styles.ts:54-61 with the same minHeight, inline-flex and accent colour. The feed code does reuse what exists: Zod validates rows in summary.ts:108-137, links go through the shared safeUrl, SafeExternalLink and linkify helpers, and both data pages use the new FeedStatus notes.",
-    "reviewedAt": "2026-09-25T05:45:01.435Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "note": "FAIL. The dashboard's only network call rewrites the shared transport by hand instead of using it. dashboard/src/lib/useRuns.ts:8 sets its own FETCH_TIMEOUT_MS = 10_000. Lines 59-68 then hand-write fetch with `AbortSignal.timeout`, `if (!res.ok) throw new Error(`HTTP ${res.status}`)` and `await res.json()`. design-system/http.ts:61 already exports `requestJson<T>(path, schema, init?, timeoutMs)`, which does the timeout, the status check (throwing an HttpError that carries `status`) and a parse through a Zod-shaped `{ parse }` parser. DEFAULT_FETCH_TIMEOUT_MS is exported at http.ts:18. The file's own header comment names this duplication: every app had written 'a timeout constant, a fetch that pulls { error } out of a failed body before throwing'. `requestJson(url, { parse: parseRunsFeed }, undefined, 10_000)` would replace the hand-written block, and describeFetchError/feedState would stay as they are. The cross-origin URL is no obstacle: requestJson is a plain fetch(path), and its only added header, `accept`, is CORS-safelisted. No dashboard file imports http.ts. Two smaller points: relativeTime.ts:7-30 hand-writes relative-time bucketing, with the unit suffixes in en.ts:335-342, instead of using Intl.RelativeTimeFormat. RunList.tsx:169-183 StatusIcon repeats the `passed ? '✓' : '!'` glyph and the success/error colour pairs that StatusBadge.tsx:19,36-37 already owns. The rest of the app reuses the shared library properly: Page (components/Page.tsx:6), SafeExternalLink (RunList.tsx:3, RunHeader.tsx:2), linkify (lib/linkify.tsx:8), useDocumentMeta (lib/useDocumentMeta.ts:7-10) and safeUrl (lib/summary.ts:3).",
+    "reviewedAt": "2026-09-25T05:55:47.993Z",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
-      "dashboard/src/pages/NotFound.tsx",
-      "dashboard/src/components/shell/constants.ts",
-      "dashboard/src/theme.ts",
-      "dashboard/src/components/runDetail/BackToRunsLink.tsx",
-      "dashboard/src/components/runDetail/styles.ts"
+      "dashboard/src/lib/useRuns.ts",
+      "design-system/http.ts",
+      "dashboard/src/lib/relativeTime.ts",
+      "dashboard/src/i18n/en.ts",
+      "dashboard/src/components/RunList.tsx",
+      "dashboard/src/components/StatusBadge.tsx"
     ],
     "schemaVersion": 2
   },
@@ -400,22 +402,34 @@
   },
   {
     "ruleId": "fe-pages-compose",
-    "passed": false,
+    "passed": true,
     "method": "judge",
     "evidence": [
-      "dashboard/src/pages/NotFound.tsx",
       "dashboard/src/pages/Home.tsx",
       "dashboard/src/pages/RunDetail.tsx",
-      "dashboard/src/pages/About.tsx"
+      "dashboard/src/pages/NotFound.tsx",
+      "dashboard/src/pages/About.tsx",
+      "dashboard/src/pages/Terms.tsx",
+      "dashboard/src/pages/Privacy.tsx",
+      "dashboard/src/pages/Contact.tsx",
+      "dashboard/src/components/RunsOverview.tsx",
+      "dashboard/src/components/FeedStatus.tsx",
+      "dashboard/src/components/ContentSections.tsx"
     ],
-    "note": "Home.tsx:44-51, RunDetail.tsx:28-36 and :52-93, and the About and Contact pages (e.g. Contact.tsx:14-18) return short lists of named components, and the page passes its state down. Home owns the search query through useState at Home.tsx:63. NotFound.tsx:26-53 doesn't follow the pattern. It returns a raw <p> with an inline style object (line 28) and a <Link> with an 11-property inline style object (lines 35-52) instead of using a named component like the existing BackToRunsLink. The rule excludes exactly this: a page that writes its own markup and style objects.",
-    "reviewedAt": "2026-09-25T05:45:01.435Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "note": "PASS. I opened all seven page files. None has inline markup, CSSProperties objects or style props. Each return is a short list of named components. Home.tsx:55-64 owns state: it calls useRuns() at :62 and useState for the query at :63, then passes both to HomeBody. HomeBody (:25-52) picks one branch per feed state, each rendering Page with LoadingNote, AlertNote, or AlertNote plus RunsOverview. RunsOverview.tsx:25-49 composes KpiStrip, ScoreNote, RunSearch, and either StatusNote or RunList, with the query passed down as a controlled prop. RunDetail.tsx:101-116 owns useParams and useRuns and hands them to RunDetailView (:52-93). Each branch there renders Page with LoadingNote/AlertNote/StatusNote/BackToRunsLink, or with RunDetailBody (:28-36 = RunHeader, IterationHistory, RuleBreakdown). NotFound.tsx:25-30 is Page, StatusNote and BackToRunsLink. About, Terms, Privacy and Contact (lines 14-18 in each) are Page wrapping ContentSections, with the text coming from en.pages.*. The only non-JSX logic in the pages is useDocumentMeta, the one-line detailTitle helper (RunDetail.tsx:19-21) and the slug lookup (:72), which is page-level selection and belongs in the page.",
+    "reviewedAt": "2026-09-25T05:55:47.994Z",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
-      "dashboard/src/pages/NotFound.tsx",
       "dashboard/src/pages/Home.tsx",
       "dashboard/src/pages/RunDetail.tsx",
-      "dashboard/src/pages/About.tsx"
+      "dashboard/src/pages/NotFound.tsx",
+      "dashboard/src/pages/About.tsx",
+      "dashboard/src/pages/Terms.tsx",
+      "dashboard/src/pages/Privacy.tsx",
+      "dashboard/src/pages/Contact.tsx",
+      "dashboard/src/components/RunsOverview.tsx",
+      "dashboard/src/components/FeedStatus.tsx",
+      "dashboard/src/components/ContentSections.tsx"
     ],
     "schemaVersion": 2
   },
@@ -457,13 +471,13 @@
     ],
     "note": "Measured on production by desktop_width.mjs at 1440 AND 1920: every route's main content occupies 93% of the viewport, against an 80% minimum. Two widths on purpose — a rem cap reads as 90% at 1600 and 75% at 1920, which is how this shipped narrow four times before the rule existed.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-cold-visitor",
@@ -474,8 +488,8 @@
     ],
     "note": "cold_visitor against https://redanvil-dashboard.pages.dev: a first-time visitor gets a working app: 5 cold-start check(s) held",
     "reviewedAt": "2026-08-01T01:29:32.535Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   },
   {
     "ruleId": "fe-design-archetype",
@@ -489,7 +503,7 @@
     ],
     "note": "Archetype: Metric board, recorded in claims.json and confirmed by opening evidence/screenshots/dashboard-1280-dark.png and evidence/screenshots/dashboard-1280-light.png before recording anything (both files actually opened and viewed, not inferred from source): the home route is a KPI band (Total runs / Passed / Avg score) above a list of run records with status badges -- numbers first, reading beats navigating, not a tile grid or a centred column. design_audit.mjs --claims measured the widest block at 1306 of 1440px (91%) with equal 67px gutters -- wide enough that the anti-column check (requires <72% width AND equal gutters to flag) does not fire either way, but the archetype itself is a genuine structural read of the rendered page, not picked to pass a check.",
     "reviewedAt": "2026-08-02T23:18:29.256Z",
-    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
-    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
+    "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
+    "bundleHash": "7687da112eed78ee1229200b4cf65953571b0cf33a231b7d536345b6c5bc5779"
   }
 ]
