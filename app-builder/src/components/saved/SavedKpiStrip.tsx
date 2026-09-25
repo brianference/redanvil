@@ -1,4 +1,5 @@
 import { en } from '../../i18n/en';
+import { listCountLabel } from '../../lib/savedList';
 import { KpiCard } from './KpiCard';
 import { kpiStripStyle } from './styles';
 
@@ -7,14 +8,17 @@ export interface SavedKpiStripProps {
   thisWeek: number;
   /** Total builds in the list. */
   total: number;
+  /** Whether the list hit the API's row limit, so older builds may be missing. */
+  truncated: boolean;
 }
 
 /**
- * KPI strip for the Saved dashboard.
+ * KPI strip for the Saved dashboard. When the list is cut off, the total is a
+ * lower bound, and so is this week's count if every loaded build is this week's.
  *
- * @param props - thisWeek and total counts.
+ * @param props - thisWeek and total counts, and whether the list is cut off.
  */
-export function SavedKpiStrip({ thisWeek, total }: SavedKpiStripProps): JSX.Element {
+export function SavedKpiStrip({ thisWeek, total, truncated }: SavedKpiStripProps): JSX.Element {
   const copy = en.pages.saved;
   return (
     <div
@@ -23,8 +27,8 @@ export function SavedKpiStrip({ thisWeek, total }: SavedKpiStripProps): JSX.Elem
       role="group"
       aria-label={copy.kpiLabel}
     >
-      <KpiCard value={thisWeek} label={copy.kpiThisWeek} />
-      <KpiCard value={total} label={copy.kpiTotal} />
+      <KpiCard value={listCountLabel(thisWeek, truncated && thisWeek === total)} label={copy.kpiThisWeek} />
+      <KpiCard value={listCountLabel(total, truncated)} label={copy.kpiTotal} />
     </div>
   );
 }

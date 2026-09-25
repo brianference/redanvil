@@ -1,8 +1,8 @@
 import { kpiLblStyle, kpiStyle, kpiValStyle } from './styles';
 
 export interface KpiCardProps {
-  /** Numeric value shown large. */
-  value: number;
+  /** Value shown large: a count, or a lower bound such as "50+". */
+  value: string;
   /** Uppercase label under the value. */
   label: string;
 }

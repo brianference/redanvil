@@ -20,6 +20,24 @@ const savedPrdRowSchema = savedPrdListItemSchema.extend({
 /** Full row from GET /api/prd/:id. */
 export type SavedPrdRow = z.infer<typeof savedPrdRowSchema>;
 
+/**
+ * Most rows GET /api/prds returns, newest first. A list this long may be cut
+ * off, so counts taken from it are lower bounds.
+ */
+export const SAVED_LIST_LIMIT = 50;
+
+/**
+ * A count taken from the loaded list, marked "+" when the list may be cut off
+ * and the count could be higher.
+ *
+ * @param count - Rows counted in the loaded list.
+ * @param mayBeHigher - Whether rows beyond the list could also count.
+ * @returns "12" or "50+".
+ */
+export function listCountLabel(count: number, mayBeHigher: boolean): string {
+  return mayBeHigher ? `${count}+` : String(count);
+}
+
 const MS_PER_MINUTE = 60_000;
 const MINUTES_PER_HOUR = 60;
 const HOURS_PER_DAY = 24;

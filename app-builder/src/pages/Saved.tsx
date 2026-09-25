@@ -6,7 +6,12 @@ import { SavedKpiStrip } from '../components/saved/SavedKpiStrip';
 import { SavedLoading } from '../components/saved/SavedLoading';
 import { SavedToolbar } from '../components/saved/SavedToolbar';
 import { en } from '../i18n/en';
-import { countThisWeek, parseSavedList, type SavedPrdListItem } from '../lib/savedList';
+import {
+  countThisWeek,
+  parseSavedList,
+  SAVED_LIST_LIMIT,
+  type SavedPrdListItem
+} from '../lib/savedList';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
@@ -66,7 +71,11 @@ export function Saved(): JSX.Element {
 
       {state.status === 'success' && (
         <>
-          <SavedKpiStrip thisWeek={countThisWeek(state.items)} total={state.items.length} />
+          <SavedKpiStrip
+            thisWeek={countThisWeek(state.items)}
+            total={state.items.length}
+            truncated={state.items.length >= SAVED_LIST_LIMIT}
+          />
           <SavedCardList items={state.items} />
         </>
       )}
