@@ -128,8 +128,27 @@ describe('parseRun', () => {
     expect(run.commit).toBe('759920006033720125b9b211737469b163d63fe3');
   });
 
-  it('nulls a malformed provenance commit while accepting the row', () => {
-    const run = parsedRun(validFeedRow({ provenance: { commit: 'not-a-sha' } }));
+  it('accepts a row with no provenance block, recording no commit', () => {
+    const row = validFeedRow();
+    delete row.provenance;
+    const run = parsedRun(row);
+    expect(run.slug).toBe('app-builder');
+    expect(run.finalScore).toBe(100);
+    expect(run.commit).toBeNull();
+  });
+
+  const SHA = '759920006033720125b9b211737469b163d63fe3';
+  it.each([
+    ['null provenance', null],
+    ['non-object provenance', 'abc'],
+    ['no commit key', { dirty: false }],
+    ['null commit', { commit: null }],
+    ['not a SHA', { commit: 'not-a-sha' }],
+    ['short SHA', { commit: SHA.slice(0, 7) }],
+    ['uppercase SHA', { commit: SHA.toUpperCase() }],
+    ['non-string commit', { commit: 42 }]
+  ])('accepts the row but records no commit for %s', (_label, provenance) => {
+    const run = parsedRun(validFeedRow({ provenance }));
     expect(run.slug).toBe('app-builder');
     expect(run.commit).toBeNull();
   });

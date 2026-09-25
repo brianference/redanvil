@@ -85,18 +85,8 @@ const COMMIT_SHA = /^[0-9a-f]{40}$/;
  * rather than rejecting a run whose scores are otherwise valid.
  */
 const provenanceSchema = z
-  .object({ commit: z.string().regex(COMMIT_SHA).nullable().catch(null) })
+  .object({ commit: z.string().regex(COMMIT_SHA).nullable() })
   .catch({ commit: null });
-
-/**
- * Pull the gated commit SHA out of an untrusted provenance block.
- *
- * @param provenance - The row's provenance value, any shape.
- * @returns The SHA, or null when missing or not a full hex SHA.
- */
-export function gatedCommit(provenance: unknown): string | null {
-  return provenanceSchema.parse(provenance).commit;
-}
 
 const iterationSchema = z.object({
   index: z.number().int().finite(),

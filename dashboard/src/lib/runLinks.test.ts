@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { gatedCommitUrl, gateResultUrl } from './runLinks';
-import { gatedCommit } from './summary';
 
 const SHA = '759920006033720125b9b211737469b163d63fe3';
 
@@ -21,22 +20,5 @@ describe('gateResultUrl', () => {
 describe('gatedCommitUrl', () => {
   it('links a recorded commit', () => {
     expect(gatedCommitUrl(SHA)).toBe(`https://github.com/brianference/redanvil/commit/${SHA}`);
-  });
-});
-
-describe('gatedCommit', () => {
-  it('reads a full SHA from provenance', () => {
-    expect(gatedCommit({ commit: SHA, dirty: false })).toBe(SHA);
-  });
-
-  it.each([
-    ['missing provenance', undefined],
-    ['null provenance', null],
-    ['no commit key', { dirty: false }],
-    ['short SHA', { commit: '7599200' }],
-    ['uppercase / decorated', { commit: `${SHA.toUpperCase()}` }],
-    ['non-string', { commit: 42 }]
-  ])('returns null for %s', (_label, provenance) => {
-    expect(gatedCommit(provenance)).toBeNull();
   });
 });
