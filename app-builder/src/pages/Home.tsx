@@ -1,19 +1,17 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Page } from '../components/Page';
 import { ComposerChat } from '../components/ComposerChat';
 import { TemplateGallery, type TemplateSelection } from '../components/TemplateGallery';
 import { Wizard, EMPTY_WIZARD_ANSWERS } from '../components/Wizard';
 import { PrdResult } from '../components/PrdResult';
-import { ErrorBanner } from '../components/Banner';
-import { buttonStyle } from '../components/ui';
-import { generatePrd, UnresolvedPrdError, type Prd } from '../lib/prd';
+import { ForgeError } from '../components/ForgeError';
+import { generatePrd, type Prd } from '../lib/prd';
 import { estimate } from '../lib/estimate';
 import { countEntities, countScopeSignals, type BuildJob, type WizardAnswers } from '../lib/job';
 import { readLastJobId, writeLastJobId } from '../lib/jobStatus';
 import { JobStatusPanel } from '../components/JobStatusPanel';
 import { en } from '../i18n/en';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
-import { theme } from '../theme';
 
 /** Which builder surface is active on the home route. */
 type BuilderView = 'chat' | 'templates' | 'wizard' | 'result';
@@ -26,6 +24,23 @@ type ForgeResultState =
   | { status: 'idle' }
   | { status: 'error'; message: string }
   | { status: 'success'; prd: Prd };
+
+/**
+ * The h1 for the active builder surface. A result without a PRD is an error
+ * screen, whatever the reason, so it carries the error label.
+ *
+ * @param view - Active surface.
+ * @param forgeResult - Outcome of PRD generation.
+ * @returns Page title.
+ */
+function pageTitleFor(view: BuilderView, forgeResult: ForgeResultState): string {
+  if (view === 'templates') return en.templates.title;
+  if (view === 'wizard') return en.wizard.formLabel;
+  if (view === 'result') {
+    return forgeResult.status === 'success' ? forgeResult.prd.title : en.pages.home.forgeErrorLabel;
+  }
+  return en.pages.home.title;
+}
 
 /**
  * Home: conversational composer → optional templates → clarifying wizard → PRD.
@@ -136,12 +151,7 @@ export function Home(): JSX.Element {
       setForgeResult({ status: 'success', prd });
       setView('result');
     } catch (err) {
-      const message =
-        err instanceof UnresolvedPrdError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : copy.forgeError;
+      const message = err instanceof Error ? err.message : copy.forgeError;
       setForgeResult({ status: 'error', message });
       setView('result');
     }
@@ -181,16 +191,7 @@ export function Home(): JSX.Element {
     reset();
   }
 
-  const pageTitle =
-    view === 'templates'
-      ? en.templates.title
-      : view === 'wizard'
-        ? en.wizard.formLabel
-        : view === 'result' && forgeResult.status === 'success'
-          ? forgeResult.prd.title
-          : view === 'result' && forgeResult.status === 'error'
-            ? copy.forgeErrorLabel
-            : copy.title;
+  const pageTitle = pageTitleFor(view, forgeResult);
 
   // No page-level subtitle on home. The forge composer carries its own title
   // and hint; a multi-line lead under the h1 pushed the primary action below
@@ -238,49 +239,17 @@ export function Home(): JSX.Element {
         />
       )}
 
-      {view === 'result' && forgeResult.status === 'error' && (
-        <section style={forgeErrorRootStyle} aria-label={copy.forgeErrorLabel}>
-          <ErrorBanner message={forgeResult.message} />
-          <div style={forgeErrorActionsStyle}>
-            <button type="button" style={buttonStyle(true)} onClick={backToWizard}>
-              {copy.forgeErrorBack}
-            </button>
-            <button type="button" style={buttonStyle(false)} onClick={reset}>
-              {copy.forgeErrorNew}
-            </button>
-          </div>
-        </section>
-      )}
-
       {view === 'result' && forgeResult.status === 'success' && (
         <PrdResult prd={forgeResult.prd} onReset={reset} />
       )}
 
-      {view === 'result' && forgeResult.status === 'idle' && (
-        <section style={forgeErrorRootStyle} aria-label={copy.forgeErrorLabel}>
-          <ErrorBanner message={copy.forgeError} />
-          <div style={forgeErrorActionsStyle}>
-            <button type="button" style={buttonStyle(true)} onClick={backToWizard}>
-              {copy.forgeErrorBack}
-            </button>
-            <button type="button" style={buttonStyle(false)} onClick={reset}>
-              {copy.forgeErrorNew}
-            </button>
-          </div>
-        </section>
+      {view === 'result' && forgeResult.status !== 'success' && (
+        <ForgeError
+          message={forgeResult.status === 'error' ? forgeResult.message : copy.forgeError}
+          onBack={backToWizard}
+          onReset={reset}
+        />
       )}
     </Page>
   );
 }
-
-const forgeErrorRootStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.space.md
-};
-
-const forgeErrorActionsStyle: CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: theme.space.sm
-};
