@@ -76,22 +76,17 @@ export function groupRulesByLane(rules: readonly RunRule[]): readonly RuleLaneGr
   });
 }
 
-/**
- * Schema for the results feed.
- *
- * These were hand-rolled `typeof` chains. An independent judge failed
- * `u-conc-use-what-exists` on them: this monorepo already validates every
- * boundary with Zod, and the one place consuming genuinely untrusted,
- * cross-origin JSON was the place not using it. Hand-written narrowing also
- * accepts anything it forgot to mention — `finalScore: NaN`, a negative total,
- * an empty slug — because `typeof NaN === 'number'`.
- *
- * Fail closed: a rejected row is reported, never dropped silently. `useRuns`
- * renders a feed with some bad rows as an explicit partial state and a feed
- * with only bad rows as an error, never as a clean empty success.
- */
 /** A full 40-hex git SHA. A short or decorated value is not linked. */
 const COMMIT_SHA = /^[0-9a-f]{40}$/;
+
+/**
+ * The gate's provenance block, reduced to the commit it scored. Any other
+ * shape, or a commit that is not a full SHA, reads as "no commit recorded"
+ * rather than rejecting a run whose scores are otherwise valid.
+ */
+const provenanceSchema = z
+  .object({ commit: z.string().regex(COMMIT_SHA).nullable().catch(null) })
+  .catch({ commit: null });
 
 /**
  * Pull the gated commit SHA out of an untrusted provenance block.
@@ -100,9 +95,7 @@ const COMMIT_SHA = /^[0-9a-f]{40}$/;
  * @returns The SHA, or null when missing or not a full hex SHA.
  */
 export function gatedCommit(provenance: unknown): string | null {
-  if (provenance === null || typeof provenance !== 'object') return null;
-  const commit: unknown = (provenance as { commit?: unknown }).commit;
-  return typeof commit === 'string' && COMMIT_SHA.test(commit) ? commit : null;
+  return provenanceSchema.parse(provenance).commit;
 }
 
 const iterationSchema = z.object({
@@ -116,6 +109,15 @@ const ruleSchema = z.object({
   passed: z.boolean()
 });
 
+/**
+ * Schema for one results-feed row. The feed is cross-origin JSON, so every
+ * field is checked, including the ones `typeof` would wave through: a NaN
+ * score, a negative total, an empty slug.
+ *
+ * Fail closed: a rejected row is reported, never dropped silently. `useRuns`
+ * renders a feed with some bad rows as an explicit partial state and a feed
+ * with only bad rows as an error, never as a clean empty success.
+ */
 const runSchema = z
   .object({
     slug: z.string().min(1),
@@ -130,11 +132,9 @@ const runSchema = z
     // a bad deploy link must not hide an otherwise valid run.
     deployUrl: z.unknown().transform(safeUrl),
     finishedAt: z.string().min(1),
-    // Written by the gate. Only its commit is shown; like deployUrl, a malformed
-    // value collapses to null rather than hiding an otherwise valid run.
-    provenance: z.unknown().optional()
+    provenance: provenanceSchema
   })
-  .transform(({ provenance, ...rest }): Run => ({ ...rest, commit: gatedCommit(provenance) }));
+  .transform(({ provenance, ...rest }): Run => ({ ...rest, commit: provenance.commit }));
 
 /** One feed row after validation: the run, or why it was rejected. */
 export type RowResult = { ok: true; run: Run } | { ok: false; reason: string };
@@ -149,8 +149,7 @@ export function parseRun(row: unknown): RowResult {
   const parsed = runSchema.safeParse(row);
   if (parsed.success) return { ok: true, run: parsed.data };
   const issue = parsed.error.issues[0];
-  // Name the field that failed. A fixed "malformed run" for every cause told
-  // you nothing about which field had changed shape.
+  // Name the field that failed, so a feed regression points at what changed shape.
   const where = issue === undefined ? '' : ` at ${issue.path.join('.') || '(root)'}`;
   return { ok: false, reason: `malformed run${where}: ${issue?.message ?? 'invalid'}` };
 }
@@ -164,7 +163,7 @@ export interface ParsedFeed {
 /**
  * Validate a full results feed (JSON array of runs), row by row.
  *
- * One malformed row no longer hides every valid one: it is set aside with its
+ * A malformed row does not hide the valid ones: it is set aside with its
  * reason so the caller can render the valid runs as an explicit partial state.
  *
  * @param raw - Untrusted feed body.
