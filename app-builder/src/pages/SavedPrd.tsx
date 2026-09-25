@@ -1,24 +1,14 @@
-import { type CSSProperties } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { en } from '../i18n/en';
-import { theme } from '../theme';
 import { LoadingBanner, ErrorBanner } from '../components/Banner';
-import { FidelityWarning } from '../components/FidelityWarning';
-import { StackReferences } from '../components/StackReferences';
-import { buttonStyle, cardStyle } from '../components/ui';
+import { BackToSaved } from '../components/saved/BackToSaved';
+import { SavedError } from '../components/saved/SavedError';
+import { SavedPrdDocument } from '../components/saved/SavedPrdDocument';
+import { PRD_ID_PATTERN } from '../lib/ids';
+import { parseSavedPrd, type SavedPrdRow } from '../lib/savedList';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
-
-/** Full PRD row from GET /api/prd/:id. */
-interface SavedPrdRow {
-  id: string;
-  slug: string;
-  title: string;
-  prompt: string;
-  markdown: string;
-  created_at: string;
-}
 
 type DetailState =
   | { status: 'loading' }
@@ -27,51 +17,11 @@ type DetailState =
   | { status: 'success'; prd: SavedPrdRow };
 
 /**
- * Narrow unknown JSON to a SavedPrdRow, or null if the shape is wrong.
- *
- * @param payload - Raw JSON from GET /api/prd/:id.
- * @returns Typed row or null.
- */
-function parsePrd(payload: unknown): SavedPrdRow | null {
-  if (typeof payload !== 'object' || payload === null) return null;
-  const row = payload as Record<string, unknown>;
-  if (
-    typeof row.id !== 'string' ||
-    typeof row.slug !== 'string' ||
-    typeof row.title !== 'string' ||
-    typeof row.prompt !== 'string' ||
-    typeof row.markdown !== 'string' ||
-    typeof row.created_at !== 'string'
-  ) {
-    return null;
-  }
-  return {
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    prompt: row.prompt,
-    markdown: row.markdown,
-    created_at: row.created_at
-  };
-}
-
-/**
- * Format an ISO date for display; fall back to the raw string if unparseable.
- *
- * @param iso - ISO-8601 timestamp string.
- * @returns Locale display string or the original value.
- */
-function formatCreatedAt(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString();
-}
-
-/**
  * Map generic abortable fetch state onto the SavedPrd detail view union.
- * Missing id and HTTP 404 become not-found (not a generic error).
+ * An id the API would reject and an HTTP 404 both become not-found, not a
+ * generic error.
  *
- * @param hasId - Whether the route param is a non-empty id.
+ * @param hasId - Whether the route param is a well-formed PRD id.
  * @param fetchState - Hook state from GET /api/prd/:id (ignored when !hasId).
  * @returns Page-local detail state.
  */
@@ -92,13 +42,13 @@ function toDetailState(
 export function SavedPrd(): JSX.Element {
   const copy = en.pages.savedPrd;
   const { id } = useParams<{ id: string }>();
-  const hasId = id !== undefined && id.trim().length > 0;
-  const { state: fetchState } = useAbortableJsonGet({
-    url: hasId ? `/api/prd/${encodeURIComponent(id)}` : null,
-    parse: parsePrd,
+  const validId = id !== undefined && PRD_ID_PATTERN.test(id) ? id : null;
+  const { state: fetchState, retry } = useAbortableJsonGet({
+    url: validId === null ? null : `/api/prd/${encodeURIComponent(validId)}`,
+    parse: parseSavedPrd,
     errorMessage: copy.error
   });
-  const state = toDetailState(hasId, fetchState);
+  const state = toDetailState(validId !== null, fetchState);
 
   const pageTitle = state.status === 'success' ? state.prd.title : copy.title;
 
@@ -108,65 +58,16 @@ export function SavedPrd(): JSX.Element {
       state.status === 'success'
         ? `Saved PRD: ${state.prd.title}`
         : 'View a PRD saved on RedAnvil.',
-    path: hasId ? `/prd/${encodeURIComponent(id)}` : '/prd'
+    path: validId === null ? '/prd' : `/prd/${encodeURIComponent(validId)}`
   });
 
   return (
     <Page title={pageTitle} breadcrumb={copy.title}>
-      <p style={{ marginBottom: theme.space.md }}>
-        <Link to="/saved" style={buttonStyle(false)}>
-          ← {copy.backToSaved}
-        </Link>
-      </p>
-
+      <BackToSaved />
       {state.status === 'loading' && <LoadingBanner message={copy.loading} />}
-      {state.status === 'error' && <ErrorBanner message={state.message} />}
+      {state.status === 'error' && <SavedError message={state.message} onRetry={retry} />}
       {state.status === 'not-found' && <ErrorBanner message={copy.notFound} />}
-      {state.status === 'success' && (
-        <section style={rootStyle} aria-label={state.prd.title}>
-          <p style={readyStyle}>
-            <span aria-hidden="true">✓ </span>
-            {copy.readyBadge}
-          </p>
-          <p style={{ margin: 0, color: theme.color.muted, fontSize: theme.type.scale[1] }}>
-            {copy.createdAt(formatCreatedAt(state.prd.created_at))}
-          </p>
-          <FidelityWarning markdown={state.prd.markdown} />
-          <div style={cardStyle(theme.space.md)}>
-            <pre style={preStyle}>{state.prd.markdown}</pre>
-          </div>
-          <StackReferences markdown={state.prd.markdown} />
-        </section>
-      )}
+      {state.status === 'success' && <SavedPrdDocument prd={state.prd} />}
     </Page>
   );
 }
-
-// Layout lives in `.ra-content-col`, not here. An inline maxWidth cannot be
-// lifted by a media query, which is design rule R14 — and an independent judge
-// caught this one surviving the desktop-width work.
-const rootStyle: CSSProperties = {};
-
-const readyStyle: CSSProperties = {
-  margin: 0,
-  color: theme.color.accent,
-  fontSize: theme.type.scale[0],
-  fontWeight: 700,
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase'
-};
-
-const preStyle: CSSProperties = {
-  margin: 0,
-  maxHeight: '28rem',
-  overflow: 'auto',
-  background: theme.color.bg,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.md,
-  padding: theme.space.md,
-  fontSize: theme.type.scale[1],
-  lineHeight: 1.6,
-  whiteSpace: 'pre-wrap',
-  wordBreak: 'break-word',
-  color: theme.color.text
-};
