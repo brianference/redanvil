@@ -10,15 +10,23 @@ const recoveryLinkStyle: CSSProperties = {
   fontWeight: 600
 };
 
+export interface BackToRunsLinkProps {
+  /** Link text; defaults to the run-detail copy. */
+  label?: string;
+}
+
 /**
- * Recovery link back to the run list (used on not-found / error).
+ * Recovery link back to the run list (used on not-found / error, and on the
+ * 404 page with its own label).
  *
  * @returns The link.
  */
-export function BackToRunsLink(): JSX.Element {
+export function BackToRunsLink({
+  label = en.runDetail.backToRuns
+}: BackToRunsLinkProps): JSX.Element {
   return (
     <Link to="/" style={recoveryLinkStyle}>
-      {en.runDetail.backToRuns}
+      {label}
     </Link>
   );
 }

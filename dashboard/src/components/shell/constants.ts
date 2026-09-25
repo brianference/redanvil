@@ -14,15 +14,6 @@ export const LOGO_HEIGHT = 112;
 export const DRAWER_LOGO_HEIGHT = 48;
 
 /**
- * Minimum edge of a standalone tap target, px (WCAG 2.5.8 AA).
- *
- * Only for targets that are NOT a link inside a sentence — 2.5.8 exempts those,
- * and enforcing 44px on inline prose links produced a confident false FAIL once
- * already.
- */
-export const TOUCH_TARGET_MIN_PX = 44;
-
-/**
  * Footer lockup height, px.
  *
  * The lockup is a 440x149 raster with the tagline baked into the pixels, so it
