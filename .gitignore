@@ -76,3 +76,12 @@ results/*.verify.json
 
 # Local owner-dispatch registry. Job approvals carry prompts; never commit them.
 .redanvil/dispatch/
+
+# Runtime state written by the overnight loop and by agent worktrees; never gate input.
+.redanvil/overnight/ALERT.json
+.redanvil/overnight/checkpoint*.json
+.redanvil/overnight/evidence/
+.claude/worktrees/
+.redanvil/overnight/last-run.json
+logs/
+evidence/receipts/
