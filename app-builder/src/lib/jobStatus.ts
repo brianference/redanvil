@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { safeHttpUrl } from '../../../design-system/safeHttpUrl';
 import { UUID_PATTERN } from './ids';
 
@@ -145,17 +146,6 @@ export function jobStatusUrl(jobId: string): string {
 }
 
 /**
- * Read a string field, or null when it is missing or empty.
- *
- * @param value - Unknown JSON field.
- * @returns The string, or null.
- */
-function nullableString(value: unknown): string | null {
-  if (typeof value !== 'string' || value.length === 0) return null;
-  return value;
-}
-
-/**
  * Accept only an http or https URL short enough for the status API.
  * javascript:, data:, and other schemes are dropped so the panel never links them.
  *
@@ -181,29 +171,38 @@ export function shouldShowDeployLink(status: string, deployUrl: string | null): 
   return safeHttpUrl(deployUrl) !== null && deployUrl.length <= MAX_DEPLOY_URL_LEN;
 }
 
+/** Optional text field; missing, null and empty all read as null. */
+const optionalText = z
+  .string()
+  .nullish()
+  .transform((value) => (value === undefined || value === null || value.length === 0 ? null : value));
+
+/**
+ * The public status JSON. Extra fields, including `prompt`, are stripped, and
+ * a payload that is not this shape fails the parse so the panel fails closed
+ * instead of rendering whatever the server sent.
+ */
+const publicJobStatusSchema = z.object({
+  id: z.string().regex(UUID_PATTERN),
+  status: z.string().min(1),
+  step: optionalText,
+  detail: optionalText,
+  updatedAt: optionalText,
+  deployUrl: z.unknown().transform(publicDeployUrl)
+});
+
+/** A successful POST /api/submit body. */
+const submittedJobSchema = z.object({ id: z.string().regex(UUID_PATTERN) });
+
 /**
  * Parse the public status JSON.
- *
- * Extra fields, including `prompt`, are ignored. A payload that is not the
- * public shape returns null so the panel fails closed instead of rendering
- * whatever the server sent.
  *
  * @param payload - Parsed JSON.
  * @returns The public status, or null.
  */
 export function parsePublicJobStatus(payload: unknown): PublicJobStatus | null {
-  if (typeof payload !== 'object' || payload === null) return null;
-  const record = payload as Record<string, unknown>;
-  if (typeof record['id'] !== 'string' || !isJobId(record['id'])) return null;
-  if (typeof record['status'] !== 'string' || record['status'].length === 0) return null;
-  return {
-    id: record['id'],
-    status: record['status'],
-    step: nullableString(record['step']),
-    detail: nullableString(record['detail']),
-    updatedAt: nullableString(record['updatedAt']),
-    deployUrl: publicDeployUrl(record['deployUrl'])
-  };
+  const parsed = publicJobStatusSchema.safeParse(payload);
+  return parsed.success ? parsed.data : null;
 }
 
 /**
@@ -213,10 +212,8 @@ export function parsePublicJobStatus(payload: unknown): PublicJobStatus | null {
  * @returns The id, or null when the body has none.
  */
 export function parseSubmittedJobId(payload: unknown): string | null {
-  if (typeof payload !== 'object' || payload === null) return null;
-  const id = (payload as Record<string, unknown>)['id'];
-  if (typeof id !== 'string' || !isJobId(id)) return null;
-  return id;
+  const parsed = submittedJobSchema.safeParse(payload);
+  return parsed.success ? parsed.data.id : null;
 }
 
 /**
