@@ -3,8 +3,9 @@
  * Produce evidence/judge-diff-<slug>.json for the independent judge-over-diff
  * finish-line row (F5 / isDone.independentReviewOk).
  *
- * Modeled on independent_judge.mjs (disposable worktree, scrubbed env, grok
- * as the independent reviewer) but reviews the DIFF, not a fixed rule list.
+ * Modeled on independent_judge.mjs (disposable worktree, scrubbed env, claude
+ * as the independent reviewer, no Grok fallback) but reviews the DIFF, not a
+ * fixed rule list.
  * The decision + report shape live in ONE place:
  *   orchestrator/src/loop/independentReview.ts
  * This driver never hand-authors a passing report — it runs the reviewer and

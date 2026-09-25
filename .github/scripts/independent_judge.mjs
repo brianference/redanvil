@@ -7,8 +7,8 @@
  * the code, so the number measured agreement with itself. Handing the same ten
  * rules to an independent reviewer returned six FAILs, five of them real.
  *
- * This makes that repeatable instead of a one-off. It runs the `grok` CLI in a
- * disposable git worktree with:
+ * This makes that repeatable instead of a one-off. It runs `claude -p` (prompt
+ * on stdin) in a disposable git worktree with:
  *   - no access to the existing verdict file (it must decide from the code),
  *   - a hard requirement to cite file:line evidence that exists on disk,
  *   - an explicit instruction that PASS is the claim needing proof, not FAIL.
@@ -20,23 +20,26 @@
  * Usage:
  *   node independent_judge.mjs <appDir> [--out evidence/judge-independent-<slug>.json]
  *                                       [--rules a,b,c] [--timeout 900]
- *                                       [--engine claude|grok]
+ *                                       [--engine claude]
  *
- * `--engine` defaults to claude. A rate limit or a missing `claude` binary
- * falls back to grok. The report records which engine actually answered.
+ * Claude only. Owner rule, 2026-09-24 (orchestrator/scripts/lib/engine-policy.mjs):
+ * judging never runs on Grok, and there is no fallback. `--engine grok` is a
+ * usage error. When claude is missing, rate-limited, or returns an `is_error`
+ * envelope, the run is UNVERIFIED: exit 1 and no report, because a judge that
+ * could not be run must not be recorded as agreement.
  *
  * Exit 0 when the run completed and a report was written (findings or not),
- * 1 when the reviewer could not be run, 2 on usage error.
+ * 1 when the reviewer could not be run (UNVERIFIED), 2 on usage error.
  */
 import { writeFileSync, readFileSync, existsSync, mkdtempSync, rmSync, readdirSync } from 'node:fs';
 import { join, basename, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
 import {
   judgeScopeFromCitations,
   JUDGE_SCOPE_SCHEMA_VERSION
 } from '../../orchestrator/scripts/lib/verdict-freshness.mjs';
+import { ENGINE_CLAUDE } from '../../orchestrator/scripts/lib/engine-policy.mjs';
 
 const args = process.argv.slice(2);
 const appDir = args[0];
@@ -51,9 +54,12 @@ const flag = (name, fallback) => {
 const slug = basename(resolve(appDir));
 const outPath = flag('out', join('evidence', `judge-independent-${slug}.json`));
 const timeoutSec = Number(flag('timeout', '900'));
-const engineFlag = String(flag('engine', 'claude'));
-if (engineFlag !== 'claude' && engineFlag !== 'grok') {
-  console.error('independent_judge FAIL: --engine must be claude or grok');
+const engineFlag = String(flag('engine', ENGINE_CLAUDE));
+if (engineFlag !== ENGINE_CLAUDE) {
+  console.error(
+    'independent_judge FAIL: --engine must be claude. Judging runs on Claude only ' +
+      '(owner rule 2026-09-24, orchestrator/scripts/lib/engine-policy.mjs).'
+  );
   process.exit(2);
 }
 
@@ -178,17 +184,14 @@ One entry per rule, ${rules.length} entries. Do not edit any file. Do not run gi
 
 console.log(`independent judge: ${slug} @ ${head.slice(0, 12)}, ${rules.length} rules`);
 
-// The prompt goes in a file inside the worktree, not on the command line.
-// Passing it as an argument exceeded the Windows command-line limit and grok
-// exited 1 with no output — which this script correctly refused to record as
-// agreement, but which also meant it never ran.
+// The prompt goes on stdin, not on the command line. Passing it as an argument
+// exceeded the Windows command-line limit and the reviewer exited 1 with no
+// output — which this script correctly refused to record as agreement, but
+// which also meant it never ran.
 // The checkout contains committed verdict files. Remove them inside the
-// throwaway worktree only, so neither engine can grade by copying the last
+// throwaway worktree only, so the reviewer cannot grade by copying the last
 // review. The real repo copy is untouched.
 hidePriorVerdicts(worktreePath);
-
-const taskFile = join(worktreePath, 'JUDGE_TASK.md');
-writeFileSync(taskFile, prompt);
 
 /**
  * Delete prior judge output inside a disposable worktree.
@@ -250,47 +253,10 @@ function classifyClaude(res) {
   return { ok: res.status === 0, rateLimited, detail: `no json envelope; exit ${res.status}` };
 }
 
-const sid = randomUUID();
-const grokArgs = [
-  '--no-auto-update',
-  '--always-approve',
-  '--no-alt-screen',
-  '--cwd',
-  worktreePath,
-  '--session-id',
-  sid,
-  '--output-format',
-  'json',
-  '-p',
-  'Read JUDGE_TASK.md in the current directory and carry out exactly what it ' +
-    'says. Reply with only the JSON array it asks for. Do not modify any file, ' +
-    'including JUDGE_TASK.md. Do not open any verdicts-*.json or judge-*.json file.'
-];
-
 // The reviewer never needs credentials, and must not see them.
 const scrubbed = { ...process.env };
 for (const k of Object.keys(scrubbed)) {
   if (/TOKEN|KEY|SECRET|PASSWORD|CREDENTIAL/i.test(k)) delete scrubbed[k];
-}
-
-/**
- * Run grok. It is a .cmd shim on Windows, so that path uses a shell, with
- * each argument quoted — Node's shell:true does not quote, and the prompt
- * was being re-split.
- *
- * @returns {{code: number, stdout: string, stderr: string, unavailable: boolean}}
- */
-function runGrok() {
-  const useShell = process.platform === 'win32';
-  const quoted = useShell
-    ? grokArgs.map((a) => (/[\s"]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a))
-    : grokArgs;
-  const grok = run('grok', quoted, {
-    env: scrubbed,
-    timeout: timeoutSec * 1000,
-    shell: useShell
-  });
-  return { ...grok, unavailable: grok.code !== 0 && grok.stdout.trim().length === 0 };
 }
 
 /**
@@ -313,24 +279,26 @@ function runClaude() {
   return { ...claude, unavailable };
 }
 
-let usedEngine = engineFlag;
-let res = usedEngine === 'claude' ? runClaude() : runGrok();
-if (usedEngine === 'claude') {
-  const classified = classifyClaude({
-    status: res.code,
-    stdout: res.stdout,
-    stderr: res.stderr
-  });
-  if (res.unavailable || classified.rateLimited) {
-    console.error(
-      `independent judge: claude unavailable or rate-limited (${classified.detail}); falling back to grok`
-    );
-    usedEngine = 'grok';
-    res = runGrok();
-  }
-}
+const usedEngine = ENGINE_CLAUDE;
+const res = runClaude();
+const classified = classifyClaude({
+  status: res.code,
+  stdout: res.stdout,
+  stderr: res.stderr
+});
 
 cleanup();
+
+// Fail closed. No Grok fallback: a missing, rate-limited or erroring Claude is
+// an UNVERIFIED run, not a reason to ask a different engine.
+if (res.unavailable || classified.rateLimited || !classified.ok) {
+  console.error(
+    `independent_judge UNVERIFIED: claude unavailable, rate-limited or errored ` +
+      `(${classified.detail}). No report written; there is no fallback engine. ` +
+      `A judge that could not be run must NOT be recorded as agreement.`
+  );
+  process.exit(1);
+}
 
 if (res.code !== 0 && res.stdout.trim().length === 0) {
   console.error(

@@ -98,7 +98,8 @@ export interface PmDeps {
    * Optional independent judge over the diff. When omitted, the iteration
    * does not spawn a judge (unit tests of budget and dispatch). The
    * production PM command passes {@link invokeIterationJudge}, which runs
-   * Claude and falls back to Grok. Building roles are not this callback.
+   * Claude only and fails closed when Claude cannot review. Building roles
+   * are not this callback.
    */
   independentJudge?: () => Promise<{ ok: boolean; summary: string; engine?: JudgeEngine }>;
   /**
@@ -180,7 +181,7 @@ export interface PmResult {
  *
  * The old `Promise.all` looked parallel and was not: `runRole` blocked on
  * `spawnSync`, so the cap was secretly 1. Three is the default so a fan-out
- * of independent roles overlaps without unbounded grok processes.
+ * of independent roles overlaps without unbounded agent processes.
  */
 export const PM_ROLE_CONCURRENCY = 3;
 
@@ -446,17 +447,15 @@ export function dryRunAssignments(
 /** Test-only spawns for {@link invokeIterationJudge}. Production omits this. */
 export interface IterationJudgeRunners {
   runClaude?: (prompt: string, timeoutMs: number) => EngineSpawnResult;
-  runGrok?: (prompt: string, timeoutMs: number) => EngineSpawnResult;
 }
 
 /**
  * The one independent judge an iteration runs.
  *
- * Claude by default (`claude -p`, fresh context, no verdict file). When Claude
- * is unavailable or rate-limited, the review falls back to Grok inside
- * {@link runIndependentDiffReview}. The report records which engine actually
- * answered. Grok remains the engine for every building role; this function
- * does not dispatch one.
+ * Claude only (`claude -p`, fresh context, no verdict file). When Claude is
+ * unavailable, rate-limited or returns an error envelope, the review is
+ * recorded as `unavailable` and is not ok (UNVERIFIED, fail-closed). It never
+ * falls back to Grok (orchestrator/scripts/lib/engine-policy.mjs).
  *
  * @param appDir - App directory the diff is collected from.
  * @param runners - Test-only spawns. Production omits them.
@@ -469,10 +468,12 @@ export async function invokeIterationJudge(
   const review = await runIndependentDiffReview({
     dir: appDir,
     engine: 'claude',
-    runClaude: runners?.runClaude,
-    runGrok: runners?.runGrok
+    runClaude: runners?.runClaude
   });
-  const who = review.engine ?? review.mode;
+  // An unavailable review still records engine 'claude' (the engine asked);
+  // the summary must say it never answered.
+  const who =
+    review.mode === 'unavailable' ? 'claude unavailable, UNVERIFIED' : (review.engine ?? review.mode);
   return {
     ok: review.ok,
     engine: review.engine,

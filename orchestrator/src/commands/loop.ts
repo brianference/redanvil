@@ -5,7 +5,7 @@ import { withWorktree } from '../worktree/isolate';
 import { promoteWorktree, type PromoteResult } from '../worktree/promote';
 import { runLoop, type GateOutcome, type LoopResult } from '../loop/ralph';
 import { gateApp, type GateReport } from './gate';
-import { runGrok, parseGrokJson, newSessionId } from '../grok/harness';
+import { runClaude, parseClaudeJson, CODER_PERMISSION_MODE, DEFAULT_CLAUDE_TIMEOUT_MS } from '../claude/harness';
 import { scoreRun, coderEnv } from '../loop/runRules';
 import type { Outcome } from '../gate/score';
 import { runIndependentDiffReview } from '../loop/independentReview';
@@ -44,7 +44,7 @@ export interface LoopRun {
 export interface LoopCommandOptions {
   /** App directory the coder edits and the gate scores. */
   dir: string;
-  /** Path to the spec Grok implements. */
+  /** Path to the spec the Claude coder implements. */
   specPath: string;
   threshold: number;
   maxIters: number;
@@ -52,13 +52,13 @@ export interface LoopCommandOptions {
   judge: Outcome[];
   /** Rule ids or lane names that do not apply to this app. */
   notApplicable: string[];
-  /** Per-iteration Grok timeout. */
+  /** Per-iteration coder timeout. */
   timeoutMs?: number;
   /**
    * Run the coder in a disposable git worktree instead of the working tree.
    * Default true: `lg-worktree-isolation` is a blocker and the README promises
-   * a "bounded, isolated" run, so letting Grok edit the live tree by default
-   * would make both statements false.
+   * a "bounded, isolated" run, so letting the coder edit the live tree by default
+   * would make both statements false. The coder is Claude (engine-policy.mjs).
    */
   isolate?: boolean;
   /** Repo the worktree branches from. Defaults to the current directory. */
@@ -76,8 +76,8 @@ export interface LoopCommandOptions {
   estimatedIterations?: number;
 }
 
-/** Coder timeout applied when the caller sets none; mirrors the Grok harness default. */
-const DEFAULT_CODER_TIMEOUT_MS = 600_000;
+/** Coder timeout applied when the caller sets none; the Claude harness default. */
+const DEFAULT_CODER_TIMEOUT_MS = DEFAULT_CLAUDE_TIMEOUT_MS;
 
 /** Indent a captured diagnostic so it reads as a block under its rule id. */
 function indent(text: string): string {
@@ -209,16 +209,22 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
   let gatedIterations = 0;
   /** The full report from the most recent gate pass, for the result file. */
   let lastReport: GateReport | null = null;
-  // One session for the whole loop so the coder keeps its own context across
-  // iterations; the gate verdict is what carries state between passes.
-  const sessionId = newSessionId();
+  // The coder resumes the Claude session its previous iteration opened, so it
+  // keeps its own context; the gate verdict is what carries state between
+  // passes. Only an id a real envelope returned is resumed -- a failed first
+  // call leaves nothing to resume, and the next iteration starts fresh.
+  let coderSessionId: string | undefined;
 
   const deps = {
-    /** Invoke Grok for one iteration. A coder failure is not a gate pass. */
+    /**
+     * Invoke the Claude coder for one iteration. A coder failure is not a gate
+     * pass, and it never falls back to Grok (engine-policy.mjs).
+     */
     coder: async (iteration: number, feedback: string): Promise<void> => {
-      const result = await runGrok(dir, coderPrompt(spec, iteration, feedback), {
-        sessionId,
-        timeoutMs: opts.timeoutMs
+      const result = await runClaude(dir, coderPrompt(spec, iteration, feedback), {
+        resumeSessionId: coderSessionId,
+        permissionMode: CODER_PERMISSION_MODE,
+        timeoutMs: opts.timeoutMs ?? DEFAULT_CODER_TIMEOUT_MS
       });
       if (result.code !== 0) {
         // Surface it, but do not abort: the gate still runs and scores whatever
@@ -226,8 +232,12 @@ async function runLoopIn(dir: string, opts: LoopCommandOptions): Promise<LoopRun
         console.error(`iteration ${iteration}: coder exited ${result.code ?? 'timeout'}`);
         return;
       }
-      const reply = parseGrokJson(result.stdout);
-      if (reply === null) console.error(`iteration ${iteration}: coder output was not valid JSON`);
+      const reply = parseClaudeJson(result.stdout);
+      if (reply === null) {
+        console.error(`iteration ${iteration}: coder output was not valid JSON`);
+        return;
+      }
+      coderSessionId = reply.sessionId ?? coderSessionId;
     },
 
     /** Score inline. Never the coder's self-report. */

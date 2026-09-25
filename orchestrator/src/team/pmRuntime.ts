@@ -32,6 +32,7 @@ import {
   writeAssignment
 } from './worktreeEnforcement';
 import {
+  roleEngine,
   runRole,
   type RunRoleDeps,
   type RunRoleResult
@@ -330,6 +331,7 @@ async function addWorktree(
 function promoteOnlyRoleResult(roleId: RoleId, worktreeDir: string): RunRoleResult {
   return {
     role: roleId,
+    engine: roleEngine(roleId),
     exitCode: 0,
     countedAsRun: true,
     missing: [],

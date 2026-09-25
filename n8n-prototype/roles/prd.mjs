@@ -168,7 +168,7 @@ const AUTH_WORDS_RE = /\b(sign[- ]?in|log[- ]?in|account|accounts|per[- ]user|pr
  * Overrule an intent that turns sign-in on when the prompt only ever mentions
  * sign-in to rule it out ("works without a login", "login not required").
  *
- * Grok's answer is trusted for everything else. This one field decides whether
+ * Claude's answer is trusted for everything else. This one field decides whether
  * a public app ships with an auth wall, and the prompt's own negation is the
  * stronger evidence. The override is recorded on the intent.
  *
@@ -307,7 +307,7 @@ export function assertAnswerTook(group, intended, actual) {
  * @param {string} prompt the prompt that produced it
  * @param {Array<{group: string, intended: string, actual: string}>} answers recorded answers
  * @param {string} source builder URL
- * @param {{intent: Record<string, unknown>, intentSource: string, grokDurationMs: number, fallbackReason?: string}} [meta] intent, when one was extracted
+ * @param {{intent: Record<string, unknown>, intentSource: string, intentDurationMs: number, fallbackReason?: string}} [meta] intent, when one was extracted
  * @returns {void}
  * @throws {AnswerDidNotTakeError} when any answer did not take — and does not write
  */
@@ -332,7 +332,7 @@ export function writePrdArtifacts(docsDir, markdown, prompt, answers, source, me
   if (meta?.intent) {
     provenance.intent = meta.intent;
     provenance.intentSource = meta.intentSource;
-    provenance.grokDurationMs = meta.grokDurationMs;
+    provenance.intentDurationMs = meta.intentDurationMs;
     if (meta.fallbackReason) provenance.fallbackReason = meta.fallbackReason;
   }
   mkdirSync(docsDir, { recursive: true });
@@ -344,7 +344,7 @@ export function writePrdArtifacts(docsDir, markdown, prompt, answers, source, me
       JSON.stringify(
         {
           intentSource: meta.intentSource,
-          grokDurationMs: meta.grokDurationMs,
+          intentDurationMs: meta.intentDurationMs,
           ...(meta.fallbackReason ? { fallbackReason: meta.fallbackReason } : {}),
           ...meta.intent
         },
@@ -432,7 +432,7 @@ export function picksForGroup(group, prompt, intent = null) {
 /**
  * Entity text for the wizard field.
  *
- * A grok intent carries structured entities and is formatted to the entity-spec
+ * A claude intent carries structured entities and is formatted to the entity-spec
  * contract. The regex fallback has no entities, so a caller-supplied list (the
  * old `--entities` / `REDANVIL_ENTITIES` path) is used instead. A spec that
  * does not parse cleanly is not typed in — that would store a string the

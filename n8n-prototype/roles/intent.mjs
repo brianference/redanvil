@@ -2,25 +2,30 @@
  * Typed intent for the PRD role.
  *
  * The wizard used to be answered by regex over the prompt. That is still the
- * fallback, but the first attempt asks grok for a structured intent whose
- * appType, dataStorage and integrations are limited to the buttons the wizard
- * actually renders (app-builder/src/i18n/en.ts). Entity text follows the Batch
- * 3 entity-spec contract so the wizard field parses with zero errors.
+ * fallback, but the first attempt asks Claude (`claude -p --json-schema`) for
+ * a structured intent whose appType, dataStorage and integrations are limited
+ * to the buttons the wizard actually renders (app-builder/src/i18n/en.ts).
+ * Entity text follows the Batch 3 entity-spec contract so the wizard field
+ * parses with zero errors.
  *
- * The grok runner is injectable (`opts.runGrok`). Tests pass a fake. The real
- * runner is headless, `shell: false`, ten minutes, and never sees GitHub or
- * Cloudflare credentials.
+ * Owner rule, 2026-09-24: PRD intent runs on Claude, never Grok. There is no
+ * Grok fallback; when Claude cannot answer, the regex rules answer and the
+ * provenance says `regex-fallback` with the reason.
+ *
+ * The claude runner is injectable (`opts.runClaude`). Tests pass a fake. The
+ * real runner is headless, `shell: false`, prompt on stdin, no tools, ten
+ * minutes, and never sees GitHub or Cloudflare credentials.
  */
 import { spawn } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
-/** How long one grok attempt may run before it is killed. */
-const GROK_TIMEOUT_MS = 10 * 60 * 1000;
+/** How long one claude attempt may run before it is killed. */
+const INTENT_TIMEOUT_MS = 10 * 60 * 1000;
 
 /** Invalid model output is tried twice (the first call, then one retry). */
-const MAX_GROK_ATTEMPTS = 2;
+const MAX_INTENT_ATTEMPTS = 2;
 
 /** Contract: entity and field names are at most this many characters. */
 const NAME_MAX_LENGTH = 40;
@@ -97,7 +102,8 @@ export function normaliseFieldName(raw) {
 }
 
 /**
- * JSON schema passed to `grok --json-schema`.
+ * JSON schema passed to `claude --json-schema`, and checked again by
+ * validateIntent on whatever comes back.
  *
  * Enums are the wizard's real button labels, not a guessed taxonomy.
  *
@@ -347,32 +353,32 @@ export function publicIntent(result) {
 }
 
 /**
- * Provenance payload: the intent, where it came from, and how long grok took.
+ * Provenance payload: the intent, where it came from, and how long the extraction took.
  *
- * @param {{appName: string, appType: string, hasAuth: boolean, dataStorage: string, hasRealtime: boolean, integrations: string[], entities: Array<{name: string, fields: Array<{name: string, type: string, ref?: string}>}>, capabilities: string[], nonGoals: string[], negated: string[], intentSource: string, grokDurationMs: number, fallbackReason?: string}} extracted
- * @returns {{intent: ReturnType<typeof publicIntent>, intentSource: string, grokDurationMs: number, fallbackReason?: string}}
+ * @param {{appName: string, appType: string, hasAuth: boolean, dataStorage: string, hasRealtime: boolean, integrations: string[], entities: Array<{name: string, fields: Array<{name: string, type: string, ref?: string}>}>, capabilities: string[], nonGoals: string[], negated: string[], intentSource: string, intentDurationMs: number, fallbackReason?: string}} extracted
+ * @returns {{intent: ReturnType<typeof publicIntent>, intentSource: string, intentDurationMs: number, fallbackReason?: string}}
  */
 export function provenanceMetaFromIntent(extracted) {
-  /** @type {{intent: ReturnType<typeof publicIntent>, intentSource: string, grokDurationMs: number, fallbackReason?: string}} */
+  /** @type {{intent: ReturnType<typeof publicIntent>, intentSource: string, intentDurationMs: number, fallbackReason?: string}} */
   const meta = {
     intent: publicIntent(extracted),
     intentSource: extracted.intentSource,
-    grokDurationMs: extracted.grokDurationMs
+    intentDurationMs: extracted.intentDurationMs
   };
   if (extracted.fallbackReason) meta.fallbackReason = extracted.fallbackReason;
   return meta;
 }
 
 /**
- * Environment for the grok child.
+ * Environment for the claude child.
  *
  * GitHub and Cloudflare credentials are dropped. Everything else stays so the
- * `grok login` session under the user profile still resolves.
+ * Claude login under the user profile still resolves.
  *
  * @param {NodeJS.ProcessEnv} [base] environment to copy
  * @returns {NodeJS.ProcessEnv}
  */
-export function scrubGrokEnv(base = process.env) {
+export function scrubAgentEnv(base = process.env) {
   /** @type {NodeJS.ProcessEnv} */
   const env = {};
   for (const [key, value] of Object.entries(base)) {
@@ -385,50 +391,48 @@ export function scrubGrokEnv(base = process.env) {
 }
 
 /**
- * Argv for one headless grok call.
+ * Argv for one headless claude call. The prompt is NOT here: it goes on stdin.
  *
- * `--max-turns 1` is required for `--json-schema` to come back as
- * `structuredOutput`. Without it the CLI spends the turn on tools and the
- * schema result is null (same failure the independent diff review hit).
- * `--cwd` is the temp dir that holds the prompt file, so a tool call cannot
- * write into the repo.
+ * `claude --help` (read 2026-09-24): `--json-schema <schema>` is "JSON Schema
+ * for structured output validation"; `--tools ""` disables every built-in
+ * tool, so the call cannot touch the filesystem. A measured run with these
+ * flags returned the object on the envelope's `structured_output` field and
+ * the same JSON as a string on `result`.
  *
- * @param {string} promptFile absolute path to the prompt
  * @param {string} schemaText JSON schema
  * @returns {{command: string, args: string[], shell: false, timeoutMs: number}}
  */
-export function buildGrokSpawn(promptFile, schemaText) {
+export function buildClaudeSpawn(schemaText) {
   return {
-    command: process.platform === 'win32' ? 'grok.exe' : 'grok',
+    command: 'claude',
     args: [
-      '--no-auto-update',
-      '--always-approve',
-      '--no-alt-screen',
-      '--max-turns',
-      '1',
-      '--cwd',
-      dirname(promptFile),
-      '--prompt-file',
-      promptFile,
+      '-p',
+      '--output-format',
+      'json',
+      '--input-format',
+      'text',
+      '--no-session-persistence',
+      '--tools',
+      '',
       '--json-schema',
       schemaText
     ],
     shell: false,
-    timeoutMs: GROK_TIMEOUT_MS
+    timeoutMs: INTENT_TIMEOUT_MS
   };
 }
 
 /**
- * spawn options. `shell` is false: grok.exe is on PATH and must not go through
+ * spawn options. `shell` is false: claude is on PATH and must not go through
  * cmd.exe, which is what splits a free-text argument.
  *
  * @param {NodeJS.ProcessEnv} [baseEnv] environment before scrubbing
  * @returns {{shell: false, env: NodeJS.ProcessEnv, windowsHide: true}}
  */
-export function grokProcessOptions(baseEnv = process.env) {
+export function claudeProcessOptions(baseEnv = process.env) {
   return {
     shell: false,
-    env: scrubGrokEnv(baseEnv),
+    env: scrubAgentEnv(baseEnv),
     windowsHide: true
   };
 }
@@ -466,24 +470,25 @@ function intentPrompt(prompt) {
 }
 
 /**
- * Run grok once and return its stdout.
+ * Run claude once, prompt on stdin, and return its stdout (the JSON envelope).
+ *
+ * The child runs in an empty temp directory so nothing it could do lands in
+ * the repo, and `--tools ""` means it cannot do anything anyway.
  *
  * @param {string} prompt app description
  * @param {{spawn?: typeof spawn, env?: NodeJS.ProcessEnv}} [deps] test doubles
  * @returns {Promise<string>}
  */
-export async function runGrokProcess(prompt, deps = {}) {
+export async function runClaudeProcess(prompt, deps = {}) {
   const spawnImpl = deps.spawn ?? spawn;
   const dir = mkdtempSync(join(tmpdir(), 'ra-intent-'));
-  const promptFile = join(dir, 'prompt.txt');
   const schemaText = JSON.stringify(intentJsonSchema());
-  writeFileSync(promptFile, intentPrompt(prompt), 'utf8');
-  const launch = buildGrokSpawn(promptFile, schemaText);
+  const launch = buildClaudeSpawn(schemaText);
   try {
     return await new Promise((resolve, reject) => {
       const child = spawnImpl(launch.command, launch.args, {
         cwd: dir,
-        ...grokProcessOptions(deps.env)
+        ...claudeProcessOptions(deps.env)
       });
       let stdout = '';
       let stderr = '';
@@ -492,8 +497,12 @@ export async function runGrokProcess(prompt, deps = {}) {
         if (settled) return;
         settled = true;
         child.kill();
-        reject(new Error(`grok timed out after ${launch.timeoutMs}ms`));
+        reject(new Error(`claude timed out after ${launch.timeoutMs}ms`));
       }, launch.timeoutMs);
+      child.stdin.on('error', () => {
+        // EPIPE when the child exits before reading; 'close' reports the exit.
+      });
+      child.stdin.end(intentPrompt(prompt), 'utf8');
       child.stdout.setEncoding('utf8');
       child.stderr.setEncoding('utf8');
       child.stdout.on('data', (chunk) => {
@@ -513,7 +522,11 @@ export async function runGrokProcess(prompt, deps = {}) {
         settled = true;
         clearTimeout(timer);
         if (code !== 0) {
-          reject(new Error(`grok exited ${code}: ${String(stderr).slice(0, 400)}`));
+          reject(
+            new Error(
+              `claude exited ${code}: ${String(stderr).slice(0, 200)} ${String(stdout).slice(0, 200)}`.trim()
+            )
+          );
           return;
         }
         resolve(stdout);
@@ -525,56 +538,54 @@ export async function runGrokProcess(prompt, deps = {}) {
 }
 
 /**
- * Unwrap grok's `--output-format json` envelope.
+ * Unwrap claude's `--output-format json` envelope.
  *
- * A successful `--json-schema` run puts the object on `structuredOutput`.
- * `text` is the same JSON as a string when the envelope has no structured
- * field. A bare intent object (what a fake runner returns) is accepted too.
+ * A successful `--json-schema` run puts the object on `structured_output`
+ * (measured 2026-09-24). `result` is the same JSON as a string. An envelope
+ * with `is_error: true` is a failed call, whatever else it carries. A bare
+ * intent object (what a fake runner returns) is accepted too.
  *
  * @param {unknown} raw runner return value
  * @returns {Record<string, unknown>}
  */
-export function decodeGrokPayload(raw) {
-  if (raw && typeof raw === 'object') return unwrapGrokObject(/** @type {Record<string, unknown>} */ (raw));
-  if (typeof raw !== 'string') throw new Error('grok runner returned nothing');
+export function decodeClaudePayload(raw) {
+  if (raw && typeof raw === 'object') return unwrapClaudeObject(/** @type {Record<string, unknown>} */ (raw));
+  if (typeof raw !== 'string') throw new Error('claude runner returned nothing');
   const text = raw.trim();
-  if (!text) throw new Error('grok returned empty stdout');
+  if (!text) throw new Error('claude returned empty stdout');
   /** @type {unknown} */
   let parsed;
   try {
     parsed = JSON.parse(text);
   } catch {
     const at = text.indexOf('{');
-    if (at < 0) throw new Error(`grok stdout was not JSON: ${text.slice(0, 180)}`);
+    if (at < 0) throw new Error(`claude stdout was not JSON: ${text.slice(0, 180)}`);
     parsed = JSON.parse(text.slice(at));
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    throw new Error('grok JSON was not an object');
+    throw new Error('claude JSON was not an object');
   }
-  return unwrapGrokObject(/** @type {Record<string, unknown>} */ (parsed));
+  return unwrapClaudeObject(/** @type {Record<string, unknown>} */ (parsed));
 }
 
 /**
+ * Pull the intent object out of a claude envelope, or accept a bare intent.
  * @param {Record<string, unknown>} parsed envelope or intent
  * @returns {Record<string, unknown>}
  */
-function unwrapGrokObject(parsed) {
-  const structured = parsed.structuredOutput;
+function unwrapClaudeObject(parsed) {
+  if (parsed.is_error === true) {
+    const status = parsed.api_error_status ?? 'none';
+    throw new Error(
+      `claude returned an error envelope: subtype=${String(parsed.subtype)} api_error_status=${String(status)}`
+    );
+  }
+  const structured = parsed.structured_output;
   if (structured && typeof structured === 'object' && !Array.isArray(structured)) {
     return /** @type {Record<string, unknown>} */ (structured);
   }
-  if (
-    structured == null &&
-    typeof parsed.structuredOutputError === 'string' &&
-    parsed.structuredOutputError.length > 0
-  ) {
-    throw new Error(`grok structured output failed: ${parsed.structuredOutputError.slice(0, 300)}`);
-  }
-  if (parsed.stopReason === 'Cancelled' && structured == null) {
-    throw new Error('grok cancelled before producing structured output');
-  }
-  if (typeof parsed.text === 'string') {
-    let body = parsed.text.trim();
+  if (typeof parsed.result === 'string') {
+    let body = parsed.result.trim();
     const fenced = /```(?:json)?\s*([\s\S]*?)```/.exec(body);
     if (fenced?.[1]) body = fenced[1].trim();
     if (body.startsWith('{')) {
@@ -585,7 +596,7 @@ function unwrapGrokObject(parsed) {
     }
   }
   if (typeof parsed.appType === 'string') return parsed;
-  throw new Error('grok JSON had no intent object');
+  throw new Error('claude JSON had no intent object');
 }
 
 /**
@@ -854,31 +865,31 @@ async function buildRegexIntent(prompt) {
 /**
  * Extract a typed intent.
  *
- * Runs grok, validates, retries once on invalid output, then falls back to
- * the regex rules. `intentSource` is `grok` or `regex-fallback`. On fallback,
+ * Runs claude, validates, retries once on invalid output, then falls back to
+ * the regex rules. `intentSource` is `claude` or `regex-fallback`. On fallback,
  * `fallbackReason` is the last validation or runner error.
  *
  * @param {string} prompt app description
- * @param {{runGrok?: (prompt: string, ctx: {attempt: number, schema: Record<string, unknown>}) => unknown | Promise<unknown>, fallback?: (prompt: string) => Promise<ReturnType<typeof publicIntent>> | ReturnType<typeof publicIntent>}} [opts]
- * @returns {Promise<ReturnType<typeof publicIntent> & {intentSource: 'grok' | 'regex-fallback', grokDurationMs: number, fallbackReason?: string}>}
+ * @param {{runClaude?: (prompt: string, ctx: {attempt: number, schema: Record<string, unknown>}) => unknown | Promise<unknown>, fallback?: (prompt: string) => Promise<ReturnType<typeof publicIntent>> | ReturnType<typeof publicIntent>}} [opts]
+ * @returns {Promise<ReturnType<typeof publicIntent> & {intentSource: 'claude' | 'regex-fallback', intentDurationMs: number, fallbackReason?: string}>}
  */
 export async function extractIntent(prompt, opts = {}) {
-  const runGrok = opts.runGrok ?? ((text) => runGrokProcess(text));
+  const runClaude = opts.runClaude ?? ((text) => runClaudeProcess(text));
   const started = Date.now();
   /** @type {string[]} */
   const reasons = [];
   const schema = intentJsonSchema();
 
-  for (let attempt = 1; attempt <= MAX_GROK_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= MAX_INTENT_ATTEMPTS; attempt += 1) {
     try {
-      const raw = await runGrok(prompt, { attempt, schema });
-      const decoded = decodeGrokPayload(raw);
+      const raw = await runClaude(prompt, { attempt, schema });
+      const decoded = decodeClaudePayload(raw);
       const validated = await validateIntent(decoded, prompt);
       if (validated.ok) {
         return {
           ...validated.value,
-          intentSource: 'grok',
-          grokDurationMs: Date.now() - started
+          intentSource: 'claude',
+          intentDurationMs: Date.now() - started
         };
       }
       reasons.push(validated.reason);
@@ -890,7 +901,7 @@ export async function extractIntent(prompt, opts = {}) {
 
   const fallback = opts.fallback ?? buildRegexIntent;
   const base = await fallback(prompt);
-  const fallbackReason = (reasons[reasons.length - 1] || 'grok output was not a valid intent').slice(
+  const fallbackReason = (reasons[reasons.length - 1] || 'claude output was not a valid intent').slice(
     0,
     500
   );
@@ -898,7 +909,7 @@ export async function extractIntent(prompt, opts = {}) {
     ...base,
     intentSource: 'regex-fallback',
     fallbackReason,
-    grokDurationMs: Date.now() - started
+    intentDurationMs: Date.now() - started
   };
 }
 

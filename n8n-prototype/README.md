@@ -158,8 +158,13 @@ failing role fails the batch without cancelling the others. Joins before
 `decide` use Merge `chooseBranch` / `waitForAll`. `test/parallel-roles.test.mjs`
 proves overlap with four real child processes, and fails on a serial copy.
 
-Grok roles (`grok-role.mjs`, `design-role.mjs`) share `roles/agent-failover.mjs`:
-prompt via `--prompt-file`, no shell, an 8-minute output heartbeat, and a
-hand-off to `claude -p` only on a hang, a timeout, a spending-limit/403, or an
-exhausted balance (402). Image roles never hand off: Grok Imagine has no Claude
+Agent roles (`claude-role.mjs`, `design-role.mjs`) share `roles/agent-failover.mjs`,
+which picks the engine from `orchestrator/scripts/lib/engine-policy.mjs`. Only
+logo, palette and layout may run on Grok (owner rule, 2026-09-24). Every other
+role (brainstorm, testwriter, judge, user-refuse, pm, debugger, build, content)
+runs `claude -p` with the prompt on stdin and never falls back to Grok; a Claude
+failure or `is_error` envelope fails the role. The design roles run grok with
+`--prompt-file`, no shell and an 8-minute output heartbeat, and hand off to
+`claude -p` only on a hang, a timeout, a spending-limit/403, or an exhausted
+balance (402). Image roles never hand off: Grok Imagine has no Claude
 equivalent, so they fail clearly instead.

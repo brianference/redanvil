@@ -28,7 +28,7 @@ export interface ClaudeClassification {
  *
  * 429 and 529 are "wait" (rate limit / overloaded), not a review that failed.
  * With no envelope, the text fallback is broad on purpose: missing a rate
- * limit costs the iteration, a false positive costs one extra Grok call.
+ * limit costs the iteration, a false positive fails one call closed.
  *
  * @param res - Spawn result. `status` null means the process never exited.
  * @returns Whether the call succeeded, whether it was rate-limited, and cost.
@@ -81,21 +81,25 @@ export function classifyClaude(res: ClaudeSpawnResult): ClaudeClassification {
 }
 
 /**
- * True when Claude did not produce a review and Grok should be tried.
+ * True when Claude did not produce a review.
  *
- * Unavailable (no process, timeout, missing binary) and rate-limit both
- * fall back. A completed Claude answer that is merely unparseable does not:
- * that is a bad review, and switching engines would hide it.
+ * Unavailable (no process, timeout, missing binary), a rate limit, and an
+ * `is_error` envelope all count. The caller fails closed on true (UNVERIFIED);
+ * there is no second engine to try. A completed Claude answer that is merely
+ * unparseable is NOT this: that is a bad review, handled by the parser.
+ *
+ * FAIL INPUT: `{status: 0, stdout: '{"is_error":true,"result":"{}"}'}` must
+ * return true, or a clean-looking body inside an error envelope passes.
  *
  * @param res - Spawn result, plus the caller's unavailable flag.
- * @returns Whether to run the Grok judge instead.
+ * @returns Whether Claude failed to produce a review.
  */
-export function claudeShouldFallBack(res: ClaudeSpawnResult & { unavailable?: boolean }): boolean {
+export function claudeDidNotReview(res: ClaudeSpawnResult & { unavailable?: boolean }): boolean {
   if (res.unavailable === true) return true;
   if (res.status === null) return true;
   // An error envelope (is_error: true -- an auth failure, an API error) is not
   // a review. Parsing its text as judge output could read a clean JSON result
-  // inside it as a pass, so any Claude error goes to Grok.
+  // inside it as a pass.
   return classifyClaude(res).rateLimited || isErrorEnvelope(res.stdout);
 }
 
@@ -105,7 +109,7 @@ export function claudeShouldFallBack(res: ClaudeSpawnResult & { unavailable?: bo
  * @param stdout - Raw stdout of `claude -p --output-format json`.
  * @returns Whether the envelope reports an error.
  */
-function isErrorEnvelope(stdout: string): boolean {
+export function isErrorEnvelope(stdout: string): boolean {
   try {
     const parsed: unknown = JSON.parse(stdout.trim());
     return (

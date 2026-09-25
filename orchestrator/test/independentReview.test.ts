@@ -10,7 +10,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   aggregateChunkReviews,
-  buildIndependentReviewGrokArgs,
+  claudeSpawnPlan,
   buildRefutePrompt,
   collectDiff,
   evaluateReviewOk,
@@ -278,34 +278,14 @@ describe('independentReview pure helpers', () => {
     ).toBeNull();
   });
 
-  it('buildIndependentReviewGrokArgs uses real CLI flags only', () => {
-    const argv = buildIndependentReviewGrokArgs({
-      cwd: 'C:\\apps\\demo',
-      promptFile: 'C:\\tmp\\REFUTE_TASK.md',
-      sessionId: '019f0000-0000-4000-8000-000000000001'
-    });
-    // Must match how independent_judge.mjs / harness.ts invoke grok.
-    expect(argv).toEqual(
-      expect.arrayContaining([
-        '--no-auto-update',
-        '--always-approve',
-        '--no-alt-screen',
-        '--cwd',
-        'C:\\apps\\demo',
-        '-m',
-        'grok-4.6',
-        '--max-turns',
-        '1',
-        '--json-schema',
-        JUDGE_DIFF_JSON_SCHEMA,
-        '--prompt-file',
-        'C:\\tmp\\REFUTE_TASK.md'
-      ])
-    );
-    // The broken flags that made F5 permanently unparseable.
-    expect(argv).not.toContain('--grokmodel');
-    expect(argv).not.toContain('-d');
-    expect(argv.indexOf('--cwd') + 1).toBe(argv.indexOf('C:\\apps\\demo'));
+  it('the judge spawn plan is claude with the prompt on stdin, never grok', () => {
+    const plan = claudeSpawnPlan('review this diff');
+    expect(plan.command).toBe('claude');
+    expect(plan.args).toEqual(['-p', '--output-format', 'json']);
+    expect(plan.input).toBe('review this diff');
+    expect(plan.args.join(' ')).not.toMatch(/grok|always-approve|prompt-file/);
+    // The schema stays exported for callers that parse against it.
+    expect(JSON.parse(JUDGE_DIFF_JSON_SCHEMA)).toHaveProperty('type', 'object');
   });
 });
 

@@ -1,7 +1,7 @@
 /**
  * Independent judge over the real git diff — before any app can be reported done.
  *
- * The author (Claude or Grok) already reviewed their own work. That review
+ * The author already reviewed their own work. That review
  * measures agreement with itself. This step dispatches a separate judge with
  * instructions to REFUTE: find what was missed, cite file:line, and FAIL
  * anything it cannot verify. A run where the judge found nothing must say so
@@ -10,13 +10,12 @@
  * The judge reads the DIFF, not a summary of the diff.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
-import { createHash, randomUUID } from 'node:crypto';
-import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
 import { mapPool } from '../process/pool';
 import { runCommand, scrubbedEnv } from '../process/run';
-import { claudeShouldFallBack } from './classifyClaude';
+import { claudeDidNotReview } from './classifyClaude';
 import {
   allFailingFindingsAccepted,
   type AcceptedFinding
@@ -30,15 +29,18 @@ import { reviewPinCommit } from '../git/newestSourceCommit.mjs';
  * judge, so no review ran. It must never evaluate as ok / F5 pass.
  */
 export type IndependentReviewMode =
-  | 'grok'
   | 'claude'
   | 'fixture'
   | 'unavailable'
   | 'empty-diff'
   | 'external';
 
-/** Which model engine produced a judge result. Building roles stay on Grok. */
-export type JudgeEngine = 'claude' | 'grok';
+/**
+ * Which model engine produced a judge result. Claude only: the owner rule
+ * (orchestrator/scripts/lib/engine-policy.mjs) keeps Grok for design and image
+ * work, never for judging, so there is no second engine to fall back to.
+ */
+export type JudgeEngine = 'claude';
 
 /**
  * Raw judge output that means the reviewer could not be REACHED, as opposed to
@@ -140,7 +142,7 @@ export interface IndependentReviewOptions {
   /** Optional explicit out path. */
   outPath?: string;
   /**
-   * When set, skip the live grok CLI and use this fixture report body.
+   * When set, skip the live judge CLI and use this fixture report body.
    * Tests only — production never sets this.
    * Applies to the whole review (no per-chunk live calls).
    */
@@ -153,16 +155,16 @@ export interface IndependentReviewOptions {
    * reviewer, never to let the row pass unreviewed or to reuse the TEST fixture
    * path in production. `reviewerId` is recorded in the report so a reader can
    * always see WHO judged, and ok is recomputed from the findings here exactly
-   * as it is for the grok path: this supplies findings, it does not supply a
+   * as it is for the live judge path: this supplies findings, it does not supply a
    * verdict.
    */
   externalReview?: { reviewerId: string; findings: IndependentFinding[]; rawExcerpt?: string };
   /** Per-chunk timeout for the judge CLI (ms). */
   timeoutMs?: number;
   /**
-   * Which engine runs this review. `claude` is the per-iteration default the
-   * PM passes; it falls back to `grok` when Claude is unavailable or
-   * rate-limited. Omitted means `grok`, so existing callers keep Grok.
+   * Which engine runs this review. Only `claude` exists; omitted means claude.
+   * When Claude is unavailable, rate-limited or returns an error envelope the
+   * review fails closed as `unavailable`. It never switches to Grok.
    */
   engine?: JudgeEngine;
   /**
@@ -170,10 +172,6 @@ export interface IndependentReviewOptions {
    * Return the raw `--output-format json` envelope (or a rate-limit envelope).
    */
   runClaude?: (prompt: string, timeoutMs: number) => EngineSpawnResult;
-  /**
-   * Test-only Grok spawn. Production never sets this.
-   */
-  runGrok?: (prompt: string, timeoutMs: number) => EngineSpawnResult;
   /** Base vs head for the diff. Defaults to merge-base with main/master..HEAD. */
   diffRange?: string;
   /**
@@ -182,7 +180,7 @@ export interface IndependentReviewOptions {
    */
   diffPaths?: string[];
   /**
-   * Test-only hook: review one chunk without spawning grok. Return raw stdout
+   * Test-only hook: review one chunk without spawning the judge. Return raw stdout
    * for parseJudgeJson (or garbage to simulate unparseable). Production never
    * sets this — one blind / unparseable chunk must fail the aggregate.
    */
@@ -213,7 +211,7 @@ export const JUDGE_PROMPT_DIFF_BUDGET = 120_000;
 /**
  * How many chunk reviews may be in flight at once.
  *
- * Each chunk is its own grok process (up to 600s). Sequential `spawnSync`
+ * Each chunk is its own claude process (up to 600s). Sequential `spawnSync`
  * made a multi-chunk review take the sum of those ceilings. Three overlaps
  * them without an unbounded process fan-out.
  */
@@ -1019,8 +1017,8 @@ ${clipped.length === 0 ? '(empty diff — tree is clean and HEAD has no patch; s
 }
 
 /**
- * JSON Schema for the independent judge reply. Passed to `grok --json-schema`
- * so the model is constrained to this shape (implies --output-format json).
+ * JSON Schema for the independent judge reply. The shape the refute prompt
+ * asks Claude for; historical grok reports were constrained with it too.
  * Matches what {@link parseJudgeJson} / evaluateReviewOk already expect.
  */
 export const JUDGE_DIFF_JSON_SCHEMA = JSON.stringify({
@@ -1145,8 +1143,9 @@ export function extractJsonObjects(text: string): unknown[] {
 /**
  * Parse judge JSON from stdout.
  *
- * When grok is invoked with --output-format json / --json-schema, stdout is a
- * CLI envelope `{ text, stopReason, usage, ... }`. The model's actual result
+ * Claude's `--output-format json` envelope carries the model text in `result`.
+ * The older grok envelope `{ text, structuredOutput, stopReason, ... }` is
+ * still parsed so stored reports and fixtures keep reading the same way. The model's actual result
  * is the string in `text` (JSON matching JUDGE_DIFF_JSON_SCHEMA). Multi-turn
  * runs concatenate one schema object per turn into `text` — the last valid
  * findings body is the final answer. Unparseable input returns null so the
@@ -1229,49 +1228,6 @@ export function parseJudgeJson(text: string): {
     if (normalized !== null) return normalized;
   }
   return null;
-}
-
-/**
- * Build the headless `grok` argv for the independent diff review.
- *
- * Mirrors `.github/scripts/independent_judge.mjs` and `src/grok/harness.ts`:
- * real flags only (--cwd, -m, --always-approve, --json-schema). Never
- * `--grokmodel` or bare `-d` — those are not CLI options and produce no
- * parseable review.
- *
- * @param opts - Cwd, path to the prompt file, session id, optional model.
- * @returns Argv for `runCommand('grok', ...)`.
- */
-export function buildIndependentReviewGrokArgs(opts: {
-  cwd: string;
-  promptFile: string;
-  sessionId: string;
-  model?: string;
-}): string[] {
-  return [
-    '--no-auto-update',
-    '--always-approve',
-    '--no-alt-screen',
-    '--cwd',
-    opts.cwd,
-    '--session-id',
-    opts.sessionId,
-    '-m',
-    opts.model ?? 'grok-4.6',
-    // One turn: the full unified diff is already in the prompt file, so the
-    // model answers from that. Multi-turn tool use under --json-schema emits
-    // one intermediate body per turn, hits the ceiling mid-review, and leaves
-    // structuredOutput null (observed live: stopReason Cancelled, num_turns 8).
-    '--max-turns',
-    '1',
-    // Constrains the model to the findings shape and implies --output-format json.
-    '--json-schema',
-    JUDGE_DIFF_JSON_SCHEMA,
-    // Large refute prompts (full unified diff) exceed the Windows argv ceiling
-    // when passed via -p; --prompt-file is the path the rest of the repo uses.
-    '--prompt-file',
-    opts.promptFile
-  ];
 }
 
 /**
@@ -1376,68 +1332,7 @@ function emptyDiffReport(base: {
 }
 
 /**
- * Invoke grok once for a single chunk's prompt file.
- *
- * Async via {@link runCommand}. `runCommand` quotes argv for the Windows
- * shell, so this does not pre-quote (that would double-quote). A null exit
- * is unavailable: timeout kill or a missing binary, same as the old
- * `error || status === null` check.
- *
- * @param dir - App cwd for the CLI (`--cwd`, not the spawn cwd).
- * @param prompt - Full refute prompt text.
- * @param timeoutMs - Per-chunk spawn timeout.
- * @returns stdout text, or an error marker when the binary cannot run.
- */
-async function invokeGrokForChunk(
-  dir: string,
-  prompt: string,
-  timeoutMs: number
-): Promise<{ stdout: string; unavailable: boolean; detail: string }> {
-  const taskDir = mkdtempSync(join(tmpdir(), 'redanvil-judge-diff-'));
-  const promptFile = join(taskDir, 'REFUTE_TASK.md');
-  writeFileSync(promptFile, prompt, 'utf8');
-
-  const grokArgv = buildIndependentReviewGrokArgs({
-    cwd: dir,
-    promptFile,
-    sessionId: randomUUID()
-  });
-
-  try {
-    const grok = await runCommand('grok', grokArgv, {
-      timeoutMs,
-      // Same allowlist as harness runGrok / lg-grok-no-secrets — not a denylist.
-      env: scrubbedEnv([])
-    });
-    if (grok.code === null) {
-      const detailText = grok.timedOut
-        ? 'timed out'
-        : grok.stderr.trim() || grok.stdout.trim() || 'non-zero or missing binary';
-      return {
-        stdout: `${grok.stdout}${grok.stderr}`,
-        unavailable: true,
-        detail:
-          'grok CLI could not be run — independent review is required before done; ' +
-          detailText
-      };
-    }
-    const stdout = grok.stdout;
-    const stderr = grok.stderr;
-    // Prefer stdout (JSON envelope). stderr is diagnostic only — concat only as
-    // a fallback when stdout is empty so parseJudgeJson can still fail closed.
-    const raw = stdout.trim().length > 0 ? stdout : `${stdout}\n${stderr}`;
-    return { stdout: raw, unavailable: false, detail: '' };
-  } finally {
-    try {
-      rmSync(taskDir, { recursive: true, force: true });
-    } catch {
-      /* temp dir may hold locked handles; harmless */
-    }
-  }
-}
-
-/**
- * Judge one chunk: hook, or grok with one retry on unparseable output.
+ * Judge one chunk: hook, or claude with one retry on unparseable output.
  *
  * @param args - Chunk, prompt context, and how to invoke the reviewer.
  * @returns The chunk result, plus whether the reviewer could not be started.
@@ -1451,7 +1346,7 @@ async function reviewOneChunk(args: {
   diffChars: number;
   timeoutMs: number;
   reviewChunk?: IndependentReviewOptions['reviewChunk'];
-  /** Runs the active judge engine (with its Claude-to-Grok fallback) on one prompt. */
+  /** Runs the Claude judge on one prompt. Unavailable is never a review. */
   invoke: (prompt: string) => Promise<{ stdout: string; unavailable: boolean; detail: string }>;
 }): Promise<{ result: ChunkReviewResult; unavailable: boolean; detail: string }> {
   const { chunk, total } = args;
@@ -1660,36 +1555,25 @@ export async function runIndependentDiffReview(
   let unavailableDetail: string | null = null;
   let unavailableChunk = 0;
   let stopScheduling = false;
-  // Claude is opt-in (the PM passes it). Anything else, including the test
-  // hook that supplies chunks directly, stays on Grok unless asked. One shared
-  // switch: once Claude is rate-limited, every later chunk goes to Grok, so a
-  // review never ping-pongs between engines.
-  const engineState: { active: JudgeEngine } = { active: opts.engine ?? 'grok' };
+  // Claude is the only judge engine. There is no fallback: a Claude failure is
+  // recorded as unavailable and the review fails closed (UNVERIFIED), because
+  // switching engines would let an unreviewed diff read as reviewed by someone.
+  const engine: JudgeEngine = opts.engine ?? 'claude';
 
   /**
-   * Spawn one engine for one prompt, or the injected test runner.
+   * Spawn Claude for one prompt, or the injected test runner.
    *
-   * @param engine - claude or grok.
    * @param prompt - Refute prompt for this chunk.
    * @returns Spawn result. Unavailable is never treated as a review.
    */
-  const spawnEngine = async (engine: JudgeEngine, prompt: string): Promise<EngineSpawnResult> => {
-    if (engine === 'claude') {
-      if (opts.runClaude) return opts.runClaude(prompt, timeoutMs);
-      return invokeClaudeForChunk(dir, prompt, timeoutMs);
-    }
-    if (opts.runGrok) return opts.runGrok(prompt, timeoutMs);
-    const grok = await invokeGrokForChunk(dir, prompt, timeoutMs);
-    return {
-      status: grok.unavailable ? null : 0,
-      stdout: grok.stdout,
-      stderr: grok.detail,
-      unavailable: grok.unavailable
-    };
+  const spawnJudge = async (prompt: string): Promise<EngineSpawnResult> => {
+    if (opts.runClaude) return opts.runClaude(prompt, timeoutMs);
+    return invokeClaudeForChunk(dir, prompt, timeoutMs);
   };
 
   /**
-   * Run the active engine, falling back from Claude to Grok once.
+   * Run Claude once. Unavailable, a rate limit and an is_error envelope all
+   * become an unavailable chunk -- fail closed, never a pass and never Grok.
    *
    * @param prompt - Refute prompt for this chunk.
    * @returns Output in the shape reviewOneChunk expects.
@@ -1697,16 +1581,16 @@ export async function runIndependentDiffReview(
   const invokeJudge = async (
     prompt: string
   ): Promise<{ stdout: string; unavailable: boolean; detail: string }> => {
-    let invoked = await spawnEngine(engineState.active, prompt);
-    if (engineState.active === 'claude' && claudeShouldFallBack(invoked)) {
-      engineState.active = 'grok';
-      invoked = await spawnEngine('grok', prompt);
-    }
-    const unavailable = invoked.unavailable === true;
+    const invoked = await spawnJudge(prompt);
+    const unavailable = claudeDidNotReview(invoked);
     return {
       stdout: invoked.stdout,
       unavailable,
-      detail: unavailable ? invoked.stderr || invoked.stdout || 'judge unavailable' : ''
+      detail: unavailable
+        ? `claude could not review (UNVERIFIED, no fallback engine): ${
+            invoked.stderr.trim() || invoked.stdout.trim().slice(0, 400) || 'judge unavailable'
+          }`
+        : ''
     };
   };
 
@@ -1770,7 +1654,7 @@ export async function runIndependentDiffReview(
   });
 
   const mode: IndependentReviewMode =
-    unavailableDetail !== null ? 'unavailable' : engineState.active;
+    unavailableDetail !== null ? 'unavailable' : engine;
 
   const report: IndependentReviewReport = {
     kind: 'independent-diff-review',
@@ -1784,10 +1668,9 @@ export async function runIndependentDiffReview(
     findings: aggregated.findings,
     rawExcerpt: aggregated.rawExcerpt,
     mode,
-    // The engine that produced the output, including a Grok fallback and a
-    // review that then failed closed. Empty-diff / fixture / external never
-    // reach here.
-    engine: engineState.active,
+    // The engine that was asked, including a review that then failed closed.
+    // Empty-diff / fixture / external never reach here.
+    engine,
     chunkCount: aggregated.chunkCount,
     coverageChars: aggregated.coverageChars,
     diffChars: aggregated.diffChars,

@@ -1,7 +1,7 @@
 /**
  * Typed intent for the PRD role.
  *
- * Grok is faked. A separate manual run calls the real CLI; this file must
+ * Claude is faked. A separate manual run calls the real CLI; this file must
  * not. Every refusal check names the input that makes it fail.
  */
 import assert from 'node:assert/strict';
@@ -14,12 +14,12 @@ import {
   WIZARD_APP_TYPES,
   WIZARD_DATA_STORAGE,
   WIZARD_INTEGRATIONS,
-  buildGrokSpawn,
+  buildClaudeSpawn,
   extractIntent,
   formatEntitySpec,
   parseEntitySpec,
   provenanceMetaFromIntent,
-  runGrokProcess
+  runClaudeProcess
 } from '../roles/intent.mjs';
 import {
   entityTextForWizard,
@@ -32,7 +32,7 @@ import {
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, '..', '..');
 
-/** The prompt the task requires a real grok call for. Tests fake that call. */
+/** The prompt the task requires a real claude call for. Tests fake that call. */
 const DOG_PROMPT =
   'A reminder app for dog owners that tracks recurring care tasks like vaccinations, grooming and vet appointments per dog, with due dates and a history';
 
@@ -133,7 +133,21 @@ function fakeChild(stdout) {
   const stderrListeners = {};
   /** @type {Record<string, (code: number) => void>} */
   const childListeners = {};
+  /** @type {string[]} */
+  const stdinChunks = [];
   return {
+    stdinChunks,
+    stdin: {
+      /** @returns {void} */
+      on() {},
+      /**
+       * @param {string} [chunk]
+       * @returns {void}
+       */
+      end(chunk) {
+        if (chunk != null) stdinChunks.push(String(chunk));
+      }
+    },
     stdout: {
       /** @returns {void} */
       setEncoding() {},
@@ -257,30 +271,28 @@ describe('wizard enums are the buttons the scope step renders', () => {
     assert.deepEqual([...WIZARD_DATA_STORAGE], [value('none'), value('simple'), value('relational')]);
   });
 
-  test('the headless launch is shell false, ten minutes, and carries the required flags', () => {
-    const promptFile = join(scratch(), 'prompt.txt');
-    const schemaText = buildGrokSpawn(promptFile, '{"type":"object"}').args.at(-1);
-    // The launch helper echoes the schema it was given. The schema extractIntent
-    // builds is checked by parsing a real runGrokProcess argv below.
-    assert.equal(typeof schemaText, 'string');
-    const launch = buildGrokSpawn(promptFile, schemaText ?? '');
+  test('the headless launch is claude, shell false, ten minutes, no tools, schema on argv', () => {
+    const launch = buildClaudeSpawn('{"type":"object"}');
+    assert.equal(launch.command, 'claude');
     assert.equal(launch.shell, false);
     assert.equal(launch.timeoutMs, 10 * 60 * 1000);
-    assert.equal(launch.args.includes('--no-auto-update'), true);
-    assert.equal(launch.args.includes('--always-approve'), true);
-    assert.equal(launch.args.includes('--no-alt-screen'), true);
-    assert.equal(launch.args.includes('--prompt-file'), true);
-    assert.equal(launch.args.includes('--json-schema'), true);
-    assert.equal(launch.args[launch.args.indexOf('--prompt-file') + 1], promptFile);
+    assert.equal(launch.args.includes('-p'), true);
+    assert.equal(launch.args[launch.args.indexOf('--output-format') + 1], 'json');
+    assert.equal(launch.args[launch.args.indexOf('--input-format') + 1], 'text');
+    assert.equal(launch.args[launch.args.indexOf('--tools') + 1], '');
+    assert.equal(launch.args[launch.args.indexOf('--json-schema') + 1], '{"type":"object"}');
+    // FAIL INPUT: any grok flag, or a prompt file on argv, means the old runner.
+    assert.equal(launch.args.includes('--prompt-file'), false);
+    assert.equal(launch.args.includes('--always-approve'), false);
   });
 });
 
-describe('grok runner', () => {
-  test('spawn is shell false, secrets are scrubbed, flags and enums are the wizard ones', async () => {
-    /** @type {{command?: string, args?: string[], options?: {shell: boolean, env: NodeJS.ProcessEnv}, prompt?: string, schema?: {properties: {appType: {enum: string[]}, dataStorage: {enum: string[]}, integrations: {items: {enum: string[]}}}}} | null} */
+describe('claude runner', () => {
+  test('spawn is claude, shell false, prompt on stdin, secrets scrubbed, enums are the wizard ones', async () => {
+    /** @type {{command?: string, args?: string[], options?: {shell: boolean, env: NodeJS.ProcessEnv}, child?: {stdinChunks: string[]}, schema?: {properties: {appType: {enum: string[]}, dataStorage: {enum: string[]}, integrations: {items: {enum: string[]}}}}} | null} */
     let seen = null;
     const prompt = DOG_PROMPT;
-    await runGrokProcess(prompt, {
+    await runClaudeProcess(prompt, {
       env: {
         PATH: 'C:\\Windows',
         HOME: 'C:\\Users\\brian',
@@ -295,23 +307,22 @@ describe('grok runner', () => {
        * @param {{shell: boolean, env: NodeJS.ProcessEnv}} options
        */
       spawn(command, args, options) {
-        const promptPath = args[args.indexOf('--prompt-file') + 1];
         const schemaText = args[args.indexOf('--json-schema') + 1];
+        const child = fakeChild('{}');
         seen = {
           command,
           args,
           options,
-          prompt: readFileSync(promptPath, 'utf8'),
+          child,
           schema: JSON.parse(schemaText)
         };
-        const child = fakeChild('{}');
         setImmediate(() => child.emit());
         return child;
       }
     });
     assert.ok(seen);
     assert.equal(seen.options.shell, false);
-    assert.equal(seen.command, process.platform === 'win32' ? 'grok.exe' : 'grok');
+    assert.equal(seen.command, 'claude');
     assert.equal(seen.options.env.GITHUB_TOKEN, undefined);
     assert.equal(seen.options.env.GH_TOKEN, undefined);
     assert.equal(seen.options.env.CLOUDFLARE_API_TOKEN, undefined);
@@ -321,14 +332,12 @@ describe('grok runner', () => {
     const flat = seen.args.join('\n');
     assert.equal(flat.includes('gh-secret'), false);
     assert.equal(flat.includes('cf-secret'), false);
-    assert.equal(seen.args.includes('--no-auto-update'), true);
-    assert.equal(seen.args.includes('--always-approve'), true);
-    assert.equal(seen.args.includes('--no-alt-screen'), true);
-    assert.equal(seen.args.includes('--prompt-file'), true);
     assert.equal(seen.args.includes('--json-schema'), true);
-    assert.equal(seen.args[seen.args.indexOf('--max-turns') + 1], '1');
-    assert.match(seen.prompt, /dog owners/);
-    assert.equal(seen.prompt.includes('gh-secret'), false);
+    // The prompt is stdin, never argv.
+    assert.equal(flat.includes('dog owners'), false);
+    const stdinText = seen.child.stdinChunks.join('');
+    assert.match(stdinText, /dog owners/);
+    assert.equal(stdinText.includes('gh-secret'), false);
     assert.deepEqual(seen.schema.properties.appType.enum, [...WIZARD_APP_TYPES]);
     assert.deepEqual(seen.schema.properties.dataStorage.enum, [...WIZARD_DATA_STORAGE]);
     assert.deepEqual(seen.schema.properties.integrations.items.enum, [...WIZARD_INTEGRATIONS]);
@@ -372,18 +381,18 @@ describe('entity spec', () => {
 });
 
 describe('extractIntent', () => {
-  test('a valid grok envelope fills every wizard group and a parseable entity spec', async () => {
+  test('a valid claude envelope fills every wizard group and a parseable entity spec', async () => {
     let calls = 0;
     const intent = await extractIntent(DOG_PROMPT, {
-      runGrok: () => {
+      runClaude: () => {
         calls += 1;
-        return { structuredOutput: VALID_INTENT, stopReason: 'EndTurn' };
+        return { type: 'result', subtype: 'success', is_error: false, structured_output: VALID_INTENT };
       }
     });
     assert.equal(calls, 1);
-    assert.equal(intent.intentSource, 'grok');
+    assert.equal(intent.intentSource, 'claude');
     assert.equal(intent.fallbackReason, undefined);
-    assert.equal(typeof intent.grokDurationMs, 'number');
+    assert.equal(typeof intent.intentDurationMs, 'number');
     const expected = ['Mobile app', 'Yes', 'Simple (D1 tables)', 'No', 'Email'];
     WIZARD_GROUPS.forEach((group, index) => {
       const picks = picksForGroup(group, DOG_PROMPT, intent);
@@ -406,7 +415,7 @@ describe('extractIntent', () => {
   test('a negated marketplace clause never selects Marketplace, a later positive one still does', async () => {
     let rejectedCalls = 0;
     const rejected = await extractIntent('it is not a marketplace', {
-      runGrok: () => {
+      runClaude: () => {
         rejectedCalls += 1;
         if (rejectedCalls > 2) throw new Error('retried more than once');
         return { ...VALID_INTENT, appType: 'Marketplace', appName: 'Not A Market' };
@@ -427,7 +436,7 @@ describe('extractIntent', () => {
     const kept = await extractIntent(
       'it is not a job board, it is a marketplace for buyers and sellers',
       {
-        runGrok: () => {
+        runClaude: () => {
           keptCalls += 1;
           return {
             ...VALID_INTENT,
@@ -440,7 +449,7 @@ describe('extractIntent', () => {
       }
     );
     assert.equal(keptCalls, 1);
-    assert.equal(kept.intentSource, 'grok');
+    assert.equal(kept.intentSource, 'claude');
     assert.equal(kept.appType, 'Marketplace');
     assert.deepEqual(
       picksForGroup(
@@ -452,10 +461,10 @@ describe('extractIntent', () => {
     );
   });
 
-  test('invalid grok output is retried once, then the regex fallback is recorded', async () => {
+  test('invalid claude output is retried once, then the regex fallback is recorded', async () => {
     let calls = 0;
     const intent = await extractIntent(DOG_PROMPT, {
-      runGrok: () => {
+      runClaude: () => {
         calls += 1;
         if (calls > 2) throw new Error('retried more than once');
         return 'nope';
@@ -469,21 +478,58 @@ describe('extractIntent', () => {
 
     let retry = 0;
     const recovered = await extractIntent(DOG_PROMPT, {
-      runGrok: () => {
+      runClaude: () => {
         retry += 1;
         if (retry === 1) return '{';
         return VALID_INTENT;
       }
     });
     assert.equal(retry, 2);
-    assert.equal(recovered.intentSource, 'grok');
+    assert.equal(recovered.intentSource, 'claude');
     assert.equal(recovered.appName, 'Dog Care');
   });
 
-  test('provenance and intent.json record the intent, its source, and the grok duration', async () => {
+  test('FAIL INPUT: an is_error envelope is a failure even when it carries an intent', async () => {
+    let calls = 0;
+    const intent = await extractIntent(DOG_PROMPT, {
+      runClaude: () => {
+        calls += 1;
+        // A rate-limited run: exit 0, is_error true. Never trust the payload.
+        return JSON.stringify({
+          type: 'result',
+          subtype: 'success',
+          is_error: true,
+          api_error_status: 429,
+          structured_output: VALID_INTENT
+        });
+      }
+    });
+    assert.equal(calls, 2);
+    assert.equal(intent.intentSource, 'regex-fallback');
+    assert.match(intent.fallbackReason ?? '', /error envelope/);
+    assert.match(intent.fallbackReason ?? '', /429/);
+  });
+
+  test('the real-envelope string shape (structured_output) decodes to a claude intent', async () => {
+    const intent = await extractIntent(DOG_PROMPT, {
+      runClaude: () =>
+        JSON.stringify({
+          type: 'result',
+          subtype: 'success',
+          is_error: false,
+          api_error_status: null,
+          result: JSON.stringify(VALID_INTENT),
+          structured_output: VALID_INTENT
+        })
+    });
+    assert.equal(intent.intentSource, 'claude');
+    assert.equal(intent.appName, 'Dog Care');
+  });
+
+  test('provenance and intent.json record the intent, its source, and the claude duration', async () => {
     const dir = scratch();
     const extracted = await extractIntent(DOG_PROMPT, {
-      runGrok: () => ({ structuredOutput: VALID_INTENT })
+      runClaude: () => ({ type: 'result', is_error: false, structured_output: VALID_INTENT })
     });
     const markdown = 'x'.repeat(2500);
     writePrdArtifacts(
@@ -496,18 +542,18 @@ describe('extractIntent', () => {
     );
     const provenance = JSON.parse(readFileSync(join(dir, 'prd-provenance.json'), 'utf8'));
     const intentFile = JSON.parse(readFileSync(join(dir, 'intent.json'), 'utf8'));
-    assert.equal(provenance.intentSource, 'grok');
-    assert.equal(typeof provenance.grokDurationMs, 'number');
+    assert.equal(provenance.intentSource, 'claude');
+    assert.equal(typeof provenance.intentDurationMs, 'number');
     assert.equal(provenance.intent.appType, 'Mobile app');
     assert.equal(provenance.intent.entities.length, 3);
-    assert.equal(intentFile.intentSource, 'grok');
-    assert.equal(intentFile.grokDurationMs, provenance.grokDurationMs);
+    assert.equal(intentFile.intentSource, 'claude');
+    assert.equal(intentFile.intentDurationMs, provenance.intentDurationMs);
     assert.equal(intentFile.appName, 'Dog Care');
     assert.equal(intentFile.dataStorage, 'Simple (D1 tables)');
     assert.equal(intentFile.fallbackReason, undefined);
 
     const fallback = await extractIntent('it is not a marketplace', {
-      runGrok: () => 'nope'
+      runClaude: () => 'nope'
     });
     const fallbackDir = scratch();
     writePrdArtifacts(

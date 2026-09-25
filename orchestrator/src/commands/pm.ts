@@ -441,9 +441,9 @@ async function executePm(opts: PmCommandOptions): Promise<number> {
           feedback
         };
       },
-      // One Claude judge per iteration. Falls back to Grok inside
-      // invokeIterationJudge when Claude is unavailable or rate-limited.
-      // Building roles are dispatched by runRole and stay on Grok.
+      // One Claude judge per iteration, no Grok fallback: a Claude failure
+      // fails the review closed. Roles are dispatched by runRole, which uses
+      // Grok only for the design allowlist in engine-policy.mjs.
       independentJudge: () => invokeIterationJudge(appDir),
       isDone: async () => {
         const rules = lastGate

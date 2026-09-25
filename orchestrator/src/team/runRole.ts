@@ -15,16 +15,23 @@
  * each declared artifact versus the pre-run snapshot (create or meaningful
  * edit; byte-identical rewrites do not count).
  *
- * The grok invocation mirrors `independent_judge.mjs`, including two hard-won
- * details: the brief goes in a FILE because passing it as an argument exceeded
- * the Windows command-line limit and grok exited 1 with no output, and each
- * argument is quoted by hand because Node's `shell: true` re-splits a multi-word
- * prompt.
+ * ENGINE (owner rule, orchestrator/scripts/lib/engine-policy.mjs): only the
+ * design roles in GROK_ALLOWED_ROLES (logo, palette, layout) run on grok. Every
+ * other role runs on `claude -p` and never falls back to grok: when Claude
+ * fails, the role is NOT RUN, full stop.
+ *
+ * Two hard-won details carry over from the grok era: the brief goes in a FILE
+ * because passing it as an argument exceeded the Windows command-line limit,
+ * and Claude's short instruction goes on stdin rather than argv because Node's
+ * `shell: true` re-splits a multi-word argument.
  */
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { runCommand } from '../process/run';
+import { isErrorEnvelope } from '../loop/classifyClaude';
+import { claudeArgs, CODER_PERMISSION_MODE } from '../claude/harness';
+import { mayUseGrok } from '../../scripts/lib/engine-policy.mjs';
 import { expandArtifacts, type Role, type RoleId } from './roles';
 import {
   missingArtifacts,
@@ -113,14 +120,15 @@ export interface RunRoleContext {
 /** Injectable side effects, so tests never shell out to a real agent. */
 export interface RunRoleDeps {
   /**
-   * Spawn a process. Defaults to a real grok invocation via the async runner.
-   * May return a promise. A synchronous return is still accepted so existing
-   * tests keep working; the default path does not block the event loop.
+   * Spawn a process. Defaults to a real `claude` (or, for a design role, `grok`)
+   * invocation via the async runner. May return a promise. A synchronous
+   * return is still accepted so existing tests keep working; the default path
+   * does not block the event loop. `input` is stdin for the claude path.
    */
   spawn?: (
     cmd: string,
     args: string[],
-    opts: { cwd?: string; env?: NodeJS.ProcessEnv; timeout?: number; shell?: boolean }
+    opts: RoleSpawnOptions
   ) => { code: number; out: string } | Promise<{ code: number; out: string }>;
   /** Write the brief. Defaults to the filesystem. */
   writeBrief?: (path: string, body: string) => void;
@@ -128,9 +136,80 @@ export interface RunRoleDeps {
   sessionId?: () => string;
 }
 
+/** Options handed to a role spawn. `timeout` is milliseconds. */
+export interface RoleSpawnOptions {
+  cwd?: string;
+  env?: NodeJS.ProcessEnv;
+  timeout?: number;
+  shell?: boolean;
+  /** Bytes for the child's stdin (the claude path's instruction). */
+  input?: string;
+}
+
+/** The engine a role runs on. Decided only by {@link roleEngine}. */
+export type RoleEngine = 'claude' | 'grok';
+
+/** Instruction every role agent gets; the real brief is ROLE_TASK.md. */
+export const ROLE_INSTRUCTION =
+  'Read ROLE_TASK.md in the current directory and carry out exactly what it ' +
+  'says. Leave every artifact it names on disk. Do not delete ROLE_TASK.md.';
+
+/**
+ * Which engine runs this role. grok only for the design allowlist in
+ * engine-policy.mjs; claude for everything else, with no fallback.
+ *
+ * @param roleId - Registry role id.
+ * @returns The engine.
+ */
+export function roleEngine(roleId: string): RoleEngine {
+  return mayUseGrok(roleId) ? 'grok' : 'claude';
+}
+
+/**
+ * The exact command, argv and stdin for one role run.
+ *
+ * @param roleId - Registry role id.
+ * @param workDir - Directory the agent works in.
+ * @param sessionId - Session id (grok only; claude calls are fresh contexts).
+ * @returns Command, argv, and stdin (undefined for grok).
+ */
+export function roleSpawnPlan(
+  roleId: string,
+  workDir: string,
+  sessionId: string
+): { engine: RoleEngine; cmd: string; args: string[]; input?: string } {
+  if (roleEngine(roleId) === 'grok') {
+    return {
+      engine: 'grok',
+      cmd: 'grok',
+      args: [
+        '--no-auto-update',
+        '--always-approve',
+        '--no-alt-screen',
+        '--cwd',
+        workDir,
+        '--session-id',
+        sessionId,
+        '-p',
+        ROLE_INSTRUCTION
+      ]
+    };
+  }
+  // Roles write files and run commands, so they need the coder's permission
+  // mode; the working directory is the role's blast radius.
+  return {
+    engine: 'claude',
+    cmd: 'claude',
+    args: claudeArgs({ permissionMode: CODER_PERMISSION_MODE }),
+    input: ROLE_INSTRUCTION
+  };
+}
+
 /** What actually happened, decided by artifacts rather than by the agent. */
 export interface RunRoleResult {
   role: RoleId;
+  /** Engine the role was spawned on. Recorded from the plan, never inferred. */
+  engine: RoleEngine;
   /** Process exit code. A claim, not evidence. */
   exitCode: number;
   /** Declared artifacts that are absent or empty after the run. */
@@ -218,7 +297,7 @@ export function scrubEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 }
 
 /**
- * Default spawn: the grok CLI, headless, in the role's working directory.
+ * Default spawn: the role's CLI, headless, in the role's working directory.
  *
  * Uses {@link runCommand} so the wait is async. `spawnSync` blocked the PM's
  * event loop for the whole timeout, which made `Promise.all` sequential.
@@ -234,13 +313,20 @@ export function scrubEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 async function defaultSpawn(
   cmd: string,
   args: string[],
-  opts: { cwd?: string; env?: NodeJS.ProcessEnv; timeout?: number; shell?: boolean }
+  opts: RoleSpawnOptions
 ): Promise<{ code: number; out: string }> {
   const r = await runCommand(cmd, args, {
     cwd: opts.cwd,
     env: opts.env,
-    timeoutMs: opts.timeout
+    timeoutMs: opts.timeout,
+    input: opts.input
   });
+  // Claude exits 0 with an is_error envelope on a usage limit or API error.
+  // That is not a run.
+  if (r.code === 0 && isErrorEnvelope(r.stdout)) {
+    return { code: 1, out: `${r.stdout}${r.stderr}
+claude returned an is_error envelope` };
+  }
   return { code: r.code === null ? 1 : r.code, out: `${r.stdout}${r.stderr}` };
 }
 
@@ -280,32 +366,27 @@ export async function runRole(
   write(briefPath, buildRoleBrief(assignment, ctx.slug));
 
   const sid = deps.sessionId?.() ?? randomUUID();
-  const args = [
-    '--no-auto-update',
-    '--always-approve',
-    '--no-alt-screen',
-    '--cwd',
-    ctx.workDir,
-    '--session-id',
-    sid,
-    '-p',
-    'Read ROLE_TASK.md in the current directory and carry out exactly what it ' +
-      'says. Leave every artifact it names on disk. Do not delete ROLE_TASK.md.'
-  ];
+  const plan = roleSpawnPlan(assignment.role.id, ctx.workDir, sid);
 
-  // grok is a .cmd shim on Windows, which needs a shell. Node's shell:true joins
-  // argv without quoting, so a multi-word prompt gets re-split. `runCommand`
-  // quotes with `quoteForCmd` on that path. Injected spawns receive the raw
-  // argv (same words, no extra quotes) plus `shell: true` on Windows so a
-  // test double can see the platform decision.
+  // grok and claude are .cmd shims on Windows, which need a shell. Node's
+  // shell:true joins argv without quoting; `runCommand` quotes with
+  // `quoteForCmd` on that path. Injected spawns receive the raw argv plus
+  // `shell: true` on Windows so a test double can see the platform decision.
   const useShell = process.platform === 'win32';
 
-  const res = await spawn('grok', args, {
+  const spawned = await spawn(plan.cmd, plan.args, {
     cwd: ctx.workDir,
     env: scrubEnv(process.env),
     timeout: (ctx.timeoutSec ?? DEFAULT_ROLE_TIMEOUT_SEC) * 1000,
-    shell: useShell
+    shell: useShell,
+    ...(plan.input !== undefined ? { input: plan.input } : {})
   });
+  // An is_error envelope is a failed claude run even when an injected spawn
+  // reports exit 0. There is no retry on another engine.
+  const res =
+    plan.engine === 'claude' && spawned.code === 0 && isErrorEnvelope(spawned.out)
+      ? { code: 1, out: spawned.out }
+      : spawned;
 
   const missing = missingArtifacts(artifactRoot, artifacts);
   const unchanged =
@@ -318,7 +399,7 @@ export async function runRole(
 
   let reason: string;
   if (res.code !== 0) {
-    reason = `${assignment.role.id}: agent exited ${res.code} — not run`;
+    reason = `${assignment.role.id}: ${plan.engine} exited ${res.code} — not run`;
   } else if (missing.length > 0) {
     reason =
       `${assignment.role.id}: agent exited 0 but left no ${missing.join(', ')} — ` +
@@ -333,6 +414,7 @@ export async function runRole(
 
   return {
     role: assignment.role.id,
+    engine: plan.engine,
     exitCode: res.code,
     missing,
     unchanged,
