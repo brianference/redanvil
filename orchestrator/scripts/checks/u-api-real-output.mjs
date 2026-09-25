@@ -30,6 +30,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, relative, sep, extname, dirname } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
+import { randomBytes } from 'node:crypto';
 import {
   pickFreePort,
   killProcessTree,
@@ -148,6 +149,78 @@ export function fillParams(route, params = {}) {
   });
   // An optional catch-all filled with '' leaves a trailing slash; the directory itself is the target.
   return { path: path.replace(/\/$/, '') || '/', missing };
+}
+
+/** A binding name an app may ask the check to mint for its local runtime. */
+const SECRET_NAME = /^[A-Z][A-Z0-9_]{0,63}$/;
+/** A header reference to a minted value: `Bearer {{secret:RUNNER_TOKEN}}`. */
+const SECRET_REF = /\{\{secret:([^}]*)\}\}/g;
+/** Random bytes per minted value. */
+const SECRET_BYTES = 32;
+
+/**
+ * Validate the example file's `localSecrets` declaration.
+ *
+ * An app whose routes fail closed on an unset secret (a bearer token, an HMAC
+ * key) answers 503 on a fresh checkout, where no `.dev.vars` exists. Without a
+ * way to give the local runtime a value, the only ways to go green were to
+ * commit a credential into the examples or to remove the access control, and
+ * the header comment in callExample already names that as worse than no gate.
+ * So the app declares the NAMES only; the check mints the values.
+ *
+ * @param {unknown} declared - The `localSecrets` value from the examples file.
+ * @returns {{names: string[], error: string|null}} Names, or why the declaration is invalid.
+ */
+export function parseLocalSecrets(declared) {
+  if (declared === undefined) return { names: [], error: null };
+  if (!Array.isArray(declared)) return { names: [], error: 'localSecrets must be an array of binding names' };
+  const bad = declared.filter((n) => typeof n !== 'string' || !SECRET_NAME.test(n));
+  if (bad.length > 0) {
+    return { names: [], error: `localSecrets has invalid binding name(s): ${bad.map((n) => JSON.stringify(n)).join(', ')}` };
+  }
+  return { names: [...new Set(declared)], error: null };
+}
+
+/**
+ * Mint one random value per declared name, fresh for every run.
+ *
+ * The values exist only for the life of one local runtime the check itself
+ * boots and kills, so they unlock nothing anywhere else and are never written
+ * to evidence.
+ *
+ * @param {string[]} names - Binding names.
+ * @returns {Record<string, string>} Name to hex value.
+ */
+export function mintLocalSecrets(names) {
+  return Object.fromEntries(names.map((n) => [n, randomBytes(SECRET_BYTES).toString('hex')]));
+}
+
+/**
+ * Substitute `{{secret:NAME}}` references in declared header values.
+ *
+ * Fails closed: a reference to a name the file did not declare is an error,
+ * never an empty string, so a typo cannot quietly send an unauthenticated call
+ * and let a 401 example pass for the wrong reason.
+ *
+ * @param {Record<string, string>|undefined} headers - Declared headers.
+ * @param {Record<string, string>} secrets - Minted values.
+ * @returns {{headers: Record<string, string>, error: string|null}} Resolved headers.
+ */
+export function resolveHeaders(headers, secrets) {
+  /** @type {Record<string, string>} */
+  const out = {};
+  for (const [key, raw] of Object.entries(headers ?? {})) {
+    let error = null;
+    out[key] = String(raw).replace(SECRET_REF, (_m, name) => {
+      if (!Object.hasOwn(secrets, name)) {
+        error = `header ${key} references {{secret:${name}}}, which localSecrets does not declare`;
+        return '';
+      }
+      return secrets[name];
+    });
+    if (error !== null) return { headers: {}, error };
+  }
+  return { headers: out, error: null };
 }
 
 /**
@@ -323,9 +396,11 @@ export function evaluateResponse(example, got) {
  * @param {number} port - Local port.
  * @param {string} path - Concrete request path.
  * @param {object} example - The declared example.
+ * @param {string|null} [origin] - Remote origin, when the example names one.
+ * @param {Record<string, string>} [secrets] - Minted values for `{{secret:NAME}}` headers.
  * @returns {Promise<{status: number|null, text: string, body: unknown, error: string|null}>} Captured response.
  */
-async function callExample(port, path, example, origin = null) {
+async function callExample(port, path, example, origin = null, secrets = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_MS);
   try {
@@ -336,7 +411,9 @@ async function callExample(port, path, example, origin = null) {
     // rewards removing an access control is worse than no gate. Secrets belong
     // in the environment, so a header value here should reference a test
     // credential, never a production one.
-    const init = { method, signal: controller.signal, headers: { ...(example.headers ?? {}) } };
+    const resolved = resolveHeaders(example.headers, secrets);
+    if (resolved.error !== null) return { status: null, text: '', body: null, error: resolved.error };
+    const init = { method, signal: controller.signal, headers: resolved.headers };
     if (example.body !== undefined && method !== 'GET' && method !== 'HEAD') {
       init.headers['content-type'] = 'application/json';
       init.body = JSON.stringify(example.body);
@@ -441,7 +518,10 @@ export async function runApiRealOutput(appDir, io, deps = {}) {
   if (!build.ok) return fail(`the app does not build, so no route can be exercised:\n${build.output.slice(-800)}`);
 
   const boot = deps.boot ?? defaultBoot;
-  const captured = await boot(appDir, plan);
+  const localSecrets = parseLocalSecrets(declared.localSecrets);
+  if (localSecrets.error !== null) return fail(`${EXAMPLES_FILE}: ${localSecrets.error}`);
+
+  const captured = await boot(appDir, plan, localSecrets.names);
   if (captured.error !== null) return fail(captured.error);
 
   const failures = [];
@@ -530,11 +610,13 @@ function writeEvidence(appDir, results) {
  *
  * @param {string} appDir - App directory.
  * @param {object[]} plan - Routes and their examples.
+ * @param {string[]} [secretNames] - Bindings to mint for this runtime only.
  * @returns {Promise<{results: object[], error: string|null}>} Captured results.
  */
-async function defaultBoot(appDir, plan) {
+async function defaultBoot(appDir, plan, secretNames = []) {
   const port = await pickFreePort();
-  const { child, output } = spawnWranglerPagesDev(appDir, port);
+  const secrets = mintLocalSecrets(secretNames);
+  const { child, output } = spawnWranglerPagesDev(appDir, port, secrets);
   try {
     const ready = await waitForReady(port, READINESS_MS);
     if (!ready) {
@@ -556,7 +638,7 @@ async function defaultBoot(appDir, plan) {
       let path = entry.path;
       let setupError = null;
       for (const step of Array.isArray(entry.example.setup) ? entry.example.setup : []) {
-        const stepGot = await callExample(port, step.route, step, origin);
+        const stepGot = await callExample(port, step.route, step, origin, secrets);
         if (stepGot.status === null || stepGot.status < 200 || stepGot.status >= 300) {
           setupError = `setup ${step.method ?? 'GET'} ${step.route} answered ${stepGot.status ?? stepGot.error}`;
           break;
@@ -577,7 +659,7 @@ async function defaultBoot(appDir, plan) {
         results.push({ ...entry, got: { status: null, text: '', body: null, error: setupError }, measuredAt: origin ?? 'local' });
         continue;
       }
-      const got = await callExample(port, path, entry.example, origin);
+      const got = await callExample(port, path, entry.example, origin, secrets);
       results.push({ ...entry, path, got, measuredAt: origin ?? 'local' });
     }
     return { results, error: null };

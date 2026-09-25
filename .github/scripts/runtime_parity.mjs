@@ -373,12 +373,17 @@ export function applyLocalMigrations(appDir) {
  * puts the child in its own process group so killProcessTree can reap it.
  * @param {string} appDir App directory (cwd).
  * @param {number} port Port to bind.
+ * @param {Record<string, string>} [bindings] Extra `--binding NAME=VALUE`
+ *   variables. Callers pass throwaway per-run values only (see
+ *   u-api-real-output's localSecrets): an argument is visible in the process
+ *   list, so a real credential must never travel this way.
  * @returns {{ child: import('node:child_process').ChildProcess, output: { text: string } }}
  */
-export function spawnWranglerPagesDev(appDir, port) {
+export function spawnWranglerPagesDev(appDir, port, bindings = {}) {
   const useShell = process.platform === 'win32';
   applyLocalMigrations(appDir);
   const args = ['wrangler', 'pages', 'dev', 'dist', '--port', String(port), '--ip', '127.0.0.1'];
+  for (const [name, value] of Object.entries(bindings)) args.push('--binding', `${name}=${value}`);
   /** Mutable buffer shared with callers that read live output. */
   const output = { text: '' };
   const child = spawn('npx', args, {
