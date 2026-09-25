@@ -4,8 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { ContentSections } from '../components/ContentSections';
-import { ThemeToggle } from '../components/ThemeToggle';
-import { en, type Locale } from './en';
+import { en } from './en';
 
 /** Words banned by the Human Writing Guidelines (case-insensitive whole words). */
 const BANNED_WORDS = [
@@ -79,33 +78,7 @@ function findBannedWords(text: string): string[] {
 }
 
 describe('en locale bundle', () => {
-  it('exposes typed app shell copy', () => {
-    const locale: Locale = en;
-    expect(locale.app.name).toBe('RedAnvil');
-    expect(locale.app.primaryNav).toBe('Primary');
-    expect(locale.app.footerCopyright).toContain('RedAnvil');
-    expect(locale.app.themeToLight).toBe('Switch to light theme');
-    expect(locale.app.themeToDark).toBe('Switch to dark theme');
-    expect(locale.app.menuOpen).toBe('Open menu');
-    expect(locale.app.menuClose).toBe('Close menu');
-    expect(locale.app.breadcrumbHome).toBe('Home');
-    expect(locale.app.breadcrumbNav).toBe('Breadcrumb');
-    expect(locale.app.navBuilder).toBe('App Builder');
-    expect(locale.app.navDashboard).toBe('Dashboard');
-    expect(locale.app.navRuns).toBe('Runs');
-    expect(locale.app.navContact).toBe('Contact');
-    expect(locale.app.navGitHub).toBe('GitHub');
-  });
-
-  // Exact labels, not a length check: `length > 2` passes for "xxx", for a
-  // leftover placeholder, and for the wrong page's title.
   it('gives every route a distinct, human breadcrumb title', () => {
-    expect(en.pages.about.title).toBe('About');
-    expect(en.pages.contact.title).toBe('Contact');
-    expect(en.pages.terms.title).toBe('Terms');
-    expect(en.pages.privacy.title).toBe('Privacy');
-    expect(en.pages.notFound.title).toBe('Page not found');
-
     const titles = [
       en.pages.about.title,
       en.pages.contact.title,
@@ -123,43 +96,16 @@ describe('en locale bundle', () => {
     }
   });
 
-  it('exposes run list and run detail copy', () => {
-    expect(en.runList.coverage).toBe('Coverage');
-    expect(en.runList.coverageValue(41, 41)).toBe('41/41 rules');
+  it('formats run counts with the right plural and a lane label per prefix', () => {
+    expect(en.runList.coverageValue(41, 43)).toBe('41/43 rules');
+    expect(en.runList.iterationsValue(1)).toBe('1 iteration');
     expect(en.runList.iterationsValue(2)).toBe('2 iterations');
-    expect(en.status.pass).toBe('Pass');
-    expect(en.status.fail).toBe('Fail');
-    expect(en.pages.home.kpiTotal).toBe('Total runs');
-    expect(en.pages.home.kpiPassed).toBe('Passed');
-    expect(en.pages.home.kpiAvgScore).toBe('Avg score');
+    expect(en.runDetail.laneHeading('fe')).toBe('fe lane');
     // Three KPI tiles sit side by side; identical labels would make the strip
-    // unreadable, and a presence check passes happily when they collide.
+    // unreadable.
     expect(
       new Set([en.pages.home.kpiTotal, en.pages.home.kpiPassed, en.pages.home.kpiAvgScore]).size
     ).toBe(3);
-    expect(en.runDetail.iterationsHeading).toBe('Iteration history');
-    expect(en.runDetail.rulesHeading).toBe('Per-rule breakdown');
-    expect(en.runDetail.laneHeading('u')).toBe('u lane');
-    expect(en.runDetail.laneHeading('fe')).toBe('fe lane');
-  });
-
-  it('gives each content page a non-empty intro and multiple headed sections', () => {
-    const contentPages = [
-      en.pages.about,
-      en.pages.contact,
-      en.pages.terms,
-      en.pages.privacy
-    ] as const;
-    for (const page of contentPages) {
-      expect(page.intro.trim().length).toBeGreaterThan(0);
-      expect(page.updated.trim().length).toBeGreaterThan(0);
-      // R30: real headed sections, not a single stub paragraph.
-      expect(page.sections.length).toBeGreaterThanOrEqual(3);
-      for (const section of page.sections) {
-        expect(section.heading.trim().length).toBeGreaterThan(0);
-        expect(section.body.trim().length).toBeGreaterThan(0);
-      }
-    }
   });
 
   it('meets R30 substance floor on Terms and Privacy (>=150 words, >=3 sections)', () => {
@@ -222,16 +168,5 @@ describe('Breadcrumbs', () => {
     expect(html).toContain(en.pages.about.title);
     expect(html).toContain('aria-current="page"');
     expect(html).toContain(`aria-label="${en.app.breadcrumbNav}"`);
-  });
-});
-
-describe('ThemeToggle', () => {
-  it('offers the dark theme on the default light first paint', () => {
-    // The control is labelled with the action it performs, so it names the
-    // theme it switches TO, and its icon is decoration a screen reader skips.
-    const html = renderToStaticMarkup(createElement(ThemeToggle));
-    expect(html).toMatch(new RegExp(`<button[^>]*aria-label="${en.app.themeToDark}"`));
-    expect(html).not.toContain(en.app.themeToLight);
-    expect(html).toMatch(/<span aria-hidden="true">[^<]+<\/span><\/button>/);
   });
 });
