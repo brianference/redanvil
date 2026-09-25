@@ -36,3 +36,9 @@ export declare function runResourceLinks(
   },
   opts?: { url?: string | null; fixtureDir?: string | null }
 ): Promise<void>;
+
+export declare function resolveRealDetailId(
+  base: string,
+  route: string,
+  opts?: { fetchImpl?: typeof fetch }
+): Promise<string | null>;

@@ -2,7 +2,9 @@
  * Central English locale bundle for all user-facing copy.
  * Components must reference these keys; no inline UI strings.
  */
+import { jobStatus } from './jobStatus';
 import { legalPages } from './legalPages';
+import { templates } from './templates';
 
 export const en = {
   app: {
@@ -119,7 +121,10 @@ export const en = {
       notFound: 'This PRD was not found.',
       backToSaved: 'Back to saved PRDs',
       createdAt: (createdAt: string): string => `Saved ${createdAt}`,
-      readyBadge: 'PRD READY'
+      readyBadge: 'PRD READY',
+      referencesHeading: 'Stack documentation',
+      referencesIntro: 'Official docs for the technologies this PRD asks the builder to use.',
+      referenceOpensNewTab: '(opens in a new tab)'
     },
     ...legalPages
   },
@@ -173,209 +178,7 @@ export const en = {
       }
     ]
   },
-  templates: {
-    title: 'Start from a template',
-    subtitle: 'Pick an app archetype, or describe your own below.',
-    gridLabel: 'App type templates',
-    sectionLabel: 'App types',
-    sectionCount: (n: number): string => (n === 1 ? '1 template' : `${n} templates`),
-    variantsLabel: 'Starter variants',
-    variantsHint: 'Pick a concrete starter under this type, or keep the default prompt.',
-    orDescribe: 'or describe your own',
-    composerLabel: 'Your app idea',
-    composerPlaceholder:
-      'e.g. A booking system for independent bike shops with inventory and SMS reminders',
-    continue: 'Continue to questions',
-    backToChat: 'Back to chat',
-    selected: 'Selected',
-    emptyHint: 'Pick a template or write your own description to continue.',
-    emptyTitle: 'No template selected',
-    examplesLabel: 'Example prompts',
-    items: [
-      {
-        id: 'saas',
-        title: 'SaaS',
-        description: 'Subscriptions, teams, billing, dashboards',
-        appType: 'SaaS dashboard',
-        prompt: 'A multi-tenant SaaS dashboard with team invites, billing, and usage analytics',
-        variants: [
-          {
-            id: 'saas-analytics',
-            label: 'Analytics dashboard',
-            appType: 'SaaS dashboard',
-            prompt:
-              'A multi-tenant SaaS analytics dashboard with team invites, usage charts, and CSV export'
-          },
-          {
-            id: 'saas-billing',
-            label: 'Team billing & seats',
-            appType: 'SaaS dashboard',
-            prompt:
-              'A SaaS app with seat-based billing, plan upgrades, team invites, and invoice history'
-          },
-          {
-            id: 'saas-admin',
-            label: 'Admin console',
-            appType: 'SaaS dashboard',
-            prompt:
-              'A SaaS admin console with role-based access, audit logs, and customer account search'
-          },
-          {
-            id: 'saas-onboarding',
-            label: 'Product onboarding',
-            appType: 'SaaS dashboard',
-            prompt:
-              'A SaaS product with guided onboarding, checklist progress, and team workspace setup'
-          }
-        ]
-      },
-      {
-        id: 'marketplace',
-        title: 'Marketplace',
-        description: 'Listings, search, checkout, sellers',
-        appType: 'Marketplace',
-        prompt: 'A marketplace for local makers with listings, search, tips, and pickup slots',
-        variants: [
-          {
-            id: 'market-local',
-            label: 'Local services',
-            appType: 'Marketplace',
-            prompt:
-              'A local services marketplace with provider profiles, booking slots, and reviews'
-          },
-          {
-            id: 'market-digital',
-            label: 'Digital goods',
-            appType: 'Marketplace',
-            prompt:
-              'A digital goods marketplace with listings, secure download delivery, and seller payouts'
-          },
-          {
-            id: 'market-rentals',
-            label: 'Rentals',
-            appType: 'Marketplace',
-            prompt:
-              'A peer-to-peer rentals marketplace with availability calendars, deposits, and return checks'
-          },
-          {
-            id: 'market-makers',
-            label: 'Local makers',
-            appType: 'Marketplace',
-            prompt: 'A marketplace for local makers with listings, search, tips, and pickup slots'
-          }
-        ]
-      },
-      {
-        id: 'internal',
-        title: 'Internal tool',
-        description: 'Ops tables, roles, audit trails',
-        appType: 'Internal tool',
-        prompt: 'An internal ops tool with role-based access, audit trails, and bulk export',
-        variants: [
-          {
-            id: 'internal-ops',
-            label: 'Ops queue',
-            appType: 'Internal tool',
-            prompt:
-              'An internal ops queue with role-based access, status transitions, and bulk export'
-          },
-          {
-            id: 'internal-inventory',
-            label: 'Inventory tracker',
-            appType: 'Internal tool',
-            prompt:
-              'An internal inventory tracker with stock levels, low-stock alerts, and audit trails'
-          },
-          {
-            id: 'internal-approvals',
-            label: 'Approval workflow',
-            appType: 'Internal tool',
-            prompt:
-              'An internal approval workflow with request forms, multi-step review, and audit logs'
-          },
-          {
-            id: 'internal-crm',
-            label: 'Lightweight CRM',
-            appType: 'Internal tool',
-            prompt:
-              'A lightweight internal CRM with contacts, notes, pipeline stages, and CSV export'
-          }
-        ]
-      },
-      {
-        id: 'mobile',
-        title: 'Mobile app',
-        description: 'iOS/Android flows, push, offline',
-        appType: 'Mobile app',
-        prompt:
-          'A mobile-first app with offline support, push notifications, and simple onboarding',
-        variants: [
-          {
-            id: 'mobile-reminders',
-            label: 'Reminders & checklists',
-            appType: 'Mobile app',
-            prompt:
-              'A mobile-first reminders app with checklists, due dates, and push-style notifications'
-          },
-          {
-            id: 'mobile-field',
-            label: 'Field capture',
-            appType: 'Mobile app',
-            prompt:
-              'A mobile field capture app with offline notes, photo attachments, and later sync'
-          },
-          {
-            id: 'mobile-habits',
-            label: 'Habits & streaks',
-            appType: 'Mobile app',
-            prompt: 'A mobile habit tracker with daily check-ins, streaks, and simple onboarding'
-          },
-          {
-            id: 'mobile-coach',
-            label: 'Daily coach',
-            appType: 'Mobile app',
-            prompt: 'A mobile coach app with daily prompts, progress history, and offline reading'
-          }
-        ]
-      },
-      {
-        id: 'api',
-        title: 'API / backend',
-        description: 'Auth, webhooks, rate limits, OpenAPI docs',
-        appType: 'API backend',
-        prompt: 'A backend API with auth, webhooks, rate limits, and OpenAPI documentation',
-        variants: [
-          {
-            id: 'api-crud',
-            label: 'CRUD + auth',
-            appType: 'API backend',
-            prompt: 'A backend API with session auth, resource CRUD, rate limits, and OpenAPI docs'
-          },
-          {
-            id: 'api-webhooks',
-            label: 'Webhooks hub',
-            appType: 'API backend',
-            prompt:
-              'A webhooks hub API with signed delivery, retry queues, and event subscription CRUD'
-          },
-          {
-            id: 'api-ingest',
-            label: 'Data ingest',
-            appType: 'API backend',
-            prompt:
-              'A data ingest API with API keys, schema validation, batch upload, and rate limits'
-          },
-          {
-            id: 'api-bff',
-            label: 'BFF for SPA',
-            appType: 'API backend',
-            prompt:
-              'A backend-for-frontend API with cookie sessions, aggregate endpoints, and health checks'
-          }
-        ]
-      }
-    ]
-  },
+  templates,
   wizard: {
     formLabel: 'App build wizard',
     stepOf: (step: number): string => `Step ${step} of 4`,
@@ -476,105 +279,7 @@ export const en = {
       timeout: 'Request timed out'
     }
   },
-  jobStatus: {
-    progressLabel: 'Build progress',
-    regionLabel: 'Build job status',
-    heading: 'Build status',
-    ownerApproval:
-      'Each build is approved by the owner before it runs. Submitting a job does not start the build.',
-    jobId: (id: string): string => `Job ${id}`,
-    copyJobId: 'Copy job id',
-    copyLabel: 'Copy',
-    copied: 'Copied',
-    dismiss: 'Dismiss build status',
-    startNew: 'Start a new app',
-    loading: 'Checking build status…',
-    /**
-     * Icon, short badge, and one-line headline for a public status.
-     * Unknown values keep the raw status instead of an invented label.
-     *
-     * @param status - Status string from the public endpoint.
-     * @returns Badge icon, badge text, and headline.
-     */
-    statusPresentation: (
-      status: string
-    ): { icon: string; badge: string; headline: string } => {
-      switch (status) {
-        case 'queued':
-          return { icon: '○', badge: 'Queued', headline: 'In line. Nothing has started.' };
-        case 'claimed':
-          return { icon: '◉', badge: 'Picked up', headline: 'A runner picked this up.' };
-        case 'awaiting_owner':
-          return {
-            icon: '◎',
-            badge: 'Awaiting approval',
-            headline: 'Waiting for owner approval.'
-          };
-        case 'approved':
-          return {
-            icon: '✓',
-            badge: 'Approved',
-            headline: 'Approved. The build has not started.'
-          };
-        case 'building':
-          return { icon: '…', badge: 'Building', headline: 'The build is running.' };
-        case 'done':
-          return { icon: '●', badge: 'Done', headline: 'The app is ready.' };
-        case 'failed':
-          return { icon: '!', badge: 'Failed', headline: 'The build did not finish.' };
-        case 'rejected':
-          return { icon: '×', badge: 'Rejected', headline: 'Rejected. It will not be built.' };
-        default:
-          return { icon: '?', badge: status, headline: `Status: ${status}` };
-      }
-    },
-    /**
-     * Process-map order (n8n-prototype/process-map.mjs). One list for ids and labels.
-     */
-    steps: [
-      { id: 'prd', label: 'Product requirements' },
-      { id: 'product', label: 'Product brief' },
-      { id: 'brainstorm', label: 'Ranked features' },
-      { id: 'inspo', label: 'Reference apps' },
-      { id: 'reuse', label: 'Search existing code' },
-      { id: 'logo', label: 'Brand marks' },
-      { id: 'palette', label: 'Colour and type' },
-      { id: 'layout', label: 'Layout options' },
-      { id: 'decide', label: 'Owner picks the design' },
-      { id: 'integration', label: 'Wire the data source' },
-      { id: 'testwriter', label: 'Acceptance tests' },
-      { id: 'build', label: 'Implement the design' },
-      { id: 'content', label: 'Pages and empty states' },
-      { id: 'runners', label: 'Run the test lanes' },
-      { id: 'visual', label: 'Visual review' },
-      { id: 'ui-live', label: 'Drive the deployed UI' },
-      { id: 'qa-runtime', label: 'Check deployed routes' },
-      { id: 'judge', label: 'Fresh review of the diff' },
-      { id: 'qa-data', label: 'Check citations and links' },
-      { id: 'user-refuse', label: 'Adversarial acceptance' },
-      { id: 'pm', label: 'Assign unmet work' },
-      { id: 'debugger', label: 'Find the root cause' },
-      { id: 'reverify', label: 'Re-measure the deploy' },
-      { id: 'ship', label: 'Deploy and prove the hash' }
-    ],
-    /**
-     * Progress line for a known step.
-     *
-     * @param index - 1-based position in the catalog.
-     * @param total - Catalog length.
-     * @param label - Human label for that step.
-     * @returns The panel line.
-     */
-    stepProgress: (index: number, total: number, label: string): string =>
-      `Step ${index} of ${total} · ${label}`,
-    openDeploy: 'Open the deployed app',
-    errors: {
-      invalid: 'Could not read the build status',
-      loadFailed: 'Could not load the build status',
-      network: 'Network error checking build status',
-      timeout: 'Build status request timed out'
-    }
-  },
+  jobStatus,
   prdResult: {
     ready: 'PRD READY',
     download: 'Download .md',

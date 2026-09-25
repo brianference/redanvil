@@ -11,8 +11,11 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:features": "node scripts/feature-audit.mjs",
-    "test:coverage": "vitest run --coverage",
-    "verify": "npm run typecheck && npm run lint && npm run test && npm run test:e2e && npm run test:features"
+    "test:coverage": "vitest run --project unit --coverage",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run test:e2e && npm run test:features",
+    "test:unit": "vitest run --project unit",
+    "test:browser": "vitest run --project browser",
+    "test:vrt": "vitest run --project vrt"
   },
   "dependencies": {
     "react": "^18.3.0",
@@ -28,6 +31,7 @@
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "@vitest/browser": "2.1.9",
     "@vitest/coverage-v8": "2.1.9",
     "axe-core": "^4.12.1",
     "eslint": "^10.7.0",
