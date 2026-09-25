@@ -2,47 +2,43 @@ import { describe, it, expect } from 'vitest';
 import { mkdtemp, writeFile, rm, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { grokArgs, parseGrokJson, newSessionId } from '../src/grok/harness';
+import { claudeArgs, parseClaudeJson, CODER_PERMISSION_MODE } from '../src/claude/harness';
 import { withWorktree } from '../src/worktree/isolate';
 import { runCommand } from '../src/process/run';
 
-describe('grokArgs', () => {
-  const argv = grokArgs('/work/dir', 'do the thing', { sessionId: 'run-1' });
-
-  it('includes the required headless flags and the scoped cwd', () => {
-    expect(argv).toEqual(
-      expect.arrayContaining(['--always-approve', '--no-alt-screen', '--output-format', 'json'])
-    );
-    expect(argv[argv.indexOf('--cwd') + 1]).toBe('/work/dir');
-    expect(argv[argv.indexOf('--session-id') + 1]).toBe('run-1');
+describe('claudeArgs', () => {
+  it('is headless json with no prompt on argv', () => {
+    const argv = claudeArgs();
+    expect(argv).toEqual(['-p', '--output-format', 'json', '--input-format', 'text']);
+    expect(argv.join(' ')).not.toMatch(/grok|always-approve|prompt-file/);
   });
 
-  it('defaults to the grok-4.6 model and puts the prompt last', () => {
-    expect(argv[argv.indexOf('-m') + 1]).toBe('grok-4.6');
-    expect(argv[argv.length - 1]).toBe('do the thing');
-    expect(argv[argv.length - 2]).toBe('-p');
+  it('adds the coder permission mode and a resume id only when asked', () => {
+    const argv = claudeArgs({ permissionMode: CODER_PERMISSION_MODE, resumeSessionId: 'abc' });
+    expect(argv[argv.indexOf('--permission-mode') + 1]).toBe('auto');
+    expect(argv[argv.indexOf('--resume') + 1]).toBe('abc');
   });
 });
 
-describe('newSessionId', () => {
-  it('produces a valid UUID (grok rejects non-UUID session ids)', () => {
-    expect(newSessionId()).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+describe('parseClaudeJson', () => {
+  it('extracts result, session id and cost from a real envelope shape', () => {
+    const r = parseClaudeJson(
+      '{"type":"result","is_error":false,"result":"ok","session_id":"s-1","total_cost_usd":0.2}'
     );
-  });
-});
-
-describe('parseGrokJson', () => {
-  it('extracts text, stopReason, and usage from a real reply shape', () => {
-    const r = parseGrokJson('{"text":"ok","stopReason":"EndTurn","usage":{"total_tokens":20}}');
     expect(r?.text).toBe('ok');
-    expect(r?.stopReason).toBe('EndTurn');
-    expect(r?.usage?.total_tokens).toBe(20);
+    expect(r?.sessionId).toBe('s-1');
+    expect(r?.costUsd).toBe(0.2);
+  });
+
+  it('FAIL INPUT: an is_error envelope is not a reply, even with a result string', () => {
+    expect(parseClaudeJson('{"is_error":true,"result":"done","api_error_status":429}')).toBeNull();
   });
 
   it('returns null on malformed output', () => {
-    expect(parseGrokJson('not json')).toBeNull();
-    expect(parseGrokJson('{"no":"text"}')).toBeNull();
+    expect(parseClaudeJson('not json')).toBeNull();
+    expect(parseClaudeJson('{"no":"result"}')).toBeNull();
+    // The old grok envelope is not a Claude reply.
+    expect(parseClaudeJson('{"text":"ok","stopReason":"EndTurn"}')).toBeNull();
   });
 });
 

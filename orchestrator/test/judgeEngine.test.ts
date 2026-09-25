@@ -1,15 +1,32 @@
 /**
- * The per-iteration judge runs on Claude and falls back to Grok.
+ * The per-iteration judge runs on Claude only.
  *
- * Runners are injected. A rate-limit envelope must not be recorded as a
- * Claude review, and a successful Claude review must not call Grok.
+ * Runners are injected. A rate-limit or error envelope must not be recorded
+ * as a review, and there is no Grok fallback: a Claude failure fails the
+ * review closed (UNVERIFIED), per orchestrator/scripts/lib/engine-policy.mjs.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+/** Every command the review asks runCommand to spawn in this file. */
+const spawnedCommands: string[] = vi.hoisted(() => []);
+
+// Pass-through wrapper that records the command name, so a negative test can
+// prove no code path shells out to grok. Behaviour is otherwise unchanged.
+vi.mock('../src/process/run', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../src/process/run')>();
+  return {
+    ...actual,
+    runCommand: (command: string, ...rest: Parameters<typeof actual.runCommand> extends [string, ...infer R] ? R : never) => {
+      spawnedCommands.push(command);
+      return actual.runCommand(command, ...rest);
+    }
+  };
+});
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { classifyClaude, claudeShouldFallBack } from '../src/loop/classifyClaude';
+import { classifyClaude, claudeDidNotReview } from '../src/loop/classifyClaude';
 import { claudeSpawnPlan, parseJudgeJson } from '../src/loop/independentReview';
 import { invokeIterationJudge } from '../src/team/pm';
 import type { EngineSpawnResult } from '../src/loop/independentReview';
@@ -94,11 +111,11 @@ describe('classifyClaude', () => {
       stderr: 'usage limit reached'
     });
     expect(text.rateLimited).toBe(true);
-    expect(claudeShouldFallBack({ status: 1, stdout: '', stderr: '', unavailable: true })).toBe(
+    expect(claudeDidNotReview({ status: 1, stdout: '', stderr: '', unavailable: true })).toBe(
       true
     );
     expect(
-      claudeShouldFallBack({ status: 1, stdout: 'nope', stderr: '', unavailable: false })
+      claudeDidNotReview({ status: 1, stdout: 'nope', stderr: '', unavailable: false })
     ).toBe(false);
   });
 });
@@ -115,18 +132,17 @@ describe('claude spawn plan', () => {
 });
 
 describe('per-iteration judge engine', () => {
-  it('records claude when claude answers, and does not call grok', async () => {
+  it('records claude when claude answers', async () => {
     const dir = repoWithDiff();
     try {
-      let grokCalls = 0;
+      let claudeCalls = 0;
       const result = await invokeIterationJudge(dir, {
-        runClaude: () => claudeOk(),
-        runGrok: () => {
-          grokCalls += 1;
-          throw new Error('grok must not run when claude answered');
+        runClaude: () => {
+          claudeCalls += 1;
+          return claudeOk();
         }
       });
-      expect(grokCalls).toBe(0);
+      expect(claudeCalls).toBeGreaterThan(0);
       expect(result.ok).toBe(true);
       expect(result.engine).toBe('claude');
       expect(result.summary).toMatch(/claude/);
@@ -135,26 +151,42 @@ describe('per-iteration judge engine', () => {
     }
   });
 
-  it('falls back to grok when claude is rate-limited and records grok', async () => {
+  it('FAIL INPUT: a rate-limited claude fails the review closed and never runs grok', async () => {
     const dir = repoWithDiff();
+    spawnedCommands.length = 0;
     try {
-      let grokCalls = 0;
+      let claudeCalls = 0;
       const result = await invokeIterationJudge(dir, {
-        runClaude: () => claudeLimited(),
-        runGrok: () => {
-          grokCalls += 1;
-          return {
-            status: 0,
-            stderr: '',
-            unavailable: false,
-            stdout: JSON.stringify({ foundNothingExplicit: true, findings: [] })
-          };
+        runClaude: () => {
+          claudeCalls += 1;
+          return claudeLimited();
         }
       });
-      expect(grokCalls).toBeGreaterThan(0);
-      expect(result.engine).toBe('grok');
-      expect(result.ok).toBe(true);
-      expect(result.summary).toMatch(/grok/);
+      expect(claudeCalls).toBeGreaterThan(0);
+      expect(result.ok).toBe(false);
+      expect(result.engine).toBe('claude');
+      expect(result.summary).toMatch(/unavailable/);
+      expect(spawnedCommands.filter((c) => /grok/i.test(c))).toEqual([]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('FAIL INPUT: an is_error envelope with a clean-looking result is not a pass', async () => {
+    const dir = repoWithDiff();
+    try {
+      const result = await invokeIterationJudge(dir, {
+        runClaude: () => ({
+          status: 0,
+          stderr: '',
+          unavailable: false,
+          stdout: JSON.stringify({
+            is_error: true,
+            result: JSON.stringify({ foundNothingExplicit: true, findings: [] })
+          })
+        })
+      });
+      expect(result.ok).toBe(false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -167,15 +199,14 @@ describe('per-iteration judge engine', () => {
   });
 });
 
-describe('claudeShouldFallBack on an error envelope', () => {
-  it('falls back to grok when claude returns is_error, even with parseable text', async () => {
-    const { claudeShouldFallBack } = await import('../src/loop/classifyClaude');
+describe('claudeDidNotReview on an error envelope', () => {
+  it('is true when claude returns is_error, even with parseable text', () => {
     const envelope = JSON.stringify({
       type: 'result',
       is_error: true,
       result: '{"findings":[],"foundNothingExplicit":true}'
     });
-    expect(claudeShouldFallBack({ status: 1, stdout: envelope, stderr: '' })).toBe(true);
-    expect(claudeShouldFallBack({ status: 0, stdout: envelope, stderr: '' })).toBe(true);
+    expect(claudeDidNotReview({ status: 1, stdout: envelope, stderr: '' })).toBe(true);
+    expect(claudeDidNotReview({ status: 0, stdout: envelope, stderr: '' })).toBe(true);
   });
 });

@@ -49,7 +49,8 @@ import {
   unlinkSync,
   writeFileSync
 } from 'node:fs';
-import { grokCannotRun as sharedGrokCannotRun } from '../roles/agent-failover.mjs';
+import { CLAUDE_ROLE_ARGS } from '../roles/agent-failover.mjs';
+import { ENGINE_CLAUDE } from '../../orchestrator/scripts/lib/engine-policy.mjs';
 import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
@@ -210,38 +211,24 @@ function headCommit(cwd) {
  * (Tonkotsu) are driven by an editor or a window, and there is nothing for a
  * cron job to talk to. `opencode-ai` does ship a win32 binary and would work,
  * but it is a third install with its own auth and its own spend for a capability
- * already present twice over.
+ * already present.
  *
- * Both entries below are installed, authenticated and verified on this machine:
- * `grok --prompt-file` returns a completion and `claude -p` returns
- * HEADLESS_OK. That is why no third-party orchestrator is adopted here.
+ * Claude only. Owner rule, 2026-09-24 (orchestrator/scripts/lib/engine-policy.mjs):
+ * the overnight coding loop runs on `claude -p` and never falls back to Grok.
+ * Grok is kept for image and design-option work. When Claude cannot run, or
+ * stays rate-limited through every wait, the item fails and its receipt says
+ * so; nothing is handed to Grok.
  *
- * Order is grok, then claude. Grok has no session limit, so it is the agent
- * that actually runs the night. Claude is the fallback only when grok cannot
- * run (not on PATH, spending-limit 403, or a hang/timeout) — not when grok
- * ran and the fix failed. Claude's own usage-window waits stay in dispatchFix.
- *
- * Neither `args` function receives the prompt text. On Windows, spawn with
+ * The `args` never carry the prompt text. On Windows, spawn with
  * `shell: true` joins argv without quoting, so a prompt that starts
  * "In ${app}, ..." arrives as the single word "In", and `% & | < > ^` plus
- * newlines never survive cmd.exe. prepareAgentLaunch writes the bytes to a
- * file or to stdin instead.
+ * newlines never survive cmd.exe. prepareAgentLaunch puts the bytes on stdin.
  *
- * @type {Array<{name: string, bin: string, structured: boolean, hasUsageLimits: boolean, promptVia: 'file'|'stdin'}>}
+ * @type {ReadonlyArray<{name: string, bin: string, structured: boolean, hasUsageLimits: boolean, promptVia: 'stdin'}>}
  */
-const AGENTS = [
+const AGENTS = Object.freeze([
   {
-    name: 'grok',
-    bin: 'grok',
-    structured: false,
-    // Grok has no session limit. It goes first so a Claude usage window is
-    // not the thing that decides whether the night works.
-    hasUsageLimits: false,
-    // `grok --help`: --prompt-file is "Single-turn prompt from a file".
-    promptVia: 'file'
-  },
-  {
-    name: 'claude',
+    name: ENGINE_CLAUDE,
     bin: 'claude',
     structured: true,
     // Claude enforces usage windows. When one is hit, the night must WAIT, not
@@ -252,19 +239,21 @@ const AGENTS = [
     // prompt — the bytes are stdin.
     promptVia: 'stdin'
   }
-];
-
-/** Worktree file that holds the grok prompt. Never passed on the command line. */
-const PROMPT_FILE_NAME = 'OVERNIGHT_TASK.md';
+]);
 
 /**
  * Spend ceiling for one night. A trivial claude call cost $0.27; caps matter.
  *
- * This cannot bind on grok: the non-structured branch of dispatchFix hardcodes
- * costUsd: 0, and grok is the agent that runs first. The wall-clock deadline
- * is the real cap.
+ * It binds in two places. Every Claude run reports `total_cost_usd` in its
+ * envelope, runOvernight adds that to the checkpoint, and the loop stops
+ * before the next item once the total reaches the cap. Each run is also
+ * started with `--max-budget-usd` set to what is left, so a single run cannot
+ * spend past the cap before the loop gets to check.
  */
 const COST_CAP_USD = Number(process.env.OVERNIGHT_COST_CAP_USD ?? 25);
+
+/** `--max-budget-usd` is printed in dollars and cents. */
+const BUDGET_DECIMALS = 2;
 
 /**
  * Read the checkpoint, or an empty one.
@@ -709,49 +698,44 @@ function createWorktree(slug, repoRoot = getRepoRoot()) {
  * in `args`. On Windows those bytes are destroyed by cmd.exe before the child
  * starts; a real receipt showed Claude answering `just "In"`.
  *
- * grok reads `OVERNIGHT_TASK.md` via `--prompt-file` (`grok --help`:
- * "Single-turn prompt from a file"). claude gets the same bytes on stdin and
- * no positional prompt (`claude --help`: `-p/--print` is useful for pipes,
- * `--input-format text` is the default input format for `--print`).
+ * claude gets the bytes on stdin and no positional prompt (`claude --help`:
+ * `-p/--print` is useful for pipes, `--input-format text` is the default
+ * input format for `--print`). The flags are CLAUDE_ROLE_ARGS from
+ * roles/agent-failover.mjs, which include `--permission-mode auto` so the
+ * headless run can edit files and run the app's tests.
  *
- * @param {{name: string, promptVia?: 'file'|'stdin'}} agent
+ * `budgetUsd`, when given, becomes `--max-budget-usd` (`claude --help`:
+ * "Maximum dollar amount to spend on API calls (only works with --print)").
+ *
+ * @param {{name: string, promptVia?: 'stdin'}} _agent the agent (always claude)
  * @param {string} prompt exact prompt text
- * @param {string} cwd worktree directory
- * @returns {{args: string[], input: string|null, promptFile: string|null}}
+ * @param {string} _cwd worktree directory (unused: nothing is written there)
+ * @param {{budgetUsd?: number}} [opts]
+ * @returns {{args: string[], input: string, promptFile: null}}
  */
-function prepareAgentLaunch(agent, prompt, cwd) {
-  if (agent.promptVia === 'stdin' || agent.name === 'claude') {
-    return {
-      args: ['-p', '--output-format', 'json', '--input-format', 'text'],
-      input: prompt,
-      promptFile: null
-    };
+function prepareAgentLaunch(_agent, prompt, _cwd, opts = {}) {
+  const args = [...CLAUDE_ROLE_ARGS];
+  if (typeof opts.budgetUsd === 'number' && Number.isFinite(opts.budgetUsd)) {
+    args.push('--max-budget-usd', Math.max(0, opts.budgetUsd).toFixed(BUDGET_DECIMALS));
   }
-  const promptFile = join(cwd, PROMPT_FILE_NAME);
-  writeFileSync(promptFile, prompt, 'utf8');
-  return {
-    args: ['--always-approve', '--cwd', cwd, '-m', 'grok-4.6', '--prompt-file', promptFile],
-    input: null,
-    promptFile
-  };
+  return { args, input: prompt, promptFile: null };
 }
 
 /**
- * Spawn one agent with the prompt kept off the command line.
+ * Spawn claude with the prompt kept off the command line.
  *
- * `shell` is false. grok and claude are `.exe` files on this machine
- * (`where grok` → `grok.exe`, `where claude` → `claude.exe`); they do not
- * need cmd.exe, and cmd.exe is what splits a free-text argument. The prompt
- * file is removed after the child exits so `git add -A` cannot commit it.
+ * `shell` is false. claude is a `.exe` on this machine (`where claude` →
+ * `claude.exe`); it does not need cmd.exe, and cmd.exe is what splits a
+ * free-text argument.
  *
- * @param {{name: string, bin: string, promptVia?: 'file'|'stdin'}} agent
+ * @param {{name: string, bin: string, promptVia?: 'stdin'}} agent
  * @param {string} prompt exact prompt text
  * @param {string} cwd worktree directory
- * @param {{timeout?: number, env?: NodeJS.ProcessEnv, run?: typeof run, bin?: string, argsPrefix?: string[]}} [opts]
+ * @param {{timeout?: number, env?: NodeJS.ProcessEnv, run?: typeof run, bin?: string, argsPrefix?: string[], budgetUsd?: number}} [opts]
  * @returns {{status: number|null, stdout: string, stderr: string, signal?: NodeJS.Signals|null, error?: {code: string|null, message: string}|null}}
  */
 function spawnAgent(agent, prompt, cwd, opts = {}) {
-  const plan = prepareAgentLaunch(agent, prompt, cwd);
+  const plan = prepareAgentLaunch(agent, prompt, cwd, { budgetUsd: opts.budgetUsd });
   const runFn = opts.run ?? run;
   const args = [...(opts.argsPrefix ?? []), ...plan.args];
   /** @type {{cwd?: string, timeout?: number, env?: NodeJS.ProcessEnv, shell: boolean, input?: string}} */
@@ -759,44 +743,10 @@ function spawnAgent(agent, prompt, cwd, opts = {}) {
     cwd,
     timeout: opts.timeout,
     env: opts.env,
-    shell: false
+    shell: false,
+    input: plan.input
   };
-  if (plan.input != null) spawnOpts.input = plan.input;
-  try {
-    return runFn(opts.bin ?? agent.bin, args, spawnOpts);
-  } finally {
-    if (plan.promptFile && existsSync(plan.promptFile)) {
-      try {
-        unlinkSync(plan.promptFile);
-      } catch {
-        // the agent may already have removed it
-      }
-    }
-  }
-}
-
-/**
- * Whether grok failed before it could do the work.
- *
- * Hand off only when grok did not succeed. `status === null` is a hang, a
- * timeout (`ETIMEDOUT`) or a spawn failure. A non-zero exit hands off when
- * the output says `spending limit` or contains HTTP 403, including a plain
- * `403 Forbidden`. Exit 0 is never a handoff, whatever the output says.
- * Any other non-zero exit means grok ran and failed. Do not also pay Claude.
- *
- * FAIL INPUT: `{status: 0, stdout: 'fixed the spending limit check'}` → false.
- * FAIL INPUT: `{status: 1, stderr: 'HTTP 403 Forbidden'}` → true.
- * FAIL INPUT: `{status: null, error: {code: 'ETIMEDOUT'}}` → true.
- * FAIL INPUT: `{status: 1, stderr: '... status 402 Payment Required ... usage balance exhausted'}` → true.
- * A plain exit 1 with no 403 → false.
- *
- * @param {{status: number|null, stdout?: string, stderr?: string, error?: {code?: string|null}|null}} res
- * @returns {boolean}
- */
-function grokCannotRun(res) {
-  // One definition, shared with the n8n roles (roles/agent-failover.mjs), so
-  // a new failure shape such as the 402 balance error is taught once.
-  return sharedGrokCannotRun(res);
+  return runFn(opts.bin ?? agent.bin, args, spawnOpts);
 }
 
 /**
@@ -808,10 +758,15 @@ function grokCannotRun(res) {
  * which keeps it from optimising for its own self-report -- the failure mode
  * this whole project is built around.
  *
+ * Claude only. When claude is not on PATH, stays rate-limited through every
+ * wait, or fails, the result is `ok: false`. There is no Grok fallback.
+ * `costUsd` is the sum of `total_cost_usd` over every attempt, so the night's
+ * cost cap sees what rate-limited retries spent too.
+ *
  * @param {string} app slug
  * @param {string[]} blockers failing rule ids
  * @param {string} cwd worktree to work in
- * @param {{deadlineAt?: number, itemTimeoutMs?: number, run?: typeof run}} [opts] deadline clamp
+ * @param {{deadlineAt?: number, itemTimeoutMs?: number, run?: typeof run, budgetUsd?: number}} [opts] deadline clamp and remaining night budget
  * @returns {{agent: string|null, status: number|null, ok?: boolean, costUsd?: number, output: string}} result
  */
 function dispatchFix(app, blockers, cwd, opts = {}) {
@@ -833,6 +788,7 @@ function dispatchFix(app, blockers, cwd, opts = {}) {
   // in a tight loop wastes them just as thoroughly while looking busy.
   const LIMIT_BACKOFF_MS = [5 * 60_000, 15 * 60_000, 30 * 60_000, 60 * 60_000];
 
+  let spentUsd = 0;
   for (const agent of AGENTS) {
     const probe = runFn(process.platform === 'win32' ? 'where' : 'which', [agent.bin], {
       timeout: 10_000
@@ -848,41 +804,40 @@ function dispatchFix(app, blockers, cwd, opts = {}) {
           agent: agent.name,
           status: null,
           ok: false,
-          costUsd: 0,
+          costUsd: spentUsd,
           output: 'deadline reached before dispatch'
         };
       }
-      const res = spawnAgent(agent, prompt, cwd, { run: runFn, timeout });
-      const verdict = agent.structured
-        ? classifyClaude(res)
-        : { ok: res.status === 0, rateLimited: false, costUsd: 0, detail: `exit ${res.status}` };
-
-      // Grok is first. A spending-limit or HTTP 403, or a hang, means it never
-      // ran, so Claude still gets the item. Exit 0 is grok's result even when
-      // the output mentions a spending limit. Any other exit is also the
-      // result — do not also call Claude.
-      if (!agent.structured && grokCannotRun(res)) {
-        process.stdout.write(
-          `    ${agent.name} cannot run (${verdict.detail}); handing off\n`
-        );
-        break;
+      const budgetUsd =
+        typeof opts.budgetUsd === 'number' ? opts.budgetUsd - spentUsd : undefined;
+      if (budgetUsd !== undefined && budgetUsd <= 0) {
+        return {
+          agent: agent.name,
+          status: null,
+          ok: false,
+          costUsd: spentUsd,
+          output: 'night cost cap reached before dispatch'
+        };
       }
+      const res = spawnAgent(agent, prompt, cwd, { run: runFn, timeout, budgetUsd });
+      const verdict = classifyClaude(res);
+      spentUsd += verdict.costUsd;
 
       if (verdict.ok || !verdict.rateLimited) {
         return {
           agent: agent.name,
           status: res.status,
           ok: verdict.ok,
-          costUsd: verdict.costUsd,
+          costUsd: spentUsd,
           output: `${verdict.detail}\n${res.stdout}\n${res.stderr}`.slice(-4000)
         };
       }
 
-      // Rate limited. Wait, unless the waits are exhausted -- then hand the work
-      // to the next agent rather than idling until morning.
+      // Rate limited. Wait, unless the waits are exhausted or would outlast the
+      // night -- then the item fails. It is never handed to Grok.
       if (attempt === LIMIT_BACKOFF_MS.length) {
         process.stdout.write(
-          `    ${agent.name} still limited after ${LIMIT_BACKOFF_MS.length} waits; handing off\n`
+          `    ${agent.name} still limited after ${LIMIT_BACKOFF_MS.length} waits; item fails\n`
         );
         break;
       }
@@ -891,7 +846,7 @@ function dispatchFix(app, blockers, cwd, opts = {}) {
         opts.deadlineAt != null ? opts.deadlineAt - Date.now() : Number.POSITIVE_INFINITY;
       if (!backoffFits(waitMs, remainingAfter)) {
         process.stdout.write(
-          `    ${agent.name} backoff ${Math.round(waitMs / 60000)}m exceeds remaining ${Math.round(remainingAfter / 60000)}m; handing off\n`
+          `    ${agent.name} backoff ${Math.round(waitMs / 60000)}m exceeds remaining ${Math.round(remainingAfter / 60000)}m; item fails\n`
         );
         break;
       }
@@ -900,8 +855,15 @@ function dispatchFix(app, blockers, cwd, opts = {}) {
       );
       sleepSync(waitMs);
     }
+    return {
+      agent: agent.name,
+      status: null,
+      ok: false,
+      costUsd: spentUsd,
+      output: `${agent.name} rate limited; no fallback engine (owner rule: coding runs on Claude only)`
+    };
   }
-  return { agent: null, status: null, ok: false, costUsd: 0, output: 'no headless agent could run' };
+  return { agent: null, status: null, ok: false, costUsd: 0, output: 'claude is not on PATH; no headless agent could run' };
 }
 
 /**
@@ -1365,7 +1327,7 @@ async function deployAndVerify(app, repoRoot, opts = {}) {
  * Process one queue item end to end.
  *
  * @param {{id: string, kind: string, app?: string, summary: string}} item work item
- * @param {{lokiAvailable: boolean, allowDeploy: boolean, dryRun: boolean, deadlineAt?: number, itemTimeoutMs?: number, run?: typeof run, dispatchFix?: Function, fetchImpl?: typeof fetch, repoRoot?: string, env?: NodeJS.ProcessEnv, pollMs?: number, pollAttempts?: number}} ctx run context
+ * @param {{lokiAvailable: boolean, allowDeploy: boolean, dryRun: boolean, deadlineAt?: number, itemTimeoutMs?: number, run?: typeof run, dispatchFix?: Function, budgetUsd?: number, fetchImpl?: typeof fetch, repoRoot?: string, env?: NodeJS.ProcessEnv, pollMs?: number, pollAttempts?: number}} ctx run context
  * @returns {Promise<string>} the receipt path written
  */
 async function processItem(item, ctx) {
@@ -1439,7 +1401,8 @@ async function processItem(item, ctx) {
       const fixer = ctx.dispatchFix ?? dispatchFix;
       const fix = fixer(item.app, gate.blockers.slice(0, 6), wt.path, {
         deadlineAt: ctx.deadlineAt,
-        itemTimeoutMs: itemTimeout
+        itemTimeoutMs: itemTimeout,
+        budgetUsd: ctx.budgetUsd
       });
       executor = fix.agent ?? 'none';
       itemCostUsd = fix.costUsd ?? 0;
@@ -1653,7 +1616,7 @@ async function runOvernight(opts = {}) {
   const queue = (opts.queue ?? buildQueue()).slice(0, maxItems);
 
   process.stdout.write(
-    `overnight: ${queue.length} item(s); executor=${loki.available ? `loki ${loki.version}` : 'grok (loki unavailable)'}` +
+    `overnight: ${queue.length} item(s); executor=${loki.available ? `loki ${loki.version}` : 'claude (loki unavailable)'}` +
       `${dryRun ? ' [DRY RUN]' : ''}${allowDeploy ? ' [DEPLOY ALLOWED]' : ''}` +
       `; deadline=${new Date(deadlineAt).toISOString()}\n`
   );
@@ -1723,6 +1686,7 @@ async function runOvernight(opts = {}) {
         itemTimeoutMs,
         fetchImpl: opts.fetchImpl,
         dispatchFix: opts.dispatchFix,
+        budgetUsd: COST_CAP_USD - checkpoint.spentUsd,
         run: opts.run,
         repoRoot: opts.repoRoot
       });
@@ -1753,7 +1717,7 @@ async function runOvernight(opts = {}) {
     `${JSON.stringify(
       {
         finishedAt: new Date(finishedAtMs).toISOString(),
-        executor: loki.available ? 'loki' : 'grok',
+        executor: loki.available ? 'loki' : ENGINE_CLAUDE,
         lokiAvailable: loki.available,
         items: queue.length,
         receipts,
@@ -1818,11 +1782,11 @@ export {
   headCommit,
   classifyClaude,
   AGENTS,
+  COST_CAP_USD,
   checkpointIsCurrentNight,
   nightKeyForDeadline,
   rolloverCheckpoint,
   prepareAgentLaunch,
   spawnAgent,
-  grokCannotRun,
   settleNightAlert
 };

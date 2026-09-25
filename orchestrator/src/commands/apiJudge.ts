@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname, relative } from 'node:path';
-import { runGrok, parseGrokJson, newSessionId } from '../grok/harness';
+import { runClaude, parseClaudeJson } from '../claude/harness';
 import {
   judgeScopeFromCitations,
   JUDGE_SCOPE_SCHEMA_VERSION
@@ -37,8 +37,6 @@ import {
 
 /** Where the det half writes captured live traffic. */
 const EVIDENCE_DIR = 'evidence';
-/** Grok's model for this pass. */
-const JUDGE_MODEL = 'grok-4.6';
 /** Wall-clock ceiling for the judge call. */
 const JUDGE_TIMEOUT_MS = 300_000;
 
@@ -67,7 +65,7 @@ export interface JudgeVerdict {
   schemaVersion: typeof JUDGE_SCOPE_SCHEMA_VERSION;
 }
 
-/** Grok's per-route finding. */
+/** The judge's per-route finding. */
 interface RouteFinding {
   route: string;
   delivers: boolean;
@@ -124,10 +122,10 @@ export function findClaimFiles(appDir: string): string[] {
  * being evidence. It is told explicitly that a 200 is not the question, because
  * the whole failure class here wears a 200.
  *
- * The evidence is referenced BY PATH, not inlined. Grok runs with `--cwd appDir`
- * and the prompt is passed as a command-line argument, so inlining 60KB of
- * captured traffic overran the Windows ~32KB command-line ceiling and the spawn
- * died with ENAMETOOLONG before the model saw anything. Pointing at files also
+ * The evidence is referenced BY PATH, not inlined. Claude runs with its cwd at
+ * appDir. The prompt now goes on stdin, but it was once an argv argument, and
+ * inlining 60KB of captured traffic overran the Windows ~32KB command-line
+ * ceiling with ENAMETOOLONG before the model saw anything. Pointing at files also
  * happens to be the more honest arrangement: the judge reads the same artifact
  * on disk that the verdict will cite as its evidence, rather than a copy that
  * passed through this process and could differ from it.
@@ -171,7 +169,7 @@ export function buildJudgePrompt(evidenceRel: string, claimFiles: string[]): str
 }
 
 /**
- * Pull the findings object out of Grok's reply.
+ * Pull the findings object out of the judge's reply.
  *
  * Tolerates a fenced block, because models add fences even when told not to.
  * Returns null rather than guessing when nothing parses — a judge whose output
@@ -270,13 +268,12 @@ export async function runApiJudge(
   const run =
     opts.run ??
     (async (cwd: string, p: string): Promise<string | null> => {
-      const result = await runGrok(cwd, p, {
-        sessionId: newSessionId(),
-        model: JUDGE_MODEL,
-        timeoutMs: JUDGE_TIMEOUT_MS
-      });
+      // Claude, fresh context, no permission mode: the judge reads the
+      // evidence files and edits nothing. A Claude failure is "no usable
+      // reply" (exit 2, fail-closed) -- never a Grok retry (engine-policy.mjs).
+      const result = await runClaude(cwd, p, { timeoutMs: JUDGE_TIMEOUT_MS });
       if (result.code !== 0) return null;
-      return parseGrokJson(result.stdout)?.text ?? null;
+      return parseClaudeJson(result.stdout)?.text ?? null;
     });
 
   const reply = await run(appDir, prompt);

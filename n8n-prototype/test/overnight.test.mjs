@@ -1309,160 +1309,167 @@ describe('9. prompt delivery on win32', () => {
   });
 });
 
-describe('10. executor order', () => {
-  test('order is grok then claude', () => {
+describe('10. executor: claude only', () => {
+  test('the only agent is claude; grok is not an executor (owner rule 2026-09-24)', () => {
     assert.deepEqual(
       overnight.AGENTS.map((agent) => agent.name),
-      ['grok', 'claude']
+      ['claude']
     );
+    assert.equal(overnight.AGENTS.some((agent) => agent.bin === 'grok'), false);
+    assert.equal('grokCannotRun' in overnight, false);
+  });
+
+  test('the cost cap defaults to $25', () => {
+    assert.equal(overnight.COST_CAP_USD, 25);
   });
 
   /**
    * @param {(cmd: string, args: string[], opts: object) => {status: number|null, stdout: string, stderr: string, error?: object|null}} run
+   * @param {{budgetUsd?: number}} [extra]
    */
-  function dispatchWith(run) {
+  function dispatchWith(run, extra = {}) {
     const cwd = mkdtempSync(join(tmpdir(), 'overnight-order-'));
     try {
       return overnight.dispatchFix('demo', ['lg-shipped'], cwd, {
         run,
         deadlineAt: Date.now() + 120_000,
-        itemTimeoutMs: 5_000
+        itemTimeoutMs: 5_000,
+        ...extra
       });
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }
   }
 
-  test('FAIL INPUT: grok spending-limit 403 hands off to claude, and claude is not first', () => {
+  test('claude runs with the prompt on stdin, shell false, and reports its cost', () => {
     /** @type {string[]} */
     const seen = [];
+    /** @type {string[]} */
+    let claudeArgs = [];
     const result = dispatchWith((cmd, args, opts) => {
       seen.push(cmd);
       if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
-      if (cmd === 'grok' || cmd === 'claude') {
-        assert.equal(opts.shell, false);
-        assert.ok(!args.some((arg) => arg.includes('\n') || arg.includes('RedAnvil gate rules')));
-      }
-      if (cmd === 'grok') {
-        return { status: 1, stdout: '', stderr: '403 spending limit reached', error: null };
-      }
       if (cmd === 'claude') {
+        claudeArgs = args;
+        assert.equal(opts.shell, false);
+        assert.match(String(opts.input), /RedAnvil gate rules/);
+        assert.ok(!args.some((arg) => arg.includes('\n') || arg.includes('RedAnvil gate rules')));
         return {
           status: 0,
-          stdout: '{"is_error":false,"subtype":"success","total_cost_usd":0}',
+          stdout: '{"is_error":false,"subtype":"success","total_cost_usd":1.5}',
           stderr: ''
         };
       }
       return { status: 1, stdout: '', stderr: `unexpected ${cmd}` };
     });
-    assert.deepEqual(
-      seen.filter((cmd) => cmd === 'grok' || cmd === 'claude'),
-      ['grok', 'claude']
-    );
+    assert.deepEqual(seen.filter((cmd) => cmd !== 'where' && cmd !== 'which'), ['claude']);
+    assert.equal(claudeArgs[claudeArgs.indexOf('--permission-mode') + 1], 'auto');
     assert.equal(result.agent, 'claude');
-  });
-
-  test('a grok exit 1 that is not a 403 does not fall through to claude', () => {
-    /** @type {string[]} */
-    const seen = [];
-    const result = dispatchWith((cmd) => {
-      seen.push(cmd);
-      if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
-      if (cmd === 'grok') return { status: 1, stdout: '', stderr: 'edit failed', error: null };
-      if (cmd === 'claude') {
-        return { status: 0, stdout: '{"is_error":false,"total_cost_usd":0}', stderr: '' };
-      }
-      return { status: 1, stdout: '', stderr: '' };
-    });
-    assert.deepEqual(
-      seen.filter((cmd) => cmd === 'grok' || cmd === 'claude'),
-      ['grok']
-    );
-    assert.equal(result.agent, 'grok');
-    assert.equal(result.ok, false);
-  });
-
-  test('FAIL INPUT: grok exit 0 is not a handoff even when the output says spending limit', () => {
-    /** @type {string[]} */
-    const seen = [];
-    const result = dispatchWith((cmd) => {
-      seen.push(cmd);
-      if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
-      if (cmd === 'grok') {
-        return { status: 0, stdout: 'fixed the spending limit check', stderr: '', error: null };
-      }
-      if (cmd === 'claude') {
-        return { status: 0, stdout: '{"is_error":false,"total_cost_usd":0}', stderr: '' };
-      }
-      return { status: 1, stdout: '', stderr: '' };
-    });
-    assert.deepEqual(
-      seen.filter((cmd) => cmd === 'grok' || cmd === 'claude'),
-      ['grok']
-    );
-    assert.equal(result.agent, 'grok');
     assert.equal(result.ok, true);
-    assert.equal(
-      overnight.grokCannotRun({ status: 0, stdout: 'fixed the spending limit check', stderr: '' }),
-      false
-    );
-    assert.equal(
-      overnight.grokCannotRun({ status: 0, stdout: '', stderr: 'HTTP 403 Forbidden' }),
-      false
-    );
+    assert.equal(result.costUsd, 1.5);
   });
 
-  test('FAIL INPUT: plain HTTP 403 Forbidden on a non-zero exit hands off', () => {
+  test('FAIL INPUT: claude failing, hanging, or erroring never invokes grok', () => {
+    const failures = [
+      { status: 1, stdout: '', stderr: 'edit failed', error: null },
+      { status: 1, stdout: '', stderr: 'HTTP 403 Forbidden spending limit', error: null },
+      { status: null, stdout: '', stderr: '', error: { code: 'ETIMEDOUT', message: 'spawnSync ETIMEDOUT' } },
+      { status: 0, stdout: '{"is_error":true,"subtype":"error_during_execution","total_cost_usd":0.2}', stderr: '' }
+    ];
+    for (const failure of failures) {
+      /** @type {string[]} */
+      const seen = [];
+      const result = dispatchWith((cmd) => {
+        seen.push(cmd);
+        if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
+        if (cmd === 'claude') return failure;
+        return { status: 0, stdout: '', stderr: '' };
+      });
+      const label = JSON.stringify(failure);
+      assert.equal(seen.includes('grok'), false, label);
+      assert.deepEqual(seen.filter((cmd) => cmd !== 'where' && cmd !== 'which'), ['claude'], label);
+      assert.equal(result.agent, 'claude', label);
+      assert.equal(result.ok, false, label);
+    }
+  });
+
+  test('FAIL INPUT: claude not on PATH fails the item and never probes or runs grok', () => {
+    /** @type {Array<{cmd: string, args: string[]}>} */
+    const seen = [];
+    const result = dispatchWith((cmd, args) => {
+      seen.push({ cmd, args });
+      if (cmd === 'where' || cmd === 'which') return { status: 1, stdout: '', stderr: 'not found' };
+      return { status: 0, stdout: '', stderr: '' };
+    });
+    assert.equal(result.agent, null);
+    assert.equal(result.ok, false);
+    assert.equal(seen.some((call) => call.cmd === 'grok' || call.args.includes('grok')), false);
+  });
+
+  test('the remaining night budget becomes --max-budget-usd, and an exhausted budget does not spawn', () => {
+    /** @type {string[]} */
+    let claudeArgs = [];
+    dispatchWith(
+      (cmd, args) => {
+        if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
+        claudeArgs = args;
+        return { status: 0, stdout: '{"is_error":false,"total_cost_usd":0.4}', stderr: '' };
+      },
+      { budgetUsd: 3.2 }
+    );
+    assert.equal(claudeArgs[claudeArgs.indexOf('--max-budget-usd') + 1], '3.20');
+
     /** @type {string[]} */
     const seen = [];
-    const result = dispatchWith((cmd) => {
-      seen.push(cmd);
-      if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
-      if (cmd === 'grok') return { status: 1, stdout: '', stderr: 'HTTP 403 Forbidden', error: null };
-      if (cmd === 'claude') {
+    const spent = dispatchWith(
+      (cmd) => {
+        seen.push(cmd);
+        if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
         return { status: 0, stdout: '{"is_error":false,"total_cost_usd":0}', stderr: '' };
-      }
-      return { status: 1, stdout: '', stderr: '' };
-    });
-    assert.deepEqual(
-      seen.filter((cmd) => cmd === 'grok' || cmd === 'claude'),
-      ['grok', 'claude']
+      },
+      { budgetUsd: 0 }
     );
-    assert.equal(result.agent, 'claude');
-    assert.equal(
-      overnight.grokCannotRun({ status: 1, stdout: '', stderr: 'HTTP 403 Forbidden' }),
-      true
-    );
-    assert.equal(
-      overnight.grokCannotRun({ status: 1, stdout: 'usage', stderr: 'spending limit reached' }),
-      true
-    );
-    // The real stderr of an exhausted Grok Build account, captured 2026-09-23.
-    assert.equal(
-      overnight.grokCannotRun({
-        status: 1,
-        stdout: '',
-        stderr:
-          'Error: Internal error: { "message": "API error (status 402 Payment Required): Grok Build usage balance exhausted", "http_status": 402 }'
-      }),
-      true
-    );
+    assert.equal(seen.includes('claude'), false);
+    assert.equal(spent.ok, false);
+    assert.match(spent.output, /cost cap/);
   });
 
-  test('FAIL INPUT: grok hang (status null) hands off to claude', () => {
-    const result = dispatchWith((cmd) => {
-      if (cmd === 'where' || cmd === 'which') return { status: 0, stdout: cmd, stderr: '' };
-      if (cmd === 'grok') {
-        return { status: null, stdout: '', stderr: '', error: { code: 'ETIMEDOUT', message: 'spawnSync ETIMEDOUT' } };
-      }
-      if (cmd === 'claude') {
-        return { status: 0, stdout: '{"is_error":false,"total_cost_usd":0}', stderr: '' };
-      }
-      return { status: 1, stdout: '', stderr: '' };
+  test('FAIL INPUT: the $25 cap stops the night once recorded claude spend reaches it', async () => {
+    const repo = makeOvernightRepo('overnight-cap-');
+    const started = new Date(2026, 8, 22, 23, 30, 0, 0);
+    const sameNightDeadline = new Date(2026, 8, 23, 6, 0, 0, 0).getTime();
+    // Spend already recorded tonight from claude envelopes (total_cost_usd).
+    writeCheckpointFile(repo, {
+      completed: [],
+      spentUsd: overnight.COST_CAP_USD,
+      startedAt: started.toISOString(),
+      deadlineAt: sameNightDeadline,
+      nightKey: '2026-09-23T06:00:00'
     });
-    assert.equal(result.agent, 'claude');
-    assert.equal(overnight.grokCannotRun({ status: null, stdout: '', stderr: '', error: { code: 'ETIMEDOUT' } }), true);
-    assert.equal(overnight.grokCannotRun({ status: 1, stdout: '', stderr: 'edit failed' }), false);
+    const prevRepo = process.env.REDANVIL_REPO;
+    try {
+      const { result, stdout } = await withStdout(() =>
+        overnight.runOvernight({
+          args: { 'dry-run': true },
+          repoRoot: repo,
+          deadlineAt: sameNightDeadline,
+          nowFn: () => started.getTime() + 60 * 60 * 1000,
+          queue: [{ id: 'item-capped', kind: 'fix-known-bug', summary: 'capped item' }],
+          loki: { available: false, version: null },
+          dispatchFix: () => {
+            throw new Error('dispatched past the cost cap');
+          }
+        })
+      );
+      assert.equal(result.stoppedEarly, true, stdout);
+      assert.equal(result.receipts.length, 0, stdout);
+      assert.match(stdout, /cost cap \$25 reached; stopping before item-capped/);
+      const summary = JSON.parse(readFileSync(result.summaryPath, 'utf8'));
+      assert.equal(summary.executor, 'claude');
+    } finally {
+      process.env.REDANVIL_REPO = prevRepo;
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 });
 

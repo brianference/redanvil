@@ -13,8 +13,13 @@
  * the whole process map exists to prevent, so it fails loudly instead.
  */
 
-/** Shorthand for a judgement role delegated to Grok Build. */
-const grok = (role) => `node n8n-prototype/roles/grok-role.mjs --role=${role} --slug={slug} --repoRoot={root}`;
+/**
+ * Shorthand for a judgement role run on Claude (`claude -p`). Owner rule,
+ * 2026-09-24: these never run on Grok (orchestrator/scripts/lib/engine-policy.mjs).
+ * @param {string} role role id
+ * @returns {string} command template
+ */
+const claude = (role) => `node n8n-prototype/roles/claude-role.mjs --role=${role} --slug={slug} --repoRoot={root}`;
 
 /** Shorthand for a deterministic local script. */
 const script = (name) => `node n8n-prototype/roles/${name}.mjs --slug={slug} --repoRoot={root}`;
@@ -47,19 +52,19 @@ export const BINDINGS = {
   'ui-live': script('ui-live'),
   runners: script('runners'),
 
-  // Judgement roles, delegated to Grok Build until n8n's native agents are in
-  // use. n8n 2.33.7 is available and supports them; we ran 2.22.6, so this is a
-  // stopgap that keeps the process complete rather than leaving six holes in it.
-  brainstorm: grok('brainstorm'),
-  testwriter: grok('testwriter'),
-  judge: grok('judge'),
-  'user-refuse': grok('user-refuse'),
-  pm: grok('pm'),
-  debugger: grok('debugger'),
+  // Judgement roles, run on Claude until n8n's native agents are in use. n8n
+  // 2.33.7 is available and supports them; we ran 2.22.6, so this is a stopgap
+  // that keeps the process complete rather than leaving six holes in it.
+  brainstorm: claude('brainstorm'),
+  testwriter: claude('testwriter'),
+  judge: claude('judge'),
+  'user-refuse': claude('user-refuse'),
+  pm: claude('pm'),
+  debugger: claude('debugger'),
 
-  // Design and build work, delegated to Grok because that is where it is
-  // strongest -- logos and component/layout options -- with a compact spec
-  // rather than 60KB of generated option HTML.
+  // Design and build work share design-role.mjs and its compact spec rather
+  // than 60KB of generated option HTML. Only logo, palette and layout run on
+  // Grok; build and content are coding and copy, so they run on Claude.
   logo: 'node n8n-prototype/roles/design-role.mjs --role=logo --slug={slug} --repoRoot={root}',
   palette: 'node n8n-prototype/roles/design-role.mjs --role=palette --slug={slug} --repoRoot={root}',
   layout: 'node n8n-prototype/roles/design-role.mjs --role=layout --slug={slug} --repoRoot={root}',

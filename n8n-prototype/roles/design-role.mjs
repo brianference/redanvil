@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 /**
- * Design and build roles delegated to Grok Build.
+ * Design and build roles.
  *
  * The owner's instruction is to use Grok surgically for logos and component
- * design options, not for everything and not for whole-app rebuilds. Two rules
+ * design options, not for everything and not for whole-app rebuilds. Only
+ * logo, palette and layout run on Grok (GROK_ALLOWED_ROLES in
+ * orchestrator/scripts/lib/engine-policy.mjs); `build` and `content` are
+ * coding and copy, so runAgentWithFailover sends them to Claude with no Grok
+ * fallback. Two rules
  * follow from what that cost when ignored:
  *
  * 1. Feed a COMPACT SPEC. Pointing jobs at the generated option HTML meant

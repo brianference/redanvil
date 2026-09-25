@@ -126,7 +126,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"brainstorm\", step: \"brainstorm\",\n  artifacts: `${c.slug}/docs/FEATURES.md`,\n  cmd: $env.REDANVIL_CMD_BRAINSTORM || \"node n8n-prototype/roles/grok-role.mjs --role=brainstorm --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"brainstorm\", step: \"brainstorm\",\n  artifacts: `${c.slug}/docs/FEATURES.md`,\n  cmd: $env.REDANVIL_CMD_BRAINSTORM || \"node n8n-prototype/roles/claude-role.mjs --role=brainstorm --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -1395,7 +1395,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"testwriter\", step: \"testwriter\",\n  artifacts: `${c.slug}/test/acceptance`,\n  cmd: $env.REDANVIL_CMD_TESTWRITER || \"node n8n-prototype/roles/grok-role.mjs --role=testwriter --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"testwriter\", step: \"testwriter\",\n  artifacts: `${c.slug}/test/acceptance`,\n  cmd: $env.REDANVIL_CMD_TESTWRITER || \"node n8n-prototype/roles/claude-role.mjs --role=testwriter --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -1612,7 +1612,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"independent-judge\", step: \"judge\",\n  artifacts: `${c.slug}/evidence/judge-diff.json`,\n  cmd: $env.REDANVIL_CMD_JUDGE || \"node n8n-prototype/roles/grok-role.mjs --role=judge --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"independent-judge\", step: \"judge\",\n  artifacts: `${c.slug}/evidence/judge-diff.json`,\n  cmd: $env.REDANVIL_CMD_JUDGE || \"node n8n-prototype/roles/claude-role.mjs --role=judge --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -1674,7 +1674,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"user-refuse\", step: \"user-refuse\",\n  artifacts: `${c.slug}/evidence/user-refuse.json`,\n  cmd: $env.REDANVIL_CMD_USER_REFUSE || \"node n8n-prototype/roles/grok-role.mjs --role=user-refuse --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"user-refuse\", step: \"user-refuse\",\n  artifacts: `${c.slug}/evidence/user-refuse.json`,\n  cmd: $env.REDANVIL_CMD_USER_REFUSE || \"node n8n-prototype/roles/claude-role.mjs --role=user-refuse --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -1705,7 +1705,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"pm\", step: \"pm\",\n  artifacts: `${c.slug}/evidence/assignments.json`,\n  cmd: $env.REDANVIL_CMD_PM || \"node n8n-prototype/roles/grok-role.mjs --role=pm --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"pm\", step: \"pm\",\n  artifacts: `${c.slug}/evidence/assignments.json`,\n  cmd: $env.REDANVIL_CMD_PM || \"node n8n-prototype/roles/claude-role.mjs --role=pm --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {
@@ -1736,7 +1736,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"debugger\", step: \"debugger\",\n  artifacts: `${c.slug}/evidence/root-cause.md`,\n  cmd: $env.REDANVIL_CMD_DEBUGGER || \"node n8n-prototype/roles/grok-role.mjs --role=debugger --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
+        "jsCode": "const c = $('Slice config').first().json;\nreturn [{ json: { ...c, role: \"debugger\", step: \"debugger\",\n  artifacts: `${c.slug}/evidence/root-cause.md`,\n  cmd: $env.REDANVIL_CMD_DEBUGGER || \"node n8n-prototype/roles/claude-role.mjs --role=debugger --slug={slug} --repoRoot={root}\"\n    .replaceAll('{slug}', c.slug).replaceAll('{root}', JSON.stringify(c.repoRoot)).replaceAll('{promptB64}', Buffer.from(String(c.prompt ?? ''), 'utf8').toString('base64')).replaceAll('{entitiesB64}', Buffer.from(String(c.entities ?? ''), 'utf8').toString('base64')).replaceAll('{prompt}', JSON.stringify(c.prompt ?? '')) } }];"
       }
     },
     {

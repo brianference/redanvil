@@ -35,9 +35,10 @@ const minFails = Number(flag('min-fails', '0'));
 const APPS = ['app-builder', 'dashboard'];
 /**
  * How far an independent review may drift behind HEAD before it is called stale.
- * Reported, not enforced — `grok` authenticates interactively, so the reviewer
- * cannot run in CI and a hard failure here would only block on something CI is
- * unable to fix.
+ * Reported, not enforced — the reviewer is `claude -p` on the owner's login
+ * (Claude only since 2026-09-24; see orchestrator/scripts/lib/engine-policy.mjs),
+ * which CI does not have, so a hard failure here would only block on something
+ * CI is unable to fix.
  */
 const MAX_COMMITS_BEHIND = Number(flag('max-commits-behind', '40'));
 const outPath = flag('out', null);

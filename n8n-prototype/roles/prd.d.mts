@@ -95,10 +95,10 @@ export declare function assertAnswerTook(group: string, intended: string, actual
 export interface PrdIntentMeta {
   /** Normalised intent fields. */
   intent: Record<string, unknown>;
-  /** `grok` or `regex-fallback`. */
-  intentSource: string;
-  /** Milliseconds spent in the grok attempts. */
-  grokDurationMs: number;
+  /** `claude` or `regex-fallback`. Never `grok`: PRD intent runs on Claude only. */
+  intentSource: 'claude' | 'regex-fallback';
+  /** Milliseconds spent in the claude attempts. */
+  intentDurationMs: number;
   /** Why the regex fallback was used, when it was. */
   fallbackReason?: string;
 }

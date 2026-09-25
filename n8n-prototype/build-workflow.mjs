@@ -373,13 +373,14 @@ function joinNode(id, name, position) {
 }
 
 /**
- * Grok and design-role bindings are the slow steps. Local scripts are not.
+ * Agent-role bindings (claude-role and design-role) are the slow steps.
+ * Local scripts are not.
  * @param {import('./process-map.mjs').ProcessStep} step
  * @returns {boolean}
  */
 function isAgentStep(step) {
   const cmd = BINDINGS[step.id] ?? '';
-  return cmd.includes('roles/grok-role.mjs') || cmd.includes('roles/design-role.mjs');
+  return cmd.includes('roles/claude-role.mjs') || cmd.includes('roles/design-role.mjs');
 }
 
 /**
@@ -413,7 +414,7 @@ function wireTails(tails, to, inputIndex) {
  * Wire steps from `dependsOn` instead of from map order.
  *
  * Steps that share a dependency set fan out from one predecessor. A set of
- * two or more grok/design roles is launched by one Execute Command
+ * two or more agent (claude/design) roles is launched by one Execute Command
  * (`parallel-roles.mjs`), because executionOrder v1 walks one branch to the
  * end before the next (n8n-core workflow-execute.js: the loop shifts a
  * single stack entry, and v1 unshifts children). Human gates stay on their

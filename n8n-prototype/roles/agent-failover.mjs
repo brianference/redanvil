@@ -1,10 +1,16 @@
 /**
- * Grok first, Claude only when Grok never got to do the work.
+ * Run one role on the engine the owner allows for it.
  *
- * Ported from loki/overnight.mjs (`grokCannotRun`, `prepareAgentLaunch`):
- * the prompt goes to grok through `--prompt-file` and to claude on stdin,
- * and both children are spawned with `shell: false`. A hang is either the
- * overall timeout or a stretch of silence on stdout and stderr.
+ * Owner rule (2026-09-24, orchestrator/scripts/lib/engine-policy.mjs): Grok
+ * runs ONLY the design roles in GROK_ALLOWED_ROLES (logo, palette, layout).
+ * Every other role runs on Claude and never falls back to Grok. When Claude
+ * cannot run, the role fails closed.
+ *
+ * Design roles keep the older order: grok first, Claude only when grok never
+ * got to do the work (`grokCannotRun`). The prompt goes to grok through
+ * `--prompt-file` and to claude on stdin, and both children are spawned with
+ * `shell: false`. A hang is either the overall timeout or a stretch of
+ * silence on stdout and stderr.
  *
  * Image roles stay on Grok. Grok Imagine (`image_gen`) is not a Claude tool;
  * handing that prompt to Claude produces a write-up instead of the marks.
@@ -13,6 +19,72 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { ENGINE_CLAUDE, ENGINE_GROK, mayUseGrok } from '../../orchestrator/scripts/lib/engine-policy.mjs';
+
+/**
+ * Argv for a headless Claude role run. The prompt is stdin, never argv
+ * (Windows command-line limit, cmd.exe quoting). `--permission-mode auto` was
+ * measured on 2026-09-24: a `-p` run ran a Bash command and wrote a file with
+ * `permission_denials: []`. Without a mode, headless edits are denied.
+ */
+export const CLAUDE_ROLE_ARGS = Object.freeze([
+  '-p',
+  '--output-format',
+  'json',
+  '--input-format',
+  'text',
+  '--permission-mode',
+  'auto'
+]);
+
+/** Anthropic API statuses that mean "wait", not "the work failed". */
+const CLAUDE_RATE_LIMIT_STATUSES = new Set([429, 529]);
+
+/**
+ * Classify a `claude -p --output-format json` result.
+ *
+ * Exit 0 alone is not success: an envelope with `is_error: true` (a usage
+ * limit or API error) is a failure whatever the exit code. No parseable
+ * envelope is also a failure, because `--output-format json` prints one when
+ * the run completes.
+ *
+ * FAIL INPUT: `{status: 0, stdout: '{"is_error":true,"api_error_status":429}'}` → ok false.
+ * FAIL INPUT: `{status: 0, stdout: 'not json'}` → ok false.
+ *
+ * @param {{status: number|null, stdout?: string, stderr?: string, error?: {code?: string|null, message?: string}|null}} res
+ * @returns {{ok: boolean, rateLimited: boolean, reason: string|null}}
+ */
+export function classifyClaudeRun(res) {
+  if (res.status === null) {
+    const code = res.error?.code ?? 'no exit status';
+    return { ok: false, rateLimited: false, reason: `claude did not finish (${code})` };
+  }
+  /** @type {Record<string, unknown>|null} */
+  let envelope = null;
+  try {
+    const parsed = JSON.parse(String(res.stdout ?? '').trim());
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) envelope = parsed;
+  } catch {
+    // Not an envelope: the process died before it could print one.
+  }
+  if (!envelope) {
+    return {
+      ok: false,
+      rateLimited: false,
+      reason: `claude exit ${res.status} with no json envelope`
+    };
+  }
+  const apiStatus = envelope.api_error_status;
+  const rateLimited = typeof apiStatus === 'number' && CLAUDE_RATE_LIMIT_STATUSES.has(apiStatus);
+  if (envelope.is_error === true || res.status !== 0) {
+    return {
+      ok: false,
+      rateLimited,
+      reason: `claude error: subtype=${String(envelope.subtype)} api_error_status=${String(apiStatus ?? 'none')} exit=${res.status}`
+    };
+  }
+  return { ok: true, rateLimited: false, reason: null };
+}
 
 /**
  * Kill the grok child when it has produced no stdout and no stderr for this
@@ -213,7 +285,64 @@ export function writeRoleReceipt(appDir, receipt) {
 }
 
 /**
- * Run grok, and claude only if grok could not run.
+ * @typedef {{bin: string, args: string[], cwd?: string, input?: string|null, timeoutMs?: number, heartbeatMs?: number}} SpawnSpec
+ * @typedef {{status: number|null, stdout?: string, stderr?: string, error?: {code?: string|null, message?: string}|null}} SpawnResult
+ * @typedef {{engine: string|null, handedOff: boolean, ok: boolean, status: number|null, stdout: string, stderr: string, reason: string|null}} RoleOutcome
+ */
+
+/**
+ * Spawn Claude for a role, prompt on stdin.
+ *
+ * No heartbeat: `--output-format json` prints nothing until the run ends, so
+ * a silence timer would kill every healthy run. The overall bound applies.
+ *
+ * @param {(spec: SpawnSpec) => Promise<SpawnResult>} spawnImpl
+ * @param {{prompt: string, cwd: string, timeoutMs: number}} opts
+ * @returns {Promise<SpawnResult>}
+ */
+function spawnClaude(spawnImpl, opts) {
+  return spawnImpl({
+    bin: 'claude',
+    args: [...CLAUDE_ROLE_ARGS],
+    cwd: opts.cwd,
+    input: opts.prompt,
+    timeoutMs: opts.timeoutMs,
+    heartbeatMs: 0
+  });
+}
+
+/**
+ * Turn a Claude spawn into a role outcome. `handedOff` records whether a
+ * design role got here because grok could not run.
+ *
+ * @param {SpawnResult} claudeRes
+ * @param {{handedOff: boolean, handoffWhy?: string}} ctx
+ * @returns {RoleOutcome}
+ */
+function claudeOutcome(claudeRes, ctx) {
+  const verdict = classifyClaudeRun(claudeRes);
+  const prefix = ctx.handedOff && ctx.handoffWhy ? `handed off: ${ctx.handoffWhy}` : null;
+  const reason = verdict.ok ? prefix : [prefix, verdict.reason].filter(Boolean).join('; ');
+  // A zero exit with an is_error envelope is still a failed role.
+  const failedStatus = typeof claudeRes.status === 'number' && claudeRes.status !== 0 ? claudeRes.status : 1;
+  return {
+    engine: ENGINE_CLAUDE,
+    handedOff: ctx.handedOff,
+    ok: verdict.ok,
+    status: verdict.ok ? 0 : failedStatus,
+    stdout: claudeRes.stdout ?? '',
+    stderr: claudeRes.stderr ?? '',
+    reason
+  };
+}
+
+/**
+ * Run one role on its allowed engine.
+ *
+ * - Role not in GROK_ALLOWED_ROLES (or no role): Claude only. Grok is never
+ *   spawned, even when Claude fails; the outcome is `ok: false` instead.
+ * - Design role: grok first, and Claude only when grok could not run and the
+ *   role does not need Grok Imagine.
  *
  * @param {{
  *   prompt: string,
@@ -224,12 +353,37 @@ export function writeRoleReceipt(appDir, receipt) {
  *   role?: string,
  *   artifact?: string,
  *   appDir?: string,
- *   spawnImpl?: (spec: {bin: string, args: string[], cwd?: string, input?: string|null, timeoutMs?: number, heartbeatMs?: number}) => Promise<{status: number|null, stdout?: string, stderr?: string, error?: {code?: string|null, message?: string}|null}>
+ *   spawnImpl?: (spec: SpawnSpec) => Promise<SpawnResult>
  * }} opts
- * @returns {Promise<{engine: string|null, handedOff: boolean, ok: boolean, status: number|null, stdout: string, stderr: string, reason: string|null, receiptPath: string|null}>}
+ * @returns {Promise<RoleOutcome & {receiptPath: string|null}>}
  */
 export async function runAgentWithFailover(opts) {
   const spawnImpl = opts.spawnImpl ?? spawnTracked;
+
+  /**
+   * @param {RoleOutcome} result
+   * @returns {RoleOutcome & {receiptPath: string|null}}
+   */
+  const finish = (result) => {
+    let receiptPath = null;
+    if (opts.appDir && opts.role) {
+      receiptPath = writeRoleReceipt(opts.appDir, {
+        role: opts.role,
+        engine: result.engine,
+        artifact: opts.artifact ?? '',
+        handedOff: result.handedOff,
+        ok: result.ok,
+        reason: result.reason
+      });
+    }
+    return { ...result, receiptPath };
+  };
+
+  if (!mayUseGrok(opts.role)) {
+    const claudeRes = await spawnClaude(spawnImpl, opts);
+    return finish(claudeOutcome(claudeRes, { handedOff: false }));
+  }
+
   const heartbeatMs = opts.heartbeatMs ?? HEARTBEAT_SILENCE_MS;
   const promptFile = join(
     tmpdir(),
@@ -261,27 +415,9 @@ export async function runAgentWithFailover(opts) {
   const grokStdout = grokRes.stdout ?? '';
   const grokStderr = grokRes.stderr ?? '';
 
-  /**
-   * @param {{engine: string|null, handedOff: boolean, ok: boolean, status: number|null, stdout: string, stderr: string, reason: string|null}} result
-   */
-  const finish = (result) => {
-    let receiptPath = null;
-    if (opts.appDir && opts.role) {
-      receiptPath = writeRoleReceipt(opts.appDir, {
-        role: opts.role,
-        engine: result.engine,
-        artifact: opts.artifact ?? '',
-        handedOff: result.handedOff,
-        ok: result.ok,
-        reason: result.reason
-      });
-    }
-    return { ...result, receiptPath };
-  };
-
   if (!grokCannotRun(grokRes)) {
     return finish({
-      engine: 'grok',
+      engine: ENGINE_GROK,
       handedOff: false,
       ok: grokRes.status === 0,
       status: grokRes.status,
@@ -307,23 +443,6 @@ export async function runAgentWithFailover(opts) {
     });
   }
 
-  const claudeRes = await spawnImpl({
-    bin: 'claude',
-    args: ['-p', '--output-format', 'json', '--input-format', 'text'],
-    cwd: opts.cwd,
-    input: opts.prompt,
-    timeoutMs: opts.timeoutMs,
-    heartbeatMs: 0
-  });
-  const claudeStdout = claudeRes.stdout ?? '';
-  const claudeStderr = claudeRes.stderr ?? '';
-  return finish({
-    engine: 'claude',
-    handedOff: true,
-    ok: claudeRes.status === 0,
-    status: claudeRes.status,
-    stdout: claudeStdout,
-    stderr: claudeStderr,
-    reason: claudeRes.status === 0 ? `handed off: ${describeGrokFailure(grokRes)}` : describeGrokFailure(grokRes)
-  });
+  const claudeRes = await spawnClaude(spawnImpl, opts);
+  return finish(claudeOutcome(claudeRes, { handedOff: true, handoffWhy: describeGrokFailure(grokRes) }));
 }

@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 /**
- * Run a judgement role by delegating to Grok Build.
+ * Run a judgement role on Claude (`claude -p`, prompt on stdin).
  *
  * Six roles in the map are genuinely agentic — brainstorm, testwriter, judge,
  * user-refuse, pm, debugger. n8n has first-class AI Agent nodes that would suit
  * them, but self-hosted agents need n8n 2.32.3+ with the `agents` module and we
  * run 2.22.6, so that is a version upgrade rather than a config flag. Until
- * then these run as Grok shell-outs, which keeps the process complete instead of
- * leaving six holes in it.
+ * then these run as Claude shell-outs, which keeps the process complete instead
+ * of leaving six holes in it.
+ *
+ * None of these roles is in GROK_ALLOWED_ROLES
+ * (orchestrator/scripts/lib/engine-policy.mjs), so runAgentWithFailover never
+ * spawns grok for them. Owner rule, 2026-09-24: when Claude cannot run, the
+ * role fails; it is not handed to Grok. This file was grok-role.mjs.
  *
  * One runner, not six near-identical scripts: the roles differ only in their
  * prompt and their required artifact, and duplicating the plumbing is how the
@@ -154,34 +159,37 @@ than guessing.`
   }
 };
 
-/** Overall bound for one judgement role. The heartbeat inside the failover is shorter. */
+/** Overall bound for one judgement role. */
 const ROLE_TIMEOUT_MS = 20 * 60 * 1000;
 
 /**
  * Scope the agent as tightly as its job allows.
  *
- * `--always-approve` pre-grants every approval, so the working directory IS the
- * blast radius. Only `judge` genuinely needs the repository — it reviews
+ * `--permission-mode auto` lets the agent act without a person approving each
+ * step, so the working directory IS the blast radius. Only `judge` genuinely needs the repository — it reviews
  * `git diff` — and even then it only reads. Every other role works inside the
  * app it is building, so pointing them at the repo root would let a brainstorm
  * job rewrite the orchestrator or the gate that scores it.
  */
 const NEEDS_REPO = new Set(['judge']);
 
+/** Roles this runner knows, for the engine-policy test and the usage line. */
+export const CLAUDE_ROLE_IDS = Object.freeze(Object.keys(ROLES));
+
 /**
- * Run one judgement role. None of these prompts call image_gen, so a grok
- * hang or a spending-limit 403 may hand the same prompt to claude.
+ * Run one judgement role on Claude. A Claude failure fails the role; there is
+ * no Grok fallback.
  *
  * @param {{role: string, slug: string, repoRoot?: string, runAgent?: typeof runAgentWithFailover}} opts
  * @returns {Promise<{status: number, stdout: string, stderr: string}>}
  */
-export async function runGrokRole(opts) {
+export async function runClaudeRole(opts) {
   const spec = ROLES[opts.role];
   if (!opts.role || !opts.slug || !spec) {
     return {
       status: 2,
       stdout: '',
-      stderr: `usage: grok-role.mjs --role=<${Object.keys(ROLES).join('|')}> --slug=X\n`
+      stderr: `usage: claude-role.mjs --role=<${CLAUDE_ROLE_IDS.join('|')}> --slug=X\n`
     };
   }
   const root = resolve(opts.repoRoot ?? process.cwd());
@@ -226,7 +234,7 @@ const isDirectRun =
 
 if (isDirectRun) {
   const args = parseArgs(process.argv.slice(2));
-  const result = await runGrokRole({ role: args.role, slug: args.slug, repoRoot: args.repoRoot });
+  const result = await runClaudeRole({ role: args.role, slug: args.slug, repoRoot: args.repoRoot });
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
   process.exit(result.status);

@@ -1,6 +1,6 @@
 /**
  * One-shot proof that multi-chunk independent review covers the full release
- * diff and fails closed on an unparseable chunk. Uses reviewChunk (no live grok).
+ * diff and fails closed on an unparseable chunk. Uses reviewChunk (no live judge CLI).
  *
  * Usage: npx tsx orchestrator/scripts/team/proof-chunk-review.mts
  */
