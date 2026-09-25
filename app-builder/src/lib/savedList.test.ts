@@ -66,6 +66,12 @@ describe('countThisWeek', () => {
         slug: 'b',
         title: 'B',
         created_at: '2026-07-01T12:00:00.000Z'
+      },
+      {
+        id: '3',
+        slug: 'c',
+        title: 'C',
+        created_at: 'not-a-date'
       }
     ];
     expect(countThisWeek(items, now)).toBe(1);

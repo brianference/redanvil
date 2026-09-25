@@ -20,8 +20,15 @@ const savedPrdRowSchema = savedPrdListItemSchema.extend({
 /** Full row from GET /api/prd/:id. */
 export type SavedPrdRow = z.infer<typeof savedPrdRowSchema>;
 
-const MS_PER_DAY = 86_400_000;
+const MS_PER_MINUTE = 60_000;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+const MS_PER_DAY = MS_PER_MINUTE * MINUTES_PER_HOUR * HOURS_PER_DAY;
 const WEEK_DAYS = 7;
+/** Below this many hours a label counts hours ("30h ago"), then days. */
+const HOURS_LABEL_LIMIT = 48;
+/** Below this many days a label counts days ("9d ago"), then shows the date. */
+const DAYS_LABEL_LIMIT = 14;
 
 /**
  * Narrow unknown JSON to a SavedPrdListItem array, or null if any row is invalid.
@@ -47,30 +54,33 @@ export function parseSavedPrd(payload: unknown): SavedPrdRow | null {
 
 /**
  * Relative time label from an ISO timestamp; falls back to locale string.
+ *
+ * @param iso - ISO-8601 timestamp.
+ * @param nowMs - Clock, injectable for tests.
+ * @returns "now", "5m ago", "3h ago", "4d ago", or a date.
  */
 export function formatRelativeTime(iso: string, nowMs: number = Date.now()): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
   const deltaMs = Math.max(0, nowMs - date.getTime());
-  const minutes = Math.floor(deltaMs / 60_000);
+  const minutes = Math.floor(deltaMs / MS_PER_MINUTE);
   if (minutes < 1) return 'now';
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 48) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 14) return `${days}d ago`;
+  if (minutes < MINUTES_PER_HOUR) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / MINUTES_PER_HOUR);
+  if (hours < HOURS_LABEL_LIMIT) return `${hours}h ago`;
+  const days = Math.floor(hours / HOURS_PER_DAY);
+  if (days < DAYS_LABEL_LIMIT) return `${days}d ago`;
   return date.toLocaleDateString();
 }
 
 /**
- * Count items created within the last 7 days (real data only).
+ * Count items created within the last 7 days. An unparseable date never counts.
+ *
+ * @param items - Loaded list rows.
+ * @param nowMs - Clock, injectable for tests.
+ * @returns How many were created this week.
  */
-export function countThisWeek(items: SavedPrdListItem[], nowMs: number = Date.now()): number {
+export function countThisWeek(items: readonly SavedPrdListItem[], nowMs: number = Date.now()): number {
   const cutoff = nowMs - WEEK_DAYS * MS_PER_DAY;
-  let count = 0;
-  for (const item of items) {
-    const t = new Date(item.created_at).getTime();
-    if (!Number.isNaN(t) && t >= cutoff) count += 1;
-  }
-  return count;
+  return items.filter((item) => new Date(item.created_at).getTime() >= cutoff).length;
 }
