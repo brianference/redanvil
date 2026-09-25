@@ -131,6 +131,14 @@ describe('saved PRD page (real browser)', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 
+  it('shows not found, not a generic error, when the API answers 404', async () => {
+    mockApi(json({ error: 'PRD not found' }, 404));
+    openPrd('prd-deleted-since');
+
+    await expect.element(page.getByText(copy.notFound), AFTER_LOAD).toBeVisible();
+    expect(page.getByRole('button', { name: en.pages.saved.errorRetry }).elements()).toHaveLength(0);
+  });
+
   it('treats a malformed id as not found without calling the API', async () => {
     const fetchSpy = mockApi();
     openPrd('NOT_A_VALID_ID');

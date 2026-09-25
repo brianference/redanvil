@@ -3,7 +3,7 @@
  * Browser lane: the Saved dashboard's KPI strip, from a mocked GET /api/prds.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { page } from '@vitest/browser/context';
+import { page, userEvent } from '@vitest/browser/context';
 import { Saved } from './Saved';
 import { en } from '../i18n/en';
 import { SAVED_LIST_LIMIT } from '../lib/savedList';
@@ -29,16 +29,27 @@ afterEach(() => {
 });
 
 /**
- * Answer GET /api/prds with `list`; anything else goes to the network.
+ * Answer GET /api/prds with `responses` in order; anything else goes to the network.
+ *
+ * @param responses - One response per list request.
+ * @returns The fetch spy.
+ */
+function mockListResponses(...responses: Response[]) {
+  const queue = [...responses];
+  return vi.spyOn(window, 'fetch').mockImplementation((input, init) => {
+    if (input !== '/api/prds') return realFetch(input, init);
+    const next = queue.shift();
+    return next === undefined ? Promise.reject(new Error('unexpected list request')) : Promise.resolve(next);
+  });
+}
+
+/**
+ * Answer GET /api/prds with `list`.
  *
  * @param list - Rows the API returns.
  */
 function mockList(list: unknown[]): void {
-  vi.spyOn(window, 'fetch').mockImplementation((input, init) =>
-    input === '/api/prds'
-      ? Promise.resolve(new Response(JSON.stringify(list), { status: 200 }))
-      : realFetch(input, init)
-  );
+  mockListResponses(Response.json(list));
 }
 
 /**
@@ -80,5 +91,29 @@ describe('Saved dashboard KPIs (real browser)', () => {
     mockList(list);
     mounted = mount(<Saved />, { route: '/saved' });
     expect(await kpiTiles()).toEqual([`1${copy.kpiThisWeek}`, `2${copy.kpiTotal}`]);
+  });
+
+  it('shows the empty state, not a zero strip, when nothing is saved', async () => {
+    mockList([]);
+    mounted = mount(<Saved />, { route: '/saved' });
+
+    await expect.element(page.getByText(copy.empty), AFTER_LOAD).toBeVisible();
+    expect(page.getByRole('group', { name: copy.kpiLabel }).elements()).toHaveLength(0);
+  });
+
+  it('recovers through Retry after a failed load', async () => {
+    const fetchSpy = mockListResponses(
+      Response.json({ error: 'Could not list PRDs' }, { status: 500 }),
+      Response.json([{ id: 'a', slug: 'recipe-box', title: 'Recipe Box', created_at: new Date().toISOString() }])
+    );
+    mounted = mount(<Saved />, { route: '/saved' });
+
+    const retry = page.getByRole('button', { name: copy.errorRetry });
+    await expect.element(retry, AFTER_LOAD).toBeVisible();
+    await expect.element(page.getByText('Could not list PRDs')).toBeVisible();
+    await userEvent.click(retry);
+
+    await expect.element(page.getByText('Recipe Box'), AFTER_LOAD).toBeVisible();
+    expect(fetchSpy.mock.calls.filter(([input]) => input === '/api/prds')).toHaveLength(2);
   });
 });
