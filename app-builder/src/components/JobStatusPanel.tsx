@@ -1,12 +1,9 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
 import { en } from '../i18n/en';
-import {
-  FETCH_TIMEOUT_MS,
-  createActiveFlag,
-  isAbortError
-} from '../lib/abortableEffect';
+import { createActiveFlag } from '../lib/abortableEffect';
 import { messageFromPayload } from '../lib/apiError';
+import { fetchJson, type FetchJsonFailure } from '../lib/fetchJson';
 import {
   JOB_STATUS_POLL_INTERVAL_MS,
   dismissTrackedJob,
@@ -25,11 +22,54 @@ import { buttonStyle, cardStyle, errorBannerStyle } from './ui';
 /** How long the inline "Copied" label stays on the job-id button. */
 const COPIED_FEEDBACK_MS = 2000;
 
-/** What the panel is showing. A later poll does not flash back to loading. */
+/**
+ * What the panel is showing. A later poll does not flash back to loading, and
+ * a failed poll after a good one keeps the last status under a warning.
+ */
 type PanelState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; job: PublicJobStatus };
+  | { status: 'ready'; job: PublicJobStatus; warning: string | null };
+
+/** Result of the last copy-to-clipboard attempt, shown on the copy button. */
+type CopyState = 'idle' | 'copied' | 'failed';
+
+/**
+ * Why a poll produced no status, in the panel's words.
+ *
+ * @param failure - How the request failed.
+ * @returns User-facing message.
+ */
+function pollErrorMessage(failure: FetchJsonFailure): string {
+  const errors = en.jobStatus.errors;
+  switch (failure.kind) {
+    case 'http':
+      return messageFromPayload(failure.payload, errors.loadFailed);
+    case 'invalid-json':
+    case 'invalid-payload':
+      return errors.invalid;
+    case 'timeout':
+      return errors.timeout;
+    case 'aborted':
+    case 'network':
+      return errors.network;
+  }
+}
+
+/**
+ * State after a failed poll: keep a status that already loaded, under a
+ * warning, or show the error when nothing has loaded yet.
+ *
+ * @param previous - State before the poll.
+ * @param message - Why the poll failed.
+ * @returns Next state.
+ */
+function afterFailedPoll(previous: PanelState, message: string): PanelState {
+  if (previous.status === 'ready') {
+    return { ...previous, warning: en.jobStatus.staleWarning(message) };
+  }
+  return { status: 'error', message };
+}
 
 export interface JobStatusPanelProps {
   /** Job id returned by POST /api/submit. */
@@ -101,17 +141,17 @@ export function JobStatusPanel({
   const copy = en.jobStatus;
   const [state, setState] = useState<PanelState>({ status: 'loading' });
   const [hidden, setHidden] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>('idle');
 
   useEffect(() => {
-    if (!copied) return;
+    if (copyState === 'idle') return;
     const timeoutId = window.setTimeout(() => {
-      setCopied(false);
+      setCopyState('idle');
     }, COPIED_FEEDBACK_MS);
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [copied]);
+  }, [copyState]);
 
   useEffect(() => {
     if (!shouldPollJob(hidden, null)) return;
@@ -121,66 +161,31 @@ export function JobStatusPanel({
     let inFlight: AbortController | null = null;
 
     /**
-     * Fetch the public status once. A timeout sets an error; a cleanup abort
-     * does not. Terminal statuses stop the interval.
+     * Fetch the public status once. A cleanup abort changes nothing; terminal
+     * statuses stop the interval.
      */
     async function poll(): Promise<void> {
       if (stopped || !flag.isActive()) return;
-      if (!shouldPollJob(hidden, null)) return;
       inFlight?.abort();
       const controller = new AbortController();
       inFlight = controller;
-      let timedOut = false;
-      const timeoutId = setTimeout(() => {
-        timedOut = true;
-        controller.abort();
-      }, FETCH_TIMEOUT_MS);
-
-      try {
-        const response = await fetch(jobStatusUrl(jobId), { signal: controller.signal });
-        clearTimeout(timeoutId);
-        let payload: unknown;
-        try {
-          payload = await response.json();
-        } catch {
-          flag.ifActive(() => {
-            setState({ status: 'error', message: copy.errors.invalid });
-          });
-          return;
-        }
-        if (!response.ok) {
-          flag.ifActive(() => {
-            setState({
-              status: 'error',
-              message: messageFromPayload(payload, copy.errors.loadFailed)
-            });
-          });
-          return;
-        }
-        const job = parsePublicJobStatus(payload);
-        if (job === null) {
-          flag.ifActive(() => {
-            setState({ status: 'error', message: copy.errors.invalid });
-          });
-          return;
-        }
+      const result = await fetchJson(jobStatusUrl(jobId), parsePublicJobStatus, {
+        signal: controller.signal
+      });
+      if (!result.ok) {
+        if (result.kind === 'aborted') return;
+        const message = pollErrorMessage(result);
         flag.ifActive(() => {
-          setState({ status: 'ready', job });
+          setState((previous) => afterFailedPoll(previous, message));
         });
-        if (!shouldPollJob(false, job.status)) {
-          stopped = true;
-          if (timer !== null) clearInterval(timer);
-        }
-      } catch (error: unknown) {
-        clearTimeout(timeoutId);
-        if (!flag.isActive()) return;
-        if (isAbortError(error)) {
-          if (timedOut) {
-            setState({ status: 'error', message: copy.errors.timeout });
-          }
-          return;
-        }
-        setState({ status: 'error', message: copy.errors.network });
+        return;
+      }
+      flag.ifActive(() => {
+        setState({ status: 'ready', job: result.data, warning: null });
+      });
+      if (!shouldPollJob(false, result.data.status)) {
+        stopped = true;
+        if (timer !== null) clearInterval(timer);
       }
     }
 
@@ -195,17 +200,18 @@ export function JobStatusPanel({
       if (timer !== null) clearInterval(timer);
       inFlight?.abort();
     };
-  }, [jobId, copy, hidden]);
+  }, [jobId, hidden]);
 
   /**
-   * Copy the full job id and show inline confirmation. A blocked clipboard stays quiet.
+   * Copy the full job id and say on the button whether it worked, so a blocked
+   * clipboard does not look like a successful copy or a dead button.
    */
   async function copyJobId(): Promise<void> {
     try {
       await navigator.clipboard.writeText(jobId);
-      setCopied(true);
+      setCopyState('copied');
     } catch {
-      setCopied(false);
+      setCopyState('failed');
     }
   }
 
@@ -278,20 +284,20 @@ export function JobStatusPanel({
         </span>
         <button
           type="button"
-          aria-label={copied ? copy.copied : copy.copyJobId}
+          aria-label={copyButtonLabel(copyState)}
           onClick={() => {
             void copyJobId();
           }}
           style={copyButtonStyle}
         >
-          {copied ? copy.copied : copy.copyLabel}
+          {copyState === 'idle' ? copy.copyLabel : copyButtonLabel(copyState)}
         </button>
       </div>
 
-      {state.status === 'error' && (
+      {(state.status === 'error' || (state.status === 'ready' && state.warning !== null)) && (
         <div role="alert" style={errorBannerStyle()}>
           <span aria-hidden="true">!</span>
-          <span>{state.message}</span>
+          <span>{state.status === 'error' ? state.message : state.warning}</span>
         </div>
       )}
 
@@ -334,6 +340,18 @@ export function JobStatusPanel({
       )}
     </section>
   );
+}
+
+/**
+ * Accessible name and feedback text for the copy button.
+ *
+ * @param copyState - Result of the last copy attempt.
+ * @returns Button label.
+ */
+function copyButtonLabel(copyState: CopyState): string {
+  if (copyState === 'copied') return en.jobStatus.copied;
+  if (copyState === 'failed') return en.jobStatus.copyFailed;
+  return en.jobStatus.copyJobId;
 }
 
 /**
