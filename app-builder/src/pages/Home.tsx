@@ -2,12 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { Page } from '../components/Page';
 import { ComposerChat } from '../components/ComposerChat';
 import { TemplateGallery, type TemplateSelection } from '../components/TemplateGallery';
-import { Wizard, EMPTY_WIZARD_ANSWERS } from '../components/Wizard';
+import { Wizard } from '../components/Wizard';
+import type { WizardStepIndex } from '../components/wizard/types';
 import { PrdResult } from '../components/PrdResult';
 import { ForgeError } from '../components/ForgeError';
 import { generatePrd, type Prd } from '../lib/prd';
-import { estimate } from '../lib/estimate';
-import { countEntities, countScopeSignals, type BuildJob, type WizardAnswers } from '../lib/job';
+import {
+  EMPTY_WIZARD_ANSWERS,
+  estimateForAnswers,
+  type BuildJob,
+  type WizardAnswers
+} from '../lib/job';
 import { readLastJobId, writeLastJobId } from '../lib/jobStatus';
 import { JobStatusPanel } from '../components/JobStatusPanel';
 import { en } from '../i18n/en';
@@ -50,7 +55,7 @@ export function Home(): JSX.Element {
   const [view, setView] = useState<BuilderView>('chat');
   const [answers, setAnswers] = useState<WizardAnswers>(EMPTY_WIZARD_ANSWERS);
   const [forgeResult, setForgeResult] = useState<ForgeResultState>({ status: 'idle' });
-  const [wizardStartStep, setWizardStartStep] = useState<1 | 2 | 3 | 4>(1);
+  const [wizardStartStep, setWizardStartStep] = useState<WizardStepIndex>(1);
   /**
    * Bumped only on intentional new-wizard-session events (chat send, template
    * continue, reset). Used as the Wizard React key so typing the prompt never
@@ -116,8 +121,7 @@ export function Home(): JSX.Element {
     // an empty one, which means "this template did not pick a type" — NOT "the
     // type is empty". So it keeps whatever is already answered (the default on
     // a fresh session), and still opens on Prompt so the user confirms their own
-    // wording. The two readings looked interchangeable while the default was
-    // '' and only diverged once it was not; naming the flag keeps them apart.
+    // wording.
     const templatePickedType = selection.appType.trim().length > 0;
     updateAnswers({
       ...prev,
@@ -138,16 +142,8 @@ export function Home(): JSX.Element {
     writeLastJobId(jobId);
     setTrackedJobId(jobId);
     const current = answersRef.current;
-    const entityCount = countEntities(current.entities);
-    const features = Math.max(1, entityCount + (current.appType.trim() ? 1 : 0));
-    const cost = estimate({
-      features,
-      hasAuth: current.hasAuth,
-      entities: entityCount,
-      scopeSignals: countScopeSignals(current)
-    });
     try {
-      const prd = generatePrd(current, cost);
+      const prd = generatePrd(current, estimateForAnswers(current));
       setForgeResult({ status: 'success', prd });
       setView('result');
     } catch (err) {

@@ -14,13 +14,13 @@ import {
   isFeatureSelectionReady,
   type WizardAnswers
 } from '../lib/job';
+import { integrationChipSelected, toggleIntegrationChip } from './wizard/integrationChips';
+import { reviewAnswerRows } from './wizard/reviewRows';
 import {
-  integrationChipSelected,
-  reviewAnswerRows,
-  toggleFeatureSelection,
-  toggleIntegrationChip
-} from './Wizard';
-import { featureEntityNames, resolveFeatureSelection } from './wizard/steps/FeaturesStep';
+  featureEntityNames,
+  resolveFeatureSelection,
+  toggleFeatureSelection
+} from './wizard/steps/FeaturesStep';
 import { defaultSelectedFeatureIds } from '../lib/prd/sections/features';
 
 describe('wizard scope options', () => {
@@ -157,10 +157,9 @@ describe('wizard feature selection Continue gate', () => {
 });
 
 // resolveFeatureSelection decides what the Features step shows and what reaches
-// generatePrd. It was re-exported "for unit tests" that never existed — an
-// independent judge caught the comment vouching for coverage that was not there.
-// Its stale-id branch is the interesting one: changing the entity list renumbers
-// feature ids, so a saved selection can point at ids that no longer exist.
+// generatePrd. Its stale-id branch is the interesting one: changing the entity
+// list renumbers feature ids, so a saved selection can point at ids that no
+// longer exist.
 describe('resolveFeatureSelection', () => {
   const answers = {
     ...EMPTY_WIZARD_ANSWERS,

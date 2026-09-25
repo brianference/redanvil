@@ -7,9 +7,13 @@ import {
   isPromptReady,
   isAppTypeReady,
   canForgePrd,
+  countScopeSignals,
+  estimateForAnswers,
+  parseBuildJob,
   DEFAULT_APP_TYPE,
   EMPTY_WIZARD_ANSWERS
 } from './job';
+import { estimate } from './estimate';
 import { en } from '../i18n/en';
 
 describe('DEFAULT_APP_TYPE', () => {
@@ -147,9 +151,7 @@ describe('wizard readiness (canForgePrd)', () => {
     expect(canForgePrd({ ...base, prompt: 'short', appType: 'SaaS' })).toBe(false);
   });
 
-  // The empty-selection branch was the one canForgePrd path no test reached: an
-  // independent judge found it while every other branch was covered twice. It is
-  // the whole point of the Features step — deselect everything and Forge must
+  // The whole point of the Features step: deselect everything and Forge must
   // refuse, rather than generate a PRD with no features in it.
   it('refuses to forge when the user has deselected every feature', () => {
     const ready = { ...base, appType: 'SaaS', entities: 'Dog: name' };
@@ -189,5 +191,40 @@ describe('wizard readiness (canForgePrd)', () => {
     // A legacy name parses, but it has no fields, so it is not enough to forge.
     expect(canForgePrd({ ...vague, entities: 'Thing' })).toBe(false);
     expect(canForgePrd({ ...vague, entities: 'Thing: name' })).toBe(true);
+  });
+});
+
+describe('parseBuildJob', () => {
+  const job = buildJob(
+    { prompt: 'A dog care log for grooming reminders', appType: 'SaaS', hasAuth: true, entities: 'Dog: name' },
+    new Date('2026-09-24T12:00:00.000Z')
+  );
+
+  it('accepts the job buildJob produces and drops extra fields such as the id', () => {
+    expect(parseBuildJob({ ...job, id: '3f2b8c1e-5d4a-4e9b-8c7d-1a2b3c4d5e6f' })).toEqual(job);
+  });
+
+  it('rejects a job with a drifted fixed field or a non-string answer', () => {
+    expect(parseBuildJob({ ...job, targetType: 'mobile' })).toBeNull();
+    expect(parseBuildJob({ ...job, threshold: 80 })).toBeNull();
+    expect(parseBuildJob({ ...job, answers: { ...job.answers, hasAuth: true } })).toBeNull();
+    const { createdAt: _createdAt, ...withoutCreatedAt } = job;
+    expect(parseBuildJob(withoutCreatedAt)).toBeNull();
+  });
+});
+
+describe('estimateForAnswers', () => {
+  it('counts the app shell and each entity as features, with the scope signals', () => {
+    const answers = { ...EMPTY_WIZARD_ANSWERS, appType: 'SaaS', hasAuth: true, entities: 'Dog: name; Walk: at:date' };
+    expect(estimateForAnswers(answers)).toEqual(
+      estimate({ features: 3, hasAuth: true, entities: 2, scopeSignals: countScopeSignals(answers) })
+    );
+  });
+
+  it('still counts one feature for an app with no type and no entities', () => {
+    const answers = { ...EMPTY_WIZARD_ANSWERS, appType: '  ', entities: '' };
+    expect(estimateForAnswers(answers)).toEqual(
+      estimate({ features: 1, hasAuth: answers.hasAuth, entities: 0, scopeSignals: countScopeSignals(answers) })
+    );
   });
 });

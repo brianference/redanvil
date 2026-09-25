@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { estimate, type EstimateResult } from './estimate';
 import { entitySpecReady, parseEntitySpec } from './prd/entitySpec';
 import { isTitleFragment, titleFromPrompt } from './prd/naming';
 
@@ -111,7 +113,7 @@ export function canForgePrd(answers: WizardAnswers): boolean {
   if (!isPromptReady(answers) || !isAppTypeReady(answers)) {
     return false;
   }
-  if (answers.selectedFeatureIds !== null && answers.selectedFeatureIds.length === 0) {
+  if (!isFeatureSelectionReady(answers)) {
     return false;
   }
   // Gate when the derived title is still a sentence fragment (A6).
@@ -135,7 +137,7 @@ export function canForgePrd(answers: WizardAnswers): boolean {
  */
 export function countScopeSignals(answers: WizardAnswers): number {
   let signals = 0;
-  if (answers.appType.trim().length > 0) signals += 1;
+  if (isAppTypeReady(answers)) signals += 1;
   if (answers.entities.trim().length > 0) signals += 1;
   // Explicit non-default storage is a stronger signal than the default "simple".
   if (answers.dataStorage !== DEFAULT_DATA_STORAGE) signals += 1;
@@ -164,6 +166,47 @@ export interface BuildJob {
   answers: Record<string, string>;
   /** ISO-8601 creation time (orchestrator Job.createdAt). */
   createdAt: string;
+}
+
+/** The job POST /api/submit returns, checked field by field against BuildJob. */
+const buildJobSchema = z.object({
+  kind: z.literal('job'),
+  slug: z.string(),
+  prompt: z.string(),
+  targetType: z.literal('fullstack-web'),
+  threshold: z.literal(90),
+  answers: z.record(z.string()),
+  createdAt: z.string()
+});
+
+/**
+ * Narrow the submit response to a BuildJob, failing closed on any mismatch so
+ * the client shape cannot silently drift from the orchestrator's JobSchema.
+ *
+ * @param payload - JSON from POST /api/submit.
+ * @returns The job, or null.
+ */
+export function parseBuildJob(payload: unknown): BuildJob | null {
+  const parsed = buildJobSchema.safeParse(payload);
+  return parsed.success ? parsed.data : null;
+}
+
+/**
+ * Cost estimate for the current answers: one base feature for the app shell
+ * when an app type is set, plus one per named entity. The wizard's review step
+ * and the PRD generated after submit both use this, so they cannot disagree.
+ *
+ * @param answers - Wizard form values.
+ * @returns Token and cost estimate.
+ */
+export function estimateForAnswers(answers: WizardAnswers): EstimateResult {
+  const entityCount = countEntities(answers.entities);
+  return estimate({
+    features: Math.max(1, entityCount + (isAppTypeReady(answers) ? 1 : 0)),
+    hasAuth: answers.hasAuth,
+    entities: entityCount,
+    scopeSignals: countScopeSignals(answers)
+  });
 }
 
 const SLUG_MAX = 49;
