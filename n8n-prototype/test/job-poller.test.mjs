@@ -148,6 +148,14 @@ async function createWorld(options = {}) {
     statuses,
     webhooks,
     /**
+     * Make the fake site hand this job out again, as the real claim route does
+     * once a job has sat in `claimed` past its lease.
+     * @param {object} job claim response job
+     */
+    reissue(job) {
+      queue.push(job);
+    },
+    /**
      * @param {object} [extra] runCycle overrides
      */
     cycle(extra = {}) {
@@ -239,6 +247,44 @@ describe('claim', () => {
       const awaiting = world.statuses.find((post) => post.body.status === 'awaiting_owner');
       assert.match(awaiting.body.detail, /waiting for the owner to approve this build/);
       assert.match(awaiting.body.detail, /taken-slug-3/);
+    } finally {
+      await world.close();
+    }
+  });
+});
+
+describe('claim lease re-issue', () => {
+  test('FAIL INPUT: a re-issued job is not tracked twice and its status is sent again', async () => {
+    const world = await createWorld({ job: SAMPLE_JOB });
+    try {
+      await world.cycle();
+      world.reissue(SAMPLE_JOB);
+      const result = await world.cycle();
+      assert.equal(result.claimed, false);
+      const awaiting = world.statuses.filter(
+        (post) => post.id === 'job-1' && post.body.status === 'awaiting_owner'
+      );
+      assert.equal(awaiting.length, 2);
+      assert.equal(readPending(world.repo, 'job-1').slug, 'taken-slug');
+      assert.equal(world.webhooks.length, 0);
+    } finally {
+      await world.close();
+    }
+  });
+
+  test('a re-issued job that the owner already approved does not start a second build', async () => {
+    const world = await createWorld({ job: SAMPLE_JOB });
+    try {
+      await world.cycle();
+      decide(world.repo, 'job-1', 'approve');
+      await world.cycle();
+      assert.equal(world.webhooks.length, 1);
+      world.reissue(SAMPLE_JOB);
+      await world.cycle();
+      await world.cycle();
+      assert.equal(world.webhooks.length, 1);
+      const last = world.statuses.filter((post) => post.id === 'job-1').at(-1);
+      assert.equal(last.body.status, 'building');
     } finally {
       await world.close();
     }

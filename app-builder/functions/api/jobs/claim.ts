@@ -13,6 +13,22 @@ const CLAIM_ATTEMPTS = 8;
 const MAX_RUNNER_LEN = 64;
 
 /**
+ * How long a claim holds a job that has not moved past `claimed`. After this
+ * the job is claimable again, so a runner that crashed between the claim and
+ * its first status update does not strand the job forever.
+ *
+ * The poller (n8n-prototype/poller/job-poller.mjs) moves a job off `claimed`
+ * in the same cycle it claims it: one claim POST and one awaiting_owner POST,
+ * each capped by its 20 s REQUEST_TIMEOUT_MS, so 40 s of timeouts at worst. When
+ * that status POST fails, the poller retries it at the start of every cycle,
+ * every 5 min by default (DEFAULT_INTERVAL_MIN). 30 min is six of those
+ * retry cycles and 45 times that 40 s window, so only a runner
+ * that is really gone loses the job. Every later status (awaiting_owner,
+ * building, done...) is never re-issued, however old its claim.
+ */
+export const CLAIM_LEASE_MS = 30 * 60 * 1000;
+
+/**
  * Body for POST /api/jobs/claim.
  * runner is the name recorded in claimed_by.
  */
@@ -21,20 +37,23 @@ const claimBodySchema = z.object({
 });
 
 /**
- * Oldest queued id.
- * The follow-up UPDATE is conditional on this id still being queued, which is
- * what stops two claims from taking the same row. See the note on
- * {@link claimOldest} for why this is not a single RETURNING statement.
+ * Oldest claimable id: queued, or claimed with an expired lease
+ * (`claimed_at` before the bound cutoff). The follow-up UPDATE repeats the
+ * same condition, which is what stops two claims from taking the same row.
+ * See the note on {@link claimOldest} for why this is not a single
+ * RETURNING statement.
  */
-const PICK_QUEUED_SQL =
-  "SELECT id FROM jobs WHERE status = 'queued' ORDER BY created_at ASC LIMIT 1";
+const PICK_CLAIMABLE_SQL =
+  "SELECT id FROM jobs WHERE status = 'queued' OR (status = 'claimed' AND claimed_at < ?) ORDER BY created_at ASC LIMIT 1";
 
 /**
- * Compare-and-set: only the claim that still sees status='queued' wins.
+ * Compare-and-set: only the claim that still sees the row claimable wins.
+ * The winner writes a fresh claimed_at, so a second claim of an expired
+ * lease no longer matches `claimed_at < cutoff` and gets changes === 0.
  * `meta.changes` is 1 for the winner and 0 for a claim that lost the race.
  */
 const CLAIM_SQL =
-  "UPDATE jobs SET status = 'claimed', claimed_at = ?, claimed_by = ?, updated_at = ? WHERE id = ? AND status = 'queued'";
+  "UPDATE jobs SET status = 'claimed', claimed_at = ?, claimed_by = ?, updated_at = ? WHERE id = ? AND (status = 'queued' OR (status = 'claimed' AND claimed_at < ?))";
 
 /** Columns the claim response is allowed to return, including the prompt. */
 const LOAD_CLAIMED_SQL =
@@ -123,7 +142,8 @@ function toClaimedJob(row: {
 }
 
 /**
- * Atomically claim the oldest queued job.
+ * Atomically claim the oldest queued job, or the oldest job whose claim
+ * lease has expired.
  *
  * D1's prepared-statement docs say `results` is empty for UPDATE / INSERT /
  * DELETE (https://developers.cloudflare.com/d1/worker-api/prepared-statements/)
@@ -139,15 +159,17 @@ function toClaimedJob(row: {
  * @param db - D1 binding.
  * @param runner - Runner name stored in claimed_by.
  * @param now - ISO timestamp for claimed_at and updated_at.
- * @returns The claimed job, `empty` when nothing is queued, or `contended`.
+ * @param leaseCutoff - ISO timestamp; claims older than this have expired.
+ * @returns The claimed job, `empty` when nothing is claimable, or `contended`.
  */
 async function claimOldest(
   db: D1Database,
   runner: string,
-  now: string
+  now: string,
+  leaseCutoff: string
 ): Promise<{ kind: 'empty' } | { kind: 'contended' } | { kind: 'claimed'; job: ClaimedJob }> {
   for (let attempt = 0; attempt < CLAIM_ATTEMPTS; attempt += 1) {
-    const picked = await db.prepare(PICK_QUEUED_SQL).all();
+    const picked = await db.prepare(PICK_CLAIMABLE_SQL).bind(leaseCutoff).all();
     const candidate = picked.results[0];
     if (!isIdRow(candidate)) {
       return { kind: 'empty' };
@@ -155,7 +177,7 @@ async function claimOldest(
 
     const updated = await db
       .prepare(CLAIM_SQL)
-      .bind(now, runner, now, candidate.id)
+      .bind(now, runner, now, candidate.id, leaseCutoff)
       .run();
     if ((updated.meta?.changes ?? 0) !== 1) {
       continue;
@@ -172,7 +194,8 @@ async function claimOldest(
 }
 
 /**
- * POST /api/jobs/claim — move the oldest queued job to claimed.
+ * POST /api/jobs/claim — move the oldest queued job to claimed. A job left
+ * in `claimed` for longer than {@link CLAIM_LEASE_MS} counts as queued.
  *
  * Bearer token required. 204 when the queue is empty. 401 when the token is
  * wrong or missing. 503 when RUNNER_TOKEN is unset.
@@ -189,9 +212,11 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
   const parsed = await readValidatedBody(request, claimBodySchema, ALLOWED_METHODS);
   if (!parsed.ok) return parsed.response;
 
-  const now = new Date().toISOString();
+  const nowMs = Date.now();
+  const now = new Date(nowMs).toISOString();
+  const leaseCutoff = new Date(nowMs - CLAIM_LEASE_MS).toISOString();
   try {
-    const outcome = await claimOldest(env.DB, parsed.data.runner, now);
+    const outcome = await claimOldest(env.DB, parsed.data.runner, now, leaseCutoff);
     if (outcome.kind === 'empty') {
       return emptyResponse(request, 204, ALLOWED_METHODS);
     }

@@ -1,8 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { onRequestPost as submit } from './submit';
 import { onRequestPost as savePrd } from './prds';
-import { RATE_LIMIT_PER_HOUR } from '../lib/rateLimit';
-import { createQueueEnv, readQueueJobs, readRateKeys } from '../../tests/helpers/jobQueueDb';
+import type { D1PreparedStatement, Env } from '../lib/env';
+import { RATE_LIMIT_PER_HOUR, RATE_LIMIT_PRUNE_BATCH } from '../lib/rateLimit';
+import {
+  createQueueEnv,
+  readQueueJobs,
+  readRateBuckets,
+  readRateKeys,
+  type RateBucketSeed
+} from '../../tests/helpers/jobQueueDb';
 
 /** Client address used as rate-limit input. It must not be stored. */
 const CLIENT_IP = '203.0.113.10';
@@ -198,5 +205,120 @@ describe('rate limit', () => {
       env
     });
     expect(response.status).toBe(400);
+  });
+});
+
+/** Fixed clock for the pruning cases, so the current hour cannot roll over mid-test. */
+const FIXED_NOW = new Date('2026-09-24T15:30:00.000Z');
+
+/** Hour bucket the limiter writes at {@link FIXED_NOW}. */
+const CURRENT_HOUR = '2026-09-24T15';
+
+/** An hour that has already ended at {@link FIXED_NOW}. */
+const PAST_HOUR = '2026-09-24T14';
+
+/**
+ * Expired buckets from an earlier hour, with distinct hex keys.
+ *
+ * @param count - How many to build.
+ * @returns Seeds whose window_start is {@link PAST_HOUR}.
+ */
+function expiredBuckets(count: number): RateBucketSeed[] {
+  return Array.from({ length: count }, (_unused, index) => ({
+    bucket_key: index.toString(16).padStart(64, '0'),
+    hit_count: 3,
+    window_start: PAST_HOUR
+  }));
+}
+
+describe('rate limit pruning', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('deletes buckets from earlier hours when a request opens a new bucket', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
+    const env = createQueueEnv({ rateBuckets: expiredBuckets(3) });
+    const response = await submit({
+      request: post('https://example.com/api/submit', submitBody(), CLIENT_IP),
+      env
+    });
+    expect(response.status).toBe(200);
+    const buckets = readRateBuckets(env);
+    expect(buckets).toHaveLength(1);
+    expect(buckets[0]?.window_start).toBe(CURRENT_HOUR);
+    expect(buckets[0]?.hit_count).toBe(1);
+  });
+
+  it('keeps buckets from the current hour, so no live count is reset', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
+    const live: RateBucketSeed = {
+      bucket_key: 'f'.repeat(64),
+      hit_count: RATE_LIMIT_PER_HOUR,
+      window_start: CURRENT_HOUR
+    };
+    const env = createQueueEnv({ rateBuckets: [live, ...expiredBuckets(2)] });
+    const response = await submit({
+      request: post('https://example.com/api/submit', submitBody(), CLIENT_IP),
+      env
+    });
+    expect(response.status).toBe(200);
+    const buckets = readRateBuckets(env);
+    expect(buckets.map((bucket) => bucket.window_start)).toEqual([CURRENT_HOUR, CURRENT_HOUR]);
+    expect(buckets.find((bucket) => bucket.bucket_key === live.bucket_key)?.hit_count).toBe(
+      RATE_LIMIT_PER_HOUR
+    );
+  });
+
+  it('deletes at most RATE_LIMIT_PRUNE_BATCH rows in one request', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(FIXED_NOW);
+    const leftOver = 5;
+    const env = createQueueEnv({ rateBuckets: expiredBuckets(RATE_LIMIT_PRUNE_BATCH + leftOver) });
+    const response = await submit({
+      request: post('https://example.com/api/submit', submitBody(), CLIENT_IP),
+      env
+    });
+    expect(response.status).toBe(200);
+    const buckets = readRateBuckets(env);
+    expect(buckets.filter((bucket) => bucket.window_start === PAST_HOUR)).toHaveLength(leftOver);
+    expect(buckets.filter((bucket) => bucket.window_start === CURRENT_HOUR)).toHaveLength(1);
+  });
+
+  it('fails closed with 500 when the prune itself fails', async () => {
+    const base = createQueueEnv({ rateBuckets: expiredBuckets(2) });
+    const env: Env = {
+      ...base,
+      DB: {
+        prepare(query: string): D1PreparedStatement {
+          const inner = base.DB.prepare(query);
+          if (!query.startsWith('DELETE FROM rate_limits')) return inner;
+          const failing: D1PreparedStatement = {
+            bind: () => failing,
+            run: () => Promise.reject(new Error('D1 unavailable')),
+            all: () => Promise.reject(new Error('D1 unavailable'))
+          };
+          return failing;
+        }
+      }
+    };
+    const response = await submit({
+      request: post('https://example.com/api/submit', submitBody(), CLIENT_IP),
+      env
+    });
+    expect(response.status).toBe(500);
+    expect(readQueueJobs(base)).toHaveLength(0);
+  });
+
+  it('still returns 503 before any prune when RATE_LIMIT_KEY is unset', async () => {
+    const env = { ...createQueueEnv({ rateBuckets: expiredBuckets(2) }), RATE_LIMIT_KEY: '' };
+    const response = await submit({
+      request: post('https://example.com/api/submit', submitBody(), CLIENT_IP),
+      env
+    });
+    expect(response.status).toBe(503);
+    expect(readRateBuckets(env)).toHaveLength(2);
   });
 });
