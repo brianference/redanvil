@@ -84,4 +84,15 @@ describe('POST /api/submit body bounds', () => {
     const body = (await response.json()) as { error: string };
     expect(typeof body.error).toBe('string');
   });
+
+  it('rejects a whitespace-only appType with 400 instead of queueing a typeless job', async () => {
+    const request = submitRequest({
+      prompt: 'Build a recipe app with search',
+      appType: '   ',
+      hasAuth: false,
+      entities: 0
+    });
+    const response = await onRequestPost({ request, env: mockEnv() });
+    expect(response.status).toBe(400);
+  });
 });

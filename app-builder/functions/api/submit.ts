@@ -25,7 +25,7 @@ const RATE_LIMIT_ROUTE = 'submit';
  */
 const submitBodySchema = z.object({
   prompt: z.string().trim().min(8).max(MAX_PROMPT_LEN),
-  appType: z.string().min(1).max(MAX_APP_TYPE_LEN),
+  appType: z.string().trim().min(1).max(MAX_APP_TYPE_LEN),
   hasAuth: z.boolean(),
   entities: z.number().int().min(0).max(10_000),
   entityNames: z.string().trim().max(MAX_ENTITY_NAMES_LEN).optional()

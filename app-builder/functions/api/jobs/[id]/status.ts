@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { Env } from '../../../lib/env';
 import { jsonResponse, readValidatedBody } from '../../../lib/http';
 import { authorizeRunner } from '../../../lib/runnerAuth';
+import { isJobId } from '../../../../src/lib/jobStatus';
 
 /** CORS allow-methods for this endpoint (public GET, runner POST). */
 const ALLOWED_METHODS = 'GET, POST';
@@ -87,7 +88,12 @@ interface StatusContext {
 }
 
 /**
- * Path id, or a 400 response when it is missing.
+ * Path id, or a 404 response unless it is the UUID shape submit issues.
+ *
+ * The id is user input like any body field. The client already polls only
+ * ids that pass {@link isJobId}; the server now holds the same line, so a
+ * malformed or oversized value never reaches the query. No job can have such
+ * an id, so the answer is the same 404 an unknown id gets.
  *
  * @param context - Pages Function context.
  * @returns The id, or the response to return.
@@ -95,11 +101,11 @@ interface StatusContext {
 function requireJobId(
   context: StatusContext
 ): { ok: true; id: string } | { ok: false; response: Response } {
-  const id = context.params.id?.trim() ?? '';
-  if (id.length === 0) {
+  const id = context.params.id ?? '';
+  if (!isJobId(id)) {
     return {
       ok: false,
-      response: jsonResponse(context.request, { error: 'Missing job id' }, 400, ALLOWED_METHODS)
+      response: jsonResponse(context.request, { error: 'Job not found' }, 404, ALLOWED_METHODS)
     };
   }
   return { ok: true, id };
