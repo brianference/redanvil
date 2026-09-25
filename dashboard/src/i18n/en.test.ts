@@ -226,12 +226,12 @@ describe('Breadcrumbs', () => {
 });
 
 describe('ThemeToggle', () => {
-  it('renders a labeled theme control with glyph', () => {
+  it('offers the dark theme on the default light first paint', () => {
     // The control is labelled with the action it performs, so it names the
-    // theme it switches TO. Light is the default first paint, so it offers dark.
+    // theme it switches TO, and its icon is decoration a screen reader skips.
     const html = renderToStaticMarkup(createElement(ThemeToggle));
-    expect(html).toContain(en.app.themeToDark);
-    expect(html).toContain('aria-hidden="true"');
-    expect(html).toContain('☾');
+    expect(html).toMatch(new RegExp(`<button[^>]*aria-label="${en.app.themeToDark}"`));
+    expect(html).not.toContain(en.app.themeToLight);
+    expect(html).toMatch(/<span aria-hidden="true">[^<]+<\/span><\/button>/);
   });
 });
