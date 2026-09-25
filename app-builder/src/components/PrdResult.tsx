@@ -4,9 +4,9 @@ import type { Prd } from '../lib/prd';
 import { savePrd, SavePrdError } from '../lib/savePrd';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
-import { LoadingBanner, ErrorBanner } from './Banner';
+import { LoadingBanner, ErrorBanner, SuccessBanner } from './Banner';
 import { FidelityWarning } from './FidelityWarning';
-import { buttonStyle, cardStyle, statusBannerStyle } from './ui';
+import { buttonStyle, cardStyle } from './ui';
 
 export interface PrdResultProps {
   /** The generated PRD to display and offer for download. */
@@ -128,12 +128,11 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
 
       {saveState.status === 'loading' && <LoadingBanner message={copy.saving} />}
       {savedHref !== null && (
-        <div role="status" style={statusBannerStyle()}>
-          <span aria-hidden="true">✓</span>
+        <SuccessBanner>
           <a href={savedHref} style={{ color: theme.color.accent, fontWeight: 600 }}>
             {copy.savedViewAt(savedHref)}
           </a>
-        </div>
+        </SuccessBanner>
       )}
       {saveState.status === 'success' && savedHref === null && (
         <ErrorBanner message={copy.errors.unsafeLink} />

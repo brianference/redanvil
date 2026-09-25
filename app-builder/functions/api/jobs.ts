@@ -5,8 +5,11 @@ import { authorizeRunner } from '../lib/runnerAuth';
 /** CORS allow-methods for this endpoint (GET only). */
 const ALLOWED_METHODS = 'GET';
 
+/** Most jobs one list returns, newest first. */
+export const JOB_LIST_LIMIT = 50;
+
 /**
- * GET /api/jobs — list the 50 newest jobs, including prompts, for the runner.
+ * GET /api/jobs — list the {@link JOB_LIST_LIMIT} newest jobs, including prompts, for the runner.
  *
  * Requires the same bearer token as claim. Anonymous callers get 401, and an
  * unset RUNNER_TOKEN gets 503. The public progress route is
@@ -24,8 +27,10 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
   try {
     const { results } = await env.DB.prepare(
-      'SELECT id, slug, prompt, target_type, threshold, status, created_at FROM jobs ORDER BY created_at DESC LIMIT 50'
-    ).all();
+      'SELECT id, slug, prompt, target_type, threshold, status, created_at FROM jobs ORDER BY created_at DESC LIMIT ?'
+    )
+      .bind(JOB_LIST_LIMIT)
+      .all();
     return jsonResponse(request, results, 200, ALLOWED_METHODS);
   } catch {
     return jsonResponse(request, { error: 'Could not list jobs' }, 500, ALLOWED_METHODS);

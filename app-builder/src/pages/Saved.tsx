@@ -1,9 +1,9 @@
+import { LoadingBanner } from '../components/Banner';
 import { Page } from '../components/Page';
 import { SavedCardList } from '../components/saved/SavedCardList';
 import { SavedEmpty } from '../components/saved/SavedEmpty';
 import { SavedError } from '../components/saved/SavedError';
 import { SavedKpiStrip } from '../components/saved/SavedKpiStrip';
-import { SavedLoading } from '../components/saved/SavedLoading';
 import { SavedToolbar } from '../components/saved/SavedToolbar';
 import { en } from '../i18n/en';
 import {
@@ -58,12 +58,11 @@ export function Saved(): JSX.Element {
   });
   const state = toListState(fetchState);
 
-
   return (
     <Page title={copy.title} subtitle={copy.subtitle} breadcrumb={copy.title}>
       <SavedToolbar />
 
-      {state.status === 'loading' && <SavedLoading />}
+      {state.status === 'loading' && <LoadingBanner message={copy.loading} />}
 
       {state.status === 'error' && <SavedError message={state.message} onRetry={retry} />}
 

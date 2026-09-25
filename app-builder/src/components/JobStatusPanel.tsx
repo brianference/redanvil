@@ -16,7 +16,8 @@ import {
   type PublicJobStatus
 } from '../lib/jobStatus';
 import { theme } from '../theme';
-import { buttonStyle, cardStyle, errorBannerStyle } from './ui';
+import { ErrorBanner } from './Banner';
+import { buttonStyle, cardStyle } from './ui';
 
 /** How long the inline "Copied" label stays on the job-id button. */
 const COPIED_FEEDBACK_MS = 2000;
@@ -280,12 +281,8 @@ export function JobStatusPanel({
         </button>
       </div>
 
-      {(state.status === 'error' || (state.status === 'ready' && state.warning !== null)) && (
-        <div role="alert" style={errorBannerStyle()}>
-          <span aria-hidden="true">!</span>
-          <span>{state.status === 'error' ? state.message : state.warning}</span>
-        </div>
-      )}
+      {state.status === 'error' && <ErrorBanner message={state.message} />}
+      {state.status === 'ready' && state.warning !== null && <ErrorBanner message={state.warning} />}
 
       {stepView !== null && stepView.line.length > 0 && (
         <>
