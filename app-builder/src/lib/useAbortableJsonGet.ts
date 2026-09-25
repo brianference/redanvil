@@ -45,6 +45,10 @@ function toAbortableState<T>(result: FetchJsonResult<T>, errorMessage: string): 
       httpStatus: result.httpStatus
     };
   }
+  // A non-JSON body still carries its status, so a plain-text 404 reads as not found.
+  if (result.kind === 'invalid-json') {
+    return { status: 'error', message: errorMessage, httpStatus: result.httpStatus };
+  }
   return { status: 'error', message: errorMessage };
 }
 
