@@ -22,6 +22,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+import { collectionApiCandidates } from '../lib/collection-api.mjs';
 
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -263,20 +264,22 @@ export async function resolveRealDetailId(base, route, opts = {}) {
   if (!collection) return null;
   const origin = base.replace(/\/$/, '');
 
-  // 1) Collection API: /api/sitters, /api/crops, …
-  try {
-    const apiUrl = `${origin}/api${collection}`;
-    const res = await fetchImpl(apiUrl, {
-      headers: { Accept: 'application/json', 'User-Agent': BROWSER_UA },
-      redirect: 'follow'
-    });
-    if (res.ok) {
-      const body = await res.json();
-      const id = firstRealIdFromJson(body);
-      if (id) return id;
+  // 1) Collection API: /api/sitters, /api/crops, or the plural list beside a
+  //    singular detail prefix (/prd/:id -> /api/prds). See collection-api.mjs.
+  for (const apiPath of collectionApiCandidates(collection)) {
+    try {
+      const res = await fetchImpl(`${origin}${apiPath}`, {
+        headers: { Accept: 'application/json', 'User-Agent': BROWSER_UA },
+        redirect: 'follow'
+      });
+      if (res.ok) {
+        const body = await res.json();
+        const id = firstRealIdFromJson(body);
+        if (id) return id;
+      }
+    } catch {
+      // SPA fallback HTML or network error: try the next candidate.
     }
-  } catch {
-    // try HTML fallback
   }
 
   // 2) Collection page HTML: first real detail link.

@@ -1,10 +1,12 @@
 import { defineConfig } from 'vitest/config';
 
-/** Vitest unit tests for src and functions (node env). */
+/**
+ * Root vitest config: coverage only. The unit, browser and vrt lanes are
+ * defined in vitest.workspace.ts, which vitest 2.x reads in place of a
+ * `test.projects` block here.
+ */
 export default defineConfig({
   test: {
-    include: ['src/**/*.test.ts', 'functions/**/*.test.ts'],
-    environment: 'node',
     coverage: {
       provider: 'v8',
       // json-summary writes coverage/coverage-summary.json, which u-test-presence
@@ -15,7 +17,7 @@ export default defineConfig({
       // V8 provider cannot see a browser it did not launch, so including them
       // would report 0% for files that are in fact tested.
       include: ['src/lib/**', 'src/hooks/**', 'functions/**'],
-      exclude: ['**/*.test.ts']
+      exclude: ['**/*.test.ts', '**/*.browser.test.tsx', '**/*.vrt.test.tsx']
     }
   }
 });

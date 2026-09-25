@@ -21,3 +21,8 @@ export declare function runBreadcrumbs(
   },
   opts?: { url?: string | null; fixtureDir?: string | null }
 ): Promise<void>;
+export declare function resolveRealDetailId(
+  base: string,
+  route: string,
+  opts?: { fetchImpl?: typeof fetch }
+): Promise<string | null>;

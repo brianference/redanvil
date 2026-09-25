@@ -5,6 +5,7 @@ import { en } from '../i18n/en';
 import { theme } from '../theme';
 import { LoadingBanner, ErrorBanner } from '../components/Banner';
 import { FidelityWarning } from '../components/FidelityWarning';
+import { StackReferences } from '../components/StackReferences';
 import { buttonStyle, cardStyle } from '../components/ui';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
@@ -134,6 +135,7 @@ export function SavedPrd(): JSX.Element {
           <div style={cardStyle(theme.space.md)}>
             <pre style={preStyle}>{state.prd.markdown}</pre>
           </div>
+          <StackReferences markdown={state.prd.markdown} />
         </section>
       )}
     </Page>

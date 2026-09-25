@@ -8,3 +8,4 @@ logos/
 playwright-report/
 test-results/
 coverage/
+.vrt-output/

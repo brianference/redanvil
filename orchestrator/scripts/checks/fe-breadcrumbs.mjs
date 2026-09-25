@@ -20,6 +20,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+import { collectionApiCandidates } from '../lib/collection-api.mjs';
 
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -326,15 +327,60 @@ export function serveFixtureDir(dir) {
 }
 
 /**
- * Serve SPA dist with index fallback.
+ * Forward one read-only /api request to the deployed backend.
+ *
+ * The local dist server has no Pages Functions, so a detail page such as
+ * /prd/:id could never load its row and no real id could ever be found: every
+ * app with a DB-backed detail route failed here whatever it rendered. The UI
+ * under test stays the local HEAD build; only its data comes from the deploy.
+ *
+ * @param {import('node:http').IncomingMessage} req Incoming request.
+ * @param {import('node:http').ServerResponse} res Response to fill.
+ * @param {string} apiOrigin Deployed origin (no trailing slash).
+ * @returns {Promise<void>}
+ */
+async function proxyApi(req, res, apiOrigin) {
+  try {
+    const upstream = await fetch(`${apiOrigin}${req.url ?? '/'}`, {
+      method: req.method,
+      headers: {
+        accept: req.headers.accept ?? 'application/json',
+        'user-agent': BROWSER_UA
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(API_PROXY_TIMEOUT_MS)
+    });
+    const body = Buffer.from(await upstream.arrayBuffer());
+    res.writeHead(upstream.status, {
+      'content-type': upstream.headers.get('content-type') ?? 'application/octet-stream'
+    });
+    res.end(body);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.writeHead(502, { 'content-type': 'text/plain' }).end(`api proxy failed: ${msg}`);
+  }
+}
+
+/** Ceiling for one proxied API request so a slow deploy cannot hang the gate. */
+const API_PROXY_TIMEOUT_MS = 15_000;
+
+/**
+ * Serve SPA dist with index fallback. When `apiOrigin` is given, read-only
+ * /api/* requests are forwarded there (see proxyApi); writes never are.
  *
  * @param {string} root Dist root.
+ * @param {string | null} [apiOrigin] Deployed origin for /api reads.
  * @returns {Promise<{ base: string, close: () => Promise<void> }>}
  */
-function serveStatic(root) {
+function serveStatic(root, apiOrigin = null) {
   return new Promise((resolveServe, reject) => {
     const server = createServer((req, res) => {
       const urlPath = (req.url ?? '/').split('?')[0] ?? '/';
+      const readOnly = req.method === 'GET' || req.method === 'HEAD';
+      if (apiOrigin && readOnly && /^\/api(\/|$)/.test(urlPath)) {
+        void proxyApi(req, res, apiOrigin);
+        return;
+      }
       const rel = decodeURIComponent(urlPath.replace(/^\//, ''));
       let file = join(root, rel.length === 0 ? 'index.html' : rel);
       if (!existsSync(file) || statSync(file).isDirectory()) {
@@ -517,19 +563,22 @@ export async function resolveRealDetailId(base, route, opts = {}) {
   if (!collection) return null;
   const origin = base.replace(/\/$/, '');
 
-  try {
-    const apiUrl = `${origin}/api${collection}`;
-    const res = await fetchImpl(apiUrl, {
-      headers: { Accept: 'application/json', 'User-Agent': BROWSER_UA },
-      redirect: 'follow'
-    });
-    if (res.ok) {
-      const body = await res.json();
-      const id = firstRealIdFromJson(body);
-      if (id) return id;
+  // Same prefix first, then the plural list beside a singular detail prefix
+  // (/prd/:id -> /api/prds). See collection-api.mjs.
+  for (const apiPath of collectionApiCandidates(collection)) {
+    try {
+      const res = await fetchImpl(`${origin}${apiPath}`, {
+        headers: { Accept: 'application/json', 'User-Agent': BROWSER_UA },
+        redirect: 'follow'
+      });
+      if (res.ok) {
+        const body = await res.json();
+        const id = firstRealIdFromJson(body);
+        if (id) return id;
+      }
+    } catch {
+      // SPA fallback HTML or network error: try the next candidate.
     }
-  } catch {
-    // try HTML fallback
   }
 
   try {
@@ -611,7 +660,7 @@ export async function runBreadcrumbs(appDir, io, opts = {}) {
       if (!base) {
         const dist = ensureDist(appDir);
         if (dist.ok) {
-          const served = await serveStatic(join(appDir, 'dist'));
+          const served = await serveStatic(join(appDir, 'dist'), readDeployUrl(appDir));
           base = served.base;
           close = served.close;
         } else {
