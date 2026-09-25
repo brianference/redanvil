@@ -59,87 +59,22 @@ const CLAIM_SQL =
 const LOAD_CLAIMED_SQL =
   'SELECT id, slug, prompt, entities, target_type, threshold, created_at FROM jobs WHERE id = ?';
 
+/** A row from PICK_CLAIMABLE_SQL. */
+const idRowSchema = z.object({ id: z.string().min(1) });
+
+/** A row from LOAD_CLAIMED_SQL; it is returned to the runner as the claimed job. */
+const claimedJobSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  prompt: z.string(),
+  entities: z.string(),
+  target_type: z.string(),
+  threshold: z.number(),
+  created_at: z.string()
+});
+
 /** Job object returned by a successful claim. */
-interface ClaimedJob {
-  id: string;
-  slug: string;
-  prompt: string;
-  entities: string;
-  target_type: string;
-  threshold: number;
-  created_at: string;
-}
-
-/**
- * True when a row is `{ id: string }`.
- *
- * @param value - Unknown D1 row.
- * @returns Whether the row has a string id.
- */
-function isIdRow(value: unknown): value is { id: string } {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'id' in value &&
-    typeof (value as { id: unknown }).id === 'string' &&
-    (value as { id: string }).id.length > 0
-  );
-}
-
-/**
- * True when a row has every field the claim response returns.
- *
- * @param value - Unknown D1 row.
- * @returns Whether the row can be returned as a claimed job.
- */
-function isClaimedRow(value: unknown): value is {
-  id: string;
-  slug: string;
-  prompt: string;
-  entities: string | null;
-  target_type: string;
-  threshold: number;
-  created_at: string;
-} {
-  if (typeof value !== 'object' || value === null) return false;
-  const row = value as Record<string, unknown>;
-  return (
-    typeof row['id'] === 'string' &&
-    typeof row['slug'] === 'string' &&
-    typeof row['prompt'] === 'string' &&
-    (typeof row['entities'] === 'string' || row['entities'] === null) &&
-    typeof row['target_type'] === 'string' &&
-    typeof row['threshold'] === 'number' &&
-    typeof row['created_at'] === 'string'
-  );
-}
-
-/**
- * Map a loaded row to the claim response. `entities` is the names string,
- * or an empty string when the column is null.
- *
- * @param row - Loaded jobs row.
- * @returns Claim response job object.
- */
-function toClaimedJob(row: {
-  id: string;
-  slug: string;
-  prompt: string;
-  entities: string | null;
-  target_type: string;
-  threshold: number;
-  created_at: string;
-}): ClaimedJob {
-  return {
-    id: row.id,
-    slug: row.slug,
-    prompt: row.prompt,
-    entities: row.entities ?? '',
-    target_type: row.target_type,
-    threshold: row.threshold,
-    created_at: row.created_at
-  };
-}
+type ClaimedJob = z.infer<typeof claimedJobSchema>;
 
 /**
  * Atomically claim the oldest queued job, or the oldest job whose claim
@@ -170,25 +105,25 @@ async function claimOldest(
 ): Promise<{ kind: 'empty' } | { kind: 'contended' } | { kind: 'claimed'; job: ClaimedJob }> {
   for (let attempt = 0; attempt < CLAIM_ATTEMPTS; attempt += 1) {
     const picked = await db.prepare(PICK_CLAIMABLE_SQL).bind(leaseCutoff).all();
-    const candidate = picked.results[0];
-    if (!isIdRow(candidate)) {
+    const candidate = idRowSchema.safeParse(picked.results[0]);
+    if (!candidate.success) {
       return { kind: 'empty' };
     }
 
     const updated = await db
       .prepare(CLAIM_SQL)
-      .bind(now, runner, now, candidate.id, leaseCutoff)
+      .bind(now, runner, now, candidate.data.id, leaseCutoff)
       .run();
     if ((updated.meta?.changes ?? 0) !== 1) {
       continue;
     }
 
-    const loaded = await db.prepare(LOAD_CLAIMED_SQL).bind(candidate.id).all();
-    const row = loaded.results[0];
-    if (!isClaimedRow(row) || row.id !== candidate.id) {
+    const loaded = await db.prepare(LOAD_CLAIMED_SQL).bind(candidate.data.id).all();
+    const row = claimedJobSchema.safeParse(loaded.results[0]);
+    if (!row.success || row.data.id !== candidate.data.id) {
       return { kind: 'contended' };
     }
-    return { kind: 'claimed', job: toClaimedJob(row) };
+    return { kind: 'claimed', job: row.data };
   }
   return { kind: 'contended' };
 }
