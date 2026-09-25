@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { requestJson } from '../../../design-system/http';
 import { type ParsedFeed, parseRunsFeed, type Run } from './summary';
 
 const RESULTS_URL =
@@ -58,10 +59,8 @@ function feedState(feed: ParsedFeed): RunsState {
  */
 export async function fetchRuns(url: string): Promise<RunsState> {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const raw: unknown = await res.json();
-    return feedState(parseRunsFeed(raw));
+    const feed = await requestJson(url, { parse: parseRunsFeed }, undefined, FETCH_TIMEOUT_MS);
+    return feedState(feed);
   } catch (err: unknown) {
     return { status: 'error', message: describeFetchError(err) };
   }

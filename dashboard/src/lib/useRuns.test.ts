@@ -54,7 +54,7 @@ describe('fetchRuns', () => {
 
   it('surfaces a non-2xx as an error, never as an empty success', async () => {
     vi.stubGlobal('fetch', async () => new Response('{}', { status: 503 }));
-    expect(await fetchRuns(FEED_URL)).toEqual({ status: 'error', message: 'HTTP 503' });
+    expect(await fetchRuns(FEED_URL)).toEqual({ status: 'error', message: 'Request failed (503)' });
   });
 
   it('surfaces a feed whose every row is malformed as an error naming the bad field', async () => {

@@ -333,12 +333,9 @@ export const en = {
     metaSep: ' · '
   },
   relativeTime: {
-    justNow: 'just now',
-    minutes: (n: number): string => `${n}m ago`,
-    hours: (n: number): string => `${n}h ago`,
-    days: (n: number): string => `${n}d ago`,
-    months: (n: number): string => `${n}mo ago`,
-    years: (n: number): string => `${n}y ago`
+    // Units and suffixes come from Intl.RelativeTimeFormat for this locale.
+    locale: 'en',
+    justNow: 'just now'
   },
   runDetail: {
     loading: 'Loading run detail…',

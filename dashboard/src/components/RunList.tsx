@@ -5,7 +5,7 @@ import { en } from '../i18n/en';
 import { formatRelativeTime } from '../lib/relativeTime';
 import type { Run } from '../lib/summary';
 import { theme } from '../theme';
-import { StatusBadge } from './StatusBadge';
+import { StatusBadge, statusTone } from './StatusBadge';
 
 export interface RunListProps {
   /** Finished runs to display (read-only). */
@@ -167,17 +167,16 @@ const listCountStyle: CSSProperties = {
  * Status icon square: ✓ / ! with soft tint (icon + text badge elsewhere — not color alone).
  */
 function StatusIcon({ passed }: { passed: boolean }): JSX.Element {
+  const tone = statusTone(passed);
   const style: CSSProperties = {
     ...iconBase,
-    background: passed ? theme.color.successSoft : theme.color.errorSoft,
-    color: passed ? theme.color.success : theme.color.error,
-    borderColor: passed
-      ? `color-mix(in srgb, ${theme.color.success} 30%, ${theme.color.border})`
-      : `color-mix(in srgb, ${theme.color.error} 30%, ${theme.color.border})`
+    background: tone.soft,
+    color: tone.fg,
+    borderColor: `color-mix(in srgb, ${tone.fg} 30%, ${theme.color.border})`
   };
   return (
     <div style={style} aria-hidden="true">
-      {passed ? '✓' : '!'}
+      {tone.icon}
     </div>
   );
 }
