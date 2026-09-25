@@ -1,6 +1,7 @@
 {
-  "source": "independent judge (grok, disposable worktree, no access to the verdict file)",
-  "reviewedCommit": "09ca9eb3371722240d02182b91c219d2fbbde6a8",
+  "source": "independent judge (claude, disposable worktree, no access to the verdict file)",
+  "engine": "claude",
+  "reviewedCommit": "e4be788243218ea801ba4856355f7dde8cb34100",
   "app": "app-builder",
   "rulesRequested": [
     "u-conc-idiomatic",
@@ -17,7 +18,7 @@
   "why": "Judge verdicts are otherwise written by the same agent that wrote the code. This run exists to produce dissent that self-review structurally cannot.",
   "result": {
     "rulesJudged": 10,
-    "failed": 4,
+    "failed": 9,
     "citationsMissingOnDisk": 0
   },
   "adjudication": "UNADJUDICATED — each FAIL must be verified by hand before it is treated as real, and each one that turns out to be wrong must be recorded as wrong.",
@@ -26,135 +27,203 @@
       "ruleId": "u-conc-idiomatic",
       "passed": false,
       "evidence": [
-        "app-builder/src/components/wizard/steps/FeaturesStep.tsx",
-        "app-builder/src/lib/prd/generate.ts",
-        "app-builder/src/lib/job.ts"
+        "app-builder/src/pages/Home.tsx",
+        "app-builder/functions/lib/rateLimit.ts",
+        "app-builder/functions/lib/runnerAuth.ts",
+        "app-builder/src/lib/savedList.ts",
+        "app-builder/src/components/JobStatusPanel.tsx"
       ],
-      "note": "FeaturesStep.tsx:51 still packs three selection outcomes (kept-some / deliberate-empty / all-stale→defaults) into one boolean OR ternary that only the surrounding tests and JSDoc decode: `return kept.length > 0 || value.selectedFeatureIds.length === 0 ? kept : defaults`. generate.ts:262 and :326-329 keep nested selection/storage ternaries in the same dense style. Elsewhere helpers are plain (job.ts slugFromPrompt/countEntities pipelines), but the Features gate path fails the 'reads at a glance' bar.",
-      "missingEvidence": []
+      "note": "Several spots are written the long way when a one-line idiom exists. Home.tsx:139-144 is a nested ternary whose first branch (`err instanceof UnresolvedPrdError ? err.message`) gives the same result as the `instanceof Error` branch after it, so it adds nothing. rateLimit.ts:54-58 builds a hex string with an index loop and a `?? 0` guard. `Array.from(bytes, b => b.toString(16).padStart(2,'0')).join('')` does it in one line. rateLimit.ts:81-82 clamps a value that lines 78-80 already keep within 1..3600, so neither clamp branch can run. runnerAuth.ts:31-33 checks that a SHA-256 digest is 32 bytes, which it always is. savedList.ts:19-34 casts `row` eight times instead of narrowing it once. JobStatusPanel.tsx:117,129 call `shouldPollJob(hidden, null)`, which is just `!hidden` with a constant argument.",
+      "missingEvidence": [],
+      "scope": [
+        "app-builder/src/pages/Home.tsx",
+        "app-builder/functions/lib/rateLimit.ts",
+        "app-builder/functions/lib/runnerAuth.ts",
+        "app-builder/src/lib/savedList.ts",
+        "app-builder/src/components/JobStatusPanel.tsx"
+      ],
+      "schemaVersion": 2
     },
     {
       "ruleId": "u-conc-no-speculative-abstraction",
       "passed": false,
       "evidence": [
-        "app-builder/src/lib/wizardSession.ts",
-        "app-builder/src/pages/Home.tsx",
-        "app-builder/src/lib/wizardSession.test.ts"
+        "app-builder/src/lib/jobStatus.ts",
+        "app-builder/src/components/JobStatusPanel.tsx",
+        "app-builder/src/pages/SavedPrd.tsx",
+        "app-builder/src/pages/Saved.tsx",
+        "app-builder/src/components/saved/SavedKpiStrip.tsx"
       ],
-      "note": "wizardInstanceKey (wizardSession.ts:11-13) is a single-use trivial wrapper: one production call at Home.tsx:169, body is only `` `wizard-${sessionId}-${startStep}` ``. The module+tests exist to freeze a string format (wizardSession.test.ts:5-17 arity/format checks) rather than a second real consumer. Prior single-use ghosts (isFeatureContinueBlocked, contentColumnStyle, createTimedAbort, auth hashPassword) are gone; this one remains.",
-      "missingEvidence": []
+      "note": "jobStatus.ts:52 `shouldPollJob(hidden, status)` merges two unrelated checks. Every production call passes one of its arguments as a constant: `(hidden, null)` at JobStatusPanel.tsx:117 and :129, and `(false, job.status)` at :170. It is really `!hidden` and `!isTerminalJobStatus`. Only jobStatus.test.ts:188-195 uses both arguments. jobStatus.ts:276 `dismissTrackedJob(hide)` is a trivial wrapper around `clearLastJobId(); hide();`. SavedPrd.tsx:148 declares an empty `rootStyle: CSSProperties = {}` and passes it at :126, so it does nothing. SavedKpiStrip.tsx:10-11,30 takes a `saved` prop whose own doc comment says it is 'same as total'. Saved.tsx:63 passes `saved: total`, so the strip shows a duplicate KPI card from a prop with no independent value.",
+      "missingEvidence": [],
+      "scope": [
+        "app-builder/src/lib/jobStatus.ts",
+        "app-builder/src/components/JobStatusPanel.tsx",
+        "app-builder/src/pages/SavedPrd.tsx",
+        "app-builder/src/pages/Saved.tsx",
+        "app-builder/src/components/saved/SavedKpiStrip.tsx"
+      ],
+      "schemaVersion": 2
     },
     {
       "ruleId": "u-conc-use-what-exists",
-      "passed": true,
+      "passed": false,
       "evidence": [
-        "app-builder/package.json",
-        "app-builder/functions/api/submit.ts",
-        "app-builder/functions/api/prds.ts",
-        "app-builder/functions/lib/http.ts",
-        "app-builder/src/components/Page.tsx",
-        "app-builder/src/components/shell/Header.tsx",
-        "app-builder/src/lib/useAbortableJsonGet.ts"
+        "app-builder/src/components/JobStatusPanel.tsx",
+        "app-builder/src/lib/useAbortableJsonGet.ts",
+        "app-builder/src/pages/Home.tsx",
+        "app-builder/functions/lib/env.ts",
+        "app-builder/functions/lib/http.ts"
       ],
-      "note": "Runtime deps stay react/react-dom/react-router-dom/zod (package.json:17-22). POST bodies use Zod via readValidatedBody (submit.ts:18-34, prds.ts:18-32, http.ts:55-78). Shell reuses design-system Page/Header/Footer/shellCss (Page.tsx:6-50, Header.tsx:6-60). Client GETs share useAbortableJsonGet rather than a new fetch stack.",
-      "missingEvidence": []
+      "note": "JobStatusPanel.tsx:140-183 rewrites by hand the fetch, JSON-parse failure, `!response.ok` plus messageFromPayload, parse-to-null, flag.ifActive and abort/timeout sequence that the shared hook useAbortableJsonGet.ts:84-128 already implements. The only thing the panel adds is polling, which the existing hook could support with a retry or interval. Home.tsx:241-253 and :259-271 repeat the same error section (ErrorBanner plus two buttons) in one file instead of reusing one component. env.ts:1-31 declares its own D1Database, D1PreparedStatement and D1Result types. http.ts:77-81 declares a structural `safeParse` schema type instead of `z.ZodType<T>` from zod, which is already a dependency.",
+      "missingEvidence": [],
+      "scope": [
+        "app-builder/src/components/JobStatusPanel.tsx",
+        "app-builder/src/lib/useAbortableJsonGet.ts",
+        "app-builder/src/pages/Home.tsx",
+        "app-builder/functions/lib/env.ts",
+        "app-builder/functions/lib/http.ts"
+      ],
+      "schemaVersion": 2
     },
     {
       "ruleId": "u-conc-smallest-diff",
-      "passed": true,
+      "passed": false,
       "evidence": [
-        "app-builder/functions/lib/env.ts",
-        "app-builder/functions/lib/http.ts",
-        "app-builder/src/lib/abortableEffect.ts",
-        "app-builder/src/pages/Saved.tsx",
-        "app-builder/src/components/TemplateGallery.tsx",
-        "app-builder/src/components/wizard/styles.ts"
+        "app-builder/package.json",
+        "app-builder/vitest.workspace.ts",
+        "app-builder/src/lib/prd/namingWords.ts",
+        "app-builder/src/i18n/templates.ts",
+        "app-builder/src/components/StackReferences.tsx"
       ],
-      "note": "functions/lib holds only env.ts+http.ts (no leftover auth scaffolding). abortableEffect.ts exports only FETCH_TIMEOUT_MS/createActiveFlag/errorMessageFromFetchCatch/isAbortError used by the live GET path. Saved.tsx and TemplateGallery.tsx are slim compositions after earlier bloat; wizard formStyle no longer carries an inline maxWidth layout cap (wizard/styles.ts:8-11). No large dead modules or commented-out production scaffolding remain for the cited ticket leftovers.",
-      "missingEvidence": []
+      "note": "The latest substantive app-builder commit, afc5dcb 'real browser/VRT lanes, PRD stack docs, detail-id discovery', names three separate tickets in its subject and touches 35 files (+1635/-987). It adds VRT and browser test lanes (vitest.workspace.ts, src/testing/vrt.ts). It adds a StackReferences feature (StackReferences.tsx, stackReferences.ts). It splits en.ts into jobStatus.ts and templates.ts, naming.ts into namingWords.ts, and capabilities.ts into capabilityKinds.ts and featureMarkdown.ts. It also changes orchestrator checks (fe-breadcrumbs.mjs, fe-resource-links.mjs, collection-api.mjs). Commit 8bc2907 likewise bundles a rate-limit prune, a claim lease, a privacy-page text edit and n8n poller changes. Neither diff is scoped to one ticket.",
+      "missingEvidence": [],
+      "scope": [
+        "app-builder/package.json",
+        "app-builder/vitest.workspace.ts",
+        "app-builder/src/lib/prd/namingWords.ts",
+        "app-builder/src/i18n/templates.ts",
+        "app-builder/src/components/StackReferences.tsx"
+      ],
+      "schemaVersion": 2
     },
     {
       "ruleId": "u-val-input-validation",
-      "passed": true,
+      "passed": false,
       "evidence": [
+        "app-builder/functions/api/prd/[id].ts",
+        "app-builder/functions/api/jobs/[id]/status.ts",
         "app-builder/functions/api/submit.ts",
-        "app-builder/functions/api/prds.ts",
-        "app-builder/functions/lib/http.ts",
-        "app-builder/functions/api/submit.test.ts",
-        "app-builder/functions/api/prds.test.ts",
-        "app-builder/functions/api/prd/[id].ts"
+        "app-builder/src/lib/jobStatus.ts"
       ],
-      "note": "Both body-reading POSTs Zod-parse before use: submitBodySchema bounds prompt 8–10000, appType 1–64, hasAuth boolean, entities int 0–10000 (submit.ts:18-34); savePrdBodySchema enforces slug regex and title/prompt/markdown min/max (prds.ts:18-32) via readValidatedBody (http.ts:55-78). Over-limit bodies return 400 (submit.test.ts:59-86, prds.test.ts:35-60). GET /api/prd/:id rejects empty id with 400 and binds the id (prd/[id].ts:16-27).",
-      "missingEvidence": []
+      "note": "JSON request bodies are validated with Zod through readValidatedBody (submit.ts:26-32, prds.ts:22-27, claim.ts:35-37, status.ts:51-65). The route path id is also user input, and it is not validated. prd/[id].ts:16 and status.ts:98 only `.trim()` it and reject an empty string. The value then reaches the D1 query (prd/[id].ts:23-27, status.ts:153, status.ts:201-209) with no schema, format check or length bound. The client already has a UUID check, jobStatus.ts:136 `isJobId`, but the server does not use it. submit.ts:28 `appType` also has no `.trim()`, so a whitespace-only value passes `min(1)`.",
+      "missingEvidence": [],
+      "scope": [
+        "app-builder/functions/api/prd/[id].ts",
+        "app-builder/functions/api/jobs/[id]/status.ts",
+        "app-builder/functions/api/submit.ts",
+        "app-builder/src/lib/jobStatus.ts"
+      ],
+      "schemaVersion": 2
     },
     {
       "ruleId": "u-sec-no-stub-paths",
       "passed": true,
       "evidence": [
-        "app-builder/functions/lib/env.ts",
-        "app-builder/functions/lib/http.ts",
-        "app-builder/functions/api/submit.ts",
-        "app-builder/functions/api/prds.ts",
+        "app-builder/functions/lib/runnerAuth.ts",
+        "app-builder/functions/lib/rateLimit.ts",
         "app-builder/functions/api/jobs.ts",
-        "app-builder/functions/api/prd/[id].ts"
+        "app-builder/functions/api/jobs/claim.ts",
+        "app-builder/functions/api/jobs/[id]/status.ts"
       ],
-      "note": "No functions/lib/auth.ts and no TODO/always-true security guards under functions/. Endpoints fail closed on bad JSON/schema (submit.ts:33-34, prds.ts:31-32), DB errors (submit.ts:50-51, prds.ts:44-45, jobs.ts:20-21, prd/[id].ts:35-36), and missing rows (prd/[id].ts:30-31). Public write paths rely on Zod + parameterized .bind, not stubbed checks.",
-      "missingEvidence": []
+      "note": "I grepped functions/ and src/ (excluding tests) for TODO, FIXME, stub, bypass and `return true`. None of the hits is a security check. They are in PRD-generation text and pure helpers. authorizeRunner (runnerAuth.ts:70-91) fails closed: an unset RUNNER_TOKEN returns 503, and a wrong or missing bearer returns 401 after a digest compare. It runs before any work at jobs.ts:22, claim.ts:209 and status.ts:189. enforceRateLimit (rateLimit.ts:123-173) returns 503 when RATE_LIMIT_KEY is unset and 500 on a storage failure, and it is called at submit.ts:42 and prds.ts:35. The public status GET does not select the prompt (status.ts:71-72).",
+      "missingEvidence": [],
+      "scope": [
+        "app-builder/functions/lib/runnerAuth.ts",
+        "app-builder/functions/lib/rateLimit.ts",
+        "app-builder/functions/api/jobs.ts",
+        "app-builder/functions/api/jobs/claim.ts",
+        "app-builder/functions/api/jobs/[id]/status.ts"
+      ],
+      "schemaVersion": 2
     },
     {
       "ruleId": "u-test-adequacy",
       "passed": false,
       "evidence": [
-        "app-builder/src/lib/job.ts",
-        "app-builder/src/lib/job.test.ts",
-        "app-builder/src/lib/prd/generate.ts",
-        "app-builder/src/lib/prd.test.ts",
-        "app-builder/src/components/wizard.test.ts"
+        "app-builder/src/pages/Home.tsx",
+        "app-builder/src/components/JobStatusPanel.tsx",
+        "app-builder/src/components/JobStatusPanel.test.ts",
+        "app-builder/src/pages/SavedPrd.tsx",
+        "app-builder/tests/feature-coverage.spec.ts"
       ],
-      "note": "canForgePrd title-fragment branch (job.ts:112-115) is never reached by job.test.ts:97-140 (only appType/prompt/empty-features). generatePrd unresolved-title throw (generate.ts:140-145) has zero assertions in prd.test.ts (only unresolved-entities at :604-630). isTitleFragment is unit-tested in naming.test.ts, but that does not assert the canForgePrd or generatePrd branches that gate shipping. Feature-selection paths are now covered (wizard.test.ts:149-197; job.test.ts:134-140).",
-      "missingEvidence": []
+      "note": "Several branches have no assertion. No test references the Home forge-error panel (Home.tsx:138-146 and :241-271, including the 'idle' fallback). Grepping src and tests for forgeError and UnresolvedPrdError finds only en.ts, prd/* and prd.test.ts, and prd.test.ts covers the generator, not the page. JobStatusPanel's polling, error, timeout, terminal-stop, deploy-link, dismiss and start-new branches (JobStatusPanel.tsx:116-198, 220-247) have no component-level test. JobStatusPanel.test.ts:24-46 renders only the first loading paint, and no Playwright spec touches the panel. SavedPrd's not-found and error branches (SavedPrd.tsx:82-86, 123-124) have no spec either.",
+      "missingEvidence": [],
+      "scope": [
+        "app-builder/src/pages/Home.tsx",
+        "app-builder/src/components/JobStatusPanel.tsx",
+        "app-builder/src/components/JobStatusPanel.test.ts",
+        "app-builder/src/pages/SavedPrd.tsx",
+        "app-builder/tests/feature-coverage.spec.ts"
+      ],
+      "schemaVersion": 2
     },
     {
       "ruleId": "u-test-behavioral",
-      "passed": true,
+      "passed": false,
       "evidence": [
-        "app-builder/src/components/wizard.test.ts",
-        "app-builder/src/lib/job.test.ts",
-        "app-builder/src/lib/savePrd.test.ts",
-        "app-builder/functions/api/jobs.test.ts",
-        "app-builder/src/lib/prd.test.ts"
+        "app-builder/src/components/JobStatusPanel.test.ts",
+        "app-builder/src/components/Page.test.ts",
+        "app-builder/tests/feature-coverage.spec.ts",
+        "app-builder/functions/api/prds.test.ts"
       ],
-      "note": "Features gate tests assert production isFeatureSelectionReady and toggleFeatureSelection (wizard.test.ts:104-141), not a test-only dual. resolveFeatureSelection tests stale-id drop, empty pick, and defaults (wizard.test.ts:149-197). savePrd mocks fetch at the boundary (savePrd.test.ts); jobs.test uses in-memory D1 for success/500; generatePrd tests assert markdown behaviour and UnresolvedPrdError on empty entities. Residual length>2 i18n checks exist but do not replace the behavioural suites.",
-      "missingEvidence": []
+      "note": "The API tests (prds.test.ts:35-60) call the handlers at the Request/D1 seam and check status codes, which is behavioural. The UI tests depend on implementation details and on presence checks. JobStatusPanel.test.ts:39-45 slices the raw HTML and asserts the inline style strings 'min-height:44px' and 'min-width:44px'. Page.test.ts:35-58 regex-parses static markup to imitate getByRole instead of rendering the page. feature-coverage.spec.ts:147-158 ('saved Retry is present') forces a 500 and then only asserts that the Retry button is visible and in the viewport. It never clicks Retry or checks that the list recovers. No test drives the job-status panel's error or timeout branches.",
+      "missingEvidence": [],
+      "scope": [
+        "app-builder/src/components/JobStatusPanel.test.ts",
+        "app-builder/src/components/Page.test.ts",
+        "app-builder/tests/feature-coverage.spec.ts",
+        "app-builder/functions/api/prds.test.ts"
+      ],
+      "schemaVersion": 2
     },
     {
       "ruleId": "fe-pages-compose",
-      "passed": true,
+      "passed": false,
       "evidence": [
         "app-builder/src/pages/Home.tsx",
-        "app-builder/src/pages/Saved.tsx",
-        "app-builder/src/pages/About.tsx",
+        "app-builder/src/pages/SavedPrd.tsx",
         "app-builder/src/pages/Examples.tsx",
-        "app-builder/src/components/TemplateGallery.tsx",
-        "app-builder/src/components/Wizard.tsx"
+        "app-builder/src/pages/Saved.tsx"
       ],
-      "note": "Home.tsx:142-178 is a short state switch over ComposerChat/TemplateGallery/Wizard/PrdResult. Saved.tsx:67-84 composes SavedToolbar/Loading/Error/Empty/KpiStrip/CardList. Legal routes are thin LegalPage wrappers (About.tsx:13). Examples maps ExampleCard (Examples.tsx:65-67). TemplateGallery.tsx:140-176 and Wizard.tsx:267-328 own state and pass it into named children rather than inlining page-scale markup.",
-      "missingEvidence": []
+      "note": "Saved.tsx:67-82 is composed from named components (SavedToolbar, SavedLoading, SavedError, SavedEmpty, SavedKpiStrip, SavedCardList). The other pages are not. Home.tsx:241-271 writes out the same forge-error `<section>`, ErrorBanner and two buttons twice, with page-local style objects at :276-286. SavedPrd.tsx:125-140 writes the whole success view inline. That includes the ready badge, a date paragraph with an inline `style={{ color, fontSize }}` at :131, and a `<pre>` styled by the page's own readyStyle and preStyle at :150-172. Examples.tsx:35-56 writes the filter-chip button group inline, plus an inline style at :32, instead of using a named FilterChips component.",
+      "missingEvidence": [],
+      "scope": [
+        "app-builder/src/pages/Home.tsx",
+        "app-builder/src/pages/SavedPrd.tsx",
+        "app-builder/src/pages/Examples.tsx",
+        "app-builder/src/pages/Saved.tsx"
+      ],
+      "schemaVersion": 2
     },
     {
       "ruleId": "fe-fail-closed-states",
       "passed": false,
       "evidence": [
-        "app-builder/src/pages/Home.tsx",
-        "app-builder/src/lib/job.ts",
-        "app-builder/src/lib/prd/generate.ts",
         "app-builder/src/pages/Saved.tsx",
         "app-builder/src/pages/SavedPrd.tsx",
-        "app-builder/src/components/PrdResult.tsx",
-        "app-builder/src/components/Wizard.tsx"
+        "app-builder/src/lib/useAbortableJsonGet.ts",
+        "app-builder/src/lib/savedList.ts"
       ],
-      "note": "Saved/SavedPrd/PrdResult/Wizard submit all expose loading|error|empty|success (Saved.tsx:71-82, SavedPrd.tsx:120-136, PrdResult.tsx:111-120, Wizard handleSubmit :207-262). Primary forge path does not: Home.handleJobReady (Home.tsx:107-118) calls generatePrd with no try/catch after a successful POST. canForgePrd (job.ts:105-116) never gates unresolved entities, so a prompt like 'please make a thing' can pass Forge, queue a job, then throw UnresolvedPrdError (generate.ts:151-156) with no error UI on Home — not a defined fail-closed state for the core product screen.",
-      "missingEvidence": []
+      "note": "Loading, error and empty states exist, and a failure never renders as an empty success. Saved.tsx:14-36 has loading, error, empty and success. useAbortableJsonGet.ts:89-115 fails closed on bad JSON, non-OK responses and parse failure. SavedPrd.tsx:23-27 has loading, error, not-found and success. The rule also requires an explicit partial state, and no screen has one. savedList.ts:19-28 discards the whole list when one row is malformed, so a partial result becomes a full error. SavedPrd.tsx:123 shows an error with no recovery action, while Saved has a retry at Saved.tsx:73. A 404 with a non-JSON body takes the generic parse-error path (useAbortableJsonGet.ts:91-95) with no httpStatus, so SavedPrd's not-found mapping at :85 never runs for it.",
+      "missingEvidence": [],
+      "scope": [
+        "app-builder/src/pages/Saved.tsx",
+        "app-builder/src/pages/SavedPrd.tsx",
+        "app-builder/src/lib/useAbortableJsonGet.ts",
+        "app-builder/src/lib/savedList.ts"
+      ],
+      "schemaVersion": 2
     }
   ]
 }

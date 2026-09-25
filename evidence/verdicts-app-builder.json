@@ -9,12 +9,13 @@
     ],
     "note": "evidence/design-app-builder.json against https://redanvil.pages.dev: 8 route(s) at 375; every interactive element >= 44px",
     "reviewedAt": "2026-08-02T23:20:22.674Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-type-floor",
@@ -26,12 +27,13 @@
     ],
     "note": "evidence/design-app-builder.json against https://redanvil.pages.dev: 8 route(s) at 375, smallest body font 16px; nothing under 16px",
     "reviewedAt": "2026-08-02T23:20:22.674Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-responsive-375",
@@ -43,12 +45,13 @@
     ],
     "note": "evidence/design-app-builder.json against https://redanvil.pages.dev: no page or element overflow/clip at 375 on 8 route(s) (H>1px V>2px)",
     "reviewedAt": "2026-08-02T23:20:22.674Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-safe-areas",
@@ -59,12 +62,13 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: header sticky on all 6 route(s), padding-top 0px",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-premium-nav",
@@ -75,12 +79,13 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: 6 header link(s) [App Builder, Dashboard, Examples, Saved, About, Contact], aria-current on \"App Builder\"",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-noncolor-state",
@@ -91,12 +96,13 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: active nav item: weight 650, gradient background true, aria-current present true",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-no-attribution",
@@ -107,12 +113,13 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: no attribution text",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-cross-link",
@@ -123,12 +130,13 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: cross-site link present",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-seo-og",
@@ -139,12 +147,13 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: title \"RedAnvil — Forge apps from a prompt\", description present, og:image present",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-required-pages",
@@ -155,12 +164,13 @@
     ],
     "note": "evidence/design-app-builder.json against https://redanvil.pages.dev: /about 200 \"About RedAnvil\" 362w/7§; /contact 200 \"Contact\" 265w/5§; /terms 200 \"Terms and Conditions\" 1462w/16§; /privacy 200 \"Privacy Policy\" 1605w/16§; /saved 200 \"Saved builds\" 34w/0§; /examples 200 \"Examples\" 503w/7§; /no-such-page 200 \"Page not found\" 30w/0§",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -171,12 +181,13 @@
     ],
     "note": "design_audit against https://redanvil.pages.dev: 0 console/page error(s) across the measured loads",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-cold-visitor",
@@ -187,12 +198,13 @@
     ],
     "note": "cold_visitor against production: a first-time visitor gets a working app: 5 cold-start check(s) held",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-a11y-contrast",
@@ -204,168 +216,235 @@
     ],
     "note": "axe-core 4.12.1 against production: 0 colour-contrast violations in dark and light.",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "u-conc-idiomatic",
-    "passed": true,
+    "passed": false,
     "method": "judge",
     "evidence": [
-      "app-builder/src/lib/prd/generate.ts",
-      "app-builder/src/lib/job.ts",
-      "app-builder/src/components/shell/Header.tsx"
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/functions/lib/rateLimit.ts",
+      "app-builder/functions/lib/runnerAuth.ts",
+      "app-builder/src/lib/savedList.ts",
+      "app-builder/src/components/JobStatusPanel.tsx"
     ],
-    "note": "Helpers stay short and plain after the prd split: generate.ts composes section builders instead of inlining them, job.ts keeps slug and entity helpers as small pure functions, and the extracted Header reads as straightforward JSX with no dense one-liners.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "note": "Several spots are written the long way when a one-line idiom exists. Home.tsx:139-144 is a nested ternary whose first branch (`err instanceof UnresolvedPrdError ? err.message`) gives the same result as the `instanceof Error` branch after it, so it adds nothing. rateLimit.ts:54-58 builds a hex string with an index loop and a `?? 0` guard. `Array.from(bytes, b => b.toString(16).padStart(2,'0')).join('')` does it in one line. rateLimit.ts:81-82 clamps a value that lines 78-80 already keep within 1..3600, so neither clamp branch can run. runnerAuth.ts:31-33 checks that a SHA-256 digest is 32 bytes, which it always is. savedList.ts:19-34 casts `row` eight times instead of narrowing it once. JobStatusPanel.tsx:117,129 call `shouldPollJob(hidden, null)`, which is just `!hidden` with a constant argument.",
+    "reviewedAt": "2026-09-25T05:19:06.477Z",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
-      "app-builder/src/lib",
-      "app-builder/src/components/shell"
-    ]
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/functions/lib/rateLimit.ts",
+      "app-builder/functions/lib/runnerAuth.ts",
+      "app-builder/src/lib/savedList.ts",
+      "app-builder/src/components/JobStatusPanel.tsx"
+    ],
+    "schemaVersion": 2
   },
   {
     "ruleId": "u-conc-no-speculative-abstraction",
-    "passed": true,
+    "passed": false,
     "method": "judge",
     "evidence": [
-      "app-builder/src/lib/prd",
-      "app-builder/src/components/shell"
+      "app-builder/src/lib/jobStatus.ts",
+      "app-builder/src/components/JobStatusPanel.tsx",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/src/pages/Saved.tsx",
+      "app-builder/src/components/saved/SavedKpiStrip.tsx"
     ],
-    "note": "The prd and shell splits were driven by a measured size cap and a real second consumer, not by anticipated reuse. No interface was introduced with a single implementation for future flexibility.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "note": "jobStatus.ts:52 `shouldPollJob(hidden, status)` merges two unrelated checks. Every production call passes one of its arguments as a constant: `(hidden, null)` at JobStatusPanel.tsx:117 and :129, and `(false, job.status)` at :170. It is really `!hidden` and `!isTerminalJobStatus`. Only jobStatus.test.ts:188-195 uses both arguments. jobStatus.ts:276 `dismissTrackedJob(hide)` is a trivial wrapper around `clearLastJobId(); hide();`. SavedPrd.tsx:148 declares an empty `rootStyle: CSSProperties = {}` and passes it at :126, so it does nothing. SavedKpiStrip.tsx:10-11,30 takes a `saved` prop whose own doc comment says it is 'same as total'. Saved.tsx:63 passes `saved: total`, so the strip shows a duplicate KPI card from a prop with no independent value.",
+    "reviewedAt": "2026-09-25T05:19:06.478Z",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
-      "app-builder/src/lib",
-      "app-builder/src/components/shell"
-    ]
+      "app-builder/src/lib/jobStatus.ts",
+      "app-builder/src/components/JobStatusPanel.tsx",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/src/pages/Saved.tsx",
+      "app-builder/src/components/saved/SavedKpiStrip.tsx"
+    ],
+    "schemaVersion": 2
   },
   {
     "ruleId": "u-conc-use-what-exists",
-    "passed": true,
+    "passed": false,
     "method": "judge",
     "evidence": [
-      "app-builder/src/components/shell/Header.tsx",
-      "app-builder/src/components/Breadcrumbs.tsx"
+      "app-builder/src/components/JobStatusPanel.tsx",
+      "app-builder/src/lib/useAbortableJsonGet.ts",
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/functions/lib/env.ts",
+      "app-builder/functions/lib/http.ts"
     ],
-    "note": "The header split reuses the existing Breadcrumbs component, i18n bundle and theme tokens rather than adding copies, and the nav work introduced no new dependency.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "note": "JobStatusPanel.tsx:140-183 rewrites by hand the fetch, JSON-parse failure, `!response.ok` plus messageFromPayload, parse-to-null, flag.ifActive and abort/timeout sequence that the shared hook useAbortableJsonGet.ts:84-128 already implements. The only thing the panel adds is polling, which the existing hook could support with a retry or interval. Home.tsx:241-253 and :259-271 repeat the same error section (ErrorBanner plus two buttons) in one file instead of reusing one component. env.ts:1-31 declares its own D1Database, D1PreparedStatement and D1Result types. http.ts:77-81 declares a structural `safeParse` schema type instead of `z.ZodType<T>` from zod, which is already a dependency.",
+    "reviewedAt": "2026-09-25T05:19:06.478Z",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
-      "app-builder/src/components"
-    ]
+      "app-builder/src/components/JobStatusPanel.tsx",
+      "app-builder/src/lib/useAbortableJsonGet.ts",
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/functions/lib/env.ts",
+      "app-builder/functions/lib/http.ts"
+    ],
+    "schemaVersion": 2
   },
   {
     "ruleId": "u-conc-smallest-diff",
-    "passed": true,
+    "passed": false,
     "method": "judge",
     "evidence": [
-      "app-builder/src/lib/prd.ts",
-      "app-builder/src/components/Page.tsx"
+      "app-builder/package.json",
+      "app-builder/vitest.workspace.ts",
+      "app-builder/src/lib/prd/namingWords.ts",
+      "app-builder/src/i18n/templates.ts",
+      "app-builder/src/components/StackReferences.tsx"
     ],
-    "note": "The prd and shell refactors are pure structural moves. generatePrd output was verified byte-identical across five varied inputs by running the pre-split and post-split modules side by side, so the diff adds no behaviour of its own.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "note": "The latest substantive app-builder commit, afc5dcb 'real browser/VRT lanes, PRD stack docs, detail-id discovery', names three separate tickets in its subject and touches 35 files (+1635/-987). It adds VRT and browser test lanes (vitest.workspace.ts, src/testing/vrt.ts). It adds a StackReferences feature (StackReferences.tsx, stackReferences.ts). It splits en.ts into jobStatus.ts and templates.ts, naming.ts into namingWords.ts, and capabilities.ts into capabilityKinds.ts and featureMarkdown.ts. It also changes orchestrator checks (fe-breadcrumbs.mjs, fe-resource-links.mjs, collection-api.mjs). Commit 8bc2907 likewise bundles a rate-limit prune, a claim lease, a privacy-page text edit and n8n poller changes. Neither diff is scoped to one ticket.",
+    "reviewedAt": "2026-09-25T05:19:06.478Z",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
-      "app-builder/src/lib",
-      "app-builder/src/components"
-    ]
+      "app-builder/package.json",
+      "app-builder/vitest.workspace.ts",
+      "app-builder/src/lib/prd/namingWords.ts",
+      "app-builder/src/i18n/templates.ts",
+      "app-builder/src/components/StackReferences.tsx"
+    ],
+    "schemaVersion": 2
   },
   {
     "ruleId": "u-val-input-validation",
-    "passed": true,
+    "passed": false,
     "method": "judge",
     "evidence": [
+      "app-builder/functions/api/prd/[id].ts",
+      "app-builder/functions/api/jobs/[id]/status.ts",
       "app-builder/functions/api/submit.ts",
-      "app-builder/functions/api/jobs.ts"
+      "app-builder/src/lib/jobStatus.ts"
     ],
-    "note": "Handlers that read a request body run it through a schema before use; JSON.parse alone is not treated as validation anywhere under functions/.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "note": "JSON request bodies are validated with Zod through readValidatedBody (submit.ts:26-32, prds.ts:22-27, claim.ts:35-37, status.ts:51-65). The route path id is also user input, and it is not validated. prd/[id].ts:16 and status.ts:98 only `.trim()` it and reject an empty string. The value then reaches the D1 query (prd/[id].ts:23-27, status.ts:153, status.ts:201-209) with no schema, format check or length bound. The client already has a UUID check, jobStatus.ts:136 `isJobId`, but the server does not use it. submit.ts:28 `appType` also has no `.trim()`, so a whitespace-only value passes `min(1)`.",
+    "reviewedAt": "2026-09-25T05:19:06.478Z",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
-      "app-builder/functions"
-    ]
+      "app-builder/functions/api/prd/[id].ts",
+      "app-builder/functions/api/jobs/[id]/status.ts",
+      "app-builder/functions/api/submit.ts",
+      "app-builder/src/lib/jobStatus.ts"
+    ],
+    "schemaVersion": 2
   },
   {
     "ruleId": "u-sec-no-stub-paths",
     "passed": true,
     "method": "judge",
     "evidence": [
-      "app-builder/functions/api/submit.ts",
-      "app-builder/functions/lib/http.ts",
-      "app-builder/functions/lib/env.ts"
+      "app-builder/functions/lib/runnerAuth.ts",
+      "app-builder/functions/lib/rateLimit.ts",
+      "app-builder/functions/api/jobs.ts",
+      "app-builder/functions/api/jobs/claim.ts",
+      "app-builder/functions/api/jobs/[id]/status.ts"
     ],
-    "note": "This app ships no authentication surface, so there is no guard to stub: functions/lib holds only http and env helpers. Confirmed no auth-named function anywhere under functions/ returns an unconditional truthy value and no TODO-auth marker exists.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "note": "I grepped functions/ and src/ (excluding tests) for TODO, FIXME, stub, bypass and `return true`. None of the hits is a security check. They are in PRD-generation text and pure helpers. authorizeRunner (runnerAuth.ts:70-91) fails closed: an unset RUNNER_TOKEN returns 503, and a wrong or missing bearer returns 401 after a digest compare. It runs before any work at jobs.ts:22, claim.ts:209 and status.ts:189. enforceRateLimit (rateLimit.ts:123-173) returns 503 when RATE_LIMIT_KEY is unset and 500 on a storage failure, and it is called at submit.ts:42 and prds.ts:35. The public status GET does not select the prompt (status.ts:71-72).",
+    "reviewedAt": "2026-09-25T05:19:06.478Z",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
-      "app-builder/functions"
-    ]
+      "app-builder/functions/lib/runnerAuth.ts",
+      "app-builder/functions/lib/rateLimit.ts",
+      "app-builder/functions/api/jobs.ts",
+      "app-builder/functions/api/jobs/claim.ts",
+      "app-builder/functions/api/jobs/[id]/status.ts"
+    ],
+    "schemaVersion": 2
   },
   {
     "ruleId": "u-test-adequacy",
-    "passed": true,
+    "passed": false,
     "method": "judge",
     "evidence": [
-      "app-builder/src/lib/prd.characterization.test.ts",
-      "app-builder/src/components/Page.test.ts"
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/src/components/JobStatusPanel.tsx",
+      "app-builder/src/components/JobStatusPanel.test.ts",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/tests/feature-coverage.spec.ts"
     ],
-    "note": "The refactor is covered by a characterization test snapshotting real generatePrd output for varied inputs, and the shell by a test querying header links by role. Both assert behaviour that breaks on regression rather than mere presence.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "note": "Several branches have no assertion. No test references the Home forge-error panel (Home.tsx:138-146 and :241-271, including the 'idle' fallback). Grepping src and tests for forgeError and UnresolvedPrdError finds only en.ts, prd/* and prd.test.ts, and prd.test.ts covers the generator, not the page. JobStatusPanel's polling, error, timeout, terminal-stop, deploy-link, dismiss and start-new branches (JobStatusPanel.tsx:116-198, 220-247) have no component-level test. JobStatusPanel.test.ts:24-46 renders only the first loading paint, and no Playwright spec touches the panel. SavedPrd's not-found and error branches (SavedPrd.tsx:82-86, 123-124) have no spec either.",
+    "reviewedAt": "2026-09-25T05:19:06.478Z",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
-      "app-builder/src"
-    ]
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/src/components/JobStatusPanel.tsx",
+      "app-builder/src/components/JobStatusPanel.test.ts",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/tests/feature-coverage.spec.ts"
+    ],
+    "schemaVersion": 2
   },
   {
     "ruleId": "u-test-behavioral",
-    "passed": true,
+    "passed": false,
     "method": "judge",
     "evidence": [
+      "app-builder/src/components/JobStatusPanel.test.ts",
       "app-builder/src/components/Page.test.ts",
-      "app-builder/src/lib/prd.test.ts"
+      "app-builder/tests/feature-coverage.spec.ts",
+      "app-builder/functions/api/prds.test.ts"
     ],
-    "note": "Tests assert rendered behaviour (header exposes named links by role, active route marked) and real output content, not implementation details or call counts.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "note": "The API tests (prds.test.ts:35-60) call the handlers at the Request/D1 seam and check status codes, which is behavioural. The UI tests depend on implementation details and on presence checks. JobStatusPanel.test.ts:39-45 slices the raw HTML and asserts the inline style strings 'min-height:44px' and 'min-width:44px'. Page.test.ts:35-58 regex-parses static markup to imitate getByRole instead of rendering the page. feature-coverage.spec.ts:147-158 ('saved Retry is present') forces a 500 and then only asserts that the Retry button is visible and in the viewport. It never clicks Retry or checks that the list recovers. No test drives the job-status panel's error or timeout branches.",
+    "reviewedAt": "2026-09-25T05:19:06.478Z",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
-      "app-builder/src"
-    ]
+      "app-builder/src/components/JobStatusPanel.test.ts",
+      "app-builder/src/components/Page.test.ts",
+      "app-builder/tests/feature-coverage.spec.ts",
+      "app-builder/functions/api/prds.test.ts"
+    ],
+    "schemaVersion": 2
   },
   {
     "ruleId": "fe-pages-compose",
-    "passed": true,
+    "passed": false,
     "method": "judge",
     "evidence": [
-      "app-builder/src/components/Page.tsx",
-      "app-builder/src/components/shell/Header.tsx",
-      "app-builder/src/components/shell/Footer.tsx"
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/src/pages/Examples.tsx",
+      "app-builder/src/pages/Saved.tsx"
     ],
-    "note": "Page.tsx is a composition of named components (Header, MobileDrawer, Footer, Breadcrumbs) rather than a monolithic shell, and pages supply title, subtitle and children into that shell.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "note": "Saved.tsx:67-82 is composed from named components (SavedToolbar, SavedLoading, SavedError, SavedEmpty, SavedKpiStrip, SavedCardList). The other pages are not. Home.tsx:241-271 writes out the same forge-error `<section>`, ErrorBanner and two buttons twice, with page-local style objects at :276-286. SavedPrd.tsx:125-140 writes the whole success view inline. That includes the ready badge, a date paragraph with an inline `style={{ color, fontSize }}` at :131, and a `<pre>` styled by the page's own readyStyle and preStyle at :150-172. Examples.tsx:35-56 writes the filter-chip button group inline, plus an inline style at :32, instead of using a named FilterChips component.",
+    "reviewedAt": "2026-09-25T05:19:06.478Z",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
-      "app-builder/src/components"
-    ]
+      "app-builder/src/pages/Home.tsx",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/src/pages/Examples.tsx",
+      "app-builder/src/pages/Saved.tsx"
+    ],
+    "schemaVersion": 2
   },
   {
     "ruleId": "fe-fail-closed-states",
-    "passed": true,
+    "passed": false,
     "method": "judge",
     "evidence": [
-      "app-builder/src/components/ComposerChat.tsx",
-      "app-builder/src/lib/apiError.ts"
+      "app-builder/src/pages/Saved.tsx",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/src/lib/useAbortableJsonGet.ts",
+      "app-builder/src/lib/savedList.ts"
     ],
-    "note": "The composer renders explicit loading, empty and error states. A failed submit surfaces an error rather than an empty success, and the empty thread says so in words instead of rendering blank.",
-    "reviewedAt": "2026-07-31T06:31:26.066Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "note": "Loading, error and empty states exist, and a failure never renders as an empty success. Saved.tsx:14-36 has loading, error, empty and success. useAbortableJsonGet.ts:89-115 fails closed on bad JSON, non-OK responses and parse failure. SavedPrd.tsx:23-27 has loading, error, not-found and success. The rule also requires an explicit partial state, and no screen has one. savedList.ts:19-28 discards the whole list when one row is malformed, so a partial result becomes a full error. SavedPrd.tsx:123 shows an error with no recovery action, while Saved has a retry at Saved.tsx:73. A 404 with a non-JSON body takes the generic parse-error path (useAbortableJsonGet.ts:91-95) with no httpStatus, so SavedPrd's not-found mapping at :85 never runs for it.",
+    "reviewedAt": "2026-09-25T05:19:06.478Z",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
-      "app-builder/src"
-    ]
+      "app-builder/src/pages/Saved.tsx",
+      "app-builder/src/pages/SavedPrd.tsx",
+      "app-builder/src/lib/useAbortableJsonGet.ts",
+      "app-builder/src/lib/savedList.ts"
+    ],
+    "schemaVersion": 2
   },
   {
     "ruleId": "fe-desktop-width",
@@ -376,12 +455,13 @@
     ],
     "note": "desktop_width re-measured against production at 1440 and 1920; every route >= 80% painted width.",
     "reviewedAt": "2026-07-31T06:34:16.325Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-product-completeness",
@@ -391,13 +471,14 @@
       "evidence/e2e-app-builder.json"
     ],
     "note": "evidence/e2e-app-builder.json against the measured build: chat → wizard → Forge PRD completed against https://redanvil.pages.dev: /api/submit returned 200 and the PRD rendered, with 5 further route(s) verified. The core feature produces real output end to end.",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "reviewedAt": "2026-07-31T06:31:26.066Z",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   },
   {
     "ruleId": "fe-design-archetype",
@@ -411,11 +492,12 @@
     ],
     "note": "Archetype: Command canvas, recorded in claims.json and confirmed by opening evidence/screenshots/app-builder-1280-dark.png and evidence/screenshots/app-builder-1280-light.png before recording anything (both files actually opened and viewed, not inferred from source): the home route is a two-pane split -- a persistent composer (\"Describe your app\", the actual work) against a How-it-works/template picker, not a generic centred column. design_audit.mjs --claims measured the widest block at 1306 of 1440px (91%) with equal 67px gutters, so the anti-column check (requires <72% width AND equal gutters) does not fire either way, but the archetype label itself is a genuine structural read, not one picked to pass a check.",
     "reviewedAt": "2026-08-02T23:20:22.674Z",
-    "reviewedCommit": "466b15be5a2889a5fbad16766e0168e0e4247ed0",
+    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
     "scope": [
       "app-builder/src",
       "app-builder/public",
       "app-builder/index.html"
-    ]
+    ],
+    "bundleHash": "aec0ba7a40c5b55ef35547f0b4618fb382a32501dda92a7a1575242eef1d1053"
   }
 ]

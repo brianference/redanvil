@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil.pages.dev",
-  "checkedAt": "2026-08-17T04:45:35.493Z",
+  "checkedAt": "2026-09-25T05:14:58.492Z",
   "findings": {
     "fe-touch-targets": {
       "ok": true,
@@ -48,7 +48,7 @@
     },
     "fe-required-pages": {
       "ok": true,
-      "detail": "/about 200 \"About RedAnvil\" 362w/7§; /contact 200 \"Contact\" 265w/5§; /terms 200 \"Terms and Conditions\" 1468w/16§; /privacy 200 \"Privacy Policy\" 1605w/16§; /saved 200 \"Saved builds\" 34w/0§; /examples 200 \"Examples\" 1861w/16§; /no-such-page 200 \"Page not found\" 30w/0§"
+      "detail": "/about 200 \"About RedAnvil\" 362w/7§; /contact 200 \"Contact\" 265w/5§; /terms 200 \"Terms and Conditions\" 1526w/16§; /privacy 200 \"Privacy Policy\" 2009w/16§; /saved 200 \"Saved builds\" 34w/0§; /examples 200 \"Examples\" 1858w/16§; /no-such-page 200 \"Page not found\" 30w/0§"
     },
     "fe-visual-review-recorded": {
       "ok": true,
