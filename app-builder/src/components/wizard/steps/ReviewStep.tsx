@@ -2,7 +2,7 @@ import type { EstimateResult } from '../../../lib/estimate';
 import { MIN_PROMPT_LENGTH, type BuildJob, type WizardAnswers } from '../../../lib/job';
 import { en } from '../../../i18n/en';
 import { theme } from '../../../theme';
-import { errorBannerStyle, statusBannerStyle } from '../../ui';
+import { ErrorBanner, LoadingBanner, SuccessBanner } from '../../Banner';
 import { entitySpecBlockMessage } from '../entitySpecMessage';
 import { reviewAnswerRows } from '../reviewRows';
 import { estimateBoxStyle, fieldLabelStyle, reviewListStyle } from '../styles';
@@ -107,47 +107,22 @@ export function ReviewStep({
         </p>
       </div>
       {!promptReady && (
-        <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
-          <span aria-hidden="true">!</span>
-          <span>{copy.promptTooShort(MIN_PROMPT_LENGTH)}</span>
-        </div>
+        <ErrorBanner message={copy.promptTooShort(MIN_PROMPT_LENGTH)} style={bannerGapStyle} />
       )}
       {promptReady && appTypeReady && entityBlock !== null && (
-        <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
-          <span aria-hidden="true">!</span>
-          <span>{entityBlock}</span>
-        </div>
+        <ErrorBanner message={entityBlock} style={bannerGapStyle} />
       )}
       {promptReady && !appTypeReady && (
-        <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
-          <span aria-hidden="true">!</span>
-          <span>{copy.appTypeRequired}</span>
-        </div>
+        <ErrorBanner message={copy.appTypeRequired} style={bannerGapStyle} />
       )}
       {submitState.status === 'loading' && (
-        <div
-          role="status"
-          aria-live="polite"
-          aria-busy="true"
-          style={{ ...statusBannerStyle(), marginTop: theme.space.md }}
-        >
-          <span aria-hidden="true">…</span>
-          <span>{copy.submittingStatus}</span>
-        </div>
+        <LoadingBanner message={copy.submittingStatus} style={bannerGapStyle} />
       )}
       {submitState.status === 'error' && (
-        <div role="alert" style={{ ...errorBannerStyle(), marginTop: theme.space.md }}>
-          <span aria-hidden="true">!</span>
-          <span>{submitState.message}</span>
-        </div>
+        <ErrorBanner message={submitState.message} style={bannerGapStyle} />
       )}
       {submitState.status === 'success' && (
-        <div
-          role="status"
-          aria-live="polite"
-          style={{ ...statusBannerStyle(), marginTop: theme.space.md }}
-        >
-          <span aria-hidden="true">✓</span>
+        <SuccessBanner style={bannerGapStyle}>
           <div>
             <p style={{ margin: 0, fontWeight: 600 }}>
               {copy.jobReadyHeading(submitState.job.slug)}
@@ -162,8 +137,11 @@ export function ReviewStep({
               {copy.jobMeta(submitState.job.targetType, submitState.job.threshold)}
             </p>
           </div>
-        </div>
+        </SuccessBanner>
       )}
     </div>
   );
 }
+
+/** Space between the review content and a banner under it. */
+const bannerGapStyle = { marginTop: theme.space.md };

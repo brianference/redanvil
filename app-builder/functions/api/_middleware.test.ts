@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { onRequest } from './_middleware';
+import { expectSecureHeaders } from '../../tests/helpers/d1';
 
 /**
  * Run the middleware over a request whose downstream answer is fixed.
@@ -26,6 +27,7 @@ describe('functions/api/_middleware', () => {
     expect(response.status).toBe(404);
     expect(response.headers.get('content-type')).toBe('application/json');
     expect(await response.json()).toEqual({ error: 'No such endpoint: /api/no-such-route' });
+    expectSecureHeaders(response, 'https://redanvil.pages.dev/api/no-such-route');
   });
 
   it('passes a real JSON answer through unchanged', async () => {
@@ -36,6 +38,16 @@ describe('functions/api/_middleware', () => {
     const response = await run('/api/health', real);
 
     expect(response).toBe(real);
+  });
+
+  it("passes a handler's own JSON 404 through untouched", async () => {
+    const handled = new Response(JSON.stringify({ error: 'PRD not found' }), {
+      status: 404,
+      headers: { 'content-type': 'application/json' }
+    });
+    const response = await run('/api/prd/missing', handled);
+
+    expect(response).toBe(handled);
   });
 
   it('leaves an HTML server error as a failure, not a 404', async () => {
@@ -52,6 +64,6 @@ describe('functions/api/_middleware', () => {
     const empty = new Response(null, { status: 204 });
     const response = await run('/api/jobs/claim', empty);
 
-    expect(response.status).toBe(204);
+    expect(response).toBe(empty);
   });
 });

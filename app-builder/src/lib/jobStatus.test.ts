@@ -112,6 +112,23 @@ describe('job status helpers', () => {
     expect(parsed).not.toHaveProperty('prompt');
   });
 
+  it('fails closed on a missing, malformed or mistyped field', () => {
+    const valid = { id: JOB_ID, status: 'building' };
+    expect(parsePublicJobStatus(valid)).toEqual({
+      ...valid,
+      step: null,
+      detail: null,
+      updatedAt: null,
+      deployUrl: null
+    });
+    expect(parsePublicJobStatus({ ...valid, step: '' })?.step).toBeNull();
+    expect(parsePublicJobStatus({ ...valid, id: 'job-1' })).toBeNull();
+    expect(parsePublicJobStatus({ ...valid, status: '' })).toBeNull();
+    expect(parsePublicJobStatus({ ...valid, step: 3 })).toBeNull();
+    expect(parsePublicJobStatus({ id: JOB_ID })).toBeNull();
+    expect(parsePublicJobStatus(null)).toBeNull();
+  });
+
   it('keeps http and https deploy URLs and drops every other scheme', () => {
     const base = { id: JOB_ID, status: 'done' };
     expect(

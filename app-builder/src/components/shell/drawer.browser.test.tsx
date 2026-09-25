@@ -63,7 +63,10 @@ describe('mobile drawer focus (real browser)', () => {
     const controls = [...(drawer?.querySelectorAll<HTMLElement>('a[href], button') ?? [])];
     const first = controls[0];
     const last = controls[controls.length - 1];
-    expect(controls.length).toBeGreaterThan(2);
+    // The trap's two ends: the brand logo opens the drawer's Tab order and the
+    // GitHub overflow link, appended after the primary routes, closes it.
+    expect(first?.getAttribute('aria-label')).toBe(en.app.logoAlt);
+    expect(last?.textContent).toContain(en.app.navGitHub);
 
     first?.focus();
     await userEvent.keyboard('{Shift>}{Tab}{/Shift}');

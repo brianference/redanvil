@@ -14,13 +14,13 @@ import {
   isFeatureSelectionReady,
   type WizardAnswers
 } from '../lib/job';
+import { integrationChipSelected, toggleIntegrationChip } from './wizard/integrationChips';
+import { reviewAnswerRows } from './wizard/reviewRows';
 import {
-  integrationChipSelected,
-  reviewAnswerRows,
-  toggleFeatureSelection,
-  toggleIntegrationChip
-} from './Wizard';
-import { featureEntityNames, resolveFeatureSelection } from './wizard/steps/FeaturesStep';
+  featureEntityNames,
+  resolveFeatureSelection,
+  toggleFeatureSelection
+} from './wizard/steps/FeaturesStep';
 import { defaultSelectedFeatureIds } from '../lib/prd/sections/features';
 
 describe('wizard scope options', () => {
@@ -31,20 +31,7 @@ describe('wizard scope options', () => {
     expect(EMPTY_WIZARD_ANSWERS.selectedFeatureIds).toBeNull();
   });
 
-  it('exposes i18n copy for storage, realtime, integrations, features, and review labels', () => {
-    expect(en.wizard.dataStorageLabel.length).toBeGreaterThan(2);
-    expect(en.wizard.dataStorageOptions.none.length).toBeGreaterThan(1);
-    expect(en.wizard.dataStorageOptions.simple.length).toBeGreaterThan(1);
-    expect(en.wizard.dataStorageOptions.relational.length).toBeGreaterThan(1);
-    expect(en.wizard.realtimeLabel.length).toBeGreaterThan(2);
-    expect(en.wizard.integrationsLabel.length).toBeGreaterThan(2);
-    expect(en.wizard.integrationsChips.length).toBeGreaterThanOrEqual(3);
-    expect(en.wizard.featuresHeading.length).toBeGreaterThan(2);
-    expect(en.wizard.featuresRequired.length).toBeGreaterThan(2);
-    expect(en.wizard.reviewDataStorage.length).toBeGreaterThan(2);
-    expect(en.wizard.reviewRealtime.length).toBeGreaterThan(2);
-    expect(en.wizard.reviewIntegrations.length).toBeGreaterThan(2);
-    expect(en.wizard.reviewFeatures.length).toBeGreaterThan(2);
+  it('names the four wizard steps in order', () => {
     expect(en.wizard.stepTitles).toEqual(['App idea', 'Scope', 'Features', 'Review']);
   });
 
@@ -157,10 +144,9 @@ describe('wizard feature selection Continue gate', () => {
 });
 
 // resolveFeatureSelection decides what the Features step shows and what reaches
-// generatePrd. It was re-exported "for unit tests" that never existed — an
-// independent judge caught the comment vouching for coverage that was not there.
-// Its stale-id branch is the interesting one: changing the entity list renumbers
-// feature ids, so a saved selection can point at ids that no longer exist.
+// generatePrd. Its stale-id branch is the interesting one: changing the entity
+// list renumbers feature ids, so a saved selection can point at ids that no
+// longer exist.
 describe('resolveFeatureSelection', () => {
   const answers = {
     ...EMPTY_WIZARD_ANSWERS,

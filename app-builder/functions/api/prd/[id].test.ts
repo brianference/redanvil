@@ -28,11 +28,12 @@ describe('GET /api/prd/:id', () => {
     ['uppercase', 'PRD-Tesla'],
     ['a quote and SQL', "x' OR '1'='1"],
     ['65 characters', 'a'.repeat(65)],
-    ['a path separator', 'a/b']
+    ['a path separator', 'a/b'],
+    ['a leading hyphen', '-prd']
   ])('returns 404 for a malformed id (%s) without querying D1', async (_label, id) => {
     const response = await onRequestGet({
       request: new Request(`https://example.com/api/prd/${encodeURIComponent(id)}`),
-      // A query against this env rejects (500), so a 400 proves none ran.
+      // A query against this env rejects (500), so a 404 proves none ran.
       env: mockEnv({ fail: true }),
       params: { id }
     });

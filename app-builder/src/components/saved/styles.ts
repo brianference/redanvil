@@ -44,20 +44,9 @@ export const emptyTitleStyle: CSSProperties = {
   fontSize: theme.type.scale[2]
 };
 
-/** Error banner message + retry column. */
-export const errorBodyStyle: CSSProperties = {
-  flex: 1,
-  minWidth: 0
-};
-
 /** Retry button under the error message. */
 export const errorRetryStyle: CSSProperties = {
   marginTop: theme.space.sm
-};
-
-/** Error message paragraph (no extra margin). */
-export const errorMessageStyle: CSSProperties = {
-  margin: 0
 };
 
 /** KPI strip above the recent list. */

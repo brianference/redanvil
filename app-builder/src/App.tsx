@@ -22,7 +22,7 @@ export function App(): JSX.Element {
         <Route path="/contact" element={<Contact />} />
         <Route path="/saved" element={<Saved />} />
         <Route path="/prd/:id" element={<SavedPrd />} />
-        {/* Catch-all: an unmatched route used to render an empty document. */}
+        {/* Catch-all, so an unmatched route renders the 404 page, not an empty document. */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

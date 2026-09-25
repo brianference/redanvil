@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { onRequestPost, onRequestGet } from './prds';
 import { mockEnv, expectSecureHeaders } from '../../tests/helpers/d1';
+import { createQueueEnv } from '../../tests/helpers/jobQueueDb';
+import { SAVED_LIST_LIMIT } from '../../src/lib/savedList';
 
 /** Seed row returned by the list mock when D1 succeeds. */
 const listRow = {
@@ -146,5 +148,26 @@ describe('GET /api/prds', () => {
     const body = (await response.json()) as { error: string };
     expect(body.error).toBe('Could not list PRDs');
     expectSecureHeaders(response, request.url, 'POST, GET');
+  });
+});
+
+describe('GET /api/prds on the migrated schema', () => {
+  it('returns at most SAVED_LIST_LIMIT rows, newest first, without the markdown', async () => {
+    const env = createQueueEnv({
+      prds: Array.from({ length: SAVED_LIST_LIMIT + 5 }, (_unused, index) => ({
+        id: `prd-${index}`,
+        slug: `app-${index}`,
+        title: `App ${index}`,
+        prompt: `Build app ${index}`,
+        markdown: `# App ${index}`,
+        created_at: new Date(Date.UTC(2026, 8, 1, 0, index)).toISOString()
+      }))
+    });
+    const response = await onRequestGet({ request: new Request('https://example.com/api/prds'), env });
+    const rows = (await response.json()) as { id: string; markdown?: string }[];
+    expect(response.status).toBe(200);
+    expect(rows).toHaveLength(SAVED_LIST_LIMIT);
+    expect(rows[0]?.id).toBe(`prd-${SAVED_LIST_LIMIT + 4}`);
+    expect(rows.some((row) => row.markdown !== undefined)).toBe(false);
   });
 });

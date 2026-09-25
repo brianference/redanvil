@@ -101,6 +101,7 @@ afterEach(() => {
   mounted = null;
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
   localStorage.clear();
 });
 
@@ -138,6 +139,22 @@ describe('job status panel (real browser)', () => {
     await vi.advanceTimersByTimeAsync(JOB_STATUS_POLL_INTERVAL_MS);
     await expect.element(page.getByText(copy.statusPresentation('queued').headline)).toBeVisible();
     expect(page.getByRole('alert').elements()).toHaveLength(0);
+  });
+
+  it('keeps the last status under a warning when a later poll fails', async () => {
+    stubFetch(json(jobBody('building', { step: 'build' })), json({ error: 'Could not load job status' }, 500));
+    renderPanel();
+    await expect
+      .element(page.getByText(copy.statusPresentation('building').headline))
+      .toBeVisible();
+
+    await vi.advanceTimersByTimeAsync(JOB_STATUS_POLL_INTERVAL_MS);
+    await expect
+      .element(page.getByRole('alert'))
+      .toHaveTextContent(copy.staleWarning('Could not load job status'));
+    await expect
+      .element(page.getByText(copy.statusPresentation('building').headline))
+      .toBeVisible();
   });
 
   it('says the network failed when the request never reaches the server', async () => {
@@ -211,5 +228,24 @@ describe('job status panel (real browser)', () => {
     await expect.element(page.getByText(copy.jobId(JOB_ID))).toBeInTheDocument();
     await expect.element(page.getByText(copy.jobId('5b1c2d3e'), { exact: true })).toBeVisible();
     await expect.element(page.getByRole('button', { name: copy.copyJobId })).toBeVisible();
+  });
+
+  it('copies the full id and confirms on the button', async () => {
+    stubFetch(json(jobBody('queued')));
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+    renderPanel();
+
+    await userEvent.click(page.getByRole('button', { name: copy.copyJobId }));
+    await expect.element(page.getByRole('button', { name: copy.copied })).toBeVisible();
+    expect(writeText).toHaveBeenCalledWith(JOB_ID);
+  });
+
+  it('says so on the button when the clipboard refuses the copy', async () => {
+    stubFetch(json(jobBody('queued')));
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new DOMException('Denied', 'NotAllowedError'));
+    renderPanel();
+
+    await userEvent.click(page.getByRole('button', { name: copy.copyJobId }));
+    await expect.element(page.getByRole('button', { name: copy.copyFailed })).toBeVisible();
   });
 });

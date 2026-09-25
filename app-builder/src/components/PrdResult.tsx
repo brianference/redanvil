@@ -4,9 +4,9 @@ import type { Prd } from '../lib/prd';
 import { savePrd, SavePrdError } from '../lib/savePrd';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
-import { LoadingBanner, ErrorBanner } from './Banner';
+import { LoadingBanner, ErrorBanner, SuccessBanner } from './Banner';
 import { FidelityWarning } from './FidelityWarning';
-import { buttonStyle, cardStyle, statusBannerStyle } from './ui';
+import { buttonStyle, cardStyle } from './ui';
 
 export interface PrdResultProps {
   /** The generated PRD to display and offer for download. */
@@ -21,13 +21,19 @@ type SaveState =
   | { status: 'success'; url: string }
   | { status: 'error'; message: string };
 
+/** Result of the last copy-to-clipboard attempt, shown on the copy button. */
+type CopyState = 'idle' | 'copied' | 'failed';
+
+/** How long the copy button shows its result before resetting. */
+const COPY_FEEDBACK_MS = 2000;
+
 /**
  * Shows the generated PRD with hero-style ready state, download, copy, and
  * save-to-site actions (Grok v4 premium result language).
  */
 export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
   const copy = en.prdResult;
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>('idle');
   const [saveState, setSaveState] = useState<SaveState>({ status: 'idle' });
 
   /** Download the PRD as a .md file the user can load into Claude. */
@@ -41,15 +47,18 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
     URL.revokeObjectURL(url);
   }
 
-  /** Copy the PRD markdown to the clipboard. */
+  /**
+   * Copy the PRD markdown and say on the button whether it worked, so a refused
+   * clipboard does not look like a copy that happened.
+   */
   async function copyMarkdown(): Promise<void> {
     try {
       await navigator.clipboard.writeText(prd.markdown);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
+      setCopyState('copied');
     } catch {
-      setCopied(false);
+      setCopyState('failed');
     }
+    window.setTimeout(() => setCopyState('idle'), COPY_FEEDBACK_MS);
   }
 
   /**
@@ -69,6 +78,15 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
   }
 
   const saving = saveState.status === 'loading';
+  // The API returns a same-origin path (`/prd/:id`); safeHref rejects
+  // javascript:, data: and protocol-relative values. A rejected link is
+  // reported below, never dropped: the save happened and the user must hear so.
+  const savedHref = safeHref(saveState.status === 'success' ? saveState.url : null);
+  const copyLabels: Record<CopyState, string> = {
+    idle: copy.copy,
+    copied: copy.copied,
+    failed: copy.copyFailed
+  };
 
   return (
     <section
@@ -91,14 +109,8 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
           {copy.download}
         </button>
         <button type="button" style={buttonStyle(false)} onClick={() => void copyMarkdown()}>
-          {copied ? (
-            <>
-              <span aria-hidden="true">✓ </span>
-              {copy.copied}
-            </>
-          ) : (
-            copy.copy
-          )}
+          {copyState === 'copied' && <span aria-hidden="true">✓ </span>}
+          {copyLabels[copyState]}
         </button>
         <button
           type="button"
@@ -115,21 +127,16 @@ export function PrdResult({ prd, onReset }: PrdResultProps): JSX.Element {
       </div>
 
       {saveState.status === 'loading' && <LoadingBanner message={copy.saving} />}
-      {saveState.status === 'success' &&
-        (() => {
-          // API returns a same-origin path (`/prd/:id`); safeHref accepts that
-          // and rejects javascript:/data:/protocol-relative values.
-          const savedHref = safeHref(saveState.url);
-          if (savedHref === null) return null;
-          return (
-            <div role="status" style={statusBannerStyle()}>
-              <span aria-hidden="true">✓</span>
-              <a href={savedHref} style={{ color: theme.color.accent, fontWeight: 600 }}>
-                {copy.savedViewAt(savedHref)}
-              </a>
-            </div>
-          );
-        })()}
+      {savedHref !== null && (
+        <SuccessBanner>
+          <a href={savedHref} style={{ color: theme.color.accent, fontWeight: 600 }}>
+            {copy.savedViewAt(savedHref)}
+          </a>
+        </SuccessBanner>
+      )}
+      {saveState.status === 'success' && savedHref === null && (
+        <ErrorBanner message={copy.errors.unsafeLink} />
+      )}
       {saveState.status === 'error' && <ErrorBanner message={saveState.message} />}
 
       <FidelityWarning markdown={prd.markdown} />

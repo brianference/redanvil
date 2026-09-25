@@ -492,10 +492,9 @@ function rationaleForFeature(
   hasAuth: boolean,
   primary: string
 ): string {
-  // Keyed to the FEATURE, never to its id. These used to switch on F1..F4,
-  // which silently became wrong the moment ids were assigned dynamically: with
-  // two capability features leading, "Search airline flight" was captioned
-  // "browse and search the list" and every rationale was off by two.
+  // Keyed to the FEATURE, never to its id: ids are assigned dynamically, so with
+  // two capability features leading, an id switch would caption "Search airline
+  // flight" as "browse and search the list" and shift every rationale by two.
   if (
     feature.name.startsWith('Search ') ||
     feature.name.startsWith('Filter and sort ') ||

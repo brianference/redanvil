@@ -273,16 +273,19 @@ describe('job id validation at the boundary', () => {
     ['a slug instead of a UUID', 'job-1'],
     ['an uppercase UUID', '5B1C2D3E-4F50-4A6B-8C7D-9E0F1A2B3C4D'],
     ['an oversized value', `${JOB_ID}${'a'.repeat(500)}`],
-    ['a blank id', '   ']
+    ['a blank id', '   '],
+    ['SQL text', "1' OR '1'='1"]
   ])('GET answers %s with 404 before any query', async (_label, id) => {
+    const request = statusRequest('GET', null, null, encodeURIComponent(id));
     const response = await onRequestGet({
-      request: statusRequest('GET', null, null, encodeURIComponent(id)),
+      request,
       // The row exists under that exact id, so only validation can make this 404.
       env: envWithJob(undefined, id),
       params: { id }
     });
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: 'Job not found' });
+    expectSecureHeaders(response, request.url, 'GET, POST');
   });
 
   it('POST with a valid token answers a malformed id with 404 and writes nothing', async () => {

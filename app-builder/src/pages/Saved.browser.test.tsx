@@ -10,9 +10,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { page, userEvent } from '@vitest/browser/context';
 import { Saved } from './Saved';
 import { en } from '../i18n/en';
+import { SAVED_LIST_LIMIT } from '../lib/savedList';
 import { mount, waitForRendered, type Mounted } from '../testing/render';
 
 const copy = en.pages.saved;
+/** One day in milliseconds. */
+const DAY_MS = 86_400_000;
 /** The row GET /api/prds returns for the PRD seeded by migrations/0002_seed_prd.sql. */
 const SEEDED = {
   id: 'prd-tesla-driving-stats',
@@ -85,5 +88,94 @@ describe('saved list page (real browser)', () => {
       .toBeVisible();
     expect(page.getByRole('alert').elements()).toHaveLength(0);
     expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it('announces loading while the list request is in flight', async () => {
+    let answer: (response: Response) => void = () => undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = resolve;
+          })
+      )
+    );
+    mounted = mount(<Saved />, { route: '/saved' });
+
+    const loading = page.getByRole('status');
+    await expect.element(loading).toHaveTextContent(copy.loading);
+    await expect.element(loading).toHaveAttribute('aria-busy', 'true');
+    answer(Response.json(listRows(1, 1)));
+    await waitForRendered(page.getByText('App 0'));
+    expect(page.getByText(copy.loading).elements()).toHaveLength(0);
+  });
+
+  it('shows the empty state, not a zero strip, when nothing is saved', async () => {
+    stubFetch([200, []]);
+    mounted = mount(<Saved />, { route: '/saved' });
+    await waitForRendered(page.getByText(copy.empty));
+
+    expect(page.getByRole('group', { name: copy.kpiLabel }).elements()).toHaveLength(0);
+  });
+});
+
+/**
+ * Rows the API would return: `thisWeek` from the last few hours, then the rest
+ * a month old, newest first.
+ *
+ * @param count - Rows in the list.
+ * @param thisWeek - How many of them are from this week.
+ * @returns List rows.
+ */
+function listRows(count: number, thisWeek: number): unknown[] {
+  const now = Date.now();
+  return Array.from({ length: count }, (_unused, index) => ({
+    id: `prd-${index}`,
+    slug: `app-${index}`,
+    title: `App ${index}`,
+    created_at: new Date(index < thisWeek ? now - index * 60_000 : now - 30 * DAY_MS - index).toISOString()
+  }));
+}
+
+/**
+ * Assert the KPI tiles by their accessible names once the list has loaded.
+ *
+ * @param thisWeek - Expected "This week" value.
+ * @param total - Expected "All time" value.
+ */
+async function expectKpis(thisWeek: string, total: string): Promise<void> {
+  const strip = page.getByRole('group', { name: copy.kpiLabel });
+  await waitForRendered(strip);
+  await expect.element(strip.getByRole('group', { name: `${copy.kpiThisWeek}: ${thisWeek}` })).toBeVisible();
+  await expect.element(strip.getByRole('group', { name: `${copy.kpiTotal}: ${total}` })).toBeVisible();
+  expect(strip.getByRole('group').elements()).toHaveLength(2);
+}
+
+describe('Saved dashboard KPIs (real browser)', () => {
+  it('marks both counts as lower bounds when every loaded row is this week and the list is full', async () => {
+    stubFetch([200, listRows(SAVED_LIST_LIMIT, SAVED_LIST_LIMIT)]);
+    mounted = mount(<Saved />, { route: '/saved' });
+    await expectKpis(`${SAVED_LIST_LIMIT}+`, `${SAVED_LIST_LIMIT}+`);
+  });
+
+  it('keeps this week exact when the full list reaches back past this week', async () => {
+    stubFetch([200, listRows(SAVED_LIST_LIMIT, 3)]);
+    mounted = mount(<Saved />, { route: '/saved' });
+    await expectKpis('3', `${SAVED_LIST_LIMIT}+`);
+  });
+
+  it('counts a full list as cut off even when some of its rows are unreadable', async () => {
+    const rows = listRows(SAVED_LIST_LIMIT, 3);
+    rows[SAVED_LIST_LIMIT - 1] = { id: 42 };
+    stubFetch([200, rows]);
+    mounted = mount(<Saved />, { route: '/saved' });
+    await expectKpis('3', `${SAVED_LIST_LIMIT - 1}+`);
+  });
+
+  it('counts this week and all time exactly from a list under the limit', async () => {
+    stubFetch([200, listRows(2, 1)]);
+    mounted = mount(<Saved />, { route: '/saved' });
+    await expectKpis('1', '2');
   });
 });

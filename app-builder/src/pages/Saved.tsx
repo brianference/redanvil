@@ -1,15 +1,19 @@
-import { useMemo } from 'react';
-import { ErrorBanner } from '../components/Banner';
+import { ErrorBanner, LoadingBanner } from '../components/Banner';
 import { Page } from '../components/Page';
 import { SavedCardList } from '../components/saved/SavedCardList';
 import { SavedEmpty } from '../components/saved/SavedEmpty';
 import { SavedError } from '../components/saved/SavedError';
 import { SavedKpiStrip } from '../components/saved/SavedKpiStrip';
-import { SavedLoading } from '../components/saved/SavedLoading';
 import { SavedToolbar } from '../components/saved/SavedToolbar';
 import { partialBannerStyle } from '../components/saved/styles';
 import { en } from '../i18n/en';
-import { countThisWeek, parseSavedList, type SavedListResult, type SavedPrdListItem } from '../lib/savedList';
+import {
+  countThisWeek,
+  parseSavedList,
+  SAVED_LIST_LIMIT,
+  type SavedListResult,
+  type SavedPrdListItem
+} from '../lib/savedList';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
@@ -62,27 +66,27 @@ export function Saved(): JSX.Element {
   });
   const state = toListState(fetchState, copy.error);
 
-  const kpis = useMemo(() => {
-    if (state.status !== 'success') return null;
-    return { thisWeek: countThisWeek(state.items), total: state.items.length };
-  }, [state]);
-
   return (
     <Page title={copy.title} subtitle={copy.subtitle} breadcrumb={copy.title}>
       <SavedToolbar />
 
-      {state.status === 'loading' && <SavedLoading />}
+      {state.status === 'loading' && <LoadingBanner message={copy.loading} />}
 
       {state.status === 'error' && <SavedError message={state.message} onRetry={retry} />}
 
       {state.status === 'empty' && <SavedEmpty />}
 
-      {state.status === 'success' && kpis !== null && (
+      {state.status === 'success' && (
         <>
           {state.rejected > 0 && (
             <ErrorBanner message={copy.partial(state.rejected)} style={partialBannerStyle} />
           )}
-          <SavedKpiStrip thisWeek={kpis.thisWeek} total={kpis.total} />
+          <SavedKpiStrip
+            thisWeek={countThisWeek(state.items)}
+            total={state.items.length}
+            // The API caps the raw rows, unreadable ones included.
+            truncated={state.items.length + state.rejected >= SAVED_LIST_LIMIT}
+          />
           <SavedCardList items={state.items} />
         </>
       )}

@@ -62,13 +62,17 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-/** Mount the page at /prd/<seeded id>. */
-function renderPage(): void {
+/**
+ * Mount the page at /prd/:id.
+ *
+ * @param id - Route id; the seeded PRD by default.
+ */
+function renderPage(id: string = PRD.id): void {
   mounted = mount(
     <Routes>
       <Route path="/prd/:id" element={<SavedPrd />} />
     </Routes>,
-    { route: `/prd/${PRD.id}` }
+    { route: `/prd/${id}` }
   );
 }
 
@@ -107,5 +111,53 @@ describe('saved PRD page (real browser)', () => {
     await expect.element(page.getByRole('heading', { level: 1, name: PRD.title })).toBeVisible();
     expect(page.getByRole('alert').elements()).toHaveLength(0);
     expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it('offers no Retry on not found, since retrying cannot bring the PRD back', async () => {
+    stubFetch(json({ error: 'PRD not found' }, 404));
+    renderPage('prd-deleted-since');
+    await waitForRendered(page.getByRole('alert'));
+    expect(page.getByRole('button', { name: en.pages.saved.errorRetry }).elements()).toHaveLength(0);
+  });
+
+  it('treats a malformed id as not found without calling the API', async () => {
+    const spy = stubFetch(json(PRD));
+    renderPage('NOT_A_VALID_ID');
+    await waitForRendered(page.getByRole('alert'));
+    await expect.element(page.getByRole('alert')).toHaveTextContent(copy.notFound);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('links every named technology to its official docs in a new tab', async () => {
+    stubFetch(
+      json({
+        ...PRD,
+        markdown: 'Runs on Cloudflare Pages with Pages Functions, Cloudflare D1 and Zod validation.'
+      })
+    );
+    renderPage();
+    await waitForRendered(page.getByRole('heading', { name: copy.referencesHeading }));
+
+    const expected = [
+      ['Cloudflare Pages', 'https://developers.cloudflare.com/pages/'],
+      ['Pages Functions', 'https://developers.cloudflare.com/pages/functions/'],
+      ['Cloudflare D1', 'https://developers.cloudflare.com/d1/'],
+      ['Zod', 'https://zod.dev/']
+    ];
+    for (const [name, href] of expected) {
+      const link = page.getByRole('link', { name: `${name} ${copy.referenceOpensNewTab}` });
+      await expect.element(link).toHaveAttribute('href', href);
+      await expect.element(link).toHaveAttribute('target', '_blank');
+      await expect.element(link).toHaveAttribute('rel', 'noopener noreferrer');
+    }
+    // React is not named in this PRD, so it gets no link.
+    expect(page.getByRole('link', { name: /^React / }).elements()).toHaveLength(0);
+  });
+
+  it('shows the document but no references section when the PRD names no known technology', async () => {
+    stubFetch(json({ ...PRD, markdown: 'A plain list of recipes with no stack named.' }));
+    renderPage();
+    await waitForRendered(page.getByText('A plain list of recipes with no stack named.'));
+    expect(page.getByRole('heading', { name: copy.referencesHeading }).elements()).toHaveLength(0);
   });
 });

@@ -40,13 +40,10 @@ export function buildSlices(opts: {
 
   let next = 1;
   for (const feature of features) {
-    // Keyed to the FEATURE, never to its id. These used to test `feature.id ===
-    // 'F1'`, which stopped meaning "browse the primary entity" the moment
-    // capability features could lead the list. The result was a spec whose
-    // slices contradicted its own features: "Slice 1 — Search airline flight"
-    // built a CRUD list page, and every unmatched feature fell through to the
-    // secondary-entity branch, which invented a table from the feature NAME —
-    // hence `public_access` and `compute_airline_flight_totals` tables.
+    // Keyed to the FEATURE, never to its id: once capability features can lead
+    // the list, `F1` no longer means "browse the primary entity", and an id test
+    // would build a CRUD list page for "Search airline flight" and invent tables
+    // from feature names.
     const isPrimaryBrowse = feature.name === `Browse & search ${primary}`;
     const isPrimaryDetail = feature.name === `${primary} detail`;
     const isAccess = feature.role === 'accounts' || feature.role === 'public-access';

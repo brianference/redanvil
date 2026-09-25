@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { en } from '../i18n/en';
 import { resolveTemplateSelection } from './TemplateGallery';
+import { EMPTY_WIZARD_ANSWERS, isAppTypeReady, isPromptReady } from '../lib/job';
 
 describe('template gallery variants', () => {
   it('gives every archetype 3–4 starter variants with label, prompt, and appType', () => {
@@ -8,18 +9,19 @@ describe('template gallery variants', () => {
     for (const item of en.templates.items) {
       expect(item.variants.length, item.id).toBeGreaterThanOrEqual(3);
       expect(item.variants.length, item.id).toBeLessThanOrEqual(4);
+      const ids = item.variants.map((variant) => variant.id);
+      expect(new Set(ids).size, `${item.id} variant ids are unique`).toBe(ids.length);
       for (const variant of item.variants) {
-        expect(variant.id.length, variant.id).toBeGreaterThan(2);
-        expect(variant.label.length, variant.id).toBeGreaterThan(2);
-        expect(variant.appType.length, variant.id).toBeGreaterThan(2);
-        expect(variant.prompt.length, variant.id).toBeGreaterThan(20);
+        // A starter must be usable as-is: long enough to pass the wizard's
+        // prompt gate, with an app type the Scope step accepts.
+        const answers = { ...EMPTY_WIZARD_ANSWERS, prompt: variant.prompt, appType: variant.appType };
+        expect(isPromptReady(answers), `${variant.id} prompt`).toBe(true);
+        expect(isAppTypeReady(answers), `${variant.id} appType`).toBe(true);
       }
     }
   });
 
   it('exposes variant group copy for the second-row chips', () => {
-    expect(en.templates.variantsLabel.length).toBeGreaterThan(2);
-    expect(en.templates.variantsHint.length).toBeGreaterThan(10);
     expect(en.templates.orDescribe.toLowerCase()).toContain('describe');
   });
 

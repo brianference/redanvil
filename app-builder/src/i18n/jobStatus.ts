@@ -12,6 +12,7 @@ export const jobStatus = {
   copyJobId: 'Copy job id',
   copyLabel: 'Copy',
   copied: 'Copied',
+  copyFailed: 'Copy failed',
   dismiss: 'Dismiss build status',
   startNew: 'Start a new app',
   loading: 'Checking build status…',
@@ -99,5 +100,13 @@ export const jobStatus = {
     loadFailed: 'Could not load the build status',
     network: 'Network error checking build status',
     timeout: 'Build status request timed out'
-  }
+  },
+  /**
+   * Shown over the last status that did load when a later poll fails, so the
+   * panel neither drops what it knew nor presents it as current.
+   *
+   * @param message - Why the latest poll failed.
+   * @returns Warning line.
+   */
+  staleWarning: (message: string): string => `${message}. Showing the last status received.`
 } as const;

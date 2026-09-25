@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { Env } from '../lib/env';
 import { jsonResponse, readValidatedBody } from '../lib/http';
 import { enforceRateLimit } from '../lib/rateLimit';
+import { SAVED_LIST_LIMIT } from '../../src/lib/savedList';
 
 /** CORS allow-methods for this endpoint (POST + GET). Order matches prior local copy. */
 const ALLOWED_METHODS = 'POST, GET';
@@ -63,8 +64,10 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
   try {
     const { results } = await env.DB.prepare(
-      'SELECT id, slug, title, created_at FROM prds ORDER BY created_at DESC LIMIT 50'
-    ).all();
+      'SELECT id, slug, title, created_at FROM prds ORDER BY created_at DESC LIMIT ?'
+    )
+      .bind(SAVED_LIST_LIMIT)
+      .all();
     return jsonResponse(request, results, 200, ALLOWED_METHODS);
   } catch {
     return jsonResponse(request, { error: 'Could not list PRDs' }, 500, ALLOWED_METHODS);

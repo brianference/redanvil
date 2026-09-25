@@ -1,19 +1,10 @@
 import { en } from '../../i18n/en';
+import type { SavedPrdRow } from '../../lib/savedList';
 import { theme } from '../../theme';
 import { FidelityWarning } from '../FidelityWarning';
 import { StackReferences } from '../StackReferences';
 import { cardStyle } from '../ui';
 import { prdCreatedAtStyle, prdMarkdownStyle, prdReadyStyle } from './styles';
-
-/** Full PRD row from GET /api/prd/:id. */
-export interface SavedPrdRow {
-  id: string;
-  slug: string;
-  title: string;
-  prompt: string;
-  markdown: string;
-  created_at: string;
-}
 
 /**
  * Format an ISO date for display; fall back to the raw string if unparseable.

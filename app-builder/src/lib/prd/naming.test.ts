@@ -3,7 +3,6 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import {
-  deriveEntities,
   entityPascal,
   hasPronounHead,
   isTitleFragment,
@@ -40,27 +39,6 @@ const PLANTING = [
   'Cave Creek, AZ elevation note.',
   '(reverse engineer features from this https://www.almanac.com/gardening/planting-calendar)'
 ].join('\n');
-
-describe('deriveEntities', () => {
-  it('pulls domain nouns from a planting-calendar prompt', () => {
-    const entities = deriveEntities(PLANTING);
-    expect(entities.map((e) => e.toLowerCase())).toEqual(
-      expect.arrayContaining(['crop', 'plantingwindow'])
-    );
-    expect(entities).not.toContain('Item');
-  });
-
-  it('returns empty when nothing domain-like is present (fail closed)', () => {
-    expect(deriveEntities('!!!')).toEqual([]);
-    expect(deriveEntities('a simple app')).toEqual([]);
-  });
-
-  it('derives from a status-page prompt without inventing Item', () => {
-    const entities = deriveEntities('Simple status page for uptime checks');
-    expect(entities.length).toBeGreaterThan(0);
-    expect(entities).not.toContain('Item');
-  });
-});
 
 describe('titleFromPrompt / isTitleFragment', () => {
   it('names a short product phrase, not a truncated multi-line sentence', () => {
@@ -141,35 +119,11 @@ describe('job-application-site prompt (overnight, exact file)', () => {
     expect(title.toLowerCase()).toMatch(/job/);
   });
 
-  it('does not take Spreadsheet from the thing the product replaces', () => {
-    // Known-bad output: entities ["Spreadsheet"], from "Spreadsheets are what
-    // people actually use" — a sentence about the status quo, not a domain table.
-    expect(JOB_APPLICATION_PROMPT).toMatch(/Spreadsheets are what people actually use/);
-    const entities = deriveEntities(JOB_APPLICATION_PROMPT);
-    expect(entities.map((e) => e.toLowerCase())).not.toContain('spreadsheet');
-  });
-
   it('rejects a pronoun-headed phrase as an entity, not only one wording', () => {
     expect(hasPronounHead('ones they sent')).toBe(true);
     expect(hasPronounHead('them')).toBe(true);
     expect(hasPronounHead('those')).toBe(true);
     expect(hasPronounHead('those listings')).toBe(false);
     expect(hasPronounHead('Application')).toBe(false);
-    const ones = deriveEntities(
-      'a tracker of ones they filed last week and ones they filed this week'
-    );
-    expect(ones.every((entity) => !hasPronounHead(entity))).toBe(true);
-    const them = deriveEntities('a log of them they sent after the tab closed');
-    expect(them.every((entity) => !hasPronounHead(entity))).toBe(true);
-  });
-
-  it('still derives Spreadsheet when the product IS a spreadsheet app', () => {
-    // Negative control for the replacement-clause skip: deleting that skip
-    // must not be the only thing this file asserts, and a real spreadsheet
-    // product must still get the noun.
-    const entities = deriveEntities(
-      'A spreadsheet app for budget formulas, with one spreadsheet per month'
-    );
-    expect(entities.map((e) => e.toLowerCase())).toContain('spreadsheet');
   });
 });

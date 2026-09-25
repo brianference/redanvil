@@ -70,9 +70,11 @@ test('every header and footer link navigates', async ({ page }) => {
 
 test('the brand logo is an operable home link', async ({ page }) => {
   await page.goto('/about');
-  await page.getByRole('link', { name: /redanvil/i }).first().click();
-  // Logo href is the absolute production origin; accept either SPA home or full URL.
-  await expect(page).toHaveURL(/redanvil|\/$/i);
+  // The logo points at the production origin (APP_URL), so clicking it would
+  // leave the server under test; its href is the behaviour to check.
+  const logo = page.getByRole('banner').getByRole('link', { name: /redanvil/i }).first();
+  await expect(logo).toBeVisible();
+  await expect(logo).toHaveAttribute('href', /^https:\/\/redanvil\.pages\.dev\/?$/);
 });
 
 test('breadcrumb Home returns to the builder', async ({ page }) => {
@@ -85,15 +87,14 @@ test('breadcrumb Home returns to the builder', async ({ page }) => {
 test('outbound links carry rel=noopener or noreferrer', async ({ page }) => {
   for (const route of ['/about', '/terms', '/privacy', '/contact', '/examples'] as const) {
     await page.goto(route);
-    const external = page.locator('a[href^="http"]');
-    const count = await external.count();
-    expect(count).toBeGreaterThan(0);
+    // Every page links out in a new tab (footer GitHub at least), so an empty
+    // set means the selector broke, not that the page is clean.
+    const newTab = page.locator('a[href^="http"][target="_blank"]');
+    const count = await newTab.count();
+    expect(count, `${route} has no new-tab links`).toBeGreaterThan(0);
     for (let i = 0; i < count; i += 1) {
-      const rel = ((await external.nth(i).getAttribute('rel')) ?? '').toLowerCase();
-      const target = await external.nth(i).getAttribute('target');
-      if (target === '_blank') {
-        expect(rel.includes('noopener') || rel.includes('noreferrer')).toBe(true);
-      }
+      const rel = ((await newTab.nth(i).getAttribute('rel')) ?? '').toLowerCase();
+      expect(rel.includes('noopener') || rel.includes('noreferrer'), `${route} link ${i} rel="${rel}"`).toBe(true);
     }
   }
 

@@ -459,26 +459,21 @@ ${buildCodingStandard()}
 
   const selfCheck = evaluatePrdSelfCheck(bodyBeforeSelfCheck + '\n## 14. PRD Self-Check\n', selfCheckOpts);
 
-  // Re-evaluate once the self-check section structure is known: sections-order needs §14 heading.
-  // Build final markdown with the checklist, then re-grade the complete document so
-  // "sections in order" and other full-doc checks are honest.
-  const draftWithStub14 =
-    bodyBeforeSelfCheck +
-    '\n' +
-    selfCheck.markdown +
+  // The build prompt and effort line close the document. The self-check is
+  // graded twice: once to write §14, then again over the finished document so
+  // "sections in order" and the other whole-document checks see §14 in place.
+  const buildPromptAndEffort =
     `\n\n## Initial build prompt (paste into the coder)\n\n` +
     `> Implement this spec as **vertical slices** (§11, Slice 0→Slice ${lastSlice.index}). Honor **§7** Technical Requirements (architecture, DDL, routes, Zod names, signatures, design specs) before polish. Satisfy every MVP feature (${mvpIds}) and its acceptance bullets (**§9**) with the named tests in **§10** (${featureIds}). Follow **§13** coding standard. Do not implement **§5** non-goals. After each slice, run that slice's Verify command. Do not stop until **§12** clears: \`npx tsc --noEmit\`, \`npx eslint . --max-warnings 0\`, \`npx vitest run\`, \`npm run build\`, runtime \`curl …/api/health\`, and from monorepo root \`npm run gate -- ${slug} --threshold ${PRD_THRESHOLD}\` at score >= ${PRD_THRESHOLD}. No push, no deploy, no secrets. Smallest correct diff. Strict TypeScript, zero \`any\`.\n\n` +
     `_Effort (human/orchestrator only): ~${cost.iterations} iterations, ~${cost.tokens.toLocaleString()} tokens (${cost.confidence} confidence)._\n`;
+  const withSelfCheck = (selfCheckMarkdown: string): string =>
+    bodyBeforeSelfCheck + '\n' + selfCheckMarkdown + buildPromptAndEffort;
 
-  const finalCheck = evaluatePrdSelfCheck(draftWithStub14, selfCheckOpts);
+  const finalCheck = evaluatePrdSelfCheck(withSelfCheck(selfCheck.markdown), selfCheckOpts);
 
   const markdown =
-    bodyBeforeSelfCheck +
+    withSelfCheck(finalCheck.markdown) +
     '\n' +
-    finalCheck.markdown +
-    `\n\n## Initial build prompt (paste into the coder)\n\n` +
-    `> Implement this spec as **vertical slices** (§11, Slice 0→Slice ${lastSlice.index}). Honor **§7** Technical Requirements (architecture, DDL, routes, Zod names, signatures, design specs) before polish. Satisfy every MVP feature (${mvpIds}) and its acceptance bullets (**§9**) with the named tests in **§10** (${featureIds}). Follow **§13** coding standard. Do not implement **§5** non-goals. After each slice, run that slice's Verify command. Do not stop until **§12** clears: \`npx tsc --noEmit\`, \`npx eslint . --max-warnings 0\`, \`npx vitest run\`, \`npm run build\`, runtime \`curl …/api/health\`, and from monorepo root \`npm run gate -- ${slug} --threshold ${PRD_THRESHOLD}\` at score >= ${PRD_THRESHOLD}. No push, no deploy, no secrets. Smallest correct diff. Strict TypeScript, zero \`any\`.\n\n` +
-    `_Effort (human/orchestrator only): ~${cost.iterations} iterations, ~${cost.tokens.toLocaleString()} tokens (${cost.confidence} confidence)._\n\n` +
     claimsSection(slug, title, productPrompt, appType, hasAuth, frontmatterEntities, features);
 
   return { slug, title, prompt, markdown };

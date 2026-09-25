@@ -406,34 +406,6 @@ export function parseEntitySpec(text: string | null | undefined): EntitySpecPars
 }
 
 /**
- * Format entities as the wizard's Main entities value.
- *
- * `Name: field, field:type, field->Other`. Entities are separated by `; `.
- * A text field with no ref is just the name. Round-trips through
- * {@link parseEntitySpec}.
- *
- * @param entities - Parsed entities.
- * @returns Spec text.
- */
-export function formatEntitySpec(entities: readonly EntitySpec[]): string {
-  return entities
-    .map((entity) => {
-      const name = normaliseEntityName(entity.name);
-      const fields = entity.fields.map((field) => {
-        const fieldName = normaliseFieldName(field.name);
-        if (field.ref !== undefined && field.ref.length > 0) {
-          return `${fieldName}->${normaliseEntityName(field.ref)}`;
-        }
-        const type = field.type.toLowerCase();
-        if (type === 'text') return fieldName;
-        return `${fieldName}:${type}`;
-      });
-      return `${name}: ${fields.join(', ')}`;
-    })
-    .join('; ');
-}
-
-/**
  * Whether the spec is enough to generate a PRD.
  *
  * Parsing can succeed and still not be ready: zero entities, any entity

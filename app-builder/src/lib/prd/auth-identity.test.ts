@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { estimate } from '../estimate';
 import { generatePrd } from './generate';
-import { deriveEntities } from './naming';
 import {
   authRequiredByFeatures,
   buildFeatures,
@@ -30,6 +29,14 @@ const JOB_APPLICATION_PROMPT = readFileSync(
   ),
   'utf8'
 );
+
+/**
+ * Entities for the prompt above, as a wizard spec now supplies them. These are
+ * the names the prompt noun-miner returned when the auth failures below were
+ * measured, minus its "CloudflareD1" false positive; generation takes entities
+ * from the wizard and no longer mines them.
+ */
+const JOB_ENTITIES: string[] = ['Account', 'Listing', 'Job', 'Visitor', 'Posting'];
 
 /** Pronouns the spec names as illegal heads of an entity or feature subject. */
 const PRONOUN_HEADS = new Set([
@@ -117,7 +124,7 @@ describe('auth-identity spec', () => {
     it('returns true when the accounts feature is present and is not F3', () => {
       // Measured: capability features numbered Accounts to F8. Identity by
       // id === 'F3' && name === 'Accounts' returned false and dropped auth.
-      const entities = deriveEntities(JOB_APPLICATION_PROMPT);
+      const entities = JOB_ENTITIES;
       const features = buildFeatures(entities, true, JOB_APPLICATION_PROMPT);
       const accounts = features.find((f) => /PBKDF2/.test(f.behavior));
       expect(accounts, 'accounts feature missing from derivation').toBeDefined();
@@ -129,7 +136,7 @@ describe('auth-identity spec', () => {
 
   describe('2. wizardHasAuth false stays false', () => {
     it('returns false when wizardHasAuth is false, whatever is selected', () => {
-      const entities = deriveEntities(JOB_APPLICATION_PROMPT);
+      const entities = JOB_ENTITIES;
       const withAccounts = buildFeatures(entities, true, JOB_APPLICATION_PROMPT);
       const withoutAccounts = buildFeatures(entities, false, JOB_APPLICATION_PROMPT);
       expect(authRequiredByFeatures(false, withAccounts)).toBe(false);
@@ -140,7 +147,7 @@ describe('auth-identity spec', () => {
 
   describe('3. full generate on the real overnight prompt', () => {
     it('does not emit hasAuth: false or the fully-public sentence when sign-in was Yes', () => {
-      const entities = deriveEntities(JOB_APPLICATION_PROMPT);
+      const entities = JOB_ENTITIES;
       const selected = defaultSelectedFeatureIds(entities, true, JOB_APPLICATION_PROMPT);
       const prd = generatePrd(
         {
@@ -163,12 +170,7 @@ describe('auth-identity spec', () => {
 
   describe('4. no pronoun-headed entity or feature subject', () => {
     it('rejects pronoun heads on the real prompt and on other pronoun phrases', () => {
-      const entities = deriveEntities(JOB_APPLICATION_PROMPT);
-      expect(entities.length).toBeGreaterThan(0);
-      for (const entity of entities) {
-        expect(hasPronounHead(entity), `entity "${entity}" has a pronoun head`).toBe(false);
-      }
-      const features = buildFeatures(entities, true, JOB_APPLICATION_PROMPT);
+      const features = buildFeatures(JOB_ENTITIES, true, JOB_APPLICATION_PROMPT);
       for (const feature of features) {
         const domain = featureDomainPhrase(feature.name);
         expect(
@@ -185,17 +187,9 @@ describe('auth-identity spec', () => {
       expect(hasPronounHead(themSubject), `subject "${themSubject}"`).toBe(false);
       const thoseSubject = extractSubject('track those they filed last season', ['Filing']);
       expect(hasPronounHead(thoseSubject), `subject "${thoseSubject}"`).toBe(false);
-      const onesEntities = deriveEntities(
-        'a tracker of ones they filed last week and ones they filed this week'
-      );
-      for (const entity of onesEntities) {
-        expect(hasPronounHead(entity), `derived "${entity}"`).toBe(false);
-      }
     });
 
     it('still accepts a determiner + domain noun (those listings)', () => {
-      const entities = deriveEntities('A catalog that tracks those listings for a shop');
-      expect(entities.map((e) => e.toLowerCase())).toEqual(expect.arrayContaining(['listing']));
       const subject = extractSubject('search those listings by title', ['Listing']);
       expect(hasPronounHead(subject)).toBe(false);
       expect(subject.toLowerCase()).toMatch(/listing/);

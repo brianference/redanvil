@@ -19,7 +19,7 @@ const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), 'prd.character
  * fails the displayed grade when fidelity fails, and appends the claims block.
  * The case inputs changed with that: a field-less list is no longer enough to
  * generate, and the storage-none case names UptimeCheck and StatusPage instead
- * of leaving the field empty for deriveEntities.
+ * of leaving the field empty for the generator to mine.
  *
  * Regenerated again the same day (read the diffs, all intended): the top-ranked
  * capability is now MVP and leads the list, every entity is managed in the MVP

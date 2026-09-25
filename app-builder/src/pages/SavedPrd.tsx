@@ -1,11 +1,12 @@
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { en } from '../i18n/en';
-import { theme } from '../theme';
 import { LoadingBanner, ErrorBanner } from '../components/Banner';
+import { BackToSaved } from '../components/saved/BackToSaved';
 import { SavedError } from '../components/saved/SavedError';
-import { SavedPrdView, type SavedPrdRow } from '../components/saved/SavedPrdView';
-import { buttonStyle } from '../components/ui';
+import { SavedPrdView } from '../components/saved/SavedPrdView';
+import { PRD_ID_PATTERN } from '../lib/ids';
+import { parseSavedPrd, type SavedPrdRow } from '../lib/savedList';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
@@ -16,39 +17,11 @@ type DetailState =
   | { status: 'success'; prd: SavedPrdRow };
 
 /**
- * Narrow unknown JSON to a SavedPrdRow, or null if the shape is wrong.
- *
- * @param payload - Raw JSON from GET /api/prd/:id.
- * @returns Typed row or null.
- */
-function parsePrd(payload: unknown): SavedPrdRow | null {
-  if (typeof payload !== 'object' || payload === null) return null;
-  const row = payload as Record<string, unknown>;
-  if (
-    typeof row.id !== 'string' ||
-    typeof row.slug !== 'string' ||
-    typeof row.title !== 'string' ||
-    typeof row.prompt !== 'string' ||
-    typeof row.markdown !== 'string' ||
-    typeof row.created_at !== 'string'
-  ) {
-    return null;
-  }
-  return {
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    prompt: row.prompt,
-    markdown: row.markdown,
-    created_at: row.created_at
-  };
-}
-
-/**
  * Map generic abortable fetch state onto the SavedPrd detail view union.
- * Missing id and HTTP 404 become not-found (not a generic error).
+ * An id the API would reject and an HTTP 404 both become not-found, not a
+ * generic error.
  *
- * @param hasId - Whether the route param is a non-empty id.
+ * @param hasId - Whether the route param is a well-formed PRD id.
  * @param fetchState - Hook state from GET /api/prd/:id (ignored when !hasId).
  * @returns Page-local detail state.
  */
@@ -69,13 +42,13 @@ function toDetailState(
 export function SavedPrd(): JSX.Element {
   const copy = en.pages.savedPrd;
   const { id } = useParams<{ id: string }>();
-  const hasId = id !== undefined && id.trim().length > 0;
+  const validId = id !== undefined && PRD_ID_PATTERN.test(id) ? id : null;
   const { state: fetchState, retry } = useAbortableJsonGet({
-    url: hasId ? `/api/prd/${encodeURIComponent(id)}` : null,
-    parse: parsePrd,
+    url: validId === null ? null : `/api/prd/${encodeURIComponent(validId)}`,
+    parse: parseSavedPrd,
     errorMessage: copy.error
   });
-  const state = toDetailState(hasId, fetchState);
+  const state = toDetailState(validId !== null, fetchState);
 
   const pageTitle = state.status === 'success' ? state.prd.title : copy.title;
 
@@ -85,17 +58,12 @@ export function SavedPrd(): JSX.Element {
       state.status === 'success'
         ? `Saved PRD: ${state.prd.title}`
         : 'View a PRD saved on RedAnvil.',
-    path: hasId ? `/prd/${encodeURIComponent(id)}` : '/prd'
+    path: validId === null ? '/prd' : `/prd/${encodeURIComponent(validId)}`
   });
 
   return (
     <Page title={pageTitle} breadcrumb={copy.title}>
-      <p style={{ marginBottom: theme.space.md }}>
-        <Link to="/saved" style={buttonStyle(false)}>
-          ← {copy.backToSaved}
-        </Link>
-      </p>
-
+      <BackToSaved />
       {state.status === 'loading' && <LoadingBanner message={copy.loading} />}
       {state.status === 'error' && <SavedError message={state.message} onRetry={retry} />}
       {state.status === 'not-found' && <ErrorBanner message={copy.notFound} />}

@@ -1,25 +1,23 @@
 import { useState, type FormEvent } from 'react';
-import { estimate } from '../lib/estimate';
 import {
   countEntities,
-  countScopeSignals,
+  estimateForAnswers,
   isPromptReady,
   isAppTypeReady,
   isFeatureSelectionReady,
   canForgePrd,
+  parseBuildJob,
   submitRequestBody,
-  EMPTY_WIZARD_ANSWERS,
   type BuildJob,
   type WizardAnswers
 } from '../lib/job';
+import { failureMessage, fetchJson, type FailureMessages } from '../lib/fetchJson';
 import { parseSubmittedJobId } from '../lib/jobStatus';
+import { defaultSelectedFeatureIds } from '../lib/prd/sections/features';
 import { en } from '../i18n/en';
-import { messageFromPayload } from '../lib/apiError';
 import { theme } from '../theme';
 import { buttonStyle, cardStyle, stickyBarStyle } from './ui';
 import { ComingUp } from './wizard/ComingUp';
-import { integrationChipSelected, toggleIntegrationChip } from './wizard/integrationChips';
-import { reviewAnswerRows } from './wizard/reviewRows';
 import { Stepper } from './wizard/Stepper';
 import { PromptStep } from './wizard/steps/PromptStep';
 import { ScopeStep } from './wizard/steps/ScopeStep';
@@ -33,13 +31,6 @@ import { entitySpecBlockMessage } from './wizard/entitySpecMessage';
 import { formStyle, kickerStyle } from './wizard/styles';
 import type { WizardStepIndex } from './wizard/types';
 
-/** Re-exported so Home and the page router keep importing it from Wizard. */
-export type { WizardStepIndex };
-import { defaultSelectedFeatureIds } from '../lib/prd/sections/features';
-
-/** Client fetch timeout for POST /api/submit (fail closed). */
-const SUBMIT_TIMEOUT_MS = 10_000;
-
 export interface WizardProps {
   /** Controlled wizard answers. */
   value: WizardAnswers;
@@ -52,38 +43,36 @@ export interface WizardProps {
 }
 
 /**
- * Narrow unknown JSON to a BuildJob (fail closed on any mismatch).
- * Requires orchestrator Job fields (answers + createdAt) so the client shape
- * cannot silently drift from JobSchema.
+ * The job and its id from a successful submit, or null when either is missing.
  *
- * @param payload - Unknown JSON from POST /api/submit.
- * @returns Typed BuildJob or null.
+ * @param payload - JSON from POST /api/submit.
+ * @returns Job and id, or null.
  */
-function parseBuildJob(payload: unknown): BuildJob | null {
-  if (typeof payload !== 'object' || payload === null) return null;
-  const record = payload as Record<string, unknown>;
-  if (record['kind'] !== 'job') return null;
-  if (typeof record['slug'] !== 'string') return null;
-  if (typeof record['prompt'] !== 'string') return null;
-  if (record['targetType'] !== 'fullstack-web') return null;
-  if (record['threshold'] !== 90) return null;
-  if (typeof record['createdAt'] !== 'string') return null;
-  if (typeof record['answers'] !== 'object' || record['answers'] === null) return null;
-  const answersRaw = record['answers'] as Record<string, unknown>;
-  const answers: Record<string, string> = {};
-  for (const [key, value] of Object.entries(answersRaw)) {
-    if (typeof value !== 'string') return null;
-    answers[key] = value;
-  }
-  return {
-    kind: 'job',
-    slug: record['slug'],
-    prompt: record['prompt'],
-    targetType: 'fullstack-web',
-    threshold: 90,
-    answers,
-    createdAt: record['createdAt']
-  };
+function parseSubmitted(payload: unknown): { job: BuildJob; jobId: string } | null {
+  const job = parseBuildJob(payload);
+  const jobId = parseSubmittedJobId(payload);
+  return job === null || jobId === null ? null : { job, jobId };
+}
+
+/** How the review step words each way a submit can fail. */
+const SUBMIT_FAILURE_MESSAGES: FailureMessages = {
+  invalidJson: en.wizard.errors.invalidResponse,
+  invalidPayload: en.wizard.errors.invalidJobPayload,
+  timeout: en.wizard.errors.timeout,
+  network: en.wizard.errors.network,
+  http: en.wizard.errors.submitFailed
+};
+
+/**
+ * Whether `next` differs from the stored feature selection, so the wizard only
+ * writes a selection that actually changed.
+ *
+ * @param stored - Current selection, or null before one is materialised.
+ * @param next - Selection about to be stored.
+ * @returns True when an onChange is needed.
+ */
+function selectionChanged(stored: readonly string[] | null, next: readonly string[]): boolean {
+  return stored === null || next.join(',') !== stored.join(',');
 }
 
 /**
@@ -94,21 +83,11 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
   const [step, setStep] = useState<WizardStepIndex>(initialStep);
   const [submitState, setSubmitState] = useState<SubmitUiState>({ status: 'idle' });
 
-  const entityCount = countEntities(value.entities);
-  /** One base feature for the app shell, plus one per named entity. */
-  const features = Math.max(1, entityCount + (value.appType.trim() ? 1 : 0));
-  const scopeSignals = countScopeSignals(value);
-  const cost = estimate({
-    features,
-    hasAuth: value.hasAuth,
-    entities: entityCount,
-    scopeSignals
-  });
+  const cost = estimateForAnswers(value);
 
   // Readiness predicates live in lib/job (tested there) and mirror exactly what
   // the submit endpoint requires, so the wizard never sends a body the server
-  // will 400 on. App type used to be ungated, so an empty one reached the server
-  // and returned a raw "String must contain at least 1 character(s)".
+  // will 400 on.
   const promptReady = isPromptReady(value);
   const appTypeReady = isAppTypeReady(value);
   const featuresReady = isFeatureSelectionReady(value);
@@ -148,10 +127,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
         value.selectedFeatureIds === null
           ? defaultSelectedFeatureIds(entityNames, value.hasAuth, value.prompt)
           : resolveFeatureSelection(value);
-      if (
-        value.selectedFeatureIds === null ||
-        nextSelection.join(',') !== value.selectedFeatureIds.join(',')
-      ) {
+      if (selectionChanged(value.selectedFeatureIds, nextSelection)) {
         onChange({ ...value, selectedFeatureIds: nextSelection });
       }
     }
@@ -160,10 +136,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
       // Persist the resolved selection (MVP defaults) even if the user never toggled.
       const resolved = resolveFeatureSelection(value);
       if (resolved.length === 0) return;
-      if (
-        value.selectedFeatureIds === null ||
-        resolved.join(',') !== value.selectedFeatureIds.join(',')
-      ) {
+      if (selectionChanged(value.selectedFeatureIds, resolved)) {
         onChange({ ...value, selectedFeatureIds: resolved });
       }
     }
@@ -171,13 +144,8 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
   }
 
   /**
-   * Move to a step and put the user at the top of it.
-   *
-   * Advancing kept the scroll position, so on the Features and Review steps —
-   * the two long ones — the next screen opened halfway down its own content
-   * with the heading off-screen above. Nothing in the DOM is wrong, which is
-   * why no rule caught it; it is only visible to someone actually clicking
-   * through the flow.
+   * Move to a step and put the user at the top of it, so a long step (Features,
+   * Review) opens on its heading rather than halfway down its own content.
    */
   function goToStep(next: WizardStepIndex): void {
     setStep(next);
@@ -205,62 +173,26 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
 
   /**
    * POST answers to /api/submit; show loading, error, or returned job.
-   * Fail closed: errors never render as success; onSubmit only on 200 job.
-   * Explicit AbortController timeout (~10s).
+   * Fail closed: errors never render as success; onSubmit only on a 200 job.
    */
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     if (!canSubmit) return;
 
     setSubmitState({ status: 'loading' });
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, SUBMIT_TIMEOUT_MS);
-
-    try {
-      const response = await fetch('/api/submit', {
+    const result = await fetchJson('/api/submit', parseSubmitted, {
+      init: {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(submitRequestBody(value, entityCount)),
-        signal: controller.signal
-      });
-
-      let payload: unknown;
-      try {
-        payload = await response.json();
-      } catch {
-        setSubmitState({ status: 'error', message: copy.errors.invalidResponse });
-        return;
+        body: JSON.stringify(submitRequestBody(value, countEntities(value.entities)))
       }
-
-      if (!response.ok) {
-        const message = messageFromPayload(payload, copy.errors.submitFailed(response.status));
-        setSubmitState({ status: 'error', message });
-        return;
-      }
-
-      const job = parseBuildJob(payload);
-      const jobId = parseSubmittedJobId(payload);
-      if (job === null || jobId === null) {
-        setSubmitState({ status: 'error', message: copy.errors.invalidJobPayload });
-        return;
-      }
-
-      setSubmitState({ status: 'success', job });
-      onSubmit(job, jobId);
-    } catch (error: unknown) {
-      const timedOut =
-        (error instanceof DOMException && error.name === 'AbortError') ||
-        (error instanceof Error && error.name === 'AbortError');
-      setSubmitState({
-        status: 'error',
-        message: timedOut ? copy.errors.timeout : copy.errors.network
-      });
-    } finally {
-      clearTimeout(timeoutId);
+    });
+    if (!result.ok) {
+      setSubmitState({ status: 'error', message: failureMessage(result, SUBMIT_FAILURE_MESSAGES) });
+      return;
     }
+    setSubmitState({ status: 'success', job: result.data.job });
+    onSubmit(result.data.job, result.data.jobId);
   }
 
   const disableNext = nextDisabled();
@@ -328,19 +260,3 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
     </form>
   );
 }
-
-/** Re-export empty answers so Home and tests import from the Wizard surface. */
-export { EMPTY_WIZARD_ANSWERS };
-
-/** Re-export integration chip helpers (public API for tests). */
-export { integrationChipSelected, toggleIntegrationChip };
-
-/** Re-export review row derivation (public API; Review step UI path). */
-export { reviewAnswerRows };
-
-// Only `toggleFeatureSelection` is imported through this surface. The block used
-// to re-export `resolveFeatureSelection` and `featureEntityNames` too, labelled
-// "public API for unit tests" — but no test imported them. An independent judge
-// caught the comment vouching for callers that did not exist.
-/** Re-export the feature toggle helper (public API for unit tests). */
-export { toggleFeatureSelection } from './wizard/steps/FeaturesStep';

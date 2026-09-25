@@ -14,10 +14,14 @@ import {
 } from '../lib/jobStatus';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { theme } from '../theme';
-import { buttonStyle, cardStyle, errorBannerStyle } from './ui';
+import { ErrorBanner } from './Banner';
+import { buttonStyle, cardStyle } from './ui';
 
 /** How long the inline "Copied" label stays on the job-id button. */
 const COPIED_FEEDBACK_MS = 2000;
+
+/** Result of the last copy-to-clipboard attempt, shown on the copy button. */
+type CopyState = 'idle' | 'copied' | 'failed';
 
 /**
  * Whether a job has stopped moving, so polling can end.
@@ -98,10 +102,11 @@ export function JobStatusPanel({
 }: JobStatusPanelProps): JSX.Element | null {
   const copy = en.jobStatus;
   const [hidden, setHidden] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>('idle');
   // The shared GET owns the timeout, abort-on-unmount, JSON and shape checks.
-  // Polling keeps the last answer on screen until the next one lands, and a
-  // hidden panel passes no URL, which stops it.
+  // Polling keeps the last answer on screen until the next one lands (under a
+  // warning when a later poll fails), and a hidden panel passes no URL, which
+  // stops it.
   const { state } = useAbortableJsonGet({
     url: hidden ? null : jobStatusUrl(jobId),
     parse: parsePublicJobStatus,
@@ -116,24 +121,25 @@ export function JobStatusPanel({
   });
 
   useEffect(() => {
-    if (!copied) return;
+    if (copyState === 'idle') return;
     const timeoutId = window.setTimeout(() => {
-      setCopied(false);
+      setCopyState('idle');
     }, COPIED_FEEDBACK_MS);
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [copied]);
+  }, [copyState]);
 
   /**
-   * Copy the full job id and show inline confirmation. A blocked clipboard stays quiet.
+   * Copy the full job id and say on the button whether it worked, so a blocked
+   * clipboard does not look like a successful copy or a dead button.
    */
   async function copyJobId(): Promise<void> {
     try {
       await navigator.clipboard.writeText(jobId);
-      setCopied(true);
+      setCopyState('copied');
     } catch {
-      setCopied(false);
+      setCopyState('failed');
     }
   }
 
@@ -208,21 +214,19 @@ export function JobStatusPanel({
         </span>
         <button
           type="button"
-          aria-label={copied ? copy.copied : copy.copyJobId}
+          aria-label={copyButtonLabel(copyState)}
           onClick={() => {
             void copyJobId();
           }}
           style={copyButtonStyle}
         >
-          {copied ? copy.copied : copy.copyLabel}
+          {copyState === 'idle' ? copy.copyLabel : copyButtonLabel(copyState)}
         </button>
       </div>
 
-      {state.status === 'error' && (
-        <div role="alert" style={errorBannerStyle()}>
-          <span aria-hidden="true">!</span>
-          <span>{state.message}</span>
-        </div>
+      {state.status === 'error' && <ErrorBanner message={state.message} />}
+      {state.status === 'success' && state.pollError !== undefined && (
+        <ErrorBanner message={copy.staleWarning(state.pollError)} />
       )}
 
       {stepView !== null && stepView.line.length > 0 && (
@@ -264,6 +268,18 @@ export function JobStatusPanel({
       )}
     </section>
   );
+}
+
+/**
+ * Accessible name and feedback text for the copy button.
+ *
+ * @param copyState - Result of the last copy attempt.
+ * @returns Button label.
+ */
+function copyButtonLabel(copyState: CopyState): string {
+  if (copyState === 'copied') return en.jobStatus.copied;
+  if (copyState === 'failed') return en.jobStatus.copyFailed;
+  return en.jobStatus.copyJobId;
 }
 
 /**
