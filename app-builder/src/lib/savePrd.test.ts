@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
+import { FETCH_TIMEOUT_MS } from './abortableEffect';
 import { savePrd, SavePrdError } from './savePrd';
 import type { Prd } from './prd';
 
@@ -10,6 +11,7 @@ const samplePrd: Prd = {
 };
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -108,17 +110,27 @@ describe('savePrd', () => {
     });
   });
 
-  it('throws SavePrdError with timeout message on AbortError', async () => {
+  it('throws SavePrdError with the timeout message when the server never answers', async () => {
+    vi.useFakeTimers();
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockRejectedValue(Object.assign(new Error('Aborted'), { name: 'AbortError' }))
+      vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => {
+              reject(new DOMException('Aborted', 'AbortError'));
+            });
+          })
+      )
     );
 
-    await expect(savePrd(samplePrd)).rejects.toSatisfy((err: unknown) => {
+    const rejection = expect(savePrd(samplePrd)).rejects.toSatisfy((err: unknown) => {
       expect(err).toBeInstanceOf(SavePrdError);
       expect((err as SavePrdError).message).toBe('Request timed out');
       return true;
     });
+    await vi.advanceTimersByTimeAsync(FETCH_TIMEOUT_MS);
+    await rejection;
   });
 
   it('uses a generic status message when error payload has no string error', async () => {

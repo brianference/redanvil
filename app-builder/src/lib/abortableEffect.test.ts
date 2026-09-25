@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { createActiveFlag, errorMessageFromFetchCatch, isAbortError } from './abortableEffect';
+import { createActiveFlag, isAbortError } from './abortableEffect';
 
 afterEach(() => {
   vi.useRealTimers();
@@ -62,26 +62,5 @@ describe('createActiveFlag', () => {
     });
 
     expect(state).toBe('success-B');
-  });
-});
-
-describe('errorMessageFromFetchCatch', () => {
-  it('returns null on AbortError so an abort never becomes an error state', () => {
-    const abort = new Error('aborted');
-    abort.name = 'AbortError';
-    // Active: still null (abort is not a user-visible error from catch).
-    expect(errorMessageFromFetchCatch(abort, true, 'Could not load')).toBeNull();
-    // Inactive: also null (cleanup race).
-    expect(errorMessageFromFetchCatch(abort, false, 'Could not load')).toBeNull();
-  });
-
-  it('returns null when inactive so a stale network failure cannot set error', () => {
-    expect(errorMessageFromFetchCatch(new Error('network'), false, 'Could not load')).toBeNull();
-  });
-
-  it('returns the error message for real failures while still active', () => {
-    expect(
-      errorMessageFromFetchCatch(new TypeError('Failed to fetch'), true, 'Could not load')
-    ).toBe('Could not load');
   });
 });

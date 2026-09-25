@@ -1,4 +1,4 @@
-/** Default timeout for list/detail GETs that use AbortController. */
+/** Default timeout for every client JSON request. */
 export const FETCH_TIMEOUT_MS = 10_000;
 
 /**
@@ -48,27 +48,4 @@ export function createActiveFlag(): {
       return true;
     }
   };
-}
-
-/**
- * Map a fetch catch into a UI error message, or null when no state update
- * should occur (inactive effect run, or AbortError from cleanup/timeout abort).
- *
- * An abort must never produce an error state from this helper — that is what
- * the prior race bug did (cleanup abort → error banner while a newer fetch loads).
- * Timeouts should set the error via `ifActive` when the timer fires, not here.
- *
- * @param err - Caught value from the fetch path.
- * @param active - Whether this effect run is still current.
- * @param errorMessage - User-facing message for real network/parse failures.
- * @returns Error message to set, or null to leave state unchanged.
- */
-export function errorMessageFromFetchCatch(
-  err: unknown,
-  active: boolean,
-  errorMessage: string
-): string | null {
-  if (!active) return null;
-  if (isAbortError(err)) return null;
-  return errorMessage;
 }

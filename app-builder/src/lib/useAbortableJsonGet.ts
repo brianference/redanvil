@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { createActiveFlag, errorMessageFromFetchCatch, FETCH_TIMEOUT_MS } from './abortableEffect';
+import { createActiveFlag } from './abortableEffect';
 import { messageFromPayload } from './apiError';
+import { fetchJson, type FetchJsonResult } from './fetchJson';
 
 /**
  * Generic GET lifecycle owned by {@link useAbortableJsonGet}.
@@ -24,6 +25,27 @@ export interface UseAbortableJsonGetOptions<T> {
   parse: (payload: unknown) => T | null;
   /** User-facing message for network, timeout, parse, and generic failures. */
   errorMessage: string;
+}
+
+/**
+ * Map a request outcome onto the hook's state. A caller abort (a superseded
+ * run) maps to null, so it never becomes error UI.
+ *
+ * @param result - Outcome of the GET.
+ * @param errorMessage - User-facing message for every failure without server text.
+ * @returns Next state, or null to leave state unchanged.
+ */
+function toAbortableState<T>(result: FetchJsonResult<T>, errorMessage: string): AbortableJsonState<T> | null {
+  if (result.ok) return { status: 'success', data: result.data };
+  if (result.kind === 'aborted') return null;
+  if (result.kind === 'http') {
+    return {
+      status: 'error',
+      message: messageFromPayload(result.payload, errorMessage),
+      httpStatus: result.httpStatus
+    };
+  }
+  return { status: 'error', message: errorMessage };
 }
 
 /**
@@ -57,81 +79,18 @@ export function useAbortableJsonGet<T>(options: UseAbortableJsonGetOptions<T>): 
     if (url === null) {
       return;
     }
-    // Narrow once for the effect body and nested load() (url is string after this).
-    const requestUrl: string = url;
-
     // Active-flag pattern (dashboard useRuns): cleanup deactivates first so a
-    // late response or AbortError from a superseded run cannot overwrite newer state.
+    // late response from a superseded run cannot overwrite newer state.
     const flag = createActiveFlag();
     // Reset immediately on url/reload change so prior success never lingers under a new URL.
-    flag.ifActive(() => {
-      setState({ status: 'loading' });
-    });
-
+    setState({ status: 'loading' });
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-      // Timeout is user-visible; cleanup aborts are not (catch ignores AbortError).
-      flag.ifActive(() => {
-        setState({ status: 'error', message: errorMessage });
-      });
-    }, FETCH_TIMEOUT_MS);
-
-    /**
-     * Load JSON from `requestUrl`; fail closed on network, timeout, bad payload, or non-OK.
-     * Every setState is guarded so a superseded effect cannot overwrite a newer run.
-     */
-    async function load(): Promise<void> {
-      try {
-        const response = await fetch(requestUrl, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        let payload: unknown;
-        try {
-          payload = await response.json();
-        } catch {
-          flag.ifActive(() => {
-            setState({ status: 'error', message: errorMessage });
-          });
-          return;
-        }
-
-        if (!response.ok) {
-          flag.ifActive(() => {
-            setState({
-              status: 'error',
-              message: messageFromPayload(payload, errorMessage),
-              httpStatus: response.status
-            });
-          });
-          return;
-        }
-
-        const data = parse(payload);
-        if (data === null) {
-          flag.ifActive(() => {
-            setState({ status: 'error', message: errorMessage });
-          });
-          return;
-        }
-
-        flag.ifActive(() => {
-          setState({ status: 'success', data });
-        });
-      } catch (err: unknown) {
-        clearTimeout(timeoutId);
-        const message = errorMessageFromFetchCatch(err, flag.isActive(), errorMessage);
-        if (message !== null) {
-          flag.ifActive(() => {
-            setState({ status: 'error', message });
-          });
-        }
-      }
-    }
-
-    void load();
+    void fetchJson(url, parse, { signal: controller.signal }).then((result) => {
+      const next = toAbortableState(result, errorMessage);
+      if (next !== null) flag.ifActive(() => setState(next));
+    });
     return () => {
       flag.deactivate();
-      clearTimeout(timeoutId);
       controller.abort();
     };
   }, [url, errorMessage, reloadKey, parse]);
