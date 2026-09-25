@@ -24,7 +24,7 @@
  * needs a rendered page -- so the visual review still owns the general case.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 /** Source files, excluding tests. */
@@ -52,6 +52,45 @@ function specFiles(dir, out = []) {
   return out;
 }
 
+/** Extensions tried when resolving an extensionless relative import. */
+const IMPORT_EXTENSIONS = ['', '.tsx', '.ts', '.jsx', '.js', '.mjs', '/index.tsx', '/index.ts'];
+/** Matches the specifier of a relative static import or re-export. */
+const RELATIVE_IMPORT = /(?:from|import)\s*['"](\.{1,2}\/[^'"]+)['"]/g;
+
+/**
+ * Shared modules outside the app that its sources import, followed transitively.
+ *
+ * A monorepo app can render every route through a shared Page that already
+ * resets scroll (design-system/Page.tsx). Scanning only the app's own src/
+ * reported that app as never resetting scroll, and removing its duplicate reset
+ * to satisfy the judge then failed this rule. Only files the app actually
+ * imports are read, so an unrelated shared file cannot satisfy the check.
+ *
+ * @param {string} appDir App directory.
+ * @param {string[]} sources The app's own source files.
+ * @returns {string[]} Absolute paths of imported files outside appDir.
+ */
+function importedSharedFiles(appDir, sources) {
+  const appRoot = resolve(appDir) + sep;
+  const seen = new Set();
+  const queue = [...sources];
+  const shared = [];
+  while (queue.length > 0) {
+    const file = queue.pop();
+    for (const m of readFileSync(file, 'utf8').matchAll(RELATIVE_IMPORT)) {
+      const base = resolve(dirname(file), m[1]);
+      const hit = IMPORT_EXTENSIONS.map((ext) => base + ext).find(
+        (p) => existsSync(p) && statSync(p).isFile()
+      );
+      if (hit === undefined || hit.startsWith(appRoot) || seen.has(hit)) continue;
+      seen.add(hit);
+      shared.push(hit);
+      queue.push(hit);
+    }
+  }
+  return shared;
+}
+
 /**
  * Run the check.
  *
@@ -62,7 +101,8 @@ export function runVisibleResponse(appDir, io) {
   const sources = sourceFiles(join(appDir, 'src'));
   if (sources.length === 0) io.notApplicable('no src/ to inspect');
 
-  const joined = sources.map((f) => readFileSync(f, 'utf8')).join('\n');
+  const scanned = [...sources, ...importedSharedFiles(appDir, sources)];
+  const joined = scanned.map((f) => readFileSync(f, 'utf8')).join('\n');
 
   // Only applies to a client-side router. A server-rendered app gets scroll
   // reset from the browser and needs nothing.
@@ -116,7 +156,7 @@ export function runVisibleResponse(appDir, io) {
     io.fail(`${failures.length} issue(s):\n  ${failures.join('\n  ')}`);
   }
 
-  const where = sources.find((f) => /window\.scrollTo|ScrollRestoration/.test(readFileSync(f, 'utf8')));
+  const where = scanned.find((f) => /window\.scrollTo|ScrollRestoration/.test(readFileSync(f, 'utf8')));
   console.log(`scroll reset present${where ? ` (${relative(appDir, where)})` : ''}`);
   io.pass();
 }
