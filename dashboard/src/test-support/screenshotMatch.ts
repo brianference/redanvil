@@ -24,6 +24,9 @@ const CHANNEL_TOLERANCE = 8;
  */
 const MAX_CHANGED_PIXELS = 0;
 
+/** Bound on decoding a PNG through fetch, ms. A data: URL resolves locally; this keeps it explicit. */
+const DECODE_TIMEOUT_MS = 10_000;
+
 /** Decoded RGBA pixels of one PNG. */
 interface Pixels {
   width: number;
@@ -38,7 +41,10 @@ interface Pixels {
  * @returns Width, height and pixel data.
  */
 async function decodePng(base64: string): Promise<Pixels> {
-  const blob = await (await fetch(`data:image/png;base64,${base64}`)).blob();
+  const res = await fetch(`data:image/png;base64,${base64}`, {
+    signal: AbortSignal.timeout(DECODE_TIMEOUT_MS)
+  });
+  const blob = await res.blob();
   const bitmap = await createImageBitmap(blob);
   const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
   const ctx = canvas.getContext('2d');

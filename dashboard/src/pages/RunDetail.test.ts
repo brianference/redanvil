@@ -122,4 +122,27 @@ describe('RunDetailView', () => {
     expect(html).toContain(en.runDetail.backToRuns);
     expect(html).not.toContain(en.runDetail.scoreValue(100, 90));
   });
+
+  it('says the run may be an unreadable row when the feed is partial and the slug is missing', () => {
+    const html = renderDetail('dashboard', {
+      status: 'partial',
+      runs: [sampleRun()],
+      rejected: ['malformed run at finalScore: Required']
+    });
+    expect(html).toContain(en.runDetail.partialNotFound(1));
+    expect(html).toContain('role="alert"');
+    expect(html).not.toContain(en.runDetail.notFound);
+    expect(html).toContain(en.runDetail.backToRuns);
+  });
+
+  it('shows a readable run from a partial feed in full', () => {
+    const html = renderDetail('app-builder', {
+      status: 'partial',
+      runs: [sampleRun()],
+      rejected: ['malformed run at finalScore: Required']
+    });
+    expect(html).toContain(en.runDetail.scoreValue(100, 90));
+    expect(html).toContain(en.runDetail.rulesHeading);
+    expect(html).not.toContain(en.runDetail.partialNotFound(1));
+  });
 });

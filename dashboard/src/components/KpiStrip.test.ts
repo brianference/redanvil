@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { en } from '../i18n/en';
-import { KpiStrip } from './KpiStrip';
+import { formatAverage, KpiStrip } from './KpiStrip';
 
 describe('KpiStrip', () => {
   it('renders total, passed, and average score from summary', () => {
@@ -18,17 +18,18 @@ describe('KpiStrip', () => {
     expect(html).toContain('>90<');
   });
 
-  it('formats non-integer averages to one decimal place', () => {
-    const html = renderToStaticMarkup(
-      createElement(KpiStrip, { summary: { total: 2, passed: 1, avgScore: 85.5 } })
-    );
-    expect(html).toContain('85.5');
+  it('shows an average as a whole number, or to one decimal place when it is not one', () => {
+    expect(formatAverage({ total: 2, passed: 2, avgScore: 90 })).toBe('90');
+    expect(formatAverage({ total: 2, passed: 1, avgScore: 85.5 })).toBe('85.5');
+    expect(formatAverage({ total: 3, passed: 1, avgScore: 200 / 3 })).toBe('66.7');
   });
 
-  it('shows an em dash for average when total is zero', () => {
+  it('shows a dash, not a zero average, when there are no runs to average', () => {
+    // A 0 here would read as "every run scored zero".
+    expect(formatAverage({ total: 0, passed: 0, avgScore: 0 })).toBe('—');
     const html = renderToStaticMarkup(
       createElement(KpiStrip, { summary: { total: 0, passed: 0, avgScore: 0 } })
     );
-    expect(html).toContain('—');
+    expect(html).toContain('>—<');
   });
 });

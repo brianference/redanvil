@@ -26,7 +26,6 @@ const cardStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: 10,
-  minHeight: 56,
   padding: '10px 12px',
   background: theme.color.surface,
   border: `1px solid ${theme.color.border}`,
@@ -137,6 +136,33 @@ const noneStyle: CSSProperties = {
   color: theme.color.muted
 };
 
+const listHeaderStyle: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: theme.space.sm,
+  marginBottom: theme.space.sm,
+  minHeight: 32
+};
+
+const listHeadingStyle: CSSProperties = {
+  margin: 0,
+  fontSize: theme.type.scale[1],
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  color: theme.color.muted,
+  fontFamily: theme.type.family
+};
+
+const listCountStyle: CSSProperties = {
+  fontSize: theme.type.scale[1],
+  color: theme.color.muted,
+  fontWeight: 500,
+  fontVariantNumeric: 'tabular-nums',
+  fontFamily: theme.type.family
+};
+
 /**
  * Status icon square: ✓ / ! with soft tint (icon + text badge elsewhere — not color alone).
  */
@@ -238,52 +264,16 @@ function RunCard({ run }: { run: Run }): JSX.Element {
 /**
  * Glanceable card list of build runs (status icon + badge, slug, meta, deploy).
  * Replaces the former table layout to match the approved grok-v5 mockup.
+ * The caller owns the empty and no-match states; this always has runs to show.
+ *
+ * @returns The labelled run list.
  */
 export function RunList({ runs }: RunListProps): JSX.Element {
-  if (runs.length === 0) {
-    return (
-      <p role="status" style={{ color: theme.color.muted, fontFamily: theme.type.family }}>
-        {en.runList.empty}
-      </p>
-    );
-  }
-
   return (
     <section aria-label={en.runList.listAria} data-testid="search-results">
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: theme.space.sm,
-          marginBottom: theme.space.sm,
-          minHeight: 32
-        }}
-      >
-        <h2
-          style={{
-            margin: 0,
-            fontSize: theme.type.scale[1],
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            color: theme.color.muted,
-            fontFamily: theme.type.family
-          }}
-        >
-          {en.pages.home.recentHeading}
-        </h2>
-        <span
-          style={{
-            fontSize: theme.type.scale[1],
-            color: theme.color.muted,
-            fontWeight: 500,
-            fontVariantNumeric: 'tabular-nums',
-            fontFamily: theme.type.family
-          }}
-        >
-          {en.pages.home.recentMeta(runs.length)}
-        </span>
+      <div style={listHeaderStyle}>
+        <h2 style={listHeadingStyle}>{en.pages.home.recentHeading}</h2>
+        <span style={listCountStyle}>{en.pages.home.recentMeta(runs.length)}</span>
       </div>
       <ul style={listStyle} aria-label={en.runList.listAria}>
         {runs.map((run) => (

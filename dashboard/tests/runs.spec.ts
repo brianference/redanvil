@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 
 /**
  * Dashboard acceptance tests — the run list driven as a user drives it (R27).
@@ -10,45 +10,60 @@ import { test, expect } from '@playwright/test';
  * Assertions are on observable state, never on a class name.
  */
 
+/**
+ * Every run card, found by role rather than class: the articles in the run list.
+ *
+ * @param page - Playwright page.
+ * @returns Locator for the cards.
+ */
+function runCards(page: Page): Locator {
+  return page.getByRole('list', { name: /recent builds/i }).getByRole('article');
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
   // Wait for the DATA, not just the heading. The heading renders immediately
   // while the run list is still fetching, so a test that read the cards next
   // saw zero and reported an empty dashboard that was merely still loading.
-  await page.locator('.ra-run-card').first().waitFor();
+  await runCards(page).first().waitFor();
 });
 
-test('the run list renders real runs, not an empty shell', async ({ page }) => {
-  const cards = page.locator('.ra-run-card');
-  await expect(cards.first()).toBeVisible();
+test('the run list shows every run the feed returned, and counts them', async ({ page }) => {
+  const cards = runCards(page);
   await expect(cards.first()).toBeInViewport();
-  expect(await cards.count()).toBeGreaterThan(0);
+  // The header's "N shown" and the cards under it must agree: a count written
+  // separately from its list can drift from it.
+  const shown = await page.getByText(/^\d+ shown$/).innerText();
+  await expect(cards).toHaveCount(Number.parseInt(shown, 10));
 });
 
-test('every run shows a slug and a score', async ({ page }) => {
-  const texts = await page
-    .locator('.ra-run-card')
-    .evaluateAll((els) => els.map((e) => (e.textContent ?? '').trim()));
-  expect(texts.length).toBeGreaterThan(0);
-  for (const t of texts) {
-    // A run without a score is a card with nothing to say.
-    expect(/\d/.test(t)).toBe(true);
+test('every run shows its slug, verdict, and score summary', async ({ page }) => {
+  for (const card of await runCards(page).all()) {
+    await expect(card.getByRole('link').first()).toHaveText(/^[a-z0-9][a-z0-9-]*$/);
+    await expect(card.getByText(/^(pass|fail)$/i)).toBeVisible();
+    // "0 · 84/84 rules · 1 iteration": score, coverage, iteration count.
+    await expect(card.getByText(/^\d+(\.\d+)? · \d+\/\d+ rules · \d+ iterations?$/)).toBeVisible();
   }
 });
 
 test('opening a run shows that run, not a generic page', async ({ page }) => {
-  const first = page.locator('.ra-run-card').first();
-  const title = (await first.locator('.ra-run-title').innerText()).trim();
-  await first.getByRole('link').first().click();
-  const match = page.getByText(title, { exact: false }).first();
-  await expect(match).toBeVisible();
-  await expect(match).toBeInViewport();
+  const titleLink = runCards(page).first().getByRole('link').first();
+  const slug = (await titleLink.innerText()).trim();
+  await titleLink.click();
+  await expect(page).toHaveURL(new RegExp(`/run/${slug}$`));
+  const heading = page.getByRole('heading', { level: 1 });
+  await expect(heading).toHaveText(slug);
+  await expect(heading).toBeInViewport();
 });
 
-test('a run detail lists rule outcomes', async ({ page }) => {
-  await page.locator('.ra-run-card').first().getByRole('link').first().click();
-  // Whatever the layout, a run detail has to show per-rule results.
-  await expect(page.getByText(/pass|fail|blocker|rule/i).first()).toBeVisible();
+test('a run detail lists each rule with its outcome', async ({ page }) => {
+  await runCards(page).first().getByRole('link').first().click();
+  const rules = page.getByRole('region', { name: /per-rule breakdown/i }).getByRole('listitem');
+  await expect(rules.first()).toBeVisible();
+  for (const rule of await rules.all()) {
+    await expect(rule.locator('code')).toHaveText(/^[a-z0-9]+(-[a-z0-9]+)+$/);
+    await expect(rule.getByText(/^(pass|fail)$/i)).toBeVisible();
+  }
 });
 
 test('primary navigation reaches every required page', async ({ page }) => {
@@ -86,8 +101,13 @@ test('the theme toggle flips the theme and the choice survives a reload', async 
     .toBe(after);
 });
 
-test('an unknown path shows a not-found page with a way back', async ({ page }) => {
+test('an unknown path shows a not-found page whose way back works', async ({ page }) => {
   await page.goto('/no-such-page');
-  await expect(page.getByText(/not found|no such|404/i).first()).toBeVisible();
-  await expect(page.getByRole('link').first()).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/page not found/i);
+  await page
+    .getByRole('main')
+    .getByRole('link', { name: /back to home/i })
+    .click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(runCards(page).first()).toBeVisible();
 });

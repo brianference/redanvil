@@ -4,11 +4,34 @@ import {
   parseRun,
   parseRunsFeed,
   ruleLane,
-  safeUrl,
   summarize,
   type Run
 } from './summary';
 import { validFeedRow } from './runFixture';
+
+/**
+ * Parse a row that must be valid.
+ *
+ * @param row - Feed row.
+ * @returns The run the parser produced.
+ */
+function parsedRun(row: unknown): Run {
+  const result = parseRun(row);
+  if (!result.ok) throw new Error(`expected a valid row, got: ${result.reason}`);
+  return result.run;
+}
+
+/**
+ * Parse a row that must be rejected.
+ *
+ * @param row - Feed row.
+ * @returns The rejection reason.
+ */
+function rejectReason(row: unknown): string {
+  const result = parseRun(row);
+  if (result.ok) throw new Error(`expected a rejected row, got run ${result.run.slug}`);
+  return result.reason;
+}
 
 /**
  * Build a full Run for tests with optional field overrides.
@@ -63,30 +86,37 @@ describe('summarize', () => {
   });
 });
 
-describe('safeUrl', () => {
-  it('keeps http and https URLs', () => {
-    expect(safeUrl('https://example.com')).toBe('https://example.com');
-    expect(safeUrl('http://example.com')).toBe('http://example.com');
-    expect(safeUrl('https://example.com/path')).toBe('https://example.com/path');
-  });
+describe('parseRun deployUrl', () => {
+  // The deploy link is rendered as an href, so the parser is where an unsafe
+  // scheme has to stop. A rejected URL nulls the link; the run still renders.
+  it.each(['https://example.com', 'http://example.com', 'https://example.com/path'])(
+    'keeps the http(s) link %s',
+    (url) => {
+      expect(parsedRun(validFeedRow({ deployUrl: url })).deployUrl).toBe(url);
+    }
+  );
 
-  it('rejects non-http schemes, whitespace/case tricks, protocol-relative, and junk', () => {
-    expect(safeUrl('javascript:alert(1)')).toBeNull();
-    expect(safeUrl(' javascript:alert(1)')).toBeNull();
-    expect(safeUrl('JaVaScRiPt:alert(1)')).toBeNull();
-    expect(safeUrl('java\tscript:alert(1)')).toBeNull();
-    expect(safeUrl('java\nscript:alert(1)')).toBeNull();
-    expect(safeUrl('//evil.example')).toBeNull();
-    expect(safeUrl('data:text/html,hi')).toBeNull();
-    expect(safeUrl('not a url')).toBeNull();
-    expect(safeUrl(null)).toBeNull();
-    expect(safeUrl(42)).toBeNull();
+  it.each([
+    'javascript:alert(1)',
+    ' javascript:alert(1)',
+    'JaVaScRiPt:alert(1)',
+    'java\tscript:alert(1)',
+    'java\nscript:alert(1)',
+    '//evil.example',
+    'data:text/html,hi',
+    'not a url',
+    null,
+    42
+  ])('nulls the unsafe or junk link %j and keeps the run', (url) => {
+    const run = parsedRun(validFeedRow({ deployUrl: url }));
+    expect(run.slug).toBe('app-builder');
+    expect(run.deployUrl).toBeNull();
   });
 });
 
 describe('parseRun', () => {
   it('parses a full feed row with rules and iterations', () => {
-    const run = parseRun(validFeedRow());
+    const run = parsedRun(validFeedRow());
     expect(run.slug).toBe('app-builder');
     expect(run.evaluated).toBe(41);
     expect(run.total).toBe(41);
@@ -99,37 +129,35 @@ describe('parseRun', () => {
   });
 
   it('nulls a malformed provenance commit while accepting the row', () => {
-    const run = parseRun(validFeedRow({ provenance: { commit: 'not-a-sha' } }));
+    const run = parsedRun(validFeedRow({ provenance: { commit: 'not-a-sha' } }));
     expect(run.slug).toBe('app-builder');
     expect(run.commit).toBeNull();
   });
 
   it('nulls unsafe deployUrl while accepting the row', () => {
-    const run = parseRun(validFeedRow({ deployUrl: 'javascript:void(0)' }));
+    const run = parsedRun(validFeedRow({ deployUrl: 'javascript:void(0)' }));
     expect(run.deployUrl).toBeNull();
   });
 
-  it('throws when required fields are missing', () => {
-    expect(() => parseRun({ slug: 'x' })).toThrow('malformed run');
-    expect(() => parseRun(validFeedRow({ evaluated: undefined }))).toThrow('malformed run');
-    expect(() => parseRun(validFeedRow({ total: '41' }))).toThrow('malformed run');
-    expect(() => parseRun(validFeedRow({ rules: 'nope' }))).toThrow('malformed run');
+  it('rejects when required fields are missing', () => {
+    expect(rejectReason({ slug: 'x' })).toMatch('malformed run');
+    expect(rejectReason(validFeedRow({ evaluated: undefined }))).toMatch('malformed run');
+    expect(rejectReason(validFeedRow({ total: '41' }))).toMatch('malformed run');
+    expect(rejectReason(validFeedRow({ rules: 'nope' }))).toMatch('malformed run');
   });
 
-  it('throws when a rule entry is malformed, and says which field', () => {
+  it('rejects when a rule entry is malformed, and says which field', () => {
     // The message now names the failing path instead of a fixed string, so a
     // feed regression tells you what changed shape.
-    expect(() => parseRun(validFeedRow({ rules: [{ ruleId: 'u-x' }] }))).toThrow(
-      /rules\.0\.passed/
-    );
-    expect(() => parseRun(validFeedRow({ rules: [{ passed: true }] }))).toThrow(/rules\.0\.ruleId/);
+    expect(rejectReason(validFeedRow({ rules: [{ ruleId: 'u-x' }] }))).toMatch(/rules\.0\.passed/);
+    expect(rejectReason(validFeedRow({ rules: [{ passed: true }] }))).toMatch(/rules\.0\.ruleId/);
   });
 
-  it('throws when an iteration entry is malformed, and says which field', () => {
-    expect(() =>
-      parseRun(validFeedRow({ iterations: [{ index: 1, score: 0, blockers: [1] }] }))
-    ).toThrow(/iterations\.0\.blockers\.0/);
-    expect(() => parseRun(validFeedRow({ iterations: [{ index: 1 }] }))).toThrow(
+  it('rejects when an iteration entry is malformed, and says which field', () => {
+    expect(
+      rejectReason(validFeedRow({ iterations: [{ index: 1, score: 0, blockers: [1] }] }))
+    ).toMatch(/iterations\.0\.blockers\.0/);
+    expect(rejectReason(validFeedRow({ iterations: [{ index: 1 }] }))).toMatch(
       /iterations\.0\.score/
     );
   });
@@ -137,27 +165,30 @@ describe('parseRun', () => {
   // Values the hand-rolled `typeof` chain accepted because it only asked about
   // the type, never the value. `typeof NaN === 'number'` is the classic one.
   it('rejects numerically absurd rows the old typeof narrowing let through', () => {
-    expect(() => parseRun(validFeedRow({ finalScore: Number.NaN }))).toThrow(/finalScore/);
-    expect(() => parseRun(validFeedRow({ total: -1 }))).toThrow(/total/);
-    expect(() => parseRun(validFeedRow({ evaluated: 1.5 }))).toThrow(/evaluated/);
-    expect(() => parseRun(validFeedRow({ slug: '' }))).toThrow(/slug/);
-    expect(() => parseRun(validFeedRow({ finishedAt: '' }))).toThrow(/finishedAt/);
+    expect(rejectReason(validFeedRow({ finalScore: Number.NaN }))).toMatch(/finalScore/);
+    expect(rejectReason(validFeedRow({ total: -1 }))).toMatch(/total/);
+    expect(rejectReason(validFeedRow({ evaluated: 1.5 }))).toMatch(/evaluated/);
+    expect(rejectReason(validFeedRow({ slug: '' }))).toMatch(/slug/);
+    expect(rejectReason(validFeedRow({ finishedAt: '' }))).toMatch(/finishedAt/);
   });
 });
 
 describe('parseRunsFeed', () => {
   it('parses an array of rows', () => {
-    const runs = parseRunsFeed([validFeedRow(), validFeedRow({ slug: 'other' })]);
-    expect(runs).toHaveLength(2);
-    expect(runs[1]?.slug).toBe('other');
+    const { runs, rejected } = parseRunsFeed([validFeedRow(), validFeedRow({ slug: 'other' })]);
+    expect(runs.map((run) => run.slug)).toEqual(['app-builder', 'other']);
+    expect(rejected).toEqual([]);
   });
 
   it('throws when the root is not an array', () => {
     expect(() => parseRunsFeed({ runs: [] })).toThrow('malformed results feed');
   });
 
-  it('fails closed when any row is bad', () => {
-    expect(() => parseRunsFeed([validFeedRow(), { slug: 'bad' }])).toThrow('malformed run');
+  it('keeps the valid rows and reports each bad one instead of hiding them all', () => {
+    const { runs, rejected } = parseRunsFeed([validFeedRow(), { slug: 'bad' }]);
+    expect(runs.map((run) => run.slug)).toEqual(['app-builder']);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]).toMatch(/malformed run at finalScore/);
   });
 });
 

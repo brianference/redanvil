@@ -1,6 +1,5 @@
 import { z } from 'zod';
 // Single shared implementation — do not reimplement scheme checks here.
-export { safeHttpUrl, safeUrl } from '../../../design-system/safeHttpUrl';
 import { safeUrl } from '../../../design-system/safeHttpUrl';
 
 /** One rule result from the gate feed. */
@@ -87,8 +86,9 @@ export function groupRulesByLane(rules: readonly RunRule[]): readonly RuleLaneGr
  * accepts anything it forgot to mention — `finalScore: NaN`, a negative total,
  * an empty slug — because `typeof NaN === 'number'`.
  *
- * Fail closed: `.parse` throws, `useRuns` turns that into a visible error state,
- * and a malformed feed is never rendered as a clean empty success.
+ * Fail closed: a rejected row is reported, never dropped silently. `useRuns`
+ * renders a feed with some bad rows as an explicit partial state and a feed
+ * with only bad rows as an error, never as a clean empty success.
  */
 /** A full 40-hex git SHA. A short or decorated value is not linked. */
 const COMMIT_SHA = /^[0-9a-f]{40}$/;
@@ -136,34 +136,52 @@ const runSchema = z
   })
   .transform(({ provenance, ...rest }): Run => ({ ...rest, commit: gatedCommit(provenance) }));
 
+/** One feed row after validation: the run, or why it was rejected. */
+export type RowResult = { ok: true; run: Run } | { ok: false; reason: string };
+
 /**
- * Validate one feed row into a Run. Throws on any malformed field (fail closed).
+ * Validate one feed row into a Run.
  *
  * @param row - Untrusted feed row.
- * @returns The validated run.
+ * @returns The validated run, or the reason it was rejected, naming the field.
  */
-export function parseRun(row: unknown): Run {
+export function parseRun(row: unknown): RowResult {
   const parsed = runSchema.safeParse(row);
-  if (!parsed.success) {
-    const issue = parsed.error.issues[0];
-    // Name the field that failed. The hand-rolled version threw a fixed
-    // "malformed run" for every cause, so a feed regression told you nothing
-    // about which field had changed shape.
-    const where = issue === undefined ? '' : ` at ${issue.path.join('.') || '(root)'}`;
-    throw new Error(`malformed run${where}: ${issue?.message ?? 'invalid'}`);
-  }
-  return parsed.data;
+  if (parsed.success) return { ok: true, run: parsed.data };
+  const issue = parsed.error.issues[0];
+  // Name the field that failed. A fixed "malformed run" for every cause told
+  // you nothing about which field had changed shape.
+  const where = issue === undefined ? '' : ` at ${issue.path.join('.') || '(root)'}`;
+  return { ok: false, reason: `malformed run${where}: ${issue?.message ?? 'invalid'}` };
+}
+
+/** A validated feed: the rows that parsed, and a reason for each row that did not. */
+export interface ParsedFeed {
+  runs: Run[];
+  rejected: string[];
 }
 
 /**
- * Validate a full results feed (JSON array of runs). Throws if the root is not an array
- * or any row is malformed.
+ * Validate a full results feed (JSON array of runs), row by row.
+ *
+ * One malformed row no longer hides every valid one: it is set aside with its
+ * reason so the caller can render the valid runs as an explicit partial state.
+ *
+ * @param raw - Untrusted feed body.
+ * @returns The valid runs and the rejection reasons, in feed order.
+ * @throws Error when the root is not an array.
  */
-export function parseRunsFeed(raw: unknown): Run[] {
+export function parseRunsFeed(raw: unknown): ParsedFeed {
   if (!Array.isArray(raw)) {
     throw new Error('malformed results feed');
   }
-  return raw.map(parseRun);
+  const feed: ParsedFeed = { runs: [], rejected: [] };
+  for (const row of raw) {
+    const result = parseRun(row);
+    if (result.ok) feed.runs.push(result.run);
+    else feed.rejected.push(result.reason);
+  }
+  return feed;
 }
 
 /**
