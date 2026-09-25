@@ -10,7 +10,7 @@ import { theme } from '../theme';
 
 /**
  * Header control: toggles light/dark on documentElement, persists to localStorage,
- * and applies saved-or-system preference on load.
+ * and on load applies the saved choice, else light.
  */
 export function ThemeToggle(): JSX.Element {
   const tokens: SharedProps['tokens'] = {
