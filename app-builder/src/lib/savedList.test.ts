@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { countThisWeek, formatRelativeTime, parseSavedList } from './savedList';
+import { countThisWeek, formatRelativeTime, parseSavedList, parseSavedPrd } from './savedList';
 
 describe('parseSavedList', () => {
   it('accepts valid rows and rejects malformed payloads', () => {
@@ -10,6 +10,28 @@ describe('parseSavedList', () => {
     expect(ok?.[0]?.slug).toBe('meal');
     expect(parseSavedList({ not: 'array' })).toBeNull();
     expect(parseSavedList([{ id: 1 }])).toBeNull();
+  });
+});
+
+describe('parseSavedPrd', () => {
+  const row = {
+    id: 'prd-tesla-driving-stats',
+    slug: 'tesla-driving-stats',
+    title: 'Tesla Driving Stats',
+    prompt: 'Track my Tesla drives',
+    markdown: '# Tesla Driving Stats',
+    created_at: '2026-07-01T12:00:00.000Z'
+  };
+
+  it('returns the full row and strips unknown fields', () => {
+    expect(parseSavedPrd({ ...row, extra: 'dropped' })).toEqual(row);
+  });
+
+  it('rejects a partial or mistyped row', () => {
+    const { markdown: _markdown, ...withoutMarkdown } = row;
+    expect(parseSavedPrd(withoutMarkdown)).toBeNull();
+    expect(parseSavedPrd({ ...row, created_at: 1 })).toBeNull();
+    expect(parseSavedPrd(null)).toBeNull();
   });
 });
 

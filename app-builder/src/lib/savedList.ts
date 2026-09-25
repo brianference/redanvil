@@ -1,39 +1,48 @@
+import { z } from 'zod';
+
+/** Shape of one GET /api/prds row. */
+const savedPrdListItemSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  created_at: z.string()
+});
+
 /** One row from GET /api/prds (metadata only). */
-export interface SavedPrdListItem {
-  id: string;
-  slug: string;
-  title: string;
-  created_at: string;
-}
+export type SavedPrdListItem = z.infer<typeof savedPrdListItemSchema>;
+
+/** Full row from GET /api/prd/:id: the list metadata plus the document. */
+const savedPrdRowSchema = savedPrdListItemSchema.extend({
+  prompt: z.string(),
+  markdown: z.string()
+});
+
+/** Full row from GET /api/prd/:id. */
+export type SavedPrdRow = z.infer<typeof savedPrdRowSchema>;
 
 const MS_PER_DAY = 86_400_000;
 const WEEK_DAYS = 7;
 
 /**
  * Narrow unknown JSON to a SavedPrdListItem array, or null if any row is invalid.
+ *
+ * @param payload - Raw JSON from GET /api/prds.
+ * @returns Typed rows, or null.
  */
 export function parseSavedList(payload: unknown): SavedPrdListItem[] | null {
-  if (!Array.isArray(payload)) return null;
-  const items: SavedPrdListItem[] = [];
-  for (const row of payload) {
-    if (
-      typeof row !== 'object' ||
-      row === null ||
-      typeof (row as { id?: unknown }).id !== 'string' ||
-      typeof (row as { slug?: unknown }).slug !== 'string' ||
-      typeof (row as { title?: unknown }).title !== 'string' ||
-      typeof (row as { created_at?: unknown }).created_at !== 'string'
-    ) {
-      return null;
-    }
-    items.push({
-      id: (row as { id: string }).id,
-      slug: (row as { slug: string }).slug,
-      title: (row as { title: string }).title,
-      created_at: (row as { created_at: string }).created_at
-    });
-  }
-  return items;
+  const parsed = z.array(savedPrdListItemSchema).safeParse(payload);
+  return parsed.success ? parsed.data : null;
+}
+
+/**
+ * Narrow unknown JSON to one saved PRD, or null if any field is missing or mistyped.
+ *
+ * @param payload - Raw JSON from GET /api/prd/:id.
+ * @returns Typed row, or null.
+ */
+export function parseSavedPrd(payload: unknown): SavedPrdRow | null {
+  const parsed = savedPrdRowSchema.safeParse(payload);
+  return parsed.success ? parsed.data : null;
 }
 
 /**
