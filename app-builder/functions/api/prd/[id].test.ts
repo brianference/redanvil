@@ -3,32 +3,22 @@ import { onRequestGet } from './[id]';
 import { mockEnv, expectSecureHeaders } from '../../../tests/helpers/d1';
 
 describe('GET /api/prd/:id', () => {
-  it('returns 400 when the path id is missing', async () => {
-    const request = new Request('https://example.com/api/prd/');
-    const response = await onRequestGet({
-      request,
-      env: mockEnv(),
-      params: {}
-    });
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: 'Required' });
-    expectSecureHeaders(response, request.url);
-  });
-
   it.each([
+    ['missing', undefined],
     ['blank', '   '],
     ['uppercase', 'PRD-TESLA'],
     ['over-long', 'a'.repeat(65)],
     ['sql text', "1' OR '1'='1"]
-  ])('returns 400 for a %s id without querying D1', async (_label, id) => {
+  ])('answers a %s id with 404 without querying D1', async (_label, id) => {
     const request = new Request('https://example.com/api/prd/x');
     const response = await onRequestGet({
       request,
       env: mockEnv({ fail: true }),
-      params: { id }
+      params: id === undefined ? {} : { id }
     });
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: 'Invalid PRD id' });
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: 'PRD not found' });
+    expectSecureHeaders(response, request.url);
   });
 
   it('returns 404 when no row matches the id', async () => {

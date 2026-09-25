@@ -1,12 +1,12 @@
 import type { Env } from '../../lib/env';
-import { jsonResponse, validateInput } from '../../lib/http';
+import { jsonResponse } from '../../lib/http';
 import { prdIdSchema } from '../../lib/ids';
 
 /** CORS allow-methods for this endpoint (GET only). */
 const ALLOWED_METHODS = 'GET';
 
 /**
- * GET /api/prd/:id — fetch one saved PRD by id. Malformed id → 400; missing → 404; DB error → 500.
+ * GET /api/prd/:id — fetch one saved PRD by id. Malformed or missing → 404; DB error → 500.
  */
 export async function onRequestGet(context: {
   request: Request;
@@ -14,8 +14,12 @@ export async function onRequestGet(context: {
   params: { id?: string };
 }): Promise<Response> {
   const { request, env, params } = context;
-  const id = validateInput(request, params.id, prdIdSchema, ALLOWED_METHODS);
-  if (!id.ok) return id.response;
+  // An id the API could never have minted names no PRD, so it is a 404 like any
+  // other absent id, answered before it reaches the query.
+  const id = prdIdSchema.safeParse(params.id);
+  if (!id.success) {
+    return jsonResponse(request, { error: 'PRD not found' }, 404, ALLOWED_METHODS);
+  }
 
   try {
     const { results } = await env.DB.prepare(

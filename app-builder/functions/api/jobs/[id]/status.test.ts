@@ -107,24 +107,24 @@ describe('/api/jobs/:id/status path id', () => {
     ['uppercase', JOB_ID.toUpperCase()],
     ['over-long', `${JOB_ID}${'a'.repeat(200)}`],
     ['sql text', "1' OR '1'='1"]
-  ])('GET rejects a %s id with 400 before touching storage', async (_label, id) => {
+  ])('GET answers a %s id with 404 before touching storage', async (_label, id) => {
     const request = statusRequest('GET', null, null, encodeURIComponent(id));
     const response = await onRequestGet({
       request,
       env: createQueueEnv({ fail: true }),
       params: { id }
     });
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: 'Invalid job id' });
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: 'Job not found' });
     expectSecureHeaders(response, request.url, 'GET, POST');
   });
 
-  it('POST rejects a malformed id with 400 and writes nothing', async () => {
+  it('POST answers a malformed id with 404 and writes nothing', async () => {
     const env = envWithJob(TOKEN);
     const request = statusRequest('POST', { status: 'failed' }, TOKEN, 'job-1');
     const response = await onRequestPost({ request, env, params: { id: 'job-1' } });
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: 'Invalid job id' });
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: 'Job not found' });
     expect(readQueueJobs(env)[0]?.status).toBe('building');
   });
 });

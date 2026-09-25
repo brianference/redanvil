@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Env } from '../../../lib/env';
-import { jsonResponse, readValidatedBody, validateInput } from '../../../lib/http';
+import { jsonResponse, readValidatedBody } from '../../../lib/http';
 import { jobIdSchema } from '../../../lib/ids';
 import { authorizeRunner } from '../../../lib/runnerAuth';
 
@@ -104,6 +104,17 @@ const statusRowSchema = z.object({
 });
 
 /**
+ * 404 for a job that does not exist. An id the API could never have minted is
+ * answered the same way, before it reaches a query.
+ *
+ * @param request - Incoming request.
+ * @returns The not-found response.
+ */
+function jobNotFound(request: Request): Response {
+  return jsonResponse(request, { error: 'Job not found' }, 404, ALLOWED_METHODS);
+}
+
+/**
  * GET /api/jobs/:id/status — public progress for one job.
  *
  * Returns only id, status, step, detail, updatedAt, and deployUrl.
@@ -114,15 +125,13 @@ const statusRowSchema = z.object({
  */
 export async function onRequestGet(context: StatusContext): Promise<Response> {
   const { request, env } = context;
-  const idResult = validateInput(request, context.params.id, jobIdSchema, ALLOWED_METHODS);
-  if (!idResult.ok) return idResult.response;
+  const id = jobIdSchema.safeParse(context.params.id);
+  if (!id.success) return jobNotFound(request);
 
   try {
-    const { results } = await env.DB.prepare(PUBLIC_STATUS_SQL).bind(idResult.data).all();
+    const { results } = await env.DB.prepare(PUBLIC_STATUS_SQL).bind(id.data).all();
     const parsed = statusRowSchema.safeParse(results[0]);
-    if (!parsed.success) {
-      return jsonResponse(request, { error: 'Job not found' }, 404, ALLOWED_METHODS);
-    }
+    if (!parsed.success) return jobNotFound(request);
     const row = parsed.data;
     return jsonResponse(
       request,
@@ -158,8 +167,8 @@ export async function onRequestPost(context: StatusContext): Promise<Response> {
   const auth = await authorizeRunner(request, env, ALLOWED_METHODS);
   if (!auth.ok) return auth.response;
 
-  const idResult = validateInput(request, context.params.id, jobIdSchema, ALLOWED_METHODS);
-  if (!idResult.ok) return idResult.response;
+  const id = jobIdSchema.safeParse(context.params.id);
+  if (!id.success) return jobNotFound(request);
 
   const parsed = await readValidatedBody(request, statusBodySchema, ALLOWED_METHODS);
   if (!parsed.ok) return parsed.response;
@@ -175,12 +184,10 @@ export async function onRequestPost(context: StatusContext): Promise<Response> {
         executionId ?? null,
         deployUrl ?? null,
         now,
-        idResult.data
+        id.data
       )
       .run();
-    if ((updated.meta?.changes ?? 0) !== 1) {
-      return jsonResponse(request, { error: 'Job not found' }, 404, ALLOWED_METHODS);
-    }
+    if ((updated.meta?.changes ?? 0) !== 1) return jobNotFound(request);
     return jsonResponse(request, { ok: true }, 200, ALLOWED_METHODS);
   } catch {
     return jsonResponse(request, { error: 'Could not update job status' }, 500, ALLOWED_METHODS);
