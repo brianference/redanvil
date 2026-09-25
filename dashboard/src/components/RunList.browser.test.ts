@@ -1,7 +1,8 @@
 import { userEvent } from '@vitest/browser/context';
 import { afterEach, describe, expect, it } from 'vitest';
 import { sampleRun } from '../lib/runFixture';
-import { mountRunList, type MountedRunList } from '../test-support/mountRunList';
+import type { Mounted } from '../test-support/mount';
+import { mountRunList } from '../test-support/mountRunList';
 
 /**
  * Browser lane: the run card is an `<article tabIndex=0>` with its own
@@ -21,7 +22,7 @@ const dashboardRun = sampleRun({
   deployUrl: null
 });
 
-let mounted: MountedRunList | null = null;
+let mounted: Mounted | null = null;
 
 afterEach(() => {
   mounted?.unmount();

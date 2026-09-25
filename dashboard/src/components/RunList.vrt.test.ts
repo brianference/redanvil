@@ -1,7 +1,8 @@
 import { page } from '@vitest/browser/context';
 import { afterEach, describe, it } from 'vitest';
 import { sampleRun } from '../lib/runFixture';
-import { mountRunList, type MountedRunList } from '../test-support/mountRunList';
+import type { Mounted } from '../test-support/mount';
+import { mountRunList } from '../test-support/mountRunList';
 import { expectScreenshotToMatch } from '../test-support/screenshotMatch';
 
 /**
@@ -15,7 +16,7 @@ const VIEWPORT_HEIGHT = 900;
 const WIDTHS = [375, 1280] as const;
 const THEMES = ['light', 'dark'] as const;
 
-let mounted: MountedRunList | null = null;
+let mounted: Mounted | null = null;
 
 afterEach(() => {
   mounted?.unmount();

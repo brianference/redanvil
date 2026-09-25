@@ -4,9 +4,6 @@ import { RunList } from '../components/RunList';
 import type { Run } from '../lib/summary';
 import { mount, type Mounted } from './mount';
 
-/** A mounted RunList and the cleanup that removes it. */
-export type MountedRunList = Mounted;
-
 /**
  * Stand-in for the detail route: shows which slug the router landed on, so a
  * test can see where a card actually navigated.
@@ -23,7 +20,7 @@ function DetailProbe(): JSX.Element {
  * @param runs - Runs to list.
  * @returns The container and an unmount function.
  */
-export function mountRunList(runs: readonly Run[]): MountedRunList {
+export function mountRunList(runs: readonly Run[]): Mounted {
   const mounted = mount(
     createElement(
       MemoryRouter,
