@@ -50,12 +50,7 @@ async function hmacHex(key: string, value: string): Promise<string> {
     ['sign']
   );
   const signature = await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(value));
-  const bytes = new Uint8Array(signature);
-  let hex = '';
-  for (let index = 0; index < bytes.length; index += 1) {
-    hex += (bytes[index] ?? 0).toString(16).padStart(2, '0');
-  }
-  return hex;
+  return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -69,18 +64,16 @@ function hourBucket(now: Date): string {
 }
 
 /**
- * Seconds until the next UTC hour, minimum 1, for the Retry-After header.
+ * Seconds until the next UTC hour, for the Retry-After header.
+ *
+ * `nowMs % HOUR_MS` is below HOUR_MS, so the remainder is 1..HOUR_MS ms and
+ * the rounded-up result is already 1..3600 without a clamp.
  *
  * @param nowMs - `Date.now()` value.
  * @returns Whole seconds in the range 1..3600.
  */
 function retryAfterSeconds(nowMs: number): number {
-  const elapsed = nowMs % HOUR_MS;
-  const remainingMs = HOUR_MS - elapsed;
-  const seconds = Math.ceil(remainingMs / MS_PER_SECOND);
-  if (seconds < 1) return 1;
-  if (seconds > HOUR_MS / MS_PER_SECOND) return HOUR_MS / MS_PER_SECOND;
-  return seconds;
+  return Math.ceil((HOUR_MS - (nowMs % HOUR_MS)) / MS_PER_SECOND);
 }
 
 /**

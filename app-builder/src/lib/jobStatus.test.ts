@@ -3,7 +3,7 @@ import { en } from '../i18n/en';
 import {
   JOB_STATUS_POLL_INTERVAL_MS,
   LAST_JOB_ID_STORAGE_KEY,
-  dismissTrackedJob,
+  clearLastJobId,
   formatBuildStepLine,
   isTerminalJobStatus,
   jobStatusUrl,
@@ -11,7 +11,6 @@ import {
   parseSubmittedJobId,
   readLastJobId,
   shortJobId,
-  shouldPollJob,
   shouldShowDeployLink,
   writeLastJobId
 } from './jobStatus';
@@ -184,15 +183,12 @@ describe('job status helpers', () => {
     }).not.toThrow();
   });
 
-  it('stops polling when the panel is hidden or the job is terminal', () => {
-    expect(shouldPollJob(true, 'building')).toBe(false);
-    expect(shouldPollJob(true, null)).toBe(false);
-    expect(shouldPollJob(false, 'done')).toBe(false);
-    expect(shouldPollJob(false, 'failed')).toBe(false);
-    expect(shouldPollJob(false, 'rejected')).toBe(false);
-    expect(shouldPollJob(false, 'building')).toBe(true);
-    expect(shouldPollJob(false, 'queued')).toBe(true);
-    expect(shouldPollJob(false, null)).toBe(true);
+  it('treats done, failed and rejected as terminal, and every other status as still moving', () => {
+    expect(isTerminalJobStatus('done')).toBe(true);
+    expect(isTerminalJobStatus('failed')).toBe(true);
+    expect(isTerminalJobStatus('rejected')).toBe(true);
+    expect(isTerminalJobStatus('building')).toBe(false);
+    expect(isTerminalJobStatus('queued')).toBe(false);
   });
 
   it('shows the first 8 characters of a job id', () => {
@@ -281,32 +277,22 @@ describe('job status helpers', () => {
     });
   });
 
-  it('dismiss clears the stored job id and still hides when storage throws', () => {
+  it('clearing the stored job id works, and never throws when storage throws or is absent', () => {
     const store = new Map<string, string>();
     installStorage(store);
     writeLastJobId(JOB_ID);
-    let hidden = false;
-    dismissTrackedJob(() => {
-      expect(store.has(LAST_JOB_ID_STORAGE_KEY)).toBe(false);
-      hidden = true;
-    });
-    expect(hidden).toBe(true);
+    clearLastJobId();
+    expect(store.has(LAST_JOB_ID_STORAGE_KEY)).toBe(false);
     expect(readLastJobId()).toBeNull();
 
     installStorage('throw');
-    hidden = false;
     expect(() => {
-      dismissTrackedJob(() => {
-        hidden = true;
-      });
+      clearLastJobId();
     }).not.toThrow();
-    expect(hidden).toBe(true);
 
     Reflect.deleteProperty(globalThis, 'localStorage');
     expect(() => {
-      dismissTrackedJob(() => {
-        hidden = true;
-      });
+      clearLastJobId();
     }).not.toThrow();
   });
 });

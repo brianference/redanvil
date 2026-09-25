@@ -1,24 +1,13 @@
-import { type CSSProperties } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Page } from '../components/Page';
 import { en } from '../i18n/en';
 import { theme } from '../theme';
 import { LoadingBanner, ErrorBanner } from '../components/Banner';
-import { FidelityWarning } from '../components/FidelityWarning';
-import { StackReferences } from '../components/StackReferences';
-import { buttonStyle, cardStyle } from '../components/ui';
+import { SavedError } from '../components/saved/SavedError';
+import { SavedPrdView, type SavedPrdRow } from '../components/saved/SavedPrdView';
+import { buttonStyle } from '../components/ui';
 import { useAbortableJsonGet } from '../lib/useAbortableJsonGet';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
-
-/** Full PRD row from GET /api/prd/:id. */
-interface SavedPrdRow {
-  id: string;
-  slug: string;
-  title: string;
-  prompt: string;
-  markdown: string;
-  created_at: string;
-}
 
 type DetailState =
   | { status: 'loading' }
@@ -56,18 +45,6 @@ function parsePrd(payload: unknown): SavedPrdRow | null {
 }
 
 /**
- * Format an ISO date for display; fall back to the raw string if unparseable.
- *
- * @param iso - ISO-8601 timestamp string.
- * @returns Locale display string or the original value.
- */
-function formatCreatedAt(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString();
-}
-
-/**
  * Map generic abortable fetch state onto the SavedPrd detail view union.
  * Missing id and HTTP 404 become not-found (not a generic error).
  *
@@ -93,7 +70,7 @@ export function SavedPrd(): JSX.Element {
   const copy = en.pages.savedPrd;
   const { id } = useParams<{ id: string }>();
   const hasId = id !== undefined && id.trim().length > 0;
-  const { state: fetchState } = useAbortableJsonGet({
+  const { state: fetchState, retry } = useAbortableJsonGet({
     url: hasId ? `/api/prd/${encodeURIComponent(id)}` : null,
     parse: parsePrd,
     errorMessage: copy.error
@@ -120,53 +97,9 @@ export function SavedPrd(): JSX.Element {
       </p>
 
       {state.status === 'loading' && <LoadingBanner message={copy.loading} />}
-      {state.status === 'error' && <ErrorBanner message={state.message} />}
+      {state.status === 'error' && <SavedError message={state.message} onRetry={retry} />}
       {state.status === 'not-found' && <ErrorBanner message={copy.notFound} />}
-      {state.status === 'success' && (
-        <section style={rootStyle} aria-label={state.prd.title}>
-          <p style={readyStyle}>
-            <span aria-hidden="true">✓ </span>
-            {copy.readyBadge}
-          </p>
-          <p style={{ margin: 0, color: theme.color.muted, fontSize: theme.type.scale[1] }}>
-            {copy.createdAt(formatCreatedAt(state.prd.created_at))}
-          </p>
-          <FidelityWarning markdown={state.prd.markdown} />
-          <div style={cardStyle(theme.space.md)}>
-            <pre style={preStyle}>{state.prd.markdown}</pre>
-          </div>
-          <StackReferences markdown={state.prd.markdown} />
-        </section>
-      )}
+      {state.status === 'success' && <SavedPrdView prd={state.prd} />}
     </Page>
   );
 }
-
-// Layout lives in `.ra-content-col`, not here. An inline maxWidth cannot be
-// lifted by a media query, which is design rule R14 — and an independent judge
-// caught this one surviving the desktop-width work.
-const rootStyle: CSSProperties = {};
-
-const readyStyle: CSSProperties = {
-  margin: 0,
-  color: theme.color.accent,
-  fontSize: theme.type.scale[0],
-  fontWeight: 700,
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase'
-};
-
-const preStyle: CSSProperties = {
-  margin: 0,
-  maxHeight: '28rem',
-  overflow: 'auto',
-  background: theme.color.bg,
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: theme.radius.md,
-  padding: theme.space.md,
-  fontSize: theme.type.scale[1],
-  lineHeight: 1.6,
-  whiteSpace: 'pre-wrap',
-  wordBreak: 'break-word',
-  color: theme.color.text
-};

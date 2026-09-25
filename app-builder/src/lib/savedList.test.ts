@@ -2,14 +2,19 @@ import { describe, it, expect } from 'vitest';
 import { countThisWeek, formatRelativeTime, parseSavedList } from './savedList';
 
 describe('parseSavedList', () => {
-  it('accepts valid rows and rejects malformed payloads', () => {
-    const ok = parseSavedList([
-      { id: 'a', slug: 'meal', title: 'Meal planner', created_at: '2026-07-01T12:00:00.000Z' }
-    ]);
-    expect(ok).toHaveLength(1);
-    expect(ok?.[0]?.slug).toBe('meal');
+  const good = { id: 'a', slug: 'meal', title: 'Meal planner', created_at: '2026-07-01T12:00:00.000Z' };
+
+  it('keeps valid rows and reports none rejected', () => {
+    expect(parseSavedList([good])).toEqual({ items: [good], rejected: 0 });
+  });
+
+  it('keeps the readable rows and counts the malformed ones instead of dropping the list', () => {
+    const result = parseSavedList([good, { id: 1 }, null, { ...good, title: 7 }]);
+    expect(result).toEqual({ items: [good], rejected: 3 });
+  });
+
+  it('rejects a payload that is not a list at all', () => {
     expect(parseSavedList({ not: 'array' })).toBeNull();
-    expect(parseSavedList([{ id: 1 }])).toBeNull();
   });
 });
 

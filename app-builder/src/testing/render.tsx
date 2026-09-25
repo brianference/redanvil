@@ -5,6 +5,8 @@
  * (expect.element polling, a rendered node) rather than on React's scheduler.
  */
 import type { ReactElement } from 'react';
+import { vi } from 'vitest';
+import type { Locator } from '@vitest/browser/context';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
@@ -51,4 +53,28 @@ export function mount(ui: ReactElement, opts: { theme?: ThemeName; route?: strin
       container.remove();
     }
   };
+}
+
+/** Upper bound for a stubbed request to land and render. */
+const RENDER_WAIT_MS = 5000;
+
+/**
+ * Wait until a locator matches at least one rendered element.
+ *
+ * expect.element retries by formatting the whole page into its failure
+ * message on every miss; a full page shell made each miss take over a second,
+ * so a response that rendered in milliseconds still timed the matcher out.
+ * This waits on the same signal (the element exists) with a cheap check, and
+ * the caller then asserts on it with expect.element as usual.
+ *
+ * @param locator - What must render.
+ * @returns Resolves once it has.
+ */
+export async function waitForRendered(locator: Locator): Promise<void> {
+  await vi.waitFor(
+    () => {
+      if (locator.elements().length === 0) throw new Error('not rendered yet');
+    },
+    { timeout: RENDER_WAIT_MS }
+  );
 }

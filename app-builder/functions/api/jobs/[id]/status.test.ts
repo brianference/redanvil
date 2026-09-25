@@ -3,6 +3,12 @@ import { onRequestGet, onRequestPost } from './status';
 import { expectSecureHeaders } from '../../../../tests/helpers/d1';
 import { createQueueEnv, readQueueJobs } from '../../../../tests/helpers/jobQueueDb';
 
+/** A job id in the UUID shape submit issues. */
+const JOB_ID = '5b1c2d3e-4f50-4a6b-8c7d-9e0f1a2b3c4d';
+
+/** Well-formed, but no job has it. */
+const MISSING_ID = '00000000-0000-4000-8000-000000000000';
+
 /** Fake runner secret. Injected in-process; not a real credential. */
 const TOKEN = 'runner-test-token';
 
@@ -13,14 +19,15 @@ const SECRET_PROMPT = 'super-secret-prompt-do-not-leak';
  * Env with one building job whose prompt must stay off the public route.
  *
  * @param token - Runner token, or omit to leave RUNNER_TOKEN unset.
+ * @param id - Stored job id. A malformed one proves validation runs before the query.
  * @returns Queue env.
  */
-function envWithJob(token?: string) {
+function envWithJob(token?: string, id = JOB_ID) {
   return createQueueEnv({
     ...(token !== undefined ? { runnerToken: token } : {}),
     jobs: [
       {
-        id: 'job-1',
+        id,
         slug: 'recipe-box',
         prompt: SECRET_PROMPT,
         created_at: '2026-01-01T00:00:00.000Z',
@@ -48,7 +55,7 @@ function statusRequest(
   method: 'GET' | 'POST',
   body: unknown,
   token: string | null,
-  id = 'job-1'
+  id = JOB_ID
 ): Request {
   const headers = new Headers();
   if (token !== null) headers.set('authorization', `Bearer ${token}`);
@@ -66,12 +73,12 @@ describe('GET /api/jobs/:id/status', () => {
     const response = await onRequestGet({
       request,
       env: envWithJob(),
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(200);
     const body = (await response.json()) as Record<string, unknown>;
     expect(body).toEqual({
-      id: 'job-1',
+      id: JOB_ID,
       status: 'building',
       step: 'install-deps',
       detail: 'Installing packages',
@@ -84,11 +91,11 @@ describe('GET /api/jobs/:id/status', () => {
   });
 
   it('returns 404 for an unknown id', async () => {
-    const request = statusRequest('GET', null, null, 'missing');
+    const request = statusRequest('GET', null, null, MISSING_ID);
     const response = await onRequestGet({
       request,
       env: envWithJob(),
-      params: { id: 'missing' }
+      params: { id: MISSING_ID }
     });
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: 'Job not found' });
@@ -101,7 +108,7 @@ describe('POST /api/jobs/:id/status auth', () => {
     const response = await onRequestPost({
       request,
       env: envWithJob(),
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({ error: 'runner not configured' });
@@ -112,7 +119,7 @@ describe('POST /api/jobs/:id/status auth', () => {
     const response = await onRequestPost({
       request,
       env: envWithJob(TOKEN),
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(401);
     expect(await response.json()).toEqual({ error: 'unauthorized' });
@@ -123,7 +130,7 @@ describe('POST /api/jobs/:id/status auth', () => {
     const response = await onRequestPost({
       request,
       env: envWithJob(TOKEN),
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(401);
     expect(await response.json()).toEqual({ error: 'unauthorized' });
@@ -142,7 +149,7 @@ describe('POST /api/jobs/:id/status auth', () => {
       },
       TOKEN
     );
-    const response = await onRequestPost({ request, env, params: { id: 'job-1' } });
+    const response = await onRequestPost({ request, env, params: { id: JOB_ID } });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true });
     const row = readQueueJobs(env)[0];
@@ -159,7 +166,7 @@ describe('POST /api/jobs/:id/status auth', () => {
     const response = await onRequestPost({
       request,
       env: envWithJob(TOKEN),
-      params: { id: 'missing' }
+      params: { id: MISSING_ID }
     });
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: 'Job not found' });
@@ -168,7 +175,7 @@ describe('POST /api/jobs/:id/status auth', () => {
   it('keeps the previous step when the update omits it', async () => {
     const env = envWithJob(TOKEN);
     const request = statusRequest('POST', { status: 'awaiting_owner' }, TOKEN);
-    const response = await onRequestPost({ request, env, params: { id: 'job-1' } });
+    const response = await onRequestPost({ request, env, params: { id: JOB_ID } });
     expect(response.status).toBe(200);
     expect(readQueueJobs(env)[0]?.step).toBe('install-deps');
   });
@@ -180,7 +187,7 @@ describe('POST /api/jobs/:id/status validation', () => {
     const response = await onRequestPost({
       request,
       env: envWithJob(TOKEN),
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(400);
   });
@@ -190,7 +197,7 @@ describe('POST /api/jobs/:id/status validation', () => {
     const response = await onRequestPost({
       request,
       env: envWithJob(TOKEN),
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(400);
   });
@@ -200,7 +207,7 @@ describe('POST /api/jobs/:id/status validation', () => {
     const response = await onRequestPost({
       request,
       env: envWithJob(TOKEN),
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(400);
   });
@@ -214,7 +221,7 @@ describe('POST /api/jobs/:id/status validation', () => {
     const response = await onRequestPost({
       request,
       env: envWithJob(TOKEN),
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(400);
   });
@@ -229,7 +236,7 @@ describe('POST /api/jobs/:id/status validation', () => {
     const response = await onRequestPost({
       request,
       env,
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(400);
     expect(readQueueJobs(env)[0]?.status).toBe('building');
@@ -245,7 +252,7 @@ describe('POST /api/jobs/:id/status validation', () => {
     const response = await onRequestPost({
       request,
       env: envWithJob(TOKEN),
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(400);
   });
@@ -255,8 +262,37 @@ describe('POST /api/jobs/:id/status validation', () => {
     const response = await onRequestPost({
       request,
       env: envWithJob(TOKEN),
-      params: { id: 'job-1' }
+      params: { id: JOB_ID }
     });
     expect(response.status).toBe(401);
+  });
+});
+
+describe('job id validation at the boundary', () => {
+  it.each([
+    ['a slug instead of a UUID', 'job-1'],
+    ['an uppercase UUID', '5B1C2D3E-4F50-4A6B-8C7D-9E0F1A2B3C4D'],
+    ['an oversized value', `${JOB_ID}${'a'.repeat(500)}`],
+    ['a blank id', '   ']
+  ])('GET answers %s with 404 before any query', async (_label, id) => {
+    const response = await onRequestGet({
+      request: statusRequest('GET', null, null, encodeURIComponent(id)),
+      // The row exists under that exact id, so only validation can make this 404.
+      env: envWithJob(undefined, id),
+      params: { id }
+    });
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: 'Job not found' });
+  });
+
+  it('POST with a valid token answers a malformed id with 404 and writes nothing', async () => {
+    const env = envWithJob(TOKEN, 'job-1');
+    const response = await onRequestPost({
+      request: statusRequest('POST', { status: 'done' }, TOKEN, 'job-1'),
+      env,
+      params: { id: 'job-1' }
+    });
+    expect(response.status).toBe(404);
+    expect(readQueueJobs(env)[0]?.status).toBe('building');
   });
 });

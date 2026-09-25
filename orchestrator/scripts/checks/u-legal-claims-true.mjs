@@ -105,10 +105,18 @@ export const TOPICS = [
       /no\s+billing/i
     ],
     discloseRes: [/\bpayments?\b/i, /\bbilling\b/i, /\bstripe\b/i, /\bcredit\s+card\b/i],
+    // Stripe is matched by how code USES it, not by the word. The bare word
+    // matched prose: app-builder's integration chip label "Stripe" and its PRD
+    // template line "no Stripe" both read as proof the app takes payments,
+    // failing the true sentence "It does not process payments". Every real
+    // integration still needs one of these: the SDK import, the client script,
+    // the API host, the constructor or loader, or a STRIPE_* secret binding.
     codeRes: [
-      /\bstripe\b/i,
-      /js\.stripe\.com/i,
-      /\b@stripe\//,
+      /from\s+['"]stripe['"]|require\(\s*['"]stripe['"]\s*\)/,
+      /\bnew\s+Stripe\s*\(|\bStripe\(|\bloadStripe\b/,
+      /\bSTRIPE_[A-Z_]+\b/,
+      /(js|api|checkout)\.stripe\.com/i,
+      /@stripe\//,
       /\bpaypal\b/i,
       /\bbraintree\b/i,
       /paymentIntent|createCheckoutSession/i

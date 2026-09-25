@@ -1,5 +1,7 @@
 {
   "_why": "One realistic call per API route, and what its live answer must satisfy. u-api-real-output enumerates functions/api/** on disk and fails on any route with no example here, so a new endpoint is unproven-by-default. It boots the app on the real Workers runtime and calls each example: a non-2xx, an empty body, an empty collection under nonEmpty, fewer results than a declared minItems, or placeholder content in the response all fail.",
+  "localSecrets": ["RUNNER_TOKEN", "RATE_LIMIT_KEY"],
+  "_localSecrets": "The runner routes and the rate-limited POST routes fail closed with 503 when these Pages secrets are unset, which is every fresh checkout. The check mints a random value for each name per run, binds it into the local runtime it boots, and substitutes {{secret:NAME}} in headers. No value is committed.",
   "examples": [
     {
       "route": "/api/health",
@@ -12,7 +14,10 @@
     {
       "route": "/api/jobs",
       "method": "GET",
-      "comment": "Lists build jobs. A local run starts with an empty D1, and an empty job list is the correct answer for a tool that has not been used yet -- unlike a catalog, where empty means broken. nonEmpty is opted out for that reason, and the reason is written down rather than left as an omission.",
+      "headers": {
+        "authorization": "Bearer {{secret:RUNNER_TOKEN}}"
+      },
+      "comment": "Lists build jobs for the runner, so it needs the runner's bearer token. A local run starts with an empty D1, and an empty job list is the correct answer for a tool that has not been used yet -- unlike a catalog, where empty means broken. nonEmpty is opted out for that reason, and the reason is written down rather than left as an omission.",
       "expect": {
         "status": 200,
         "nonEmpty": false
@@ -61,6 +66,113 @@
         "id": "definitely-not-a-real-prd"
       },
       "comment": "The error path is worth proving too: a missing record must answer 404 with a real body rather than 500 or an empty 200. Allowed because the route also carries a 2xx example above.",
+      "expect": {
+        "status": 404,
+        "nonEmpty": true
+      }
+    },
+    {
+      "route": "/api/jobs/claim",
+      "method": "POST",
+      "headers": {
+        "authorization": "Bearer {{secret:RUNNER_TOKEN}}"
+      },
+      "body": {
+        "runner": "u-api-real-output"
+      },
+      "setup": [
+        {
+          "route": "/api/submit",
+          "method": "POST",
+          "body": {
+            "prompt": "Build a bird-watching log with sightings and photos",
+            "appType": "dashboard",
+            "hasAuth": true,
+            "entities": 2
+          }
+        }
+      ],
+      "comment": "The runner's claim. Setup queues a real job through /api/submit, so the claim must hand a job back with its prompt. The bearer token is minted per run by the check (localSecrets) and never committed.",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
+    },
+    {
+      "route": "/api/jobs/claim",
+      "method": "POST",
+      "body": {
+        "runner": "u-api-real-output"
+      },
+      "comment": "No bearer token. The queue holds prompts, so it must refuse with 401 rather than hand out a job.",
+      "expect": {
+        "status": 401,
+        "nonEmpty": true
+      }
+    },
+    {
+      "route": "/api/jobs/[id]/status",
+      "method": "GET",
+      "setup": [
+        {
+          "route": "/api/submit",
+          "method": "POST",
+          "body": {
+            "prompt": "Build a bird-watching log with sightings and photos",
+            "appType": "dashboard",
+            "hasAuth": true,
+            "entities": 2
+          },
+          "capture": {
+            "id": "id"
+          }
+        }
+      ],
+      "comment": "Public progress for the job this run just queued: id and status, and no prompt.",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
+    },
+    {
+      "route": "/api/jobs/[id]/status",
+      "method": "POST",
+      "headers": {
+        "authorization": "Bearer {{secret:RUNNER_TOKEN}}"
+      },
+      "body": {
+        "status": "awaiting_owner",
+        "step": "prd-review",
+        "detail": "Waiting for the owner to approve the PRD"
+      },
+      "setup": [
+        {
+          "route": "/api/submit",
+          "method": "POST",
+          "body": {
+            "prompt": "Build a bird-watching log with sightings and photos",
+            "appType": "dashboard",
+            "hasAuth": true,
+            "entities": 2
+          },
+          "capture": {
+            "id": "id"
+          }
+        }
+      ],
+      "comment": "The runner moving that job forward with the minted bearer token.",
+      "expect": {
+        "status": 200,
+        "nonEmpty": true
+      }
+    },
+    {
+      "route": "/api/jobs/[id]/status",
+      "method": "GET",
+      "params": {
+        "id": "00000000-0000-4000-8000-000000000000"
+      },
+      "comment": "A well-formed id that no job has: 404 with a real body, not an empty 200.",
       "expect": {
         "status": 404,
         "nonEmpty": true

@@ -60,7 +60,7 @@ export const errorMessageStyle: CSSProperties = {
   margin: 0
 };
 
-/** Three-up KPI strip above the recent list. */
+/** KPI strip above the recent list. */
 export const kpiStripStyle: CSSProperties = {
   display: 'grid',
   gap: theme.space.sm,
@@ -285,4 +285,42 @@ export const rowActionStyle: CSSProperties = {
   color: theme.color.text,
   textDecoration: 'none',
   boxSizing: 'border-box'
+};
+
+/** Space between the partial-list warning and the KPI strip under it. */
+export const partialBannerStyle: CSSProperties = {
+  marginBottom: theme.space.md
+};
+
+/** "PRD READY" eyebrow on a saved PRD. */
+export const prdReadyStyle: CSSProperties = {
+  margin: 0,
+  color: theme.color.accent,
+  fontSize: theme.type.scale[0],
+  fontWeight: 700,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase'
+};
+
+/** Saved-at line under the eyebrow. */
+export const prdCreatedAtStyle: CSSProperties = {
+  margin: 0,
+  color: theme.color.muted,
+  fontSize: theme.type.scale[1]
+};
+
+/** Scrollable markdown body of a saved PRD. */
+export const prdMarkdownStyle: CSSProperties = {
+  margin: 0,
+  maxHeight: '28rem',
+  overflow: 'auto',
+  background: theme.color.bg,
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.md,
+  padding: theme.space.md,
+  fontSize: theme.type.scale[1],
+  lineHeight: 1.6,
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+  color: theme.color.text
 };

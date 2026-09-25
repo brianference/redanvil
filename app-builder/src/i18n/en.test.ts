@@ -40,7 +40,6 @@ describe('en locale bundle', () => {
 
   it('exposes saved dashboard KPI and card copy', () => {
     expect(en.pages.saved.kpiTotal.length).toBeGreaterThan(2);
-    expect(en.pages.saved.kpiSaved.length).toBeGreaterThan(2);
     expect(en.pages.saved.kpiThisWeek.length).toBeGreaterThan(2);
     expect(en.pages.saved.openAction.length).toBeGreaterThan(1);
     expect(en.pages.saved.itemMeta('meal-planner')).toContain('meal-planner');

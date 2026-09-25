@@ -1,9 +1,6 @@
 import type { Env } from './env';
 import { jsonResponse } from './http';
 
-/** How many bytes SHA-256 produces. Both sides of the compare are this long. */
-const SHA256_BYTES = 32;
-
 /**
  * SHA-256 digest of a string via Web Crypto.
  *
@@ -27,12 +24,10 @@ async function sha256Bytes(value: string): Promise<Uint8Array> {
  * @returns True only when the digests are identical.
  */
 export async function digestsEqual(left: string, right: string): Promise<boolean> {
+  // Both digests are always 32 bytes, so the loop never exits early on length.
   const [leftBytes, rightBytes] = await Promise.all([sha256Bytes(left), sha256Bytes(right)]);
-  if (leftBytes.length !== SHA256_BYTES || rightBytes.length !== SHA256_BYTES) {
-    return false;
-  }
   let difference = 0;
-  for (let index = 0; index < SHA256_BYTES; index += 1) {
+  for (let index = 0; index < leftBytes.length; index += 1) {
     difference |= (leftBytes[index] ?? 0) ^ (rightBytes[index] ?? 0);
   }
   return difference === 0;

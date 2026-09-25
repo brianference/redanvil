@@ -27,7 +27,13 @@ export interface ApiExample {
   headers?: Record<string, string>;
   expect?: ApiExampleExpectation;
   /** Calls made first; `capture` maps a route param name to a dotted path in the response. */
-  setup?: Array<{ method?: string; route?: string; body?: unknown; capture?: Record<string, string> }>;
+  setup?: Array<{
+    method?: string;
+    route?: string;
+    body?: unknown;
+    headers?: Record<string, string>;
+    capture?: Record<string, string>;
+  }>;
 }
 
 /** A captured live response. */
@@ -38,6 +44,12 @@ export interface CapturedResponse {
   error: string | null;
 }
 
+export declare function parseLocalSecrets(declared: unknown): { names: string[]; error: string | null };
+export declare function mintLocalSecrets(names: string[]): Record<string, string>;
+export declare function resolveHeaders(
+  headers: Record<string, string> | undefined,
+  secrets: Record<string, string>
+): { headers: Record<string, string>; error: string | null };
 export declare function readPath(body: unknown, path: string): unknown;
 export declare function setupCapturedParams(example: ApiExample | null | undefined): Set<string>;
 export declare function discoverRoutes(appDir: string): string[];

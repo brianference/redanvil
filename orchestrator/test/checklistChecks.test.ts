@@ -518,6 +518,40 @@ describe('D4 u-legal-claims-true', () => {
     expect(r.code).toBe(0);
   });
 
+  it('FAILS when copy denies payments but code imports the Stripe SDK (known-bad)', async () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/i18n/terms.ts',
+      "export const terms = 'It does not process payments or create user accounts.';"
+    );
+    write(
+      app,
+      'src/lib/pay.ts',
+      "import { loadStripe } from '@stripe/stripe-js';\nexport const stripe = loadStripe(key);"
+    );
+    const r = await runCaptured((io) => runLegalClaimsTrue(app, io));
+    expect(r.code).toBe(1);
+    expect(r.msg).toMatch(/payments: copy denies it/);
+  });
+
+  it('PASSES when "Stripe" is only a word in copy the app shows (known-good)', async () => {
+    const app = makeAppDir();
+    write(
+      app,
+      'src/i18n/terms.ts',
+      "export const terms = 'It does not process payments or create user accounts.';"
+    );
+    write(app, 'src/i18n/en.ts', "export const chips = ['Stripe', 'Email', 'Webhooks'];");
+    write(
+      app,
+      'src/lib/scope.ts',
+      "export const line = '- No payment processing unless the mission names it (no Stripe).';"
+    );
+    const r = await runCaptured((io) => runLegalClaimsTrue(app, io));
+    expect(r.code).toBe(0);
+  });
+
   it('compareTopic pure mismatch for undisclosed analytics', () => {
     const topic = TOPICS.find((t) => t.id === 'analytics')!;
     const m = compareTopic(

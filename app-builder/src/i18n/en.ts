@@ -97,6 +97,10 @@ export const en = {
       loading: 'Loading recent builds…',
       error: 'Could not load saved PRDs.',
       errorRetry: 'Retry',
+      partial: (n: number): string =>
+        n === 1
+          ? '1 saved PRD could not be read and is not shown. The rest are below.'
+          : `${n} saved PRDs could not be read and are not shown. The rest are below.`,
       empty: 'No saved PRDs yet.',
       emptyHint: 'Generate a PRD and choose Save to site to see it here.',
       emptyCta: 'Start a new build',
@@ -109,7 +113,6 @@ export const en = {
       countMeta: (n: number): string => (n === 1 ? '1 shown' : `${n} shown`),
       kpiLabel: 'Library stats',
       kpiTotal: 'All time',
-      kpiSaved: 'In library',
       kpiThisWeek: 'This week',
       openAction: 'Open',
       openAria: (title: string): string => `Open ${title}`

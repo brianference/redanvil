@@ -1,3 +1,5 @@
+import type { z } from 'zod';
+
 /**
  * Secure JSON response headers: nosniff + explicit same-origin CORS (no wildcard).
  * @param request Incoming request (origin is mirrored for CORS).
@@ -68,17 +70,13 @@ export function emptyResponse(request: Request, status: number, methods: string)
  * nothing else, so neither leaks how the endpoint is implemented.
  *
  * @param request Incoming request.
- * @param schema Zod schema (anything exposing `safeParse`) for the body.
+ * @param schema Zod schema for the body.
  * @param methods Comma-separated allowed methods for CORS headers on the error.
  * @returns The validated body, or the 400 Response to return unchanged.
  */
 export async function readValidatedBody<T>(
   request: Request,
-  schema: {
-    safeParse: (
-      value: unknown
-    ) => { success: true; data: T } | { success: false; error: { issues: { message: string }[] } };
-  },
+  schema: z.ZodType<T, z.ZodTypeDef, unknown>,
   methods: string
 ): Promise<{ ok: true; data: T } | { ok: false; response: Response }> {
   let raw: unknown;
