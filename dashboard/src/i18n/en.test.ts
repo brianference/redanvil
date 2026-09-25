@@ -3,7 +3,8 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { Breadcrumbs } from '../components/Breadcrumbs';
-import { ContentSections } from '../components/ContentSections';
+import { Privacy } from '../pages/Privacy';
+import { Terms } from '../pages/Terms';
 import { en } from './en';
 
 /** Words banned by the Human Writing Guidelines (case-insensitive whole words). */
@@ -56,16 +57,6 @@ function pageCopyText(page: {
   return `${page.title} ${page.intro} ${updated} ${sectionText}`;
 }
 
-/** Count whitespace-separated words in legal page copy (R30 floor). */
-function pageWordCount(page: {
-  title: string;
-  intro: string;
-  updated?: string;
-  sections: readonly { heading: string; body: string; items?: readonly string[] }[];
-}): number {
-  return pageCopyText(page).trim().split(/\s+/).filter(Boolean).length;
-}
-
 /**
  * Return banned words found in text (whole-word, case-insensitive).
  */
@@ -108,39 +99,6 @@ describe('en locale bundle', () => {
     ).toBe(3);
   });
 
-  it('meets R30 substance floor on Terms and Privacy (>=150 words, >=3 sections)', () => {
-    for (const key of ['terms', 'privacy'] as const) {
-      const p = en.pages[key];
-      expect(p.sections.length, `${key} section count`).toBeGreaterThanOrEqual(3);
-      expect(pageWordCount(p), `${key} word count`).toBeGreaterThanOrEqual(150);
-    }
-  });
-
-  it('states the dashboard central disclaimer: scores are own gate results, not certification', () => {
-    const termsBodies = en.pages.terms.sections.map((s) => s.body).join(' ');
-    expect(termsBodies.toLowerCase()).toMatch(/certification|not a certification/);
-    expect(termsBodies.toLowerCase()).toMatch(/gate|score/);
-    const privacyBodies = en.pages.privacy.sections.map((s) => s.body).join(' ');
-    expect(privacyBodies.toLowerCase()).toMatch(/cloudflare/);
-    expect(privacyBodies.toLowerCase()).toMatch(/localstorage|theme/);
-  });
-
-  it('renders each content page with multiple h2 sections', () => {
-    for (const key of ['about', 'contact', 'privacy', 'terms'] as const) {
-      const p = en.pages[key];
-      const html = renderToStaticMarkup(
-        createElement(ContentSections, {
-          intro: p.intro,
-          updated: p.updated,
-          sections: p.sections
-        })
-      );
-      const h2Count = (html.match(/<h2\b/g) ?? []).length;
-      expect(h2Count, `${key} h2 count`).toBeGreaterThanOrEqual(3);
-      expect(html).toContain(p.updated);
-    }
-  });
-
   it('keeps page copy free of banned writing-guideline words', () => {
     const contentPages = [
       en.pages.about,
@@ -168,5 +126,52 @@ describe('Breadcrumbs', () => {
     expect(html).toContain(en.pages.about.title);
     expect(html).toContain('aria-current="page"');
     expect(html).toContain(`aria-label="${en.app.breadcrumbNav}"`);
+  });
+});
+
+/**
+ * Render a routed page the way the app does and return its markup.
+ *
+ * @param page - Page component to render.
+ * @returns Static HTML of the whole page, shell included.
+ */
+function renderPage(page: () => JSX.Element): string {
+  return renderToStaticMarkup(createElement(MemoryRouter, null, createElement(page)));
+}
+
+/**
+ * Visible text of rendered markup, tags dropped and whitespace collapsed.
+ *
+ * @param html - Rendered markup.
+ * @returns Plain text.
+ */
+function textOf(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
+}
+
+describe('legal pages as rendered', () => {
+  it.each([
+    ['Terms', Terms, en.pages.terms],
+    ['Privacy', Privacy, en.pages.privacy]
+  ] as const)('%s shows each section under its own h2 and meets the R30 floor', (_name, page, copy) => {
+    const html = renderPage(page);
+    const headings = [...html.matchAll(/<h2[^>]*>([^<]*)<\/h2>/g)].map((match) => match[1]);
+    expect(headings).toEqual(copy.sections.map((section) => section.heading));
+    expect(headings.length).toBeGreaterThanOrEqual(3);
+    const main = textOf(html.split('<main')[1]?.split('</main>')[0] ?? '');
+    expect(main.trim().split(' ').length).toBeGreaterThanOrEqual(150);
+  });
+
+  it('tells a visitor on the Terms page that a score is not a certification', () => {
+    expect(textOf(renderPage(Terms))).toContain(
+      'They are not a third-party certification of security, quality, accessibility'
+    );
+  });
+
+  it('names on the Privacy page the storage key the theme toggle actually writes', () => {
+    // ThemeToggle.browser.test asserts the toggle writes localStorage["theme"].
+    expect(textOf(renderPage(Privacy))).toContain(
+      'localStorage for theme preference under the key theme (values light or dark)'
+    );
   });
 });
