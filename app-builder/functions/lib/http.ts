@@ -56,16 +56,10 @@ export function emptyResponse(request: Request, status: number, methods: string)
 /**
  * Read, JSON-parse and schema-validate a request body, failing closed on both.
  *
- * Both POST routes had written the same preamble by hand: a try/catch around
- * `request.json()` returning a 400, then `schema.safeParse`, then the same
- * `issues[0]?.message ?? 'Invalid input'` fallback. Identical down to the
- * literals, which is why the duplication check flagged the pair once the in-app
- * pass started normalising identifiers.
- *
- * Returning a discriminated union keeps the caller's happy path flat and, more
- * usefully, keeps the two failure modes indistinguishable to the client — a
- * malformed body and a schema violation both produce a 400 with a message and
- * nothing else, so neither leaks how the endpoint is implemented.
+ * Returning a discriminated union keeps the caller's happy path flat and keeps
+ * the two failure modes indistinguishable to the client: a malformed body and
+ * a schema violation both produce a 400 with a message and nothing else, so
+ * neither leaks how the endpoint is implemented.
  *
  * @param request Incoming request.
  * @param schema Zod schema (anything exposing `safeParse`) for the body.

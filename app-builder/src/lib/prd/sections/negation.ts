@@ -22,7 +22,7 @@ export interface PromptClause {
  *
  * Matches any `not`, the n't contractions, `never`, `no`, `rather than`,
  * `instead of`, `without` and `optional` ("works without a login", "login not
- * required" and "sign-in is optional" all used to switch sign-in on), plus the "What this is NOT:"
+ * required" and "sign-in is optional" must not switch sign-in on), plus the "What this is NOT:"
  * heading form (the heading itself and every remaining clause of that
  * sentence, via `headingActive`).
  *

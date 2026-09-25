@@ -94,8 +94,8 @@ export function headNounPhrase(line: string): string {
  * 0.35 passes the right product and fails every generic or wrong one, but the
  * margin is 0.024: word overlap is a weak proxy. It fails closed, so a borderline
  * good PRD stops the build and asks the owner; the owner's job approval and the
- * claims-based gate checks remain the primary defences. An earlier version also
- * scored the declared entity names, which let the wrong product pass at 0.43.
+ * claims-based gate checks remain the primary defences. Declared entity names
+ * are not scored: counting them let the wrong product pass at 0.43.
  */
 export const FIDELITY_MIN_COVERAGE = 0.35;
 
@@ -363,9 +363,9 @@ export function evaluatePrdSelfCheck(
   const passed = items.filter((i) => i.pass).length;
   const total = items.length;
   const percent = total === 0 ? 0 : Math.round((passed / total) * 100);
-  // A fidelity miss used to still print "15/16 (94%)", which reads as a pass
-  // against the gate threshold of 90. The checklist row already fails. The
-  // grade line has to say so, or the percentage is the only thing a reader sees.
+  // Without this, a fidelity miss still prints "15/16 (94%)", which reads as a
+  // pass against the gate threshold of 90. The grade line has to carry the
+  // failure the checklist row already records.
   const fidelityFailed = items.some((item) => item.id === 'prompt-fidelity' && !item.pass);
   const gradeLine = fidelityFailed
     ? `**Grade: FAIL — prompt fidelity failed (${passed}/${total} checks, ${percent}%)**`

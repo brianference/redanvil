@@ -185,9 +185,7 @@ export function isTitleFragment(title: string): boolean {
   const first = words[0]!;
   // Mid-sentence residue: "And Book Trusted…" from stripping only the first verb.
   if (TITLE_LEADING_CONJUNCTION.test(first)) return true;
-  // Imperative / task openers are never product names (any length).
-  // Previously only length>4 was flagged, so "And Book Trusted Local Pet Sitters"
-  // (starts with And) and short verb titles slipped through.
+  // Imperative / task openers are never product names, whatever their length.
   if (TITLE_LEADING_VERBS.test(first)) return true;
   // "Find And Book …" style: verb + conjunction still visible.
   if (

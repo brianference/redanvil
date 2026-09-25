@@ -6,15 +6,10 @@
 /**
  * What the app actually DOES, extracted from the prompt.
  *
- * Features used to be derived from entity names alone: given "flight times"
- * you got "Browse & search FlightTime", "FlightTime detail", "Manage
- * FlightTime" — a CRUD app over a table with `title` and `description`. The
- * prompt was never passed to the derivation at all, so a request for "the
- * lowest cost airline flight, nonstop or one layover, with limits on layover
- * duration, arrival time and total travel time" produced a spec containing no
- * flight search and none of those constraints.
- *
- * Entities say what the app stores. Only the prompt says what it is for.
+ * Entity names alone say what the app stores, not what it is for: from "flight
+ * times" they give "Browse & search FlightTime", a CRUD app over a table, and a
+ * request for "the lowest cost airline flight, nonstop or one layover" would get
+ * no flight search and none of its constraints. The prompt says what it is for.
  */
 export interface Capability {
   /** The shape of work the app does. */
@@ -39,7 +34,7 @@ export interface Capability {
  *
  * Score is the count of these that hit a non-negated clause, so "appointments"
  * (one scheduling signal) loses to "tracks" plus "history" (two tracking
- * signals) instead of winning because schedule used to be earlier in the list.
+ * signals) whatever order the kinds are listed in.
  */
 export interface KindRule {
   /** Capability this signal group identifies. */
