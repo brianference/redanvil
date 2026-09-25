@@ -11,13 +11,13 @@
     ],
     "note": "axe-core 4.12.1 against https://redanvil-dashboard.pages.dev on this build: 0 colour-contrast violation nodes and 0 other violation types in BOTH themes. Resolved backgrounds confirm the audit really switched theme (dark rgb(11,11,15), light rgb(246,247,251)).",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-premium-nav",
@@ -30,13 +30,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: 4 header link(s) [App Builder, Runs, About, Contact], aria-current on \"Runs\"",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-required-pages",
@@ -49,13 +49,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: /about 200 \"About\"; /contact 200 \"Contact\"; /terms 200 \"Terms\"; /privacy 200 \"Privacy\"",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-no-attribution",
@@ -67,13 +67,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: no attribution text",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-responsive-375",
@@ -86,13 +86,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: no horizontal overflow at 375",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-product-completeness",
@@ -104,13 +104,13 @@
     ],
     "note": "The dashboard's core feature is showing real gate runs, and it does: the index renders a run card carrying measured values from the committed results feed (score 100, 46/46 rules, 1 iteration) rather than an empty shell, plus KPI tiles derived from the same data. Runtime parity passes on the real Workers runtime (/ 200 and /api/health 200), so this is a booting app and not just static assets.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-visual-review-recorded",
@@ -127,13 +127,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: 0 console/page error(s) across the measured loads",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-seo-og",
@@ -145,13 +145,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: title \"RedAnvil Dashboard — build runs\", description present, og:image present",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-cross-link",
@@ -163,13 +163,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: cross-site link present",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-touch-targets",
@@ -181,13 +181,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: 13 interactive elements at 375, 0 under 44px",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-type-floor",
@@ -199,13 +199,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: minimum body font 16px at 375, 0 node(s) under 16px",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-noncolor-state",
@@ -218,13 +218,13 @@
     ],
     "note": "Measured by design_audit.mjs on production: active nav item: weight 650, gradient background true, aria-current present true",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-safe-areas",
@@ -236,55 +236,59 @@
     ],
     "note": "Measured by design_audit.mjs on production: header position sticky, padding-top 0px",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "u-conc-idiomatic",
-    "passed": false,
+    "passed": true,
     "method": "judge",
     "evidence": [
       "dashboard/src/lib/useRuns.ts",
       "dashboard/src/components/KpiStrip.tsx",
-      "dashboard/src/components/RunSearch.tsx",
+      "dashboard/src/components/runDetail/RunHeader.tsx",
+      "dashboard/src/components/RunList.tsx",
       "dashboard/src/pages/RunDetail.tsx"
     ],
-    "note": "useRuns.ts:52-56 builds the error message from a nested ternary (aborted ? … : err instanceof Error ? … : 'load failed') that has to be decoded to read. KpiStrip.tsx:56-61 is another nested ternary for the average display. useRuns.ts:40-43 picks between `get` and `fetch` with an undefined-check ternary where a default parameter would read at a glance. RunSearch.tsx:55-68 renders a <label style={{display:'none'}}>, which never reaches the accessibility tree, and the input repeats the same text in aria-label. RunSearch.tsx:61 sets role=\"searchbox\" on type=\"search\", which already has that implicit role. The JSDoc at RunSearch.tsx:31 says the query arrives 'already-trimmed, lowercased', yet RunSearch.tsx:35 trims and lowercases it again. RunDetail.tsx:348 and RunDetail.tsx:409 compute the same `title` expression twice.",
-    "reviewedAt": "2026-09-25T05:08:36.686Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "note": "The old nested ternaries are now flat early-return helpers: describeFetchError at useRuns.ts:24-30, feedState at useRuns.ts:39-45 and formatAverage at KpiStrip.tsx:59-63. detailTitle at RunDetail.tsx:19-21 is a one-line ternary you can read at a glance. I found no dense line that needs a comment to decode. There are two small nits that don't fail the rule. StatusIcon repeats the `passed ?` ternary three times (RunList.tsx:172-176) where one tone variable would do. RunHeader.tsx:107 checks `commitUrl !== null && run.commit !== null`, and the second check exists only to narrow run.commit's type for commitValue.",
+    "reviewedAt": "2026-09-25T05:45:01.434Z",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src/lib/useRuns.ts",
       "dashboard/src/components/KpiStrip.tsx",
-      "dashboard/src/components/RunSearch.tsx",
+      "dashboard/src/components/runDetail/RunHeader.tsx",
+      "dashboard/src/components/RunList.tsx",
       "dashboard/src/pages/RunDetail.tsx"
     ],
     "schemaVersion": 2
   },
   {
     "ruleId": "u-conc-no-speculative-abstraction",
-    "passed": false,
+    "passed": true,
     "method": "judge",
     "evidence": [
-      "dashboard/src/lib/useDrawerA11y.ts",
-      "dashboard/src/lib/useDrawerA11y.test.ts",
-      "dashboard/src/components/shell/MobileDrawer.tsx",
-      "dashboard/src/lib/summary.ts",
-      "dashboard/src/lib/summary.test.ts"
+      "dashboard/src/lib/useRuns.ts",
+      "dashboard/src/components/Page.tsx",
+      "dashboard/src/lib/linkify.tsx",
+      "dashboard/src/lib/runLinks.ts",
+      "dashboard/src/components/FeedStatus.tsx",
+      "dashboard/src/lib/summary.ts"
     ],
-    "note": "src/lib/useDrawerA11y.ts:8-17 is a re-export shim with no production caller. MobileDrawer.tsx:5 imports the shared design-system/MobileDrawer directly, and grep shows the shim's only importer is its own test (useDrawerA11y.test.ts:2). It is a test-only dual. Its header says it was kept 'so existing imports and tests are unchanged.' summary.ts:3 re-exports safeHttpUrl and safeUrl. Nothing imports safeHttpUrl from it, and only summary.test.ts:7 imports safeUrl from it, while production code (summary.ts:4) imports safeUrl straight from design-system. The `get` parameter of fetchRuns (useRuns.ts:37) is never passed by its only production caller (useRuns.ts:73), so it is a layer that exists only for tests.",
-    "reviewedAt": "2026-09-25T05:08:36.687Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "note": "fetchRuns (useRuns.ts:59) no longer takes the test-only fetcher parameter, and commit 536d084 deleted the useDrawerA11y shim. Every exported helper I grepped has a production caller: parseRunsFeed calls parseRun (summary.ts:180), runSchema calls gatedCommit (summary.ts:137), RunHeader.tsx:68 and :101 call gatedCommitUrl and gateResultUrl, RuleBreakdown.tsx:70 calls groupRulesByLane, KpiStrip.tsx:71 calls formatAverage and RunsOverview.tsx:37 calls matchesRunQuery. Page.tsx:28-55 is thin, but it passes the dashboard's own chrome to the shared page component. The closest call is lib/linkify.tsx:17-19. It is a one-line wrapper that only ContentSections.tsx uses (lines 88 and 93), and its comment says it was kept 'so existing imports are unchanged'. I didn't fail it because it binds the app's accent colour so design-system stays theme-agnostic, and app-builder uses the same wrapper. runFixture.ts is used only by tests, and line 13 says so.",
+    "reviewedAt": "2026-09-25T05:45:01.435Z",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
-      "dashboard/src/lib/useDrawerA11y.ts",
-      "dashboard/src/lib/useDrawerA11y.test.ts",
-      "dashboard/src/components/shell/MobileDrawer.tsx",
-      "dashboard/src/lib/summary.ts",
-      "dashboard/src/lib/summary.test.ts"
+      "dashboard/src/lib/useRuns.ts",
+      "dashboard/src/components/Page.tsx",
+      "dashboard/src/lib/linkify.tsx",
+      "dashboard/src/lib/runLinks.ts",
+      "dashboard/src/components/FeedStatus.tsx",
+      "dashboard/src/lib/summary.ts"
     ],
     "schemaVersion": 2
   },
@@ -293,42 +297,40 @@
     "passed": false,
     "method": "judge",
     "evidence": [
+      "dashboard/src/pages/NotFound.tsx",
+      "dashboard/src/components/shell/constants.ts",
       "dashboard/src/theme.ts",
-      "dashboard/src/components/KpiStrip.tsx",
-      "dashboard/src/components/RunList.tsx",
-      "dashboard/src/components/StatusBadge.tsx",
-      "dashboard/src/pages/RunDetail.tsx",
-      "dashboard/src/pages/Home.tsx"
+      "dashboard/src/components/runDetail/BackToRunsLink.tsx",
+      "dashboard/src/components/runDetail/styles.ts"
     ],
-    "note": "theme.ts:25-26 exposes the shared space and radius tokens, but components hand-roll values instead. KpiStrip.tsx:22 sets borderRadius: 10, and KpiStrip.tsx:23 pads with `theme.space.sm + 2`. RunList.tsx:28-30 sets gap: 10, minHeight: 56 and padding '10px 12px'. RunList.tsx:43-50 hardcodes 36, 36, 9 and 15. RunList.tsx:260 sets minHeight: 32. StatusBadge.tsx:30 sets borderRadius: 999. RunDetail.tsx:258 hardcodes a monospace font stack the theme does not define. linkStyle and recoveryLinkStyle at RunDetail.tsx:68-86 are near-duplicates. The loading and error <p role=status/alert> markup is repeated in Home.tsx:35-53 and RunDetail.tsx:350-369, with no shared state component. Home.tsx:72 re-implements the trim check that matchesRunQuery already does.",
-    "reviewedAt": "2026-09-25T05:08:36.687Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "note": "NotFound.tsx:6 and :43 import TOUCH_TARGET_MIN_PX (constants.ts:23, value 44). That duplicates theme.touch (theme.ts:29, also 44), which the rest of src uses, and NotFound is the constant's only consumer. NotFound.tsx:35-52 also builds its own 'back home' link with an 11-property inline style. The codebase already has that link: BackToRunsLink.tsx:18-24, built on the shared linkStyle at runDetail/styles.ts:54-61 with the same minHeight, inline-flex and accent colour. The feed code does reuse what exists: Zod validates rows in summary.ts:108-137, links go through the shared safeUrl, SafeExternalLink and linkify helpers, and both data pages use the new FeedStatus notes.",
+    "reviewedAt": "2026-09-25T05:45:01.435Z",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
+      "dashboard/src/pages/NotFound.tsx",
+      "dashboard/src/components/shell/constants.ts",
       "dashboard/src/theme.ts",
-      "dashboard/src/components/KpiStrip.tsx",
-      "dashboard/src/components/RunList.tsx",
-      "dashboard/src/components/StatusBadge.tsx",
-      "dashboard/src/pages/RunDetail.tsx",
-      "dashboard/src/pages/Home.tsx"
+      "dashboard/src/components/runDetail/BackToRunsLink.tsx",
+      "dashboard/src/components/runDetail/styles.ts"
     ],
     "schemaVersion": 2
   },
   {
     "ruleId": "u-conc-smallest-diff",
-    "passed": false,
+    "passed": true,
     "method": "judge",
     "evidence": [
-      "dashboard/src/pages/Home.tsx",
-      "dashboard/src/lib/runLinks.ts",
-      "dashboard/src/components/RunList.browser.test.ts"
+      "dashboard/src/pages/RunDetail.tsx",
+      "dashboard/src/test-support/screenshotMatch.ts",
+      "dashboard/src/components/StatusBadge.tsx"
     ],
-    "note": "Commit dd9abb6, the latest dashboard fix, bundles at least four unrelated tickets. (1) New vitest browser and VRT lanes: a workspace, dependencies and baseline PNGs. (2) A run-detail feature linking the result file and commit, which touches runLinks.ts, the provenance parsing in summary.ts, and en.ts. (3) Moving the score-note width out of inline style (Home.tsx:68, theme.css). (4) Gate-check changes outside the app: fe-breadcrumbs, fe-resource-links and lib/rendered-detail-id.mjs. The diff is not scoped to one ticket.",
-    "reviewedAt": "2026-09-25T05:08:36.687Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "note": "Commit 536d084 changes 32 files (+1229/-763) to answer eight judge findings. Most of the churn comes from moving RunDetail.tsx's inline components into components/runDetail/* (RunDetail.tsx lost 379 lines) and from test rewrites the u-test-* findings asked for. The only change outside those eight rules adds a timeout to the PNG decode fetch in screenshotMatch.ts. It is 5 lines of test support, and the commit message names it. StatusBadge.tsx:31 swaps 999 for theme.radius.lg, which the commit ties to the tokens finding. I found no unrelated feature work. The commit message says the remaining RunList spacing values were left alone on purpose so the VRT baselines would not change.",
+    "reviewedAt": "2026-09-25T05:45:01.435Z",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
-      "dashboard/src/pages/Home.tsx",
-      "dashboard/src/lib/runLinks.ts",
-      "dashboard/src/components/RunList.browser.test.ts"
+      "dashboard/src/pages/RunDetail.tsx",
+      "dashboard/src/test-support/screenshotMatch.ts",
+      "dashboard/src/components/StatusBadge.tsx"
     ],
     "schemaVersion": 2
   },
@@ -348,47 +350,51 @@
   },
   {
     "ruleId": "u-test-adequacy",
-    "passed": false,
+    "passed": true,
     "method": "judge",
     "evidence": [
-      "dashboard/src/pages/Home.tsx",
-      "dashboard/src/theme.css",
+      "dashboard/src/lib/useRuns.test.ts",
       "dashboard/src/pages/Home.test.ts",
-      "dashboard/tests/runs.spec.ts",
-      "dashboard/src/components/RunList.tsx",
-      "dashboard/src/components/RunList.test.ts"
+      "dashboard/src/pages/RunDetail.test.ts",
+      "dashboard/src/components/KpiStrip.test.ts",
+      "dashboard/src/components/ScoreNote.browser.test.ts",
+      "dashboard/src/components/RunSearch.browser.test.ts",
+      "dashboard/src/components/RunList.browser.test.ts"
     ],
-    "note": "dd9abb6 added the .ra-score-note class (Home.tsx:68, theme.css:75) and its 60ch measure, and no assertion covers either: grep of src and tests finds no test that references ra-score-note or scoreNote. Home.test.ts:39-74 covers loading, error, empty and no-match. It never asserts the ready path where a query narrows the list to a non-empty subset, and it never checks that the score note renders. RunList.tsx:243-249 is an empty branch that RunList.test.ts:18-21 asserts, but production cannot reach it because Home.tsx:55 and Home.tsx:72 handle both empty cases first. That test covers dead code, not behaviour. The border colour-mix branch in StatusIcon (RunList.tsx:148-150) has no assertion.",
-    "reviewedAt": "2026-09-25T05:08:36.687Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "note": "Every new behaviour in the diff has an assertion. Three test files cover the partial state: fetchRuns (useRuns.test.ts:45-53), HomeBody (Home.test.ts:90-106), and RunDetailView when the run is missing or present (RunDetail.test.ts:126-147). useRuns.test.ts:60-69 shows a feed of only bad rows becomes an error, :71-74 shows an empty array stays ready, and :84-107 runs the timeout through the real AbortSignal.timeout. KpiStrip.test.ts:21-34 covers formatAverage's dash, whole-number and decimal cases. The browser lane checks that the search label renders off-screen (RunSearch.browser.test.ts:55-71), that the score note stops at 60ch (ScoreNote.browser.test.ts:30-56), and that the status icon's border is tinted (RunList.browser.test.ts:72+). Two branches have no test, and neither changes the verdict. describeFetchError's non-Error branch (useRuns.ts:25, 'load failed') came over from the old ternary rather than being added. No test pairs a partial feed with an empty slug (the `slug.length > 0` check at RunDetail.tsx:85), and the /run/:slug route can't produce an empty slug.",
+    "reviewedAt": "2026-09-25T05:45:01.435Z",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
-      "dashboard/src/pages/Home.tsx",
-      "dashboard/src/theme.css",
+      "dashboard/src/lib/useRuns.test.ts",
       "dashboard/src/pages/Home.test.ts",
-      "dashboard/tests/runs.spec.ts",
-      "dashboard/src/components/RunList.tsx",
-      "dashboard/src/components/RunList.test.ts"
+      "dashboard/src/pages/RunDetail.test.ts",
+      "dashboard/src/components/KpiStrip.test.ts",
+      "dashboard/src/components/ScoreNote.browser.test.ts",
+      "dashboard/src/components/RunSearch.browser.test.ts",
+      "dashboard/src/components/RunList.browser.test.ts"
     ],
     "schemaVersion": 2
   },
   {
     "ruleId": "u-test-behavioral",
-    "passed": false,
+    "passed": true,
     "method": "judge",
     "evidence": [
-      "dashboard/tests/runs.spec.ts",
+      "dashboard/src/lib/useRuns.test.ts",
+      "dashboard/src/pages/Home.test.ts",
       "dashboard/src/components/RunList.test.ts",
-      "dashboard/src/components/KpiStrip.test.ts",
-      "dashboard/src/lib/useRuns.test.ts"
+      "dashboard/tests/runs.spec.ts",
+      "dashboard/src/components/Page.test.ts"
     ],
-    "note": "Several e2e assertions check presence, not behaviour. runs.spec.ts:25 checks count > 0, and runs.spec.ts:32-35 checks length > 0 plus that the text contains a digit. runs.spec.ts:51 passes when the first element matching /pass|fail|blocker|rule/i is visible, and nav or chrome text can satisfy that. runs.spec.ts:92 passes when the first link on the page is visible, and the header logo satisfies that. The unit tests have the same weakness. RunList.test.ts:31 checks that the html contains '100', and RunList.test.ts:45 checks that it contains '!'. Both substrings match almost any render. RunList.test.ts:26-27 asserts markup structure (no '<table', has '<article') instead of behaviour. KpiStrip.test.ts:32 only checks that an em dash character appears somewhere. useRuns.test.ts:13-15 resets fake timers that were never installed. The real timeout path (AbortSignal.timeout at useRuns.ts:42) never runs, because the test fakes an AbortError through the injected `get`. The browser lane does assert real behaviour (RunList.browser.test.ts:49-85), and so do the fetchRuns error-branch tests.",
-    "reviewedAt": "2026-09-25T05:08:36.687Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "note": "The tests mock at the boundary: useRuns.test.ts replaces the global fetch (lines 27-29, 56, 92-100, 110-112) rather than injecting a fetcher. They assert outcomes. useRuns.test.ts compares whole RunsState objects with toEqual (lines 57, 73, 78, 106, 113). Home.test.ts:76-88 checks which slugs survive a search. RunList.test.ts checks the full summary line (lines 39, 57) and the FAIL badge against the threshold (line 56). Error and empty branches have tests too. The e2e specs drive the real UI by role and check the URL, the heading and that the count matches the cards (runs.spec.ts:31-57, 104-113). Some checks are weaker. Home.test.ts:61 checks `not.toContain(en.pages.home.error(''))`, which only tests a prefix. KpiStrip.test.ts:16-18 matches bare `>3<` substrings. Page.test.ts parses nav HTML with regexes. All three still check names and state a user sees, not internals.",
+    "reviewedAt": "2026-09-25T05:45:01.435Z",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
-      "dashboard/tests/runs.spec.ts",
+      "dashboard/src/lib/useRuns.test.ts",
+      "dashboard/src/pages/Home.test.ts",
       "dashboard/src/components/RunList.test.ts",
-      "dashboard/src/components/KpiStrip.test.ts",
-      "dashboard/src/lib/useRuns.test.ts"
+      "dashboard/tests/runs.spec.ts",
+      "dashboard/src/components/Page.test.ts"
     ],
     "schemaVersion": 2
   },
@@ -397,36 +403,48 @@
     "passed": false,
     "method": "judge",
     "evidence": [
+      "dashboard/src/pages/NotFound.tsx",
+      "dashboard/src/pages/Home.tsx",
       "dashboard/src/pages/RunDetail.tsx",
-      "dashboard/src/pages/Home.tsx"
+      "dashboard/src/pages/About.tsx"
     ],
-    "note": "RunDetail.tsx is a 421-line page file. It defines six components inside the page: RunHeader (:92), IterationItem (:155), IterationHistory (:206), RuleRow (:241), RuleBreakdown (:273) and BackToRunsLink (:327). It also holds eight module-level style objects (:29-86). Its markup carries many inline style={{…}} literals, for example at :99-106, :165-173, :180-187, :218-224, :243-255 and :288-295. The return in HomeBody inlines raw <p> elements with inline style objects (Home.tsx:38, 48, 59, 68, 73) instead of composing named state components. RunDetailBody (RunDetail.tsx:314-322) does read as a short component list, but the page still owns and inlines its own markup and styles.",
-    "reviewedAt": "2026-09-25T05:08:36.687Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "note": "Home.tsx:44-51, RunDetail.tsx:28-36 and :52-93, and the About and Contact pages (e.g. Contact.tsx:14-18) return short lists of named components, and the page passes its state down. Home owns the search query through useState at Home.tsx:63. NotFound.tsx:26-53 doesn't follow the pattern. It returns a raw <p> with an inline style object (line 28) and a <Link> with an 11-property inline style object (lines 35-52) instead of using a named component like the existing BackToRunsLink. The rule excludes exactly this: a page that writes its own markup and style objects.",
+    "reviewedAt": "2026-09-25T05:45:01.435Z",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
+      "dashboard/src/pages/NotFound.tsx",
+      "dashboard/src/pages/Home.tsx",
       "dashboard/src/pages/RunDetail.tsx",
-      "dashboard/src/pages/Home.tsx"
+      "dashboard/src/pages/About.tsx"
     ],
     "schemaVersion": 2
   },
   {
     "ruleId": "fe-fail-closed-states",
-    "passed": false,
+    "passed": true,
     "method": "judge",
     "evidence": [
-      "dashboard/src/lib/summary.ts",
       "dashboard/src/lib/useRuns.ts",
+      "dashboard/src/lib/summary.ts",
       "dashboard/src/pages/Home.tsx",
-      "dashboard/src/pages/RunDetail.tsx"
+      "dashboard/src/components/RunsOverview.tsx",
+      "dashboard/src/pages/RunDetail.tsx",
+      "dashboard/src/components/runDetail/IterationHistory.tsx",
+      "dashboard/src/components/runDetail/RuleBreakdown.tsx",
+      "dashboard/src/components/FeedStatus.tsx"
     ],
-    "note": "Loading, error and empty states exist and fail closed: Home.tsx:35-62, RunDetail.tsx:350-392, and useRuns.ts:39-58, which turns parse failures into an error. No partial state exists anywhere. RunsState (useRuns.ts:10-13) has only loading, error and ready. parseRunsFeed (summary.ts:162-167) maps a throwing parseRun (summary.ts:145-156) over every row, so one malformed row turns the whole feed into an error and hides every valid run. That contradicts summary.ts:129-130, which says 'a bad deploy link must not hide an otherwise valid run'. The rule requires a partial state, and no screen defines what renders when some rows are valid and some are not.",
-    "reviewedAt": "2026-09-25T05:08:36.687Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "note": "RunsState has four states: loading, error, ready and partial (useRuns.ts:10-16). A failed fetch, a non-2xx response, bad JSON, a root that isn't an array or a timeout all become error (useRuns.ts:59-68, summary.ts:174-177). If every row is bad, the result is error, never an empty list (useRuns.ts:41-43). If some rows are bad, the result is partial, and a role=alert note says how many were hidden (Home.tsx:46-48). Home shows explicit loading and error states (Home.tsx:28-42), plus notes for an empty feed and for a search with no matches (RunsOverview.tsx:26-33, :43-44). RunDetail covers loading, error with a link back to the runs, found, not found, and not found on a partial feed (RunDetail.tsx:55-92). The iteration and rule sections have their own empty notes (IterationHistory.tsx:81-84, RuleBreakdown.tsx:64-67). Home.test.ts and RunDetail.test.ts assert each branch. One issue falls under u-legal-claims-true rather than this rule: the privacy text at en.ts:156 still says a malformed feed 'shows an error state' and never mentions the partial state.",
+    "reviewedAt": "2026-09-25T05:45:01.435Z",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
-      "dashboard/src/lib/summary.ts",
       "dashboard/src/lib/useRuns.ts",
+      "dashboard/src/lib/summary.ts",
       "dashboard/src/pages/Home.tsx",
-      "dashboard/src/pages/RunDetail.tsx"
+      "dashboard/src/components/RunsOverview.tsx",
+      "dashboard/src/pages/RunDetail.tsx",
+      "dashboard/src/components/runDetail/IterationHistory.tsx",
+      "dashboard/src/components/runDetail/RuleBreakdown.tsx",
+      "dashboard/src/components/FeedStatus.tsx"
     ],
     "schemaVersion": 2
   },
@@ -439,13 +457,13 @@
     ],
     "note": "Measured on production by desktop_width.mjs at 1440 AND 1920: every route's main content occupies 93% of the viewport, against an 80% minimum. Two widths on purpose — a rem cap reads as 90% at 1600 and 75% at 1920, which is how this shipped narrow four times before the rule existed.",
     "reviewedAt": "2026-07-25T07:07:14.565Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
     "scope": [
       "dashboard/src",
       "dashboard/public",
       "dashboard/index.html"
     ],
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-cold-visitor",
@@ -456,8 +474,8 @@
     ],
     "note": "cold_visitor against https://redanvil-dashboard.pages.dev: a first-time visitor gets a working app: 5 cold-start check(s) held",
     "reviewedAt": "2026-08-01T01:29:32.535Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   },
   {
     "ruleId": "fe-design-archetype",
@@ -471,7 +489,7 @@
     ],
     "note": "Archetype: Metric board, recorded in claims.json and confirmed by opening evidence/screenshots/dashboard-1280-dark.png and evidence/screenshots/dashboard-1280-light.png before recording anything (both files actually opened and viewed, not inferred from source): the home route is a KPI band (Total runs / Passed / Avg score) above a list of run records with status badges -- numbers first, reading beats navigating, not a tile grid or a centred column. design_audit.mjs --claims measured the widest block at 1306 of 1440px (91%) with equal 67px gutters -- wide enough that the anti-column check (requires <72% width AND equal gutters to flag) does not fire either way, but the archetype itself is a genuine structural read of the rendered page, not picked to pass a check.",
     "reviewedAt": "2026-08-02T23:18:29.256Z",
-    "reviewedCommit": "061a630602c65b69905daa3b213b78b47d355cd6",
-    "bundleHash": "03b9f63ee209509f94b5bd3fb1ee2994a018b11787e3aecfb3c8d067cc1d3e2d"
+    "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
+    "bundleHash": "25b034b0629bd1f17b93e12de5743f94f61133ed4051dc19ea1c1fb556f65eb5"
   }
 ]

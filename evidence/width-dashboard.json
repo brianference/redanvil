@@ -1,6 +1,6 @@
 {
   "baseUrl": "https://redanvil-dashboard.pages.dev",
-  "checkedAt": "2026-09-25T05:05:12.666Z",
+  "checkedAt": "2026-09-25T05:40:59.958Z",
   "minPct": 80,
   "widths": [
     1440,
@@ -13,7 +13,7 @@
       "status": 200,
       "contentPct": 90,
       "contentBox": {
-        "left": 67,
+        "left": 66,
         "right": 1373
       },
       "ok": true
@@ -68,7 +68,7 @@
       "status": 200,
       "contentPct": 91,
       "contentBox": {
-        "left": 82,
+        "left": 81,
         "right": 1838
       },
       "ok": true

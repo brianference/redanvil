@@ -1,7 +1,7 @@
 {
   "source": "independent judge (claude, disposable worktree, no access to the verdict file)",
   "engine": "claude",
-  "reviewedCommit": "05e274bafe0702e39427756c45be0b99b380421c",
+  "reviewedCommit": "a4feb1883f87a7d75108397a55bbf5889fdbb69a",
   "app": "dashboard",
   "rulesRequested": [
     "u-conc-idiomatic",
@@ -16,48 +16,52 @@
   "why": "Judge verdicts are otherwise written by the same agent that wrote the code. This run exists to produce dissent that self-review structurally cannot.",
   "result": {
     "rulesJudged": 8,
-    "failed": 8,
+    "failed": 2,
     "citationsMissingOnDisk": 0
   },
   "adjudication": "UNADJUDICATED — each FAIL must be verified by hand before it is treated as real, and each one that turns out to be wrong must be recorded as wrong.",
   "verdicts": [
     {
       "ruleId": "u-conc-idiomatic",
-      "passed": false,
+      "passed": true,
       "evidence": [
         "dashboard/src/lib/useRuns.ts",
         "dashboard/src/components/KpiStrip.tsx",
-        "dashboard/src/components/RunSearch.tsx",
+        "dashboard/src/components/runDetail/RunHeader.tsx",
+        "dashboard/src/components/RunList.tsx",
         "dashboard/src/pages/RunDetail.tsx"
       ],
-      "note": "useRuns.ts:52-56 builds the error message from a nested ternary (aborted ? … : err instanceof Error ? … : 'load failed') that has to be decoded to read. KpiStrip.tsx:56-61 is another nested ternary for the average display. useRuns.ts:40-43 picks between `get` and `fetch` with an undefined-check ternary where a default parameter would read at a glance. RunSearch.tsx:55-68 renders a <label style={{display:'none'}}>, which never reaches the accessibility tree, and the input repeats the same text in aria-label. RunSearch.tsx:61 sets role=\"searchbox\" on type=\"search\", which already has that implicit role. The JSDoc at RunSearch.tsx:31 says the query arrives 'already-trimmed, lowercased', yet RunSearch.tsx:35 trims and lowercases it again. RunDetail.tsx:348 and RunDetail.tsx:409 compute the same `title` expression twice.",
+      "note": "The old nested ternaries are now flat early-return helpers: describeFetchError at useRuns.ts:24-30, feedState at useRuns.ts:39-45 and formatAverage at KpiStrip.tsx:59-63. detailTitle at RunDetail.tsx:19-21 is a one-line ternary you can read at a glance. I found no dense line that needs a comment to decode. There are two small nits that don't fail the rule. StatusIcon repeats the `passed ?` ternary three times (RunList.tsx:172-176) where one tone variable would do. RunHeader.tsx:107 checks `commitUrl !== null && run.commit !== null`, and the second check exists only to narrow run.commit's type for commitValue.",
       "missingEvidence": [],
       "scope": [
         "dashboard/src/lib/useRuns.ts",
         "dashboard/src/components/KpiStrip.tsx",
-        "dashboard/src/components/RunSearch.tsx",
+        "dashboard/src/components/runDetail/RunHeader.tsx",
+        "dashboard/src/components/RunList.tsx",
         "dashboard/src/pages/RunDetail.tsx"
       ],
       "schemaVersion": 2
     },
     {
       "ruleId": "u-conc-no-speculative-abstraction",
-      "passed": false,
+      "passed": true,
       "evidence": [
-        "dashboard/src/lib/useDrawerA11y.ts",
-        "dashboard/src/lib/useDrawerA11y.test.ts",
-        "dashboard/src/components/shell/MobileDrawer.tsx",
-        "dashboard/src/lib/summary.ts",
-        "dashboard/src/lib/summary.test.ts"
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/components/Page.tsx",
+        "dashboard/src/lib/linkify.tsx",
+        "dashboard/src/lib/runLinks.ts",
+        "dashboard/src/components/FeedStatus.tsx",
+        "dashboard/src/lib/summary.ts"
       ],
-      "note": "src/lib/useDrawerA11y.ts:8-17 is a re-export shim with no production caller. MobileDrawer.tsx:5 imports the shared design-system/MobileDrawer directly, and grep shows the shim's only importer is its own test (useDrawerA11y.test.ts:2). It is a test-only dual. Its header says it was kept 'so existing imports and tests are unchanged.' summary.ts:3 re-exports safeHttpUrl and safeUrl. Nothing imports safeHttpUrl from it, and only summary.test.ts:7 imports safeUrl from it, while production code (summary.ts:4) imports safeUrl straight from design-system. The `get` parameter of fetchRuns (useRuns.ts:37) is never passed by its only production caller (useRuns.ts:73), so it is a layer that exists only for tests.",
+      "note": "fetchRuns (useRuns.ts:59) no longer takes the test-only fetcher parameter, and commit 536d084 deleted the useDrawerA11y shim. Every exported helper I grepped has a production caller: parseRunsFeed calls parseRun (summary.ts:180), runSchema calls gatedCommit (summary.ts:137), RunHeader.tsx:68 and :101 call gatedCommitUrl and gateResultUrl, RuleBreakdown.tsx:70 calls groupRulesByLane, KpiStrip.tsx:71 calls formatAverage and RunsOverview.tsx:37 calls matchesRunQuery. Page.tsx:28-55 is thin, but it passes the dashboard's own chrome to the shared page component. The closest call is lib/linkify.tsx:17-19. It is a one-line wrapper that only ContentSections.tsx uses (lines 88 and 93), and its comment says it was kept 'so existing imports are unchanged'. I didn't fail it because it binds the app's accent colour so design-system stays theme-agnostic, and app-builder uses the same wrapper. runFixture.ts is used only by tests, and line 13 says so.",
       "missingEvidence": [],
       "scope": [
-        "dashboard/src/lib/useDrawerA11y.ts",
-        "dashboard/src/lib/useDrawerA11y.test.ts",
-        "dashboard/src/components/shell/MobileDrawer.tsx",
-        "dashboard/src/lib/summary.ts",
-        "dashboard/src/lib/summary.test.ts"
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/components/Page.tsx",
+        "dashboard/src/lib/linkify.tsx",
+        "dashboard/src/lib/runLinks.ts",
+        "dashboard/src/components/FeedStatus.tsx",
+        "dashboard/src/lib/summary.ts"
       ],
       "schemaVersion": 2
     },
@@ -65,81 +69,83 @@
       "ruleId": "u-conc-use-what-exists",
       "passed": false,
       "evidence": [
+        "dashboard/src/pages/NotFound.tsx",
+        "dashboard/src/components/shell/constants.ts",
         "dashboard/src/theme.ts",
-        "dashboard/src/components/KpiStrip.tsx",
-        "dashboard/src/components/RunList.tsx",
-        "dashboard/src/components/StatusBadge.tsx",
-        "dashboard/src/pages/RunDetail.tsx",
-        "dashboard/src/pages/Home.tsx"
+        "dashboard/src/components/runDetail/BackToRunsLink.tsx",
+        "dashboard/src/components/runDetail/styles.ts"
       ],
-      "note": "theme.ts:25-26 exposes the shared space and radius tokens, but components hand-roll values instead. KpiStrip.tsx:22 sets borderRadius: 10, and KpiStrip.tsx:23 pads with `theme.space.sm + 2`. RunList.tsx:28-30 sets gap: 10, minHeight: 56 and padding '10px 12px'. RunList.tsx:43-50 hardcodes 36, 36, 9 and 15. RunList.tsx:260 sets minHeight: 32. StatusBadge.tsx:30 sets borderRadius: 999. RunDetail.tsx:258 hardcodes a monospace font stack the theme does not define. linkStyle and recoveryLinkStyle at RunDetail.tsx:68-86 are near-duplicates. The loading and error <p role=status/alert> markup is repeated in Home.tsx:35-53 and RunDetail.tsx:350-369, with no shared state component. Home.tsx:72 re-implements the trim check that matchesRunQuery already does.",
+      "note": "NotFound.tsx:6 and :43 import TOUCH_TARGET_MIN_PX (constants.ts:23, value 44). That duplicates theme.touch (theme.ts:29, also 44), which the rest of src uses, and NotFound is the constant's only consumer. NotFound.tsx:35-52 also builds its own 'back home' link with an 11-property inline style. The codebase already has that link: BackToRunsLink.tsx:18-24, built on the shared linkStyle at runDetail/styles.ts:54-61 with the same minHeight, inline-flex and accent colour. The feed code does reuse what exists: Zod validates rows in summary.ts:108-137, links go through the shared safeUrl, SafeExternalLink and linkify helpers, and both data pages use the new FeedStatus notes.",
       "missingEvidence": [],
       "scope": [
+        "dashboard/src/pages/NotFound.tsx",
+        "dashboard/src/components/shell/constants.ts",
         "dashboard/src/theme.ts",
-        "dashboard/src/components/KpiStrip.tsx",
-        "dashboard/src/components/RunList.tsx",
-        "dashboard/src/components/StatusBadge.tsx",
-        "dashboard/src/pages/RunDetail.tsx",
-        "dashboard/src/pages/Home.tsx"
+        "dashboard/src/components/runDetail/BackToRunsLink.tsx",
+        "dashboard/src/components/runDetail/styles.ts"
       ],
       "schemaVersion": 2
     },
     {
       "ruleId": "u-conc-smallest-diff",
-      "passed": false,
+      "passed": true,
       "evidence": [
-        "dashboard/src/pages/Home.tsx",
-        "dashboard/src/lib/runLinks.ts",
-        "dashboard/src/components/RunList.browser.test.ts"
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/test-support/screenshotMatch.ts",
+        "dashboard/src/components/StatusBadge.tsx"
       ],
-      "note": "Commit dd9abb6, the latest dashboard fix, bundles at least four unrelated tickets. (1) New vitest browser and VRT lanes: a workspace, dependencies and baseline PNGs. (2) A run-detail feature linking the result file and commit, which touches runLinks.ts, the provenance parsing in summary.ts, and en.ts. (3) Moving the score-note width out of inline style (Home.tsx:68, theme.css). (4) Gate-check changes outside the app: fe-breadcrumbs, fe-resource-links and lib/rendered-detail-id.mjs. The diff is not scoped to one ticket.",
+      "note": "Commit 536d084 changes 32 files (+1229/-763) to answer eight judge findings. Most of the churn comes from moving RunDetail.tsx's inline components into components/runDetail/* (RunDetail.tsx lost 379 lines) and from test rewrites the u-test-* findings asked for. The only change outside those eight rules adds a timeout to the PNG decode fetch in screenshotMatch.ts. It is 5 lines of test support, and the commit message names it. StatusBadge.tsx:31 swaps 999 for theme.radius.lg, which the commit ties to the tokens finding. I found no unrelated feature work. The commit message says the remaining RunList spacing values were left alone on purpose so the VRT baselines would not change.",
       "missingEvidence": [],
       "scope": [
-        "dashboard/src/pages/Home.tsx",
-        "dashboard/src/lib/runLinks.ts",
-        "dashboard/src/components/RunList.browser.test.ts"
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/test-support/screenshotMatch.ts",
+        "dashboard/src/components/StatusBadge.tsx"
       ],
       "schemaVersion": 2
     },
     {
       "ruleId": "u-test-adequacy",
-      "passed": false,
+      "passed": true,
       "evidence": [
-        "dashboard/src/pages/Home.tsx",
-        "dashboard/src/theme.css",
+        "dashboard/src/lib/useRuns.test.ts",
         "dashboard/src/pages/Home.test.ts",
-        "dashboard/tests/runs.spec.ts",
-        "dashboard/src/components/RunList.tsx",
-        "dashboard/src/components/RunList.test.ts"
+        "dashboard/src/pages/RunDetail.test.ts",
+        "dashboard/src/components/KpiStrip.test.ts",
+        "dashboard/src/components/ScoreNote.browser.test.ts",
+        "dashboard/src/components/RunSearch.browser.test.ts",
+        "dashboard/src/components/RunList.browser.test.ts"
       ],
-      "note": "dd9abb6 added the .ra-score-note class (Home.tsx:68, theme.css:75) and its 60ch measure, and no assertion covers either: grep of src and tests finds no test that references ra-score-note or scoreNote. Home.test.ts:39-74 covers loading, error, empty and no-match. It never asserts the ready path where a query narrows the list to a non-empty subset, and it never checks that the score note renders. RunList.tsx:243-249 is an empty branch that RunList.test.ts:18-21 asserts, but production cannot reach it because Home.tsx:55 and Home.tsx:72 handle both empty cases first. That test covers dead code, not behaviour. The border colour-mix branch in StatusIcon (RunList.tsx:148-150) has no assertion.",
+      "note": "Every new behaviour in the diff has an assertion. Three test files cover the partial state: fetchRuns (useRuns.test.ts:45-53), HomeBody (Home.test.ts:90-106), and RunDetailView when the run is missing or present (RunDetail.test.ts:126-147). useRuns.test.ts:60-69 shows a feed of only bad rows becomes an error, :71-74 shows an empty array stays ready, and :84-107 runs the timeout through the real AbortSignal.timeout. KpiStrip.test.ts:21-34 covers formatAverage's dash, whole-number and decimal cases. The browser lane checks that the search label renders off-screen (RunSearch.browser.test.ts:55-71), that the score note stops at 60ch (ScoreNote.browser.test.ts:30-56), and that the status icon's border is tinted (RunList.browser.test.ts:72+). Two branches have no test, and neither changes the verdict. describeFetchError's non-Error branch (useRuns.ts:25, 'load failed') came over from the old ternary rather than being added. No test pairs a partial feed with an empty slug (the `slug.length > 0` check at RunDetail.tsx:85), and the /run/:slug route can't produce an empty slug.",
       "missingEvidence": [],
       "scope": [
-        "dashboard/src/pages/Home.tsx",
-        "dashboard/src/theme.css",
+        "dashboard/src/lib/useRuns.test.ts",
         "dashboard/src/pages/Home.test.ts",
-        "dashboard/tests/runs.spec.ts",
-        "dashboard/src/components/RunList.tsx",
-        "dashboard/src/components/RunList.test.ts"
+        "dashboard/src/pages/RunDetail.test.ts",
+        "dashboard/src/components/KpiStrip.test.ts",
+        "dashboard/src/components/ScoreNote.browser.test.ts",
+        "dashboard/src/components/RunSearch.browser.test.ts",
+        "dashboard/src/components/RunList.browser.test.ts"
       ],
       "schemaVersion": 2
     },
     {
       "ruleId": "u-test-behavioral",
-      "passed": false,
+      "passed": true,
       "evidence": [
-        "dashboard/tests/runs.spec.ts",
+        "dashboard/src/lib/useRuns.test.ts",
+        "dashboard/src/pages/Home.test.ts",
         "dashboard/src/components/RunList.test.ts",
-        "dashboard/src/components/KpiStrip.test.ts",
-        "dashboard/src/lib/useRuns.test.ts"
+        "dashboard/tests/runs.spec.ts",
+        "dashboard/src/components/Page.test.ts"
       ],
-      "note": "Several e2e assertions check presence, not behaviour. runs.spec.ts:25 checks count > 0, and runs.spec.ts:32-35 checks length > 0 plus that the text contains a digit. runs.spec.ts:51 passes when the first element matching /pass|fail|blocker|rule/i is visible, and nav or chrome text can satisfy that. runs.spec.ts:92 passes when the first link on the page is visible, and the header logo satisfies that. The unit tests have the same weakness. RunList.test.ts:31 checks that the html contains '100', and RunList.test.ts:45 checks that it contains '!'. Both substrings match almost any render. RunList.test.ts:26-27 asserts markup structure (no '<table', has '<article') instead of behaviour. KpiStrip.test.ts:32 only checks that an em dash character appears somewhere. useRuns.test.ts:13-15 resets fake timers that were never installed. The real timeout path (AbortSignal.timeout at useRuns.ts:42) never runs, because the test fakes an AbortError through the injected `get`. The browser lane does assert real behaviour (RunList.browser.test.ts:49-85), and so do the fetchRuns error-branch tests.",
+      "note": "The tests mock at the boundary: useRuns.test.ts replaces the global fetch (lines 27-29, 56, 92-100, 110-112) rather than injecting a fetcher. They assert outcomes. useRuns.test.ts compares whole RunsState objects with toEqual (lines 57, 73, 78, 106, 113). Home.test.ts:76-88 checks which slugs survive a search. RunList.test.ts checks the full summary line (lines 39, 57) and the FAIL badge against the threshold (line 56). Error and empty branches have tests too. The e2e specs drive the real UI by role and check the URL, the heading and that the count matches the cards (runs.spec.ts:31-57, 104-113). Some checks are weaker. Home.test.ts:61 checks `not.toContain(en.pages.home.error(''))`, which only tests a prefix. KpiStrip.test.ts:16-18 matches bare `>3<` substrings. Page.test.ts parses nav HTML with regexes. All three still check names and state a user sees, not internals.",
       "missingEvidence": [],
       "scope": [
-        "dashboard/tests/runs.spec.ts",
+        "dashboard/src/lib/useRuns.test.ts",
+        "dashboard/src/pages/Home.test.ts",
         "dashboard/src/components/RunList.test.ts",
-        "dashboard/src/components/KpiStrip.test.ts",
-        "dashboard/src/lib/useRuns.test.ts"
+        "dashboard/tests/runs.spec.ts",
+        "dashboard/src/components/Page.test.ts"
       ],
       "schemaVersion": 2
     },
@@ -147,33 +153,45 @@
       "ruleId": "fe-pages-compose",
       "passed": false,
       "evidence": [
+        "dashboard/src/pages/NotFound.tsx",
+        "dashboard/src/pages/Home.tsx",
         "dashboard/src/pages/RunDetail.tsx",
-        "dashboard/src/pages/Home.tsx"
+        "dashboard/src/pages/About.tsx"
       ],
-      "note": "RunDetail.tsx is a 421-line page file. It defines six components inside the page: RunHeader (:92), IterationItem (:155), IterationHistory (:206), RuleRow (:241), RuleBreakdown (:273) and BackToRunsLink (:327). It also holds eight module-level style objects (:29-86). Its markup carries many inline style={{…}} literals, for example at :99-106, :165-173, :180-187, :218-224, :243-255 and :288-295. The return in HomeBody inlines raw <p> elements with inline style objects (Home.tsx:38, 48, 59, 68, 73) instead of composing named state components. RunDetailBody (RunDetail.tsx:314-322) does read as a short component list, but the page still owns and inlines its own markup and styles.",
+      "note": "Home.tsx:44-51, RunDetail.tsx:28-36 and :52-93, and the About and Contact pages (e.g. Contact.tsx:14-18) return short lists of named components, and the page passes its state down. Home owns the search query through useState at Home.tsx:63. NotFound.tsx:26-53 doesn't follow the pattern. It returns a raw <p> with an inline style object (line 28) and a <Link> with an 11-property inline style object (lines 35-52) instead of using a named component like the existing BackToRunsLink. The rule excludes exactly this: a page that writes its own markup and style objects.",
       "missingEvidence": [],
       "scope": [
+        "dashboard/src/pages/NotFound.tsx",
+        "dashboard/src/pages/Home.tsx",
         "dashboard/src/pages/RunDetail.tsx",
-        "dashboard/src/pages/Home.tsx"
+        "dashboard/src/pages/About.tsx"
       ],
       "schemaVersion": 2
     },
     {
       "ruleId": "fe-fail-closed-states",
-      "passed": false,
+      "passed": true,
       "evidence": [
-        "dashboard/src/lib/summary.ts",
         "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/lib/summary.ts",
         "dashboard/src/pages/Home.tsx",
-        "dashboard/src/pages/RunDetail.tsx"
+        "dashboard/src/components/RunsOverview.tsx",
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/components/runDetail/IterationHistory.tsx",
+        "dashboard/src/components/runDetail/RuleBreakdown.tsx",
+        "dashboard/src/components/FeedStatus.tsx"
       ],
-      "note": "Loading, error and empty states exist and fail closed: Home.tsx:35-62, RunDetail.tsx:350-392, and useRuns.ts:39-58, which turns parse failures into an error. No partial state exists anywhere. RunsState (useRuns.ts:10-13) has only loading, error and ready. parseRunsFeed (summary.ts:162-167) maps a throwing parseRun (summary.ts:145-156) over every row, so one malformed row turns the whole feed into an error and hides every valid run. That contradicts summary.ts:129-130, which says 'a bad deploy link must not hide an otherwise valid run'. The rule requires a partial state, and no screen defines what renders when some rows are valid and some are not.",
+      "note": "RunsState has four states: loading, error, ready and partial (useRuns.ts:10-16). A failed fetch, a non-2xx response, bad JSON, a root that isn't an array or a timeout all become error (useRuns.ts:59-68, summary.ts:174-177). If every row is bad, the result is error, never an empty list (useRuns.ts:41-43). If some rows are bad, the result is partial, and a role=alert note says how many were hidden (Home.tsx:46-48). Home shows explicit loading and error states (Home.tsx:28-42), plus notes for an empty feed and for a search with no matches (RunsOverview.tsx:26-33, :43-44). RunDetail covers loading, error with a link back to the runs, found, not found, and not found on a partial feed (RunDetail.tsx:55-92). The iteration and rule sections have their own empty notes (IterationHistory.tsx:81-84, RuleBreakdown.tsx:64-67). Home.test.ts and RunDetail.test.ts assert each branch. One issue falls under u-legal-claims-true rather than this rule: the privacy text at en.ts:156 still says a malformed feed 'shows an error state' and never mentions the partial state.",
       "missingEvidence": [],
       "scope": [
-        "dashboard/src/lib/summary.ts",
         "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/lib/summary.ts",
         "dashboard/src/pages/Home.tsx",
-        "dashboard/src/pages/RunDetail.tsx"
+        "dashboard/src/components/RunsOverview.tsx",
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/components/runDetail/IterationHistory.tsx",
+        "dashboard/src/components/runDetail/RuleBreakdown.tsx",
+        "dashboard/src/components/FeedStatus.tsx"
       ],
       "schemaVersion": 2
     }
