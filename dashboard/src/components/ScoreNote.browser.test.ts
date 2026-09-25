@@ -1,10 +1,8 @@
 import { page } from '@vitest/browser/context';
 import { createElement } from 'react';
-import { flushSync } from 'react-dom';
-import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { en } from '../i18n/en';
-import '../theme.css';
+import { mount, type Mounted } from '../test-support/mount';
 import { ScoreNote } from './ScoreNote';
 
 /**
@@ -16,26 +14,18 @@ import { ScoreNote } from './ScoreNote';
 const DESKTOP_WIDTH = 1280;
 const VIEWPORT_HEIGHT = 900;
 
-let root: Root | null = null;
-let container: HTMLDivElement | null = null;
+let mounted: Mounted | null = null;
 
 afterEach(() => {
-  root?.unmount();
-  container?.remove();
-  root = null;
-  container = null;
+  mounted?.unmount();
+  mounted = null;
 });
 
 describe('ScoreNote in a real browser', () => {
   it('stops at a 60ch measure instead of running the full width at 1280', async () => {
     await page.viewport(DESKTOP_WIDTH, VIEWPORT_HEIGHT);
-    container = document.createElement('div');
-    document.body.appendChild(container);
-    const mountedRoot = createRoot(container);
-    root = mountedRoot;
-    flushSync(() => {
-      mountedRoot.render(createElement(ScoreNote));
-    });
+    mounted = mount(createElement(ScoreNote));
+    const { container } = mounted;
 
     const note = container.querySelector('p');
     if (note === null) throw new Error('score note not rendered');

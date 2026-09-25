@@ -1,10 +1,8 @@
 import { page, userEvent } from '@vitest/browser/context';
 import { createElement, useState } from 'react';
-import { flushSync } from 'react-dom';
-import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { en } from '../i18n/en';
-import '../theme.css';
+import { mount, type Mounted } from '../test-support/mount';
 import { RunSearch } from './RunSearch';
 
 /**
@@ -13,14 +11,11 @@ import { RunSearch } from './RunSearch';
  * label rendered fine as a string and named nothing.
  */
 
-let root: Root | null = null;
-let container: HTMLDivElement | null = null;
+let mounted: Mounted | null = null;
 
 afterEach(() => {
-  root?.unmount();
-  container?.remove();
-  root = null;
-  container = null;
+  mounted?.unmount();
+  mounted = null;
 });
 
 /** RunSearch with its query held in real state, as Home holds it. */
@@ -31,13 +26,7 @@ function ControlledSearch(): JSX.Element {
 
 /** Mount the controlled search into the document. */
 function mountSearch(): void {
-  container = document.createElement('div');
-  document.body.appendChild(container);
-  const mountedRoot = createRoot(container);
-  root = mountedRoot;
-  flushSync(() => {
-    mountedRoot.render(createElement(ControlledSearch));
-  });
+  mounted = mount(createElement(ControlledSearch));
 }
 
 /**
@@ -59,7 +48,7 @@ describe('RunSearch in a real browser', () => {
     // resolves the name either way, so it cannot tell the two apart; these
     // checks can.
     mountSearch();
-    const input = container?.querySelector('input');
+    const input = mounted?.container.querySelector('input');
     if (input === null || input === undefined) throw new Error('input not rendered');
     const label = input.labels?.[0];
     if (label === undefined) throw new Error('input has no associated label');

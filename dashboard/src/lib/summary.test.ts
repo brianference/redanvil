@@ -7,7 +7,7 @@ import {
   summarize,
   type Run
 } from './summary';
-import { validFeedRow } from './runFixture';
+import { sampleRun, validFeedRow } from './runFixture';
 
 /**
  * Parse a row that must be valid.
@@ -33,28 +33,6 @@ function rejectReason(row: unknown): string {
   return result.reason;
 }
 
-/**
- * Build a full Run for tests with optional field overrides.
- */
-function makeRun(partial: Pick<Run, 'finalScore' | 'passed'> & Partial<Run>): Run {
-  return {
-    slug: partial.slug ?? 'test-app',
-    finalScore: partial.finalScore,
-    threshold: partial.threshold ?? 90,
-    passed: partial.passed,
-    evaluated: partial.evaluated ?? 41,
-    total: partial.total ?? 41,
-    rules: partial.rules ?? [
-      { ruleId: 'u-typing-strict', passed: true },
-      { ruleId: 'fe-theme-tokens-only', passed: true }
-    ],
-    iterations: partial.iterations ?? [{ index: 1, score: partial.finalScore, blockers: [] }],
-    deployUrl: partial.deployUrl ?? null,
-    finishedAt: partial.finishedAt ?? '2026-07-21T00:00:00.000Z',
-    commit: partial.commit ?? null
-  };
-}
-
 describe('summarize', () => {
   it('returns zeros for an empty list', () => {
     expect(summarize([])).toEqual({ total: 0, passed: 0, avgScore: 0 });
@@ -62,9 +40,9 @@ describe('summarize', () => {
 
   it('counts how many runs passed', () => {
     const runs: Run[] = [
-      makeRun({ finalScore: 90, passed: true }),
-      makeRun({ finalScore: 80, passed: false }),
-      makeRun({ finalScore: 95, passed: true })
+      sampleRun({ finalScore: 90, passed: true }),
+      sampleRun({ finalScore: 80, passed: false }),
+      sampleRun({ finalScore: 95, passed: true })
     ];
     const result = summarize(runs);
     expect(result.total).toBe(3);
@@ -73,15 +51,15 @@ describe('summarize', () => {
 
   it('computes the average final score', () => {
     const runs: Run[] = [
-      makeRun({ finalScore: 90, passed: true }),
-      makeRun({ finalScore: 80, passed: false }),
-      makeRun({ finalScore: 100, passed: true })
+      sampleRun({ finalScore: 90, passed: true }),
+      sampleRun({ finalScore: 80, passed: false }),
+      sampleRun({ finalScore: 100, passed: true })
     ];
     expect(summarize(runs).avgScore).toBe(90);
   });
 
   it('treats a single run as total 1 with its own score', () => {
-    const result = summarize([makeRun({ finalScore: 72, passed: false })]);
+    const result = summarize([sampleRun({ finalScore: 72, passed: false })]);
     expect(result).toEqual({ total: 1, passed: 0, avgScore: 72 });
   });
 });
