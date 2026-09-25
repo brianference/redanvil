@@ -36,7 +36,8 @@ const CHANNELS = 4;
  * @returns Decoded pixels.
  */
 async function decodePng(base64: string): Promise<ImageData> {
-  const blob = await (await fetch(`data:image/png;base64,${base64}`)).blob();
+  const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+  const blob = new Blob([bytes], { type: 'image/png' });
   const bitmap = await createImageBitmap(blob, {
     colorSpaceConversion: 'none',
     premultiplyAlpha: 'none'
