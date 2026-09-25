@@ -28,9 +28,6 @@ async function sha256Bytes(value: string): Promise<Uint8Array> {
  */
 export async function digestsEqual(left: string, right: string): Promise<boolean> {
   const [leftBytes, rightBytes] = await Promise.all([sha256Bytes(left), sha256Bytes(right)]);
-  if (leftBytes.length !== SHA256_BYTES || rightBytes.length !== SHA256_BYTES) {
-    return false;
-  }
   let difference = 0;
   for (let index = 0; index < SHA256_BYTES; index += 1) {
     difference |= (leftBytes[index] ?? 0) ^ (rightBytes[index] ?? 0);
