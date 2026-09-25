@@ -11,3 +11,4 @@ export declare function runMeasKnownBad(
   io: { pass: () => never; fail: (m?: string) => never; notApplicable: (w?: string) => never },
   deps?: { required?: string[]; rerun?: boolean }
 ): void;
+export declare function implChangedMs(file: string): number | null;

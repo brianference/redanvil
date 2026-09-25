@@ -82,6 +82,41 @@ export function checkImplPath(ruleId) {
 }
 
 /**
+ * When a check implementation last changed, in ms.
+ *
+ * The file's mtime is what a checkout wrote, not when the check changed: a fresh
+ * clone (CI, a new worktree) stamps every check with the clone time, so every
+ * known-bad entry read as stale there and the rule could only pass on the
+ * machine that recorded it. The last commit touching the file is the same in
+ * every full clone. A file with uncommitted edits still uses its mtime, so a
+ * local change to a check is still caught before it is committed.
+ *
+ * @param {string} file Absolute path of the implementation.
+ * @returns {number | null} Change time in ms, or null when it cannot be read.
+ */
+export function implChangedMs(file) {
+  const cwd = dirname(file);
+  try {
+    const dirty = execFileSync('git', ['status', '--porcelain', '--', file], {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    }).trim();
+    if (dirty === '') {
+      const committed = execFileSync('git', ['log', '-1', '--format=%ct', '--', file], {
+        cwd,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore']
+      }).trim();
+      if (/^\d+$/.test(committed)) return Number(committed) * 1000;
+    }
+  } catch {
+    // Not a git checkout: fall through to the filesystem time.
+  }
+  return fileMtimeMs(file);
+}
+
+/**
  * Re-run a known-bad fixture and return the exit code.
  *
  * @param {string} ruleId
@@ -250,7 +285,7 @@ export function runMeasKnownBad(appDir, io, deps = {}) {
 
   const implMtime = (ruleId) => {
     const p = checkImplPath(ruleId);
-    return p ? fileMtimeMs(p) : null;
+    return p ? implChangedMs(p) : null;
   };
 
   // Resolution is ALWAYS applied when a rerun is requested -- resolveInput
