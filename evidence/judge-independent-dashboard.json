@@ -1,71 +1,173 @@
 {
   "source": "independent judge (claude, disposable worktree, no access to the verdict file)",
   "engine": "claude",
-  "reviewedCommit": "f7f0fc99ab8d0a169ca1ab911f9aee87a5c8cd6b",
+  "reviewedCommit": "aa20fe1892bdf869446408658644bd956744fb06",
   "app": "dashboard",
   "rulesRequested": [
+    "u-conc-idiomatic",
+    "u-conc-no-speculative-abstraction",
     "u-conc-use-what-exists",
-    "fe-pages-compose"
+    "u-conc-smallest-diff",
+    "u-test-adequacy",
+    "u-test-behavioral",
+    "fe-fail-closed-states"
   ],
   "why": "Judge verdicts are otherwise written by the same agent that wrote the code. This run exists to produce dissent that self-review structurally cannot.",
   "result": {
-    "rulesJudged": 2,
-    "failed": 1,
+    "rulesJudged": 7,
+    "failed": 5,
     "citationsMissingOnDisk": 0
   },
   "adjudication": "UNADJUDICATED — each FAIL must be verified by hand before it is treated as real, and each one that turns out to be wrong must be recorded as wrong.",
   "verdicts": [
     {
-      "ruleId": "u-conc-use-what-exists",
-      "passed": false,
+      "ruleId": "u-conc-idiomatic",
+      "passed": true,
       "evidence": [
-        "dashboard/src/lib/useRuns.ts",
-        "design-system/http.ts",
         "dashboard/src/lib/relativeTime.ts",
-        "dashboard/src/i18n/en.ts",
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/lib/summary.ts",
+        "dashboard/src/components/RunsOverview.tsx",
         "dashboard/src/components/RunList.tsx",
-        "dashboard/src/components/StatusBadge.tsx"
+        "dashboard/src/components/runDetail/RunHeader.tsx"
       ],
-      "note": "FAIL. The dashboard's only network call rewrites the shared transport by hand instead of using it. dashboard/src/lib/useRuns.ts:8 sets its own FETCH_TIMEOUT_MS = 10_000. Lines 59-68 then hand-write fetch with `AbortSignal.timeout`, `if (!res.ok) throw new Error(`HTTP ${res.status}`)` and `await res.json()`. design-system/http.ts:61 already exports `requestJson<T>(path, schema, init?, timeoutMs)`, which does the timeout, the status check (throwing an HttpError that carries `status`) and a parse through a Zod-shaped `{ parse }` parser. DEFAULT_FETCH_TIMEOUT_MS is exported at http.ts:18. The file's own header comment names this duplication: every app had written 'a timeout constant, a fetch that pulls { error } out of a failed body before throwing'. `requestJson(url, { parse: parseRunsFeed }, undefined, 10_000)` would replace the hand-written block, and describeFetchError/feedState would stay as they are. The cross-origin URL is no obstacle: requestJson is a plain fetch(path), and its only added header, `accept`, is CORS-safelisted. No dashboard file imports http.ts. Two smaller points: relativeTime.ts:7-30 hand-writes relative-time bucketing, with the unit suffixes in en.ts:335-342, instead of using Intl.RelativeTimeFormat. RunList.tsx:169-183 StatusIcon repeats the `passed ? '✓' : '!'` glyph and the success/error colour pairs that StatusBadge.tsx:19,36-37 already owns. The rest of the app reuses the shared library properly: Page (components/Page.tsx:6), SafeExternalLink (RunList.tsx:3, RunHeader.tsx:2), linkify (lib/linkify.tsx:8), useDocumentMeta (lib/useDocumentMeta.ts:7-10) and safeUrl (lib/summary.ts:3).",
+      "note": "I checked the changed logic, and the core code uses the standard idioms. relativeTime.ts:4 uses a single Intl.RelativeTimeFormat instance, and each unit branch is one line (lines 22-33). useRuns.ts:40-46 maps the feed state as a flat early-return chain. summary.ts:419-448 is a declarative Zod schema with a transform. RunsOverview.tsx:65 filters in one expression. No dense line needs a comment to decode. Two minor issues do not fail the rule. First, the guard `run.deployUrl !== null && run.deployUrl !== ''` (RunList.tsx:242, RunHeader.tsx:91) is redundant because the schema already collapses the value through safeUrl (summary.ts:442 -> design-system/safeHttpUrl.ts:74-76). Second, the comment at RunList.tsx:92-96 says the title 'still truncates, deliberately', which contradicts the comment at RunList.tsx:59-64 and titleStyle `overflowWrap: 'anywhere'` at RunList.tsx:69. That comment is stale.",
       "missingEvidence": [],
       "scope": [
-        "dashboard/src/lib/useRuns.ts",
-        "design-system/http.ts",
         "dashboard/src/lib/relativeTime.ts",
-        "dashboard/src/i18n/en.ts",
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/lib/summary.ts",
+        "dashboard/src/components/RunsOverview.tsx",
         "dashboard/src/components/RunList.tsx",
-        "dashboard/src/components/StatusBadge.tsx"
+        "dashboard/src/components/runDetail/RunHeader.tsx"
       ],
       "schemaVersion": 2
     },
     {
-      "ruleId": "fe-pages-compose",
-      "passed": true,
+      "ruleId": "u-conc-no-speculative-abstraction",
+      "passed": false,
       "evidence": [
-        "dashboard/src/pages/Home.tsx",
-        "dashboard/src/pages/RunDetail.tsx",
-        "dashboard/src/pages/NotFound.tsx",
-        "dashboard/src/pages/About.tsx",
-        "dashboard/src/pages/Terms.tsx",
-        "dashboard/src/pages/Privacy.tsx",
-        "dashboard/src/pages/Contact.tsx",
-        "dashboard/src/components/RunsOverview.tsx",
-        "dashboard/src/components/FeedStatus.tsx",
-        "dashboard/src/components/ContentSections.tsx"
+        "dashboard/src/lib/linkify.tsx",
+        "dashboard/src/components/ContentSections.tsx",
+        "dashboard/src/components/ScrollToTop.tsx",
+        "dashboard/src/App.tsx"
       ],
-      "note": "PASS. I opened all seven page files. None has inline markup, CSSProperties objects or style props. Each return is a short list of named components. Home.tsx:55-64 owns state: it calls useRuns() at :62 and useState for the query at :63, then passes both to HomeBody. HomeBody (:25-52) picks one branch per feed state, each rendering Page with LoadingNote, AlertNote, or AlertNote plus RunsOverview. RunsOverview.tsx:25-49 composes KpiStrip, ScoreNote, RunSearch, and either StatusNote or RunList, with the query passed down as a controlled prop. RunDetail.tsx:101-116 owns useParams and useRuns and hands them to RunDetailView (:52-93). Each branch there renders Page with LoadingNote/AlertNote/StatusNote/BackToRunsLink, or with RunDetailBody (:28-36 = RunHeader, IterationHistory, RuleBreakdown). NotFound.tsx:25-30 is Page, StatusNote and BackToRunsLink. About, Terms, Privacy and Contact (lines 14-18 in each) are Page wrapping ContentSections, with the text coming from en.pages.*. The only non-JSX logic in the pages is useDocumentMeta, the one-line detailTitle helper (RunDetail.tsx:19-21) and the slug lookup (:72), which is page-level selection and belongs in the page.",
+      "note": "dashboard/src/lib/linkify.tsx:17-19 is a one-line wrapper, `linkifyText(text) => linkifyTextShared(text, theme.color.accent)`, and its only caller file is ContentSections.tsx (lines 2, 88 and 93). That is the single-use trivial wrapper the rule forbids. Its own header (linkify.tsx:5) says it exists only 'so existing imports are unchanged'. ContentSections could call design-system/linkify.tsx:21 directly with the accent token. ScrollToTop.tsx:13-21 is a separate component layer mounted in App.tsx:15 for behaviour the shared Page already performs (see u-conc-use-what-exists).",
       "missingEvidence": [],
       "scope": [
-        "dashboard/src/pages/Home.tsx",
-        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/lib/linkify.tsx",
+        "dashboard/src/components/ContentSections.tsx",
+        "dashboard/src/components/ScrollToTop.tsx",
+        "dashboard/src/App.tsx"
+      ],
+      "schemaVersion": 2
+    },
+    {
+      "ruleId": "u-conc-use-what-exists",
+      "passed": false,
+      "evidence": [
+        "dashboard/src/components/ScrollToTop.tsx",
+        "dashboard/src/App.tsx",
+        "design-system/Page.tsx",
+        "dashboard/src/components/Page.tsx",
         "dashboard/src/pages/NotFound.tsx",
-        "dashboard/src/pages/About.tsx",
-        "dashboard/src/pages/Terms.tsx",
-        "dashboard/src/pages/Privacy.tsx",
-        "dashboard/src/pages/Contact.tsx",
-        "dashboard/src/components/RunsOverview.tsx",
-        "dashboard/src/components/FeedStatus.tsx",
-        "dashboard/src/components/ContentSections.tsx"
+        "dashboard/src/pages/About.tsx"
+      ],
+      "note": "dashboard/src/components/ScrollToTop.tsx:16-19 runs `window.scrollTo({ top: 0, left: 0, behavior: 'auto' })` on every `pathname` change. The shared page orchestrator already does exactly this in design-system/Page.tsx:112-118 (`useEffect(() => { setMenuOpen(false); window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }, [location.pathname])`). Every dashboard route renders through that Page via dashboard/src/components/Page.tsx:39: Home, RunDetail, About, NotFound (NotFound.tsx:26) and the others. So App.tsx:15 mounts a second hand-written copy of shared-library behaviour, and the scroll resets twice per navigation. The recent change does reuse existing code: useRuns.ts:62 calls the shared requestJson from design-system/http.ts:61, relativeTime.ts:4 calls Intl, and StatusBadge.tsx:26 is shared by RunList.tsx:170. That does not clear the duplicate.",
+      "missingEvidence": [],
+      "scope": [
+        "dashboard/src/components/ScrollToTop.tsx",
+        "dashboard/src/App.tsx",
+        "design-system/Page.tsx",
+        "dashboard/src/components/Page.tsx",
+        "dashboard/src/pages/NotFound.tsx",
+        "dashboard/src/pages/About.tsx"
+      ],
+      "schemaVersion": 2
+    },
+    {
+      "ruleId": "u-conc-smallest-diff",
+      "passed": false,
+      "evidence": [
+        "dashboard/src/components/ScrollToTop.tsx",
+        "dashboard/src/lib/linkify.tsx",
+        "dashboard/src/components/RunList.tsx"
+      ],
+      "note": "Not verified. I was told not to run git, and the tree has no diff artifact: dashboard/evidence holds only api-live-dashboard.json and measurement-meta.json. I therefore could not see which files the ticket commit touched or how large the change was. PASS needs proof, so this cannot pass. The tree also carries code the ticket does not need: a redundant ScrollToTop component (ScrollToTop.tsx, App.tsx:2,15), a pass-through linkify module (linkify.tsx:17-19), and a stale contradictory comment block in RunList.tsx:92-96.",
+      "missingEvidence": [],
+      "scope": [
+        "dashboard/src/components/ScrollToTop.tsx",
+        "dashboard/src/lib/linkify.tsx",
+        "dashboard/src/components/RunList.tsx"
+      ],
+      "schemaVersion": 2
+    },
+    {
+      "ruleId": "u-test-adequacy",
+      "passed": false,
+      "evidence": [
+        "dashboard/src/lib/relativeTime.ts",
+        "dashboard/src/lib/relativeTime.test.ts",
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/lib/useRuns.test.ts",
+        "dashboard/src/components/ScrollToTop.tsx"
+      ],
+      "note": "Three branches have no assertion. (1) The new Intl relativeTime has an untested month->year boundary, and it is wrong. For 360-364 days, `months = Math.floor(days/30)` is 12, which skips the `months < 12` branch at relativeTime.ts:31. Line 33 then formats `-Math.floor(days/365)` = -0 as a year. Run under Node 22, `new Intl.RelativeTimeFormat('en',{style:'narrow'}).format(-0,'year')` returns '0y ago'. relativeTime.test.ts:17-20 only checks 2mo and 2y, so this boundary has no assertion. (2) The non-Error branch of describeFetchError (useRuns.ts:26, returns 'load failed') has no assertion. Every error case in useRuns.test.ts:55-114 throws an Error or returns a response. (3) ScrollToTop.tsx has no test at all. The other branches are covered: the fetchRuns ready, partial, error, timeout and transport cases (useRuns.test.ts:37-114), the HomeBody and RunDetailView branches (Home.test.ts:40-106, RunDetail.test.ts:196-254), and the pass/fail status colour, shared from statusTone and asserted in RunList.browser.test.ts:72-91.",
+      "missingEvidence": [],
+      "scope": [
+        "dashboard/src/lib/relativeTime.ts",
+        "dashboard/src/lib/relativeTime.test.ts",
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/src/lib/useRuns.test.ts",
+        "dashboard/src/components/ScrollToTop.tsx"
+      ],
+      "schemaVersion": 2
+    },
+    {
+      "ruleId": "u-test-behavioral",
+      "passed": true,
+      "evidence": [
+        "dashboard/src/lib/useRuns.test.ts",
+        "dashboard/src/pages/Home.test.ts",
+        "dashboard/src/pages/RunDetail.test.ts",
+        "dashboard/src/components/RunList.test.ts",
+        "dashboard/src/components/RunList.browser.test.ts",
+        "dashboard/src/components/KpiStrip.test.ts",
+        "dashboard/tests/runs.spec.ts"
+      ],
+      "note": "The tests mock at the boundary and assert outcomes. useRuns.test.ts stubs the global fetch, not an injected fetcher (lines 27-29 and 92-100), and asserts the resulting RunsState, including the real AbortSignal.timeout path at lines 84-107. Home.test.ts and RunDetail.test.ts assert the copy a reader sees from the locale bundle and which links are present or absent, for example Home.test.ts:76-88, where the query narrows the list. RunList.browser.test.ts:49-106 drives real Enter, Space, click and Tab and asserts where navigation lands and the focus order. KpiStrip.test.ts:134-141 asserts the dash-not-zero behaviour. runs.spec.ts:31-113 asserts observable state with role locators. Some assertions check ARIA attribute strings (Home.test.ts:43-44), but those encode user-facing announcement behaviour, not internals. This one passes.",
+      "missingEvidence": [],
+      "scope": [
+        "dashboard/src/lib/useRuns.test.ts",
+        "dashboard/src/pages/Home.test.ts",
+        "dashboard/src/pages/RunDetail.test.ts",
+        "dashboard/src/components/RunList.test.ts",
+        "dashboard/src/components/RunList.browser.test.ts",
+        "dashboard/src/components/KpiStrip.test.ts",
+        "dashboard/tests/runs.spec.ts"
+      ],
+      "schemaVersion": 2
+    },
+    {
+      "ruleId": "fe-fail-closed-states",
+      "passed": false,
+      "evidence": [
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/App.tsx",
+        "dashboard/src/main.tsx",
+        "dashboard/src/pages/Home.tsx",
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/package.json"
+      ],
+      "note": "The feed states are defined correctly. Home.tsx:28-51 and RunDetail.tsx:55-92 handle loading, error, partial and empty/no-match. useRuns.ts:40-46 turns an all-rejected feed into an error, never an empty ready state. The detail route itself has an undefined failure state. RunDetail.tsx:103 calls `decodeURIComponent(rawSlug)` on a useParams value, and react-router-dom ^6.26 (package.json:23) already decodes params. A URL such as /run/100%25 therefore reaches that call as '100%', and in Node `decodeURIComponent('100%')` throws `URIError: URI malformed`. This throw happens during render. No error boundary exists anywhere: grep finds no ErrorBoundary or componentDidCatch in dashboard/src or design-system, main.tsx:6-10 renders App bare, and App.tsx:14-26 uses BrowserRouter with no errorElement. React then unmounts the whole tree, so the visitor gets a blank document instead of an error or not-found state. The double decode also means a slug containing an encoded '%' never matches its run. I derived this from the code and a Node decodeURIComponent check; I did not reproduce it in a browser.",
+      "missingEvidence": [],
+      "scope": [
+        "dashboard/src/pages/RunDetail.tsx",
+        "dashboard/src/App.tsx",
+        "dashboard/src/main.tsx",
+        "dashboard/src/pages/Home.tsx",
+        "dashboard/src/lib/useRuns.ts",
+        "dashboard/package.json"
       ],
       "schemaVersion": 2
     }
