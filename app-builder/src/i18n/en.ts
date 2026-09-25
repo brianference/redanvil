@@ -284,6 +284,7 @@ export const en = {
     download: 'Download .md',
     copy: 'Copy',
     copied: 'Copied',
+    copyFailed: 'Copy failed',
     newPrd: 'New PRD',
     saveToSite: 'Save to site',
     saving: 'Saving…',
@@ -297,6 +298,7 @@ export const en = {
     fidelityUnmatchedLabel: 'Not covered',
     errors: {
       generic: 'Could not save the PRD.',
+      unsafeLink: 'The PRD was saved, but the server returned a link this page will not open.',
       timeout: 'Save request timed out',
       network: 'Network error saving PRD'
     }
