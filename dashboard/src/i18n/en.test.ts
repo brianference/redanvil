@@ -97,10 +97,8 @@ describe('en locale bundle', () => {
     expect(locale.app.navGitHub).toBe('GitHub');
   });
 
-  // These were `length > 2` presence checks. An independent judge failed
-  // u-test-behavioral on them and it was right: `length > 2` passes for "xxx",
-  // for a leftover placeholder, and for the wrong page's title. A breadcrumb
-  // asserts the label a user reads, so the test should too.
+  // Exact labels, not a length check: `length > 2` passes for "xxx", for a
+  // leftover placeholder, and for the wrong page's title.
   it('gives every route a distinct, human breadcrumb title', () => {
     expect(en.pages.about.title).toBe('About');
     expect(en.pages.contact.title).toBe('Contact');
@@ -230,11 +228,7 @@ describe('Breadcrumbs', () => {
 describe('ThemeToggle', () => {
   it('renders a labeled theme control with glyph', () => {
     // The control is labelled with the action it performs, so it names the
-    // theme it switches TO, not the one in effect. f7ef3e1 made light the
-    // default first paint for every app, so the first paint offers dark. This
-    // test asserted themeToLight and the sun, which was correct only while the
-    // default was dark -- it failed the moment the default flipped, on a
-    // component that was behaving exactly as intended.
+    // theme it switches TO. Light is the default first paint, so it offers dark.
     const html = renderToStaticMarkup(createElement(ThemeToggle));
     expect(html).toContain(en.app.themeToDark);
     expect(html).toContain('aria-hidden="true"');

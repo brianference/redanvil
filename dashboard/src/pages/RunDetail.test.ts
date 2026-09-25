@@ -10,11 +10,8 @@ import { RunDetailBody, RunDetailView } from './RunDetail';
 
 describe('RunDetailBody', () => {
   it('renders score, coverage, iteration history, and per-rule breakdown', () => {
-    // The lane assertions below need one rule per lane, so the rules are stated
-    // here rather than taken from the shared fixture: this test is specifically
-    // about the per-lane grouping, and a lane heading only renders when a rule
-    // in that lane exists. Dropping to the fixture's two rules made the `hyg`
-    // assertion fail, which is the test doing its job.
+    // One rule per lane, stated here rather than taken from the fixture: a lane
+    // heading only renders when a rule in that lane exists.
     const run = sampleRun({
       rules: [
         { ruleId: 'u-typing-strict', passed: true },

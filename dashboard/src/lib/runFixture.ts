@@ -3,12 +3,7 @@ import type { Run } from './summary';
 /**
  * The canonical sample run used by tests, shaped like a real `results/all.json`
  * row: a first iteration that failed on a real blocker and a second that passed.
- *
- * `summary.test.ts` and `RunList.test.ts` each carried their own copy of this
- * literal — same score, same blocker id, same deploy URL, same timestamp — so a
- * change to the feed shape would have had to be made twice, and a test could
- * have gone on passing against a shape the app no longer produces. Keeping the
- * numbers here means the two suites cannot disagree about what a run looks like.
+ * One copy, so the suites cannot disagree about what a run looks like.
  *
  * Test-only: nothing under `src/` outside a `.test.ts` file imports it.
  *

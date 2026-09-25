@@ -162,9 +162,8 @@ describe('parseRun', () => {
     );
   });
 
-  // Values the hand-rolled `typeof` chain accepted because it only asked about
-  // the type, never the value. `typeof NaN === 'number'` is the classic one.
-  it('rejects numerically absurd rows the old typeof narrowing let through', () => {
+  // Values a type-only check would accept: `typeof NaN === 'number'`.
+  it('rejects numerically absurd rows that pass a typeof check', () => {
     expect(rejectReason(validFeedRow({ finalScore: Number.NaN }))).toMatch(/finalScore/);
     expect(rejectReason(validFeedRow({ total: -1 }))).toMatch(/total/);
     expect(rejectReason(validFeedRow({ evaluated: 1.5 }))).toMatch(/evaluated/);

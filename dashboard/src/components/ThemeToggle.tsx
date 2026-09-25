@@ -1,8 +1,5 @@
 /**
  * Thin wrapper: supplies this app's theme and copy to the shared ThemeToggle.
- *
- * Dashboard previously hardcoded 44 for the touch edge; that matches theme.touch
- * so rendered output is unchanged while staying on tokens.
  */
 import {
   ThemeToggle as SharedThemeToggle,

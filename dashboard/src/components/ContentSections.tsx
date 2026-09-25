@@ -19,11 +19,8 @@ export interface ContentSectionsProps {
   sections: readonly ContentSection[];
 }
 
-// Width lives in `.ra-prose-lead` / `.ra-prose-cols`, not here. These were
-// inline 40rem caps, which no media query can lift, and they held every
-// dashboard content page to 33% of a 1920 viewport. The app-builder side had
-// already moved to the shared prose classes; this file had not, and the width
-// check could not see it because it was measuring the container.
+// Width lives in `.ra-prose-lead` / `.ra-prose-cols`, not here: an inline
+// max-width cannot be lifted by a media query at wide viewports.
 const introStyle: CSSProperties = {
   color: theme.color.text,
   fontSize: theme.type.scale[2],
@@ -34,9 +31,7 @@ const introStyle: CSSProperties = {
 
 const updatedStyle: CSSProperties = {
   color: theme.color.muted,
-  // 16px: fe-type-floor is a blocker with a 16px body floor. Broadening the
-  // design audit from `/` to every route is what surfaced this — measuring one
-  // page hid a 14px line on four others.
+  // 16px: fe-type-floor holds body text to a 16px minimum on every route.
   fontSize: theme.type.scale[2],
   margin: `${theme.space.sm}px 0 0`
 };

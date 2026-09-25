@@ -48,11 +48,10 @@ function feedState(feed: ParsedFeed): RunsState {
 /**
  * Fetch and validate the results feed, resolving to a terminal state.
  *
- * Split out of the hook because every interesting branch lives here — HTTP
- * error, malformed feed, timeout, transport failure — and none of them had a
- * single assertion while they were tangled up in a `useEffect`. This is the one
- * place the app talks to an origin nobody here controls, so it is the one place
- * that must never render a failure as a clean empty success.
+ * Kept outside the hook so every branch (HTTP error, malformed feed, timeout,
+ * transport failure) is testable without a render. This is the one place the
+ * app talks to an origin nobody here controls, so it must never turn a failure
+ * into a clean empty success.
  *
  * @param url - Feed URL.
  * @returns A ready or partial state with runs, or an error state with a readable message.

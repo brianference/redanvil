@@ -56,12 +56,9 @@ const bodyStyle: CSSProperties = {
   minWidth: 0
 };
 
-// A run title is a slug — one hyphenated token — so it wraps mid-token rather
-// than ellipsising, the same as `metaTextStyle` below. As nowrap + ellipsis it
-// clipped "az-planting-calendar" by 13px at 375 on the runner, which
-// fe-responsive-375 counts as a defect whether or not the truncation was
-// deliberate. `anywhere` is what actually breaks a slug; normal wrapping finds
-// no break opportunity in it.
+// A run title is a slug, one hyphenated token, so it wraps mid-token rather
+// than overflowing at 375. `anywhere` is what breaks a slug; normal wrapping
+// finds no break opportunity in it.
 const titleStyle: CSSProperties = {
   fontSize: theme.type.scale[2],
   fontWeight: 650,
@@ -76,9 +73,8 @@ const titleStyle: CSSProperties = {
 };
 
 const metaStyle: CSSProperties = {
-  // 16px, not 14: fe-type-floor is a blocker with a 16px body floor, and this
-  // line carries the run's actual result ("100 - 46/46 rules - 1 iteration").
-  // Measured at 375 on production, it was the only node under the floor.
+  // 16px: fe-type-floor holds body text to 16px, and this line carries the
+  // run's actual result ("100 - 46/46 rules - 1 iteration").
   fontSize: theme.type.scale[2],
   color: theme.color.muted,
   marginTop: 2,
@@ -89,11 +85,8 @@ const metaStyle: CSSProperties = {
   flexWrap: 'wrap'
 };
 
-// "100 · 46/46 rules · 1 iteration" is the run's whole summary, and at 375 it
-// was truncating to "1 iter…" — the iteration count, which is the part you
-// actually scan for, cut in half. It wraps now. The title above still
-// truncates, deliberately: a slug can be arbitrarily long and it is a link
-// whose full text is one tap away.
+// "100 · 46/46 rules · 1 iteration" is the run's whole summary, so it wraps
+// rather than truncating: the iteration count at the end is the part you scan for.
 const metaTextStyle: CSSProperties = {
   minWidth: 0,
   overflowWrap: 'anywhere'
@@ -267,7 +260,6 @@ function RunCard({ run }: { run: Run }): JSX.Element {
 
 /**
  * Glanceable card list of build runs (status icon + badge, slug, meta, deploy).
- * Replaces the former table layout to match the approved grok-v5 mockup.
  * The caller owns the empty and no-match states; this always has runs to show.
  *
  * @returns The labelled run list.
