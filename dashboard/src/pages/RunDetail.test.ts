@@ -58,8 +58,9 @@ describe('RunDetailBody', () => {
         run: sampleRun({ iterations: [], rules: [], evaluated: 0, total: 0 })
       })
     );
-    expect(html).toContain(en.runDetail.iterationsEmpty);
-    expect(html).toContain(en.runDetail.rulesEmpty);
+    // Announced as settled status notes, not silent empty cards.
+    expect(html).toMatch(new RegExp(`role="status"[^>]*>${en.runDetail.iterationsEmpty}</p>`));
+    expect(html).toMatch(new RegExp(`role="status"[^>]*>${en.runDetail.rulesEmpty}</p>`));
   });
 });
 
@@ -130,6 +131,20 @@ describe('RunDetailView', () => {
     expect(html).toContain(en.runDetail.partialNotFound(1));
     expect(html).toContain('role="alert"');
     expect(html).not.toContain(en.runDetail.notFound);
+    expect(html).toContain(en.runDetail.backToRuns);
+  });
+
+  it('shows plain not-found, not the partial-feed alert, when the slug is missing from a partial feed', () => {
+    // With no slug there is no run the unreadable rows could be hiding.
+    const html = renderDetail('', {
+      status: 'partial',
+      runs: [sampleRun()],
+      rejected: ['malformed run at finalScore: Required']
+    });
+    expect(html).toContain(en.runDetail.notFound);
+    expect(html).toContain(en.runDetail.missingSlug);
+    expect(html).not.toContain(en.runDetail.partialNotFound(1));
+    expect(html).not.toContain('role="alert"');
     expect(html).toContain(en.runDetail.backToRuns);
   });
 
