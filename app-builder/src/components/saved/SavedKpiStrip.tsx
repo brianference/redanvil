@@ -14,12 +14,15 @@ export interface SavedKpiStripProps {
 
 /**
  * KPI strip for the Saved dashboard. When the list is cut off, the total is a
- * lower bound, and so is this week's count if every loaded build is this week's.
+ * lower bound.
  *
  * @param props - thisWeek and total counts, and whether the list is cut off.
  */
 export function SavedKpiStrip({ thisWeek, total, truncated }: SavedKpiStripProps): JSX.Element {
   const copy = en.pages.saved;
+  // Rows past the limit are older than every loaded row, so this week's count
+  // can only be short when every loaded row is from this week.
+  const thisWeekMayBeHigher = truncated && thisWeek === total;
   return (
     <div
       className="ra-saved-col ra-saved-grid"
@@ -27,7 +30,7 @@ export function SavedKpiStrip({ thisWeek, total, truncated }: SavedKpiStripProps
       role="group"
       aria-label={copy.kpiLabel}
     >
-      <KpiCard value={listCountLabel(thisWeek, truncated && thisWeek === total)} label={copy.kpiThisWeek} />
+      <KpiCard value={listCountLabel(thisWeek, thisWeekMayBeHigher)} label={copy.kpiThisWeek} />
       <KpiCard value={listCountLabel(total, truncated)} label={copy.kpiTotal} />
     </div>
   );
