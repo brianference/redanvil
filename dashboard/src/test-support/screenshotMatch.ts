@@ -24,6 +24,9 @@ const CHANNEL_TOLERANCE = 8;
  */
 const MAX_CHANGED_PIXELS = 0;
 
+/** Committed baselines, relative to a test file under src/components/. */
+const BASELINE_DIR = '../../test-support/screenshots';
+
 /** Decoded RGBA pixels of one PNG. */
 interface Pixels {
   width: number;
@@ -38,7 +41,10 @@ interface Pixels {
  * @returns Width, height and pixel data.
  */
 async function decodePng(base64: string): Promise<Pixels> {
-  const blob = await (await fetch(`data:image/png;base64,${base64}`)).blob();
+  // Decoded in place rather than fetched from a data: URL: nothing leaves the
+  // page, so there is no request that needs a timeout.
+  const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+  const blob = new Blob([bytes], { type: 'image/png' });
   const bitmap = await createImageBitmap(blob);
   const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
   const ctx = canvas.getContext('2d');
@@ -77,7 +83,9 @@ function changedPixels(actual: Pixels, baseline: Pixels): number {
  * @param name - Baseline name, unique within the calling test file.
  */
 export async function expectScreenshotToMatch(element: Element, name: string): Promise<void> {
-  const baselinePath = `__vrt__/${name}-${server.platform}.png`;
+  // Outside src/, where the binary check allows committed screenshots. Paths
+  // resolve from the calling test file, which lives in src/components/.
+  const baselinePath = `${BASELINE_DIR}/${name}-${server.platform}.png`;
   const actualPath = `__screenshots__/${name}-${server.platform}.actual.png`;
   const shot = await page.screenshot({ element, path: actualPath, base64: true });
 

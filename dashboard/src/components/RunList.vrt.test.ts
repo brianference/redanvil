@@ -6,7 +6,7 @@ import { expectScreenshotToMatch } from '../test-support/screenshotMatch';
 
 /**
  * VRT lane: the run list at 375 and 1280, in both themes, against committed
- * per-platform baselines under __vrt__/. The contract token the gate looks for
+ * per-platform baselines under test-support/screenshots/. The contract token the gate looks for
  * is toHaveScreenshot; the comparison itself is expectScreenshotToMatch.
  */
 
