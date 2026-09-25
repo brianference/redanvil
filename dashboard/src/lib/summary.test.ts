@@ -27,7 +27,8 @@ function makeRun(partial: Pick<Run, 'finalScore' | 'passed'> & Partial<Run>): Ru
     ],
     iterations: partial.iterations ?? [{ index: 1, score: partial.finalScore, blockers: [] }],
     deployUrl: partial.deployUrl ?? null,
-    finishedAt: partial.finishedAt ?? '2026-07-21T00:00:00.000Z'
+    finishedAt: partial.finishedAt ?? '2026-07-21T00:00:00.000Z',
+    commit: partial.commit ?? null
   };
 }
 
@@ -94,6 +95,13 @@ describe('parseRun', () => {
     expect(run.iterations).toHaveLength(2);
     expect(run.iterations[0]?.blockers).toEqual(['fe-responsive-375']);
     expect(run.deployUrl).toBe('https://redanvil.pages.dev');
+    expect(run.commit).toBe('759920006033720125b9b211737469b163d63fe3');
+  });
+
+  it('nulls a malformed provenance commit while accepting the row', () => {
+    const run = parseRun(validFeedRow({ provenance: { commit: 'not-a-sha' } }));
+    expect(run.slug).toBe('app-builder');
+    expect(run.commit).toBeNull();
   });
 
   it('nulls unsafe deployUrl while accepting the row', () => {
