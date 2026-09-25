@@ -70,19 +70,18 @@ export async function fetchRuns(url: string): Promise<RunsState> {
  * surfaces as an error state and is never rendered as a clean empty success.
  * Malformed rows become the partial branch, or the error branch when no row is valid.
  *
- * @param url - Feed URL (overridable for tests and previews).
- * @returns Loading, error, or ready state.
+ * @returns Loading, error, ready, or partial state.
  */
-export function useRuns(url: string = RESULTS_URL): RunsState {
+export function useRuns(): RunsState {
   const [state, setState] = useState<RunsState>({ status: 'loading' });
   useEffect(() => {
     let active = true;
-    void fetchRuns(url).then((next) => {
+    void fetchRuns(RESULTS_URL).then((next) => {
       if (active) setState(next);
     });
     return () => {
       active = false;
     };
-  }, [url]);
+  }, []);
   return state;
 }
