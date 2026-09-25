@@ -48,8 +48,8 @@ export function hasPronounHead(phrase: string): boolean {
 
 /**
  * Whether a phrase is a lone attributive adjective, not a domain noun.
- * Same check {@link deriveEntities} uses so extractSubject cannot title a
- * feature "Search real" from "shows real, current job openings".
+ * Lets extractSubject refuse to title a feature "Search real" from
+ * "shows real, current job openings".
  *
  * @param phrase - Subject candidate.
  * @returns True when the whole phrase is one listed adjective.
@@ -147,114 +147,6 @@ export function requirementLines(prompt: string): string[] {
     return [productPrompt.trim()];
   }
   return lines;
-}
-
-/**
- * Drop clauses that describe what the product replaces or competes with.
- * "Spreadsheets are what people actually use" is the status quo, not a
- * domain table; mining it produced entities: ["Spreadsheet"].
- *
- * @param text - Product prompt after generator-directive stripping.
- * @returns Text with replacement/competitor sentences removed.
- */
-function stripReplacementClauses(text: string): string {
-  const replacementRe =
-    /\b(what people actually use|with extra steps|instead of|rather than|replaces?\b|competes? with|are bad at)\b/i;
-  return text
-    .split(/(?<=[.!?])\s+/)
-    .filter((sentence) => !replacementRe.test(sentence))
-    .join(' ');
-}
-
-/**
- * Derive domain entity names from the prompt when the wizard left entities empty.
- *
- * Pulls capitalised terms and repeated content nouns (e.g. Crop, PlantingWindow).
- * Never invents a generic "Item" — returns [] so the caller can fail closed.
- *
- * @param prompt - Raw wizard prompt.
- * @returns PascalCase entity names, primary-first, de-duplicated.
- */
-export function deriveEntities(prompt: string): string[] {
-  const { productPrompt } = stripGeneratorDirectives(prompt);
-  const minedPrompt = stripReplacementClauses(productPrompt);
-  if (minedPrompt.trim().length === 0) return [];
-
-  const found: string[] = [];
-  const seen = new Set<string>();
-
-  /** Accept a candidate noun if it is domain-like, unique, and not a stopword. */
-  const push = (raw: string): void => {
-    const pascal = entityPascal(raw);
-    if (pascal.length === 0) return;
-    if (GENERIC_DOMAIN.test(pascal) || GENERIC_DOMAIN.test(raw)) return;
-    if (pascal.length < 2) return;
-    const key = pascal.toLowerCase();
-    if (seen.has(key)) return;
-    // Skip pure stopword entities and numeric ids alone.
-    if (ENTITY_STOP.has(key)) return;
-    // A lone adjective is not a domain noun ("Real" from "real, current job openings").
-    if (TITLE_BARE_ADJECTIVES.has(key)) return;
-    // A pronoun is not a domain noun ("ones they sent" from "which ones they sent").
-    if (hasPronounHead(raw) || hasPronounHead(pascal)) return;
-    // "Never Supabase" is two capitalised words whose first is a stopword.
-    const firstRaw = raw.trim().split(/\s+/)[0]?.toLowerCase() ?? '';
-    if (ENTITY_STOP.has(firstRaw)) return;
-    if (/^\d+$/.test(pascal)) return;
-    seen.add(key);
-    found.push(pascal);
-  };
-
-  // Capitalised multi-word and single-token domain names (Crop, PlantingWindow, Zone).
-  const capitalRe = /\b([A-Z][a-zA-Z0-9]+(?:\s+[A-Z][a-zA-Z0-9]+)*)\b/g;
-  let m: RegExpExecArray | null;
-  while ((m = capitalRe.exec(minedPrompt)) !== null) {
-    const token = m[1] ?? '';
-    // Skip all-caps acronyms longer than 6 (likely codes) unless alphanumeric ids.
-    if (/^[A-Z]{2,6}\d*$/.test(token)) {
-      // Keep document ids like AZ1005 as Source-ish only when not the primary noun.
-      continue;
-    }
-    if (!ENTITY_STOP.has(token.toLowerCase())) push(token);
-  }
-
-  // Compound phrases that map to real tables for this class of app.
-  const compoundPatterns: readonly { re: RegExp; name: string }[] = [
-    { re: /\bplanting\s+windows?\b/i, name: 'PlantingWindow' },
-    { re: /\bhalf[-\s]?month\s+windows?\b/i, name: 'PlantingWindow' },
-    { re: /\bplantable\b/i, name: 'Crop' },
-    { re: /\bcrops?\b/i, name: 'Crop' },
-    { re: /\bzones?\b/i, name: 'Zone' },
-    { re: /\bflights?\b/i, name: 'Flight' },
-    { re: /\btrips?\b/i, name: 'Trip' },
-    { re: /\bshifts?\b/i, name: 'Shift' },
-    { re: /\binvoices?\b/i, name: 'Invoice' },
-    { re: /\breminders?\b/i, name: 'Reminder' },
-    { re: /\blistings?\b/i, name: 'Listing' },
-    { re: /\buptime\s+checks?\b/i, name: 'UptimeCheck' },
-    { re: /\bstatus\s+pages?\b/i, name: 'StatusPage' }
-  ];
-  for (const { re, name } of compoundPatterns) {
-    if (re.test(minedPrompt)) push(name);
-  }
-
-  // Repeated lowercase content nouns (appear 2+ times) as soft signal.
-  const words = minedPrompt
-    .toLowerCase()
-    .replace(/https?:\/\/\S+/g, ' ')
-    .replace(/[^a-z0-9\s-]/g, ' ')
-    .split(/\s+/)
-    .filter((w) => w.length > 3 && !ENTITY_STOP.has(w) && !/^\d+$/.test(w));
-  const counts = new Map<string, number>();
-  for (const w of words) {
-    counts.set(w, (counts.get(w) ?? 0) + 1);
-  }
-  for (const [w, n] of counts) {
-    if (n >= 2) push(w);
-  }
-
-  // Cap so a chatty prompt does not explode the schema.
-  return found.slice(0, 6);
 }
 
 /**
@@ -488,7 +380,7 @@ export function entityPascal(name: string): string {
   const trimmed = name.trim();
   if (trimmed.length === 0) return '';
 
-  // Preserve multi-hump PascalCase from deriveEntities compound patterns.
+  // Preserve multi-hump PascalCase such as PlantingWindow or UptimeCheck.
   if (/^[A-Z][a-z0-9]*(?:[A-Z][a-z0-9]+)+$/.test(trimmed)) {
     return trimmed;
   }
