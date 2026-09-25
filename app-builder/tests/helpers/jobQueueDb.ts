@@ -1,7 +1,25 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import type { DatabaseSync, SQLInputValue } from 'node:sqlite';
 import type { D1Database, D1PreparedStatement, Env } from '../../functions/lib/env';
 
-/** One jobs row the in-memory database can claim, update, and project. */
-interface StoredJob {
+// Vite 5 strips the `node:` prefix and cannot resolve a bare `sqlite`, which
+// only exists under that prefix, so load it through Node's own require.
+const sqliteModule = createRequire(import.meta.url)('node:sqlite') as typeof import('node:sqlite');
+
+/**
+ * D1 is SQLite, so the queue tests run the handlers' real SQL against a real
+ * SQLite database built from this app's own migrations. Only the binding's
+ * async prepare/bind/run/all surface is adapted here; every WHERE clause,
+ * compare-and-set and DELETE ... LIMIT is decided by the SQL engine, never by
+ * test code.
+ */
+const MIGRATIONS_DIR = fileURLToPath(new URL('../../migrations/', import.meta.url));
+
+/** One jobs row, as the migrated schema stores it. */
+export interface StoredJob {
   id: string;
   slug: string;
   prompt: string;
@@ -20,19 +38,13 @@ interface StoredJob {
 }
 
 /** One rate-limit bucket. The key is a hash, never a raw IP. */
-interface RateBucket {
+export interface RateBucket {
   bucket_key: string;
   hit_count: number;
   window_start: string;
 }
 
-/** Result of executing one statement against the in-memory tables. */
-interface Executed {
-  changes: number;
-  results: Record<string, unknown>[];
-}
-
-/** Seed for a job row. Omitted runner fields start empty. */
+/** Seed for a job row. Omitted columns take the schema defaults. */
 export interface QueueJobSeed {
   id: string;
   slug: string;
@@ -53,12 +65,7 @@ export interface QueueJobSeed {
 }
 
 /** Seed for a rate-limit bucket, to prove expired buckets are pruned. */
-export interface RateBucketSeed {
-  bucket_key: string;
-  hit_count: number;
-  /** UTC hour, `YYYY-MM-DDTHH`, as the limiter writes it. */
-  window_start: string;
-}
+export type RateBucketSeed = RateBucket;
 
 /** Options for {@link createQueueEnv}. */
 export interface QueueEnvOptions {
@@ -75,296 +82,104 @@ export interface QueueEnvOptions {
   fail?: boolean;
 }
 
+/** Target type the submit route writes; seeds default to it. */
+const DEFAULT_TARGET_TYPE = 'fullstack-web';
+
+/** Gate threshold the submit route writes; seeds default to it. */
+const DEFAULT_THRESHOLD = 90;
+
+/** SQLite handle behind each env, so tests can read back what the handlers wrote. */
+const databases = new WeakMap<D1Database, DatabaseSync>();
+
 /**
- * Collapse whitespace so a multiline statement matches the interpreter.
+ * A fresh in-memory database with every migration applied in filename order,
+ * exactly as `wrangler d1 migrations apply` orders them.
  *
- * @param sql - SQL text from `prepare`.
- * @returns Single-spaced SQL.
+ * @returns Migrated database.
  */
-function normalizeSql(sql: string): string {
-  return sql.replace(/\s+/g, ' ').trim();
+function migratedDatabase(): DatabaseSync {
+  const sqlite = new sqliteModule.DatabaseSync(':memory:');
+  const files = readdirSync(MIGRATIONS_DIR)
+    .filter((name) => name.endsWith('.sql'))
+    .sort();
+  for (const file of files) {
+    sqlite.exec(readFileSync(join(MIGRATIONS_DIR, file), 'utf8'));
+  }
+  return sqlite;
 }
 
 /**
- * Build a stored job from a seed, filling columns the seed does not set.
+ * Adapt a SQLite handle to the D1 binding surface the handlers call.
  *
- * @param seed - Caller-supplied fields.
- * @returns A complete row.
+ * @param sqlite - Migrated database.
+ * @param fail - When true, every statement rejects like an unreachable D1.
+ * @returns D1-shaped binding.
  */
-function fromSeed(seed: QueueJobSeed): StoredJob {
+function asD1(sqlite: DatabaseSync, fail: boolean): D1Database {
   return {
-    id: seed.id,
-    slug: seed.slug,
-    prompt: seed.prompt,
-    entities: seed.entities ?? '',
-    target_type: seed.target_type ?? 'fullstack-web',
-    threshold: seed.threshold ?? 90,
-    status: seed.status ?? 'queued',
-    created_at: seed.created_at,
-    claimed_at: seed.claimed_at ?? null,
-    claimed_by: seed.claimed_by ?? null,
-    step: seed.step ?? null,
-    detail: seed.detail ?? null,
-    execution_id: seed.execution_id ?? null,
-    deploy_url: seed.deploy_url ?? null,
-    updated_at: seed.updated_at ?? ''
-  };
-}
-
-/**
- * Project a row to the columns named in a SELECT list.
- *
- * `*` returns every column, including prompt. A list that names `prompt`
- * includes it. A list that does not, does not. That is what the public
- * status test relies on: if the handler selects the prompt, the response
- * can leak it.
- *
- * @param row - Stored job.
- * @param selectList - Text between SELECT and FROM.
- * @returns One result object.
- */
-function projectJob(row: StoredJob, selectList: string): Record<string, unknown> {
-  const record = row as unknown as Record<string, unknown>;
-  if (selectList.trim() === '*') {
-    return { ...record };
-  }
-  const projected: Record<string, unknown> = {};
-  for (const column of selectList.split(',')) {
-    const name = column.trim();
-    projected[name] = record[name];
-  }
-  return projected;
-}
-
-/**
- * Whether a claim may take this row: queued, or claimed with a lease that
- * started before `leaseCutoff`. A null cutoff means queued only, which is
- * what the claim SQL did before the lease existed.
- *
- * @param row - Stored job.
- * @param leaseCutoff - ISO time; claims older than this have expired.
- * @returns True when the row is claimable.
- */
-function isClaimable(row: StoredJob, leaseCutoff: string | null): boolean {
-  if (row.status === 'queued') return true;
-  if (leaseCutoff === null) return false;
-  return row.status === 'claimed' && row.claimed_at !== null && row.claimed_at < leaseCutoff;
-}
-
-/**
- * Apply one statement. Throws on SQL this helper does not implement so a
- * drifted query fails the test instead of silently succeeding.
- *
- * Mutations run synchronously inside `run` / `all` (no await before the
- * write). Callers that `await` between statements can interleave, which is
- * the race the claim guard has to survive.
- *
- * @param jobs - Mutable job table.
- * @param rates - Mutable rate-limit table.
- * @param sql - Statement text.
- * @param params - Bound parameters, in order.
- * @returns Changes and result rows.
- */
-function execute(
-  jobs: StoredJob[],
-  rates: Map<string, RateBucket>,
-  sql: string,
-  params: readonly unknown[]
-): Executed {
-  const norm = normalizeSql(sql);
-
-  if (
-    norm.startsWith('INSERT INTO rate_limits') &&
-    norm.includes('ON CONFLICT(bucket_key) DO UPDATE SET hit_count = hit_count + 1')
-  ) {
-    const bucketKey = String(params[0]);
-    const windowStart = String(params[1]);
-    const existing = rates.get(bucketKey);
-    if (existing === undefined) {
-      rates.set(bucketKey, { bucket_key: bucketKey, hit_count: 1, window_start: windowStart });
-    } else {
-      existing.hit_count += 1;
-    }
-    return { changes: 1, results: [] };
-  }
-
-  if (norm === 'SELECT hit_count FROM rate_limits WHERE bucket_key = ?') {
-    const existing = rates.get(String(params[0]));
-    if (existing === undefined) return { changes: 0, results: [] };
-    return { changes: 0, results: [{ hit_count: existing.hit_count }] };
-  }
-
-  if (
-    norm ===
-    'DELETE FROM rate_limits WHERE bucket_key IN (SELECT bucket_key FROM rate_limits WHERE window_start < ? LIMIT ?)'
-  ) {
-    const cutoff = String(params[0]);
-    const limit = Number(params[1]);
-    if (!Number.isInteger(limit) || limit < 1) {
-      throw new Error(`jobQueueDb: bad prune limit ${String(params[1])}`);
-    }
-    const expired = [...rates.values()]
-      .filter((bucket) => bucket.window_start < cutoff)
-      .slice(0, limit);
-    for (const bucket of expired) rates.delete(bucket.bucket_key);
-    return { changes: expired.length, results: [] };
-  }
-
-  if (norm.startsWith('INSERT INTO prds ')) {
-    return { changes: 1, results: [] };
-  }
-
-  const insertJobs = /^INSERT INTO jobs \((.+)\) VALUES \((.+)\)$/.exec(norm);
-  if (insertJobs !== null) {
-    const columns = insertJobs[1]?.split(',').map((column) => column.trim()) ?? [];
-    const placeholders = insertJobs[2]?.split(',').map((part) => part.trim()) ?? [];
-    if (placeholders.some((part) => part !== '?') || columns.length !== params.length) {
-      throw new Error(`jobQueueDb: bad jobs insert: ${norm}`);
-    }
-    const row = fromSeed({
-      id: '',
-      slug: '',
-      prompt: '',
-      created_at: ''
-    });
-    const record = row as unknown as Record<string, unknown>;
-    for (let index = 0; index < columns.length; index += 1) {
-      const column = columns[index];
-      if (column === undefined) continue;
-      record[column] = params[index];
-    }
-    if (jobs.some((existing) => existing.id === row.id)) {
-      throw new Error(`jobQueueDb: duplicate job id ${row.id}`);
-    }
-    jobs.push(row);
-    return { changes: 1, results: [] };
-  }
-
-  const pickQueued =
-    norm === "SELECT id FROM jobs WHERE status = 'queued' ORDER BY created_at ASC LIMIT 1";
-  const pickWithLease =
-    norm ===
-    "SELECT id FROM jobs WHERE status = 'queued' OR (status = 'claimed' AND claimed_at < ?) ORDER BY created_at ASC LIMIT 1";
-  if (pickQueued || pickWithLease) {
-    const leaseCutoff = pickWithLease ? String(params[0]) : null;
-    const queued = jobs
-      .filter((row) => isClaimable(row, leaseCutoff))
-      .sort((left, right) => (left.created_at < right.created_at ? -1 : 1));
-    const oldest = queued[0];
-    if (oldest === undefined) return { changes: 0, results: [] };
-    return { changes: 0, results: [{ id: oldest.id }] };
-  }
-
-  if (norm.startsWith("UPDATE jobs SET status = 'claimed'")) {
-    const leased = norm.endsWith(
-      "AND (status = 'queued' OR (status = 'claimed' AND claimed_at < ?))"
-    );
-    const guarded = leased || norm.includes("AND status = 'queued'");
-    const id = String(params[3]);
-    const row = jobs.find((candidate) => candidate.id === id);
-    if (row === undefined) return { changes: 0, results: [] };
-    if (guarded && !isClaimable(row, leased ? String(params[4]) : null)) {
-      return { changes: 0, results: [] };
-    }
-    row.status = 'claimed';
-    row.claimed_at = String(params[0]);
-    row.claimed_by = String(params[1]);
-    row.updated_at = String(params[2]);
-    return { changes: 1, results: [] };
-  }
-
-  if (norm.startsWith('UPDATE jobs SET status = ?') && norm.includes('COALESCE(?, step)')) {
-    const id = String(params[6]);
-    const row = jobs.find((candidate) => candidate.id === id);
-    if (row === undefined) return { changes: 0, results: [] };
-    row.status = String(params[0]);
-    if (params[1] !== null && params[1] !== undefined) row.step = String(params[1]);
-    if (params[2] !== null && params[2] !== undefined) row.detail = String(params[2]);
-    if (params[3] !== null && params[3] !== undefined) row.execution_id = String(params[3]);
-    if (params[4] !== null && params[4] !== undefined) row.deploy_url = String(params[4]);
-    row.updated_at = String(params[5]);
-    return { changes: 1, results: [] };
-  }
-
-  const selectById = /^SELECT (.+) FROM jobs WHERE id = \?$/.exec(norm);
-  if (selectById !== null) {
-    const row = jobs.find((candidate) => candidate.id === String(params[0]));
-    if (row === undefined) return { changes: 0, results: [] };
-    return { changes: 0, results: [projectJob(row, selectById[1] ?? '*')] };
-  }
-
-  if (
-    norm ===
-    'SELECT id, slug, prompt, target_type, threshold, status, created_at FROM jobs ORDER BY created_at DESC LIMIT 50'
-  ) {
-    const sorted = [...jobs].sort((left, right) => (left.created_at < right.created_at ? 1 : -1));
-    return {
-      changes: 0,
-      results: sorted.slice(0, 50).map((row) => ({
-        id: row.id,
-        slug: row.slug,
-        prompt: row.prompt,
-        target_type: row.target_type,
-        threshold: row.threshold,
-        status: row.status,
-        created_at: row.created_at
-      }))
-    };
-  }
-
-  throw new Error(`jobQueueDb: unsupported SQL: ${norm}`);
-}
-
-/** Databases created by {@link createQueueEnv}, so tests can read them back. */
-const tables = new WeakMap<D1Database, { jobs: StoredJob[]; rates: Map<string, RateBucket> }>();
-
-/**
- * In-memory D1 that executes the job-queue and rate-limit statements.
- *
- * `run` and `all` apply the statement synchronously before they return a
- * promise, matching one SQLite statement. Awaiting between statements still
- * lets two claims interleave, so a claim UPDATE without `status = 'queued'`
- * can hand the same job to both callers.
- *
- * @param options - Token, seed rows, and failure mode.
- * @returns Env whose DB is this database.
- */
-export function createQueueEnv(options: QueueEnvOptions = {}): Env {
-  const jobs = (options.jobs ?? []).map(fromSeed);
-  const rates = new Map<string, RateBucket>();
-  for (const bucket of options.rateBuckets ?? []) {
-    rates.set(bucket.bucket_key, { ...bucket });
-  }
-  const fail = options.fail === true;
-
-  const db: D1Database = {
     prepare(query: string): D1PreparedStatement {
-      let bound: unknown[] = [];
+      let bound: SQLInputValue[] = [];
       const stmt: D1PreparedStatement = {
         bind(...values: unknown[]): D1PreparedStatement {
-          bound = values;
+          bound = values as SQLInputValue[];
           return stmt;
         },
-        run() {
-          if (fail) return Promise.reject(new Error('D1 unavailable'));
-          const outcome = execute(jobs, rates, query, bound);
-          return Promise.resolve({
-            success: true,
-            meta: { changes: outcome.changes },
-            results: outcome.results
-          });
+        async run() {
+          if (fail) throw new Error('D1 unavailable');
+          const outcome = sqlite.prepare(query).run(...bound);
+          return { success: true, meta: { changes: Number(outcome.changes) }, results: [] };
         },
-        all() {
-          if (fail) return Promise.reject(new Error('D1 unavailable'));
-          const outcome = execute(jobs, rates, query, bound);
-          return Promise.resolve({ results: outcome.results });
+        async all() {
+          if (fail) throw new Error('D1 unavailable');
+          return { results: sqlite.prepare(query).all(...bound) };
         }
       };
       return stmt;
     }
   };
+}
 
-  tables.set(db, { jobs, rates });
+/**
+ * Env backed by a freshly migrated SQLite database holding the seeds.
+ *
+ * @param options - Seeds, runner token, and failure mode.
+ * @returns Env whose DB is this database.
+ */
+export function createQueueEnv(options: QueueEnvOptions = {}): Env {
+  const sqlite = migratedDatabase();
+  const insertJob = sqlite.prepare(
+    `INSERT INTO jobs (id, slug, prompt, entities, target_type, threshold, status, created_at,
+       claimed_at, claimed_by, step, detail, execution_id, deploy_url, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  for (const seed of options.jobs ?? []) {
+    insertJob.run(
+      seed.id,
+      seed.slug,
+      seed.prompt,
+      seed.entities ?? '',
+      seed.target_type ?? DEFAULT_TARGET_TYPE,
+      seed.threshold ?? DEFAULT_THRESHOLD,
+      seed.status ?? 'queued',
+      seed.created_at,
+      seed.claimed_at ?? null,
+      seed.claimed_by ?? null,
+      seed.step ?? null,
+      seed.detail ?? null,
+      seed.execution_id ?? null,
+      seed.deploy_url ?? null,
+      seed.updated_at ?? ''
+    );
+  }
+  const insertBucket = sqlite.prepare(
+    'INSERT INTO rate_limits (bucket_key, hit_count, window_start) VALUES (?, ?, ?)'
+  );
+  for (const bucket of options.rateBuckets ?? []) {
+    insertBucket.run(bucket.bucket_key, bucket.hit_count, bucket.window_start);
+  }
+
+  const db = asD1(sqlite, options.fail === true);
+  databases.set(db, sqlite);
   return {
     DB: db,
     RATE_LIMIT_KEY: 'test-rate-limit-key',
@@ -373,31 +188,42 @@ export function createQueueEnv(options: QueueEnvOptions = {}): Env {
 }
 
 /**
- * Jobs currently stored for an env from {@link createQueueEnv}.
+ * The SQLite handle behind an env from {@link createQueueEnv}.
  *
  * @param env - Env returned by {@link createQueueEnv}.
- * @returns The live job rows.
+ * @returns The database.
+ * @throws Error when the env did not come from createQueueEnv.
+ */
+function databaseOf(env: Env): DatabaseSync {
+  const sqlite = databases.get(env.DB);
+  if (sqlite === undefined) {
+    throw new Error('jobQueueDb: env was not created by createQueueEnv');
+  }
+  return sqlite;
+}
+
+/**
+ * Jobs currently stored, oldest first.
+ *
+ * @param env - Env returned by {@link createQueueEnv}.
+ * @returns The stored job rows.
  */
 export function readQueueJobs(env: Env): readonly StoredJob[] {
-  const table = tables.get(env.DB);
-  if (table === undefined) {
-    throw new Error('readQueueJobs: env was not created by createQueueEnv');
-  }
-  return table.jobs;
+  return databaseOf(env)
+    .prepare('SELECT * FROM jobs ORDER BY created_at ASC')
+    .all() as unknown as StoredJob[];
 }
 
 /**
  * Rate-limit buckets currently stored, with their window.
  *
  * @param env - Env returned by {@link createQueueEnv}.
- * @returns Copies of the stored buckets.
+ * @returns The stored buckets.
  */
 export function readRateBuckets(env: Env): readonly RateBucket[] {
-  const table = tables.get(env.DB);
-  if (table === undefined) {
-    throw new Error('readRateBuckets: env was not created by createQueueEnv');
-  }
-  return [...table.rates.values()].map((bucket) => ({ ...bucket }));
+  return databaseOf(env)
+    .prepare('SELECT bucket_key, hit_count, window_start FROM rate_limits')
+    .all() as unknown as RateBucket[];
 }
 
 /**
@@ -407,9 +233,5 @@ export function readRateBuckets(env: Env): readonly RateBucket[] {
  * @returns Bucket keys.
  */
 export function readRateKeys(env: Env): readonly string[] {
-  const table = tables.get(env.DB);
-  if (table === undefined) {
-    throw new Error('readRateKeys: env was not created by createQueueEnv');
-  }
-  return [...table.rates.keys()];
+  return readRateBuckets(env).map((bucket) => bucket.bucket_key);
 }
