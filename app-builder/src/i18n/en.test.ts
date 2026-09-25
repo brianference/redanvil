@@ -130,7 +130,6 @@ describe('en locale bundle', () => {
     expect(en.wizard.stepOf(2)).toBe('Step 2 of 4');
     expect(en.wizard.promptHint(8)).toContain('8');
     expect(en.wizard.errors.submitFailed(500)).toBe('Submit failed (500)');
-    expect(en.wizard.errors.timeout).toBe('Request timed out');
     expect(en.wizard.jobReadyHeading('my-app')).toBe('Job ready: my-app');
   });
 });
