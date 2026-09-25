@@ -134,6 +134,50 @@ const rubric = ['concision', 'security', 'testing', 'frontend']
   })
   .join('');
 
+/** Most commits listed in the diff summary; older history adds nothing to scope. */
+const DIFF_SUMMARY_MAX_COMMITS = 40;
+/** File name the change summary is written to inside the disposable worktree. */
+const DIFF_SUMMARY_FILE = 'JUDGE-CHANGE-SUMMARY.txt';
+
+/**
+ * The change under review, as text the judge can read without running git.
+ *
+ * u-conc-smallest-diff is about the diff, but the judge is told not to run git,
+ * so it answered "not verified" and failed the rule on every run it noticed
+ * that. It now gets the commits touching this app since its last scored commit
+ * (results/<slug>.json provenance), each with its file stats, lockfiles
+ * excluded as the rule requires.
+ *
+ * @returns {string} Commit subjects and per-commit stats, or a note when no base resolves.
+ */
+function changeSummary() {
+  let base = '';
+  try {
+    const result = JSON.parse(readFileSync(join('results', `${slug}.json`), 'utf8'));
+    base = String(result?.provenance?.commit ?? '');
+  } catch {
+    base = '';
+  }
+  const known = base !== '' && run('git', ['cat-file', '-e', `${base}^{commit}`]).code === 0;
+  const range = known ? `${base}..HEAD` : 'HEAD';
+  const log = run('git', [
+    'log',
+    `-n${DIFF_SUMMARY_MAX_COMMITS}`,
+    '--stat=160',
+    '--format=%n=== %h %s',
+    range,
+    '--',
+    appDir,
+    ':(exclude)**/package-lock.json'
+  ]).stdout.trim();
+  const scope = known
+    ? `Commits touching ${appDir} since its last scored commit ${base.slice(0, 12)}`
+    : `No resolvable last scored commit; the ${DIFF_SUMMARY_MAX_COMMITS} most recent commits touching ${appDir}`;
+  return `${scope} (newest first, lockfiles excluded):
+${log || '(none)'}
+`;
+}
+
 const prompt = `You are an INDEPENDENT code judge. You did NOT write this code and you
 have no stake in it passing.
 
@@ -180,6 +224,10 @@ Reply with ONLY a JSON array, no prose around it, no code fences:
   }
 ]
 
+For u-conc-smallest-diff, the change under review is in \`${DIFF_SUMMARY_FILE}\` at the
+repository root: each commit touching this app since it was last scored, with
+its file stats. Judge whether each commit is scoped to one change.
+
 One entry per rule, ${rules.length} entries. Do not edit any file. Do not run git.`;
 
 console.log(`independent judge: ${slug} @ ${head.slice(0, 12)}, ${rules.length} rules`);
@@ -192,6 +240,7 @@ console.log(`independent judge: ${slug} @ ${head.slice(0, 12)}, ${rules.length} 
 // throwaway worktree only, so the reviewer cannot grade by copying the last
 // review. The real repo copy is untouched.
 hidePriorVerdicts(worktreePath);
+writeFileSync(join(worktreePath, DIFF_SUMMARY_FILE), changeSummary());
 
 /**
  * Delete prior judge output inside a disposable worktree.
