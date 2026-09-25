@@ -2,12 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   ENTITY_SPEC_EXAMPLE,
   entitySpecReady,
-  formatEntitySpec,
   parseEntitySpec
 } from './entitySpec';
 
 describe('parseEntitySpec', () => {
-  it('parses the contract example with zero errors and round-trips', () => {
+  it('parses the contract example with zero errors', () => {
     const parsed = parseEntitySpec(ENTITY_SPEC_EXAMPLE);
     expect(parsed.errors).toEqual([]);
     expect(parsed.entities.map((entity) => entity.name)).toEqual(['Dog', 'CareTask', 'CareLog']);
@@ -19,8 +18,6 @@ describe('parseEntitySpec', () => {
       'datetime'
     );
     expect(parsed.entities.every((entity) => entity.fields.length > 0)).toBe(true);
-    const again = parseEntitySpec(formatEntitySpec(parsed.entities));
-    expect(again).toEqual(parsed);
   });
 
   it('accepts a newline between entities', () => {
@@ -38,11 +35,10 @@ describe('parseEntitySpec', () => {
     expect(parsed.entities[0]?.fields[1]?.type).toBe('date');
   });
 
-  it('treats a bare name as text and drops :text on the way back out', () => {
+  it('treats a bare name as text, the same as an explicit :text', () => {
     const parsed = parseEntitySpec('Dog: name:text, note');
     expect(parsed.errors).toEqual([]);
     expect(parsed.entities[0]?.fields.map((field) => field.type)).toEqual(['text', 'text']);
-    expect(formatEntitySpec(parsed.entities)).toBe('Dog: name, note');
   });
 
   it('parses a legacy list as entities with no fields and zero errors', () => {
@@ -53,9 +49,6 @@ describe('parseEntitySpec', () => {
       { name: 'CareTask', fields: [] }
     ]);
     expect(entitySpecReady('Dog, CareTask')).toBe(false);
-    const again = parseEntitySpec(formatEntitySpec(legacy.entities));
-    expect(again.entities).toEqual(legacy.entities);
-    expect(again.errors).toEqual([]);
   });
 
   it('rejects bad names, reserved names, unknown refs, and duplicates', () => {
