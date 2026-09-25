@@ -69,6 +69,33 @@ describe('RunList in a real browser', () => {
     await expect.poll(landedOn).toBe('detail:dashboard');
   });
 
+  it('leaves a deploy-link click to the link instead of opening the run', async () => {
+    mounted = mountRunList([sampleRun()]);
+    const deploy = card('app-builder').querySelector<HTMLAnchorElement>('a.ra-deploy-link');
+    if (deploy === null) throw new Error('deploy link not rendered');
+    // Keep the browser from following the external link; the click still
+    // bubbles to the card exactly as a real one does. React flushes a click's
+    // updates before the dispatch returns, so once the listener has run, any
+    // navigation the card started is already on screen.
+    let clicked = false;
+    deploy.addEventListener('click', (event) => {
+      event.preventDefault();
+      clicked = true;
+    });
+    await userEvent.click(deploy);
+    await expect.poll(() => clicked).toBe(true);
+    expect(landedOn()).toBeNull();
+    expect(card('app-builder').isConnected).toBe(true);
+  });
+
+  it('opens the run once from its title link', async () => {
+    mounted = mountRunList([sampleRun()]);
+    const title = card('app-builder').querySelector('a.ra-run-title');
+    if (title === null) throw new Error('title link not rendered');
+    await userEvent.click(title);
+    await expect.poll(landedOn).toBe('detail:app-builder');
+  });
+
   it('tints the status icon border with the pass or fail colour, not the plain card border', () => {
     mounted = mountRunList([sampleRun(), dashboardRun]);
     /**
