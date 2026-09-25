@@ -114,6 +114,17 @@ test('examples page exposes live app and source links', async ({ page }) => {
   await expect(live).toHaveAttribute('href', /^https?:\/\//);
   await expect(source).toHaveAttribute('href', /^https?:\/\//);
   await expect(live).toBeInViewport();
+
+  // A private repository is not a source a visitor can read: its card keeps
+  // the live link and renders no source link, rather than a GitHub 404.
+  const quickflight = page.locator('article[data-slug="quickflight"]');
+  await expect(quickflight.getByRole('link', { name: /open the live app/i })).toBeVisible();
+  await expect(quickflight.getByRole('link', { name: /read the source/i })).toHaveCount(0);
+  const sourceHrefs = await page
+    .getByRole('link', { name: /read the source/i })
+    .evaluateAll((links) => links.map((l) => l.getAttribute('href') ?? ''));
+  expect(sourceHrefs.length).toBeGreaterThan(0);
+  for (const href of sourceHrefs) expect(href).not.toMatch(/\/tree\/(master|main)\//);
 });
 
 test('start from a template opens the template gallery', async ({ page }) => {

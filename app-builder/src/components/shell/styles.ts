@@ -14,6 +14,22 @@ import {
 } from '../../../../design-system/shellStyles';
 import { theme } from '../../theme';
 
+/**
+ * Tallest a device frame on an /examples card face may render.
+ *
+ * The frames are full phone captures (375x812 and taller). Sized by width
+ * alone the first card's stack measured 738px tall on production at 1440x1000,
+ * which put "Open the live app" at y=1381 -- the page's primary action was
+ * below the fold until the visitor scrolled. Capped, each frame is a cropped
+ * peek of the app's top screen and the actions stay above the fold.
+ *
+ * The cap sits on the images, not on the stack with overflow:hidden. Clipping
+ * the stack let the frames paint into its 12px bottom padding, over the meta
+ * panel's top border, and a clipped box still reports its full rect to the
+ * overflow measurements the padding below exists to satisfy.
+ */
+const EXAMPLE_DEVICE_MAX_HEIGHT = 232;
+
 const styleTokens: ShellStyleTokens = {
   bg: theme.color.bg,
   surface: theme.color.surface,
@@ -250,6 +266,9 @@ ${SHARED_SHELL_CSS}
         .ex-card__device {
           width: 100%;
           height: auto;
+          max-height: ${EXAMPLE_DEVICE_MAX_HEIGHT}px;
+          object-fit: cover;
+          object-position: top;
           border-radius: ${theme.radius.md}px ${theme.radius.md}px 0 0;
           border: 1px solid ${theme.color.border};
           border-bottom: 0;

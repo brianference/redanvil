@@ -63,6 +63,21 @@ describe('shipped examples', () => {
     }
   });
 
+  // A source link is a claim that a visitor can read the code. Sushi Finder,
+  // Pet Sitter and AZ Planting Calendar left the monorepo for private repos, so
+  // a branch path into it 404s, and QuickFlight's own repo is private.
+  it('never links source a visitor cannot open', () => {
+    for (const ex of EXAMPLES) {
+      if (ex.repoUrl === undefined) continue;
+      expect(ex.repoUrl, ex.slug).toMatch(/^https:\/\/github\.com\//);
+      expect(ex.repoUrl, ex.slug).not.toMatch(/\/tree\/(master|main)\//);
+    }
+    const quickflight = EXAMPLES.find((e) => e.slug === 'quickflight');
+    expect(quickflight).toBeDefined();
+    expect(quickflight!.repoUrl).toBeUndefined();
+    expect(EXAMPLES.some((e) => e.repoUrl !== undefined)).toBe(true);
+  });
+
   it('shows the prompt that was actually typed, not a summary', () => {
     for (const ex of EXAMPLES) {
       expect(ex.prompt.length).toBeGreaterThan(20);

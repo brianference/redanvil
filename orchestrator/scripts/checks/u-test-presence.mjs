@@ -187,7 +187,14 @@ export function resolveBase(appDir) {
  */
 export function changedSources(appDir, base) {
   const measured = measuredDirs(appDir);
-  const tracked = git(appDir, ['diff', '--name-only', base, '--']);
+  // A file deleted since the baseline is a change with nothing left to
+  // exercise; listing it as "no test runs it" asked for a test of a file that
+  // does not exist (functions/lib/auth.ts, after the unused scaffold was removed).
+  // Renames need nothing extra: with rename detection a staged rename is
+  // reported under its new path, and without it (diff.renames=false, or an
+  // unstaged `mv`) the old path is a D the filter drops while the new path
+  // arrives as an A or through ls-files --others below.
+  const tracked = git(appDir, ['diff', '--name-only', '--diff-filter=d', base, '--']);
   const untracked = git(appDir, ['ls-files', '--others', '--exclude-standard', '--']);
   if (tracked === null && untracked === null) return null;
   const all = [...(tracked ?? '').split('\n'), ...(untracked ?? '').split('\n')]

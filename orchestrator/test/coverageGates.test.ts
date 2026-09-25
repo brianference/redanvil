@@ -16,6 +16,7 @@ import {
   hasSuccessExample,
   withQuery
 } from '../scripts/checks/u-api-real-output.mjs';
+import { changedSources } from '../scripts/checks/u-test-presence.mjs';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const corpusDir = join(repoRoot, 'rules');
@@ -602,6 +603,53 @@ describe('the measured surface follows the evidence', () => {
     expect(status, output).toBe(1);
     expect(output).toContain('Widget.tsx');
     await rm(dir, { recursive: true, force: true });
+  });
+});
+
+describe('changedSources lists only files that still exist to be tested', () => {
+  // A file deleted since the baseline is a change with nothing left to
+  // exercise. Listing it asked for a test of functions/lib/auth.ts after the
+  // unused scaffold was removed -- a demand no test could ever satisfy.
+  let dir: string;
+  let base: string;
+  beforeAll(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'redanvil-deleted-'));
+    git(dir, ['init', '-q']);
+    await mkdir(join(dir, 'src', 'lib'), { recursive: true });
+    await mkdir(join(dir, 'functions', 'lib'), { recursive: true });
+    const body = (name: string): string =>
+      `export const ${name} = 1;\n// line two\n// line three\n`;
+    await writeFile(join(dir, 'functions', 'lib', 'auth.ts'), body('auth'));
+    await writeFile(join(dir, 'src', 'lib', 'kept.ts'), body('kept'));
+    await writeFile(join(dir, 'src', 'lib', 'moved.ts'), body('moved'));
+    await writeFile(join(dir, 'src', 'lib', 'untouched.ts'), body('untouched'));
+    commitAll(dir, 'baseline');
+    base = spawnSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
+    await rm(join(dir, 'functions', 'lib', 'auth.ts'));
+    await writeFile(join(dir, 'src', 'lib', 'kept.ts'), `${body('kept')}export const more = 2;\n`);
+    // A staged rename: git reports it under the NEW path, so the filter that
+    // drops deletions must not also drop the file that now carries the code.
+    git(dir, ['mv', join('src', 'lib', 'moved.ts'), join('src', 'lib', 'renamed.ts')]);
+  });
+  afterAll(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it('omits a source file deleted after the baseline', () => {
+    const changed = changedSources(dir, base);
+    expect(changed).not.toBeNull();
+    expect(changed).not.toContain('functions/lib/auth.ts');
+  });
+
+  it('still lists a modified file, so the filter cannot drop everything', () => {
+    expect(changedSources(dir, base)).toContain('src/lib/kept.ts');
+  });
+
+  it('lists a renamed file under its new path and not its old one', () => {
+    const changed = changedSources(dir, base);
+    expect(changed).toContain('src/lib/renamed.ts');
+    expect(changed).not.toContain('src/lib/moved.ts');
+    expect(changed).not.toContain('src/lib/untouched.ts');
   });
 });
 

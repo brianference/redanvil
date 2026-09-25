@@ -67,8 +67,13 @@ export interface Example {
     readonly area: string;
     readonly items: readonly string[];
   }[];
-  /** Public repository, so the claims above can be checked against the code. */
-  readonly repoUrl: string;
+  /**
+   * Public repository, so the claims above can be checked against the code.
+   *
+   * Omitted when the source is private: a visitor following it gets a GitHub
+   * 404, so the card shows no "Read the source" link rather than a dead one.
+   */
+  readonly repoUrl?: string;
 }
 
 /**
@@ -389,7 +394,9 @@ export const EXAMPLES: readonly Example[] = [
       }
     ],
     liveUrl: 'https://quickflight.pages.dev',
-    repoUrl: 'https://github.com/brianference/quickflight',
+    // No repoUrl: github.com/brianference/quickflight is a private repository
+    // (GitHub API `private: true`, and an anonymous request returned 404 on
+    // 2026-09-24), so linking it would hand every visitor a dead link.
     features: [
       {
         area: 'Departure and arrival',
