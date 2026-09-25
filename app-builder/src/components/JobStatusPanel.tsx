@@ -2,8 +2,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
 import { en } from '../i18n/en';
 import { createActiveFlag } from '../lib/abortableEffect';
-import { messageFromPayload } from '../lib/apiError';
-import { fetchJson, type FetchJsonFailure } from '../lib/fetchJson';
+import { failureMessage, fetchJson, type FailureMessages } from '../lib/fetchJson';
 import {
   JOB_STATUS_POLL_INTERVAL_MS,
   dismissTrackedJob,
@@ -34,27 +33,14 @@ type PanelState =
 /** Result of the last copy-to-clipboard attempt, shown on the copy button. */
 type CopyState = 'idle' | 'copied' | 'failed';
 
-/**
- * Why a poll produced no status, in the panel's words.
- *
- * @param failure - How the request failed.
- * @returns User-facing message.
- */
-function pollErrorMessage(failure: FetchJsonFailure): string {
-  const errors = en.jobStatus.errors;
-  switch (failure.kind) {
-    case 'http':
-      return messageFromPayload(failure.payload, errors.loadFailed);
-    case 'invalid-json':
-    case 'invalid-payload':
-      return errors.invalid;
-    case 'timeout':
-      return errors.timeout;
-    case 'aborted':
-    case 'network':
-      return errors.network;
-  }
-}
+/** How the panel words each way a status poll can fail. */
+const POLL_FAILURE_MESSAGES: FailureMessages = {
+  invalidJson: en.jobStatus.errors.invalid,
+  invalidPayload: en.jobStatus.errors.invalid,
+  timeout: en.jobStatus.errors.timeout,
+  network: en.jobStatus.errors.network,
+  http: () => en.jobStatus.errors.loadFailed
+};
 
 /**
  * State after a failed poll: keep a status that already loaded, under a
@@ -174,7 +160,7 @@ export function JobStatusPanel({
       });
       if (!result.ok) {
         if (result.kind === 'aborted') return;
-        const message = pollErrorMessage(result);
+        const message = failureMessage(result, POLL_FAILURE_MESSAGES);
         flag.ifActive(() => {
           setState((previous) => afterFailedPoll(previous, message));
         });

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import type { Prd } from './prd';
-import { messageFromPayload } from './apiError';
-import { fetchJson, type FetchJsonFailure } from './fetchJson';
+import { failureMessage, fetchJson, type FailureMessages, type FetchJsonFailure } from './fetchJson';
 
 /** Successful save response from POST /api/prds. */
 const saveResultSchema = z.object({ id: z.string(), url: z.string() });
@@ -37,30 +36,24 @@ function parseSaveResult(payload: unknown): SavePrdResult | null {
   return parsed.success ? parsed.data : null;
 }
 
+/** How a failed save is worded. */
+const SAVE_FAILURE_MESSAGES: FailureMessages = {
+  invalidJson: 'Invalid response from server',
+  invalidPayload: 'Invalid save payload from server',
+  timeout: 'Request timed out',
+  network: 'Network error saving PRD',
+  http: (httpStatus) => `Save failed (${httpStatus})`
+};
+
 /**
- * The error a failed save surfaces. savePrd passes no abort signal of its own,
- * so an abort can only be the timeout.
+ * The error a failed save surfaces, carrying the HTTP status when the server answered.
  *
  * @param failure - Why the request produced no result.
  * @returns The error to throw.
  */
 function saveError(failure: FetchJsonFailure): SavePrdError {
-  switch (failure.kind) {
-    case 'http':
-      return new SavePrdError(
-        messageFromPayload(failure.payload, `Save failed (${failure.httpStatus})`),
-        failure.httpStatus
-      );
-    case 'invalid-json':
-      return new SavePrdError('Invalid response from server', failure.httpStatus);
-    case 'invalid-payload':
-      return new SavePrdError('Invalid save payload from server', failure.httpStatus);
-    case 'timeout':
-    case 'aborted':
-      return new SavePrdError('Request timed out');
-    case 'network':
-      return new SavePrdError('Network error saving PRD');
-  }
+  const httpStatus = 'httpStatus' in failure ? failure.httpStatus : undefined;
+  return new SavePrdError(failureMessage(failure, SAVE_FAILURE_MESSAGES), httpStatus);
 }
 
 /**

@@ -1,4 +1,5 @@
 import { FETCH_TIMEOUT_MS, isAbortError } from './abortableEffect';
+import { messageFromPayload } from './apiError';
 
 /**
  * Why a JSON request did not produce a parsed value. Each caller words these
@@ -79,5 +80,43 @@ export async function fetchJson<T>(
   } finally {
     clearTimeout(timeoutId);
     options.signal?.removeEventListener('abort', abortFromCaller);
+  }
+}
+
+/** A screen's wording for each way a request can fail. */
+export interface FailureMessages {
+  /** The body was not JSON. */
+  invalidJson: string;
+  /** The JSON was not the expected shape. */
+  invalidPayload: string;
+  /** The request timed out. */
+  timeout: string;
+  /** No response, or the request was cut off. */
+  network: string;
+  /** Fallback for a non-2xx whose body carries no `error` text. */
+  http: (httpStatus: number) => string;
+}
+
+/**
+ * The user-facing message for a failed request: the server's own `error`
+ * text for a non-2xx when it sent one, otherwise the screen's wording.
+ *
+ * @param failure - How the request failed.
+ * @param messages - The screen's wording.
+ * @returns Message to show.
+ */
+export function failureMessage(failure: FetchJsonFailure, messages: FailureMessages): string {
+  switch (failure.kind) {
+    case 'http':
+      return messageFromPayload(failure.payload, messages.http(failure.httpStatus));
+    case 'invalid-json':
+      return messages.invalidJson;
+    case 'invalid-payload':
+      return messages.invalidPayload;
+    case 'timeout':
+      return messages.timeout;
+    case 'aborted':
+    case 'network':
+      return messages.network;
   }
 }

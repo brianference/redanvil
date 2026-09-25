@@ -11,11 +11,10 @@ import {
   type BuildJob,
   type WizardAnswers
 } from '../lib/job';
-import { fetchJson, type FetchJsonFailure } from '../lib/fetchJson';
+import { failureMessage, fetchJson, type FailureMessages } from '../lib/fetchJson';
 import { parseSubmittedJobId } from '../lib/jobStatus';
 import { defaultSelectedFeatureIds } from '../lib/prd/sections/features';
 import { en } from '../i18n/en';
-import { messageFromPayload } from '../lib/apiError';
 import { theme } from '../theme';
 import { buttonStyle, cardStyle, stickyBarStyle } from './ui';
 import { ComingUp } from './wizard/ComingUp';
@@ -55,28 +54,14 @@ function parseSubmitted(payload: unknown): { job: BuildJob; jobId: string } | nu
   return job === null || jobId === null ? null : { job, jobId };
 }
 
-/**
- * What the review step says when a submit fails.
- *
- * @param failure - Why the submit produced no job.
- * @returns User-facing message.
- */
-function submitErrorMessage(failure: FetchJsonFailure): string {
-  const errors = en.wizard.errors;
-  switch (failure.kind) {
-    case 'http':
-      return messageFromPayload(failure.payload, errors.submitFailed(failure.httpStatus));
-    case 'invalid-json':
-      return errors.invalidResponse;
-    case 'invalid-payload':
-      return errors.invalidJobPayload;
-    case 'timeout':
-      return errors.timeout;
-    case 'aborted':
-    case 'network':
-      return errors.network;
-  }
-}
+/** How the review step words each way a submit can fail. */
+const SUBMIT_FAILURE_MESSAGES: FailureMessages = {
+  invalidJson: en.wizard.errors.invalidResponse,
+  invalidPayload: en.wizard.errors.invalidJobPayload,
+  timeout: en.wizard.errors.timeout,
+  network: en.wizard.errors.network,
+  http: en.wizard.errors.submitFailed
+};
 
 /**
  * Whether `next` differs from the stored feature selection, so the wizard only
@@ -203,7 +188,7 @@ export function Wizard({ value, onChange, onSubmit, initialStep = 1 }: WizardPro
       }
     });
     if (!result.ok) {
-      setSubmitState({ status: 'error', message: submitErrorMessage(result) });
+      setSubmitState({ status: 'error', message: failureMessage(result, SUBMIT_FAILURE_MESSAGES) });
       return;
     }
     setSubmitState({ status: 'success', job: result.data.job });

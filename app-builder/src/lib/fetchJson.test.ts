@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchJson } from './fetchJson';
+import { failureMessage, fetchJson, type FailureMessages } from './fetchJson';
 
 /** Accept only `{ id: string }`, like the app's payload parsers. */
 function parseId(payload: unknown): { id: string } | null {
@@ -78,5 +78,30 @@ describe('fetchJson', () => {
     const pending = fetchJson('/api/x', parseId, { signal: caller.signal, timeoutMs: 60_000 });
     caller.abort();
     expect(await pending).toEqual({ ok: false, kind: 'aborted' });
+  });
+});
+
+describe('failureMessage', () => {
+  const messages: FailureMessages = {
+    invalidJson: 'not json',
+    invalidPayload: 'wrong shape',
+    timeout: 'too slow',
+    network: 'offline',
+    http: (httpStatus) => `failed (${httpStatus})`
+  };
+
+  it("prefers the server's error text for a non-2xx, else the screen's wording", () => {
+    expect(failureMessage({ kind: 'http', httpStatus: 429, payload: { error: 'rate limited' } }, messages)).toBe(
+      'rate limited'
+    );
+    expect(failureMessage({ kind: 'http', httpStatus: 503, payload: {} }, messages)).toBe('failed (503)');
+  });
+
+  it('words every other failure kind from the screen', () => {
+    expect(failureMessage({ kind: 'invalid-json', httpStatus: 200 }, messages)).toBe('not json');
+    expect(failureMessage({ kind: 'invalid-payload', httpStatus: 200 }, messages)).toBe('wrong shape');
+    expect(failureMessage({ kind: 'timeout' }, messages)).toBe('too slow');
+    expect(failureMessage({ kind: 'network' }, messages)).toBe('offline');
+    expect(failureMessage({ kind: 'aborted' }, messages)).toBe('offline');
   });
 });
