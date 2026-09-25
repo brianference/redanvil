@@ -1,6 +1,7 @@
 import type { PrdSelfCheckItem, PrdSelfCheckResult } from './types';
 import { PRD_SECTION_HEADINGS, PRD_THRESHOLD } from './types';
 import { entityTable, requirementLines } from './naming';
+import { FUNCTION_WORDS } from './namingWords';
 import {
   DEFINITION_OF_DONE_HEADING,
   DONE_CHECKLIST_SECTIONS
@@ -15,26 +16,7 @@ const PLACEHOLDER_RE = /\b(TBD|TODO|FIXME|lorem ipsum)\b/i;
 
 /** Stopwords ignored when building a head noun phrase for fidelity matching. */
 const FIDELITY_STOP = new Set([
-  'a',
-  'an',
-  'the',
-  'for',
-  'with',
-  'and',
-  'or',
-  'to',
-  'of',
-  'in',
-  'on',
-  'at',
-  'by',
-  'from',
-  'is',
-  'are',
-  'be',
-  'as',
-  'this',
-  'that',
+  ...FUNCTION_WORDS,
   'show',
   'list',
   'display',

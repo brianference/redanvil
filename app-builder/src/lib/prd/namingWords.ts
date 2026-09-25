@@ -137,16 +137,17 @@ export const TITLE_BARE_ADJECTIVES = new Set([
 export const GENERIC_DOMAIN =
   /^(?:an?\s+)?(?:simple\s+|full[- ]stack\s+|mobile[- ]first\s+|web\s+)*(?:app|application|tool|system|site|website|platform|dashboard|record|thing|product|service|page|status)s?$/i;
 
-/** Common English function words skipped when mining domain nouns. */
-export const ENTITY_STOP = new Set([
+/**
+ * Articles, prepositions, conjunctions and copulas: never a domain word. Both
+ * entity mining and PRD fidelity scoring skip these.
+ */
+export const FUNCTION_WORDS: readonly string[] = [
   'a',
   'an',
   'the',
   'for',
   'with',
   'from',
-  'into',
-  'onto',
   'and',
   'or',
   'to',
@@ -158,10 +159,17 @@ export const ENTITY_STOP = new Set([
   'as',
   'is',
   'are',
-  'was',
   'be',
   'this',
-  'that',
+  'that'
+];
+
+/** Common English function words skipped when mining domain nouns. */
+export const ENTITY_STOP = new Set([
+  ...FUNCTION_WORDS,
+  'into',
+  'onto',
+  'was',
   'these',
   'those',
   'what',
