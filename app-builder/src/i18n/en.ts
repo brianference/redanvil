@@ -109,7 +109,6 @@ export const en = {
       countMeta: (n: number): string => (n === 1 ? '1 shown' : `${n} shown`),
       kpiLabel: 'Library stats',
       kpiTotal: 'All time',
-      kpiSaved: 'In library',
       kpiThisWeek: 'This week',
       openAction: 'Open',
       openAria: (title: string): string => `Open ${title}`

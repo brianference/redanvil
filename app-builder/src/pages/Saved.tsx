@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Page } from '../components/Page';
 import { SavedCardList } from '../components/saved/SavedCardList';
 import { SavedEmpty } from '../components/saved/SavedEmpty';
@@ -54,15 +53,6 @@ export function Saved(): JSX.Element {
   });
   const state = toListState(fetchState);
 
-  const kpis = useMemo(() => {
-    if (state.status !== 'success') return null;
-    const total = state.items.length;
-    return {
-      thisWeek: countThisWeek(state.items),
-      total,
-      saved: total
-    };
-  }, [state]);
 
   return (
     <Page title={copy.title} subtitle={copy.subtitle} breadcrumb={copy.title}>
@@ -74,9 +64,9 @@ export function Saved(): JSX.Element {
 
       {state.status === 'empty' && <SavedEmpty />}
 
-      {state.status === 'success' && kpis !== null && (
+      {state.status === 'success' && (
         <>
-          <SavedKpiStrip thisWeek={kpis.thisWeek} total={kpis.total} saved={kpis.saved} />
+          <SavedKpiStrip thisWeek={countThisWeek(state.items)} total={state.items.length} />
           <SavedCardList items={state.items} />
         </>
       )}
