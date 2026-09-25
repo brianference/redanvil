@@ -65,7 +65,9 @@ export function HomeBody({ state, query, onQueryChange }: HomeBodyProps): JSX.El
   return (
     <Page title={title}>
       <KpiStrip summary={stats} />
-      <p style={scoreNoteStyle}>{en.pages.home.scoreNote}</p>
+      <p className="ra-score-note" style={scoreNoteStyle}>
+        {en.pages.home.scoreNote}
+      </p>
       <RunSearch value={query} onChange={onQueryChange} />
       {filteredRuns.length === 0 && query.trim().length > 0 ? (
         <p role="status" style={{ color: theme.color.muted }}>
@@ -100,7 +102,8 @@ export function Home(): JSX.Element {
  */
 const scoreNoteStyle: CSSProperties = {
   margin: `0 0 ${theme.space.md}px`,
-  maxWidth: '60ch',
+  // The 60ch measure lives on .ra-score-note in theme.css: an inline maxWidth
+  // beats every class, so a media query could never lift it.
   fontSize: theme.type.scale[2],
   lineHeight: 1.55,
   color: theme.color.muted

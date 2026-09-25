@@ -6,3 +6,5 @@ dist/
 *.tsbuildinfo
 playwright-report/
 test-results/
+# VRT captures from a failed comparison (baselines live in __vrt__/)
+__screenshots__/

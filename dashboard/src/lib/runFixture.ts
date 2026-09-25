@@ -33,6 +33,8 @@ export function sampleRun(overrides: Partial<Run> = {}): Run {
     ],
     deployUrl: 'https://redanvil.pages.dev',
     finishedAt: '2026-07-21T16:40:00.000Z',
+    // The commit results/all.json records for app-builder's gated run.
+    commit: '759920006033720125b9b211737469b163d63fe3',
     ...overrides
   };
 }
@@ -45,5 +47,7 @@ export function sampleRun(overrides: Partial<Run> = {}): Run {
  * @returns A feed row shaped like one entry of `results/all.json`.
  */
 export function validFeedRow(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  return { kind: 'results', ...sampleRun(), ...overrides };
+  // The feed carries the commit inside provenance; the parser lifts it out.
+  const { commit, ...rest } = sampleRun();
+  return { kind: 'results', ...rest, provenance: { commit }, ...overrides };
 }

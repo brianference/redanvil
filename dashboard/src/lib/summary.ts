@@ -28,6 +28,8 @@ export interface Run {
   iterations: readonly RunIteration[];
   deployUrl: string | null;
   finishedAt: string;
+  /** Full SHA of the commit the gate scored (from provenance); null when absent or malformed. */
+  commit: string | null;
 }
 
 /** Aggregate stats over a list of runs. */
@@ -88,6 +90,21 @@ export function groupRulesByLane(rules: readonly RunRule[]): readonly RuleLaneGr
  * Fail closed: `.parse` throws, `useRuns` turns that into a visible error state,
  * and a malformed feed is never rendered as a clean empty success.
  */
+/** A full 40-hex git SHA. A short or decorated value is not linked. */
+const COMMIT_SHA = /^[0-9a-f]{40}$/;
+
+/**
+ * Pull the gated commit SHA out of an untrusted provenance block.
+ *
+ * @param provenance - The row's provenance value, any shape.
+ * @returns The SHA, or null when missing or not a full hex SHA.
+ */
+export function gatedCommit(provenance: unknown): string | null {
+  if (provenance === null || typeof provenance !== 'object') return null;
+  const commit: unknown = (provenance as { commit?: unknown }).commit;
+  return typeof commit === 'string' && COMMIT_SHA.test(commit) ? commit : null;
+}
+
 const iterationSchema = z.object({
   index: z.number().int().finite(),
   score: z.number().finite(),
@@ -99,20 +116,25 @@ const ruleSchema = z.object({
   passed: z.boolean()
 });
 
-const runSchema = z.object({
-  slug: z.string().min(1),
-  finalScore: z.number().finite(),
-  threshold: z.number().finite(),
-  passed: z.boolean(),
-  evaluated: z.number().int().nonnegative(),
-  total: z.number().int().nonnegative(),
-  rules: z.array(ruleSchema),
-  iterations: z.array(iterationSchema),
-  // Unknown/invalid URLs collapse to null rather than rejecting the whole row:
-  // a bad deploy link must not hide an otherwise valid run.
-  deployUrl: z.unknown().transform(safeUrl),
-  finishedAt: z.string().min(1)
-});
+const runSchema = z
+  .object({
+    slug: z.string().min(1),
+    finalScore: z.number().finite(),
+    threshold: z.number().finite(),
+    passed: z.boolean(),
+    evaluated: z.number().int().nonnegative(),
+    total: z.number().int().nonnegative(),
+    rules: z.array(ruleSchema),
+    iterations: z.array(iterationSchema),
+    // Unknown/invalid URLs collapse to null rather than rejecting the whole row:
+    // a bad deploy link must not hide an otherwise valid run.
+    deployUrl: z.unknown().transform(safeUrl),
+    finishedAt: z.string().min(1),
+    // Written by the gate. Only its commit is shown; like deployUrl, a malformed
+    // value collapses to null rather than hiding an otherwise valid run.
+    provenance: z.unknown().optional()
+  })
+  .transform(({ provenance, ...rest }): Run => ({ ...rest, commit: gatedCommit(provenance) }));
 
 /**
  * Validate one feed row into a Run. Throws on any malformed field (fail closed).

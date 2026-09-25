@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { en } from '../i18n/en';
 import { sampleRun } from '../lib/runFixture';
+import { gatedCommitUrl, gateResultUrl } from '../lib/runLinks';
 import type { RunsState } from '../lib/useRuns';
 import { RunDetailBody, RunDetailView } from './RunDetail';
 
@@ -39,6 +40,18 @@ describe('RunDetailBody', () => {
     expect(html).toContain(en.status.fail);
     expect(html).toContain('href="https://redanvil.pages.dev"');
     expect(html).toContain('target="_blank"');
+    expect(html).toContain(`href="${gateResultUrl('app-builder')}"`);
+    expect(html).toContain(`href="${gatedCommitUrl(run.commit) ?? ''}"`);
+    expect(html).toContain(en.runDetail.commitValue('759920006033720125b9b211737469b163d63fe3'));
+  });
+
+  it('shows no commit link when the row recorded no commit', () => {
+    const html = renderToStaticMarkup(
+      createElement(RunDetailBody, { run: sampleRun({ commit: null }) })
+    );
+    expect(html).not.toContain('/commit/');
+    // The result file link does not depend on provenance and still renders.
+    expect(html).toContain(`href="${gateResultUrl('app-builder')}"`);
   });
 
   it('shows empty states when iterations and rules are empty', () => {
@@ -61,11 +74,7 @@ describe('RunDetailBody', () => {
  */
 function renderDetail(slug: string, state: RunsState): string {
   return renderToStaticMarkup(
-    createElement(
-      MemoryRouter,
-      null,
-      createElement(RunDetailView, { slug, state })
-    )
+    createElement(MemoryRouter, null, createElement(RunDetailView, { slug, state }))
   );
 }
 

@@ -69,3 +69,9 @@
     display: block;
   }
 }
+
+/* Reading measure for the score note under the KPI strip. Kept in CSS rather
+   than an inline maxWidth so a media query can lift it. */
+.ra-score-note {
+  max-width: 60ch;
+}

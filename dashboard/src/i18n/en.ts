@@ -354,6 +354,10 @@ export const en = {
     deployLabel: 'Deploy',
     openDeploy: 'Open deploy',
     none: 'None',
+    resultLabel: 'Gate result',
+    openResult: 'View on GitHub',
+    commitLabel: 'Commit scored',
+    commitValue: (sha: string): string => sha.slice(0, 7),
     iterationsHeading: 'Iteration history',
     iterationsSummary: (count: number): string =>
       count === 1 ? '1 iteration' : `${count} iterations`,

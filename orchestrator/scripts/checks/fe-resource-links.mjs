@@ -22,6 +22,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { writeMeasurementMetaEntry, nowIso } from '../lib/measurement-meta.mjs';
+import { firstRealIdFromRenderedPages } from '../lib/rendered-detail-id.mjs';
 
 const require = createRequire(import.meta.url);
 const here = dirname(fileURLToPath(import.meta.url));
@@ -253,7 +254,8 @@ export function firstRealIdFromHtml(html, collection) {
  *
  * @param {string} base Origin (no trailing slash).
  * @param {string} route Route template (e.g. /sitters/:id).
- * @param {{ fetchImpl?: typeof fetch }} [opts]
+ * @param {{ fetchImpl?: typeof fetch, browser?: { newPage: (o?: object) => Promise<any> } | null }} [opts]
+ *   `browser`, when given, is tried last (see step 3).
  * @returns {Promise<string | null>} Real id, or null when none available.
  */
 export async function resolveRealDetailId(base, route, opts = {}) {
@@ -292,7 +294,22 @@ export async function resolveRealDetailId(base, route, opts = {}) {
       if (id) return id;
     }
   } catch {
-    // fail closed
+    // try the rendered DOM
+  }
+
+  // 3) Rendered DOM of the collection page, then home: a client-rendered app
+  //    writes its detail links after load, so steps 1-2 cannot see them.
+  if (opts.browser) {
+    try {
+      return await firstRealIdFromRenderedPages(
+        opts.browser,
+        origin,
+        collection,
+        firstRealIdFromHtml
+      );
+    } catch {
+      // fail closed
+    }
   }
   return null;
 }
@@ -663,23 +680,27 @@ export async function runResourceLinks(appDir, io, opts = {}) {
     /** @type {Map<string, { ok: boolean, status: number | null, error?: string }>} */
     const cache = new Map();
 
+    // Launched before id resolution: a client-rendered app only exposes its
+    // detail links in the rendered DOM, so resolution needs the browser too.
+    const browser = await chromium.launch();
+
     // Resolve a real detail id once per dynamic route template before crawling.
     // Never invent "sample" — if the catalog has no rows, the check fails.
     /** @type {Map<string, string>} */
     const realIdsByRoute = new Map();
-    for (const route of targets) {
-      if (!hasDynamicSegment(route)) continue;
-      if (realIdsByRoute.has(route)) continue;
-      const id = await resolveRealDetailId(base, route);
-      if (id == null) {
-        io.fail(
-          `no real detail id available for ${route} (collection API/page returned nothing probeable)`
-        );
+    const resolveIds = async () => {
+      for (const route of targets) {
+        if (!hasDynamicSegment(route)) continue;
+        if (realIdsByRoute.has(route)) continue;
+        const id = await resolveRealDetailId(base, route, { browser });
+        if (id == null) {
+          io.fail(
+            `no real detail id available for ${route} (collection API, page HTML and rendered DOM returned nothing probeable)`
+          );
+        }
+        realIdsByRoute.set(route, id);
       }
-      realIdsByRoute.set(route, id);
-    }
-
-    const browser = await chromium.launch();
+    };
     /**
      * @returns {Promise<{ failures: string[], pagesChecked: number }>}
      */
@@ -742,6 +763,7 @@ export async function runResourceLinks(appDir, io, opts = {}) {
     let run2;
     let at2;
     try {
+      await resolveIds();
       run1 = await crawlOnce();
       at1 = nowIso();
       run2 = await crawlOnce();

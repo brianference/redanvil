@@ -4,6 +4,7 @@ import { Page } from '../components/Page';
 import { StatusBadge } from '../components/StatusBadge';
 import { en } from '../i18n/en';
 import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
+import { gatedCommitUrl, gateResultUrl } from '../lib/runLinks';
 import { groupRulesByLane, type Run, type RunIteration, type RunRule } from '../lib/summary';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 import { type RunsState, useRuns } from '../lib/useRuns';
@@ -85,9 +86,11 @@ const recoveryLinkStyle: CSSProperties = {
 };
 
 /**
- * Header card: score, threshold, pass/fail, coverage, finished time, deploy link.
+ * Header card: score, threshold, pass/fail, coverage, finished time, deploy link,
+ * and the two external sources that back the numbers (result file, gated commit).
  */
 function RunHeader({ run }: { run: Run }): JSX.Element {
+  const commitUrl = gatedCommitUrl(run.commit);
   return (
     <section style={cardStyle} aria-label={en.runDetail.headerLabel}>
       <ul style={metaRowStyle}>
@@ -120,6 +123,22 @@ function RunHeader({ run }: { run: Run }): JSX.Element {
           {run.deployUrl !== null && run.deployUrl !== '' ? (
             <SafeExternalLink href={run.deployUrl} rel="noreferrer" style={linkStyle}>
               {en.runDetail.openDeploy}
+            </SafeExternalLink>
+          ) : (
+            <span style={{ color: theme.color.muted }}>{en.runDetail.none}</span>
+          )}
+        </li>
+        <li style={metaItemStyle}>
+          <span style={metaLabelStyle}>{en.runDetail.resultLabel}</span>
+          <SafeExternalLink href={gateResultUrl(run.slug)} style={linkStyle}>
+            {en.runDetail.openResult}
+          </SafeExternalLink>
+        </li>
+        <li style={metaItemStyle}>
+          <span style={metaLabelStyle}>{en.runDetail.commitLabel}</span>
+          {commitUrl !== null && run.commit !== null ? (
+            <SafeExternalLink href={commitUrl} style={linkStyle}>
+              <code>{en.runDetail.commitValue(run.commit)}</code>
             </SafeExternalLink>
           ) : (
             <span style={{ color: theme.color.muted }}>{en.runDetail.none}</span>
