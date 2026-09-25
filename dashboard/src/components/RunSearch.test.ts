@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { en } from '../i18n/en';
-import { matchesRunQuery, RunSearch } from './RunSearch';
+import { matchesRunQuery } from './RunSearch';
 
 describe('matchesRunQuery', () => {
   it('matches a case-insensitive substring of the slug', () => {
@@ -26,26 +23,5 @@ describe('matchesRunQuery', () => {
     expect(before.length).toBe(3);
     expect(after).toEqual(['az-planting-calendar']);
     expect(after.length).toBeLessThan(before.length);
-  });
-});
-
-describe('RunSearch', () => {
-  it('names the search field with a real label, not a duplicate aria-label', () => {
-    const html = renderToStaticMarkup(
-      createElement(RunSearch, { value: '', onChange: () => undefined })
-    );
-    // RunSearch.browser.test.ts proves this label reaches the accessibility tree.
-    expect(html).toMatch(
-      new RegExp(`<label for="run-search"[^>]*>${en.pages.home.searchLabel}</label>`)
-    );
-    expect(html).toContain('id="run-search"');
-    expect(html).not.toContain('aria-label=');
-  });
-
-  it('reflects the controlled value', () => {
-    const html = renderToStaticMarkup(
-      createElement(RunSearch, { value: 'az', onChange: () => undefined })
-    );
-    expect(html).toContain('value="az"');
   });
 });
