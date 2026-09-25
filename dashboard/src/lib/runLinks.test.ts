@@ -22,10 +22,6 @@ describe('gatedCommitUrl', () => {
   it('links a recorded commit', () => {
     expect(gatedCommitUrl(SHA)).toBe(`https://github.com/brianference/redanvil/commit/${SHA}`);
   });
-
-  it('returns null when no commit was recorded', () => {
-    expect(gatedCommitUrl(null)).toBeNull();
-  });
 });
 
 describe('gatedCommit', () => {

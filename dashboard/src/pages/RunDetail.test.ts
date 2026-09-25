@@ -41,8 +41,9 @@ describe('RunDetailBody', () => {
     expect(html).toContain('href="https://redanvil.pages.dev"');
     expect(html).toContain('target="_blank"');
     expect(html).toContain(`href="${gateResultUrl('app-builder')}"`);
-    expect(html).toContain(`href="${gatedCommitUrl(run.commit) ?? ''}"`);
-    expect(html).toContain(en.runDetail.commitValue('759920006033720125b9b211737469b163d63fe3'));
+    const sha = '759920006033720125b9b211737469b163d63fe3';
+    expect(html).toContain(`href="${gatedCommitUrl(sha)}"`);
+    expect(html).toContain(en.runDetail.commitValue(sha));
   });
 
   it('shows no commit link when the row recorded no commit', () => {

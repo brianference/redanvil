@@ -247,7 +247,7 @@ function RunCard({ run }: { run: Run }): JSX.Element {
           <time style={timeStyle} dateTime={run.finishedAt}>
             {relative}
           </time>
-          {run.deployUrl !== null && run.deployUrl !== '' ? (
+          {run.deployUrl !== null ? (
             <SafeExternalLink
               href={run.deployUrl}
               rel="noreferrer"

@@ -65,7 +65,6 @@ function formatFinishedAt(iso: string): string {
  * @returns The run summary section.
  */
 export function RunHeader({ run }: { run: Run }): JSX.Element {
-  const commitUrl = gatedCommitUrl(run.commit);
   return (
     <section style={cardStyle} aria-label={en.runDetail.headerLabel}>
       <ul style={metaRowStyle}>
@@ -88,7 +87,7 @@ export function RunHeader({ run }: { run: Run }): JSX.Element {
         </li>
         <li style={metaItemStyle}>
           <span style={metaLabelStyle}>{en.runDetail.deployLabel}</span>
-          {run.deployUrl !== null && run.deployUrl !== '' ? (
+          {run.deployUrl !== null ? (
             <SafeExternalLink href={run.deployUrl} rel="noreferrer" style={linkStyle}>
               {en.runDetail.openDeploy}
             </SafeExternalLink>
@@ -104,8 +103,8 @@ export function RunHeader({ run }: { run: Run }): JSX.Element {
         </li>
         <li style={metaItemStyle}>
           <span style={metaLabelStyle}>{en.runDetail.commitLabel}</span>
-          {commitUrl !== null && run.commit !== null ? (
-            <SafeExternalLink href={commitUrl} style={linkStyle}>
+          {run.commit !== null ? (
+            <SafeExternalLink href={gatedCommitUrl(run.commit)} style={linkStyle}>
               <code>{en.runDetail.commitValue(run.commit)}</code>
             </SafeExternalLink>
           ) : (

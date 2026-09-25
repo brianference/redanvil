@@ -18,11 +18,11 @@ export function gateResultUrl(slug: string): string {
 }
 
 /**
- * The commit the gate scored, or null when the feed row did not record one.
+ * The commit the gate scored.
  *
  * @param commit - Full commit SHA from the row's provenance.
- * @returns Absolute GitHub commit URL, or null.
+ * @returns Absolute GitHub commit URL.
  */
-export function gatedCommitUrl(commit: string | null): string | null {
-  return commit === null ? null : `${REPO_URL}/commit/${commit}`;
+export function gatedCommitUrl(commit: string): string {
+  return `${REPO_URL}/commit/${commit}`;
 }
