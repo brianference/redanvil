@@ -1,4 +1,4 @@
-import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
+import type { CSSProperties, KeyboardEvent, MouseEvent, SyntheticEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SafeExternalLink } from '../../../design-system/SafeExternalLink';
 import { en } from '../i18n/en';
@@ -182,6 +182,16 @@ function StatusIcon({ passed }: { passed: boolean }): JSX.Element {
 }
 
 /**
+ * Whether a card event started on one of the card's own links.
+ *
+ * @param event - Click or key event bubbling up to the card.
+ * @returns True when the target is inside an anchor.
+ */
+function fromNestedLink(event: SyntheticEvent): boolean {
+  return event.target instanceof Element && event.target.closest('a') !== null;
+}
+
+/**
  * One glanceable run card: status icon + badge, slug title, meta, deploy action.
  * Whole card navigates to /run/:slug; deploy is a separate control.
  */
@@ -196,11 +206,10 @@ function RunCard({ run }: { run: Run }): JSX.Element {
   ].join(en.runList.metaSep);
 
   /**
-   * Navigate when the card background is activated; ignore clicks on nested controls.
+   * Navigate when the card background is activated; a nested link handles its own click.
    */
   function handleCardClick(event: MouseEvent<HTMLElement>): void {
-    const target = event.target as HTMLElement;
-    if (target.closest('a')) return;
+    if (fromNestedLink(event)) return;
     void navigate(detailPath);
   }
 
@@ -209,8 +218,7 @@ function RunCard({ run }: { run: Run }): JSX.Element {
    */
   function handleCardKeyDown(event: KeyboardEvent<HTMLElement>): void {
     if (event.key !== 'Enter' && event.key !== ' ') return;
-    const target = event.target as HTMLElement;
-    if (target.closest('a')) return;
+    if (fromNestedLink(event)) return;
     if (event.key === ' ') event.preventDefault();
     void navigate(detailPath);
   }
@@ -245,9 +253,6 @@ function RunCard({ run }: { run: Run }): JSX.Element {
               rel="noreferrer"
               style={deployLinkStyle}
               className="ra-deploy-link"
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
             >
               {en.runList.openDeploy}
             </SafeExternalLink>
