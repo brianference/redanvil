@@ -1,0 +1,46 @@
+# Visual-regression baselines are per platform: text rasterises differently on
+# Linux and Windows, so a baseline recorded on the owner's machine cannot be
+# compared on a CI runner. This job records the Linux ones on the same image CI
+# uses and uploads them; they are reviewed and committed by hand, never
+# auto-committed, so a regression cannot quietly become the new baseline.
+name: Record VRT baselines
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: App directory (app-builder or dashboard)
+        required: true
+        type: choice
+        options: [app-builder, dashboard]
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 22
+      - name: Install workspace deps
+        run: npm ci
+      - name: Install Chromium
+        working-directory: ${{ inputs.app }}
+        run: npx playwright install --with-deps chromium
+      - name: Record baselines
+        working-directory: ${{ inputs.app }}
+        env:
+          VRT_UPDATE: '1'
+        run: npm run test:vrt
+      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: vrt-baselines-${{ inputs.app }}-linux
+          path: |
+            ${{ inputs.app }}/**/*-linux.png
+            !${{ inputs.app }}/node_modules/**
+          if-no-files-found: error

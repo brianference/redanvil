@@ -576,8 +576,9 @@ for (const app of apps) {
       app.dir,
       '--judge',
       `evidence/verdicts-${app.slug}.json`,
-      '--na',
-      app.na,
+      // An empty --na value vanishes under a Windows shell and the next flag
+      // becomes its value, so omit the flag when nothing is waived.
+      ...(app.na ? ['--na', app.na] : []),
       '--slug',
       app.slug,
       '--min-coverage',

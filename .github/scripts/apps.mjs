@@ -58,7 +58,9 @@ export const CORE_APPS = Object.freeze([
     // Core flow is the wizard forge, not search. fe-search-present is waived;
     // qa_visual / user_refuse must drive chat → Forge PRD (see drive_wizard_forge.mjs).
     coreFlow: 'wizard',
-    na: 'process',
+    // Every process-lane rule is implemented now, so the lane is measured. It was
+    // waived while some had no implementation, which capped coverage below 90%.
+    na: '',
     // Copied from app-builder/src/i18n: footer labels + page h1 titles (LegalPage).
     // searchQuery: for coreFlow=wizard this is the plain-language forge prompt a
     // stranger types into the composer (same shape as e2e_smoke_app_builder).
@@ -84,7 +86,7 @@ export const CORE_APPS = Object.freeze([
     e2e: false,
     wizard: false,
     coreFlow: 'search',
-    na: 'process',
+    na: '',
     // Copied from dashboard/src/i18n/en.ts: app.footer* link labels + pages.*.title
     // (Page shell h1).
     // searchQuery: a real run slug on the public feed (results/all.json shows

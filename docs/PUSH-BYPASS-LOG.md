@@ -113,3 +113,17 @@ app-builder and dashboard red.
 
 **Clear by:** 2026-10-08. Either fix the defects above and decide the coverage
 floor (lower it, or measure the process lane), or record why not.
+
+## 2026-09-24 (second) — push so Linux VRT baselines can be recorded in CI
+
+**Why:** app-builder and dashboard now have real browser and VRT lanes, whose
+baselines are per platform. Only Windows baselines exist, and the recording
+workflow (`record-vrt-baselines.yml`) can only be dispatched once it is on
+GitHub. The finish line cannot pass until those baselines exist, so the hook
+refuses the very push that unblocks it. This push also measures the process
+lane instead of waiving it, which is what makes the 90% coverage floor reachable.
+
+**Not bypassed:** CI still runs `apps-meet-the-bar`.
+
+**Clear by:** 2026-10-08, same as the entry above: re-verify both apps after the
+Linux baselines land.
