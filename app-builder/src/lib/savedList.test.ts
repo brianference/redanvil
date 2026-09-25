@@ -51,6 +51,12 @@ describe('formatRelativeTime', () => {
     expect(formatRelativeTime('2026-07-18T12:00:00.000Z', now)).toBe('3d ago');
   });
 
+  it('falls back to the date once a label would count two weeks or more', () => {
+    const iso = '2026-07-01T12:00:00.000Z';
+    expect(formatRelativeTime('2026-07-08T12:00:00.000Z', now)).toBe('13d ago');
+    expect(formatRelativeTime(iso, now)).toBe(new Date(iso).toLocaleDateString());
+  });
+
   it('returns the raw string when unparseable', () => {
     expect(formatRelativeTime('not-a-date', now)).toBe('not-a-date');
   });

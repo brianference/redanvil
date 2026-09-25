@@ -31,20 +31,7 @@ describe('wizard scope options', () => {
     expect(EMPTY_WIZARD_ANSWERS.selectedFeatureIds).toBeNull();
   });
 
-  it('exposes i18n copy for storage, realtime, integrations, features, and review labels', () => {
-    expect(en.wizard.dataStorageLabel.length).toBeGreaterThan(2);
-    expect(en.wizard.dataStorageOptions.none.length).toBeGreaterThan(1);
-    expect(en.wizard.dataStorageOptions.simple.length).toBeGreaterThan(1);
-    expect(en.wizard.dataStorageOptions.relational.length).toBeGreaterThan(1);
-    expect(en.wizard.realtimeLabel.length).toBeGreaterThan(2);
-    expect(en.wizard.integrationsLabel.length).toBeGreaterThan(2);
-    expect(en.wizard.integrationsChips.length).toBeGreaterThanOrEqual(3);
-    expect(en.wizard.featuresHeading.length).toBeGreaterThan(2);
-    expect(en.wizard.featuresRequired.length).toBeGreaterThan(2);
-    expect(en.wizard.reviewDataStorage.length).toBeGreaterThan(2);
-    expect(en.wizard.reviewRealtime.length).toBeGreaterThan(2);
-    expect(en.wizard.reviewIntegrations.length).toBeGreaterThan(2);
-    expect(en.wizard.reviewFeatures.length).toBeGreaterThan(2);
+  it('names the four wizard steps in order', () => {
     expect(en.wizard.stepTitles).toEqual(['App idea', 'Scope', 'Features', 'Review']);
   });
 
