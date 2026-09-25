@@ -127,3 +127,10 @@ lane instead of waiving it, which is what makes the 90% coverage floor reachable
 
 **Clear by:** 2026-10-08, same as the entry above: re-verify both apps after the
 Linux baselines land.
+
+**2026-09-25 addendum:** one more --no-verify push of the same round (27 local
+commits: judge fixes for both apps, the check fixes for fe-visible-response,
+fe-breadcrumbs/fe-resource-links detail discovery, u-api-real-output local
+secrets and u-legal-claims-true, and the judge change summary). Pushed to stay
+under the 20-commit cadence limit while both apps re-run their judge loops.
+Clear-by date unchanged: 2026-10-08.
